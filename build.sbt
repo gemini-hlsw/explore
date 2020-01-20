@@ -49,7 +49,7 @@ lazy val explore: Project = project
     libraryDependencies ++= Seq(
       "io.github.cquiroz.react" %%% "common" % "0.4.2",
       "io.github.cquiroz.react" %%% "react-grid-layout" % "0.2.1",
-      "io.github.cquiroz.react" %%% "react-sizeme" % "0.1.1"
+      "io.github.cquiroz.react" %%% "react-sizeme" % "0.1.2"
     ),
     // don't publish the demo
     publish := {},
@@ -123,6 +123,7 @@ lazy val commonWDS = Seq(
   npmDependencies in Compile ++= Seq(
     "react" -> reactJS,
     "react-dom" -> reactJS,
-    "semantic-ui-less" -> SUI
+    "semantic-ui-less" -> SUI,
+    "prop-types" -> "15.7.2"
   )
 )
