@@ -16,7 +16,7 @@ const Web = Merge(
   parts.resourceModules,
   parts.extractCSS({
     devMode: false,
-    use: ["css-loader", parts.autoprefix(), "less-loader"], // Order is very important: css, post-css, less
+    use: ["css-loader", parts.autoprefix(), parts.lessLoader()], // Order is very important: css, post-css, less
     ci: ci
   }),
   parts.minifyJavaScript(),
