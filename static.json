@@ -1,0 +1,7 @@
+{
+    "root": "explore/target/scala-2.13/scalajs-bundler/main/",
+    "clean_urls": false,
+    "routes": {
+      "/**": "index.html"
+    }
+  }
