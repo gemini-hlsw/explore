@@ -9,7 +9,6 @@ import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import react.gridlayout._
 import react.sizeme._
-import scala.scalajs.js
 import model._
 
 object HomeComponent {
@@ -48,32 +47,23 @@ object HomeComponent {
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
-            <.div(
-              TagMod.unless(js.isUndefined(s.width))(
-                ResponsiveReactGridLayout(
-                  s.width,
-                  margin           = (5: JsNumber, 5: JsNumber),
-                  containerPadding = (5: JsNumber, 5: JsNumber),
-                  className        = "layout",
-                  rowHeight        = 30,
-                  draggableHandle  = ".tileTitle",
-                  onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                  layouts          = layouts
-                )(
-                  <.div(^.key := "tpe",
-                        ^.cls := "tile",
-                        Tile(Tile.Props("Conditions"), Conditions())),
-                  <.div(^.key := "coords",
-                        ^.cls := "tile",
-                        Tile(Tile.Props("Coordinates"), Imag())),
-                  <.div(
-                    ^.key := "doc",
-                    ^.cls := "tile",
-                    Tile(Tile.Props("Target Position"),
-                         targetFlow(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))
-                         ))
-                  )
-                )
+            ResponsiveReactGridLayout(
+              s.width,
+              margin           = (5: JsNumber, 5: JsNumber),
+              containerPadding = (5: JsNumber, 5: JsNumber),
+              className        = "layout",
+              rowHeight        = 30,
+              draggableHandle  = ".tileTitle",
+              onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+              layouts          = layouts
+            )(
+              <.div(^.key := "tpe",    ^.cls := "tile", Tile(Tile.Props("Conditions"), Conditions())),
+              <.div(^.key := "coords", ^.cls := "tile", Tile(Tile.Props("Coordinates"), Imag())),
+              <.div(
+                ^.key := "doc",
+                ^.cls := "tile",
+                Tile(Tile.Props("Target Position"),
+                     targetFlow(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))))
               )
             )
           }
