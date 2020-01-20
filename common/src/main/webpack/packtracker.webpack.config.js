@@ -5,7 +5,7 @@ const PacktrackerPlugin = require("@packtracker/webpack-plugin");
 const PackTracker = Merge(Web, {
   plugins: [
     new PacktrackerPlugin({
-      project_token: "eb5ee661-6208-4044-a706-85aebe3f774d",
+      project_token: process.env.PACKTRACKER_TOKEN,
       upload: true,
       fail_build: true,
       branch: process.env.GITHUB_REF.split("/")[2],
