@@ -1,4 +1,15 @@
 {
+    "buildpacks": [
+        {
+          "url": "heroku/nodejs"
+        },
+        {
+          "url": "heroku/scala"
+        },
+        {
+          "url": "https://github.com/hone/heroku-buildpack-static"
+        }
+      ],
     "environments": {
       "test": {
         "formation": {
@@ -16,21 +27,9 @@
           }
         ],
         "scripts" : {
-          "test-setup": "npm install jsdom"
+          "test-setup": "npm install jsdom",
+          "test": "sbt scalafmtCheckAll headerCheck test:headerCheck test"
         }
-      },
-      "review": {
-        "buildpacks": [
-            {
-              "url": "heroku/nodejs"
-            },
-            {
-              "url": "heroku/scala"
-            },
-            {
-              "url": "https://github.com/hone/heroku-buildpack-static"
-            }
-          ]
       }
     }
   }

@@ -1,8 +1,5 @@
 { 
     "engines": { 
         "node": "12.14.1" 
-    },
-    "scripts": {
-        "test": "./dummy-script"
     }
 }

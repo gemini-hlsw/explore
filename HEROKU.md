@@ -4,11 +4,4 @@ This can be done similarly to what is described in https://devcenter.heroku.com/
 
 Furthermore, we will add `nginx` to serve the app and its static files, as well as define it as reverse proxy. For this we use https://github.com/heroku/heroku-buildpack-static, similarly to what is described in https://m.alphasights.com/using-nginx-on-heroku-to-serve-single-page-apps-and-avoid-cors-5d013b171a45.
 
-Namely, Heroku apps must be configured in the following way (order matters!):
-
-```
-heroku buildpacks:clear
-heroku buildpacks:add heroku/nodejs
-heroku buildpacks:add heroku/scala
-heroku buildpacks:add https://github.com/hone/heroku-buildpack-static
-```
+However, we configure the buildpack stack in `app.json` instead of doing it manually as the tutorials show.
