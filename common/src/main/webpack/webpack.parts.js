@@ -27,7 +27,7 @@ module.exports.localResourcesDir = localResourcesDir;
 module.exports.browsers = {
   browsers: [
     ">1%",
-    "last 4 versions",
+    "last 2 versions",
     "Firefox ESR",
     "not ie < 9" // React doesn't support IE8 anyway
   ],

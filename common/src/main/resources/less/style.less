@@ -1,5 +1,7 @@
 @import "~theme/modules/sidebar.variables";
 
+@gridSpace: 5px;
+
 html,
 body {
   box-sizing: border-box;
@@ -85,8 +87,8 @@ body {
   position: absolute;
   right: 3px;
   bottom: 3px;
-  width: 5px;
-  height: 5px;
+  width: @gridSpace;
+  height: @gridSpace;
   border-right: 2px solid rgba(255, 255, 255, 0.6);
   border-bottom: 2px solid rgba(255, 255, 255, 0.6);
 }
@@ -110,6 +112,6 @@ body {
   cursor: se-resize;
 }
 
-// .pushable > .pusher {
-//   width: ~"calc(100% - @wideWidth - 6px)";
-// }
+.pushable > .pusher {
+  width: ~"calc(100% - @{wideWidth})";
+}
