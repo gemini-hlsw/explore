@@ -19,6 +19,12 @@ addCommandAlias(
   "; conditions/fastOptJS::stopWebpackDevServer; conditions/fastOptJS::startWebpackDevServer; ~conditions/fastOptJS"
 )
 
+// For Heroku deployment
+addCommandAlias(
+  "stage",
+  "explore/fullOptJS::webpack"
+)
+
 lazy val root =
   project
     .in(file("."))
