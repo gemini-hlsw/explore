@@ -18,6 +18,19 @@
         "scripts" : {
           "test-setup": "npm install jsdom"
         }
+      },
+      "review": {
+        "buildpacks": [
+            {
+              "url": "heroku/nodejs"
+            },
+            {
+              "url": "heroku/scala"
+            },
+            {
+              "url": "https://github.com/hone/heroku-buildpack-static"
+            }
+          ]
       }
     }
   }
