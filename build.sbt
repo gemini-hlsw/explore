@@ -54,7 +54,7 @@ lazy val explore: Project = project
   .settings(
     libraryDependencies ++= Seq(
       "io.github.cquiroz.react" %%% "common" % "0.4.2",
-      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.2.1",
+      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.3.0",
       "io.github.cquiroz.react" %%% "react-sizeme" % "0.1.2"
     ),
     // don't publish the demo
