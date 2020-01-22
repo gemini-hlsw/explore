@@ -32,7 +32,6 @@ jobs:
           SBT_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
           PT_COMMIT: ${{ github.event.pull_request.head.sha }}
           PT_PRIOR_COMMIT: ${{ github.event.pull_request.base.sha }}
-          PACKTRACKER_TOKEN: ${{ secrets.PACKTRACKER_TOKEN }}
       - name: Export assets to packtracker merged
         if: github.event_name == 'push'
         run: |
@@ -42,4 +41,3 @@ jobs:
         env:
           SBT_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
           PT_COMMIT: ${{ github.sha }}
-          PACKTRACKER_TOKEN: ${{ secrets.PACKTRACKER_TOKEN }}
