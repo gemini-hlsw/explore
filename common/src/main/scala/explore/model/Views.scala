@@ -5,9 +5,11 @@ package explore.model
 
 import cats.effect._
 import crystal._
+import explore.graphql.TestQuery
 
 object Views {
   import AppState.rootModel
 
-  lazy val target: View[IO, Target] = rootModel.view(RootModel.target)
+  lazy val target: View[IO, Option[Target]] = rootModel.view(RootModel.target)
+  lazy val persons: View[IO, List[TestQuery.AllPersons]] = rootModel.view(RootModel.persons)
 }

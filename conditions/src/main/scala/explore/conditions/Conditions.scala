@@ -13,14 +13,22 @@ import explore.model._
 import scala.scalajs.js
 import js.JSConverters._
 import js.UndefOr._
+import cats.effect._
 
 object Conditions {
-  private val targetFlow = Views.target.flow
-
   private def renderButton(forTarget: Target, selected: Option[Target]) = {
     val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
-    Button(onClick = Actions.TargetActionsIO.set(forTarget), color = color)(forTarget.toString)
+    Button(onClick = Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
   }
+
+  private def retrievePersons(): IO[Unit] = {
+    for {
+      persons <- Actions.PersonsActionsIO.query()
+      _ = println(persons)
+      _ <- Views.persons.set(persons)
+    } yield ()
+  }
+
 
   private val component =
     ScalaComponent
@@ -32,11 +40,12 @@ object Conditions {
             Button(color = Blue)("Button", "Btn"),
             Button("Button", "Dec")
           ),
-          targetFlow(selected =>
+          Views.target.flow(selected =>
             <.div(
               List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
             )
-          )
+          ),
+          Button(onClick = retrievePersons())("GraphQL Test")
         )
       }
       .build

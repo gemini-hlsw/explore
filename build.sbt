@@ -1,6 +1,7 @@
 val reactJS      = "16.7.0"
 val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
+val circe        = "0.12.3"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -83,8 +84,13 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.3.2",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
-    "com.rpiaggio" %%% "crystal" % "0.0.14"
+    "com.rpiaggio" %%% "crystal" % "0.0.15"
   )
+  ) ++ Seq(
+      "io.circe" %%% "circe-core",
+      "io.circe" %%% "circe-generic",
+      "io.circe" %%% "circe-parser"
+  ).map(_ % circe)
 )
 
 lazy val commonWDS = Seq(

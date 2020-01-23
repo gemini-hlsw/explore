@@ -8,6 +8,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import scala.scalajs.js
 import model.Target
 import react.common._
+import explore.model._
 
 final case class Tpe(target: Target) extends ReactProps {
   @inline def render: VdomElement = Tpe.component(this)
@@ -27,6 +28,10 @@ object Tpe {
       .render { _ =>
         <.div(
           ^.height := 28.pc
+        )(
+          Views.persons.flow { persons =>
+            <.div(persons.toString)
+          }
         )
       }
       .build
