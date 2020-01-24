@@ -1,5 +1,5 @@
 val reactJS      = "16.7.0"
-val scalaJsReact = "1.5.0"
+val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
 
 parallelExecution in (ThisBuild, Test) := false
@@ -53,9 +53,9 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "common" % "0.4.2",
-      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.2.1",
-      "io.github.cquiroz.react" %%% "react-sizeme" % "0.1.2"
+      "io.github.cquiroz.react" %%% "common" % "0.5.1",
+      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.3.1",
+      "io.github.cquiroz.react" %%% "react-sizeme" % "0.2.1"
     ),
     // don't publish the demo
     publish := {},
@@ -83,7 +83,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.3.2",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.1",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.1",
-    "com.rpiaggio" %%% "crystal" % "0.0.13"
+    "com.rpiaggio" %%% "crystal" % "0.0.14"
   )
 )
 
