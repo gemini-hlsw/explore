@@ -3,7 +3,7 @@
 
 package explore.model
 
-import explore.graphql.client.AjaxIOGraphQLClient
+import explore.graphql.client.AjaxGraphQLClient
 import explore.graphql.TestQuery
 import cats.effect._
 import crystal._
@@ -14,14 +14,16 @@ import scala.concurrent.ExecutionContext.global
 @Lenses
 case class RootModel(
   target: Option[Target] = None,
-  persons: List[TestQuery.AllPersons] = List.empty
+  persons: List[TestQuery.AllPersons] = List.empty,
+  todoList: List[Task] = List.empty
 )
 
 object AppState {
   implicit private lazy val timerIO: Timer[IO]     = cats.effect.IO.timer(global)
   implicit private lazy val csIO: ContextShift[IO] = IO.contextShift(global)
 
-  lazy val swapiClient = AjaxIOGraphQLClient("https://api.graph.cool/simple/v1/swapi")
+  lazy val swapiClient = AjaxGraphQLClient("https://api.graph.cool/simple/v1/swapi")
+  lazy val todoClient = AjaxGraphQLClient("https://cors-anywhere.herokuapp.com/https://todo-mongo-graphql-server.herokuapp.com/")
 
   lazy val rootModel = Model[IO, RootModel](RootModel(target = Some(Target.M81)))
 }

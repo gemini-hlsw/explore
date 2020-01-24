@@ -1,12 +1,12 @@
 package explore.graphql.client
 
-import io.circe.Decoder
+import io.circe.{Encoder, Decoder}
 
 trait GraphQLQuery {
   val document: String
   type Variables
   type Data
 
-  case class Response(data: Data)
-  implicit val jsonDecoder: Decoder[Response]
+  implicit val varEncoder: Encoder[Variables]
+  implicit val dataDecoder: Decoder[Data]
 }

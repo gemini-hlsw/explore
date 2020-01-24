@@ -10,6 +10,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.gridlayout._
 import react.sizeme._
 import model._
+import explore.todo.Todo
 
 object HomeComponent {
 
@@ -37,8 +38,6 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  private val targetFlow = Views.target.flow
-
   val component =
     ScalaComponent
       .builder[Unit]("Home")
@@ -63,7 +62,8 @@ object HomeComponent {
                 ^.key := "doc",
                 ^.cls := "tile",
                 Tile(Tile.Props("Target Position"),
-                     targetFlow(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))))
+                     Todo(Views.todoList),
+                     Views.target.flow(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))))
               )
             )
           }
