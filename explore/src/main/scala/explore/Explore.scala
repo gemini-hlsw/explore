@@ -29,6 +29,21 @@ object ExploreMain extends IOApp {
     val router = Router(BaseUrl.fromWindowOrigin, Routing.config)
     router().renderIntoDOM(container)
 
+    (
+      for {
+        subscription <- explore.model.AppState.pollClient.subscribe[IO, io.circe.Json](
+          "subscription { poll_results {option_id option { id text } votes}}")
+        _ <- IO {
+          js.timers.setTimeout(30000){
+            subscription.stop.unsafeRunAsyncAndForget()
+          }
+        }
+        _ <- subscription.stream.evalMap(v => IO(println(v))).compile.drain
+      } yield ()
+    ).unsafeRunAsync{r => 
+      r.swap.foreach(e => println(s"ERROR: $e"))
+    }
+
     ExitCode.Success
   }
 }

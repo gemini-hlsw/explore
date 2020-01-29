@@ -3,44 +3,38 @@ package explore.graphql.client
 import cats.effect._
 import org.scalajs.dom.ext.Ajax
 import io.circe._
-import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
 
-case class AjaxGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) extends GraphQLClient {
-    // Request
-    // {
-    //   "query": "...",
-    //   "operationName": "...",
-    //   "variables": { "myVariable": "someValue", ... }
-    // }
+import scala.concurrent.ExecutionContext.Implicits._
+import scala.util.Success
+import scala.util.Failure
 
-    private case class Request(
-        query: String,
-        operationName: Option[String] = None,
-        variables: Option[Json] = None
-    )
-
+case class AjaxGraphQLClient(uri: String) extends GraphQLClient {
     // Response
     // {
     //   "data": { ... }, // Typed
     //   "errors": [ ... ]
     // }
 
-    protected def queryInternal[F[_] : LiftIO, V, D: Decoder](document: String, operationName: Option[String] = None, variables: Option[Json] = None): F[D] = 
-        LiftIO[F].liftIO {
-            IO.fromFuture(IO(
-                Ajax.post(
-                    url = uri,
-                    data = Request(document, operationName = operationName, variables = variables).asJson.toString,
-                    headers = Map("Content-Type" -> "application/json")
-                    )
-            ))
-            .map(r => 
-                parse(r.responseText)
-                .flatMap(_.hcursor.downField("data").as[D])
-                // TODO Handle errors
-            )
-            .flatMap(r => IO.fromEither(r))
+    protected def queryInternal[F[_] : Async, V, D: Decoder](document: String, operationName: Option[String] = None, variables: Option[Json] = None): F[D] = 
+        Async[F].async{ cb =>
+            Ajax.post(
+                url = uri,
+                data = GraphQLRequest(document, operationName = operationName, variables = variables).asJson.toString,
+                headers = Map("Content-Type" -> "application/json")
+            ).onComplete{
+                case Success(r) =>
+                    val data = parse(r.responseText).flatMap{ json =>
+                        val cursor = json.hcursor
+                        cursor.get[List[Json]]("errors")
+                            .map(errors => new GraphQLException(errors))
+                            .swap
+                            .flatMap(_ => cursor.get[D]("data"))
+                    }
+                    cb(data)
+                case Failure(t) =>
+                    cb(Left(t))
+            }
         }
 }

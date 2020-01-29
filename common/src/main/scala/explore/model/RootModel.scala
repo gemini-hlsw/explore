@@ -4,6 +4,7 @@
 package explore.model
 
 import explore.graphql.client.AjaxGraphQLClient
+import explore.graphql.client.WebSocketGraphQLClient
 import explore.graphql.TestQuery
 import cats.effect._
 import crystal._
@@ -24,6 +25,7 @@ object AppState {
 
   lazy val swapiClient = AjaxGraphQLClient("https://api.graph.cool/simple/v1/swapi")
   lazy val todoClient = AjaxGraphQLClient("https://cors-anywhere.herokuapp.com/https://todo-mongo-graphql-server.herokuapp.com/")
+  lazy val pollClient = WebSocketGraphQLClient("wss://hasura-realtime-poll.herokuapp.com/v1alpha1/graphql")
 
   lazy val rootModel = Model[IO, RootModel](RootModel(target = Some(Target.M81)))
 }
