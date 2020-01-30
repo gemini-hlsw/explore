@@ -22,9 +22,9 @@ object ClearCompletedMutation extends GraphQLQuery {
   case class ClearedTasks(id: Option[UUID])
   object ClearedTasks {
     implicit val jsonDecoder: Decoder[ClearedTasks] = deriveDecoder[ClearedTasks]
-    implicit val jsonEncoder: Encoder[ClearedTasks] = deriveEncoder[ClearedTasks]    
+    implicit val jsonEncoder: Encoder[ClearedTasks] = deriveEncoder[ClearedTasks]
   }
 
   implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-  implicit val dataDecoder: Decoder[Data] = Data.jsonDecoder
+  implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
 }

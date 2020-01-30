@@ -1,6 +1,6 @@
 package explore.graphql.client
 
-import io.circe.{Encoder, Decoder}
+import io.circe.{ Decoder, Encoder }
 
 trait GraphQLQuery {
   val document: String

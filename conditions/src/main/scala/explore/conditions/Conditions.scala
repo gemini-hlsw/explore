@@ -21,14 +21,12 @@ object Conditions {
     Button(onClick = Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
   }
 
-  private def retrievePersons(): IO[Unit] = {
+  private def retrievePersons(): IO[Unit] =
     for {
       persons <- Actions.PersonsActionsIO.query()
       _ = println(persons)
       _ <- Views.persons.set(persons)
     } yield ()
-  }
-
 
   private val component =
     ScalaComponent

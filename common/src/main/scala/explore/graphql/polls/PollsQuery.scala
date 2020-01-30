@@ -1,26 +1,30 @@
-package explore.graphql
+package explore.graphql.polls
 
-import client.GraphQLQuery
+import explore.graphql.client.GraphQLQuery
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import explore.model.Task
+import explore.model.Poll
 
-object AllTasksQuery extends GraphQLQuery {
+object PollsQuery extends GraphQLQuery {
   val document = """
-      query AllTasksQuery {
-        todos {
+    query PollsQuery {
+      poll {
+        id
+        question
+        options(order_by: {id: desc}) {
           id
-          title
-          completed
+          text
         }
-      }"""
+      }
+    }
+  """
 
   case class Variables()
   object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-  case class Data(todos: List[Task])
+  case class Data(poll: List[Poll])
   object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
   implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-  implicit val dataDecoder: Decoder[Data] = Data.jsonDecoder
+  implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
 }

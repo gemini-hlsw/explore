@@ -4,9 +4,11 @@
 package explore.model
 
 import cats.effect._
+import AppState._
 
 object Actions {
   //implicit object TargetActionsIO extends TargetActionsInterpreter[IO](Views.target)
-  implicit object PersonsActionsIO extends PersonsActionsInterpreter[IO]//(Views.persons)
+  implicit object PersonsActionsIO extends PersonsActionsInterpreter[IO] //(Views.persons)
   implicit object TodoListActionsIO extends TodoListActionsInterpreter[IO](Views.todoList)
+  implicit object PollsActionsIO extends PollsActionsInterpreter[IO](Views.polls)
 }

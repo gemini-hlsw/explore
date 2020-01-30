@@ -6,11 +6,12 @@ import cats.effect.Async
 import cats.implicits._
 
 trait PersonsActions[F[_]] {
-  def query(): F[List[TestQuery.AllPersons]]  
+  def query(): F[List[TestQuery.AllPersons]]
 //   def set(newPersons: List[TestQuery.AllPersons]): F[Unit]
 }
 
-class PersonsActionsInterpreter[F[_] : Async]/*(lens: FixedLens[F, List[TestQuery.AllPersons]])*/ extends PersonsActions[F] {
+class PersonsActionsInterpreter[F[_]: Async] /*(lens: FixedLens[F, List[TestQuery.AllPersons]])*/
+    extends PersonsActions[F] {
   override def query(): F[List[TestQuery.AllPersons]] = {
     val result = AppState.swapiClient.query[F](TestQuery)()
     result.map(_.allPersons)

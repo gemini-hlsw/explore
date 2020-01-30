@@ -5,22 +5,22 @@ import explore.model.Task
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 
-object AddMutation extends GraphQLQuery {
+object DestroyMutation extends GraphQLQuery {
   val document = """
-      mutation AddMutation($title: String!) {
-        add(title: $title) {
+      mutation DestroyMutation($taskId: String!) {
+        destroy(id: $taskId) {
           id
           title
           completed
         }
       }"""
 
-  case class Variables(title: String)
+  case class Variables(taskId: String)
   object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-  case class Data(add: Option[Task])
+  case class Data(destroy: Option[Task])
   object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
   implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-  implicit val dataDecoder: Decoder[Data] = Data.jsonDecoder
+  implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
 }

@@ -3,7 +3,7 @@ package explore.graphql.client
 import io.circe.Json
 import io.circe.generic.JsonCodec
 
-// Request
+// Request format from Spec: https://github.com/APIs-guru/graphql-over-http
 // {
 //   "query": "...",
 //   "operationName": "...",
@@ -12,7 +12,7 @@ import io.circe.generic.JsonCodec
 
 @JsonCodec
 protected[client] final case class GraphQLRequest(
-    query: String,
-    operationName: Option[String] = None,
-    variables: Option[Json] = None
+  query:         String,
+  operationName: Option[String] = None,
+  variables:     Option[Json] = None
 )

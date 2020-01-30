@@ -1,26 +1,26 @@
 package explore.graphql
 
 import client.GraphQLQuery
-import explore.model.Task
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+import explore.model.Task
 
-object SaveMutation extends GraphQLQuery {
+object AllTasksQuery extends GraphQLQuery {
   val document = """
-  mutation SaveMutation($taskId: String!, $title: String!) {
-    save(id: $taskId, title: $title) {
-      id
-      title
-      completed
-    }
-  }"""
+      query AllTasksQuery {
+        todos {
+          id
+          title
+          completed
+        }
+      }"""
 
-  case class Variables(taskId: String, title: String)
+  case class Variables()
   object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-  case class Data(save: Option[Task])
+  case class Data(todos: List[Task])
   object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
   implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-  implicit val dataDecoder: Decoder[Data] = Data.jsonDecoder
+  implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
 }

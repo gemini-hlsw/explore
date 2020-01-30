@@ -13,7 +13,7 @@ import spatutorial.client.services.Algebras._
 final case class Todo(view: View[IO, Pot[Todos]]) extends ReactProps {
   @inline def render: VdomElement = Todo.component(this)
 }
-*/
+ */
 
 import cats.effect.IO
 import react.common.ReactProps
@@ -29,14 +29,13 @@ final case class Todo(view: View[IO, List[Task]]) extends ReactProps {
   @inline def render: VdomElement = Todo.component(this)
 }
 
-
 object Todo {
   type Props = Todo
 
   case class State(selectedItem: Option[Task] = None, showTodoForm: Boolean = false)
 
-  class Backend($: BackendScope[Props, State]) {
-      println($)
+  class Backend( /*$: BackendScope[Props, State]*/ ) {
+    //   println($)
 
     private def actions(props: Props) = props.view.actions[TodoListActions]
 
@@ -45,12 +44,12 @@ object Todo {
       actions(props).refresh().when(props.view.get.map(_.isEmpty))
 
     def toggle(props: Props)(id: String): IO[Unit] =
-        for{
-            _ <- actions(props).toggle(id)
-            _ <- actions(props).refresh()
-        } yield ()
+      for {
+        _ <- actions(props).toggle(id)
+        _ <- actions(props).refresh()
+      } yield ()
 
-/*
+    /*
     def editTodo(item: Option[TodoItem]) =
     // activate the edit dialog
       $.modStateIO(s => s.copy(selectedItem = item, showTodoForm = true))
@@ -72,10 +71,12 @@ object Todo {
       io.flatMap(_ => $.modStateIO(s => s.copy(showTodoForm = false)))
     }*/
 
-    def render(p: Props, s: State) =
-    <.div($.toString, s.toString(),
-        p.view.streamRender{ tasks => TodoList(tasks, toggle(p))} 
-    )
+    def render(p: Props /*, s: State*/ ) =
+      <.div(
+        p.view.streamRender { tasks =>
+          TodoList(tasks, toggle(p))
+        }
+      )
     /*
       Panel("What needs to be done")(
         p.view.flow { todosOpt =>
@@ -96,11 +97,12 @@ object Todo {
         if (s.showTodoForm) TodoForm(s.selectedItem, todoEdited)
         else // otherwise add an empty placeholder
           VdomArray.empty())
-          */
+   */
   }
 
   // create the React component for To Do management
-  val component = ScalaComponent.builder[Props]("Todo")
+  val component = ScalaComponent
+    .builder[Props]("Todo")
     .initialState(State()) // initial state from TodoStore
     .renderBackend[Backend]
     .componentDidMount(scope => scope.backend.mounted(scope.props))
@@ -182,4 +184,4 @@ object TodoForm {
     .renderBackend[Backend]
     .build
 }
-*/
+ */
