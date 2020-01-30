@@ -8,10 +8,14 @@ package object client {
     private val messageTypes: Map[String, String] = Map(
             "ConnectionInit" -> "connection_init",
             "ConnectionAck" -> "connection_ack",
-            "KeepAlive" -> "ka",
+            "ConnectionError" -> "connection_error",
+            "ConnectionKeepAlive" -> "ka",
             "Start" -> "start",
             "Stop" -> "stop",
-            "Data" -> "data"
+            "ConnectionTerminate" -> "connection_terminate",
+            "Data" -> "data",
+            "Error" -> "error",
+            "Complete" -> "complete"
         )
 
     implicit protected[client] val genDevConfig: Configuration =

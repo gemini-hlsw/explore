@@ -74,7 +74,7 @@ object Todo {
 
     def render(p: Props, s: State) =
     <.div($.toString, s.toString(),
-    p.view.flow{ tasks => TodoList(tasks, toggle(p))} 
+        p.view.streamRender{ tasks => TodoList(tasks, toggle(p))} 
     )
     /*
       Panel("What needs to be done")(

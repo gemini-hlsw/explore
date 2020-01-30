@@ -29,7 +29,7 @@ object Tpe {
         <.div(
           ^.height := 28.pc
         )(
-          Views.persons.flow { persons =>
+          Views.persons.streamRender { persons =>
             <.div(persons.toString)
           }
         )

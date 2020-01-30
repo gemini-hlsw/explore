@@ -40,7 +40,7 @@ object Conditions {
             Button(color = Blue)("Button", "Btn"),
             Button("Button", "Dec")
           ),
-          Views.target.flow(selected =>
+          Views.target.streamRender(selected =>
             <.div(
               List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
             )

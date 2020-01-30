@@ -63,7 +63,7 @@ object HomeComponent {
                 ^.cls := "tile",
                 Tile(Tile.Props("Target Position"),
                      Todo(Views.todoList),
-                     Views.target.flow(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))))
+                     Views.target.streamRender(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target)))))
               )
             )
           }

@@ -19,22 +19,23 @@ import cats.data.EitherT
 // This implementation follows the Apollo protocol, specified in:
 // https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
 // Also see: https://medium.com/@rob.blackbourn/writing-a-graphql-websocket-subscriber-in-javascript-4451abb9cd60
-case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) extends GraphQLStreamingClient {
+case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) extends GraphQLStreamingClient[ConcurrentEffect] {
 
     type Subscription[F[_], D] = WebSocketSubscription[F, D]
 
     case class WebSocketSubscription[F[_] : LiftIO, D](stream: Stream[F, D], private val id: String) extends Stoppable[F] {
         def stop: F[Unit] = {
-            LiftIO[F].liftIO(client.get.map{sender => 
+            LiftIO[F].liftIO(client.get.map{ sender => 
                 subscriptions.get(id).foreach(_.terminate())
                 subscriptions -= id
-                sender.foreach(_.send(Stop(id)))
+                sender.foreach(_.send(StreamingMessage.Stop(id)))
             })
         }
     }
 
     private trait Emitter {
         def emitData(json: Json): Unit
+        def emitError(json: Json): Unit
         def terminate(): Unit
     }
 
@@ -44,6 +45,12 @@ case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) 
         def emitData(json: Json): Unit = {
             val data = json.as[D]
             val effect = queue.enqueue1(data.map(_.some))
+            Effect[F].toIO(effect).unsafeRunAsyncAndForget()
+        }
+
+        def emitError(json: Json): Unit = {
+            val error = new GraphQLException(List(json))
+            val effect = queue.enqueue1(Left(error))
             Effect[F].toIO(effect).unsafeRunAsyncAndForget()
         }
 
@@ -64,14 +71,14 @@ case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) 
 
     lazy private val client: Deferred[IO, Either[Exception, WebSocketSender]] = {
         val deferred = Deferred.unsafe[IO, Either[Exception, WebSocketSender]]
-
+        
         try {
             val ws = new WebSocket(uri, Protocol)
 
             ws.onopen = { _: Event =>
                 val sender = WebSocketSender(ws)
                 deferred.complete(Right(sender)).map( _ =>
-                    sender.send(ConnectionInit())
+                    sender.send(StreamingMessage.ConnectionInit())
                 ).unsafeRunAsyncAndForget()
             }
 
@@ -82,13 +89,23 @@ case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) 
                         // println(msg)
                         msg match {
                             case Left(e) =>
-                                println(s"Exception decoding WebSocket message for [$uri]") // TODO Proper logger
+                                // TODO Proper logging
+                                println(s"Exception decoding WebSocket message for [$uri]")
                                 e.printStackTrace()
-                            case Right(DataJson(id, json)) =>
+                            case Right(StreamingMessage.ConnectionError(json)) =>
+                                // TODO Proper logging
+                                println(s"Connection error on WebSocket for [$uri]: $json")
+                            case Right(StreamingMessage.DataJson(id, json)) =>
                                 subscriptions.get(id).foreach(_.emitData(json))
+                            case Right(StreamingMessage.Error(id, json)) =>
+                                println((id, json))
+                            case Right(StreamingMessage.Complete(id)) =>
+                                subscriptions.get(id).foreach(_.terminate())
                             case _ =>
                         }
-                    case other => println(s"Unexpected event from WebSocket [$uri]: [$other]")
+                    case other => 
+                        // TODO Proper logging
+                        println(s"Unexpected event from WebSocket for [$uri]: [$other]")
                 }
             }
             
@@ -128,14 +145,30 @@ case class WebSocketGraphQLClient(uri: String)(implicit csIO: ContextShift[IO]) 
         }
     }
 
-    def subscribe[F[_] : ConcurrentEffect, D : Decoder](subscription: String): F[Subscription[F, D]] = {
+    protected def subscribeInternal[F[_] : ConcurrentEffect, D : Decoder](subscription: String, operationName: Option[String] = None, variables: Option[Json] = None): F[Subscription[F, D]] = {
         (for {
             sender <- EitherT(LiftIO[F].liftIO(client.get))
             idq <- EitherT.right[Exception](buildQueue[F, D])
         } yield {
             val (id, q) = idq
-            sender.send(Start(id, GraphQLRequest(query = subscription)))
+            sender.send(StreamingMessage.Start(id, GraphQLRequest(subscription, operationName, variables)))
             WebSocketSubscription(q.dequeue.rethrow.unNoneTerminate, id)
         }).value.rethrow
+    }
+
+    protected def queryInternal[F[_] : ConcurrentEffect, D: Decoder](document: String, operationName: Option[String] = None, variables: Option[Json] = None): F[D] = {
+        // Cleanup should happen automatically, as long as the server sends the "Complete" message.
+        // We could add an option to force cleanup, in which case we would wrap the IO.asyncF in a Bracket.
+        LiftIO[F].liftIO{
+            IO.asyncF[D]{ cb =>
+                subscribeInternal[IO, D](document, operationName, variables).flatMap{ subscription =>
+                    subscription.stream
+                        .attempt
+                        .take(1)
+                        .evalMap{result => IO(cb(result))}
+                        .compile.drain
+                }
+            }
+        }
     }
 }
