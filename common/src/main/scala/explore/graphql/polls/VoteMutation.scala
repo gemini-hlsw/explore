@@ -1,6 +1,6 @@
 package explore.graphql.polls
 
-import explore.graphql.client.GraphQLQuery
+import clue.GraphQLQuery
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import java.util.UUID

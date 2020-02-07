@@ -3,8 +3,8 @@
 
 package explore.model
 
-import explore.graphql.client.AjaxGraphQLClient
-import explore.graphql.client.WebSocketGraphQLClient
+import clue.js.AjaxGraphQLClient
+import clue.js.WebSocketGraphQLClient
 import explore.graphql.TestQuery
 import cats.effect._
 import crystal._
