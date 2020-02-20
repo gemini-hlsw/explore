@@ -4,13 +4,14 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import java.util.UUID
-import explore.model.AppState._
+import explore.model.AppStateIO._
 import cats.implicits._
 import cats.effect.IO
 import crystal._
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
 import explore.graphql.polls.PollResultsSubscription
+import clue.js.WebSocketGraphQLClient
 
 final case class PollResults(pollId: UUID, onNewData: IO[Unit]) extends ReactProps {
   @inline def render: VdomElement = PollResults.component(this)
@@ -22,7 +23,7 @@ object PollResults {
   type Results = List[PollResultsSubscription.PollResult]
 
   final case class State(
-    subscription: Option[pollClient.Subscription[IO, PollResultsSubscription.Data]] = None,
+    subscription: Option[WebSocketGraphQLClient[IO]#ApolloSubscription[PollResultsSubscription.Data]] = None,
     renderer:     Option[StreamRenderer[Results]]                                   = None
   )
 
@@ -49,8 +50,8 @@ object PollResults {
         )
       }
       .componentWillMount { $ =>
-        pollClient
-          .subscribe[IO](PollResultsSubscription)(
+        AppState.Clients.polls
+          .subscribe(PollResultsSubscription)(
             PollResultsSubscription.Variables($.props.pollId).some
           )
           .flatMap { subscription =>

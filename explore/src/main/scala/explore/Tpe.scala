@@ -9,6 +9,7 @@ import scala.scalajs.js
 import model.Target
 import react.common._
 import explore.model._
+import explore.model.AppStateIO._
 
 final case class Tpe(target: Target) extends ReactProps {
   @inline def render: VdomElement = Tpe.component(this)
@@ -29,7 +30,7 @@ object Tpe {
         <.div(
           ^.height := 28.pc
         )(
-          Views.persons.streamRender { persons =>
+          AppState.Views.persons.streamRender { persons =>
             <.div(persons.toString)
           }
         )

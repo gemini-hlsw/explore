@@ -5,6 +5,7 @@ import cats.effect.ConcurrentEffect
 import cats.implicits._
 import explore.graphql.polls._
 import java.util.UUID
+import clue._
 
 trait PollsActions[F[_]] {
   def retrieveAll(): F[List[Poll]]
@@ -12,11 +13,11 @@ trait PollsActions[F[_]] {
   def vote(optionId: UUID): F[Unit]
 }
 
-class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, List[Poll]])
+class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, List[Poll]])(pollsClient: GraphQLClient[F])
     extends PollsActions[F] {
 
   def retrieveAll(): F[List[Poll]] =
-    AppState.pollClient.query[F](PollsQuery)().map(_.poll)
+    pollsClient.query(PollsQuery)().map(_.poll)
 
   def refresh(): F[Unit] =
     for {
@@ -25,8 +26,8 @@ class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, List[Po
     } yield ()
 
   def vote(optionId: UUID): F[Unit] =
-    AppState.pollClient
-      .query[F](VoteMutation)(
+    pollsClient
+      .query(VoteMutation)(
         VoteMutation
           .Variables(optionId, UUID.fromString("664ccbe7-b3da-9865-e7cf-8e64ea91897d"))
           .some

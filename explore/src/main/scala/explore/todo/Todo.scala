@@ -22,8 +22,7 @@ import crystal.react.io.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import explore.model.Task
-import explore.model.TodoListActions
-import explore.model.Actions._
+import explore.model.AppStateIO._
 
 final case class Todo(view: View[IO, List[Task]]) extends ReactProps {
   @inline def render: VdomElement = Todo.component(this)
@@ -37,16 +36,14 @@ object Todo {
   class Backend( /*$: BackendScope[Props, State]*/ ) {
     //   println($)
 
-    private def actions(props: Props) = props.view.actions[TodoListActions]
-
     def mounted(props: Props) =
       // dispatch a message to refresh the todos, which will cause TodoStore to fetch todos from the server
-      actions(props).refresh().when(props.view.get.map(_.isEmpty))
+      AppState.Actions.todoList.refresh().when(props.view.get.map(_.isEmpty))
 
-    def toggle(props: Props)(id: String): IO[Unit] =
+    def toggle(id: String): IO[Unit] =
       for {
-        _ <- actions(props).toggle(id)
-        _ <- actions(props).refresh()
+        _ <- AppState.Actions.todoList.toggle(id)
+        _ <- AppState.Actions.todoList.refresh()
       } yield ()
 
     /*
@@ -74,7 +71,7 @@ object Todo {
     def render(p: Props /*, s: State*/ ) =
       <.div(
         p.view.streamRender { tasks =>
-          TodoList(tasks, toggle(p))
+          TodoList(tasks, toggle)
         }
       )
     /*

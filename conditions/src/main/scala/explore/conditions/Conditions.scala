@@ -14,18 +14,19 @@ import scala.scalajs.js
 import js.JSConverters._
 import js.UndefOr._
 import cats.effect._
+import explore.model.AppStateIO._
 
 object Conditions {
   private def renderButton(forTarget: Target, selected: Option[Target]) = {
     val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
-    Button(onClick = Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
+    Button(onClick = AppState.Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
   }
 
   private def retrievePersons(): IO[Unit] =
     for {
-      persons <- Actions.PersonsActionsIO.query()
+      persons <- AppState.Actions.persons.query()
       _ = println(persons)
-      _ <- Views.persons.set(persons)
+      _ <- AppState.Views.persons.set(persons)
     } yield ()
 
   private val component =
@@ -38,7 +39,7 @@ object Conditions {
             Button(color = Blue)("Button", "Btn"),
             Button("Button", "Dec")
           ),
-          Views.target.streamRender(selected =>
+          AppState.Views.target.streamRender(selected =>
             <.div(
               List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
             )

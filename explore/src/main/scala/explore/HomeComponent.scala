@@ -14,12 +14,11 @@ import react.sizeme._
 import model._
 import explore.todo.Todo
 import explore.polls.Polls
-import cats.effect.IO
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
+import explore.model.AppStateIO._
 
 object HomeComponent {
-
   private val layoutLg: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w  = 6, h  = 9, i = "tpe"),
@@ -44,9 +43,8 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  import AppState._
   private val pollConnectionStatus = 
-    StreamRenderer.build(pollClient.statusStream[IO], Reusability.derive)
+    StreamRenderer.build(AppState.Clients.polls.statusStream, Reusability.derive)
 
   val component =
     ScalaComponent
@@ -72,14 +70,14 @@ object HomeComponent {
                 ^.key := "doc",
                 ^.cls := "tile",
                 Tile(
-                  Tile.Props("Target Position"),
-                  Todo(Views.todoList),
+                  Tile.Props("Target Position"),                  
                   <.span(
                     pollConnectionStatus(status => <.div(s"Poll connection is: $status")),
-                    Button(onClick = pollClient.close[IO]())("Close Connection")
+                    Button(onClick = AppState.Clients.polls.close())("Close Connection")
                   ),
-                  Views.polls.streamRender(Polls.apply),
-                  Views.target
+                  AppState.Views.polls.streamRender(Polls.apply),
+                  Todo(AppState.Views.todoList),
+                  AppState.Views.target
                     .streamRender(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target))))
                 )
               )

@@ -5,7 +5,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.elements.button._
 import react.common._
 import explore.model.Poll
-import explore.model.Actions.PollsActionsIO
+import explore.model.AppStateIO._
 import crystal.react.io.implicits._
 import cats.effect._
 
@@ -30,7 +30,7 @@ object Polls {
               poll.options.toTagMod { option =>
                 <.span(
                   Button(onClick = /*$.setState(State(true)).toIO
-                      .flatMap(_ => */ PollsActionsIO.vote(option.id))(option.text)
+                      .flatMap(_ => */ AppState.Actions.polls.vote(option.id))(option.text)
                 )
               },
               // <.span("CASTING...").when($.state.casting),
@@ -40,7 +40,7 @@ object Polls {
         )
       }
       .componentWillMount { _ =>
-        PollsActionsIO.refresh()
+        AppState.Actions.polls.refresh()
       }
       .build
 }

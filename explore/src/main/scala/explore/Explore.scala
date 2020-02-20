@@ -10,7 +10,7 @@ import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
 import japgolly.scalajs.react.extra.router._
-import explore.model.AppState
+import explore.model.{AppConfig, AppStateIO}
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp {
@@ -27,6 +27,8 @@ object ExploreMain extends IOApp {
       elem
     }
 
+    AppStateIO.init(AppConfig()).unsafeRunSync()
+
     val router = Router(BaseUrl.fromWindowOrigin, Routing.config)
     router().renderIntoDOM(container)
 
@@ -35,6 +37,5 @@ object ExploreMain extends IOApp {
 
   @JSExport
   def stop(): Unit =
-    // Close the websocket
-    AppState.pollClient.close[IO]().unsafeRunAsyncAndForget()
+    AppStateIO.AppState.cleanup().unsafeRunAsyncAndForget()
 }
