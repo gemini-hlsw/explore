@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.polls
 
 import japgolly.scalajs.react._
@@ -23,11 +26,16 @@ object PollResults {
   type Results = List[PollResultsSubscription.PollResult]
 
   final case class State(
-    subscription: Option[WebSocketGraphQLClient[IO]#ApolloSubscription[PollResultsSubscription.Data]] = None,
-    renderer:     Option[StreamRenderer[Results]]                                   = None
+    subscription: Option[
+      WebSocketGraphQLClient[IO]#ApolloSubscription[PollResultsSubscription.Data]
+    ] = None,
+    renderer: Option[StreamRenderer[Results]] = None
   )
 
-  private val component =
+  implicit val propsReuse: Reusability[Props] = Reusability.always
+  implicit val stateReuse: Reusability[State] = Reusability.never
+
+  val component =
     ScalaComponent
       .builder[Props]("PollResults")
       .initialState(State())
@@ -41,7 +49,9 @@ object PollResults {
                     option <- result.option
                     votes  <- result.votes
                   } yield (option.text, votes)).whenDefined {
-                    case (text, votes) => <.li(s"$text: $votes")
+                    case (text, votes) =>
+                      <.li(^.key := result.option.map(_.id.toString).getOrElse(""),
+                           s"$text: $votes")
                   }
                 }
               )
@@ -61,14 +71,13 @@ object PollResults {
                       .build(
                         subscription.stream
                           .map(_.poll_results)
-                          .flatTap(_ => fs2.Stream.eval($.props.onNewData))
+                          .flatTap(_ => fs2.Stream.eval(IO($.props.onNewData.runNow())))
                       )
                       .some)
             )
           }
       }
-      .componentWillUnmount { $ =>
-        $.state.subscription.fold(Callback.empty)(_.stop)
-      }
+      .componentWillUnmount($ => $.state.subscription.fold(Callback.empty)(_.stop))
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

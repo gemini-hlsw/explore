@@ -18,7 +18,12 @@ if (process.env.NODE_ENV !== "production") {
       "ResponsiveReactGridLayout",
       /SizeM\w/,
       "Menu",
-      "StreamRenderer"
+      "StreamRenderer",
+      "Ref",
+      "RefFindNode",
+      "Sidebar",
+      "Tile",
+      "Button"
     ]
   });
 }

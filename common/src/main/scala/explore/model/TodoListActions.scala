@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.model
 
 import crystal._
@@ -12,8 +15,9 @@ trait TodoListActions[F[_]] {
   def toggle(id: String): F[Unit]
 }
 
-class TodoListActionsInterpreter[F[_]: Async](lens: FixedLens[F, List[Task]])(todoClient: GraphQLClient[F])
-    extends TodoListActions[F] {
+class TodoListActionsInterpreter[F[_]: Async](lens: FixedLens[F, List[Task]])(
+  todoClient:                                       GraphQLClient[F]
+) extends TodoListActions[F] {
   def retrieveAll(): F[List[Task]] = {
     val result = todoClient.query(AllTasksQuery)()
     result.map(_.todos)

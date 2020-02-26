@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore
@@ -14,9 +14,9 @@ import react.sizeme._
 import model._
 import explore.todo.Todo
 import explore.polls.Polls
+import explore.model.AppStateIO._
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
-import explore.model.AppStateIO._
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -43,14 +43,14 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  private val pollConnectionStatus = 
+  private val pollConnectionStatus =
     StreamRenderer.build(AppState.Clients.polls.statusStream, Reusability.derive)
 
   val component =
     ScalaComponent
-      .builder[Unit]("Home")
+      .builder[RootModel]("Home")
       .initialState(0)
-      .renderPS { (_, _, _) =>
+      .renderPS { (_, p, _) =>
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
@@ -70,22 +70,22 @@ object HomeComponent {
                 ^.key := "doc",
                 ^.cls := "tile",
                 Tile(
-                  Tile.Props("Target Position"),                  
+                  Tile.Props("Target Position"),
                   <.span(
                     pollConnectionStatus(status => <.div(s"Poll connection is: $status")),
                     Button(onClick = AppState.Clients.polls.close())("Close Connection")
                   ),
-                  AppState.Views.polls.streamRender(Polls.apply),
-                  Todo(AppState.Views.todoList),
-                  AppState.Views.target
-                    .streamRender(targetOpt => <.div(targetOpt.whenDefined(target => Tpe(target))))
+                  Polls(p.polls),
+                  Todo(p.todoList),
+                  <.div(p.target.whenDefined(Tpe(_)))
                 )
               )
             )
           }
         )
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply() = component()
+  def apply(model: RootModel) = component(model)
 }

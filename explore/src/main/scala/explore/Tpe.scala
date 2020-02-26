@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore
@@ -18,6 +18,8 @@ final case class Tpe(target: Target) extends ReactProps {
 object Tpe {
   type Props = Tpe
 
+  private implicit val propsReuse: Reusability[Props] = Reusability.derive
+
   trait ViewOpts extends js.Object {
     var fov: Double
     var target: String
@@ -30,10 +32,9 @@ object Tpe {
         <.div(
           ^.height := 28.pc
         )(
-          AppState.Views.persons.streamRender { persons =>
-            <.div(persons.toString)
-          }
+          AppState.Views.persons.streamRender(persons => <.div(persons.toString))
         )
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }
