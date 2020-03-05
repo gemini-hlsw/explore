@@ -9,6 +9,7 @@ import cats.implicits._
 import explore.graphql.polls._
 import java.util.UUID
 import clue._
+import diode.data._
 
 trait PollsActions[F[_]] {
   def retrieveAll(): F[List[Poll]]
@@ -16,7 +17,7 @@ trait PollsActions[F[_]] {
   def vote(optionId: UUID): F[Unit]
 }
 
-class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, List[Poll]])(
+class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, Pot[List[Poll]]])(
   pollsClient:                                              GraphQLClient[F]
 ) extends PollsActions[F] {
 
@@ -25,8 +26,9 @@ class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, List[Po
 
   def refresh(): F[Unit] =
     for {
+      _     <- lens.set(Pending())
       polls <- retrieveAll()
-      _     <- lens.set(polls)
+      _     <- lens.set(Ready(polls))
     } yield ()
 
   def vote(optionId: UUID): F[Unit] =

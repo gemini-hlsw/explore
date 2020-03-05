@@ -12,16 +12,58 @@ import explore.graphql.TestQuery
 import io.lemonlabs.uri.Url
 import monocle.macros.Lenses
 import cats.effect.concurrent.Ref
-import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react._
+import diode.data._
 
 @Lenses
 case class RootModel(
   target:   Option[Target]             = None,
   persons:  List[TestQuery.AllPersons] = List.empty,
-  todoList: List[Task]                 = List.empty,
-  polls:    List[Poll]                 = List.empty
+  todoList: Pot[List[Task]]            = Pot.empty,
+  polls:    Pot[List[Poll]]            = Pot.empty
 )
 object RootModel {
+  implicit def potReuse[A: Reusability]: Reusability[Pot[A]] =
+    Reusability((x, y) =>
+      x match {
+        case Empty =>
+          y match {
+            case Empty => true
+            case _     => false
+          }
+        case Unavailable =>
+          y match {
+            case Unavailable => true
+            case _           => false
+          }
+        case Ready(a) =>
+          y match {
+            case Ready(b) => a ~=~ b
+            case _        => false
+          }
+        case Pending(t) =>
+          y match {
+            case Pending(s) => t ~=~ s
+            case _          => false
+          }
+        case PendingStale(a, t) =>
+          y match {
+            case PendingStale(b, s) => a ~=~ b && t ~=~ s
+            case _                  => false
+          }
+        case Failed(e) =>
+          y match {
+            case Failed(f) => e.getMessage ~=~ f.getMessage
+            case _         => false
+          }
+        case FailedStale(a, e) =>
+          y match {
+            case FailedStale(b, f) => a ~=~ b && e.getMessage ~=~ f.getMessage
+            case _                 => false
+          }
+      }
+    )
+
   implicit val filmsReuse: Reusability[TestQuery.AllPersons.Films] = Reusability.derive
   implicit val allPersonsReuse: Reusability[TestQuery.AllPersons]  = Reusability.derive
   implicit val reuse: Reusability[RootModel]                       = Reusability.derive
@@ -48,8 +90,8 @@ class AppState[F[_]: ConcurrentEffect: Timer](
   object Views {
     lazy val target: View[F, Option[Target]]              = rootModel.view(RootModel.target)
     lazy val persons: View[F, List[TestQuery.AllPersons]] = rootModel.view(RootModel.persons)
-    lazy val todoList: View[F, List[Task]]                = rootModel.view(RootModel.todoList)
-    lazy val polls: View[F, List[Poll]]                   = rootModel.view(RootModel.polls)
+    lazy val todoList: View[F, Pot[List[Task]]]           = rootModel.view(RootModel.todoList)
+    lazy val polls: View[F, Pot[List[Poll]]]              = rootModel.view(RootModel.polls)
   }
 
   object Actions {

@@ -10,13 +10,18 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import explore.model.Task
 import explore.model.AppStateIO._
+import explore.model.RootModel._
+import diode.data._
+import diode.react.ReactPot._
+import react.semanticui.elements.icon.Icon
+import react.semanticui.sizes._
 
-final case class Todo(tasks: List[Task]) extends ReactProps {
-  @inline def render: VdomElement = Todo.component(this)
+final case class ToDos(tasks: Pot[List[Task]]) extends ReactProps {
+  @inline def render: VdomElement = ToDos.component(this)
 }
 
-object Todo {
-  type Props = Todo
+object ToDos {
+  type Props = ToDos
 
   case class State(selectedItem: Option[Task] = None, showTodoForm: Boolean = false)
 
@@ -35,16 +40,11 @@ object Todo {
       } yield ()
 
     def render(p: Props) =
-      try {
-        <.div(
-          <.b("TASKS:"),
-          TodoList(p.tasks, toggle)
-        )
-      } catch {
-        case e: Throwable =>
-          e.printStackTrace()
-          <.div("ERROR")
-      }
+      <.div(
+        p.tasks.renderPending(_ => Icon(name = "spinner", loading = true, size = Big)),
+        p.tasks.renderFailed(_ => <.p("Failed to load")),
+        p.tasks.render(tasks => TodoList(tasks, toggle))
+      )
   }
 
   val component = ScalaComponent
