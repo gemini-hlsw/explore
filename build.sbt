@@ -81,8 +81,8 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "org.typelevel" %%% "cats-effect" % "2.1.2",
     "org.typelevel" %%% "cats-core" % "2.1.1",
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.3.2",
-    "com.github.julien-truffaut" %%% "monocle-core" % "2.0.2",
-    "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.2",
+    "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
+    "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
     "com.rpiaggio" %%% "crystal" % "0.0.14"
   )
 )
