@@ -30,14 +30,11 @@ object ToDos {
 
   class Backend() {
 
-    def onMount(): Callback =
-      AppState.Actions.todoList.refresh()
+    val onMount: Callback =
+      AppState.Actions.todoList.refresh
 
     def toggle(id: String): IO[Unit] =
-      for {
-        _ <- AppState.Actions.todoList.toggle(id)
-        _ <- AppState.Actions.todoList.refresh()
-      } yield ()
+      AppState.Actions.todoList.toggle(id)
 
     def render(p: Props) =
       <.div(
@@ -48,10 +45,10 @@ object ToDos {
   }
 
   val component = ScalaComponent
-    .builder[Props]("Todo")
+    .builder[Props]("ToDos")
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount(scope => scope.backend.onMount())
+    .componentDidMount(_.backend.onMount)
     .configure(Reusability.shouldComponentUpdate)
     .build
 }

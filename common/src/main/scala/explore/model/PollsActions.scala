@@ -12,8 +12,8 @@ import clue._
 import diode.data._
 
 trait PollsActions[F[_]] {
-  def retrieveAll(): F[List[Poll]]
-  def refresh(): F[Unit]
+  def retrieveAll: F[List[Poll]]
+  def refresh: F[Unit]
   def vote(optionId: UUID): F[Unit]
 }
 
@@ -21,13 +21,13 @@ class PollsActionsInterpreter[F[_]: ConcurrentEffect](lens: FixedLens[F, Pot[Lis
   pollsClient:                                              GraphQLClient[F]
 ) extends PollsActions[F] {
 
-  def retrieveAll(): F[List[Poll]] =
+  val retrieveAll: F[List[Poll]] =
     pollsClient.query(PollsQuery)().map(_.poll)
 
-  def refresh(): F[Unit] =
+  val refresh: F[Unit] =
     for {
       _     <- lens.set(Pending())
-      polls <- retrieveAll()
+      polls <- retrieveAll
       _     <- lens.set(Ready(polls))
     } yield ()
 

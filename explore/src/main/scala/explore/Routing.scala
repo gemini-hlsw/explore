@@ -18,6 +18,8 @@ final case class ElementPage(e: ElementItem) extends Page
 
 class Routing(modelView: View[IO, RootModel]) {
   val WithModel = modelView.streamRender
+  // import AppStateIO._
+  // val WithModel = react.StreamRenderer.build(modelView.stream.debug())
 
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._

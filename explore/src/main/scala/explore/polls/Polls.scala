@@ -80,7 +80,7 @@ object Polls {
       .builder[Props]("Polls")
       .initialState(State())
       .renderBackend[Backend]
-      .componentWillMount(_ => AppState.Actions.polls.refresh())
+      .componentWillMount(_ => AppState.Actions.polls.refresh)
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

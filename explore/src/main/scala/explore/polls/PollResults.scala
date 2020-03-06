@@ -33,7 +33,7 @@ object PollResults {
     subscription: Option[
       WebSocketGraphQLClient[IO]#ApolloSubscription[PollResultsSubscription.Data]
     ] = None,
-    renderer: Pot[StreamRenderer[Results]] = Pending()
+    renderer: Option[StreamRenderer[Pot[Results]]] = None
   )
 
   implicit val propsReuse: Reusability[Props] = Reusability.always
@@ -45,18 +45,22 @@ object PollResults {
       .initialState(State())
       .render_S { state =>
         <.div(
-          state.renderer.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-          state.renderer.render(
-            _ { results =>
-              <.ol(
-                results.toTagMod { result =>
-                  (for {
-                    option <- result.option
-                    votes  <- result.votes
-                  } yield (option.text, votes)).whenDefined {
-                    case (text, votes) =>
-                      <.li(^.key := result.option.map(_.id.toString).orEmpty, s"$text: $votes")
-                  }
+          state.renderer.whenDefined(
+            _ { resultsPot =>
+              <.div(
+                resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
+                resultsPot.render { results =>
+                  <.ol(
+                    results.toTagMod { result =>
+                      (for {
+                        option <- result.option
+                        votes  <- result.votes
+                      } yield (option.text, votes)).whenDefined {
+                        case (text, votes) =>
+                          <.li(^.key := result.option.map(_.id.toString).orEmpty, s"$text: $votes")
+                      }
+                    }
+                  )
                 }
               )
             }
@@ -70,15 +74,17 @@ object PollResults {
           )
           .flatMap { subscription =>
             $.modStateIO(_ =>
-              State(subscription.some,
-                    Ready(
-                      StreamRenderer
-                        .build(
-                          subscription.stream
-                            .map(_.poll_results)
-                            .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                        )
-                    ))
+              State(
+                subscription.some,
+                StreamRenderer
+                  .build(
+                    subscription.stream
+                      .map[Pot[Results]](r => Ready(r.poll_results))
+                      .flatTap(_ => fs2.Stream.eval($.props.onNewData))
+                      .cons1(Pending())
+                  )
+                  .some
+              )
             )
           }
       }
