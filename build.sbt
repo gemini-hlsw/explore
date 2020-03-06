@@ -89,7 +89,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "com.rpiaggio" %%% "crystal" % "0.0.22",
     "com.rpiaggio" %%% "clue-scalajs" % "0.0.4",
     "io.circe" %%% "circe-generic-extras" % "0.12.2",
-    "io.suzaku" %%% "diode-data" % "1.1.7",
+    "io.suzaku" %%% "diode-data" % "1.1.8",
     "io.suzaku" %%% "diode-react" % "1.1.7.160"
   ) ++ Seq(
       "io.circe" %%% "circe-core",
