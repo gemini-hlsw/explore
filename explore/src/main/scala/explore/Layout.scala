@@ -1,8 +1,9 @@
-// Copyright (c) 2016-2019 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore
 
+import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.extra.router._
@@ -12,7 +13,8 @@ import react.semanticui.As
 import react.common._
 import react.common.gProps2VdomNodePC
 
-final case class OTLayout(c: RouterCtl[Page], r: Resolution[Page]) extends ReactProps {
+final case class OTLayout(c: RouterCtl[Page], r: Resolution[Page])(val model: RootModel)
+    extends ReactProps {
 
   @inline def render: VdomElement = OTLayout.component(this)
 }

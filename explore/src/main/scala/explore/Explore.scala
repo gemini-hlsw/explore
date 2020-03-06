@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore
@@ -10,6 +10,7 @@ import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
 import japgolly.scalajs.react.extra.router._
+import explore.model.{ AppConfig, AppStateIO }
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp {
@@ -26,9 +27,17 @@ object ExploreMain extends IOApp {
       elem
     }
 
-    val router = Router(BaseUrl.fromWindowOrigin, Routing.config)
+    AppStateIO.init(AppConfig()).unsafeRunSync()
+    val routing = new Routing(AppStateIO.AppState.rootModel.view())
+
+    val router = Router(BaseUrl.fromWindowOrigin, routing.config)
+
     router().renderIntoDOM(container)
 
     ExitCode.Success
   }
+
+  @JSExport
+  def stop(): Unit =
+    AppStateIO.AppState.cleanup().unsafeRunAsyncAndForget()
 }

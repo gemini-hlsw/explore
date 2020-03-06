@@ -3,35 +3,31 @@
 
 package explore
 
-import explore.conditions.Conditions
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.elements.button._
 import react.common._
 import react.gridlayout._
 import react.sizeme._
 import model._
 import explore.todo.ToDos
 import explore.polls.Polls
-import explore.model.AppStateIO._
-import crystal.react.StreamRenderer
-import crystal.react.io.implicits._
+import explore.polls.PollsConnectionStatus
 
-object HomeComponent {
+object HomeComponentGQL {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 6, h  = 9, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w  = 6, h  = 9, i = "coords"),
-      LayoutItem(x = 0, y = 10, w = 12, h = 8, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w  = 6, h = 20, i = "todos"),
+      LayoutItem(x = 6, y = 0, w  = 6, h = 15, i = "polls"),
+      LayoutItem(x = 6, y = 15, w = 6, h = 5, i  = "pollsStatus")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 5, h  = 5, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w = 5, h  = 5, i = "coords"),
-      LayoutItem(x = 0, y = 6, w = 10, h = 6, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w  = 5, h = 20, i = "todos"),
+      LayoutItem(x = 5, y = 0, w  = 5, h = 15, i = "polls"),
+      LayoutItem(x = 5, y = 15, w = 5, h = 5, i  = "pollsStatus")
     )
   )
 
@@ -43,14 +39,11 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  private val pollConnectionStatus =
-    StreamRenderer.build(AppState.Clients.polls.statusStream, Reusability.derive)
-
   val component =
     ScalaComponent
-      .builder[RootModel]("Home")
+      .builder[RootModel]("HomeGQL")
       .initialState(0)
-      .renderPS { (_, p, _) =>
+      .render_P { p =>
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
@@ -64,22 +57,15 @@ object HomeComponent {
               onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
               layouts          = layouts
             )(
-              <.div(^.key := "tpe",    ^.cls := "tile", Tile(Tile.Props("Conditions"), Conditions())),
-              <.div(^.key := "coords", ^.cls := "tile", Tile(Tile.Props("Coordinates"), Imag())),
-              <.div(
-                ^.key := "doc",
-                ^.cls := "tile",
-                Tile(
-                  Tile.Props("Target Position"),
-                  <.span(
-                    pollConnectionStatus(status => <.div(s"Poll connection is: $status")),
-                    Button(onClick = AppState.Clients.polls.close())("Close Connection")
-                  ),
-                  Polls(p.polls),
-                  ToDos(p.todoList),
-                  <.div(p.target.whenDefined(Tpe(_)))
-                )
-              )
+              // ToDos Demo
+              <.div(^.key := "todos",
+                    ^.cls := "tile",
+                    Tile(Tile.Props("ToDos"), ToDos(p.todoList))),
+              // Polls demo
+              <.div(^.key := "polls", ^.cls := "tile", Tile(Tile.Props("Polls"), Polls(p.polls))),
+              <.div(^.key := "pollsStatus",
+                    ^.cls := "tile",
+                    Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus()))
             )
           }
         )

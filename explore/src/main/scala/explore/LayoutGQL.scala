@@ -3,37 +3,42 @@
 
 package explore
 
+import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.extra.router._
 import react.semanticui.collections.menu._
-import react.semanticui.sizes._
 import react.common._
+import react.common.gProps2VdomNodePC
 
-object Tile {
-  final case class Props(title: String)
+final case class OTLayoutGQL(c: RouterCtl[Page], r: Resolution[Page])(val model: RootModel)
+    extends ReactProps {
 
-  // This was preventing from rerendering when children changed.
-  // implicit val reuseProps: Reusability[Props] = Reusability.derive[Props]
+  @inline def render: VdomElement = OTLayoutGQL.component(this)
+}
+
+object OTLayoutGQL {
+
   private val component =
     ScalaComponent
-      .builder[Props]("Tile")
-      .render_PC { (p, c) =>
+      .builder[OTLayoutGQL]("DemoGQL")
+      .render_P { p =>
         <.div(
+          ^.cls := "theme dimmable",
           Menu(
-            size       = Mini,
             attached   = MenuAttached.Top,
             compact    = true,
             borderless = true,
             tabular    = MenuTabular.Right
           )(
-            MenuItem(as = "a")(Icons.BarsIcon, p.title)
+            MenuItem(as = "div")(
+              Icons.BarsIcon,
+              "Explore"
+            )
           ),
-          ^.cls := "tileTitle",
-          c
+          p.r.render()
         )
       }
-      // .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(p: Props, c: VdomNode*) = component(p)(c: _*)
 }

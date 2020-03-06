@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.conditions
@@ -13,14 +13,21 @@ import explore.model._
 import scala.scalajs.js
 import js.JSConverters._
 import js.UndefOr._
+import cats.effect._
+import explore.model.AppStateIO._
 
 object Conditions {
-  private val targetFlow = Views.target.flow
-
   private def renderButton(forTarget: Target, selected: Option[Target]) = {
     val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
-    Button(onClick = Actions.TargetActionsIO.set(forTarget), color = color)(forTarget.toString)
+    Button(onClick = AppState.Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
   }
+
+  private def retrievePersons(): IO[Unit] =
+    for {
+      persons <- AppState.Actions.persons.query()
+      _ = println(persons)
+      _ <- AppState.Views.persons.set(persons)
+    } yield ()
 
   private val component =
     ScalaComponent
@@ -32,11 +39,12 @@ object Conditions {
             Button(color = Blue)("Button", "Btn"),
             Button("Button", "Dec")
           ),
-          targetFlow(selected =>
+          AppState.Views.target.streamRender(selected =>
             <.div(
               List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
             )
-          )
+          ),
+          Button(onClick = retrievePersons())("GraphQL Test")
         )
       }
       .build
