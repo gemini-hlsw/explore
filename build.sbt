@@ -29,6 +29,7 @@ addCommandAlias(
 lazy val root =
   project
     .in(file("."))
+    .settings(name := "explore-root")
     .settings(commonSettings: _*)
     .aggregate(common, conditions, explore)
 

@@ -15,7 +15,7 @@ import react.semanticui.sizes._
 import react.common._
 import explore.model.Poll
 import explore.model.AppStateIO._
-import explore.model.RootModel._
+import explore.util.Pot._
 import crystal.react.io.implicits._
 import java.util.UUID
 import diode.data._

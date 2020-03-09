@@ -10,7 +10,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import explore.model.Task
 import explore.model.AppStateIO._
-import explore.model.RootModel._
+import explore.util.Pot._
 import diode.data._
 import diode.react.ReactPot._
 import react.semanticui.elements.icon.Icon

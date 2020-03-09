@@ -1,35 +1,35 @@
 {
-    "buildpacks": [
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "heroku/scala"
+    },
+    {
+      "url": "https://github.com/hone/heroku-buildpack-static"
+    }
+  ],
+  "environments": {
+    "test": {
+      "formation": {
+        "test": {
+          "quantity": 1,
+          "size": "performance-l"
+        }
+      },
+      "buildpacks": [
         {
           "url": "heroku/nodejs"
         },
         {
           "url": "heroku/scala"
-        },
-        {
-          "url": "https://github.com/hone/heroku-buildpack-static"
         }
       ],
-    "environments": {
-      "test": {
-        "formation": {
-          "test": {
-            "quantity": 1,
-            "size": "performance-l"
-          }
-        },
-        "buildpacks": [
-          {
-            "url": "heroku/nodejs"
-          },
-          {
-            "url": "heroku/scala"
-          }
-        ],
-        "scripts" : {
-          "test-setup": "npm install jsdom",
-          "test": "sbt scalafmtCheckAll headerCheck test:headerCheck test"
-        }
+      "scripts" : {
+        "test-setup": "npm install jsdom",
+        "test": "sbt scalafmtCheckAll headerCheck test:headerCheck test"
       }
     }
   }
+}
