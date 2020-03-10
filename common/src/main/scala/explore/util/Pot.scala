@@ -43,5 +43,5 @@ object Pot {
             case _                 => false
           }
       }
-    )  
+    )
 }

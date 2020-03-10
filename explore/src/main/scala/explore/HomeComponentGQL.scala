@@ -18,19 +18,19 @@ import explore.starwars.EpisodeHero
 object HomeComponentGQL {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y =  0, w = 6, h = 15, i = "todos"),
-      LayoutItem(x = 0, y = 15, w = 6, h =  5, i = "starwars"),
-      LayoutItem(x = 6, y =  0, w = 6, h = 15, i = "polls"),
-      LayoutItem(x = 6, y = 15, w = 6, h =  5, i = "pollsStatus")
+      LayoutItem(x = 0, y = 0, w  = 6, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 6, h = 5, i  = "starwars"),
+      LayoutItem(x = 6, y = 0, w  = 6, h = 15, i = "polls"),
+      LayoutItem(x = 6, y = 15, w = 6, h = 5, i  = "pollsStatus")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y =  0, w = 5, h = 15, i = "todos"),
-      LayoutItem(x = 0, y = 15, w = 5, h =  5, i = "starwars"),
-      LayoutItem(x = 5, y =  0, w = 5, h = 15, i = "polls"),
-      LayoutItem(x = 5, y = 15, w = 5, h =  5, i = "pollsStatus")
+      LayoutItem(x = 0, y = 0, w  = 5, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 5, h = 5, i  = "starwars"),
+      LayoutItem(x = 5, y = 0, w  = 5, h = 15, i = "polls"),
+      LayoutItem(x = 5, y = 15, w = 5, h = 5, i  = "pollsStatus")
     )
   )
 

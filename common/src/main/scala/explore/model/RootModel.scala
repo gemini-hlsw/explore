@@ -31,14 +31,14 @@ object RootModel {
 
 case class AppConfig(
   swapiURL: Url = Url.parse("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
-  todoURL: Url = Url.parse("/api/tasks"),
-  pollURL: Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
+  todoURL:  Url = Url.parse("/api/tasks"),
+  pollURL:  Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
 )
 
 class AppState[F[_]: ConcurrentEffect: Timer](
   config:        AppConfig,
   val rootModel: Model[F, RootModel]
-){ 
+) {
   object Clients {
     val starWars = AjaxGraphQLClient(config.swapiURL)
     val todo     = AjaxGraphQLClient(config.todoURL)

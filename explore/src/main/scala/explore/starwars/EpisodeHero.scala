@@ -22,14 +22,14 @@ object EpisodeHero {
     case object EMPIRE extends Episode
     case object JEDI extends Episode
 
-    val all = List(NEWHOPE, EMPIRE, JEDI)
+    val all        = List(NEWHOPE, EMPIRE, JEDI)
     val fromString = all.map(e => e.toString -> e).toMap
   }
 
   @Lenses
   final case class State(episode: Option[Episode] = None, hero: Pot[String] = Empty)
 
-  class Backend($: BackendScope[Unit, State]) {
+  class Backend($ : BackendScope[Unit, State]) {
 
     private def queryDoc(episode: Episode) = s"""
       {
@@ -38,41 +38,45 @@ object EpisodeHero {
         }
       }"""
 
-    def query(episode: Episode): IO[Unit] = {
+    def query(episode: Episode): IO[Unit] =
       for {
         _ <- IO(println(s"EP: $episode"))
         _ <- $.setStateIO(State(episode.some, Pending()))
         //hero <- AppState.Clients.starWars.query[Map[String, String], String](queryDoc, Map("episode" -> episode.toString))
         //hero <- AppState.Clients.starWars.query[Json, String](queryDoc, Json.obj("episode" -> Json.fromString(episode.toString)))
         json <- AppState.Clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
-        _ <- $.modStateIO(State.hero.set(Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))))
+        _ <- $.modStateIO(
+          State.hero.set(
+            Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))
+          )
+        )
       } yield ()
-    }
 
     // val onChange: (ReactEvent, Dropdown.DropdownProps) => Callback =
-      // (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])))
+    // (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])))
 
     val onClickItem: (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
       (_, p) => query(Episode.fromString(p.value.asInstanceOf[String]))
 
-    def render(state: State) = {
+    def render(state: State) =
       <.div(
         Dropdown(
           placeholder = "Select episode...",
-          selection = true,
-          value = state.episode.map(_.toString).orUndefined,
-          options = Episode.all.map{e => 
-            val item = DropdownItem(text = e.toString: VdomNode, value = e.toString, onClickE = onClickItem).cprops
+          selection   = true,
+          value       = state.episode.map(_.toString).orUndefined,
+          options = Episode.all.map { e =>
+            val item = DropdownItem(text = e.toString: VdomNode,
+                                    value    = e.toString,
+                                    onClickE = onClickItem).cprops
             item("key") = e.toString
             item
-          },
+          }
           // onChange = onChange
         ),
         ":",
         state.hero.renderPending(_ => Icon(name = "spinner", loading = true)),
         state.hero.render(h => h: VdomNode)
       )
-    }
   }
 
   private val component =
