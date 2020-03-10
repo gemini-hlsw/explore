@@ -23,7 +23,10 @@ if (process.env.NODE_ENV !== "production") {
       "RefFindNode",
       "Sidebar",
       "Tile",
-      "Button"
+      "Button",
+      "Icon",
+      "DropdownItem",
+      "DropdownMenu"
     ]
   });
 }

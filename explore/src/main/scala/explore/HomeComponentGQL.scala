@@ -13,21 +13,24 @@ import model._
 import explore.todo.ToDos
 import explore.polls.Polls
 import explore.polls.PollsConnectionStatus
+import explore.starwars.EpisodeHero
 
 object HomeComponentGQL {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 6, h = 20, i = "todos"),
-      LayoutItem(x = 6, y = 0, w  = 6, h = 15, i = "polls"),
-      LayoutItem(x = 6, y = 15, w = 6, h = 5, i  = "pollsStatus")
+      LayoutItem(x = 0, y =  0, w = 6, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 6, h =  5, i = "starwars"),
+      LayoutItem(x = 6, y =  0, w = 6, h = 15, i = "polls"),
+      LayoutItem(x = 6, y = 15, w = 6, h =  5, i = "pollsStatus")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 5, h = 20, i = "todos"),
-      LayoutItem(x = 5, y = 0, w  = 5, h = 15, i = "polls"),
-      LayoutItem(x = 5, y = 15, w = 5, h = 5, i  = "pollsStatus")
+      LayoutItem(x = 0, y =  0, w = 5, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 5, h =  5, i = "starwars"),
+      LayoutItem(x = 5, y =  0, w = 5, h = 15, i = "polls"),
+      LayoutItem(x = 5, y = 15, w = 5, h =  5, i = "pollsStatus")
     )
   )
 
@@ -61,6 +64,10 @@ object HomeComponentGQL {
               <.div(^.key := "todos",
                     ^.cls := "tile",
                     Tile(Tile.Props("ToDos"), ToDos(p.todoList))),
+              // Starwars Demo
+              <.div(^.key := "starwars",
+                    ^.cls := "tile",
+                    Tile(Tile.Props("Star Wars"), EpisodeHero())),
               // Polls demo
               <.div(^.key := "polls", ^.cls := "tile", Tile(Tile.Props("Polls"), Polls(p.polls))),
               <.div(^.key := "pollsStatus",
