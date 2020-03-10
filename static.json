@@ -3,5 +3,13 @@
     "clean_urls": false,
     "routes": {
       "/**": "index.html"
+    },
+    "proxies": {
+      "/api/tasks": {
+        "origin": "https://todo-mongo-graphql-server.herokuapp.com"
+      },
+      "/api/grackle-demo": {
+        "origin": "https://${GRACKLE_DEMO_BASE}"
+      }
     }
   }

@@ -37,7 +37,19 @@ const Web = Merge(
       host: "0.0.0.0",
       hot: true,
       contentBase: [__dirname, parts.rootDir],
-      historyApiFallback: true
+      historyApiFallback: true,
+      proxy: {
+        "/api/tasks": {
+          target: "https://todo-mongo-graphql-server.herokuapp.com",
+          pathRewrite: { "^/api/tasks": "" },
+          changeOrigin: true
+        },
+        "/api/grackle-demo": {
+          target: "https://grackle-demo-staging.herokuapp.com",
+          pathRewrite: { "^/api/grackle-demo": "" },
+          changeOrigin: true
+        }
+      }
     },
     plugins: [
       // Needed to enable HMR

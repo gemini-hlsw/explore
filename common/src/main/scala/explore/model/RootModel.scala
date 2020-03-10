@@ -14,6 +14,7 @@ import monocle.macros.Lenses
 import cats.effect.concurrent.Ref
 import japgolly.scalajs.react._
 import diode.data._
+import explore.util.Pot._
 
 @Lenses
 case class RootModel(
@@ -23,58 +24,15 @@ case class RootModel(
   polls:    Pot[List[Poll]]            = Pot.empty
 )
 object RootModel {
-  implicit def potReuse[A: Reusability]: Reusability[Pot[A]] =
-    Reusability((x, y) =>
-      x match {
-        case Empty =>
-          y match {
-            case Empty => true
-            case _     => false
-          }
-        case Unavailable =>
-          y match {
-            case Unavailable => true
-            case _           => false
-          }
-        case Ready(a) =>
-          y match {
-            case Ready(b) => a ~=~ b
-            case _        => false
-          }
-        case Pending(t) =>
-          y match {
-            case Pending(s) => t ~=~ s
-            case _          => false
-          }
-        case PendingStale(a, t) =>
-          y match {
-            case PendingStale(b, s) => a ~=~ b && t ~=~ s
-            case _                  => false
-          }
-        case Failed(e) =>
-          y match {
-            case Failed(f) => e.getMessage ~=~ f.getMessage
-            case _         => false
-          }
-        case FailedStale(a, e) =>
-          y match {
-            case FailedStale(b, f) => a ~=~ b && e.getMessage ~=~ f.getMessage
-            case _                 => false
-          }
-      }
-    )
-
   implicit val filmsReuse: Reusability[TestQuery.AllPersons.Films] = Reusability.derive
   implicit val allPersonsReuse: Reusability[TestQuery.AllPersons]  = Reusability.derive
   implicit val reuse: Reusability[RootModel]                       = Reusability.derive
 }
 
 case class AppConfig(
-  swapiURL: Url = Url.parse("https://api.graph.cool/simple/v1/swapi"),
-  todoURL: Url = Url.parse(
-    "https://cors-anywhere.herokuapp.com/https://todo-mongo-graphql-server.herokuapp.com/"
-  ),
-  pollURL: Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
+  swapiURL: Url = Url.parse("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
+  todoURL:  Url = Url.parse("/api/tasks"),
+  pollURL:  Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
 )
 
 class AppState[F[_]: ConcurrentEffect: Timer](
