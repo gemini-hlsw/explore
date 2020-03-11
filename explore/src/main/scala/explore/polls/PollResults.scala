@@ -16,7 +16,7 @@ import crystal._
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
 import explore.graphql.polls.PollResultsSubscription
-import clue.js.WebSocketGraphQLClient
+import clue.GraphQLStreamingClient
 import diode.data._
 import diode.react.ReactPot._
 
@@ -31,7 +31,7 @@ object PollResults {
 
   final case class State(
     subscription: Option[
-      WebSocketGraphQLClient[IO]#ApolloSubscription[PollResultsSubscription.Data]
+      GraphQLStreamingClient[IO]#Subscription[PollResultsSubscription.Data]
     ] = None,
     renderer: Option[StreamRenderer[Pot[Results]]] = None
   )
@@ -68,7 +68,7 @@ object PollResults {
         )
       }
       .componentWillMount { $ =>
-        AppState.Clients.polls
+        AppState.clients.polls
           .subscribe(PollResultsSubscription)(
             PollResultsSubscription.Variables($.props.pollId).some
           )

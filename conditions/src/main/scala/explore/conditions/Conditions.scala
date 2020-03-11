@@ -19,14 +19,14 @@ import explore.model.AppStateIO._
 object Conditions {
   private def renderButton(forTarget: Target, selected: Option[Target]) = {
     val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
-    Button(onClick = AppState.Views.target.set(Some(forTarget)), color = color)(forTarget.toString)
+    Button(onClick = AppState.views.target.set(Some(forTarget)), color = color)(forTarget.toString)
   }
 
   private def retrievePersons(): IO[Unit] =
     for {
-      persons <- AppState.Actions.persons.query()
+      persons <- AppState.actions.persons.query()
       _ = println(persons)
-      _ <- AppState.Views.persons.set(persons)
+      _ <- AppState.views.persons.set(persons)
     } yield ()
 
   private val component =
@@ -39,7 +39,7 @@ object Conditions {
             Button(color = Blue)("Button", "Btn"),
             Button("Button", "Dec")
           ),
-          AppState.Views.target.streamRender(selected =>
+          AppState.views.target.streamRender(selected =>
             <.div(
               List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
             )

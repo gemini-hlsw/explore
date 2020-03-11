@@ -6,15 +6,18 @@ package explore.model
 import cats.implicits._
 import cats.effect._
 import crystal._
-import clue.js.AjaxGraphQLClient
-import clue.js.WebSocketGraphQLClient
+import clue._
+import clue.js._
 import explore.graphql.TestQuery
 import io.lemonlabs.uri.Url
 import monocle.macros.Lenses
-import cats.effect.concurrent.Ref
 import japgolly.scalajs.react._
 import diode.data._
 import explore.util.Pot._
+import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.log4s.Log4sLogger
+import clue.Backend
+import clue.HttpClient
 
 @Lenses
 case class RootModel(
@@ -35,58 +38,86 @@ case class AppConfig(
   pollURL:  Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
 )
 
-class AppState[F[_]: ConcurrentEffect: Timer](
-  config:        AppConfig,
-  val rootModel: Model[F, RootModel]
+case class Clients[F[_]](
+  starWars: GraphQLClient[F],
+  todo:     GraphQLClient[F],
+  polls:    GraphQLStreamingClient[F]
 ) {
-  object Clients {
-    val starWars = AjaxGraphQLClient(config.swapiURL)
-    val todo     = AjaxGraphQLClient(config.todoURL)
-    val polls    = WebSocketGraphQLClient(config.pollURL)
-  }
+  def close(): F[Unit] =
+    polls.close()
+}
 
-  object Views {
-    lazy val target: View[F, Option[Target]]              = rootModel.view(RootModel.target)
-    lazy val persons: View[F, List[TestQuery.AllPersons]] = rootModel.view(RootModel.persons)
-    lazy val todoList: View[F, Pot[List[Task]]]           = rootModel.view(RootModel.todoList)
-    lazy val polls: View[F, Pot[List[Poll]]]              = rootModel.view(RootModel.polls)
-  }
+case class Views[F[_]](
+  target:   View[F, Option[Target]],
+  persons:  View[F, List[TestQuery.AllPersons]],
+  todoList: View[F, Pot[List[Task]]],
+  polls: View[F, Pot[List[Poll]]]
+)
 
-  object Actions {
-    lazy val persons: PersonsActions[F] = new PersonsActionsInterpreter[F](Clients.starWars)
-    lazy val todoList: TodoListActions[F] =
-      new TodoListActionsInterpreter[F](Views.todoList)(Clients.todo)
-    lazy val polls: PollsActions[F] = new PollsActionsInterpreter[F](Views.polls)(Clients.polls)
-  }
+case class Actions[F[_]](
+  persons:  PersonsActions[F],
+  todoList: TodoListActions[F],
+  polls:    PollsActions[F]
+)
 
+case class ApplicationState[F[_]](
+  rootModel: Model[F, RootModel],
+  clients:   Clients[F],
+  views:     Views[F],
+  actions:   Actions[F]
+)(implicit
+  val cs:    ContextShift[F],
+  val timer: Timer[F]
+) {
   def cleanup(): F[Unit] =
-    // Close the websocket
-    Clients.polls.close()
+    clients.close()
+}
+
+object ApplicationState {
+  def from[F[_]: ConcurrentEffect : ContextShift : Timer : Logger : Backend : StreamingBackend](config: AppConfig): F[ApplicationState[F]] = 
+    for {
+      model       <- Model[F].of(RootModel(target = Some(Target.M81)))
+      swClient    <- HttpClient.of(config.swapiURL)
+      todoClient  <- HttpClient.of(config.todoURL)
+      pollsClient <- ApolloStreamingClient.of(config.pollURL)
+      clients     = Clients(
+                      swClient,
+                      todoClient,
+                      pollsClient
+                    )
+      views       = Views(
+                      model.view(RootModel.target),
+                      model.view(RootModel.persons),
+                      model.view(RootModel.todoList),
+                      model.view(RootModel.polls)
+                    )
+      actions     = Actions(
+                      new PersonsActionsInterpreter[F](clients.starWars),
+                      new TodoListActionsInterpreter[F](views.todoList)(clients.todo),
+                      new PollsActionsInterpreter[F](views.polls)(pollsClient)
+                    )
+    } yield {
+      ApplicationState[F](model, clients, views, actions)
+    }
 }
 
 object AppStateIO {
-  import scala.concurrent.ExecutionContext.global
+  private var value: ApplicationState[IO] = null
 
-  implicit lazy val timerIO: Timer[IO]     = cats.effect.IO.timer(global)
-  implicit lazy val csIO: ContextShift[IO] = IO.contextShift(global)
+  def AppState: ApplicationState[IO] = Option(value).getOrElse(throw new Exception("Uninitialized AppState!"))
 
-  private val value: Ref[SyncIO, Option[AppState[IO]]] =
-    Ref.unsafe[SyncIO, Option[AppState[IO]]](None)
+  implicit def csIO: ContextShift[IO] = AppState.cs
 
-  def init(config: AppConfig): SyncIO[Unit] =
-    value.access.flatMap {
-      case (oldValue, set) =>
-        val multipleCallsError =
-          SyncIO.raiseError[Unit](new Exception("Multiple calls to AppState init."))
+  implicit def timerIO: Timer[IO] = AppState.timer
 
-        oldValue.fold(
-          for {
-            model   <- Model.in[SyncIO, IO].of(RootModel(target = Some(Target.M81)))
-            success <- set(new AppState[IO](config, model).some)
-            _       <- if (success) SyncIO.unit else multipleCallsError
-          } yield ()
-        )(_ => multipleCallsError)
-    }
+  def init(config: AppConfig)(implicit timerIO: Timer[IO], csIO: ContextShift[IO]): IO[ApplicationState[IO]] =
+    Option(value).fold{
+      implicit val logger: Logger[IO] = Log4sLogger.createLocal[IO] // Must be here since it needs ContextShift[IO]
 
-  def AppState = value.get.unsafeRunSync().getOrElse(throw new Exception("Uninitialized AppState."))
+      implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
+
+      implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
+
+      ApplicationState.from[IO](config).flatTap(appState => IO{value = appState})
+    }(_ => IO.raiseError(new Exception("Multiple calls to AppState init.")))
 }

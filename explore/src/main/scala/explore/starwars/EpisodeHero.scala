@@ -43,11 +43,10 @@ object EpisodeHero {
 
     def query(episode: Episode): IO[Unit] =
       for {
-        _ <- IO(println(s"EP: $episode"))
         _ <- $.setStateIO(State(episode.some, Pending()))
         //hero <- AppState.Clients.starWars.query[Map[String, String], String](queryDoc, Map("episode" -> episode.toString))
         //hero <- AppState.Clients.starWars.query[Json, String](queryDoc, Json.obj("episode" -> Json.fromString(episode.toString)))
-        json <- AppState.Clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
+        json <- AppState.clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
         _ <- $.modStateIO(
           State.hero.set(
             Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))

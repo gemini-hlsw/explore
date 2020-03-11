@@ -10,7 +10,6 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.colors._
 import react.semanticui.SemanticColor
 import react.common._
-import explore.model._
 import explore.model.AppStateIO._
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
@@ -19,7 +18,7 @@ import clue.StreamingClientStatus
 object PollsConnectionStatus {
 
   private val pollConnectionStatus =
-    StreamRenderer.build(AppState.Clients.polls.statusStream, Reusability.derive)
+    StreamRenderer.build(AppState.clients.polls.statusStream, Reusability.derive)
 
   private def statusColor(s: StreamingClientStatus): SemanticColor =
     s match {
@@ -39,7 +38,7 @@ object PollsConnectionStatus {
           ),
           Button(
             negative = true,
-            onClick  = AppState.Clients.polls.close()
+            onClick  = AppState.clients.polls.close()
           )("Close Connection")
         )
       }

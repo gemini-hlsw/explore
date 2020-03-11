@@ -44,7 +44,7 @@ object HomeComponent {
     )
 
   private val pollConnectionStatus =
-    StreamRenderer.build(AppState.Clients.polls.statusStream, Reusability.derive)
+    StreamRenderer.build(AppState.clients.polls.statusStream, Reusability.derive)
 
   val component =
     ScalaComponent
@@ -73,7 +73,7 @@ object HomeComponent {
                   Tile.Props("Target Position"),
                   <.span(
                     pollConnectionStatus(status => <.div(s"Poll connection is: $status")),
-                    Button(onClick = AppState.Clients.polls.close())("Close Connection")
+                    Button(onClick = AppState.clients.polls.close())("Close Connection")
                   ),
                   Polls(p.polls),
                   ToDos(p.todoList),

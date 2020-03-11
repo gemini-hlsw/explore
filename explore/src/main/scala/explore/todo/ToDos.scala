@@ -31,10 +31,10 @@ object ToDos {
   class Backend() {
 
     val onMount: Callback =
-      AppState.Actions.todoList.refresh
+      AppState.actions.todoList.refresh
 
     def toggle(id: String): IO[Unit] =
-      AppState.Actions.todoList.toggle(id)
+      AppState.actions.todoList.toggle(id)
 
     def render(p: Props) =
       <.div(
