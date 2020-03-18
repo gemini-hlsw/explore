@@ -11,7 +11,6 @@ import react.semanticui.modules.sidebar._
 import react.semanticui.collections.menu._
 import react.semanticui.As
 import react.common._
-import react.common.gProps2VdomNodePC
 
 final case class OTLayout(c: RouterCtl[Page], r: Resolution[Page])(val model: RootModel)
     extends ReactProps {

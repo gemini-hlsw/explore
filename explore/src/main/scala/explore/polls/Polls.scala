@@ -60,7 +60,7 @@ object Polls {
                         compact  = true,
                         disabled = disabled,
                         onClick = castingOn(poll.id)
-                          .flatMap(_ => AppState.Actions.polls.vote(option.id))
+                          .flatMap(_ => AppState.actions.polls.vote(option.id))
                       )(option.text)
                     )
                   },
@@ -80,7 +80,7 @@ object Polls {
       .builder[Props]("Polls")
       .initialState(State())
       .renderBackend[Backend]
-      .componentWillMount(_ => AppState.Actions.polls.refresh)
+      .componentWillMount(_ => AppState.actions.polls.refresh)
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

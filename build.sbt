@@ -55,9 +55,9 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "common" % "0.5.2",
-      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.3.1",
-      "io.github.cquiroz.react" %%% "react-sizeme" % "0.2.1"
+      "io.github.cquiroz.react" %%% "common" % "0.6.5",
+      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.4.0",
+      "io.github.cquiroz.react" %%% "react-sizeme" % "0.3.1"
     ),
     // don't publish the demo
     publish := {},
@@ -84,11 +84,11 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "org.typelevel" %%% "cats-core" % "2.1.1",
     "io.chrisdavenport" %%% "log4cats-core" % "1.0.1",
     "io.chrisdavenport" %%% "log4cats-log4s" % "0.4.0-M1",
-    "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.3.5",
+    "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.1",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
     "com.rpiaggio" %%% "crystal" % "0.0.22",
-    "com.rpiaggio" %%% "clue-scalajs" % "0.0.4",
+    "com.rpiaggio" %%% "clue-scalajs" % "0.0.5",
     "io.circe" %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku" %%% "diode-data" % "1.1.7",
     "io.suzaku" %%% "diode-react" % "1.1.7.160"

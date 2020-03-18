@@ -32,7 +32,7 @@ object Tpe {
         <.div(
           ^.height := 28.pc
         )(
-          AppState.Views.persons.streamRender(persons => <.div(persons.toString))
+          AppState.views.persons.streamRender(persons => <.div(persons.toString))
         )
       }
       .configure(Reusability.shouldComponentUpdate)

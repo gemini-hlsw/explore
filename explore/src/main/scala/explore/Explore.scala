@@ -18,24 +18,23 @@ object ExploreMain extends IOApp {
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
 
-  override def run(args: List[String]): IO[ExitCode] = IO {
+  override def run(args: List[String]): IO[ExitCode] =
+    AppStateIO.init(AppConfig()).map { appState =>
+      val container = Option(dom.document.getElementById("root")).getOrElse {
+        val elem = dom.document.createElement("div")
+        elem.id = "root"
+        dom.document.body.appendChild(elem)
+        elem
+      }
 
-    val container = Option(dom.document.getElementById("root")).getOrElse {
-      val elem = dom.document.createElement("div")
-      elem.id = "root"
-      dom.document.body.appendChild(elem)
-      elem
+      val routing = new Routing(appState.rootModel.view())
+
+      val router = Router(BaseUrl.fromWindowOrigin, routing.config)
+
+      router().renderIntoDOM(container)
+
+      ExitCode.Success
     }
-
-    AppStateIO.init(AppConfig()).unsafeRunSync()
-    val routing = new Routing(AppStateIO.AppState.rootModel.view())
-
-    val router = Router(BaseUrl.fromWindowOrigin, routing.config)
-
-    router().renderIntoDOM(container)
-
-    ExitCode.Success
-  }
 
   @JSExport
   def stop(): Unit =
