@@ -67,11 +67,13 @@ object EpisodeHero {
           selection   = true,
           value       = state.episode.map(_.toString).orUndefined,
           options = Episode.all.map { e =>
-            val item = DropdownItem(text = e.toString: VdomNode,
-                                    value    = e.toString,
-                                    onClickE = onClickItem).cprops
-            item("key") = e.toString
-            item
+            DropdownItem(
+              text     = e.toString,
+              value    = e.toString,
+              onClickE = onClickItem
+            )(
+              ^.key := e.toString
+            )
           }
           // onChange = onChange
         ),

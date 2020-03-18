@@ -18,16 +18,15 @@ object ExploreMain extends IOApp {
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
 
-  override def run(args: List[String]): IO[ExitCode] = 
-    AppStateIO.init(AppConfig()).map{ appState =>
-
+  override def run(args: List[String]): IO[ExitCode] =
+    AppStateIO.init(AppConfig()).map { appState =>
       val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)
         elem
       }
-    
+
       val routing = new Routing(appState.rootModel.view())
 
       val router = Router(BaseUrl.fromWindowOrigin, routing.config)

@@ -51,7 +51,7 @@ case class Views[F[_]](
   target:   View[F, Option[Target]],
   persons:  View[F, List[TestQuery.AllPersons]],
   todoList: View[F, Pot[List[Task]]],
-  polls: View[F, Pot[List[Poll]]]
+  polls:    View[F, Pot[List[Poll]]]
 )
 
 case class Actions[F[_]](
@@ -65,7 +65,8 @@ case class ApplicationState[F[_]](
   clients:   Clients[F],
   views:     Views[F],
   actions:   Actions[F]
-)(implicit
+)(
+  implicit
   val cs:    ContextShift[F],
   val timer: Timer[F]
 ) {
@@ -74,28 +75,30 @@ case class ApplicationState[F[_]](
 }
 
 object ApplicationState {
-  def from[F[_]: ConcurrentEffect : ContextShift : Timer : Logger : Backend : StreamingBackend](config: AppConfig): F[ApplicationState[F]] = 
+  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: StreamingBackend](
+    config: AppConfig
+  ): F[ApplicationState[F]] =
     for {
       model       <- Model[F].of(RootModel(target = Some(Target.M81)))
       swClient    <- HttpClient.of(config.swapiURL)
       todoClient  <- HttpClient.of(config.todoURL)
       pollsClient <- ApolloStreamingClient.of(config.pollURL)
-      clients     = Clients(
-                      swClient,
-                      todoClient,
-                      pollsClient
-                    )
-      views       = Views(
-                      model.view(RootModel.target),
-                      model.view(RootModel.persons),
-                      model.view(RootModel.todoList),
-                      model.view(RootModel.polls)
-                    )
-      actions     = Actions(
-                      new PersonsActionsInterpreter[F](clients.starWars),
-                      new TodoListActionsInterpreter[F](views.todoList)(clients.todo),
-                      new PollsActionsInterpreter[F](views.polls)(pollsClient)
-                    )
+      clients = Clients(
+        swClient,
+        todoClient,
+        pollsClient
+      )
+      views = Views(
+        model.view(RootModel.target),
+        model.view(RootModel.persons),
+        model.view(RootModel.todoList),
+        model.view(RootModel.polls)
+      )
+      actions = Actions(
+        new PersonsActionsInterpreter[F](clients.starWars),
+        new TodoListActionsInterpreter[F](views.todoList)(clients.todo),
+        new PollsActionsInterpreter[F](views.polls)(pollsClient)
+      )
     } yield {
       ApplicationState[F](model, clients, views, actions)
     }
@@ -104,20 +107,24 @@ object ApplicationState {
 object AppStateIO {
   private var value: ApplicationState[IO] = null
 
-  def AppState: ApplicationState[IO] = Option(value).getOrElse(throw new Exception("Uninitialized AppState!"))
+  def AppState: ApplicationState[IO] =
+    Option(value).getOrElse(throw new Exception("Uninitialized AppState!"))
 
   implicit def csIO: ContextShift[IO] = AppState.cs
 
   implicit def timerIO: Timer[IO] = AppState.timer
 
-  def init(config: AppConfig)(implicit timerIO: Timer[IO], csIO: ContextShift[IO]): IO[ApplicationState[IO]] =
-    Option(value).fold{
-      implicit val logger: Logger[IO] = Log4sLogger.createLocal[IO] // Must be here since it needs ContextShift[IO]
+  def init(
+    config:           AppConfig
+  )(implicit timerIO: Timer[IO], csIO: ContextShift[IO]): IO[ApplicationState[IO]] =
+    Option(value).fold {
+      implicit val logger
+        : Logger[IO] = Log4sLogger.createLocal[IO] // Must be here since it needs ContextShift[IO]
 
       implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
 
       implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
-      ApplicationState.from[IO](config).flatTap(appState => IO{value = appState})
+      ApplicationState.from[IO](config).flatTap(appState => IO { value = appState })
     }(_ => IO.raiseError(new Exception("Multiple calls to AppState init.")))
 }

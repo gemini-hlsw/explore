@@ -9,7 +9,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.extra.router._
 import react.semanticui.collections.menu._
 import react.common._
-import react.common.gProps2VdomNodePC
 
 final case class OTLayoutGQL(c: RouterCtl[Page], r: Resolution[Page])(val model: RootModel)
     extends ReactProps {
