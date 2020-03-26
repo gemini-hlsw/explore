@@ -21,10 +21,16 @@ addCommandAlias(
 )
 
 // For Heroku deployment
-addCommandAlias(
-  "stage",
-  "explore/fullOptJS::webpack"
-)
+val stage = taskKey[Unit]("Stage and clean task")
+
+stage := {
+  (explore / Compile / fullOptJS / webpack).value
+  if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
+    println("Cleaning up...")
+    val bundlerDir = (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
+    sbt.IO.delete(bundlerDir)
+  }
+}
 
 lazy val root =
   project

@@ -36,6 +36,7 @@ const Web = Merge(
       explore: [path.resolve(parts.localResourcesDir, "./prod.js")]
     },
     output: {
+      path: parts.stageDir,
       filename: ci ? "[name].js" : "[name].[chunkhash].js",
       publicPath: "/" // Required to make url navigation work
     },
