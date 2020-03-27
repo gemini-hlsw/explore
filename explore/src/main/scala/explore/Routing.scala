@@ -26,11 +26,11 @@ class Routing(modelView: View[IO, RootModel]) {
 
     (
       staticRoute(root, HomePage) ~>
-        render(WithModel(HomeComponentGQL.component(_)))
+        render(WithModel(HomeComponent.component(_)))
     ).notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
       .renderWith(layout)
       .logToConsole
   }
 
-  private def layout(c: RouterCtl[Page], r: Resolution[Page]) = WithModel(OTLayoutGQL(c, r)(_))
+  private def layout(c: RouterCtl[Page], r: Resolution[Page]) = WithModel(OTLayout(c, r)(_))
 }
