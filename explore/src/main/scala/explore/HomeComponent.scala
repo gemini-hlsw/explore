@@ -3,7 +3,7 @@
 
 package explore
 
-import explore.conditions.Conditions
+import explore.conditions.ConditionsPanel
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
@@ -17,6 +17,9 @@ import explore.polls.Polls
 import explore.model.AppStateIO._
 import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -64,7 +67,9 @@ object HomeComponent {
               onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
               layouts          = layouts
             )(
-              <.div(^.key := "tpe",    ^.cls := "tile", Tile(Tile.Props("Conditions"), Conditions())),
+              <.div(^.key := "tpe",    ^.cls := "tile", Tile(Tile.Props("Conditions"), 
+                ConditionsPanel(Observation.Id(ProgramId.Science.fromString.getOption("Program").get, Index.One))
+              )),
               <.div(^.key := "coords", ^.cls := "tile", Tile(Tile.Props("Coordinates"), Imag())),
               <.div(
                 ^.key := "doc",
