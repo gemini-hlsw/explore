@@ -8,7 +8,6 @@ import cats.effect._
 import crystal._
 import clue._
 import clue.js._
-import explore.graphql.TestQuery
 import io.lemonlabs.uri.Url
 import monocle.macros.Lenses
 import japgolly.scalajs.react._
@@ -22,13 +21,10 @@ import clue.HttpClient
 @Lenses
 case class RootModel(
   target:   Option[Target]             = None,
-  persons:  List[TestQuery.AllPersons] = List.empty,
   todoList: Pot[List[Task]]            = Pot.empty,
   polls:    Pot[List[Poll]]            = Pot.empty
 )
 object RootModel {
-  implicit val filmsReuse: Reusability[TestQuery.AllPersons.Films] = Reusability.derive
-  implicit val allPersonsReuse: Reusability[TestQuery.AllPersons]  = Reusability.derive
   implicit val reuse: Reusability[RootModel]                       = Reusability.derive
 }
 
@@ -49,13 +45,11 @@ case class Clients[F[_]](
 
 case class Views[F[_]](
   target:   View[F, Option[Target]],
-  persons:  View[F, List[TestQuery.AllPersons]],
   todoList: View[F, Pot[List[Task]]],
   polls:    View[F, Pot[List[Poll]]]
 )
 
 case class Actions[F[_]](
-  persons:  PersonsActions[F],
   todoList: TodoListActions[F],
   polls:    PollsActions[F]
 )
@@ -90,12 +84,10 @@ object ApplicationState {
       )
       views = Views(
         model.view(RootModel.target),
-        model.view(RootModel.persons),
         model.view(RootModel.todoList),
         model.view(RootModel.polls)
       )
       actions = Actions(
-        new PersonsActionsInterpreter[F](clients.starWars),
         new TodoListActionsInterpreter[F](views.todoList)(clients.todo),
         new PollsActionsInterpreter[F](views.polls)(pollsClient)
       )

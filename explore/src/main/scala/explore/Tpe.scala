@@ -6,9 +6,15 @@ package explore
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import scala.scalajs.js
+import js.JSConverters._
+import js.UndefOr._
 import model.Target
 import react.common._
 import explore.model._
+import explore.model.AppStateIO._
+import react.semanticui.elements.button.Button
+import react.semanticui.colors._
+import crystal.react.io.implicits._
 import explore.model.AppStateIO._
 
 final case class Tpe(target: Target) extends ReactProps {
@@ -25,14 +31,27 @@ object Tpe {
     var target: String
   }
 
+  private def renderButton(forTarget: Target, selected: Option[Target]) = {
+    val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
+    Button(onClick = AppState.views.target.set(Some(forTarget)), color = color)(forTarget.toString)
+  }
+
   private val component =
     ScalaComponent
       .builder[Props]("TPE")
       .render { _ =>
         <.div(
-          ^.height := 28.pc
-        )(
-          AppState.views.persons.streamRender(persons => <.div(persons.toString))
+          ^.height := 28.pc,
+          <.div(
+            Button("IQ"),
+            Button(color = Blue)("Button", "Btn"),
+            Button("Button", "Dec")
+          ),
+          AppState.views.target.streamRender(selected =>
+            <.div(
+              List(Target.M81, Target.M51).toTagMod(target => renderButton(target, selected))
+            )
+          )
         )
       }
       .configure(Reusability.shouldComponentUpdate)
