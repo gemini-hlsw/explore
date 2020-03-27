@@ -25,10 +25,16 @@ val stage = taskKey[Unit]("Stage and clean task")
 
 stage := {
   (explore / Compile / fullOptJS / webpack).value
+  // https://devcenter.heroku.com/articles/reducing-the-slug-size-of-play-2-x-applications#using-sbt-to-clean-build-artifacts
+  // If needed, caches can be purged manually: https://thoughtbot.com/blog/how-to-reduce-a-large-heroku-compiled-slug-size
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
+    // Remove sbt-scalajs-bundler directory, which includes node_modules.
     val bundlerDir = (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
     sbt.IO.delete(bundlerDir)
+    // Remove coursier cache
+    val coursierCacheDir = csrCacheDirectory.value
+    sbt.IO.delete(coursierCacheDir)
   }
 }
 
