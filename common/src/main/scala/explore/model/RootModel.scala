@@ -20,24 +20,26 @@ import clue.HttpClient
 
 @Lenses
 case class RootModel(
-  target:   Option[Target]             = None,
-  todoList: Pot[List[Task]]            = Pot.empty,
-  polls:    Pot[List[Poll]]            = Pot.empty
+  target:   Option[Target]  = None,
+  todoList: Pot[List[Task]] = Pot.empty,
+  polls:    Pot[List[Poll]] = Pot.empty
 )
 object RootModel {
-  implicit val reuse: Reusability[RootModel]                       = Reusability.derive
+  implicit val reuse: Reusability[RootModel] = Reusability.derive
 }
 
 case class AppConfig(
-  swapiURL: Url = Url.parse("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
-  todoURL:  Url = Url.parse("/api/tasks"),
-  pollURL:  Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
+  conditionsURL: Url = Url.parse("wss://explore-hasura.herokuapp.com/v1/graphql"), // How to do websockets through proxy?
+  swapiURL:      Url = Url.parse("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
+  todoURL:       Url = Url.parse("/api/tasks"),
+  pollURL:       Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
 )
 
 case class Clients[F[_]](
-  starWars: GraphQLClient[F],
-  todo:     GraphQLClient[F],
-  polls:    GraphQLStreamingClient[F]
+  conditions: GraphQLStreamingClient[F],
+  starWars:   GraphQLClient[F],
+  todo:       GraphQLClient[F],
+  polls:      GraphQLStreamingClient[F]
 ) {
   def close(): F[Unit] =
     polls.close()
@@ -73,11 +75,13 @@ object ApplicationState {
     config: AppConfig
   ): F[ApplicationState[F]] =
     for {
-      model       <- Model[F].of(RootModel(target = Some(Target.M81)))
-      swClient    <- HttpClient.of(config.swapiURL)
-      todoClient  <- HttpClient.of(config.todoURL)
-      pollsClient <- ApolloStreamingClient.of(config.pollURL)
+      model            <- Model[F].of(RootModel(target = Some(Target.M81)))
+      conditionsClient <- ApolloStreamingClient.of(config.conditionsURL)
+      swClient         <- HttpClient.of(config.swapiURL)
+      todoClient       <- HttpClient.of(config.todoURL)
+      pollsClient      <- ApolloStreamingClient.of(config.pollURL)
       clients = Clients(
+        conditionsClient,
         swClient,
         todoClient,
         pollsClient
