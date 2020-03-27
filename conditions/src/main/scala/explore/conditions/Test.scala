@@ -28,7 +28,9 @@ object Test extends IOApp {
       elem
     }
 
-    ConditionsPanel(Observation.Id(ProgramId.Science.fromString.getOption("Program").get, Index.One)).renderIntoDOM(container)
+    ConditionsPanel(
+      Observation.Id(ProgramId.Science.fromString.getOption("Program").get, Index.One)
+    ).renderIntoDOM(container)
 
     ExitCode.Success
   }

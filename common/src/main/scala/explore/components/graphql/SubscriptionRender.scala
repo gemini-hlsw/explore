@@ -19,7 +19,7 @@ final case class SubscriptionRender[D](
   subscribe: IO[GraphQLStreamingClient[IO]#Subscription[D]]
 )(
   val valueRender: D => VdomNode,
-  val onNewData: IO[Unit] = IO.unit
+  val onNewData:   IO[Unit] = IO.unit
 )(
   implicit val cs: ContextShift[IO]
 ) extends ReactProps {
@@ -43,15 +43,13 @@ object SubscriptionRender {
     ScalaComponent
       .builder[Props[D]]("PollResults")
       .initialState(State[D]())
-      .render{ $ =>
+      .render { $ =>
         <.div(
           $.state.renderer.whenDefined(
             _ { resultsPot =>
               <.div(
                 resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                resultsPot.render { results =>
-                  $.props.valueRender(results)
-                }
+                resultsPot.render(results => $.props.valueRender(results))
               )
             }
           )
