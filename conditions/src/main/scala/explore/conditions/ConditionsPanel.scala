@@ -26,6 +26,8 @@ import cats.Show
 import gem.util.Enumerated
 import io.circe.HCursor
 import io.circe.DecodingFailure
+import io.circe.JsonObject
+import crystal.react.io.implicits._
 
 /*
 query {
@@ -123,6 +125,37 @@ object ConditionsPanel {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
+  private object Mutation extends GraphQLQuery {
+    val document = """
+      mutation ($observationId: String, $fields: conditions_set_input){
+        update_conditions(_set: $fields, where: {
+          observation_id: {
+            _eq: $observationId
+          }
+        }) {
+          affected_rows
+        }
+      }
+    """
+
+    case class Fields(
+      cloud_cover: Option[String] = None,
+      image_quality: Option[String] = None,
+      sky_background: Option[String] = None,
+      water_vapor: Option[String] = None
+    )
+    object Fields { implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues) }
+
+    case class Variables(observationId: String, fields: Fields)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
+
+    case class Data(update_conditions: JsonObject) // We are ignoring affected_rows
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
+
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  }
+
   implicit val showSkyBackground: Show[SkyBackground] =
     Show.show(_.label)
 
@@ -135,10 +168,17 @@ object ConditionsPanel {
   implicit val showImageQuality: Show[ImageQuality] =
     Show.show(_.label)
 
-  private def iqChanged(iq: ImageQuality) = Callback(println(iq))
-  private def ccChanged(cc: CloudCover) = Callback(println(cc))
-  private def wvChanged(wv: WaterVapor) = Callback(println(wv))
-  private def sbChanged(sb: SkyBackground) = Callback(println(sb))
+  private def mutate(observationId: Observation.Id, fields: Mutation.Fields): Callback =
+    AppState.clients.conditions.query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+
+  private def iqChanged(observationId: Observation.Id)(iq: ImageQuality) = 
+    mutate(observationId, Mutation.Fields(image_quality = Enumerated[ImageQuality].tag(iq).some))
+  private def ccChanged(observationId: Observation.Id)(cc: CloudCover) =
+    mutate(observationId, Mutation.Fields(cloud_cover = Enumerated[CloudCover].tag(cc).some))
+  private def wvChanged(observationId: Observation.Id)(wv: WaterVapor) =
+    mutate(observationId, Mutation.Fields(water_vapor = Enumerated[WaterVapor].tag(wv).some))
+  private def sbChanged(observationId: Observation.Id)(sb: SkyBackground) =
+    mutate(observationId, Mutation.Fields(sky_background = Enumerated[SkyBackground].tag(sb).some))
 
   protected val component =
     ScalaComponent
@@ -159,24 +199,24 @@ object ConditionsPanel {
                                             conditions.iq.some,
                                             "Select",
                                             disabled = false,
-                                            iqChanged),
+                                            iqChanged($.props.observationId)),
                     EnumSelect[CloudCover]("Cloud Cover",
                                           conditions.cc.some,
                                           "Select",
                                           disabled = false,
-                                          ccChanged)
+                                          ccChanged($.props.observationId))
                   ),
                   FormGroup(widths = Two)(
                     EnumSelect[WaterVapor]("Water Vapor",
                                           conditions.wv.some,
                                           "Select",
                                           disabled = false,
-                                          wvChanged),
+                                          wvChanged($.props.observationId)),
                     EnumSelect[SkyBackground]("Sky Background",
                                               conditions.sb.some,
                                               "Select",
                                               disabled = false,
-                                              sbChanged)
+                                              sbChanged($.props.observationId))
                   )            
                 )
               )
