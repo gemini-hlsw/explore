@@ -9,6 +9,9 @@ import cats.effect.IOApp
 import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
 
 @JSExportTopLevel("Test")
 object Test extends IOApp {
@@ -25,7 +28,7 @@ object Test extends IOApp {
       elem
     }
 
-    Conditions().renderIntoDOM(container)
+    ConditionsPanel(Observation.Id(ProgramId.Science.fromString.getOption("Program").get, Index.One)).renderIntoDOM(container)
 
     ExitCode.Success
   }
