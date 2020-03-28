@@ -39,11 +39,12 @@ const Web = Merge(
       contentBase: [__dirname, parts.rootDir],
       historyApiFallback: true,
       proxy: {
-        "/api/conditions": {
-          target: "https://explore-hasura.herokuapp.com",
+        /*"/api/conditions": {
+          target: "wss://explore-hasura.herokuapp.com",
           pathRewrite: { "^/api/conditions": "" },
-          changeOrigin: true
-        },
+          changeOrigin: true,
+          ws: true
+        },*/
         "/api/tasks": {
           target: "https://todo-mongo-graphql-server.herokuapp.com",
           pathRewrite: { "^/api/tasks": "" },
