@@ -26,9 +26,9 @@ object HomeComponent {
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 5, h  = 8, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w = 5, h  = 8, i = "coords"),
-      LayoutItem(x = 0, y = 8, w = 10, h = 6, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w  = 5, h  = 10, i = "tpe"),
+      LayoutItem(x = 6, y = 0, w  = 5, h  = 10, i = "coords"),
+      LayoutItem(x = 0, y = 10, w = 10, h = 6, i  = "doc", isDraggable = false)
     )
   )
 

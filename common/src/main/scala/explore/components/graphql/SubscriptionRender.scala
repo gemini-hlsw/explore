@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.components.graphql
 
 import japgolly.scalajs.react._
@@ -23,7 +26,8 @@ final case class SubscriptionRender[D](
 )(
   implicit val cs: ContextShift[IO]
 ) extends ReactProps {
-  override def render: VdomElement = SubscriptionRender.component[D](this)
+  override def render: VdomElement =
+    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender[Any]])
 }
 
 object SubscriptionRender {
@@ -39,7 +43,7 @@ object SubscriptionRender {
   implicit def propsReuse[D]: Reusability[Props[D]] = Reusability.always
   implicit def stateReuse[D]: Reusability[State[D]] = Reusability.never
 
-  protected def component[D] =
+  protected def componentBuilder[D] =
     ScalaComponent
       .builder[Props[D]]("PollResults")
       .initialState(State[D]())
@@ -78,4 +82,6 @@ object SubscriptionRender {
       .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty)
       .configure(Reusability.shouldComponentUpdate)
       .build
+
+  val component = componentBuilder[Any]
 }

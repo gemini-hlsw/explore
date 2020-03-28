@@ -36,16 +36,6 @@ query {
   }
 }
 
-subscription MyQuery {
-  conditions(where: {observation_id: {_eq: "368e5b67-6c1e-4d77-8547-ef16766802fd"}}) {
-    observation_id
-    cloud_cover
-    image_quality
-    sky_background
-    water_vapor
-  }
-}
-
 mutation {
   insert_conditions(objects: [{
     observation_id: "368e5b67-6c1e-4d77-8547-ef16766802fe",
@@ -57,23 +47,7 @@ mutation {
     affected_rows
   }
 }
-
-mutation {
-  update_conditions(_set: {
-    cloud_cover: "Percent50",
-    image_quality: "Any",
-    sky_background: "Any",
-    water_vapor:"Any"
-  }, where: {
-    observation_id: {
-      _eq: "368e5b67-6c1e-4d77-8547-ef16766802fd"
-    }
-  }) {
-    affected_rows
-  }
-}
-
-*/
+ */
 
 final case class ConditionsPanel(
   observationId: Observation.Id
@@ -84,22 +58,27 @@ final case class ConditionsPanel(
 object ConditionsPanel {
   type Props = ConditionsPanel
 
-  implicit def enumDecoder[E : Enumerated]: Decoder[E] = new Decoder[E] {
+  implicit def enumDecoder[E: Enumerated]: Decoder[E] = new Decoder[E] {
     final def apply(c: HCursor): Decoder.Result[E] =
       // TODO Obtain the failure CursorOp list from c.
-      c.as[String].flatMap(s => Enumerated[E].fromTag(s).toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty)))
+      c.as[String]
+        .flatMap(s =>
+          Enumerated[E]
+            .fromTag(s)
+            .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
+        )
   }
   implicit val conditionsDecoder = new Decoder[Conditions] {
-  final def apply(c: HCursor): Decoder.Result[Conditions] =
-    for {
-      cc <- c.downField("cloud_cover").as[CloudCover]
-      iq <- c.downField("image_quality").as[ImageQuality]
-      sb <- c.downField("sky_background").as[SkyBackground]
-      wv <- c.downField("water_vapor").as[WaterVapor]
-    } yield {
-      Conditions(cc, iq, sb, wv)
-    }
-}
+    final def apply(c: HCursor): Decoder.Result[Conditions] =
+      for {
+        cc <- c.downField("cloud_cover").as[CloudCover]
+        iq <- c.downField("image_quality").as[ImageQuality]
+        sb <- c.downField("sky_background").as[SkyBackground]
+        wv <- c.downField("water_vapor").as[WaterVapor]
+      } yield {
+        Conditions(cc, iq, sb, wv)
+      }
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.observationId.format)
 
@@ -139,12 +118,14 @@ object ConditionsPanel {
     """
 
     case class Fields(
-      cloud_cover: Option[String] = None,
-      image_quality: Option[String] = None,
+      cloud_cover:    Option[String] = None,
+      image_quality:  Option[String] = None,
       sky_background: Option[String] = None,
-      water_vapor: Option[String] = None
+      water_vapor:    Option[String] = None
     )
-    object Fields { implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues) }
+    object Fields {
+      implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
+    }
 
     case class Variables(observationId: String, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
@@ -169,9 +150,10 @@ object ConditionsPanel {
     Show.show(_.label)
 
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields): Callback =
-    AppState.clients.conditions.query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+    AppState.clients.conditions
+      .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
 
-  private def iqChanged(observationId: Observation.Id)(iq: ImageQuality) = 
+  private def iqChanged(observationId: Observation.Id)(iq: ImageQuality) =
     mutate(observationId, Mutation.Fields(image_quality = Enumerated[ImageQuality].tag(iq).some))
   private def ccChanged(observationId: Observation.Id)(cc: CloudCover) =
     mutate(observationId, Mutation.Fields(cloud_cover = Enumerated[CloudCover].tag(cc).some))
@@ -189,39 +171,39 @@ object ConditionsPanel {
             .subscribe(Subscription)(
               Subscription.Variables($.props.observationId.format).some
             )
-        )(
-          data =>
-            <.div(
-              data.conditions.headOption.whenDefined( conditions =>
-                Form(
-                  FormGroup(widths = Two)(
-                    EnumSelect[ImageQuality]("Image Quality",
-                                            conditions.iq.some,
+        )(data =>
+          <.div(
+            data.conditions.headOption.whenDefined(conditions =>
+              Form(
+                FormGroup(widths = Two)(
+                  EnumSelect[ImageQuality]("Image Quality",
+                                           conditions.iq.some,
+                                           "Select",
+                                           disabled = false,
+                                           iqChanged($.props.observationId)),
+                  EnumSelect[CloudCover]("Cloud Cover",
+                                         conditions.cc.some,
+                                         "Select",
+                                         disabled = false,
+                                         ccChanged($.props.observationId))
+                ),
+                FormGroup(widths = Two)(
+                  EnumSelect[WaterVapor]("Water Vapor",
+                                         conditions.wv.some,
+                                         "Select",
+                                         disabled = false,
+                                         wvChanged($.props.observationId)),
+                  EnumSelect[SkyBackground]("Sky Background",
+                                            conditions.sb.some,
                                             "Select",
                                             disabled = false,
-                                            iqChanged($.props.observationId)),
-                    EnumSelect[CloudCover]("Cloud Cover",
-                                          conditions.cc.some,
-                                          "Select",
-                                          disabled = false,
-                                          ccChanged($.props.observationId))
-                  ),
-                  FormGroup(widths = Two)(
-                    EnumSelect[WaterVapor]("Water Vapor",
-                                          conditions.wv.some,
-                                          "Select",
-                                          disabled = false,
-                                          wvChanged($.props.observationId)),
-                    EnumSelect[SkyBackground]("Sky Background",
-                                              conditions.sb.some,
-                                              "Select",
-                                              disabled = false,
-                                              sbChanged($.props.observationId))
-                  )            
+                                            sbChanged($.props.observationId))
                 )
               )
             )
+          )
         )
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

@@ -8,7 +8,8 @@ import cats.effect._
 import crystal._
 import clue._
 import clue.js._
-import io.lemonlabs.uri.Url
+import sttp.model.Uri
+import sttp.model.Uri._
 import monocle.macros.Lenses
 import japgolly.scalajs.react._
 import diode.data._
@@ -17,6 +18,7 @@ import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.log4s.Log4sLogger
 import clue.Backend
 import clue.HttpClient
+import org.scalajs.dom
 
 @Lenses
 case class RootModel(
@@ -29,11 +31,27 @@ object RootModel {
 }
 
 case class AppConfig(
-  conditionsURL: Url = Url.parse("wss://explore-hasura.herokuapp.com/v1/graphql"), // How to do websockets through proxy?
-  swapiURL:      Url = Url.parse("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
-  todoURL:       Url = Url.parse("/api/tasks"),
-  pollURL:       Url = Url.parse("wss://realtime-poll.demo.hasura.app/v1/graphql")
+  // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
+  conditionsURL: Uri = uri"wss://explore-hasura.herokuapp.com/v1/graphql", //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
+  swapiURL:      Uri = AppConfig.baseUri.path("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
+  todoURL:       Uri = AppConfig.baseUri.path("/api/tasks"),
+  pollURL:       Uri = uri"wss://realtime-poll.demo.hasura.app/v1/graphql"
 )
+object AppConfig {
+  lazy val baseUri: Uri = {
+    val location = dom.window.location.toString
+    Uri.parse(location).getOrElse(throw new Exception(s"Could not parse URL [$location]"))
+  }
+
+  /*lazy val wsBaseUri: Uri = {
+    val uri = baseUri
+    val scheme = uri.scheme match {
+      case "https" => "wss"
+      case _       => "ws"
+    }
+    uri.scheme(scheme)
+  }*/
+}
 
 case class Clients[F[_]](
   conditions: GraphQLStreamingClient[F],
