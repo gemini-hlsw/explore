@@ -67,7 +67,7 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "common" % "0.7.0",
+      "io.github.cquiroz.react" %%% "common" % "0.7.1",
       "io.github.cquiroz.react" %%% "react-grid-layout" % "0.4.0",
       "io.github.cquiroz.react" %%% "react-sizeme" % "0.3.2"
     ),
