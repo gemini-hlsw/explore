@@ -30,7 +30,8 @@ stage := {
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
     // Remove sbt-scalajs-bundler directory, which includes node_modules.
-    val bundlerDir = (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
+    val bundlerDir =
+      (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
     sbt.IO.delete(bundlerDir)
     // Remove coursier cache
     val coursierCacheDir = csrCacheDirectory.value
@@ -106,9 +107,9 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.suzaku" %%% "diode-data" % "1.1.7",
     "io.suzaku" %%% "diode-react" % "1.1.7.160"
   ) ++ Seq(
-      "io.circe" %%% "circe-core",
-      "io.circe" %%% "circe-generic",
-      "io.circe" %%% "circe-parser"
+    "io.circe" %%% "circe-core",
+    "io.circe" %%% "circe-generic",
+    "io.circe" %%% "circe-parser"
   ).map(_ % circe)
 )
 
