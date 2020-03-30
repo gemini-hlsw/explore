@@ -12,33 +12,33 @@ import clue.GraphQLStreamingClient
 import cats.implicits._
 import cats.effect.IO
 import crystal._
-import crystal.react.StreamRenderer
 import crystal.react.io.implicits._
 import diode.data._
 import diode.react.ReactPot._
 import cats.effect.ContextShift
+import crystal.react.StreamRendererMod
 
-final case class SubscriptionRender[D, A](
+final case class SubscriptionRenderMod[D, A](
   subscribe:      IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier: fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender: A => VdomNode,
+  val valueRender: (A, StreamRendererMod.ModState[A]) => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
 )(
   implicit val cs: ContextShift[IO]
 ) extends ReactProps {
   override def render: VdomElement =
-    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender[Any, Any]])
+    SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod[Any, Any]])
 }
 
-object SubscriptionRender {
-  type Props[D, A] = SubscriptionRender[D, A]
+object SubscriptionRenderMod {
+  type Props[D, A] = SubscriptionRenderMod[D, A]
 
   final case class State[D, A](
     subscription: Option[
       GraphQLStreamingClient[IO]#Subscription[D]
     ] = None,
-    renderer: Option[StreamRenderer[Pot[A]]] = None
+    renderer: Option[StreamRendererMod[Pot[A]]] = None
   )
 
   implicit def propsReuse[D, A]: Reusability[Props[D, A]] = Reusability.always
@@ -46,15 +46,15 @@ object SubscriptionRender {
 
   protected def componentBuilder[D, A] =
     ScalaComponent
-      .builder[Props[D, A]]("SubscriptionRender")
+      .builder[Props[D, A]]("SubscriptionRenderMod")
       .initialState(State[D, A]())
       .render { $ =>
         <.div(
           $.state.renderer.whenDefined(
-            _ { resultsPot =>
+            _ { (resultsPot, modState) =>
               <.div(
                 resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                resultsPot.render(results => $.props.valueRender(results))
+                resultsPot.render(results => $.props.valueRender(results, f => modState(_.map(f))))
               )
             }
           )
@@ -68,7 +68,7 @@ object SubscriptionRender {
             $.modStateIO(_ =>
               State(
                 subscription.some,
-                StreamRenderer
+                StreamRendererMod
                   .build(
                     $.props
                       .streamModifier(subscription.stream)
