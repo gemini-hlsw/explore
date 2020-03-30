@@ -17,7 +17,7 @@ import explore.model.enum.SkyBackground
 import react.semanticui.widths._
 import explore.model.Conditions
 import explore.components.forms.EnumSelect
-import explore.components.graphql.SubscriptionRender
+import explore.components.graphql.SubscriptionRenderMod
 import explore.model.AppStateIO._
 import clue.GraphQLQuery
 import io.circe.{ Decoder, Encoder }
@@ -28,6 +28,9 @@ import io.circe.HCursor
 import io.circe.DecodingFailure
 import io.circe.JsonObject
 import crystal.react.io.implicits._
+import monocle.macros.Lenses
+import monocle.function.Cons.headOption
+import crystal.react.StreamRendererMod.ModState
 
 /*
 query {
@@ -97,6 +100,7 @@ object ConditionsPanel {
     case class Variables(observationId: String)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
+    @Lenses
     case class Data(conditions: List[Conditions])
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
@@ -153,52 +157,66 @@ object ConditionsPanel {
     AppState.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
 
-  private def iqChanged(observationId: Observation.Id)(iq: ImageQuality) =
-    mutate(observationId, Mutation.Fields(image_quality = Enumerated[ImageQuality].tag(iq).some))
-  private def ccChanged(observationId: Observation.Id)(cc: CloudCover) =
-    mutate(observationId, Mutation.Fields(cloud_cover = Enumerated[CloudCover].tag(cc).some))
-  private def wvChanged(observationId: Observation.Id)(wv: WaterVapor) =
-    mutate(observationId, Mutation.Fields(water_vapor = Enumerated[WaterVapor].tag(wv).some))
-  private def sbChanged(observationId: Observation.Id)(sb: SkyBackground) =
-    mutate(observationId, Mutation.Fields(sky_background = Enumerated[SkyBackground].tag(sb).some))
+  private def someEnumTag[E: Enumerated](e: E): Option[String] =
+    Enumerated[E].tag(e).some
+
+  private def iqChanged(observationId: Observation.Id, modState: ModState[Conditions])(
+    iq:                                ImageQuality
+  ) =
+    modState(Conditions.iq.set(iq)) >>
+      mutate(observationId, Mutation.Fields(image_quality = someEnumTag(iq)))
+  private def ccChanged(observationId: Observation.Id, modState: ModState[Conditions])(
+    cc:                                CloudCover
+  ) =
+    modState(Conditions.cc.set(cc)) >>
+      mutate(observationId, Mutation.Fields(cloud_cover = someEnumTag(cc)))
+  private def wvChanged(observationId: Observation.Id, modState: ModState[Conditions])(
+    wv:                                WaterVapor
+  ) =
+    modState(Conditions.wv.set(wv)) >>
+      mutate(observationId, Mutation.Fields(water_vapor = someEnumTag(wv)))
+  private def sbChanged(observationId: Observation.Id, modState: ModState[Conditions])(
+    sb:                                SkyBackground
+  ) =
+    modState(Conditions.sb.set(sb)) >>
+      mutate(observationId, Mutation.Fields(sky_background = someEnumTag(sb)))
 
   protected val component =
     ScalaComponent
       .builder[ConditionsPanel]("ConditionsPanel")
       .render { $ =>
-        SubscriptionRender[Subscription.Data](
+        SubscriptionRenderMod[Subscription.Data, Conditions](
           AppState.clients.conditions
             .subscribe(Subscription)(
               Subscription.Variables($.props.observationId.format).some
-            )
-        )(data =>
+            ),
+          _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
+        )((conditions, modState) =>
           <.div(
-            data.conditions.headOption.whenDefined(conditions =>
-              Form(
-                FormGroup(widths = Two)(
-                  EnumSelect[ImageQuality]("Image Quality",
-                                           conditions.iq.some,
-                                           "Select",
-                                           disabled = false,
-                                           iqChanged($.props.observationId)),
-                  EnumSelect[CloudCover]("Cloud Cover",
-                                         conditions.cc.some,
+            Form(
+              FormGroup(widths = Two)(
+                EnumSelect[ImageQuality]("Image Quality",
+                                         conditions.iq.some,
                                          "Select",
                                          disabled = false,
-                                         ccChanged($.props.observationId))
-                ),
-                FormGroup(widths = Two)(
-                  EnumSelect[WaterVapor]("Water Vapor",
-                                         conditions.wv.some,
-                                         "Select",
-                                         disabled = false,
-                                         wvChanged($.props.observationId)),
-                  EnumSelect[SkyBackground]("Sky Background",
-                                            conditions.sb.some,
-                                            "Select",
-                                            disabled = false,
-                                            sbChanged($.props.observationId))
-                )
+                                         iqChanged($.props.observationId, modState)),
+                EnumSelect[CloudCover]("Cloud Cover",
+                                       conditions.cc.some,
+                                       "Select",
+                                       disabled = false,
+                                       ccChanged($.props.observationId, modState))
+              ),
+              FormGroup(widths = Two)(
+                EnumSelect[WaterVapor]("Water Vapor",
+                                       conditions.wv.some,
+                                       "Select",
+                                       disabled = false,
+                                       wvChanged($.props.observationId, modState)),
+                EnumSelect[SkyBackground]("Sky Background",
+                                          conditions.sb.some,
+                                          "Select",
+                                          disabled = false,
+                                          sbChanged($.props.observationId, modState))
               )
             )
           )

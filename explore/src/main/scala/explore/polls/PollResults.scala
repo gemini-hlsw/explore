@@ -26,15 +26,16 @@ object PollResults {
     ScalaComponent
       .builder[Props]("PollResults")
       .render { $ =>
-        SubscriptionRender[PollResultsSubscription.Data](
+        SubscriptionRender[PollResultsSubscription.Data, List[PollResultsSubscription.PollResult]](
           AppState.clients.polls
             .subscribe(PollResultsSubscription)(
               PollResultsSubscription.Variables($.props.pollId).some
-            )
+            ),
+          _.map(_.poll_results)
         )(
-          data =>
+          pollResults =>
             <.ol(
-              data.poll_results.toTagMod { result =>
+              pollResults.toTagMod { result =>
                 (for {
                   option <- result.option
                   votes  <- result.votes
