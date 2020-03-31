@@ -157,109 +157,147 @@ object ConditionsPanel {
   implicit val showImageQuality: Show[ImageQuality] =
     Show.show(_.label)
 
-
-
-
-
+  // START UNDO MODULE -- MOVE TO COMPONENT, AND TURN vars INTO STATE
   import cats.effect._
 
+  // We don't use a case class to avoid the type parameter on T
   trait Restorer[M] { // M = (Local) Model
     type T // T = Value type
 
     val value: T // Value that will be restored upon undo/redo
-    val getter: Getter[M, T] // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
+    val getter: Getter[
+      M,
+      T
+    ] // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
     val setter: T => IO[Unit] // Modify the model
 
-    def restore(m: M): IO[Restorer[M]] = { // Actually restores the value and returns the reverse restorer
-      setter(value).map{ _ =>
-        Restorer[M, T](m, getter, setter)
-      }
-    }
+    def restore(m: M): IO[Restorer[M]] = // Actually restores the value and returns the reverse restorer
+      setter(value).map(_ => Restorer[M, T](m, getter, setter))
+
+    override def toString(): String = s"Restorer($value, ...)"
   }
   object Restorer {
-    def apply[M, A](m: M, getterA: Getter[M, A], setterA: A => IO[Unit]): Restorer[M] =
+    def apply[M, A](m: M, _getter: Getter[M, A], _setter: A => IO[Unit]): Restorer[M] =
       new Restorer[M] {
         type T = A
 
-        override val value = getterA.get(m)
+        override val value = _getter.get(m)
 
-        override val getter = getterA
+        override val getter = _getter
 
-        override val setter = setterA
+        override val setter = _setter
       }
   }
 
   var undoStack: List[Restorer[Conditions]] = List.empty
   var redoStack: List[Restorer[Conditions]] = List.empty
 
-  val pushUndo: Restorer[Conditions] => IO[Unit] = mod => IO{undoStack = mod +: undoStack}
+  val pushUndo: Restorer[Conditions] => IO[Unit] = mod => IO { undoStack = mod +: undoStack }
 
-  val pushRedo: Restorer[Conditions] => IO[Unit] = mod => IO{redoStack = mod +: redoStack}
+  val pushRedo: Restorer[Conditions] => IO[Unit] = mod => IO { redoStack = mod +: redoStack }
 
   val popUndo: IO[Option[Restorer[Conditions]]] = IO {
     undoStack match {
-      case head :: tail => 
+      case head :: tail =>
         undoStack = tail
         head.some
       case _ => None
     }
   }
 
-  def set[M, A](m: M, getter: Getter[M, A], setter: A => IO[Unit], push: Restorer[M] => IO[Unit])(v: A): IO[Unit] = 
-    push(Restorer[M, A](m, getter, setter)).flatMap(_ => setter(v))
+  val popRedo: IO[Option[Restorer[Conditions]]] = IO {
+    redoStack match {
+      case head :: tail =>
+        redoStack = tail
+        head.some
+      case _ => None
+    }
+  }
 
-  def undo[M](m: M, popUndo: IO[Option[Restorer[M]]], pushRedo: Restorer[M] => IO[Unit]): IO[Unit] = 
-    popUndo.flatMap(_.fold(IO.unit)(restorer => 
-      restorer.restore(m).flatMap(pushRedo)
-    ))
-  
+  val resetRedo: IO[Unit] = IO { redoStack = List.empty }
 
+  // Do is "set"
+  def set[M, A](
+    m:         M,
+    getter:    Getter[M, A],
+    setter:    A => IO[Unit],
+    pushUndo:  Restorer[M] => IO[Unit],
+    resetRedo: IO[Unit]
+  )(v:         A): IO[Unit] =
+    for {
+      _ <- pushUndo(Restorer[M, A](m, getter, setter))
+      _ <- resetRedo
+      _ <- setter(v)
+    } yield ()
+
+  // Undo and Redo are "restore" but with switched stacks.
+  def restore[M](
+    m:       M,
+    popFrom: IO[Option[Restorer[M]]],
+    pushTo:  Restorer[M] => IO[Unit]
+  ): IO[Unit] =
+    popFrom.flatMap(_.fold(IO.unit)(restorer => restorer.restore(m).flatMap(pushTo)))
+
+  // END UNDO MODULE
 
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields): IO[Unit] =
     AppState.clients.conditions
-      .query(Mutation)(Mutation.Variables(observationId.format, fields).some).as(())
-
+      .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+      .as(())
 
   private def modify[A](
+    lens:   Lens[Conditions, A],
+    fields: A => Mutation.Fields
+  )(
     observationId: Observation.Id,
-    modState: ModState[Conditions])(
-    lens: Lens[Conditions, A],
-    fields: Mutation.Fields
-  )(conditions: Conditions)(value: A): IO[Unit] = {
-    set(conditions, lens.asGetter, {v: A => modState(lens.set(v)).toIO}, pushUndo)(value).flatMap( _ =>
-      mutate(observationId, fields)
-    )
-  }
-
-
+    conditions:    Conditions,
+    modState:      ModState[Conditions]
+  )(
+    value: A
+  ): IO[Unit] =
+    set(
+      conditions,
+      lens.asGetter, { v: A =>
+        for {
+          // _ <- IO{println(s"MODIFY! [${fields(v)}]")}
+          _ <- modState(lens.set(v)).toIO // TODO Change modState in crystal to IO? (instead of Callback)
+          _ <- mutate(observationId, fields(v))
+        } yield ()
+      },
+      pushUndo,
+      resetRedo
+    )(value)
 
   private def someEnumTag[E: Enumerated](e: E): Option[String] =
     Enumerated[E].tag(e).some
 
-  private def iqChanged(observationId: Observation.Id, modState: ModState[Conditions])(
-    conditions: Conditions
-  )(
-    iq:                                ImageQuality
-  ): IO[Unit] =
-    modify(observationId, modState)(Conditions.iq, Mutation.Fields(image_quality = someEnumTag(iq)))(conditions)(iq)
+  private val iqChanged
+    : (Observation.Id, Conditions, ModState[Conditions]) => ImageQuality => IO[Unit] =
+    modify(
+      Conditions.iq,
+      { iq: ImageQuality => Mutation.Fields(image_quality = someEnumTag(iq)) }
+    )
 
-  private def ccChanged(observationId: Observation.Id, modState: ModState[Conditions])(
-    cc:                                CloudCover
-  ) =
-    modState(Conditions.cc.set(cc)) >>
-      mutate(observationId, Mutation.Fields(cloud_cover = someEnumTag(cc)))
+  private val ccChanged
+    : (Observation.Id, Conditions, ModState[Conditions]) => CloudCover => IO[Unit] =
+    modify(
+      Conditions.cc,
+      { cc: CloudCover => Mutation.Fields(cloud_cover = someEnumTag(cc)) }
+    )
 
-  private def wvChanged(observationId: Observation.Id, modState: ModState[Conditions])(
-    wv:                                WaterVapor
-  ) =
-    modState(Conditions.wv.set(wv)) >>
-      mutate(observationId, Mutation.Fields(water_vapor = someEnumTag(wv)))
+  private val wvChanged
+    : (Observation.Id, Conditions, ModState[Conditions]) => WaterVapor => IO[Unit] =
+    modify(
+      Conditions.wv,
+      { wv: WaterVapor => Mutation.Fields(water_vapor = someEnumTag(wv)) }
+    )
 
-  private def sbChanged(observationId: Observation.Id, modState: ModState[Conditions])(
-    sb:                                SkyBackground
-  ) =
-    modState(Conditions.sb.set(sb)) >>
-      mutate(observationId, Mutation.Fields(sky_background = someEnumTag(sb)))
+  private val sbChanged
+    : (Observation.Id, Conditions, ModState[Conditions]) => SkyBackground => IO[Unit] =
+    modify(
+      Conditions.sb,
+      { sb: SkyBackground => Mutation.Fields(sky_background = someEnumTag(sb)) }
+    )
 
   protected val component =
     ScalaComponent
@@ -271,10 +309,9 @@ object ConditionsPanel {
               Subscription.Variables($.props.observationId.format).some
             ),
           _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
-        ){(conditions, modState) =>
-
-          println(undoStack)
-          println(redoStack)
+        ) { (conditions, modState) =>
+          println(s"UNDO STACK: [$undoStack]")
+          println(s"REDO STACK: [$redoStack]")
 
           <.div(
             Form(
@@ -283,27 +320,28 @@ object ConditionsPanel {
                                          conditions.iq.some,
                                          "Select",
                                          disabled = false,
-                                         iqChanged($.props.observationId, modState)(conditions)),
+                                         iqChanged($.props.observationId, conditions, modState)),
                 EnumSelect[CloudCover]("Cloud Cover",
                                        conditions.cc.some,
                                        "Select",
                                        disabled = false,
-                                       ccChanged($.props.observationId, modState))
+                                       ccChanged($.props.observationId, conditions, modState))
               ),
               FormGroup(widths = Two)(
                 EnumSelect[WaterVapor]("Water Vapor",
                                        conditions.wv.some,
                                        "Select",
                                        disabled = false,
-                                       wvChanged($.props.observationId, modState)),
+                                       wvChanged($.props.observationId, conditions, modState)),
                 EnumSelect[SkyBackground]("Sky Background",
                                           conditions.sb.some,
                                           "Select",
                                           disabled = false,
-                                          sbChanged($.props.observationId, modState))
+                                          sbChanged($.props.observationId, conditions, modState))
               )
             ),
-            Button(onClick = undo(conditions, popUndo, pushRedo))("Undo")
+            Button(onClick = restore(conditions, popUndo, pushRedo))("Undo"),
+            Button(onClick = restore(conditions, popRedo, pushUndo))("Redo")
           )
         }
       }
