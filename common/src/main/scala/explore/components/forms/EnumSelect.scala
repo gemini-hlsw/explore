@@ -5,12 +5,14 @@ package explore.components.forms
 
 import cats.implicits._
 import cats.Show
+import cats.effect.IO
 import gem.util.Enumerated
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 import react.semanticui.modules.dropdown._
 import scala.scalajs.js.JSConverters._
+import crystal.react.io.implicits._
 
 /**
   * Produces a dropdown menu, similar to a combobox
@@ -20,7 +22,7 @@ final case class EnumSelect[A: Enumerated: Show](
   value:       Option[A],
   placeholder: String,
   disabled:    Boolean,
-  onChange:    A => Callback = (_: A) => Callback.empty
+  onChange:    A => IO[Unit] = (_: A) => IO.unit
 ) extends ReactProps {
   @inline def render: VdomElement =
     EnumSelect.component(implicitly[Enumerated[A]], implicitly[Show[A]])(this)
@@ -52,8 +54,7 @@ object EnumSelect {
                 onClickE = (_: ReactMouseEvent, ep: DropdownItem.DropdownItemProps) =>
                   ep.value.toOption
                     .flatMap(v => enum.fromTag(v.asInstanceOf[String]))
-                    .map(v => p.onChange(v))
-                    .getOrEmpty
+                    .fold[Callback](IO.unit)(v => p.onChange(v))
               )
             )
             // onChange    = (_: ReactEvent, ep: Dropdown.DropdownProps) => ep.value.toOption.flatMap(v => enum.fromTag(v.asInstanceOf[String])).map(v => p.onChange(v)).getOrEmpty
