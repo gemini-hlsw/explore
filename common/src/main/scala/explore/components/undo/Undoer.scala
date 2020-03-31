@@ -1,0 +1,119 @@
+package explore.components.undo
+
+import react.common.ReactProps
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import cats.effect.IO
+import cats.implicits._
+import monocle.macros.Lenses
+import crystal.react.io.implicits._
+import monocle.Lens
+import monocle.Getter
+
+final case class Undoer[M](
+  renderer: (Undoer.Set[M], Undoer.Undo[M], Undoer.Redo[M]) => VdomElement
+) extends ReactProps {
+  override def render: VdomElement = Undoer.component(this.asInstanceOf[Undoer[Any]])
+}
+
+object Undoer {
+  trait Set[M] {
+    def apply[A](
+      m:      M,
+      getter: Getter[M, A],
+      setter: A => IO[Unit]
+    )(v:      A): IO[Unit]
+  }
+
+  type Undo[M] = M => IO[Unit]
+
+  type Redo[M] = M => IO[Unit]
+
+  protected type Props[M] = Undoer[M]
+
+  @Lenses
+  protected final case class State[M](
+    undoStack: List[Restorer[M]] = List.empty,
+    redoStack: List[Restorer[M]] = List.empty
+  )
+
+  // implicit protected def propsReuse[M]: Reusability[Props[M]] =
+  // Reusability.always
+  // implicit protected def stateReuse[M]: Reusability[State[M]] =
+  // Reusability.by(s => (s.undoStack.length, s.redoStack.length))
+
+  protected class Backend[M]($ : BackendScope[Props[M], State[M]]) {
+    private def push(lens: Lens[State[M], List[Restorer[M]]]): Restorer[M] => IO[Unit] =
+      mod => $.modStateIO(lens.modify { stack: List[Restorer[M]] => mod +: stack })
+
+    private def pop(lens: Lens[State[M], List[Restorer[M]]]): IO[Option[Restorer[M]]] =
+      $.stateIO.flatMap { s =>
+        lens.get(s) match {
+          case head :: tail =>
+            $.modStateIO(lens.set(tail)).as(head.some)
+          case _ =>
+            IO(None)
+        }
+      }
+
+    private def reset(lens: Lens[State[M], List[Restorer[M]]]): IO[Unit] =
+      $.modStateIO(lens.set(List.empty))
+
+    private val pushUndo: Restorer[M] => IO[Unit] =
+      push(State.undoStack)
+
+    private val pushRedo: Restorer[M] => IO[Unit] =
+      push(State.redoStack)
+
+    private val popUndo: IO[Option[Restorer[M]]] =
+      pop(State.undoStack)
+
+    private val popRedo: IO[Option[Restorer[M]]] =
+      pop(State.redoStack)
+
+    private val resetRedo: IO[Unit] = reset(State.redoStack)
+
+    protected val set: Set[M] = new Set[M] {
+      override def apply[A](
+        m:      M,
+        getter: Getter[M, A],
+        setter: A => IO[Unit]
+      )(v:      A): IO[Unit] =
+        for {
+          _ <- pushUndo(Restorer[M, A](m, getter, setter))
+          _ <- resetRedo
+          _ <- setter(v)
+        } yield ()
+    }
+
+    // Undo and Redo are "restore" but with switched stacks.
+    private def restore(
+      popFrom: IO[Option[Restorer[M]]],
+      pushTo:  Restorer[M] => IO[Unit]
+    )(m:       M): IO[Unit] =
+      popFrom.flatMap(_.fold(IO.unit)(restorer => restorer.restore(m).flatMap(pushTo)))
+
+    protected val undo: Undo[M] =
+      restore(popUndo, pushRedo)
+
+    protected val redo: Redo[M] =
+      restore(popRedo, pushUndo)
+
+    def render(props: Props[M], state: State[M]): VdomElement = {
+      println(s"UNDO STACK: [${state.undoStack}]")
+      println(s"REDO STACK: [${state.redoStack}]")
+
+      props.renderer(set, undo, redo)
+    }
+  }
+
+  protected def componentBuilder[M] =
+    ScalaComponent
+      .builder[Props[M]]("Undoer")
+      .initialState { println("NEW STATE!"); State[M]() }
+      .renderBackend[Backend[M]]
+      //.configure(Reusability.shouldComponentUpdate)
+      .build
+
+  protected val component = componentBuilder[Any]
+}

@@ -32,17 +32,17 @@ final case class SubscriptionRenderMod[D, A](
 }
 
 object SubscriptionRenderMod {
-  type Props[D, A] = SubscriptionRenderMod[D, A]
+  protected type Props[D, A] = SubscriptionRenderMod[D, A]
 
-  final case class State[D, A](
+  protected final case class State[D, A](
     subscription: Option[
       GraphQLStreamingClient[IO]#Subscription[D]
     ] = None,
     renderer: Option[StreamRendererMod[Pot[A]]] = None
   )
 
-  implicit def propsReuse[D, A]: Reusability[Props[D, A]] = Reusability.always
-  implicit def stateReuse[D, A]: Reusability[State[D, A]] = Reusability.never
+  implicit protected def propsReuse[D, A]: Reusability[Props[D, A]] = Reusability.always
+  implicit protected def stateReuse[D, A]: Reusability[State[D, A]] = Reusability.never
 
   protected def componentBuilder[D, A] =
     ScalaComponent
