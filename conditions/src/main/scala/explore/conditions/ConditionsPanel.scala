@@ -178,7 +178,7 @@ object ConditionsPanel {
         conditions,
         lens.asGetter, { v: A =>
           for {
-            _ <- IO(println(s"MODIFY! [${fields(v)}]"))
+            // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
             _ <- modState(lens.set(v)).toIO // TODO Change modState in crystal to IO? (instead of Callback)
             _ <- mutate(observationId, fields(v))
           } yield ()
@@ -212,44 +212,39 @@ object ConditionsPanel {
             ),
           _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
         ) { (conditions, modState) =>
-          Undoer {
-            (
-              set:  Undoer.Set[Conditions],
-              undo: Undoer.Undo[Conditions],
-              redo: Undoer.Redo[Conditions]
-            ) =>
-              val modify = Modify($.props.observationId, conditions, modState, set)
+          Undoer[Conditions] { ctx =>
+            val modify = Modify($.props.observationId, conditions, modState, ctx.set)
 
-              <.div(
-                Form(
-                  FormGroup(widths = Two)(
-                    EnumSelect[ImageQuality]("Image Quality",
-                                             conditions.iq.some,
-                                             "Select",
-                                             disabled = false,
-                                             modify(Conditions.iq, iqFields)),
-                    EnumSelect[CloudCover]("Cloud Cover",
-                                           conditions.cc.some,
+            <.div(
+              Form(
+                FormGroup(widths = Two)(
+                  EnumSelect[ImageQuality]("Image Quality",
+                                           conditions.iq.some,
                                            "Select",
                                            disabled = false,
-                                           modify(Conditions.cc, ccFields))
-                  ),
-                  FormGroup(widths = Two)(
-                    EnumSelect[WaterVapor]("Water Vapor",
-                                           conditions.wv.some,
-                                           "Select",
-                                           disabled = false,
-                                           modify(Conditions.wv, wvFields)),
-                    EnumSelect[SkyBackground]("Sky Background",
-                                              conditions.sb.some,
-                                              "Select",
-                                              disabled = false,
-                                              modify(Conditions.sb, sbFields))
-                  )
+                                           modify(Conditions.iq, iqFields)),
+                  EnumSelect[CloudCover]("Cloud Cover",
+                                         conditions.cc.some,
+                                         "Select",
+                                         disabled = false,
+                                         modify(Conditions.cc, ccFields))
                 ),
-                Button(onClick = undo(conditions))("Undo"),
-                Button(onClick = redo(conditions))("Redo")
-              )
+                FormGroup(widths = Two)(
+                  EnumSelect[WaterVapor]("Water Vapor",
+                                         conditions.wv.some,
+                                         "Select",
+                                         disabled = false,
+                                         modify(Conditions.wv, wvFields)),
+                  EnumSelect[SkyBackground]("Sky Background",
+                                            conditions.sb.some,
+                                            "Select",
+                                            disabled = false,
+                                            modify(Conditions.sb, sbFields))
+                )
+              ),
+              Button(onClick = ctx.undo(conditions), disabled = ctx.undoEmpty)("Undo"),
+              Button(onClick = ctx.redo(conditions), disabled = ctx.redoEmpty)("Redo")
+            )
           }
         }
       }

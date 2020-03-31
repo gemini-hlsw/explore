@@ -11,12 +11,20 @@ import monocle.Lens
 import monocle.Getter
 
 final case class Undoer[M](
-  renderer: (Undoer.Set[M], Undoer.Undo[M], Undoer.Redo[M]) => VdomElement
+  renderer: Undoer.UndoContext[M] => VdomElement
 ) extends ReactProps {
   override def render: VdomElement = Undoer.component(this.asInstanceOf[Undoer[Any]])
 }
 
 object Undoer {
+  case class UndoContext[M](
+    set:       Set[M],
+    undo:      Undo[M],
+    redo:      Redo[M],
+    undoEmpty: Boolean,
+    redoEmpty: Boolean
+  )
+
   trait Set[M] {
     def apply[A](
       m:      M,
@@ -103,7 +111,7 @@ object Undoer {
       println(s"UNDO STACK: [${state.undoStack}]")
       println(s"REDO STACK: [${state.redoStack}]")
 
-      props.renderer(set, undo, redo)
+      props.renderer(UndoContext(set, undo, redo, state.undoStack.isEmpty, state.redoStack.isEmpty))
     }
   }
 
