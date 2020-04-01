@@ -17,6 +17,9 @@ import diode.data._
 import diode.react.ReactPot._
 import cats.effect.ContextShift
 import crystal.react.StreamRendererMod
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import cats.effect.Timer
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:      IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -25,7 +28,8 @@ final case class SubscriptionRenderMod[D, A](
   val valueRender: (A, StreamRendererMod.ModState[A]) => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
 )(
-  implicit val cs: ContextShift[IO]
+  implicit val cs: ContextShift[IO],
+  val timer:       Timer[IO]
 ) extends ReactProps {
   override def render: VdomElement =
     SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod[Any, Any]])
@@ -63,7 +67,8 @@ object SubscriptionRenderMod {
       .componentWillMount { $ =>
         $.props.subscribe
           .flatMap { subscription =>
-            implicit val cs = $.props.cs
+            implicit val cs    = $.props.cs
+            implicit val timer = $.props.timer
 
             $.modStateIO(_ =>
               State(
@@ -74,7 +79,8 @@ object SubscriptionRenderMod {
                       .streamModifier(subscription.stream)
                       .map[Pot[A]](a => Ready(a))
                       .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                      .cons1(Pending())
+                      .cons1(Pending()),
+                    holdAfterMod = (2 seconds).some
                   )
                   .some
               )

@@ -107,18 +107,16 @@ object Undoer {
     protected val redo: Redo[M] =
       restore(popRedo, pushUndo)
 
-    def render(props: Props[M], state: State[M]): VdomElement = {
-      println(s"UNDO STACK: [${state.undoStack}]")
-      println(s"REDO STACK: [${state.redoStack}]")
-
+    def render(props: Props[M], state: State[M]): VdomElement =
+      // println(s"UNDO STACK: [${state.undoStack}]")
+      // println(s"REDO STACK: [${state.redoStack}]")
       props.renderer(UndoContext(set, undo, redo, state.undoStack.isEmpty, state.redoStack.isEmpty))
-    }
   }
 
   protected def componentBuilder[M] =
     ScalaComponent
       .builder[Props[M]]("Undoer")
-      .initialState { println("NEW STATE!"); State[M]() }
+      .initialState(State[M]())
       .renderBackend[Backend[M]]
       //.configure(Reusability.shouldComponentUpdate)
       .build
