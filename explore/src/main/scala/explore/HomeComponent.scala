@@ -3,6 +3,7 @@
 
 package explore
 
+import explore.implicits._
 import explore.conditions.ConditionsPanel
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
@@ -40,11 +41,17 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  val component =
+  type Props = ViewCtxF[RootModel]
+
+  private implicit val propsReuse: Reusability[Props] = ViewCtxFReusability[RootModel]
+
+  protected val component =
     ScalaComponent
-      .builder[RootModel]("Home")
+      .builder[Props]("Home")
       .initialState(0)
-      .renderPS { (_, p, _) =>
+      .render_P { props =>
+        implicit val ctx = props.ctx
+
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
@@ -73,7 +80,7 @@ object HomeComponent {
                 ^.cls := "tile",
                 Tile(
                   Tile.Props("Target Position"),
-                  <.div(p.target.whenDefined(Tpe(_)))
+                  <.div(Tpe(props.zoomL(RootModel.target)))
                 )
               )
             )
@@ -83,5 +90,5 @@ object HomeComponent {
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(model: RootModel) = component(model)
+  def apply(props: Props) = component(props)
 }

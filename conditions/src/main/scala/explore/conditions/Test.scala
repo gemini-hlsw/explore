@@ -6,12 +6,12 @@ package explore.conditions
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import org.scalajs.dom
+// import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
-import gem.Observation
-import gem.ProgramId
-import gsp.math.Index
+// import gem.Observation
+// import gem.ProgramId
+// import gsp.math.Index
 
 @JSExportTopLevel("Test")
 object Test extends IOApp {
@@ -21,7 +21,7 @@ object Test extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = IO {
 
-    val container = Option(dom.document.getElementById("root")).getOrElse {
+    /*val container = Option(dom.document.getElementById("root")).getOrElse {
       val elem = dom.document.createElement("div")
       elem.id = "root"
       dom.document.body.appendChild(elem)
@@ -30,7 +30,7 @@ object Test extends IOApp {
 
     ConditionsPanel(
       Observation.Id(ProgramId.Science.fromString.getOption("Program").get, Index.One)
-    ).renderIntoDOM(container)
+    ).renderIntoDOM(container)*/
 
     ExitCode.Success
   }

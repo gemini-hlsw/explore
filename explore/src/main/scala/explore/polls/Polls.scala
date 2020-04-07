@@ -3,6 +3,7 @@
 
 package explore.polls
 
+import explore.implicits._
 import cats.effect.IO
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -14,14 +15,13 @@ import react.semanticui.colors._
 import react.semanticui.sizes._
 import react.common._
 import explore.model.Poll
-import explore.model.AppStateIO._
 import explore.util.Pot._
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 import java.util.UUID
 import diode.data._
 import diode.react.ReactPot._
 
-final case class Polls(polls: Pot[List[Poll]]) extends ReactProps {
+final case class Polls(polls: ViewCtxF[Pot[List[Poll]]]) extends ReactProps {
   @inline def render: VdomElement = Polls.component(this)
 }
 
@@ -36,16 +36,18 @@ object Polls {
 
   class Backend($ : BackendScope[Props, State]) {
     def castingOn(pollId: UUID): IO[Unit] =
-      $.modStateL(State.casting)(_ + pollId).toIO
+      $.modStateL(State.casting)(_ + pollId).to[IO]
 
     def castingOff(pollId: UUID): IO[Unit] =
-      $.modStateL(State.casting)(_ - pollId).toIO
+      $.modStateL(State.casting)(_ - pollId).to[IO]
 
-    def render(props: Props, state: State) =
+    def render(props: Props, state: State) = {
+      implicit val ctx = props.polls.ctx
+
       <.div(
-        props.polls.renderPending(_ => Icon(name = "spinner", loading = true, size = Big)),
-        props.polls.renderFailed(_ => <.p("Failed to load")),
-        props.polls.render(polls =>
+        props.polls.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Big)),
+        props.polls.get.renderFailed(_ => <.p("Failed to load")),
+        props.polls.get.render(polls =>
           <.div(
             polls.filter(_.options.nonEmpty).toTagMod { poll =>
               val disabled = state.casting.contains(poll.id)
@@ -60,19 +62,20 @@ object Polls {
                         compact  = true,
                         disabled = disabled,
                         onClick = castingOn(poll.id)
-                          .flatMap(_ => AppState.actions.polls.vote(option.id))
+                          .flatMap(_ => props.polls.actions(_.polls).vote(option.id))
+                          .toCB
                       )(option.text)
                     )
                   },
                   Icon(name = "circle notch", loading = true, size = Large).when(disabled)
                 ),
-                <.div(^.key := "results",
-                      PollResults.component(PollResults(poll.id, castingOff(poll.id))))
+                <.div(^.key := "results", PollResults(poll.id, castingOff(poll.id)))
               )
             }
           )
         )
       )
+    }
   }
 
   private val component =
@@ -80,7 +83,7 @@ object Polls {
       .builder[Props]("Polls")
       .initialState(State())
       .renderBackend[Backend]
-      .componentWillMount(_ => AppState.actions.polls.refresh)
+      .componentWillMount($ => $.props.polls.actions(_.polls).refresh.toCB)
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

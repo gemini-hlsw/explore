@@ -12,7 +12,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 import react.semanticui.modules.dropdown._
 import scala.scalajs.js.JSConverters._
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 
 /**
   * Produces a dropdown menu, similar to a combobox
@@ -54,7 +54,9 @@ object EnumSelect {
                 onClickE = (_: ReactMouseEvent, ep: DropdownItem.DropdownItemProps) =>
                   ep.value.toOption
                     .flatMap(v => enum.fromTag(v.asInstanceOf[String]))
-                    .fold[Callback](IO.unit)(v => p.onChange(v))
+                    .map(p.onChange)
+                    .orEmpty
+                    .toCB
               )
             )
             // onChange    = (_: ReactEvent, ep: Dropdown.DropdownProps) => ep.value.toOption.flatMap(v => enum.fromTag(v.asInstanceOf[String])).map(v => p.onChange(v)).getOrEmpty

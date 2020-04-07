@@ -3,17 +3,18 @@
 
 package explore.polls
 
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import java.util.UUID
-import explore.model.AppStateIO._
 import cats.implicits._
 import cats.effect.IO
 import explore.graphql.polls.PollResultsSubscription
 import explore.components.graphql.SubscriptionRender
 
-final case class PollResults(pollId: UUID, onNewData: IO[Unit]) extends ReactProps {
+final case class PollResults(pollId: UUID, onNewData: IO[Unit])(implicit val ctx: AppContextF)
+    extends ReactProps {
   @inline def render: VdomElement = PollResults.component(this)
 }
 
@@ -22,14 +23,16 @@ object PollResults {
 
   implicit val propsReuse: Reusability[Props] = Reusability.always
 
-  val component =
+  protected val component =
     ScalaComponent
       .builder[Props]("PollResults")
-      .render { $ =>
+      .render_P { props =>
+        implicit val ctx = props.ctx
+
         SubscriptionRender[PollResultsSubscription.Data, List[PollResultsSubscription.PollResult]](
-          AppState.clients.polls
+          props.ctx.clients.polls
             .subscribe(PollResultsSubscription)(
-              PollResultsSubscription.Variables($.props.pollId).some
+              PollResultsSubscription.Variables(props.pollId).some
             ),
           _.map(_.poll_results)
         )(
@@ -45,9 +48,11 @@ object PollResults {
                 }
               }
             ),
-          $.props.onNewData
+          props.onNewData
         )
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
+
+  def apply(props: Props) = component(props)
 }

@@ -3,6 +3,7 @@
 
 package explore.conditions
 
+import explore.implicits._
 import cats.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -18,7 +19,6 @@ import react.semanticui.widths._
 import explore.model.Conditions
 import explore.components.forms.EnumSelect
 import explore.components.graphql.SubscriptionRenderMod
-import explore.model.AppStateIO._
 import clue.GraphQLQuery
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
@@ -27,10 +27,10 @@ import gem.util.Enumerated
 import io.circe.HCursor
 import io.circe.DecodingFailure
 import io.circe.JsonObject
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 import monocle.macros.Lenses
 import monocle.function.Cons.headOption
-import crystal.react.StreamRendererMod.ModState
+import crystal.react.ModState
 import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
@@ -57,8 +57,9 @@ mutation {
  */
 
 final case class ConditionsPanel(
-  observationId: Observation.Id
-) extends ReactProps {
+  observationId:    Observation.Id
+)(implicit val ctx: AppContextF)
+    extends ReactProps {
   @inline override def render: VdomElement = ConditionsPanel.component(this)
 }
 
@@ -157,17 +158,19 @@ object ConditionsPanel {
   implicit val showImageQuality: Show[ImageQuality] =
     Show.show(_.label)
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields): IO[Unit] =
-    AppState.clients.conditions
+  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(
+    implicit ctx:                   AppContextF
+  ): IO[Unit] =
+    ctx.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
       .as(())
 
   case class Modify(
     observationId: Observation.Id,
     conditions:    Conditions,
-    modState:      ModState[Conditions],
+    modState:      ModState[IO, Conditions],
     set:           Undoer.Set[Conditions]
-  ) {
+  )(implicit ctx:  AppContextF) {
     def apply[A](
       lens:   Lens[Conditions, A],
       fields: A => Mutation.Fields
@@ -179,7 +182,7 @@ object ConditionsPanel {
         lens.asGetter, { v: A =>
           for {
             // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
-            _ <- modState(lens.set(v)).toIO // TODO Change modState in crystal to IO? (instead of Callback)
+            _ <- modState(lens.set(v))
             _ <- mutate(observationId, fields(v))
           } yield ()
         }
@@ -205,15 +208,19 @@ object ConditionsPanel {
     ScalaComponent
       .builder[ConditionsPanel]("ConditionsPanel")
       .render { $ =>
+        implicit val appCtx = $.props.ctx
+
         SubscriptionRenderMod[Subscription.Data, Conditions](
-          AppState.clients.conditions
+          $.props.ctx.clients.conditions
             .subscribe(Subscription)(
               Subscription.Variables($.props.observationId.format).some
             ),
           _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
-        ) { (conditions, modState) =>
+        ) { view =>
+          val conditions = view.value
+
           Undoer[Conditions] { ctx =>
-            val modify = Modify($.props.observationId, conditions, modState, ctx.set)
+            val modify = Modify($.props.observationId, conditions, view.mod, ctx.set)
 
             <.div(
               Form(
@@ -242,8 +249,8 @@ object ConditionsPanel {
                                             modify(Conditions.sb, sbFields))
                 )
               ),
-              Button(onClick = ctx.undo(conditions), disabled = ctx.undoEmpty)("Undo"),
-              Button(onClick = ctx.redo(conditions), disabled = ctx.redoEmpty)("Redo")
+              Button(onClick = ctx.undo(conditions).toCB, disabled = ctx.undoEmpty)("Undo"),
+              Button(onClick = ctx.redo(conditions).toCB, disabled = ctx.redoEmpty)("Redo")
             )
           }
         }

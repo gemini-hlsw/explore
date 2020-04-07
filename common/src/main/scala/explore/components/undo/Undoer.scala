@@ -9,14 +9,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 import cats.effect.IO
 import cats.implicits._
 import monocle.macros.Lenses
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 import monocle.Lens
 import monocle.Getter
 
 final case class Undoer[M](
   renderer: Undoer.UndoContext[M] => VdomElement
 ) extends ReactProps {
-  override def render: VdomElement = Undoer.component(this.asInstanceOf[Undoer[Any]])
+  @inline override def render: VdomElement = Undoer.component(this.asInstanceOf[Undoer[Any]])
 }
 
 object Undoer {
@@ -55,20 +55,20 @@ object Undoer {
 
   protected class Backend[M]($ : BackendScope[Props[M], State[M]]) {
     private def push(lens: Lens[State[M], List[Restorer[M]]]): Restorer[M] => IO[Unit] =
-      mod => $.modStateIO(lens.modify { stack: List[Restorer[M]] => mod +: stack })
+      mod => $.modStateIn[IO](lens.modify { stack: List[Restorer[M]] => mod +: stack })
 
     private def pop(lens: Lens[State[M], List[Restorer[M]]]): IO[Option[Restorer[M]]] =
-      $.stateIO.flatMap { s =>
+      $.stateIn[IO].flatMap { s =>
         lens.get(s) match {
           case head :: tail =>
-            $.modStateIO(lens.set(tail)).as(head.some)
+            $.modStateIn[IO](lens.set(tail)).as(head.some)
           case _ =>
             IO(None)
         }
       }
 
     private def reset(lens: Lens[State[M], List[Restorer[M]]]): IO[Unit] =
-      $.modStateIO(lens.set(List.empty))
+      $.modStateIn[IO](lens.set(List.empty))
 
     private val pushUndo: Restorer[M] => IO[Unit] =
       push(State.undoStack)
@@ -102,7 +102,7 @@ object Undoer {
       popFrom: IO[Option[Restorer[M]]],
       pushTo:  Restorer[M] => IO[Unit]
     )(m:       M): IO[Unit] =
-      popFrom.flatMap(_.fold(IO.unit)(restorer => restorer.restore(m).flatMap(pushTo)))
+      popFrom.flatMap(_.map(restorer => restorer.restore(m).flatMap(pushTo)).orEmpty)
 
     protected val undo: Undo[M] =
       restore(popUndo, pushRedo)

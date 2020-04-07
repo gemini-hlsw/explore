@@ -13,7 +13,7 @@ import cats.implicits._
 import cats.effect.IO
 import crystal._
 import crystal.react.StreamRenderer
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
 import cats.effect.ContextShift
@@ -61,27 +61,26 @@ object SubscriptionRender {
         )
       }
       .componentWillMount { $ =>
-        $.props.subscribe
-          .flatMap { subscription =>
-            implicit val cs = $.props.cs
+        $.props.subscribe.flatMap { subscription =>
+          implicit val cs = $.props.cs
 
-            $.modStateIO(_ =>
-              State(
-                subscription.some,
-                StreamRenderer
-                  .build(
-                    $.props
-                      .streamModifier(subscription.stream)
-                      .map[Pot[A]](a => Ready(a))
-                      .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                      .cons1(Pending())
-                  )
-                  .some
-              )
+          $.setStateIn[IO](
+            State(
+              subscription.some,
+              StreamRenderer
+                .build(
+                  $.props
+                    .streamModifier(subscription.stream)
+                    .map[Pot[A]](a => Ready(a))
+                    .flatTap(_ => fs2.Stream.eval($.props.onNewData))
+                    .cons1(Pending())
+                )
+                .some
             )
-          }
+          )
+        }.toCB
       }
-      .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty)
+      .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty.toCB)
       .configure(Reusability.shouldComponentUpdate)
       .build
 
