@@ -16,7 +16,8 @@ import crystal.react.StreamRenderer
 import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
-import cats.effect.ContextShift
+import cats.effect.ConcurrentEffect
+import cats.Monoid
 
 final case class SubscriptionRender[D, A](
   subscribe:      IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -25,29 +26,35 @@ final case class SubscriptionRender[D, A](
   val valueRender: A => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
 )(
-  implicit val cs: ContextShift[IO]
-) extends ReactProps {
+  implicit val ce: ConcurrentEffect[IO]
+) extends SubscriptionRender.Props[IO, D, A] with ReactProps {
   override def render: VdomElement =
-    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender[Any, Any]])
+    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
 }
 
 object SubscriptionRender {
-  type Props[D, A] = SubscriptionRender[D, A]
+  trait Props[F[_], D, A] {
+    val subscribe:      F[GraphQLStreamingClient[F]#Subscription[D]]
+    val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
+    val valueRender:    A => VdomNode
+    val onNewData:      F[Unit]
+    implicit val ce:    ConcurrentEffect[F]
+  }
 
-  final case class State[D, A](
+  final case class State[F[_], D, A](
     subscription: Option[
-      GraphQLStreamingClient[IO]#Subscription[D]
+      GraphQLStreamingClient[F]#Subscription[D]
     ] = None,
     renderer: Option[StreamRenderer[Pot[A]]] = None
   )
 
-  implicit def propsReuse[D, A]: Reusability[Props[D, A]] = Reusability.always
-  implicit def stateReuse[D, A]: Reusability[State[D, A]] = Reusability.never
+  implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
+  implicit def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
 
-  protected def componentBuilder[D, A] =
+  protected def componentBuilder[F[_], D, A](implicit monoid: Monoid[F[Unit]]) =
     ScalaComponent
-      .builder[Props[D, A]]("SubscriptionRender")
-      .initialState(State[D, A]())
+      .builder[Props[F, D, A]]("SubscriptionRender")
+      .initialState(State[F, D, A]())
       .render { $ =>
         <.div(
           $.state.renderer.whenDefined(
@@ -61,10 +68,10 @@ object SubscriptionRender {
         )
       }
       .componentWillMount { $ =>
-        $.props.subscribe.flatMap { subscription =>
-          implicit val cs = $.props.cs
+        implicit val ce = $.props.ce
 
-          $.setStateIn[IO](
+        $.props.subscribe.flatMap { subscription =>          
+          $.setStateIn[F](
             State(
               subscription.some,
               StreamRenderer
@@ -80,9 +87,13 @@ object SubscriptionRender {
           )
         }.toCB
       }
-      .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty.toCB)
+      .componentWillUnmount{ $ =>
+        implicit val ce = $.props.ce
+
+        $.state.subscription.map(_.stop).orEmpty.toCB
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  val component = componentBuilder[Any, Any]
+  val component = componentBuilder[IO, Any, Any]
 }

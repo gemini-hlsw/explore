@@ -3,11 +3,13 @@
 
 package explore.components.undo
 
-import cats.effect.IO
 import monocle.Getter
+import cats.Functor
 
 // We don't use a case class to avoid the type parameter on T
-trait Restorer[M] { // M = (Local) Model
+sealed trait Restorer[F[_], M] { // M = (Local) Model
+  protected implicit val functorF: Functor[F]
+
   type T // T = Value type
 
   val value: T // Value that will be restored upon undo/redo
@@ -15,17 +17,19 @@ trait Restorer[M] { // M = (Local) Model
     M,
     T
   ] // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
-  val setter: T => IO[Unit] // Modify the model
+  val setter: T => F[Unit] // Modify the model
 
-  def restore(m: M): IO[Restorer[M]] = // Actually restores the value and returns the reverse restorer
-    setter(value).map(_ => Restorer[M, T](m, getter, setter))
+  def restore(m: M): F[Restorer[F, M]] = // Actually restores the value and returns the reverse restorer
+    functorF.map(setter(value))(_ => Restorer[F, M, T](m, getter, setter))
 
   override def toString(): String = s"Restorer($value, ...)"
 }
 
 object Restorer {
-  def apply[M, A](m: M, _getter: Getter[M, A], _setter: A => IO[Unit]): Restorer[M] =
-    new Restorer[M] {
+  def apply[F[_], M, A](m: M, _getter: Getter[M, A], _setter: A => F[Unit])(implicit ff: Functor[F]): Restorer[F, M] =
+    new Restorer[F, M] {
+      override protected implicit val functorF = ff
+
       type T = A
 
       override val value = _getter.get(m)

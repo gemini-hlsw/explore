@@ -15,11 +15,12 @@ import crystal._
 import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
-import cats.effect.ContextShift
 import crystal.react.StreamRendererMod
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import cats.effect.Timer
+import cats.effect.ConcurrentEffect
+import cats.Monoid
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:      IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -28,30 +29,37 @@ final case class SubscriptionRenderMod[D, A](
   val valueRender: View[IO, A] => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
 )(
-  implicit val cs: ContextShift[IO],
+  implicit val ce: ConcurrentEffect[IO],
   val timer:       Timer[IO]
-) extends ReactProps {
+) extends SubscriptionRenderMod.Props[IO, D, A] with ReactProps {
   override def render: VdomElement =
-    SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod[Any, Any]])
+    SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod.Props[IO, Any, Any]])
 }
 
 object SubscriptionRenderMod {
-  protected type Props[D, A] = SubscriptionRenderMod[D, A]
+  trait Props[F[_], D, A] {
+    val subscribe:      F[GraphQLStreamingClient[F]#Subscription[D]]
+    val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
+    val valueRender:    View[F, A] => VdomNode
+    val onNewData:      F[Unit]
+    implicit val ce:    ConcurrentEffect[F]
+    implicit val timer: Timer[F]
+  }
 
-  protected final case class State[D, A](
+  protected final case class State[F[_], D, A](
     subscription: Option[
-      GraphQLStreamingClient[IO]#Subscription[D]
+      GraphQLStreamingClient[F]#Subscription[D]
     ] = None,
-    renderer: Option[StreamRendererMod[IO, Pot[A]]] = None
+    renderer: Option[StreamRendererMod[F, Pot[A]]] = None
   )
 
-  implicit protected def propsReuse[D, A]: Reusability[Props[D, A]] = Reusability.always
-  implicit protected def stateReuse[D, A]: Reusability[State[D, A]] = Reusability.never
+  implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
+  implicit protected def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
 
-  protected def componentBuilder[D, A] =
+  protected def componentBuilder[F[_], D, A](implicit monoid: Monoid[F[Unit]]) =
     ScalaComponent
-      .builder[Props[D, A]]("SubscriptionRenderMod")
-      .initialState(State[D, A]())
+      .builder[Props[F, D, A]]("SubscriptionRenderMod")
+      .initialState(State[F, D, A]())
       .render { $ =>
         <.div(
           $.state.renderer.whenDefined(
@@ -69,11 +77,11 @@ object SubscriptionRenderMod {
         )
       }
       .componentWillMount { $ =>
-        $.props.subscribe.flatMap { subscription =>
-          implicit val cs    = $.props.cs
-          implicit val timer = $.props.timer
+        implicit val ce    = $.props.ce
+        implicit val timer = $.props.timer
 
-          $.setStateIn[IO](
+        $.props.subscribe.flatMap { subscription =>
+          $.setStateIn[F](
             State(
               subscription.some,
               StreamRendererMod
@@ -90,9 +98,13 @@ object SubscriptionRenderMod {
           )
         }.toCB
       }
-      .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty.toCB)
+      .componentWillUnmount{$ =>
+        implicit val ce    = $.props.ce
+
+        $.state.subscription.map(_.stop).orEmpty.toCB
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  val component = componentBuilder[Any, Any]
+  val component = componentBuilder[IO, Any, Any]
 }

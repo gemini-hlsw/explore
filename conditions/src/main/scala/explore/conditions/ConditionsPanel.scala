@@ -169,7 +169,7 @@ object ConditionsPanel {
     observationId: Observation.Id,
     conditions:    Conditions,
     modState:      ModState[IO, Conditions],
-    set:           Undoer.Set[Conditions]
+    set:           Undoer.Set[IO, Conditions]
   )(implicit ctx:  AppContextF) {
     def apply[A](
       lens:   Lens[Conditions, A],
