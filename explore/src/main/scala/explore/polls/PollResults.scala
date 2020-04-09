@@ -13,7 +13,7 @@ import cats.effect.IO
 import explore.graphql.polls.PollResultsSubscription
 import explore.components.graphql.SubscriptionRender
 
-final case class PollResults(pollId: UUID, onNewData: IO[Unit])(implicit val ctx: AppContextF)
+final case class PollResults(pollId: UUID, onNewData: IO[Unit])(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline def render: VdomElement = PollResults.component(this)
 }

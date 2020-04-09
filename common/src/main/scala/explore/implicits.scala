@@ -12,11 +12,7 @@ import explore.model.Actions
 import crystal.ActionInterpreter
 import japgolly.scalajs.react.Reusability
 
-object implicits {
-  type Eff[A]      = IO[A]
-  type AppContextF = AppContext[Eff]
-  type ViewCtxF[A] = ViewCtx[Eff, AppContextF, A]
-
+object implicits extends ShorthandTypes {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
   implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
 
@@ -25,6 +21,6 @@ object implicits {
       viewCtx.interpreter(ctx => f(ctx.actions))
   }
 
-  @inline def ViewCtxFReusability[A](implicit r: Reusability[A]): Reusability[ViewCtxF[A]] =
-    crystal.react.implicits.viewCtxReusability[Eff, AppContextF, A]
+  @inline def ViewCtxIOReusability[A](implicit r: Reusability[A]): Reusability[ViewCtxIO[A]] =
+    crystal.react.implicits.viewCtxReusability[IO, AppContextIO, A]
 }

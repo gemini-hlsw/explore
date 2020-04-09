@@ -17,7 +17,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.colors._
 import crystal.react.implicits._
 
-final case class Tpe(target: ViewCtxF[Option[Target]]) extends ReactProps {
+final case class Tpe(target: ViewCtxIO[Option[Target]]) extends ReactProps {
   @inline def render: VdomElement = Tpe.component(this)
 }
 

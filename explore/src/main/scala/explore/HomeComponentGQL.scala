@@ -43,9 +43,9 @@ object HomeComponentGQL {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = ViewCtxF[RootModel]
+  type Props = ViewCtxIO[RootModel]
 
-  private implicit val propsReuse: Reusability[Props] = ViewCtxFReusability[RootModel]
+  private implicit val propsReuse: Reusability[Props] = ViewCtxIOReusability[RootModel]
 
   protected val component =
     ScalaComponent

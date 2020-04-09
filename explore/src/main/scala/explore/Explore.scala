@@ -3,55 +3,36 @@
 
 package explore
 
-import cats.implicits._
-import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.IOApp
-import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
 import japgolly.scalajs.react.extra.router._
-import explore.model.AppContext
 import explore.model.RootModel
-import explore.model.Target
-import explore.model.AppConfig
-import io.chrisdavenport.log4cats.Logger
-import io.chrisdavenport.log4cats.log4s.Log4sLogger
-import clue.Backend
-import clue.StreamingBackend
-import clue.js.AjaxJSBackend
-import clue.js.WebSocketJSBackend
+import crystal.react.AppRoot
+import japgolly.scalajs.react.vdom.VdomElement
+import explore.Routing
+import japgolly.scalajs.react.vdom.html_<^._
+import gem.Observation
 
 @JSExportTopLevel("Explore")
-object ExploreMain extends IOApp {
+object ExploreMain extends AppMain {
 
-  @JSExport
-  def runIOApp(): Unit = main(Array.empty)
+  override def rootComponent(
+    WithModelCtx: AppRoot.Component[IO, explore.AppContextIO, RootModel]
+  ): VdomElement =
+    WithModelCtx { viewCtx =>
+      val routing = new Routing(viewCtx) // !!! This creates a new router on each render.
 
-  override def run(args: List[String]): IO[ExitCode] = {
-    implicit val logger: Logger[IO] = Log4sLogger.createLocal[IO]
+      // val router = Router(BaseUrl.fromWindowOrigin, routing.config)
+      val (router, routerCtl) = Router.componentAndCtl(BaseUrl.fromWindowOrigin, routing.config)
 
-    implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
-
-    implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
-
-    val initialModel = RootModel(target = Target.M81.some)
-
-    AppContext.from[IO](AppConfig()).map { implicit ctx =>
-      val container = Option(dom.document.getElementById("root")).getOrElse {
-        val elem = dom.document.createElement("div")
-        elem.id = "root"
-        dom.document.body.appendChild(elem)
-        elem
-      }
-
-      val routing = new Routing(initialModel)
-
-      val router = Router(BaseUrl.fromWindowOrigin, routing.config)
-
-      router().renderIntoDOM(container)
-
-      ExitCode.Success
+      <.div(
+        <.button(
+          ^.tpe := "button",
+          routerCtl.setOnClick(ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
+        )("SET OBS"),
+        router()
+      )
     }
-  }
+
 }

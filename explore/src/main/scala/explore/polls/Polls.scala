@@ -21,7 +21,7 @@ import java.util.UUID
 import diode.data._
 import diode.react.ReactPot._
 
-final case class Polls(polls: ViewCtxF[Pot[List[Poll]]]) extends ReactProps {
+final case class Polls(polls: ViewCtxIO[Pot[List[Poll]]]) extends ReactProps {
   @inline def render: VdomElement = Polls.component(this)
 }
 

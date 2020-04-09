@@ -15,7 +15,7 @@ import crystal.react.implicits._
 import clue.StreamingClientStatus
 
 object PollsConnectionStatus {
-  type Props = AppContextF
+  type Props = AppContextIO
 
   private def statusColor(s: StreamingClientStatus): SemanticColor =
     s match {

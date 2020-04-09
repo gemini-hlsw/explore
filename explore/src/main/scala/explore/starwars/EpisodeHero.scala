@@ -29,7 +29,7 @@ object EpisodeHero {
     val fromString = all.map(e => e.toString -> e).toMap
   }
 
-  type Props = AppContextF
+  type Props = AppContextIO
 
   @Lenses
   final case class State(episode: Option[Episode] = None, hero: Pot[String] = Empty)
@@ -43,7 +43,7 @@ object EpisodeHero {
         }
       }"""
 
-    def query(episode: Episode)(implicit ctx: AppContextF): IO[Unit] =
+    def query(episode: Episode)(implicit ctx: AppContextIO): IO[Unit] =
       for {
         _    <- $.setStateIn[IO](State(episode.some, Pending()))
         json <- ctx.clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
@@ -58,7 +58,7 @@ object EpisodeHero {
     // (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])))
 
     def onClickItem(
-      implicit ctx: AppContextF
+      implicit ctx: AppContextIO
     ): (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
       (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])).toCB
 

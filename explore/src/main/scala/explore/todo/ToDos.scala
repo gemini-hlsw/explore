@@ -16,7 +16,7 @@ import diode.react.ReactPot._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
-final case class ToDos(tasks: ViewCtxF[Pot[List[Task]]]) extends ReactProps {
+final case class ToDos(tasks: ViewCtxIO[Pot[List[Task]]]) extends ReactProps {
   @inline def render: VdomElement = ToDos.component(this)
 }
 

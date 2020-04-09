@@ -55,10 +55,10 @@ object Undoer {
     redoStack: List[Restorer[F, M]] = List.empty
   )
 
-  // implicit protected def propsReuse[M]: Reusability[Props[M]] =
-  // Reusability.always
-  // implicit protected def stateReuse[M]: Reusability[State[M]] =
-  // Reusability.by(s => (s.undoStack.length, s.redoStack.length))
+  implicit protected def propsReuse[F[_], M]: Reusability[Props[F, M]] =
+    Reusability.always
+  implicit protected def stateReuse[F[_], M]: Reusability[State[F, M]] =
+    Reusability.never
 
   protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])(
     implicit monoid:                         Monoid[F[Unit]]
@@ -130,7 +130,7 @@ object Undoer {
       .builder[Props[IO, M]]("Undoer")
       .initialState(State[IO, M]())
       .renderBackend[Backend[IO, M]]
-      //.configure(Reusability.shouldComponentUpdate)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
   protected val component = componentBuilder[Any]

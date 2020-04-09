@@ -58,7 +58,7 @@ mutation {
 
 final case class ConditionsPanel(
   observationId:    Observation.Id
-)(implicit val ctx: AppContextF)
+)(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline override def render: VdomElement = ConditionsPanel.component(this)
 }
@@ -159,7 +159,7 @@ object ConditionsPanel {
     Show.show(_.label)
 
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(
-    implicit ctx:                   AppContextF
+    implicit ctx:                   AppContextIO
   ): IO[Unit] =
     ctx.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
@@ -170,7 +170,7 @@ object ConditionsPanel {
     conditions:    Conditions,
     modState:      ModState[IO, Conditions],
     set:           Undoer.Set[IO, Conditions]
-  )(implicit ctx:  AppContextF) {
+  )(implicit ctx:  AppContextIO) {
     def apply[A](
       lens:   Lens[Conditions, A],
       fields: A => Mutation.Fields
@@ -211,7 +211,7 @@ object ConditionsPanel {
         implicit val appCtx = $.props.ctx
 
         SubscriptionRenderMod[Subscription.Data, Conditions](
-          $.props.ctx.clients.conditions
+          appCtx.clients.conditions
             .subscribe(Subscription)(
               Subscription.Variables($.props.observationId.format).some
             ),
@@ -219,8 +219,8 @@ object ConditionsPanel {
         ) { view =>
           val conditions = view.value
 
-          Undoer[Conditions] { ctx =>
-            val modify = Modify($.props.observationId, conditions, view.mod, ctx.set)
+          Undoer[Conditions] { undoCtx =>
+            val modify = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
 
             <.div(
               Form(
@@ -249,8 +249,8 @@ object ConditionsPanel {
                                             modify(Conditions.sb, sbFields))
                 )
               ),
-              Button(onClick = ctx.undo(conditions).toCB, disabled = ctx.undoEmpty)("Undo"),
-              Button(onClick = ctx.redo(conditions).toCB, disabled = ctx.redoEmpty)("Redo")
+              Button(onClick = undoCtx.undo(conditions).toCB, disabled = undoCtx.undoEmpty)("Undo"),
+              Button(onClick = undoCtx.redo(conditions).toCB, disabled = undoCtx.redoEmpty)("Redo")
             )
           }
         }

@@ -18,14 +18,18 @@ import clue.Backend
 import clue.HttpClient
 import org.scalajs.dom
 import crystal.react.StreamRenderer
+import gem.Observation
 
 @Lenses
 case class RootModel(
-  target:   Option[Target]  = None,
-  todoList: Pot[List[Task]] = Pot.empty,
-  polls:    Pot[List[Poll]] = Pot.empty
+  id:       Option[Observation.Id] = None,
+  target:   Option[Target]         = None,
+  todoList: Pot[List[Task]]        = Pot.empty,
+  polls:    Pot[List[Poll]]        = Pot.empty
 )
 object RootModel {
+  implicit val observationIdReuse
+    : Reusability[Observation.Id]            = Reusability.never // This is just for temporary testing!!!!
   implicit val reuse: Reusability[RootModel] = Reusability.derive
 }
 
