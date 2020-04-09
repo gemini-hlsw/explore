@@ -31,18 +31,19 @@ final case class SubscriptionRenderMod[D, A](
 )(
   implicit val ce: ConcurrentEffect[IO],
   val timer:       Timer[IO]
-) extends SubscriptionRenderMod.Props[IO, D, A] with ReactProps {
+) extends SubscriptionRenderMod.Props[IO, D, A]
+    with ReactProps {
   override def render: VdomElement =
     SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod.Props[IO, Any, Any]])
 }
 
 object SubscriptionRenderMod {
   trait Props[F[_], D, A] {
-    val subscribe:      F[GraphQLStreamingClient[F]#Subscription[D]]
+    val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-    val valueRender:    View[F, A] => VdomNode
-    val onNewData:      F[Unit]
-    implicit val ce:    ConcurrentEffect[F]
+    val valueRender: View[F, A] => VdomNode
+    val onNewData: F[Unit]
+    implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
   }
 
@@ -98,8 +99,8 @@ object SubscriptionRenderMod {
           )
         }.toCB
       }
-      .componentWillUnmount{$ =>
-        implicit val ce    = $.props.ce
+      .componentWillUnmount { $ =>
+        implicit val ce = $.props.ce
 
         $.state.subscription.map(_.stop).orEmpty.toCB
       }

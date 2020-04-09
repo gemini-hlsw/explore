@@ -12,7 +12,6 @@ import scala.scalajs.js
 import js.annotation._
 import japgolly.scalajs.react.extra.router._
 import explore.model.AppContext
-// import explore.model.AppRoot
 import explore.model.RootModel
 import explore.model.Target
 import explore.model.AppConfig
@@ -55,10 +54,4 @@ object ExploreMain extends IOApp {
       ExitCode.Success
     }
   }
-
-  // TODO Move this to unmount of RootComponent
-  /*@JSExport
-  def stop(): Unit =
-    AppStateIO.AppState.cleanup().unsafeRunAsyncAndForget()
- */
 }

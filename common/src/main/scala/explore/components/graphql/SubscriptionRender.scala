@@ -27,18 +27,19 @@ final case class SubscriptionRender[D, A](
   val onNewData:   IO[Unit] = IO.unit
 )(
   implicit val ce: ConcurrentEffect[IO]
-) extends SubscriptionRender.Props[IO, D, A] with ReactProps {
+) extends SubscriptionRender.Props[IO, D, A]
+    with ReactProps {
   override def render: VdomElement =
     SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
 }
 
 object SubscriptionRender {
   trait Props[F[_], D, A] {
-    val subscribe:      F[GraphQLStreamingClient[F]#Subscription[D]]
+    val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-    val valueRender:    A => VdomNode
-    val onNewData:      F[Unit]
-    implicit val ce:    ConcurrentEffect[F]
+    val valueRender: A => VdomNode
+    val onNewData: F[Unit]
+    implicit val ce: ConcurrentEffect[F]
   }
 
   final case class State[F[_], D, A](
@@ -70,7 +71,7 @@ object SubscriptionRender {
       .componentWillMount { $ =>
         implicit val ce = $.props.ce
 
-        $.props.subscribe.flatMap { subscription =>          
+        $.props.subscribe.flatMap { subscription =>
           $.setStateIn[F](
             State(
               subscription.some,
@@ -87,7 +88,7 @@ object SubscriptionRender {
           )
         }.toCB
       }
-      .componentWillUnmount{ $ =>
+      .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
 
         $.state.subscription.map(_.stop).orEmpty.toCB

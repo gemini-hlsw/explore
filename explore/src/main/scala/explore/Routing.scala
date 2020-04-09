@@ -3,11 +3,12 @@
 
 package explore
 
-import explore.implicits._
+import cats.implicits._
 import cats.effect._
 import explore.model._
 import japgolly.scalajs.react.extra.router._
 import crystal.react.AppRoot
+import cats.kernel.Monoid
 
 sealed trait ElementItem extends Product with Serializable
 case object IconsElement extends ElementItem
@@ -18,11 +19,12 @@ case object HomePage extends Page
 final case class ElementPage(e: ElementItem) extends Page
 
 class Routing(initialModel: RootModel)(
-  implicit ctx:             AppContext[Eff],
-  ce:                       ConcurrentEffect[Eff],
-  timer:                    Timer[Eff]
+  implicit ctx:             AppContext[IO],
+  ce:                       ConcurrentEffect[IO],
+  timer:                    Timer[IO],
+  monoidf:                  Monoid[IO[Unit]]
 ) {
-  val WithModelCtx = AppRoot.component[Eff](initialModel, ctx)
+  val WithModelCtx = AppRoot.component[IO](initialModel, ctx)(ctx.cleanup.some)
 
   val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._

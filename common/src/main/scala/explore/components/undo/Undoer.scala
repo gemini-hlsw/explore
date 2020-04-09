@@ -18,8 +18,10 @@ import cats.kernel.Monoid
 
 final case class Undoer[M](
   renderer: Undoer.UndoContext[IO, M] => VdomElement
-) extends Undoer.Props[IO, M] with ReactProps {
-  @inline override def render: VdomElement = Undoer.component(this.asInstanceOf[Undoer.Props[IO, Any]])
+) extends Undoer.Props[IO, M]
+    with ReactProps {
+  @inline override def render: VdomElement =
+    Undoer.component(this.asInstanceOf[Undoer.Props[IO, Any]])
 }
 
 object Undoer {
@@ -44,7 +46,7 @@ object Undoer {
   type Redo[F[_], M] = M => F[Unit]
 
   protected trait Props[F[_], M] {
-    val renderer: UndoContext[F, M] => VdomElement    
+    val renderer: UndoContext[F, M] => VdomElement
   }
 
   @Lenses
@@ -58,7 +60,9 @@ object Undoer {
   // implicit protected def stateReuse[M]: Reusability[State[M]] =
   // Reusability.by(s => (s.undoStack.length, s.redoStack.length))
 
-  protected class Backend[F[_] : Async, M]($ : BackendScope[Props[F, M], State[F, M]])(implicit monoid: Monoid[F[Unit]]) {
+  protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])(
+    implicit monoid:                         Monoid[F[Unit]]
+  ) {
     private def push(lens: Lens[State[F, M], List[Restorer[F, M]]]): Restorer[F, M] => F[Unit] =
       mod => $.modStateIn[F](lens.modify { stack: List[Restorer[F, M]] => mod +: stack })
 
