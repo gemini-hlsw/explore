@@ -3,92 +3,56 @@
 
 package explore.polls
 
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.semanticui.elements.icon.Icon
-import react.semanticui.sizes._
 import java.util.UUID
-import explore.model.AppStateIO._
 import cats.implicits._
 import cats.effect.IO
-import crystal._
-import crystal.react.StreamRenderer
-import crystal.react.io.implicits._
 import explore.graphql.polls.PollResultsSubscription
-import clue.GraphQLStreamingClient
-import diode.data._
-import diode.react.ReactPot._
+import explore.components.graphql.SubscriptionRender
 
-final case class PollResults(pollId: UUID, onNewData: IO[Unit]) extends ReactProps {
+final case class PollResults(pollId: UUID, onNewData: IO[Unit])(implicit val ctx: AppContextIO)
+    extends ReactProps {
   @inline def render: VdomElement = PollResults.component(this)
 }
 
 object PollResults {
   type Props = PollResults
 
-  type Results = List[PollResultsSubscription.PollResult]
-
-  final case class State(
-    subscription: Option[
-      GraphQLStreamingClient[IO]#Subscription[PollResultsSubscription.Data]
-    ] = None,
-    renderer: Option[StreamRenderer[Pot[Results]]] = None
-  )
-
   implicit val propsReuse: Reusability[Props] = Reusability.always
-  implicit val stateReuse: Reusability[State] = Reusability.never
 
-  val component =
+  protected val component =
     ScalaComponent
       .builder[Props]("PollResults")
-      .initialState(State())
-      .render_S { state =>
-        <.div(
-          state.renderer.whenDefined(
-            _ { resultsPot =>
-              <.div(
-                resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                resultsPot.render { results =>
-                  <.ol(
-                    results.toTagMod { result =>
-                      (for {
-                        option <- result.option
-                        votes  <- result.votes
-                      } yield (option.text, votes)).whenDefined {
-                        case (text, votes) =>
-                          <.li(^.key := result.option.map(_.id.toString).orEmpty, s"$text: $votes")
-                      }
-                    }
-                  )
+      .render_P { props =>
+        implicit val ctx = props.ctx
+
+        SubscriptionRender[PollResultsSubscription.Data, List[PollResultsSubscription.PollResult]](
+          props.ctx.clients.polls
+            .subscribe(PollResultsSubscription)(
+              PollResultsSubscription.Variables(props.pollId).some
+            ),
+          _.map(_.poll_results)
+        )(
+          pollResults =>
+            <.ol(
+              pollResults.toTagMod { result =>
+                (for {
+                  option <- result.option
+                  votes  <- result.votes
+                } yield (option.text, votes)).whenDefined {
+                  case (text, votes) =>
+                    <.li(^.key := result.option.map(_.id.toString).orEmpty, s"$text: $votes")
                 }
-              )
-            }
-          )
+              }
+            ),
+          props.onNewData
         )
       }
-      .componentWillMount { $ =>
-        AppState.clients.polls
-          .subscribe(PollResultsSubscription)(
-            PollResultsSubscription.Variables($.props.pollId).some
-          )
-          .flatMap { subscription =>
-            $.modStateIO(_ =>
-              State(
-                subscription.some,
-                StreamRenderer
-                  .build(
-                    subscription.stream
-                      .map[Pot[Results]](r => Ready(r.poll_results))
-                      .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                      .cons1(Pending())
-                  )
-                  .some
-              )
-            )
-          }
-      }
-      .componentWillUnmount($ => $.state.subscription.map(_.stop).orEmpty)
       .configure(Reusability.shouldComponentUpdate)
       .build
+
+  def apply(props: Props) = component(props)
 }

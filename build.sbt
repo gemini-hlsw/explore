@@ -19,6 +19,10 @@ addCommandAlias(
   "conditionsWDS",
   "; conditions/fastOptJS::stopWebpackDevServer; conditions/fastOptJS::startWebpackDevServer; ~conditions/fastOptJS"
 )
+addCommandAlias(
+  "stopWDS",
+  "fastOptJS::stopWebpackDevServer"
+)
 
 // For Heroku deployment
 val stage = taskKey[Unit]("Stage and clean task")
@@ -30,7 +34,8 @@ stage := {
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
     // Remove sbt-scalajs-bundler directory, which includes node_modules.
-    val bundlerDir = (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
+    val bundlerDir =
+      (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
     sbt.IO.delete(bundlerDir)
     // Remove coursier cache
     val coursierCacheDir = csrCacheDirectory.value
@@ -92,6 +97,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReact,
     "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReact,
     "com.github.japgolly.scalajs-react" %%% "test" % scalaJsReact % Test,
+    "edu.gemini" %%% "gsp-core-model" % "0.1.7",
     "org.typelevel" %%% "cats-effect" % "2.1.2",
     "org.typelevel" %%% "cats-core" % "2.1.1",
     "io.chrisdavenport" %%% "log4cats-core" % "1.0.1",
@@ -99,15 +105,15 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.8",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
-    "com.rpiaggio" %%% "crystal" % "0.0.22",
-    "com.rpiaggio" %%% "clue-scalajs" % "0.0.5",
+    "com.rpiaggio" %%% "crystal" % "0.1.3",
+    "com.rpiaggio" %%% "clue-scalajs" % "0.0.6",
     "io.circe" %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku" %%% "diode-data" % "1.1.7",
     "io.suzaku" %%% "diode-react" % "1.1.7.160"
   ) ++ Seq(
-      "io.circe" %%% "circe-core",
-      "io.circe" %%% "circe-generic",
-      "io.circe" %%% "circe-parser"
+    "io.circe" %%% "circe-core",
+    "io.circe" %%% "circe-generic",
+    "io.circe" %%% "circe-parser"
   ).map(_ % circe)
 )
 

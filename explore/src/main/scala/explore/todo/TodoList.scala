@@ -8,7 +8,7 @@ import cats.effect.IO
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
-import crystal.react.io.implicits._
+import crystal.react.implicits._
 
 final case class TodoList(
   items:  List[Task],
@@ -25,7 +25,7 @@ object TodoList {
     .render_P { p =>
       def renderItem(item: Task) =
         <.li(
-          <.input.checkbox(^.checked := item.completed, ^.onChange --> p.toggle(item.id)),
+          <.input.checkbox(^.checked := item.completed, ^.onChange --> p.toggle(item.id).toCB),
           <.span(" "),
           if (item.completed) <.s(item.title) else <.span(item.title)
         )

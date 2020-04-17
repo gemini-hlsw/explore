@@ -3,6 +3,7 @@
 
 package explore
 
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
@@ -42,11 +43,17 @@ object HomeComponentGQL {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  val component =
+  type Props = ViewCtxIO[RootModel]
+
+  private implicit val propsReuse: Reusability[Props] = ViewCtxIOReusability[RootModel]
+
+  protected val component =
     ScalaComponent
-      .builder[RootModel]("HomeGQL")
+      .builder[Props]("HomeGQL")
       .initialState(0)
-      .render_P { p =>
+      .render_P { props =>
+        implicit val ctx = props.ctx
+
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
@@ -63,13 +70,15 @@ object HomeComponentGQL {
               // ToDos Demo
               <.div(^.key := "todos",
                     ^.cls := "tile",
-                    Tile(Tile.Props("ToDos"), ToDos(p.todoList))),
+                    Tile(Tile.Props("ToDos"), ToDos(props.zoomL(RootModel.todoList)))),
               // Starwars Demo
               <.div(^.key := "starwars",
                     ^.cls := "tile",
                     Tile(Tile.Props("Star Wars"), EpisodeHero())),
               // Polls demo
-              <.div(^.key := "polls", ^.cls := "tile", Tile(Tile.Props("Polls"), Polls(p.polls))),
+              <.div(^.key := "polls",
+                    ^.cls := "tile",
+                    Tile(Tile.Props("Polls"), Polls(props.zoomL(RootModel.polls)))),
               <.div(^.key := "pollsStatus",
                     ^.cls := "tile",
                     Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus()))
@@ -80,5 +89,5 @@ object HomeComponentGQL {
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(model: RootModel) = component(model)
+  def apply(props: Props) = component(props)
 }

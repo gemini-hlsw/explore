@@ -5,6 +5,9 @@
       "/**": "index.html"
     },
     "proxies": {
+      "/api/conditions": {
+        "origin": "https://todo-mongo-graphql-server.herokuapp.com"
+      },
       "/api/tasks": {
         "origin": "https://todo-mongo-graphql-server.herokuapp.com"
       },

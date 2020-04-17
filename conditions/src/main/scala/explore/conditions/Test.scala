@@ -3,30 +3,29 @@
 
 package explore.conditions
 
-import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.IOApp
-import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
+import crystal.react.AppRoot
+import explore.model.RootModel
+import explore.AppMain
+import japgolly.scalajs.react.vdom.VdomElement
 
 @JSExportTopLevel("Test")
-object Test extends IOApp {
+object Test extends AppMain {
 
-  @JSExport
-  def runIOApp(): Unit = main(Array.empty)
+  override def rootComponent(
+    WithModelCtx: AppRoot.Component[IO, explore.AppContextIO, RootModel]
+  ): VdomElement =
+    WithModelCtx { viewCtx =>
+      implicit val ctx = viewCtx.ctx
 
-  override def run(args: List[String]): IO[ExitCode] = IO {
-
-    val container = Option(dom.document.getElementById("root")).getOrElse {
-      val elem = dom.document.createElement("div")
-      elem.id = "root"
-      dom.document.body.appendChild(elem)
-      elem
+      ConditionsPanel(
+        Observation.Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+      )
     }
 
-    Conditions().renderIntoDOM(container)
-
-    ExitCode.Success
-  }
 }
