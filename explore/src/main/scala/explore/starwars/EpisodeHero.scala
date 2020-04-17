@@ -3,18 +3,18 @@
 
 package explore.starwars
 
+import explore.implicits._
 import cats.implicits._
 import cats.effect._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import crystal.react.io.implicits._
+import io.circe._
+import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
-import explore.model.AppStateIO._
 import monocle.macros._
 import react.semanticui.modules.dropdown._
 import react.semanticui.elements.icon.Icon
-import io.circe._
 import scala.scalajs.js.JSConverters._
 
 object EpisodeHero {
@@ -29,10 +29,12 @@ object EpisodeHero {
     val fromString = all.map(e => e.toString -> e).toMap
   }
 
+  type Props = AppContextIO
+
   @Lenses
   final case class State(episode: Option[Episode] = None, hero: Pot[String] = Empty)
 
-  class Backend($ : BackendScope[Unit, State]) {
+  class Backend($ : BackendScope[Props, State]) {
 
     private def queryDoc(episode: Episode) = s"""
       {
@@ -41,13 +43,11 @@ object EpisodeHero {
         }
       }"""
 
-    def query(episode: Episode): IO[Unit] =
+    def query(episode: Episode)(implicit ctx: AppContextIO): IO[Unit] =
       for {
-        _ <- $.setStateIO(State(episode.some, Pending()))
-        //hero <- AppState.Clients.starWars.query[Map[String, String], String](queryDoc, Map("episode" -> episode.toString))
-        //hero <- AppState.Clients.starWars.query[Json, String](queryDoc, Json.obj("episode" -> Json.fromString(episode.toString)))
-        json <- AppState.clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
-        _ <- $.modStateIO(
+        _    <- $.setStateIn[IO](State(episode.some, Pending()))
+        json <- ctx.clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
+        _ <- $.modStateIn[IO](
           State.hero.set(
             Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))
           )
@@ -57,10 +57,12 @@ object EpisodeHero {
     // val onChange: (ReactEvent, Dropdown.DropdownProps) => Callback =
     // (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])))
 
-    val onClickItem: (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
-      (_, p) => query(Episode.fromString(p.value.asInstanceOf[String]))
+    def onClickItem(
+      implicit ctx: AppContextIO
+    ): (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
+      (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])).toCB
 
-    def render(state: State) =
+    def render(props: Props, state: State) =
       <.div(
         Dropdown(
           placeholder = "Select episode...",
@@ -70,7 +72,7 @@ object EpisodeHero {
             DropdownItem(
               text     = e.toString,
               value    = e.toString,
-              onClickE = onClickItem
+              onClickE = onClickItem(props)
             )(
               ^.key := e.toString
             )
@@ -85,10 +87,10 @@ object EpisodeHero {
 
   private val component =
     ScalaComponent
-      .builder[Unit]("EpisodeHero")
+      .builder[Props]("EpisodeHero")
       .initialState(State())
       .renderBackend[Backend]
       .build
 
-  def apply() = component()
+  def apply()(implicit props: Props) = component(props)
 }

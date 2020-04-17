@@ -54,6 +54,7 @@ object OTLayout {
               direction = SidebarDirection.Left,
               visible   = s.menu
             )(
+              MenuHeader()(p.model.id.map(_.format).getOrElse[String]("No Observation")),
               MenuItem(as = "a", className = "sidetab")("Targets"),
               MenuItem(as = "a", className = "sidetab")("P II")
             ),

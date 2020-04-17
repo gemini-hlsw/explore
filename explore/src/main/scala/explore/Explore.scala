@@ -3,40 +3,36 @@
 
 package explore
 
-import cats.effect.ExitCode
 import cats.effect.IO
-import cats.effect.IOApp
-import org.scalajs.dom
 import scala.scalajs.js
 import js.annotation._
 import japgolly.scalajs.react.extra.router._
-import explore.model.{ AppConfig, AppStateIO }
+import explore.model.RootModel
+import crystal.react.AppRoot
+import japgolly.scalajs.react.vdom.VdomElement
+import explore.Routing
+import japgolly.scalajs.react.vdom.html_<^._
+import gem.Observation
 
 @JSExportTopLevel("Explore")
-object ExploreMain extends IOApp {
+object ExploreMain extends AppMain {
 
-  @JSExport
-  def runIOApp(): Unit = main(Array.empty)
+  override def rootComponent(
+    WithModelCtx: AppRoot.Component[IO, explore.AppContextIO, RootModel]
+  ): VdomElement =
+    WithModelCtx { viewCtx =>
+      val routing = new Routing(viewCtx) // !!! This creates a new router on each render.
 
-  override def run(args: List[String]): IO[ExitCode] =
-    AppStateIO.init(AppConfig()).map { appState =>
-      val container = Option(dom.document.getElementById("root")).getOrElse {
-        val elem = dom.document.createElement("div")
-        elem.id = "root"
-        dom.document.body.appendChild(elem)
-        elem
-      }
+      // val router = Router(BaseUrl.fromWindowOrigin, routing.config)
+      val (router, routerCtl) = Router.componentAndCtl(BaseUrl.fromWindowOrigin, routing.config)
 
-      val routing = new Routing(appState.rootModel.view())
-
-      val router = Router(BaseUrl.fromWindowOrigin, routing.config)
-
-      router().renderIntoDOM(container)
-
-      ExitCode.Success
+      <.div(
+        <.button(
+          ^.tpe := "button",
+          routerCtl.setOnClick(ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
+        )("SET OBS"),
+        router()
+      )
     }
 
-  @JSExport
-  def stop(): Unit =
-    AppStateIO.AppState.cleanup().unsafeRunAsyncAndForget()
 }

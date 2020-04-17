@@ -3,35 +3,33 @@
 
 package explore
 
-import explore.conditions.Conditions
+import explore.implicits._
+import explore.conditions.ConditionsPanel
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.elements.button._
 import react.common._
 import react.gridlayout._
 import react.sizeme._
 import model._
-import explore.todo.ToDos
-import explore.polls.Polls
-import explore.model.AppStateIO._
-import crystal.react.StreamRenderer
-import crystal.react.io.implicits._
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 6, h  = 9, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w  = 6, h  = 9, i = "coords"),
-      LayoutItem(x = 0, y = 10, w = 12, h = 8, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w  = 6, h  = 10, i = "tpe"),
+      LayoutItem(x = 6, y = 0, w  = 6, h  = 10, i = "coords"),
+      LayoutItem(x = 0, y = 10, w = 12, h = 8, i  = "doc", isDraggable = false)
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 5, h  = 5, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w = 5, h  = 5, i = "coords"),
-      LayoutItem(x = 0, y = 6, w = 10, h = 6, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w  = 5, h  = 10, i = "tpe"),
+      LayoutItem(x = 6, y = 0, w  = 5, h  = 10, i = "coords"),
+      LayoutItem(x = 0, y = 10, w = 10, h = 6, i  = "doc", isDraggable = false)
     )
   )
 
@@ -43,14 +41,17 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  private val pollConnectionStatus =
-    StreamRenderer.build(AppState.clients.polls.statusStream, Reusability.derive)
+  type Props = ViewCtxIO[RootModel]
 
-  val component =
+  private implicit val propsReuse: Reusability[Props] = ViewCtxIOReusability[RootModel]
+
+  protected val component =
     ScalaComponent
-      .builder[RootModel]("Home")
+      .builder[Props]("Home")
       .initialState(0)
-      .renderPS { (_, p, _) =>
+      .render_P { props =>
+        implicit val ctx = props.ctx
+
         <.div(
           ^.cls := "rgl-area",
           SizeMe() { s =>
@@ -64,20 +65,22 @@ object HomeComponent {
               onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
               layouts          = layouts
             )(
-              <.div(^.key := "tpe",    ^.cls := "tile", Tile(Tile.Props("Conditions"), Conditions())),
+              <.div(
+                ^.key := "tpe",
+                ^.cls := "tile",
+                Tile(Tile.Props("Conditions"),
+                     ConditionsPanel(
+                       Observation.Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get,
+                                      Index.One)
+                     ))
+              ),
               <.div(^.key := "coords", ^.cls := "tile", Tile(Tile.Props("Coordinates"), Imag())),
               <.div(
                 ^.key := "doc",
                 ^.cls := "tile",
                 Tile(
                   Tile.Props("Target Position"),
-                  <.span(
-                    pollConnectionStatus(status => <.div(s"Poll connection is: $status")),
-                    Button(onClick = AppState.clients.polls.close())("Close Connection")
-                  ),
-                  Polls(p.polls),
-                  ToDos(p.todoList),
-                  <.div(p.target.whenDefined(Tpe(_)))
+                  <.div(Tpe(props.zoomL(RootModel.target)))
                 )
               )
             )
@@ -87,5 +90,5 @@ object HomeComponent {
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(model: RootModel) = component(model)
+  def apply(props: Props) = component(props)
 }
