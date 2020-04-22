@@ -17,7 +17,6 @@ import explore.model.enum.WaterVapor
 import explore.model.enum.SkyBackground
 import react.semanticui.widths._
 import explore.model.Conditions
-import explore.components.forms.EnumSelect
 import explore.components.graphql.SubscriptionRenderMod
 import clue.GraphQLQuery
 import io.circe.{ Decoder, Encoder }
@@ -35,6 +34,7 @@ import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
 import explore.components.undo.Undoer
+import gpp.ui.forms.EnumSelect
 
 /*
 query {
@@ -220,7 +220,9 @@ object ConditionsPanel {
           val conditions = view.value
 
           Undoer[Conditions] { undoCtx =>
-            val modify = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
+            val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
+            def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
+              : A => Callback = { v: A => modifyIO(lens, fields)(v).toCB }
 
             <.div(
               Form(
