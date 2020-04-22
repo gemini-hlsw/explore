@@ -26,7 +26,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 trait AppMain extends IOApp {
 
   def rootComponent(
-    WithModelCtx: AppRoot.Component[IO, AppContextIO, RootModel]
+    viewCtx: ViewCtxIO[RootModel]
   ): VdomElement
 
   @JSExport
@@ -42,7 +42,7 @@ trait AppMain extends IOApp {
     val initialModel = RootModel(target = Target.M81.some)
 
     AppContext.from[IO](AppConfig()).map { implicit ctx =>
-      val WithModelCtx = AppRoot.component[IO](initialModel, ctx)(ctx.cleanup.some)
+      val RootComponent = AppRoot[IO](initialModel, ctx)(rootComponent, ctx.cleanup.some)
 
       val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
@@ -51,7 +51,7 @@ trait AppMain extends IOApp {
         elem
       }
 
-      rootComponent(WithModelCtx).renderIntoDOM(container)
+      RootComponent().renderIntoDOM(container)
 
       ExitCode.Success
     }

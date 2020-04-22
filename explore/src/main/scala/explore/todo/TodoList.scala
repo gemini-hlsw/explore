@@ -25,7 +25,7 @@ object TodoList {
     .render_P { p =>
       def renderItem(item: Task) =
         <.li(
-          <.input.checkbox(^.checked := item.completed, ^.onChange --> p.toggle(item.id).toCB),
+          <.input.checkbox(^.checked := item.completed, ^.onChange --> p.toggle(item.id).runInCB),
           <.span(" "),
           if (item.completed) <.s(item.title) else <.span(item.title)
         )

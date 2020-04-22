@@ -106,7 +106,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.10",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
-    "com.rpiaggio" %%% "crystal" % "0.1.3",
+    "com.rpiaggio" %%% "crystal" % "0.1.4",
     "com.rpiaggio" %%% "clue-scalajs" % "0.0.6",
     "io.circe" %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku" %%% "diode-data" % "1.1.7",
