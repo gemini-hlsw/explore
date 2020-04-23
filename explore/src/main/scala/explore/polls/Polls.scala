@@ -63,7 +63,7 @@ object Polls {
                         disabled = disabled,
                         onClick = castingOn(poll.id)
                           .flatMap(_ => props.polls.actions(_.polls).vote(option.id))
-                          .toCB
+                          .runInCB
                       )(option.text)
                     )
                   },
@@ -83,7 +83,7 @@ object Polls {
       .builder[Props]("Polls")
       .initialState(State())
       .renderBackend[Backend]
-      .componentWillMount($ => $.props.polls.actions(_.polls).refresh.toCB)
+      .componentWillMount($ => $.props.polls.actions(_.polls).refresh.runInCB)
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

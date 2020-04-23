@@ -86,12 +86,12 @@ object SubscriptionRender {
                 .some
             )
           )
-        }.toCB
+        }.runInCB
       }
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
 
-        $.state.subscription.map(_.stop).orEmpty.toCB
+        $.state.subscription.map(_.stop).orEmpty.runInCB
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

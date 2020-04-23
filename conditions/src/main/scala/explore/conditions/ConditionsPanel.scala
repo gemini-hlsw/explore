@@ -222,7 +222,7 @@ object ConditionsPanel {
           Undoer[Conditions] { undoCtx =>
             val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
             def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
-              : A => Callback = { v: A => modifyIO(lens, fields)(v).toCB }
+              : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
 
             <.div(
               Form(
@@ -251,8 +251,12 @@ object ConditionsPanel {
                                             modify(Conditions.sb, sbFields))
                 )
               ),
-              Button(onClick = undoCtx.undo(conditions).toCB, disabled = undoCtx.undoEmpty)("Undo"),
-              Button(onClick = undoCtx.redo(conditions).toCB, disabled = undoCtx.redoEmpty)("Redo")
+              Button(onClick = undoCtx.undo(conditions).runInCB, disabled = undoCtx.undoEmpty)(
+                "Undo"
+              ),
+              Button(onClick = undoCtx.redo(conditions).runInCB, disabled = undoCtx.redoEmpty)(
+                "Redo"
+              )
             )
           }
         }

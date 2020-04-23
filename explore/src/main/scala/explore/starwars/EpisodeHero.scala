@@ -60,7 +60,7 @@ object EpisodeHero {
     def onClickItem(
       implicit ctx: AppContextIO
     ): (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
-      (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])).toCB
+      (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])).runInCB
 
     def render(props: Props, state: State) =
       <.div(

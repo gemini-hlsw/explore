@@ -48,7 +48,7 @@ object ToDos {
     .builder[Props]("ToDos")
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount($ => onMount($.props).toCB)
+    .componentDidMount($ => onMount($.props).runInCB)
     .configure(Reusability.shouldComponentUpdate)
     .build
 }
