@@ -200,3 +200,7 @@ exports.extraAssets = {
     ]
   }
 };
+
+exports.noNode = {
+  node: false
+}

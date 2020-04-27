@@ -9,6 +9,7 @@ const isDevServer = process.argv.some(s => s.match(/webpack-dev-server\.js$/));
 
 const Web = Merge(
   ScalaJSConfig,
+  // parts.noNode, // We will have to use this in Scala 1.x, but doesn't work with 0.6
   parts.resolve,
   parts.resolveSemanticUI,
   parts.resourceModules,
