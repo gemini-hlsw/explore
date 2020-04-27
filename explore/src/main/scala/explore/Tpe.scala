@@ -51,7 +51,7 @@ object Tpe {
           ),
           <.div(
             List(Target.M81, Target.M51).toTagMod(target =>
-              renderButton(target, props.target.view.value)
+              renderButton(target, props.target.view.get)
             )
           )
         )

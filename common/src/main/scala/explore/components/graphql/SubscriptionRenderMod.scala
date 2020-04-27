@@ -66,8 +66,8 @@ object SubscriptionRenderMod {
           $.state.renderer.whenDefined(
             _ { view =>
               <.div(
-                view.value.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                view.value.render(_ =>
+                view.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
+                view.get.render(_ =>
                   $.props.valueRender(
                     view.zoom(_.get)(f => _.map(f))
                   )

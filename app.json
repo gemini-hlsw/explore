@@ -28,7 +28,7 @@
       ],
       "scripts" : {
         "test-setup": "npm install jsdom",
-        "test": "sbt scalafmtCheckAll headerCheck test:headerCheck test"
+        "test": "sbt scalafmtCheckAll headerCheck test:headerCheck compile test"
       }
     }
   }
