@@ -33,8 +33,9 @@ import crystal.react.ModState
 import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
-import explore.components.undo.Undoer
+import explore.components.undo.UndoRegion
 import gpp.ui.forms.EnumSelect
+import explore.components.undo.Undoer
 
 /*
 query {
@@ -217,9 +218,9 @@ object ConditionsPanel {
             ),
           _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
         ) { view =>
-          val conditions = view.value
+          val conditions = view.get
 
-          Undoer[Conditions] { undoCtx =>
+          UndoRegion[Conditions] { undoCtx =>
             val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
             def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
               : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }

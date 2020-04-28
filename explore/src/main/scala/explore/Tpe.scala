@@ -37,7 +37,7 @@ object Tpe {
       .render_P { props =>
         def renderButton(forTarget: Target, selected: Option[Target]) = {
           val color = selected.filter(_ == forTarget).map(_ => Blue).orUndefined
-          Button(onClick = props.target.view.set(forTarget.some).runInCB, color = color)(
+          Button(onClick = props.target.set(forTarget.some).runInCB, color = color)(
             forTarget.toString
           )
         }
@@ -51,7 +51,7 @@ object Tpe {
           ),
           <.div(
             List(Target.M81, Target.M51).toTagMod(target =>
-              renderButton(target, props.target.view.value)
+              renderButton(target, props.target.view.get)
             )
           )
         )

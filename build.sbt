@@ -106,16 +106,18 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.11",
     "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
     "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
-    "com.rpiaggio" %%% "crystal" % "0.1.4",
+    "com.rpiaggio" %%% "crystal" % "0.1.6",
     "com.rpiaggio" %%% "clue-scalajs" % "0.0.6",
     "io.circe" %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku" %%% "diode-data" % "1.1.7",
-    "io.suzaku" %%% "diode-react" % "1.1.7.160"
+    "io.suzaku" %%% "diode-react" % "1.1.7.160",
+    "com.lihaoyi" %%% "utest" % "0.7.4" % Test
   ) ++ Seq(
     "io.circe" %%% "circe-core",
     "io.circe" %%% "circe-generic",
     "io.circe" %%% "circe-parser"
-  ).map(_ % circe)
+  ).map(_ % circe),
+  testFrameworks += new TestFramework("utest.runner.Framework")
 )
 
 lazy val commonWDS = Seq(
