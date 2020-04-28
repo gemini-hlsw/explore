@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.components.undo
 
 import monocle._
@@ -17,16 +20,16 @@ object ListItem {
       // If it isn't but now it has to be, reinstate it.
       mod => list =>
         val oldElemAndIndex = getter.get(list)
-        val baseList =
+        val (baseList, oldElem) =
           oldElemAndIndex
-            .fold(list) {
-              case (_, idx) =>
-                list.take(idx) ++ list.drop(idx + 1)
+            .fold((list, none[A])) {
+              case (elem, idx) =>
+                (list.take(idx) ++ list.drop(idx + 1), elem.some)
             }
         val newElemAndIndex = mod(oldElemAndIndex)
         newElemAndIndex.fold(baseList) {
-          case (element, idx) =>
-            baseList.take(idx) ++ (element +: baseList.drop(idx))
+          case (newElem, idx) =>
+            baseList.take(idx) ++ (oldElem.getOrElse(newElem) +: baseList.drop(idx))
         }
     }
   }
@@ -38,7 +41,7 @@ case class ListItem[F[_], A, Id](idF: Id => A => Boolean)(id: Id) {
   def setter(
     mod: (List[A] => List[A]) => F[Unit]
   ): Option[(A, Int)] => F[Unit] =
-    valIdxOpt => mod(ListItem.indexSet[A](idF(id)).set(valIdxOpt))
+    elemAndIndex => mod(ListItem.indexSet[A](idF(id)).set(elemAndIndex))
 
   def modPos(f: Int => Int): Option[(A, Int)] => Option[(A, Int)] =
     _.map { case (value, idx) => (value, f(idx)) }

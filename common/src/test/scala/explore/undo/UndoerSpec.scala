@@ -9,8 +9,6 @@ import cats.effect.IO
 import cats.implicits._
 import cats.effect.concurrent.Ref
 import monocle.Iso
-import scala.concurrent._
-import ExecutionContext.Implicits.global
 import explore.components.undo.ListItem
 
 object UndoerSpec extends TestSuite {
@@ -19,112 +17,110 @@ object UndoerSpec extends TestSuite {
 
   def eqByRef[A]: A => A => Boolean = (a1: A) => (a2: A) => a1 == a2
 
-  def listItemEqByRef[F[_], A] = ListItem[F, A, A](eqByRef) _
+  def listItemEqByRef[A] = ListItem[IO, A, A](eqByRef) _
 
   val tests = Tests {
-    test("Undo") {
-      val io =
-        for {
-          model    <- Ref[IO].of(0)
-          undoable <- TestUndoable(model)
-          _        <- undoable.set(id[Int], model.set, 1)
-          _        <- undoable.set(id[Int], model.set, 2)
-          _        <- undoable.undo
-          v        <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == 1))
+    test("UndoAndRedo") {
+      (for {
+        model    <- Ref[IO].of(0)
+        undoable <- TestUndoable(model)
+        _        <- undoable.set(id[Int], model.set, 1)
+        _        <- undoable.set(id[Int], model.set, 2)
+        _        <- undoable.set(id[Int], model.set, 3)
+        _        <- undoable.get.map(v => assert(v == 3))
+        _        <- undoable.undo
+        _        <- undoable.get.map(v => assert(v == 2))
+        _        <- undoable.undo
+        _        <- undoable.get.map(v => assert(v == 1))
+        _        <- undoable.redo
+        _        <- undoable.get.map(v => assert(v == 2))
+        _        <- undoable.redo
+        _        <- undoable.get.map(v => assert(v == 3))
+      } yield ()).unsafeToFuture()
     }
 
-    test("Redo") {
-      val io =
-        for {
-          model    <- Ref[IO].of(0)
-          undoable <- TestUndoable(model)
-          _        <- undoable.set(id[Int], model.set, 1)
-          _        <- undoable.set(id[Int], model.set, 2)
-          _        <- undoable.set(id[Int], model.set, 3)
-          _        <- undoable.undo
-          _        <- undoable.undo
-          _        <- undoable.redo
-          v        <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == 2))
+    test("ListModPosUndoRedo") {
+      (for {
+        model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
+        undoable <- TestUndoable(model)
+        item = listItemEqByRef(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.setPos(8))
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
+        _ <- undoable.undo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _ <- undoable.redo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
+      } yield ()).unsafeToFuture()
     }
 
-    test("ListSet") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](3)
-          _ <- undoable
-            .mod[Option[(Int, Int)]](item.getter, item.setter(model.update), item.setPos(8))
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 4, 5, 3)))
+    test("ListDeleteUndoRedo") {
+      (for {
+        model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
+        undoable <- TestUndoable(model)
+        item = listItemEqByRef(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
+        _ <- undoable.undo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _ <- undoable.redo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
+      } yield ()).unsafeToFuture()
     }
 
-    test("ListUndo") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](3)
-          _ <- undoable.mod(item.getter, item.setter(model.update), item.setPos(8))
-          _ <- undoable.undo
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 3, 4, 5)))
+    test("ListInsertUndoRedo") {
+      (for {
+        model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
+        undoable <- TestUndoable(model)
+        item = listItemEqByRef(8)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.upsert(8, 3))
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
+        _ <- undoable.undo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _ <- undoable.redo
+        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
+      } yield ()).unsafeToFuture()
     }
 
-    test("ListDelete") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](3)
-          _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 4, 5)))
+    case class V(id: Int, s: String)
+    object V {
+      def apply(id: Int): V = V(id, id.toString)
     }
 
-    test("ListUndoDelete") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](3)
-          _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
-          _ <- undoable.undo
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 3, 4, 5)))
-    }
+    val vEqById: Int => V => Boolean = (id: Int) => (v: V) => id == v.id
 
-    test("ListInsert") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](8)
-          _ <- undoable.mod(item.getter, item.setter(model.update), item.upsert(8, 3))
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 3, 8, 4, 5)))
-    }
+    def listVById = ListItem[IO, V, Int](vEqById) _
 
-    test("ListUndoInsert") {
-      val io =
-        for {
-          model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
-          undoable <- TestUndoable(model)
-          item = listItemEqByRef[IO, Int](8)
-          _ <- undoable.mod(item.getter, item.setter(model.update), item.upsert(8, 3))
-          _ <- undoable.undo
-          v <- undoable.get
-        } yield v
-      io.unsafeToFuture().map(result => assert(result == List(1, 2, 3, 4, 5)))
+    test("ListObjModPosUndoRedo") {
+      (for {
+        model    <- Ref[IO].of(List(V(1), V(2), V(3), V(4), V(5)))
+        undoable <- TestUndoable(model)
+        item = listVById(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.setPos(8))
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
+        )
+        _ <- model.update(l => l.init :+ l.last.copy(s = "three")) // External modification, before undo
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
+        )
+        _ <- undoable.undo
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(3, "three"), V(4, "4"), V(5, "5")))
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
+        )
+        _ <- undoable.undo
+        _ <- model.update(l => l.take(2) ++ (l(2).copy(s = "tres") +: l.drop(3))) // External modification, before redo
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(3, "tres"), V(4, "4"), V(5, "5")))
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "tres")))
+        )
+      } yield ()).unsafeToFuture()
     }
   }
 }
