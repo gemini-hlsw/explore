@@ -169,7 +169,7 @@ object ConditionsPanel {
     observationId: Observation.Id,
     conditions:    Conditions,
     modState:      ModState[IO, Conditions],
-    set:           Undoer.Set[IO, Conditions]
+    setter:        Undoer.Setter[IO, Conditions]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
       lens:   Lens[Conditions, A],
@@ -177,7 +177,7 @@ object ConditionsPanel {
     )(
       value:  A
     ): IO[Unit] =
-      set(
+      setter.set(
         conditions,
         lens.asGetter,
         { v: A =>
@@ -221,7 +221,7 @@ object ConditionsPanel {
           val conditions = view.get
 
           UndoRegion[Conditions] { undoCtx =>
-            val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
+            val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.setter)
             def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
               : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
 

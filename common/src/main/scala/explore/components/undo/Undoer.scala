@@ -14,19 +14,26 @@ object Undoer {
   type Stack[F[_], M] = List[Restorer[F, M]]
 
   case class Context[F[_], M](
-    set:       Set[F, M],
+    setter:    Setter[F, M],
     undo:      Undo[F, M],
     redo:      Redo[F, M],
     undoEmpty: Boolean,
     redoEmpty: Boolean
   )
 
-  trait Set[F[_], M] {
-    def apply[A](
+  trait Setter[F[_], M] {
+    def set[A](
       m:      M,
       getter: Getter[M, A],
       setter: A => F[Unit]
     )(v:      A): F[Unit]
+
+    def mod[A](
+      m:      M,
+      getter: Getter[M, A],
+      setter: A => F[Unit]
+    )(f:      A => A): F[Unit] =
+      set(m, getter, setter)(f(getter.get(m)))
   }
 
   type Undo[F[_], M] = M => F[Unit]
@@ -56,7 +63,7 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
         case head :: tail =>
           modStacks(lens.set(tail)).as(head.some)
         case _            =>
-          Sync[F].delay(None)
+          none.pure[F]
       }
     }
 
@@ -77,8 +84,8 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
 
   private val resetRedo: F[Unit] = reset(redoStack)
 
-  protected val set: Undoer.Set[F, M] = new Undoer.Set[F, M] {
-    override def apply[A](
+  protected val set: Undoer.Setter[F, M] = new Undoer.Setter[F, M] {
+    override def set[A](
       m:      M,
       getter: Getter[M, A],
       setter: A => F[Unit]

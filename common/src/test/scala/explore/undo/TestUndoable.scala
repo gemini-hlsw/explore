@@ -43,15 +43,21 @@ object TestUndoer        {
 }
 
 class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M]) {
+  def get: F[M] = model.get
 
   def set[A](getter: Getter[M, A], setter: A => F[Unit], value: A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
-      _ <- c.set[A](m, getter, setter)(value)
+      _ <- c.setter.set[A](m, getter, setter)(value)
     } yield ()
 
-  def get: F[M] = model.get
+  def mod[A](getter: Getter[M, A], setter: A => F[Unit], f: A => A): F[Unit] =
+    for {
+      m <- model.get
+      c <- undoer.ctx
+      _ <- c.setter.mod[A](m, getter, setter)(f)
+    } yield ()
 
   def undo: F[Unit] =
     for {
