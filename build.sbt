@@ -97,7 +97,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReact,
     "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReact,
     "com.github.japgolly.scalajs-react" %%% "test" % scalaJsReact % Test,
-    "edu.gemini" %%% "gsp-core-model" % "0.1.7",
+    "edu.gemini" %%% "gsp-core-model" % "0.1.8",
     "edu.gemini" %%% "gpp-ui" % "0.0.2",
     "org.typelevel" %%% "cats-effect" % "2.1.3",
     "org.typelevel" %%% "cats-core" % "2.1.1",
