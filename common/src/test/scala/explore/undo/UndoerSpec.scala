@@ -10,7 +10,9 @@ import cats.implicits._
 import cats.effect.concurrent.Ref
 import monocle.Iso
 import cats.kernel.Eq
-import explore.components.undo._
+import explore.undo._
+import explore.util.tree._
+import cats.data.NonEmptyList
 
 object UndoerSpec extends TestSuite {
 
@@ -27,7 +29,7 @@ object UndoerSpec extends TestSuite {
   val listIntMod = new ListModIdentityId[IO, Int]
 
   val tests = Tests {
-    test("UndoAndRedo") {
+    test("UndoRedo") {
       (for {
         model    <- Ref[IO].of(0)
         undoable <- TestUndoable(model)
@@ -127,5 +129,227 @@ object UndoerSpec extends TestSuite {
         )
       } yield ()).unsafeToFuture()
     }
+
+    class TreeModByIdEq[F[_], A, Id: Eq](getId: A => Id)
+        extends TreeMod[F, A, Id](eqByIdEq[A, Id](getId))
+
+    class TreeModIdentityId[F[_], A: Eq] extends TreeModByIdEq[F, A, A](identity)
+
+    val treeIntMod = new TreeModIdentityId[IO, Int]
+
+    test("TreeModPosUndoRedo") {
+      (for {
+        model <- Ref[IO].of(
+          Tree(
+            Node(1, Node(2), Node(3)),
+            Node(4, Node(5))
+          )
+        )
+        undoable <- TestUndoable(model)
+        item = treeIntMod.ItemWithId(3)
+        _ <- undoable.mod(item.getter,
+                          item.setter(model.update),
+                          item.setIdx(NonEmptyList.of(1, 1)))
+        _ <- undoable.get.map(v =>
+          assert(
+            v ==
+              Tree(
+                Node(1, Node(2)),
+                Node(4, Node(5), Node(3))
+              )
+          )
+        )
+        _ <- undoable.undo
+        _ <- undoable.get.map(v =>
+          assert(
+            v ==
+              Tree(
+                Node(1, Node(2), Node(3)),
+                Node(4, Node(5))
+              )
+          )
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(
+            v ==
+              Tree(
+                Node(1, Node(2)),
+                Node(4, Node(5), Node(3))
+              )
+          )
+        )
+      } yield ()).unsafeToFuture()
+    }
+
+    test("TreeDeleteUndoRedo") {
+      (for {
+        model <- Ref[IO].of(
+          Tree(
+            Node(1, Node(2), Node(3)),
+            Node(4, Node(5))
+          )
+        )
+        undoable <- TestUndoable(model)
+        item = treeIntMod.ItemWithId(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
+        _ <- undoable.get.map(v =>
+          assert(
+            v ==
+              Tree(
+                Node(1, Node(2)),
+                Node(4, Node(5))
+              )
+          )
+        )
+        _ <- undoable.undo
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(1, Node(2), Node(3)),
+              Node(4, Node(5))
+            )
+          )
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(
+            v ==
+              Tree(
+                Node(1, Node(2)),
+                Node(4, Node(5))
+              )
+          )
+        )
+      } yield ()).unsafeToFuture()
+    }
+
+    test("TreeInsertUndoRedo") {
+      (for {
+        model <- Ref[IO].of(
+          Tree(
+            Node(1, Node(2), Node(3)),
+            Node(4, Node(5))
+          )
+        )
+        undoable <- TestUndoable(model)
+        item = treeIntMod.ItemWithId(8)
+        _ <- undoable.mod(item.getter,
+                          item.setter(model.update),
+                          item.upsert(8, NonEmptyList.of(0, 2)))
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(1, Node(2), Node(3), Node(8)),
+              Node(4, Node(5))
+            )
+          )
+        )
+        _ <- undoable.undo
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(1, Node(2), Node(3)),
+              Node(4, Node(5))
+            )
+          )
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(1, Node(2), Node(3), Node(8)),
+              Node(4, Node(5))
+            )
+          )
+        )
+      } yield ()).unsafeToFuture()
+    }
+
+    val vTreeMod = new TreeModByIdEq[IO, V, Int](_.id)
+
+    test("TreeObjModPosUndoRedo") {
+      (for {
+        model <- Ref[IO].of(
+          Tree(
+            Node(V(1), Node(V(2)), Node(V(3))),
+            Node(V(4), Node(V(5)))
+          )
+        )
+        undoable <- TestUndoable(model)
+        item = vTreeMod.ItemWithId(3)
+        _ <- undoable.mod(item.getter,
+                          item.setter(model.update),
+                          item.setIdx(NonEmptyList.of(1, 8)))
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(V(1), Node(V(2))),
+              Node(V(4), Node(V(5)), Node(V(3)))
+            )
+          )
+        )
+        _ <- model.update { t => // External modification, before undo
+          val node1 = t.children.head
+          val node2 = t.children.tail.head
+          Tree(node1,
+               Node(node2.value,
+                    node2.children.init :+ Node(node2.children.last.value.copy(s = "three"))))
+        }
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(V(1), Node(V(2))),
+              Node(V(4), Node(V(5)), Node(V(3, "three")))
+            )
+          )
+        )
+        _ <- undoable.undo
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(V(1), Node(V(2)), Node(V(3, "three"))),
+              Node(V(4), Node(V(5)))
+            )
+          )
+        )
+        _ <- undoable.redo
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(V(1), Node(V(2))),
+              Node(V(4), Node(V(5)), Node(V(3, "three")))
+            )
+          )
+        )
+        _ <- undoable.undo
+        _ <- model.update { t => // External modification, before redo
+          val node1 = t.children.head
+          val node2 = t.children.tail.head
+          Tree(Node(node1.value,
+                    node1.children.init :+ Node(node1.children.last.value.copy(s = "tres"))),
+               node2)
+        }
+        _ <- undoable.get.map(v =>
+          assert(
+            v == Tree(
+              Node(V(1), Node(V(2)), Node(V(3, "tres"))),
+              Node(V(4), Node(V(5)))
+            )
+          )
+        )
+        _ <- undoable.redo
+        _ <- undoable.get
+          .map(v =>
+            assert(
+              v == Tree(
+                Node(V(1), Node(V(2))),
+                Node(V(4), Node(V(5)), Node(V(3, "tres")))
+              )
+            )
+          )
+      } yield ()).unsafeToFuture()
+    }
+
   }
 }

@@ -3,7 +3,7 @@
 
 package explore.undo
 
-import explore.components.undo.Undoer
+import explore.undo.Undoer
 import cats.effect.Sync
 import cats.Monoid
 import cats.FlatMap

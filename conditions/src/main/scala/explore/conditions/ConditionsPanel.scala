@@ -35,7 +35,7 @@ import monocle.Lens
 import react.semanticui.elements.button.Button
 import explore.components.undo.UndoRegion
 import gpp.ui.forms.EnumSelect
-import explore.components.undo.Undoer
+import explore.undo.Undoer
 
 /*
 query {

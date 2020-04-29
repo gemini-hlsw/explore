@@ -101,6 +101,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "edu.gemini" %%% "gpp-ui" % "0.0.2",
     "org.typelevel" %%% "cats-effect" % "2.1.3",
     "org.typelevel" %%% "cats-core" % "2.1.1",
+    "org.typelevel" %%% "mouse" % "0.24",
     "io.chrisdavenport" %%% "log4cats-core" % "1.0.1",
     "io.chrisdavenport" %%% "log4cats-log4s" % "0.4.0-M1",
     "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.12",
