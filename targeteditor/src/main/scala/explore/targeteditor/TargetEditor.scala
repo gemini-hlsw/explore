@@ -70,9 +70,9 @@ object TargetEditor {
       <.div(
         ^.height := "100%",
         ^.width := "100%",
-        Grid(columns = Two, padded = GridPadded.Horizontally)(
+        Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
           ^.height := "100%",
-          GridRow(
+          GridRow(stretched = true)(
             GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
               Form(onSubmit = goTo(searchEV.value))(
                 FormDropdown(

@@ -10,7 +10,7 @@ import explore.model.RootModel
 import japgolly.scalajs.react.vdom.VdomElement
 import explore.Routing
 import japgolly.scalajs.react.vdom.html_<^._
-import gem.Observation
+// import gem.Observation
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {
@@ -19,13 +19,13 @@ object ExploreMain extends AppMain {
     val routing = new Routing(viewCtx) // !!! This creates a new router on each render.
 
     // val router = Router(BaseUrl.fromWindowOrigin, routing.config)
-    val (router, routerCtl) = Router.componentAndCtl(BaseUrl.fromWindowOrigin, routing.config)
+    val (router, _) = Router.componentAndCtl(BaseUrl.fromWindowOrigin, routing.config)
 
     <.div(
-      <.button(
-        ^.tpe := "button",
-        routerCtl.setOnClick(ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
-      )("SET OBS"),
+      // <.button(
+      //   ^.tpe := "button",
+      //   routerCtl.setOnClick(ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
+      // )("SET OBS"),
       router()
     )
   }

@@ -8,6 +8,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.collections.menu._
 import react.semanticui.sizes._
 import react.common._
+import explore.components.ui.GPPStyles
 
 object Tile {
   final case class Props(title: String)
@@ -28,7 +29,7 @@ object Tile {
           )(
             MenuItem(as = "a")(Icons.BarsIcon, p.title)
           ),
-          ^.cls := "tileTitle",
+          GPPStyles.GPPTile,
           c
         )
       }
