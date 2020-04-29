@@ -18,7 +18,7 @@ import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import io.chrisdavenport.log4cats.log4s.Log4sLogger
 import explore.model.RootModel
-import explore.model.Target
+import explore.model.ExploreTarget
 import explore.model.AppContext
 import explore.model.AppConfig
 import japgolly.scalajs.react.vdom.VdomElement
@@ -43,7 +43,7 @@ trait AppMain extends IOApp {
 
     implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
-    val initialModel = RootModel(target = Target.M81.some)
+    val initialModel = RootModel(target = ExploreTarget("M81", none).some)
 
     AppContext.from[IO](AppConfig()).map { implicit ctx =>
       val RootComponent = AppRoot[IO](initialModel, ctx)(rootComponent, ctx.cleanup.some)

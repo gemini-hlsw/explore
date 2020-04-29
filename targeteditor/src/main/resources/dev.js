@@ -6,5 +6,5 @@ import App from "sjs/targeteditor-fastopt.js";
 
 if (module.hot) {
   module.hot.accept();
-  App.Test.runIOApp();
+  App.TargetTest.runIOApp();
 }

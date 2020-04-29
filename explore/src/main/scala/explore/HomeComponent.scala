@@ -5,6 +5,7 @@ package explore
 
 import explore.implicits._
 import explore.conditions.ConditionsPanel
+import explore.target.TargetEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,17 +21,15 @@ import crystal.implicits._
 object HomeComponent {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 6, h = 10, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w = 6, h = 10, i = "coords"),
-      LayoutItem(x = 0, y = 10, w = 12, h = 8, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i  = "conditions")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 5, h = 10, i = "tpe"),
-      LayoutItem(x = 6, y = 0, w = 5, h = 10, i = "coords"),
-      LayoutItem(x = 0, y = 10, w = 10, h = 6, i = "doc", isDraggable = false)
+      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i  = "conditions")
     )
   )
 

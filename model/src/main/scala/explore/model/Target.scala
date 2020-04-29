@@ -3,9 +3,22 @@
 
 package explore.model
 
-sealed trait Target
-object Target {
-  final case object M81 extends Target
-  final case object M51 extends Target
+import cats.implicits._
+import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.CatsReact._
+import gem.Target
+import monocle.Lens
+import monocle.macros.Lenses
 
+@Lenses
+final case class ExploreTarget(searchTerm: String, target: Option[Target])
+
+object ExploreTarget {
+  implicit val targetReuse: Reusability[Target]           = Reusability.byEq
+  implicit val expTargetReuse: Reusability[ExploreTarget] = Reusability.derive[ExploreTarget]
+
+  val searchTermL: Lens[Option[ExploreTarget], String] =
+    Lens[Option[ExploreTarget], String](_.map(_.searchTerm).orEmpty)(b =>
+      s => s.map(_.copy(searchTerm = b))
+    )
 }

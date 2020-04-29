@@ -1,7 +1,7 @@
 import "resources/theme/semantic.less";
 import "resources/less/style.less";
 
-import App from "sjs/conditions-fastopt.js";
+import App from "sjs/targeteditor-fastopt.js";
 import React from "react";
 
 // Enable why did you update plugin

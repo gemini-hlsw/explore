@@ -30,6 +30,10 @@ addCommandAlias(
   "quickTest",
   "modelJVM/test"
 )
+addCommandAlias(
+  "targeteditorWDS",
+  "; targeteditor/fastOptJS::stopWebpackDevServer; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
+)
 
 // For Heroku deployment
 val stage = taskKey[Unit]("Stage and clean task")
@@ -54,7 +58,7 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, common, conditions, explore)
+  .aggregate(model.jvm, model.js, common, conditions, targeteditor, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -71,6 +75,19 @@ lazy val common = project
   .settings(commonJsLibSettings: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(model.js)
+
+lazy val targeteditor = project
+  .in(file("targeteditor"))
+  .settings(commonSettings: _*)
+  .settings(commonLibSettings: _*)
+  .settings(commonWDS: _*)
+  .enablePlugins(ScalaJSBundlerPlugin)
+  .dependsOn(common)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.2+4-5027c3f4-SNAPSHOT"
+    )
+  )
 
 lazy val conditions = project
   .in(file("conditions"))
@@ -98,7 +115,7 @@ lazy val explore: Project    = project
     publishArtifact := false,
     Keys.`package` := file("")
   )
-  .dependsOn(conditions)
+  .dependsOn(conditions, targeteditor)
 
 lazy val commonSettings      = Seq(
   scalaVersion := "2.13.1",

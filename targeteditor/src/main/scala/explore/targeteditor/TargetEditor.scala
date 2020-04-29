@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.conditions
+package explore.target
 
 import cats.implicits._
 import japgolly.scalajs.react._
@@ -19,6 +19,7 @@ import react.semanticui.elements.icon.Icon
 import japgolly.scalajs.react.extra.StateSnapshot
 import monocle.macros.Lenses
 import explore.components.ui.GPPStyles
+import react.semanticui.modules.dropdown.DropdownItem
 
 final case class TargetEditor(
   target: ViewCtxIO[Option[ExploreTarget]]
@@ -51,15 +52,21 @@ object TargetEditor {
     private val ref = Ref.toScalaComponent(AladinComp)
 
     def goTo(search: String): Callback =
-      ref.get
-        .flatMapCB(
-          _.backend
-            .gotoObject(search, (a, b) => Callback.log(s"córd: $a $b"), Callback.log("error"))
-        )
+      Callback.log(search) *>
+        ref.get
+          .flatMapCB(
+            _.backend
+              .gotoObject(search, (a, b) => Callback.log(s"córd: $a $b"), Callback.log("error"))
+          )
 
     def render(p: Props) = {
+      // val raEV =
+      //   StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
+      // val decEV =
+      //   StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
       val searchEV =
         StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
+
       <.div(
         ^.height := "100%",
         ^.width := "100%",
@@ -67,13 +74,33 @@ object TargetEditor {
           ^.height := "100%",
           GridRow(
             GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-              Form(onSubmit          = goTo(searchEV.value))(
+              Form(onSubmit = goTo(searchEV.value))(
+                FormDropdown(
+                  label     = "Type",
+                  value     = 0,
+                  selection = true,
+                  options = List(DropdownItem(value = 0, text = "Sidereal"),
+                                 DropdownItem(value = 1, text = "Non-sidereal"))
+                ),
                 FormInputEV(name     = "search",
                             id       = "search",
                             snapshot = searchEV,
                             label    = "Target",
                             focus    = true,
-                            icon     = Icon("search"))
+                            icon     = Icon("search")),
+                FormGroup(widths       = FormWidths.Equal)(
+                  FormInputEV(width    = Seven,
+                              name     = "ra",
+                              id       = "ra",
+                              snapshot = searchEV,
+                              label    = "RA"),
+                  FormInputEV(width    = Seven,
+                              name     = "dec",
+                              id       = "dec",
+                              snapshot = searchEV,
+                              label    = "Dec"),
+                  FormButton(width = Two, icon = true, label = "X")("", Icon("angle right"))
+                )
               )
             ),
             GridColumn(stretched = true, computer = Twelve)(
