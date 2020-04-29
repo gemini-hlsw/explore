@@ -9,15 +9,22 @@ import cats.effect.IO
 import cats.implicits._
 import cats.effect.concurrent.Ref
 import monocle.Iso
-import explore.components.undo.ListItem
+import cats.kernel.Eq
+import explore.components.undo._
 
 object UndoerSpec extends TestSuite {
 
   def id[A] = Iso.id[A].asLens.asGetter
 
-  def eqByRef[A]: A => A => Boolean = (a1: A) => (a2: A) => a1 == a2
+  def eqByIdEq[A, Id: Eq](getId: A => Id): Id => A => Boolean =
+    (id: Id) => (a: A) => Eq[Id].eqv(id, getId(a))
 
-  def listItemEqByRef[A] = ListItem[IO, A, A](eqByRef) _
+  class ListModByIdEq[F[_], A, Id: Eq](getId: A => Id)
+      extends ListMod[F, A, Id](eqByIdEq[A, Id](getId))
+
+  class ListModIdentityId[F[_], A: Eq] extends ListModByIdEq[F, A, A](identity)
+
+  val listIntMod = new ListModIdentityId[IO, Int]
 
   val tests = Tests {
     test("UndoAndRedo") {
@@ -43,8 +50,8 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listItemEqByRef(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.setPos(8))
+        item = listIntMod.ItemWithId(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.setIdx(8))
         _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
         _ <- undoable.undo
         _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
@@ -57,7 +64,7 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listItemEqByRef(3)
+        item = listIntMod.ItemWithId(3)
         _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
         _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
         _ <- undoable.undo
@@ -71,7 +78,7 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listItemEqByRef(8)
+        item = listIntMod.ItemWithId(8)
         _ <- undoable.mod(item.getter, item.setter(model.update), item.upsert(8, 3))
         _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
         _ <- undoable.undo
@@ -86,16 +93,14 @@ object UndoerSpec extends TestSuite {
       def apply(id: Int): V = V(id, id.toString)
     }
 
-    val vEqById: Int => V => Boolean = (id: Int) => (v: V) => id == v.id
-
-    def listVById = ListItem[IO, V, Int](vEqById) _
+    val vListMod = new ListModByIdEq[IO, V, Int](_.id)
 
     test("ListObjModPosUndoRedo") {
       (for {
         model    <- Ref[IO].of(List(V(1), V(2), V(3), V(4), V(5)))
         undoable <- TestUndoable(model)
-        item = listVById(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.setPos(8))
+        item = vListMod.ItemWithId(3)
+        _ <- undoable.mod(item.getter, item.setter(model.update), item.setIdx(8))
         _ <- undoable.get.map(v =>
           assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
         )
