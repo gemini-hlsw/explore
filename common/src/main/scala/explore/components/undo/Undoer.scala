@@ -47,20 +47,20 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
 
   val redoStack: StackLens
 
-  private def push(lens: Lens[Stacks, Undoer.Stack[F, M]]): Restorer[F, M] => F[Unit] =
+  private def push(lens:  Lens[Stacks, Undoer.Stack[F, M]]): Restorer[F, M] => F[Unit] =
     mod => modStacks(lens.modify { stack: List[Restorer[F, M]] => mod +: stack })
 
-  private def pop(lens: Lens[Stacks, Undoer.Stack[F, M]]): F[Option[Restorer[F, M]]] =
+  private def pop(lens:   Lens[Stacks, Undoer.Stack[F, M]]): F[Option[Restorer[F, M]]] =
     FlatMap[F].flatMap(getStacks) { s =>
       lens.get(s) match {
         case head :: tail =>
           modStacks(lens.set(tail)).as(head.some)
-        case _ =>
+        case _            =>
           Sync[F].delay(None)
       }
     }
 
-  private def reset(lens: Lens[Stacks, List[Restorer[F, M]]]): F[Unit] =
+  private def reset(lens: Lens[Stacks, List[Restorer[F, M]]]): F[Unit]                 =
     modStacks(lens.set(List.empty))
 
   private val pushUndo: Restorer[F, M] => F[Unit] =
@@ -93,8 +93,8 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
   // Undo and Redo are "restore" but with switched stacks.
   private def restore(
     popFrom: F[Option[Restorer[F, M]]],
-    pushTo:  Restorer[F, M] => F[Unit]
-  )(m:       M): F[Unit] =
+    pushTo: Restorer[F, M] => F[Unit]
+  )(m:      M): F[Unit] =
     popFrom.flatMap(_.map(restorer => restorer.restore(m).flatMap(pushTo)).orEmpty)
 
   protected val undo: Undoer.Undo[F, M] =

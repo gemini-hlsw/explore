@@ -35,7 +35,7 @@ object PollsConnectionStatus {
           ),
           Button(
             negative = true,
-            onClick  = ctx.clients.polls.close().runInCB
+            onClick = ctx.clients.polls.close().runInCB
           )("Close Connection")
         )
       }

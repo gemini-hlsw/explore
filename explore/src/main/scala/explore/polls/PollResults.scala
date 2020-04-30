@@ -18,7 +18,7 @@ final case class PollResults(pollId: UUID, onNewData: IO[Unit])(implicit val ctx
   @inline def render: VdomElement = PollResults.component(this)
 }
 
-object PollResults {
+object PollResults     {
   type Props = PollResults
 
   implicit val propsReuse: Reusability[Props] = Reusability.always

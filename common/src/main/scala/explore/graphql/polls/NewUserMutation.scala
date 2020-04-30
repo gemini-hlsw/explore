@@ -31,7 +31,10 @@ object NewUserMutation extends GraphQLQuery {
     implicit val jsonDecoder: Decoder[Insert_user] = deriveDecoder[Insert_user]
     implicit val jsonEncoder: Encoder[Insert_user] = deriveEncoder[Insert_user]
 
-    case class Returning(id: UUID, created_at: String) //  // timestamptz - Use ZonedDateTime. Need custom [De|En]coder.
+    case class Returning(
+      id:         UUID,
+      created_at: String
+    ) //  // timestamptz - Use ZonedDateTime. Need custom [De|En]coder.
     object Returning {
       implicit val jsonDecoder: Decoder[Returning] = deriveDecoder[Returning]
       implicit val jsonEncoder: Encoder[Returning] = deriveEncoder[Returning]
@@ -39,5 +42,5 @@ object NewUserMutation extends GraphQLQuery {
   }
 
   implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-  implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  implicit val dataDecoder: Decoder[Data] = Data.jsonDecoder
 }

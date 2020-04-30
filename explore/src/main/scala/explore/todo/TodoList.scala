@@ -17,7 +17,7 @@ final case class TodoList(
   @inline def render: VdomElement = TodoList.component(this)
 }
 
-object TodoList {
+object TodoList        {
   type Props = TodoList
 
   val component = ScalaComponent
@@ -27,7 +27,8 @@ object TodoList {
         <.li(
           <.input.checkbox(^.checked := item.completed, ^.onChange --> p.toggle(item.id).runInCB),
           <.span(" "),
-          if (item.completed) <.s(item.title) else <.span(item.title)
+          if (item.completed) <.s(item.title)
+          else <.span(item.title)
         )
 
       <.ul(p.items.toTagMod(renderItem))

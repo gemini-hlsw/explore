@@ -26,7 +26,7 @@ object UndoerSpec extends TestSuite {
           _        <- undoable.set(id[Int], model.set, 2)
           _        <- undoable.undo
           v        <- undoable.get
-        } yield (v)
+        } yield v
       io.unsafeToFuture().map(result => assert(result == 1))
     }
     test("Redo") {
@@ -41,7 +41,7 @@ object UndoerSpec extends TestSuite {
           _        <- undoable.undo
           _        <- undoable.redo
           v        <- undoable.get
-        } yield (v)
+        } yield v
       io.unsafeToFuture().map(result => assert(result == 2))
     }
   }

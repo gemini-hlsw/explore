@@ -20,11 +20,11 @@ object Tile {
       .render_PC { (p, c) =>
         <.div(
           Menu(
-            size       = Mini,
-            attached   = MenuAttached.Top,
-            compact    = true,
+            size = Mini,
+            attached = MenuAttached.Top,
+            compact = true,
             borderless = true,
-            tabular    = MenuTabular.Right
+            tabular = MenuTabular.Right
           )(
             MenuItem(as = "a")(Icons.BarsIcon, p.title)
           ),

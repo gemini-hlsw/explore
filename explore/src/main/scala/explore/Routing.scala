@@ -11,11 +11,11 @@ import monocle.Prism
 import japgolly.scalajs.react.Callback
 import crystal.react.implicits._
 
-sealed trait ElementItem extends Product with Serializable
-case object IconsElement extends ElementItem
+sealed trait ElementItem  extends Product with Serializable
+case object IconsElement  extends ElementItem
 case object LabelsElement extends ElementItem
 
-sealed trait Page extends Product with Serializable
+sealed trait Page    extends Product with Serializable
 case object HomePage extends Page
 final case class ObsPage(obsId: Observation.Id) extends Page
 
@@ -29,12 +29,12 @@ class Routing(viewCtx: ViewCtxIO[RootModel]) {
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 
-  val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
+  val config: RouterConfig[Page]             = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
     (emptyRule
       | staticRoute(root, HomePage) ~> render(HomeComponent(viewCtx))
-      | dynamicRouteCT((("/obs" / string("[a-zA-Z0-9-]+"))).pmapL(obsIdP)) ~> render(
+      | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> render(
         HomeComponent(viewCtx)
       ))
       .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
@@ -43,7 +43,7 @@ class Routing(viewCtx: ViewCtxIO[RootModel]) {
         case (_, ObsPage(id)) =>
           viewCtx.view.zoomL(RootModel.id).set(Option(id)).runInCB *>
             Callback.log(s"id:1 $id")
-        case _ => Callback.empty
+        case _                => Callback.empty
       }
       .renderWith(layout)
       .logToConsole

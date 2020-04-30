@@ -13,7 +13,7 @@ import diode.data._
 import crystal.View
 import crystal.ActionInterpreter
 
-trait PollsActions[F[_]] {
+trait PollsActions[F[_]]                                        {
   def retrieveAll: F[List[Poll]]
   def refresh: F[Unit]
   def vote(optionId: UUID): F[Unit]
@@ -22,25 +22,26 @@ trait PollsActions[F[_]] {
 class PollsActionInterpreter[F[_]: ConcurrentEffect](
   pollsClient: GraphQLClient[F]
 ) extends ActionInterpreter[F, PollsActions, Pot[List[Poll]]] {
-  def of(view: View[F, Pot[List[Poll]]]) = new PollsActions[F] {
+  def of(view: View[F, Pot[List[Poll]]]) =
+    new PollsActions[F] {
 
-    val retrieveAll: F[List[Poll]] =
-      pollsClient.query(PollsQuery)().map(_.poll)
+      val retrieveAll: F[List[Poll]] =
+        pollsClient.query(PollsQuery)().map(_.poll)
 
-    val refresh: F[Unit] =
-      for {
-        _     <- view.set(Pending())
-        polls <- retrieveAll
-        _     <- view.set(Ready(polls))
-      } yield ()
+      val refresh: F[Unit] =
+        for {
+          _     <- view.set(Pending())
+          polls <- retrieveAll
+          _     <- view.set(Ready(polls))
+        } yield ()
 
-    def vote(optionId: UUID): F[Unit] =
-      pollsClient
-        .query(VoteMutation)(
-          VoteMutation
-            .Variables(optionId, UUID.fromString("664ccbe7-b3da-9865-e7cf-8e64ea91897d"))
-            .some
-        )
-        .map(_ => ())
-  }
+      def vote(optionId: UUID): F[Unit] =
+        pollsClient
+          .query(VoteMutation)(
+            VoteMutation
+              .Variables(optionId, UUID.fromString("664ccbe7-b3da-9865-e7cf-8e64ea91897d"))
+              .some
+          )
+          .map(_ => ())
+    }
 }
