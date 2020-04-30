@@ -3,7 +3,6 @@
 
 package explore.undo
 
-import monocle.Getter
 import monocle.Lens
 import cats.FlatMap
 import cats.implicits._
@@ -23,17 +22,17 @@ object Undoer {
 
   trait Setter[F[_], M] {
     def set[A](
-      m:      M,
-      getter: Getter[M, A],
-      setter: A => F[Unit]
-    )(v:      A): F[Unit]
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(v:    A): F[Unit]
 
     def mod[A](
-      m:      M,
-      getter: Getter[M, A],
-      setter: A => F[Unit]
-    )(f:      A => A): F[Unit] =
-      set(m, getter, setter)(f(getter.get(m)))
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(f:    A => A): F[Unit] =
+      set(m, lens, setM)(f(lens.get(m)))
   }
 
   type Undo[F[_], M] = M => F[Unit]
@@ -86,14 +85,14 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
 
   protected val set: Undoer.Setter[F, M] = new Undoer.Setter[F, M] {
     override def set[A](
-      m:      M,
-      getter: Getter[M, A],
-      setter: A => F[Unit]
-    )(v:      A): F[Unit] =
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(v:    A): F[Unit] =
       for {
-        _ <- pushUndo(Restorer[F, M, A](m, getter, setter))
+        _ <- pushUndo(Restorer[F, M, A](m, lens, setM))
         _ <- resetRedo
-        _ <- setter(v)
+        _ <- setM(lens.set(v)(m))
       } yield ()
   }
 

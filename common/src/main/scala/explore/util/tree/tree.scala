@@ -3,8 +3,10 @@
 
 package explore.util.tree
 
-final case class Tree[+A](children: List[Node[A]])
-final case class Node[+A](value:    A, children: List[Node[A]] = List.empty)
+import monocle.macros.Lenses
+
+@Lenses final case class Tree[A](children: List[Node[A]])
+@Lenses final case class Node[A](value:    A, children: List[Node[A]] = List.empty)
 
 object Tree {
   def empty[A]: Tree[A] = Tree(List.empty)

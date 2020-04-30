@@ -4,11 +4,14 @@
 package explore.undo
 
 import cats.implicits._
+import monocle.Getter
 
 class ListMod[F[_], A, Id](hasId: Id => A => Boolean) extends IndexedColMod[F, List, Int, A, Id] {
 
-  override def getById(list: List[A], id: Id): Option[(A, Int)] =
-    list.indexWhere(hasId(id)).some.filter(_ >= 0).map(i => (list(i), i))
+  def getterForId(id: Id): Getter[List[A], Option[(A, Int)]] =
+    Getter[List[A], Option[(A, Int)]](list =>
+      list.indexWhere(hasId(id)).some.filter(_ >= 0).map(i => (list(i), i))
+    )
 
   override def removeWithIdx(list: List[A], idx: Int): List[A] =
     list.take(idx) ++ list.drop(idx + 1)

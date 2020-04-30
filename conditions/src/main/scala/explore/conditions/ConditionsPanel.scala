@@ -29,7 +29,7 @@ import io.circe.JsonObject
 import crystal.react.implicits._
 import monocle.macros.Lenses
 import monocle.function.Cons.headOption
-import crystal.react.ModState
+import crystal.react.SetState
 import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
@@ -168,7 +168,7 @@ object ConditionsPanel {
   case class Modify(
     observationId: Observation.Id,
     conditions:    Conditions,
-    modState:      ModState[IO, Conditions],
+    setState:      SetState[IO, Conditions],
     setter:        Undoer.Setter[IO, Conditions]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
@@ -179,12 +179,12 @@ object ConditionsPanel {
     ): IO[Unit] =
       setter.set(
         conditions,
-        lens.asGetter,
-        { v: A =>
+        lens,
+        { c: Conditions =>
           for {
             // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
-            _ <- modState(lens.set(v))
-            _ <- mutate(observationId, fields(v))
+            _ <- setState(c)
+            _ <- mutate(observationId, fields(lens.get(c)))
           } yield ()
         }
       )(value)
@@ -221,7 +221,7 @@ object ConditionsPanel {
           val conditions = view.get
 
           UndoRegion[Conditions] { undoCtx =>
-            val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.setter)
+            val modifyIO = Modify($.props.observationId, conditions, view.set, undoCtx.setter)
             def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
               : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
 

@@ -12,11 +12,10 @@ import monocle.Iso
 import cats.kernel.Eq
 import explore.undo._
 import explore.util.tree._
-import cats.data.NonEmptyList
 
 object UndoerSpec extends TestSuite {
 
-  def id[A] = Iso.id[A].asLens.asGetter
+  def id[A] = Iso.id[A].asLens
 
   def eqByIdEq[A, Id: Eq](getId: A => Id): Id => A => Boolean =
     (id: Id) => (a: A) => Eq[Id].eqv(id, getId(a))
@@ -33,9 +32,9 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(0)
         undoable <- TestUndoable(model)
-        _        <- undoable.set(id[Int], model.set, 1)
-        _        <- undoable.set(id[Int], model.set, 2)
-        _        <- undoable.set(id[Int], model.set, 3)
+        _        <- undoable.set(id[Int], 1)
+        _        <- undoable.set(id[Int], 2)
+        _        <- undoable.set(id[Int], 3)
         _        <- undoable.get.map(v => assert(v == 3))
         _        <- undoable.undo
         _        <- undoable.get.map(v => assert(v == 2))
@@ -52,13 +51,12 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listIntMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.setIdx(8))
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
-        _ <- undoable.undo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
-        _ <- undoable.redo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
+        _        <- undoable.mod(listIntMod.at(3), listIntMod.setIdx(8))
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
+        _        <- undoable.undo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _        <- undoable.redo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 4, 5, 3)))
       } yield ()).unsafeToFuture()
     }
 
@@ -66,13 +64,12 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listIntMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
-        _ <- undoable.undo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
-        _ <- undoable.redo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
+        _        <- undoable.mod(listIntMod.at(3), listIntMod.delete)
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
+        _        <- undoable.undo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _        <- undoable.redo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 4, 5)))
       } yield ()).unsafeToFuture()
     }
 
@@ -80,13 +77,12 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
         undoable <- TestUndoable(model)
-        item = listIntMod.ItemWithId(8)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.upsert(8, 3))
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
-        _ <- undoable.undo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
-        _ <- undoable.redo
-        _ <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
+        _        <- undoable.mod(listIntMod.at(8), listIntMod.upsert(8, 3))
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
+        _        <- undoable.undo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 3, 4, 5)))
+        _        <- undoable.redo
+        _        <- undoable.get.map(v => assert(v == List(1, 2, 3, 8, 4, 5)))
       } yield ()).unsafeToFuture()
     }
 
@@ -101,8 +97,7 @@ object UndoerSpec extends TestSuite {
       (for {
         model    <- Ref[IO].of(List(V(1), V(2), V(3), V(4), V(5)))
         undoable <- TestUndoable(model)
-        item = vListMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.setIdx(8))
+        _        <- undoable.mod(vListMod.at(3), vListMod.setIdx(8))
         _ <- undoable.get.map(v =>
           assert(v == List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
         )
@@ -130,8 +125,7 @@ object UndoerSpec extends TestSuite {
       } yield ()).unsafeToFuture()
     }
 
-    class TreeModByIdEq[F[_], A, Id: Eq](getId: A => Id)
-        extends TreeMod[F, A, Id](eqByIdEq[A, Id](getId))
+    class TreeModByIdEq[F[_], A, Id: Eq](getId: A => Id) extends TreeMod[F, A, Id](getId)
 
     class TreeModIdentityId[F[_], A: Eq] extends TreeModByIdEq[F, A, A](identity)
 
@@ -146,10 +140,7 @@ object UndoerSpec extends TestSuite {
           )
         )
         undoable <- TestUndoable(model)
-        item = treeIntMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter,
-                          item.setter(model.update),
-                          item.setIdx(NonEmptyList.of(1, 1)))
+        _        <- undoable.mod(treeIntMod.at(3), treeIntMod.setIdx((4.some, 1)))
         _ <- undoable.get.map(v =>
           assert(
             v ==
@@ -191,8 +182,7 @@ object UndoerSpec extends TestSuite {
           )
         )
         undoable <- TestUndoable(model)
-        item = treeIntMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter, item.setter(model.update), item.delete)
+        _        <- undoable.mod(treeIntMod.at(3), treeIntMod.delete)
         _ <- undoable.get.map(v =>
           assert(
             v ==
@@ -233,10 +223,7 @@ object UndoerSpec extends TestSuite {
           )
         )
         undoable <- TestUndoable(model)
-        item = treeIntMod.ItemWithId(8)
-        _ <- undoable.mod(item.getter,
-                          item.setter(model.update),
-                          item.upsert(8, NonEmptyList.of(0, 2)))
+        _        <- undoable.mod(treeIntMod.at(8), treeIntMod.upsert(8, (1.some, 8)))
         _ <- undoable.get.map(v =>
           assert(
             v == Tree(
@@ -277,10 +264,7 @@ object UndoerSpec extends TestSuite {
           )
         )
         undoable <- TestUndoable(model)
-        item = vTreeMod.ItemWithId(3)
-        _ <- undoable.mod(item.getter,
-                          item.setter(model.update),
-                          item.setIdx(NonEmptyList.of(1, 8)))
+        _        <- undoable.mod(vTreeMod.at(3), vTreeMod.setIdx((4.some, 1)))
         _ <- undoable.get.map(v =>
           assert(
             v == Tree(
@@ -350,6 +334,5 @@ object UndoerSpec extends TestSuite {
           )
       } yield ()).unsafeToFuture()
     }
-
   }
 }

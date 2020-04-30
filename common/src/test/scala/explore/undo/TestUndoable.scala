@@ -9,8 +9,8 @@ import cats.Monoid
 import cats.FlatMap
 import cats.implicits._
 import monocle.macros.Lenses
-import monocle.Getter
 import cats.effect.concurrent.Ref
+import monocle.Lens
 
 @Lenses
 case class TestStacks[F[_], A](
@@ -45,18 +45,18 @@ object TestUndoer        {
 class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M]) {
   def get: F[M] = model.get
 
-  def set[A](getter: Getter[M, A], setter: A => F[Unit], value: A): F[Unit] =
+  def set[A](lens: Lens[M, A], value: A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
-      _ <- c.setter.set[A](m, getter, setter)(value)
+      _ <- c.setter.set[A](m, lens, model.set)(value)
     } yield ()
 
-  def mod[A](getter: Getter[M, A], setter: A => F[Unit], f: A => A): F[Unit] =
+  def mod[A](lens: Lens[M, A], f: A => A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
-      _ <- c.setter.mod[A](m, getter, setter)(f)
+      _ <- c.setter.mod[A](m, lens, model.set)(f)
     } yield ()
 
   def undo: F[Unit] =

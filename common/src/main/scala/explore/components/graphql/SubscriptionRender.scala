@@ -57,10 +57,10 @@ object SubscriptionRender {
       .builder[Props[F, D, A]]("SubscriptionRender")
       .initialState(State[F, D, A]())
       .render { $ =>
-        <.div(
-          $.state.renderer.whenDefined(
+        React.Fragment(
+          $.state.renderer.fold[VdomNode](EmptyVdom)(
             _ { resultsPot =>
-              <.div(
+              React.Fragment(
                 resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
                 resultsPot.render(results => $.props.valueRender(results))
               )

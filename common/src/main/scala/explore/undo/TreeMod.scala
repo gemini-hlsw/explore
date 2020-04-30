@@ -5,71 +5,72 @@ package explore.undo
 
 import cats.implicits._
 import mouse.boolean._
-import cats.data.NonEmptyList
 import scala.annotation.tailrec
 import explore.util.tree._
+import cats.kernel.Eq
+import monocle.Getter
 
-class TreeMod[F[_], A, Id](hasId: Id => A => Boolean)
-    extends IndexedColMod[F, Tree, NonEmptyList[Int], A, Id] {
+object TreeMod {
+  type Index[Id] = (Option[Id], Int) // (Parent's Id (unless it's the root), Position within parent's children)
+}
 
-  override def getById(tree: Tree[A], id: Id): Option[(A, NonEmptyList[Int])] = {
-    def goNode(node: Node[A], accumIdx: NonEmptyList[Int]): Option[(A, NonEmptyList[Int])] =
-      hasId(id)(node.value).fold(
-        (node.value, accumIdx).some,
-        goChildren(node.children, accumIdx.toList)
-      )
+class TreeMod[F[_], A, Id: Eq](getId: A => Id)
+    extends IndexedColMod[F, Tree, TreeMod.Index[Id], A, Id] {
 
-    @tailrec
-    def goChildren(
-      children: List[Node[A]],
-      accumIdx: List[Int] = List.empty,
-      index:    Int = 0
-    ): Option[(A, NonEmptyList[Int])] = children match {
-      case Nil => none
-      case h :: t =>
-        goNode(h, NonEmptyList.ofInitLast(accumIdx, index)) match {
-          case Some(r) => r.some
-          case None    => goChildren(t, accumIdx, index + 1)
-        }
-    }
+  protected def hasId(id: Id)(a: A): Boolean = Eq[Id].eqv(id, getId(a))
 
-    goChildren(tree.children)
-  }
+  /*
+  // TODO Convert all the logic to more optic'y way, with compositions.
+  val nodeListGetterForId: Id => Getter[List[Node[A]], Option[(A, TreeMod.Index[Id])]] =
+    (_ /*id*/: Id) => ???
 
-  override def removeWithIdx(tree: Tree[A], idx: NonEmptyList[Int]): Tree[A] = {
+  def getterForId1(id: Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
+    Tree.children.composeGetter(nodeListGetterForId(id))
+    */
 
-    def goChildren(children: List[Node[A]], remainingIdx: NonEmptyList[Int]): List[Node[A]] = {
-      val idx = remainingIdx.head
-      children.get(idx.toLong).fold(List.empty[Node[A]]) { node =>
-        val init = children.take(idx)
-        val tail = children.drop(idx + 1)
-        remainingIdx.tail.toNel.fold(init ++ tail)(nelTail =>
-          init ++ (Node(
-            node.value,
-            goChildren(node.children, nelTail)
-          ) +: tail)
+  def getterForId(id: Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
+    Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] { tree =>      
+      def goNode(node: Node[A], idx: TreeMod.Index[Id]): Option[(A, TreeMod.Index[Id])] =
+        hasId(id)(node.value).fold(
+          (node.value, idx).some,
+          goChildren(node.children, getId(node.value).some)
         )
+
+      @tailrec
+      def goChildren(
+        children: List[Node[A]],
+        parentId: Option[Id] = None,
+        index:    Int = 0
+      ): Option[(A, TreeMod.Index[Id])] = children match {
+        case Nil => none
+        case h :: t =>
+          goNode(h, (parentId, index)) match {
+            case Some(r) => r.some
+            case None    => goChildren(t, parentId, index + 1)
+          }
       }
+
+      goChildren(tree.children)
     }
 
-    Tree(goChildren(tree.children, idx))
-  }
-
-  override def insertWithIdx(tree: Tree[A], idx: NonEmptyList[Int], a: A): Tree[A] = {
-    def goChildren(children: List[Node[A]], remainingIdx: NonEmptyList[Int]): List[Node[A]] = {
-      val idx  = remainingIdx.head
-      val init = children.take(idx)
-      val tail = children.drop(idx)
-      remainingIdx.tail.toNel.fold(init ++ (Node(a) +: tail))(nelTail =>
-        tail.headOption.fold(init ++ tail) { node =>
-          init ++ (Node(
-            node.value,
-            goChildren(node.children, nelTail)
-          ) +: tail.tail)
-        }
+  override def removeWithIdx(tree: Tree[A], idx: TreeMod.Index[Id]): Tree[A] = {
+    def goChildren(children: List[Node[A]], parentId: Option[Id] = None): List[Node[A]] =
+      (idx._1.forall(id => parentId.exists(pid => Eq[Id].eqv(id, pid)))).fold(
+        children.take(idx._2) ++ children.drop(idx._2 + 1),
+        children.map(node => Node(node.value, goChildren(node.children, getId(node.value).some)))
       )
-    }
 
-    Tree(goChildren(tree.children, idx))
+    Tree(goChildren(tree.children))
   }
+
+  override def insertWithIdx(tree: Tree[A], idx: TreeMod.Index[Id], a: A): Tree[A] = {
+    def goChildren(children: List[Node[A]], parentId: Option[Id] = None): List[Node[A]] =
+      (idx._1.forall(id => parentId.exists(pid => Eq[Id].eqv(id, pid)))).fold(
+        children.take(idx._2) ++ (Node(a) +: children.drop(idx._2)),
+        children.map(node => Node(node.value, goChildren(node.children, getId(node.value).some)))
+      )
+
+    Tree(goChildren(tree.children))
+  }
+
 }
