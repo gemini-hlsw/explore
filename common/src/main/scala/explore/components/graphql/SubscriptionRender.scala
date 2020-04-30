@@ -20,15 +20,15 @@ import cats.effect.ConcurrentEffect
 import cats.Monoid
 
 final case class SubscriptionRender[D, A](
-  subscribe:      IO[GraphQLStreamingClient[IO]#Subscription[D]],
-  streamModifier: fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
+  subscribe:       IO[GraphQLStreamingClient[IO]#Subscription[D]],
+  streamModifier:  fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
   val valueRender: A => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
-)(
-  implicit val ce: ConcurrentEffect[IO]
+)(implicit
+  val ce:          ConcurrentEffect[IO]
 ) extends SubscriptionRender.Props[IO, D, A]
-    with ReactProps {
+    with ReactProps       {
   override def render: VdomElement =
     SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
 }
@@ -46,7 +46,7 @@ object SubscriptionRender {
     subscription: Option[
       GraphQLStreamingClient[F]#Subscription[D]
     ] = None,
-    renderer: Option[StreamRenderer[Pot[A]]] = None
+    renderer:     Option[StreamRenderer[Pot[A]]] = None
   )
 
   implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always

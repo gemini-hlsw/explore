@@ -14,7 +14,7 @@ object CloudCover {
   case object Percent50 extends CloudCover(50, "50%/Clear")
   case object Percent70 extends CloudCover(70, "70%/Cirrus")
   case object Percent80 extends CloudCover(80, "80%/Cloudy")
-  case object Any extends CloudCover(100, "Any")
+  case object Any       extends CloudCover(100, "Any")
 
   /** @group Typeclass Instances */
   implicit val CloudCoverEnumerated: Enumerated[CloudCover] =

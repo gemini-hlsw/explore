@@ -14,7 +14,7 @@ object WaterVapor {
   case object Percent20 extends WaterVapor(20, "20%/Low")
   case object Percent50 extends WaterVapor(50, "50%/Median")
   case object Percent80 extends WaterVapor(80, "85%/High")
-  case object Any extends WaterVapor(100, "Any")
+  case object Any       extends WaterVapor(100, "Any")
 
   /** @group Typeclass Instances */
   implicit val WaterVaporEnumerated: Enumerated[WaterVapor] =

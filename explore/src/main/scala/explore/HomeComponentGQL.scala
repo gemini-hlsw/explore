@@ -19,19 +19,19 @@ import explore.starwars.EpisodeHero
 object HomeComponentGQL {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 6, h = 15, i = "todos"),
-      LayoutItem(x = 0, y = 15, w = 6, h = 5, i  = "starwars"),
-      LayoutItem(x = 6, y = 0, w  = 6, h = 15, i = "polls"),
-      LayoutItem(x = 6, y = 15, w = 6, h = 5, i  = "pollsStatus")
+      LayoutItem(x = 0, y = 0, w = 6, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 6, h = 5, i = "starwars"),
+      LayoutItem(x = 6, y = 0, w = 6, h = 15, i = "polls"),
+      LayoutItem(x = 6, y = 15, w = 6, h = 5, i = "pollsStatus")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w  = 5, h = 15, i = "todos"),
-      LayoutItem(x = 0, y = 15, w = 5, h = 5, i  = "starwars"),
-      LayoutItem(x = 5, y = 0, w  = 5, h = 15, i = "polls"),
-      LayoutItem(x = 5, y = 15, w = 5, h = 5, i  = "pollsStatus")
+      LayoutItem(x = 0, y = 0, w = 5, h = 15, i = "todos"),
+      LayoutItem(x = 0, y = 15, w = 5, h = 5, i = "starwars"),
+      LayoutItem(x = 5, y = 0, w = 5, h = 15, i = "polls"),
+      LayoutItem(x = 5, y = 15, w = 5, h = 5, i = "pollsStatus")
     )
   )
 
@@ -59,29 +59,33 @@ object HomeComponentGQL {
           SizeMe() { s =>
             ResponsiveReactGridLayout(
               s.width,
-              margin           = (5: JsNumber, 5: JsNumber),
+              margin = (5: JsNumber, 5: JsNumber),
               containerPadding = (5: JsNumber, 5: JsNumber),
-              className        = "layout",
-              rowHeight        = 30,
-              draggableHandle  = ".tileTitle",
-              onLayoutChange   = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-              layouts          = layouts
+              className = "layout",
+              rowHeight = 30,
+              draggableHandle = ".tileTitle",
+              onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+              layouts = layouts
             )(
               // ToDos Demo
               <.div(^.key := "todos",
                     ^.cls := "tile",
-                    Tile(Tile.Props("ToDos"), ToDos(props.zoomL(RootModel.todoList)))),
+                    Tile(Tile.Props("ToDos"), ToDos(props.zoomL(RootModel.todoList)))
+              ),
               // Starwars Demo
               <.div(^.key := "starwars",
                     ^.cls := "tile",
-                    Tile(Tile.Props("Star Wars"), EpisodeHero())),
+                    Tile(Tile.Props("Star Wars"), EpisodeHero())
+              ),
               // Polls demo
               <.div(^.key := "polls",
                     ^.cls := "tile",
-                    Tile(Tile.Props("Polls"), Polls(props.zoomL(RootModel.polls)))),
+                    Tile(Tile.Props("Polls"), Polls(props.zoomL(RootModel.polls)))
+              ),
               <.div(^.key := "pollsStatus",
                     ^.cls := "tile",
-                    Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus()))
+                    Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus())
+              )
             )
           }
         )

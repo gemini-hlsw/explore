@@ -23,24 +23,26 @@ import gem.Observation
 @Lenses
 case class RootModel(
   id:       Option[Observation.Id] = None,
-  target:   Option[Target]         = None,
-  todoList: Pot[List[Task]]        = Pot.empty,
-  polls:    Pot[List[Poll]]        = Pot.empty
+  target:   Option[Target] = None,
+  todoList: Pot[List[Task]] = Pot.empty,
+  polls:    Pot[List[Poll]] = Pot.empty
 )
-object RootModel {
-  implicit val observationIdReuse
-    : Reusability[Observation.Id]            = Reusability.never // This is just for temporary testing!!!!
+object RootModel  {
+  implicit val observationIdReuse: Reusability[Observation.Id] =
+    Reusability.never // This is just for temporary testing!!!!
   implicit val reuse: Reusability[RootModel] = Reusability.derive
 }
 
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
-  conditionsURL: Uri = uri"wss://explore-hasura.herokuapp.com/v1/graphql", //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
-  swapiURL:      Uri = AppConfig.baseUri.path("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
+  conditionsURL: Uri =
+    uri"wss://explore-hasura.herokuapp.com/v1/graphql", //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
+  swapiURL:      Uri =
+    AppConfig.baseUri.path("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
   todoURL:       Uri = AppConfig.baseUri.path("/api/tasks"),
   pollURL:       Uri = uri"wss://realtime-poll.demo.hasura.app/v1/graphql"
 )
-object AppConfig {
+object AppConfig  {
   lazy val baseUri: Uri = {
     val location = dom.window.location.toString
     Uri.parse(location).getOrElse(throw new Exception(s"Could not parse URL [$location]"))
@@ -61,7 +63,7 @@ case class Clients[F[_]: ConcurrentEffect](
   starWars:   GraphQLClient[F],
   todo:       GraphQLClient[F],
   polls:      GraphQLStreamingClient[F]
-) {
+)                 {
   lazy val pollConnectionStatus =
     StreamRenderer.build(polls.statusStream, Reusability.derive)
 
@@ -75,13 +77,12 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  clients: Clients[F],
-  actions: Actions[F]
-)(
-  implicit
+  clients:   Clients[F],
+  actions:   Actions[F]
+)(implicit
   val cs:    ContextShift[F],
   val timer: Timer[F]
-) {
+)                 {
   def cleanup(): F[Unit] =
     clients.close()
 }
@@ -95,17 +96,15 @@ object AppContext {
       swClient         <- HttpClient.of(config.swapiURL)
       todoClient       <- HttpClient.of(config.todoURL)
       pollsClient      <- ApolloStreamingClient.of(config.pollURL)
-      clients = Clients(
-        conditionsClient,
-        swClient,
-        todoClient,
-        pollsClient
-      )
-      actions = Actions(
-        new TodoListActionInterpreter[F](clients.todo),
-        new PollsActionInterpreter[F](pollsClient)
-      )
-    } yield {
-      AppContext[F](clients, actions)
-    }
+      clients           = Clients(
+                  conditionsClient,
+                  swClient,
+                  todoClient,
+                  pollsClient
+                )
+      actions           = Actions(
+                  new TodoListActionInterpreter[F](clients.todo),
+                  new PollsActionInterpreter[F](pollsClient)
+                )
+    } yield AppContext[F](clients, actions)
 }

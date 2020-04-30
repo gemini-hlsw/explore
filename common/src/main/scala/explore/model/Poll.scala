@@ -17,6 +17,6 @@ object PollOption {
 @JsonCodec
 case class Poll(id: UUID, question: String, options: List[PollOption])
 
-object Poll {
+object Poll       {
   implicit val reuse: Reusability[Poll] = Reusability.derive[Poll]
 }

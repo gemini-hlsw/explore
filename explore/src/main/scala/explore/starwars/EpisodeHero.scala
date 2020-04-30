@@ -22,8 +22,8 @@ object EpisodeHero {
   sealed trait Episode
   object Episode {
     case object NEWHOPE extends Episode
-    case object EMPIRE extends Episode
-    case object JEDI extends Episode
+    case object EMPIRE  extends Episode
+    case object JEDI    extends Episode
 
     val all        = List(NEWHOPE, EMPIRE, JEDI)
     val fromString = all.map(e => e.toString -> e).toMap
@@ -47,18 +47,18 @@ object EpisodeHero {
       for {
         _    <- $.setStateIn[IO](State(episode.some, Pending()))
         json <- ctx.clients.starWars.query[Json, Json](queryDoc(episode), Json.obj())
-        _ <- $.modStateIn[IO](
-          State.hero.set(
-            Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))
-          )
-        )
+        _    <- $.modStateIn[IO](
+               State.hero.set(
+                 Ready(json.hcursor.downField("hero").downField("name").as[String].getOrElse("???"))
+               )
+             )
       } yield ()
 
     // val onChange: (ReactEvent, Dropdown.DropdownProps) => Callback =
     // (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])))
 
-    def onClickItem(
-      implicit ctx: AppContextIO
+    def onClickItem(implicit
+      ctx:             AppContextIO
     ): (ReactEvent, DropdownItem.DropdownItemProps) => Callback =
       (_, p) => query(Episode.fromString(p.value.asInstanceOf[String])).runInCB
 
@@ -66,12 +66,12 @@ object EpisodeHero {
       <.div(
         Dropdown(
           placeholder = "Select episode...",
-          selection   = true,
-          value       = state.episode.map(_.toString).orUndefined,
+          selection = true,
+          value = state.episode.map(_.toString).orUndefined,
           options = Episode.all.map { e =>
             DropdownItem(
-              text     = e.toString,
-              value    = e.toString,
+              text = e.toString,
+              value = e.toString,
               onClickE = onClickItem(props)
             )(
               ^.key := e.toString

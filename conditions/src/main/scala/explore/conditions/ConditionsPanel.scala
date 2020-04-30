@@ -67,29 +67,28 @@ final case class ConditionsPanel(
 object ConditionsPanel {
   type Props = ConditionsPanel
 
-  implicit def enumDecoder[E: Enumerated]: Decoder[E] = new Decoder[E] {
-    final def apply(c: HCursor): Decoder.Result[E] =
-      // TODO Obtain the failure CursorOp list from c.
-      c.as[String]
-        .flatMap(s =>
-          Enumerated[E]
-            .fromTag(s)
-            .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
-        )
-  }
-  implicit val conditionsDecoder = new Decoder[Conditions] {
+  implicit def enumDecoder[E: Enumerated]: Decoder[E] =
+    new Decoder[E] {
+      final def apply(c: HCursor): Decoder.Result[E] =
+        // TODO Obtain the failure CursorOp list from c.
+        c.as[String]
+          .flatMap(s =>
+            Enumerated[E]
+              .fromTag(s)
+              .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
+          )
+    }
+  implicit val conditionsDecoder                      = new Decoder[Conditions] {
     final def apply(c: HCursor): Decoder.Result[Conditions] =
       for {
         cc <- c.downField("cloud_cover").as[CloudCover]
         iq <- c.downField("image_quality").as[ImageQuality]
         sb <- c.downField("sky_background").as[SkyBackground]
         wv <- c.downField("water_vapor").as[WaterVapor]
-      } yield {
-        Conditions(cc, iq, sb, wv)
-      }
+      } yield Conditions(cc, iq, sb, wv)
   }
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(_.observationId.format)
+  implicit val propsReuse: Reusability[Props]         = Reusability.by(_.observationId.format)
 
   private object Subscription extends GraphQLQuery {
     val document = """
@@ -114,7 +113,7 @@ object ConditionsPanel {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  private object Mutation extends GraphQLQuery {
+  private object Mutation     extends GraphQLQuery {
     val document = """
       mutation ($observationId: String, $fields: conditions_set_input){
         update_conditions(_set: $fields, where: {
@@ -133,7 +132,7 @@ object ConditionsPanel {
       sky_background: Option[String] = None,
       water_vapor:    Option[String] = None
     )
-    object Fields {
+    object Fields    {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
@@ -159,8 +158,8 @@ object ConditionsPanel {
   implicit val showImageQuality: Show[ImageQuality] =
     Show.show(_.label)
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(
-    implicit ctx:                   AppContextIO
+  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
+    ctx:                            AppContextIO
   ): IO[Unit] =
     ctx.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
@@ -176,11 +175,12 @@ object ConditionsPanel {
       lens:   Lens[Conditions, A],
       fields: A => Mutation.Fields
     )(
-      value: A
+      value:  A
     ): IO[Unit] =
       set(
         conditions,
-        lens.asGetter, { v: A =>
+        lens.asGetter,
+        { v: A =>
           for {
             // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
             _ <- modState(lens.set(v))
@@ -232,24 +232,28 @@ object ConditionsPanel {
                                            conditions.iq.some,
                                            "Select",
                                            disabled = false,
-                                           modify(Conditions.iq, iqFields)),
+                                           modify(Conditions.iq, iqFields)
+                  ),
                   EnumSelect[CloudCover]("Cloud Cover",
                                          conditions.cc.some,
                                          "Select",
                                          disabled = false,
-                                         modify(Conditions.cc, ccFields))
+                                         modify(Conditions.cc, ccFields)
+                  )
                 ),
                 FormGroup(widths = Two)(
                   EnumSelect[WaterVapor]("Water Vapor",
                                          conditions.wv.some,
                                          "Select",
                                          disabled = false,
-                                         modify(Conditions.wv, wvFields)),
+                                         modify(Conditions.wv, wvFields)
+                  ),
                   EnumSelect[SkyBackground]("Sky Background",
                                             conditions.sb.some,
                                             "Select",
                                             disabled = false,
-                                            modify(Conditions.sb, sbFields))
+                                            modify(Conditions.sb, sbFields)
+                  )
                 )
               ),
               Button(onClick = undoCtx.undo(conditions).runInCB, disabled = undoCtx.undoEmpty)(

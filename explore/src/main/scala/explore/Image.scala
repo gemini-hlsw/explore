@@ -16,8 +16,9 @@ object Imag {
         <.div(
           ^.cls := "centered",
           <.div(
-            Image(src       = "http://www.gemini.edu/images/pio/News/2019/wf2019_02/fig1.jpg",
-                  className = "non-draggable")
+            Image(src = "http://www.gemini.edu/images/pio/News/2019/wf2019_02/fig1.jpg",
+                  className = "non-draggable"
+            )
           )
         )
       }

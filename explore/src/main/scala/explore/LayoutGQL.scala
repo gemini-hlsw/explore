@@ -25,10 +25,10 @@ object OTLayoutGQL {
         <.div(
           ^.cls := "theme dimmable",
           Menu(
-            attached   = MenuAttached.Top,
-            compact    = true,
+            attached = MenuAttached.Top,
+            compact = true,
             borderless = true,
-            tabular    = MenuTabular.Right
+            tabular = MenuTabular.Right
           )(
             MenuItem(as = "div")(
               Icons.BarsIcon,

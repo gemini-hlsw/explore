@@ -30,10 +30,10 @@ object OTLayout {
         <.div(
           ^.cls := "theme dimmable",
           Menu(
-            attached   = MenuAttached.Top,
-            compact    = true,
+            attached = MenuAttached.Top,
+            compact = true,
             borderless = true,
-            tabular    = MenuTabular.Right
+            tabular = MenuTabular.Right
           )(
             MenuItem(as = "a", onClick = $.modState((s: State) => s.copy(menu = !s.menu)))(
               Icons.BarsIcon,
@@ -46,13 +46,13 @@ object OTLayout {
                 Menu(
                   inverted = true,
                   vertical = true,
-                  icon     = MenuIcon.Labeled
+                  icon = MenuIcon.Labeled
                 )
               ),
-              width     = SidebarWidth.Wide,
+              width = SidebarWidth.Wide,
               animation = SidebarAnimation.Push,
               direction = SidebarDirection.Left,
-              visible   = s.menu
+              visible = s.menu
             )(
               MenuHeader()(p.model.id.map(_.format).getOrElse[String]("No Observation")),
               MenuItem(as = "a", className = "sidetab")("Targets"),

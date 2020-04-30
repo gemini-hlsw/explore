@@ -21,7 +21,7 @@ final case class UndoRegion[M](
     UndoRegion.component(this.asInstanceOf[UndoRegion.Props[IO, Any]])
 }
 
-object UndoRegion {
+object UndoRegion   {
   protected trait Props[F[_], M] {
     val renderer: Undoer.Context[F, M] => VdomElement
   }
@@ -37,8 +37,8 @@ object UndoRegion {
   implicit protected def stateReuse[F[_], M]: Reusability[State[F, M]] =
     Reusability.never
 
-  protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])(
-    implicit monoid:                         Monoid[F[Unit]]
+  protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])(implicit
+    monoid:                                  Monoid[F[Unit]]
   ) extends Undoer[F, M] {
     type Stacks = State[F, M]
 

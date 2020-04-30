@@ -58,8 +58,8 @@ object Polls {
                   poll.options.toTagMod { option =>
                     <.span(^.key := option.id.toString)(
                       Button(
-                        color    = Blue,
-                        compact  = true,
+                        color = Blue,
+                        compact = true,
                         disabled = disabled,
                         onClick = castingOn(poll.id)
                           .flatMap(_ => props.polls.actions(_.polls).vote(option.id))
