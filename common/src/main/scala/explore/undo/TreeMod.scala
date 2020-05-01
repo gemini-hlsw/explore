@@ -10,8 +10,9 @@ import explore.util.tree._
 import cats.kernel.Eq
 import monocle.Getter
 
-object TreeMod {
-  type Index[Id] = (Option[Id], Int) // (Parent's Id (unless it's the root), Position within parent's children)
+object TreeMod                                               {
+  type Index[Id] =
+    (Option[Id], Int) // (Parent's Id (unless it's the root), Position within parent's children)
 }
 
 class TreeMod[F[_], A, Id: Eq](getId: A => Id)
@@ -26,10 +27,10 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
 
   def getterForId1(id: Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
     Tree.children.composeGetter(nodeListGetterForId(id))
-    */
+   */
 
-  def getterForId(id: Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
-    Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] { tree =>      
+  def getterForId(id:              Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
+    Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] { tree =>
       def goNode(node: Node[A], idx: TreeMod.Index[Id]): Option[(A, TreeMod.Index[Id])] =
         hasId(id)(node.value).fold(
           (node.value, idx).some,
@@ -41,18 +42,20 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
         children: List[Node[A]],
         parentId: Option[Id] = None,
         index:    Int = 0
-      ): Option[(A, TreeMod.Index[Id])] = children match {
-        case Nil => none
-        case h :: t =>
-          goNode(h, (parentId, index)) match {
-            case Some(r) => r.some
-            case None    => goChildren(t, parentId, index + 1)
-          }
-      }
+      ): Option[(A, TreeMod.Index[Id])] =
+        children match {
+          case Nil    => none
+          case h :: t =>
+            goNode(h, (parentId, index)) match {
+              case Some(r) => r.some
+              case None    => goChildren(t, parentId, index + 1)
+            }
+        }
 
       goChildren(tree.children)
     }
 
+  // format: off
   override def removeWithIdx(tree: Tree[A], idx: TreeMod.Index[Id]): Tree[A] = {
     def goChildren(children: List[Node[A]], parentId: Option[Id] = None): List[Node[A]] =
       (idx._1.forall(id => parentId.exists(pid => Eq[Id].eqv(id, pid)))).fold(
@@ -72,5 +75,5 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
 
     Tree(goChildren(tree.children))
   }
-
+  // format: on
 }

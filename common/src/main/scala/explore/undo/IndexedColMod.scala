@@ -24,14 +24,14 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] extends At[Col[A], Id, Option[(A, 
       // If element is still in the collection, just modify it's location.
       // If it isn't but now it has to be, reinstate it.
       mod => col =>
-        val oldElemAndIndex = getter.get(col)
+        val oldElemAndIndex    = getter.get(col)
         val (baseCol, oldElem) =
           oldElemAndIndex
             .fold((col, none[A])) {
               case (elem, idx) =>
                 (removeWithIdx(col, idx), elem.some)
             }
-        val newElemAndIndex = mod(oldElemAndIndex)
+        val newElemAndIndex    = mod(oldElemAndIndex)
         newElemAndIndex.fold(baseCol) {
           case (newElem, idx) =>
             insertWithIdx(baseCol, idx, oldElem.getOrElse(newElem))
@@ -55,10 +55,10 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] extends At[Col[A], Id, Option[(A, 
   def set(a: A): Operation =
     mod(_ => a)
 
-  def modIdx(f: Idx => Idx): Operation =
+  def modIdx(f:   Idx => Idx): Operation =
     _.map { case (value, idx) => (value, f(idx)) }
 
-  def setIdx(idx: Idx): Operation =
+  def setIdx(idx: Idx): Operation        =
     modIdx(_ => idx)
 
   val delete: Operation =
