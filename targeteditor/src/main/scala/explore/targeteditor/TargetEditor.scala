@@ -6,125 +6,91 @@ package explore.target
 import cats.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.collections.grid._
-import react.semanticui.collections.form._
-import react.semanticui.widths._
-import react.aladin.Aladin
 import react.common._
-import gpp.ui.forms.FormInputEV
-import crystal.react.implicits._
+// import crystal.react.implicits._
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import explore._
-import explore.model._
-import react.semanticui.elements.icon.Icon
-import japgolly.scalajs.react.extra.StateSnapshot
+import explore.implicits._
+// import explore.model._
 import monocle.macros.Lenses
-import explore.components.ui.GPPStyles
-import react.semanticui.modules.dropdown.DropdownItem
+import monocle.function.Cons.headOption
+import clue.GraphQLQuery
+import gem.Observation
+import gem.Target
+import io.circe.HCursor
+import gsp.math.RightAscension
+import gsp.math.Declination
+import gsp.math.ProperMotion
+import gsp.math.Coordinates
+import gsp.math.Epoch
+import explore.components.graphql.SubscriptionRenderMod
 
 final case class TargetEditor(
-  target: ViewCtxIO[Option[ExploreTarget]]
-) extends ReactProps {
+  observationId:    Observation.Id
+)(implicit val ctx: AppContextIO)
+    extends ReactProps {
   @inline override def render: VdomElement = TargetEditor.component(this)
-  val searchTerm                           = target.zoomL(ExploreTarget.searchTermL).get
+  // val searchTerm                          = target.zoomL(ExploreTarget.searchTermL).get
 }
 
-object TargetEditor {
+object TargetEditor    {
   type Props = TargetEditor
-  val AladinComp = Aladin.component
 
-  trait AladinFacade {
-    def hello: String
+  implicit val targetDecoder = new Decoder[Target] {
+    final def apply(c: HCursor): Decoder.Result[Target] =
+      for {
+        name <- c.downField("name").as[String]
+        ra   <- c.downField("ra").as[String].map(RightAscension.fromStringHMS.getOption)
+        dec  <- c.downField("dec").as[String].map(Declination.fromStringSignedDMS.getOption)
+      } yield {
+        val coords =
+          ProperMotion((ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
+                       Epoch.J2000,
+                       none,
+                       none,
+                       none
+          )
+        Target(name, coords.asRight)
+      }
   }
 
-  @Lenses
-  final case class State(searchTerm: String)
+  object Subscription extends GraphQLQuery {
+    val document = """
+      subscription ($observationId: String!) {
+        targets(where: {observation_id: {_eq: $observationId}}) {
+          name
+          object_type
+          ra
+          dec
+        }
+      }
+      """
 
-  def updateSearchOp(p: Props)(
-    value:              Option[String],
-    cb:                 Callback = Callback.empty
-  ): Callback =
-    p.target
-      .mod(_.map(_.copy(searchTerm = value.orEmpty)))
-      .runInCB *> cb
+    case class Variables(observationId: String)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-  class Backend {
-    // Create a mutable reference
-    private val ref = Ref.toScalaComponent(AladinComp)
+    @Lenses
+    case class Data(targets: List[Target])
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
-    def goTo(search: String): Callback =
-      Callback.log(search) *>
-        ref.get
-          .flatMapCB(
-            _.backend
-              .gotoObject(search, (a, b) => Callback.log(s"córd: $a $b"), Callback.log("error"))
-          )
-
-    def render(p: Props) = {
-      // val raEV =
-      //   StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
-      // val decEV =
-      //   StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
-      val searchEV =
-        StateSnapshot[String](p.searchTerm)(updateSearchOp(p))
-
-      <.div(
-        ^.height := "100%",
-        ^.width := "100%",
-        Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
-          ^.height := "100%",
-          GridRow(stretched = true)(
-            GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-              Form(onSubmit = goTo(searchEV.value))(
-                FormDropdown(
-                  label     = "Type",
-                  value     = 0,
-                  selection = true,
-                  options = List(DropdownItem(value = 0, text = "Sidereal"),
-                                 DropdownItem(value = 1, text = "Non-sidereal"))
-                ),
-                FormInputEV(name     = "search",
-                            id       = "search",
-                            snapshot = searchEV,
-                            label    = "Target",
-                            focus    = true,
-                            icon     = Icon("search")),
-                FormGroup(widths       = FormWidths.Equal)(
-                  FormInputEV(width    = Seven,
-                              name     = "ra",
-                              id       = "ra",
-                              snapshot = searchEV,
-                              label    = "RA"),
-                  FormInputEV(width    = Seven,
-                              name     = "dec",
-                              id       = "dec",
-                              snapshot = searchEV,
-                              label    = "Dec"),
-                  FormButton(width = Two, icon = true, label = "X")("", Icon("angle right"))
-                )
-              )
-            ),
-            GridColumn(stretched = true, computer = Twelve)(
-              AladinComp.withRef(ref)(
-                Aladin(target = p.searchTerm, fov = 0.25, showGotoControl = false)
-              )
-            )
-          )
-        )
-      )
-    }
-    // def onMount: Callback =
-    // ref.foreachCB(
-    // ref.get.flatMapCB(_.backend.gotoRaDec(0.0, 0.0))
-
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  val component =
+  val component              =
     ScalaComponent
       .builder[Props]("TargetEditor")
-      .renderBackend[Backend]
-      // .componentDidMount(_.backend.onMount)
-      // .componentWillReceiveProps(_.backend.onMount)
-      // .initialStateFromProps { p => println("st"); State(p.searchTerm) }
+      .render_P { props =>
+        implicit val appCtx = props.ctx
+        SubscriptionRenderMod[Subscription.Data, Target](
+          appCtx.clients.conditions
+            .subscribe(Subscription)(
+              Subscription.Variables(props.observationId.format).some
+            ),
+          _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
+        )(view => TargetBody(view))
+      }
       .build
 
 }

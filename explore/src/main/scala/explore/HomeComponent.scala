@@ -22,14 +22,14 @@ object HomeComponent {
   private val layoutLg: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i  = "conditions")
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "conditions")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i  = "conditions")
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "conditions")
     )
   )
 
