@@ -1,9 +1,9 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.components.undo
+package explore.undo
 
-import monocle.Getter
+import monocle.Lens
 import cats.Functor
 
 // We don't use a case class to avoid the type parameter on T
@@ -12,23 +12,23 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
 
   type T // T = Value type
 
-  val value: T             // Value that will be restored upon undo/redo
-  val getter: Getter[
+  val value: T           // Value that will be restored upon undo/redo
+  val lens: Lens[
     M,
     T
-  ]                        // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
-  val setter: T => F[Unit] // Modify the model
+  ]                      // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
+  val setM: M => F[Unit] // Modify the model
 
   def restore(
     m: M
   ): F[Restorer[F, M]] = // Actually restores the value and returns the reverse restorer
-    functorF.map(setter(value))(_ => Restorer[F, M, T](m, getter, setter))
+    functorF.map(setM(lens.set(value)(m)))(_ => Restorer[F, M, T](m, lens, setM))
 
   override def toString(): String = s"Restorer($value, ...)"
 }
 
 object Restorer {
-  def apply[F[_], M, A](m: M, _getter: Getter[M, A], _setter: A => F[Unit])(implicit
+  def apply[F[_], M, A](m: M, _lens: Lens[M, A], _setM: M => F[Unit])(implicit
     ff:                    Functor[F]
   ): Restorer[F, M] =
     new Restorer[F, M] {
@@ -36,10 +36,10 @@ object Restorer {
 
       type T = A
 
-      override val value = _getter.get(m)
+      override val value = _lens.get(m)
 
-      override val getter = _getter
+      override val lens = _lens
 
-      override val setter = _setter
+      override val setM = _setM
     }
 }

@@ -62,10 +62,10 @@ object SubscriptionRenderMod {
       .builder[Props[F, D, A]]("SubscriptionRenderMod")
       .initialState(State[F, D, A]())
       .render { $ =>
-        <.div(
-          $.state.renderer.whenDefined(
+        React.Fragment(
+          $.state.renderer.fold[VdomNode](EmptyVdom)(
             _ { view =>
-              <.div(
+              React.Fragment(
                 view.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
                 view.get.render(_ =>
                   $.props.valueRender(

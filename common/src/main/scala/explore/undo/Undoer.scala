@@ -1,9 +1,8 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.components.undo
+package explore.undo
 
-import monocle.Getter
 import monocle.Lens
 import cats.FlatMap
 import cats.implicits._
@@ -14,19 +13,26 @@ object Undoer {
   type Stack[F[_], M] = List[Restorer[F, M]]
 
   case class Context[F[_], M](
-    set:       Set[F, M],
+    setter:    Setter[F, M],
     undo:      Undo[F, M],
     redo:      Redo[F, M],
     undoEmpty: Boolean,
     redoEmpty: Boolean
   )
 
-  trait Set[F[_], M] {
-    def apply[A](
-      m:      M,
-      getter: Getter[M, A],
-      setter: A => F[Unit]
-    )(v:      A): F[Unit]
+  trait Setter[F[_], M] {
+    def set[A](
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(v:    A): F[Unit]
+
+    def mod[A](
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(f:    A => A): F[Unit] =
+      set(m, lens, setM)(f(lens.get(m)))
   }
 
   type Undo[F[_], M] = M => F[Unit]
@@ -56,7 +62,7 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
         case head :: tail =>
           modStacks(lens.set(tail)).as(head.some)
         case _            =>
-          Sync[F].delay(None)
+          none.pure[F]
       }
     }
 
@@ -77,16 +83,16 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
 
   private val resetRedo: F[Unit] = reset(redoStack)
 
-  protected val set: Undoer.Set[F, M] = new Undoer.Set[F, M] {
-    override def apply[A](
-      m:      M,
-      getter: Getter[M, A],
-      setter: A => F[Unit]
-    )(v:      A): F[Unit] =
+  protected val set: Undoer.Setter[F, M] = new Undoer.Setter[F, M] {
+    override def set[A](
+      m:    M,
+      lens: Lens[M, A],
+      setM: M => F[Unit]
+    )(v:    A): F[Unit] =
       for {
-        _ <- pushUndo(Restorer[F, M, A](m, getter, setter))
+        _ <- pushUndo(Restorer[F, M, A](m, lens, setM))
         _ <- resetRedo
-        _ <- setter(v)
+        _ <- setM(lens.set(v)(m))
       } yield ()
   }
 

@@ -29,13 +29,13 @@ import io.circe.JsonObject
 import crystal.react.implicits._
 import monocle.macros.Lenses
 import monocle.function.Cons.headOption
-import crystal.react.ModState
+import crystal.react.SetState
 import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
 import explore.components.undo.UndoRegion
 import gpp.ui.forms.EnumSelect
-import explore.components.undo.Undoer
+import explore.undo.Undoer
 
 /*
 query {
@@ -168,8 +168,8 @@ object ConditionsPanel {
   case class Modify(
     observationId: Observation.Id,
     conditions:    Conditions,
-    modState:      ModState[IO, Conditions],
-    set:           Undoer.Set[IO, Conditions]
+    setState:      SetState[IO, Conditions],
+    setter:        Undoer.Setter[IO, Conditions]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
       lens:   Lens[Conditions, A],
@@ -177,14 +177,14 @@ object ConditionsPanel {
     )(
       value:  A
     ): IO[Unit] =
-      set(
+      setter.set(
         conditions,
-        lens.asGetter,
-        { v: A =>
+        lens,
+        { c: Conditions =>
           for {
             // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
-            _ <- modState(lens.set(v))
-            _ <- mutate(observationId, fields(v))
+            _ <- setState(c)
+            _ <- mutate(observationId, fields(lens.get(c)))
           } yield ()
         }
       )(value)
@@ -221,7 +221,7 @@ object ConditionsPanel {
           val conditions = view.get
 
           UndoRegion[Conditions] { undoCtx =>
-            val modifyIO = Modify($.props.observationId, conditions, view.mod, undoCtx.set)
+            val modifyIO = Modify($.props.observationId, conditions, view.set, undoCtx.setter)
             def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
               : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
 

@@ -12,6 +12,7 @@ import monocle.macros.Lenses
 import crystal.react.implicits._
 import cats.effect.Async
 import cats.kernel.Monoid
+import explore.undo._
 
 final case class UndoRegion[M](
   renderer: Undoer.Context[IO, M] => VdomElement
