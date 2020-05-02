@@ -3,28 +3,33 @@
 
 package explore.target
 
+import cats.effect.IO
 import cats.implicits._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-// import crystal.react.implicits._
-import io.circe.{ Decoder, Encoder }
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import explore._
-import explore.implicits._
-// import explore.model._
-import monocle.macros.Lenses
-import monocle.function.Cons.headOption
 import clue.GraphQLQuery
+import crystal.react._
+import explore._
+import explore.components.graphql.SubscriptionRenderMod
+import explore.implicits._
+import explore.undo.Undoer
 import gem.Observation
 import gem.Target
-import io.circe.HCursor
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.ProperMotion
 import gsp.math.Coordinates
+import gsp.math.Declination
 import gsp.math.Epoch
-import explore.components.graphql.SubscriptionRenderMod
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
+import io.circe.Decoder
+import io.circe.Encoder
+import io.circe.HCursor
+import io.circe.JsonObject
+import io.circe.generic.semiauto.deriveDecoder
+import io.circe.generic.semiauto.deriveEncoder
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
+import monocle.function.Cons.headOption
+import monocle.macros.Lenses
+import react.common._
 
 final case class TargetEditor(
   observationId:    Observation.Id

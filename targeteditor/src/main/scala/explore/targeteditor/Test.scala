@@ -4,15 +4,17 @@
 package explore.target
 
 import scala.scalajs.js
+
 import explore.AppMain
-import gem.ProgramId
-import gem.Observation
-import js.annotation._
-import explore.model._
 import explore._
-import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.vdom.VdomElement
+import explore.model._
+import gem.Observation
+import gem.ProgramId
 import gsp.math.Index
+import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.vdom.html_<^._
+
+import js.annotation._
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {
