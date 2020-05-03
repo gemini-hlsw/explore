@@ -2,6 +2,8 @@ val reactJS      = "16.7.0"
 val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
 val circe        = "0.13.0"
+val monocle      = "2.0.4"
+val mUnit        = "0.7.5"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -105,20 +107,25 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "io.chrisdavenport"                 %%% "log4cats-core"        % "1.0.1",
     "io.chrisdavenport"                 %%% "log4cats-log4s"       % "0.4.0-M1",
     "io.github.cquiroz.react"           %%% "react-semantic-ui"    % "0.4.12",
-    "com.github.julien-truffaut"        %%% "monocle-core"         % "2.0.4",
-    "com.github.julien-truffaut"        %%% "monocle-macro"        % "2.0.4",
+    "com.github.julien-truffaut"        %%% "monocle-core"         % monocle,
+    "com.github.julien-truffaut"        %%% "monocle-macro"        % monocle,
     "com.rpiaggio"                      %%% "crystal"              % "0.2.0",
     "com.rpiaggio"                      %%% "clue-scalajs"         % "0.0.6",
     "io.circe"                          %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku"                         %%% "diode-data"           % "1.1.7",
-    "io.suzaku"                         %%% "diode-react"          % "1.1.7.160",
-    "com.lihaoyi"                       %%% "utest"                % "0.7.4"      % Test // Try MUnit
+    "io.suzaku"                         %%% "diode-react"          % "1.1.7.160"
   ) ++ Seq(
     "io.circe" %%% "circe-core",
     "io.circe" %%% "circe-generic",
     "io.circe" %%% "circe-parser"
-  ).map(_                                 % circe),
-  testFrameworks += new TestFramework("utest.runner.Framework")
+  ).map(_                                 % circe) ++
+    Seq(
+      "org.scalameta"              %%% "munit"            % mUnit,
+      "org.scalameta"              %%% "munit-scalacheck" % mUnit,
+      "org.typelevel"              %%% "discipline-core"  % "1.0.0",
+      "com.github.julien-truffaut" %%% "monocle-law"      % monocle
+    ).map(_ % Test),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val commonWDS         = Seq(
