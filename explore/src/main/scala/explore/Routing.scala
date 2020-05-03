@@ -41,7 +41,7 @@ class Routing(viewCtx: ViewCtxIO[RootModel]) {
       .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
       .onPostRender {
         case (_, ObsPage(id)) =>
-          viewCtx.view.zoomL(RootModel.id).set(Option(id)).runInCB *>
+          viewCtx.zoomL(RootModel.id).set(Option(id)).runInCB *>
             Callback.log(s"id:1 $id")
         case _                => Callback.empty
       }

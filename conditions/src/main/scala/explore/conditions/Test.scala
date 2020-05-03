@@ -12,16 +12,18 @@ import explore.model.RootModel
 import explore.AppMain
 import japgolly.scalajs.react.vdom.VdomElement
 import explore._
+import crystal.implicits._
 
 @JSExportTopLevel("Test")
 object Test extends AppMain {
 
-  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement = {
-    implicit val ctx = viewCtx.ctx
-
-    ConditionsPanel(
-      Observation.Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
-    )
-  }
+  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement =
+    viewCtx.withCtx { implicit ctx =>
+      ConditionsPanel(
+        Observation
+          .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+          .inCtx
+      )
+    }
 
 }

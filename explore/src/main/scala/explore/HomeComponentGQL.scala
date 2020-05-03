@@ -52,43 +52,43 @@ object HomeComponentGQL {
       .builder[Props]("HomeGQL")
       .initialState(0)
       .render_P { props =>
-        implicit val ctx = props.ctx
-
-        <.div(
-          ^.cls := "rgl-area",
-          SizeMe() { s =>
-            ResponsiveReactGridLayout(
-              s.width,
-              margin = (5: JsNumber, 5: JsNumber),
-              containerPadding = (5: JsNumber, 5: JsNumber),
-              className = "layout",
-              rowHeight = 30,
-              draggableHandle = ".tileTitle",
-              onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-              layouts = layouts
-            )(
-              // ToDos Demo
-              <.div(^.key := "todos",
-                    ^.cls := "tile",
-                    Tile(Tile.Props("ToDos"), ToDos(props.zoomL(RootModel.todoList)))
-              ),
-              // Starwars Demo
-              <.div(^.key := "starwars",
-                    ^.cls := "tile",
-                    Tile(Tile.Props("Star Wars"), EpisodeHero())
-              ),
-              // Polls demo
-              <.div(^.key := "polls",
-                    ^.cls := "tile",
-                    Tile(Tile.Props("Polls"), Polls(props.zoomL(RootModel.polls)))
-              ),
-              <.div(^.key := "pollsStatus",
-                    ^.cls := "tile",
-                    Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus())
+        props.viewCtx.withCtx { implicit ctx =>
+          <.div(
+            ^.cls := "rgl-area",
+            SizeMe() { s =>
+              ResponsiveReactGridLayout(
+                s.width,
+                margin = (5: JsNumber, 5: JsNumber),
+                containerPadding = (5: JsNumber, 5: JsNumber),
+                className = "layout",
+                rowHeight = 30,
+                draggableHandle = ".tileTitle",
+                onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                layouts = layouts
+              )(
+                // ToDos Demo
+                <.div(^.key := "todos",
+                      ^.cls := "tile",
+                      Tile(Tile.Props("ToDos"), ToDos(props.zoomL(RootModel.todoList)))
+                ),
+                // Starwars Demo
+                <.div(^.key := "starwars",
+                      ^.cls := "tile",
+                      Tile(Tile.Props("Star Wars"), EpisodeHero())
+                ),
+                // Polls demo
+                <.div(^.key := "polls",
+                      ^.cls := "tile",
+                      Tile(Tile.Props("Polls"), Polls(props.zoomL(RootModel.polls)))
+                ),
+                <.div(^.key := "pollsStatus",
+                      ^.cls := "tile",
+                      Tile(Tile.Props("Polls Client Status"), PollsConnectionStatus())
+                )
               )
-            )
-          }
-        )
+            }
+          )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

@@ -58,9 +58,8 @@ mutation {
  */
 
 final case class ConditionsPanel(
-  observationId:    Observation.Id
-)(implicit val ctx: AppContextIO)
-    extends ReactProps {
+  observationId: CtxIO[Observation.Id]
+) extends ReactProps {
   @inline override def render: VdomElement = ConditionsPanel.component(this)
 }
 
@@ -88,7 +87,7 @@ object ConditionsPanel {
       } yield Conditions(cc, iq, sb, wv)
   }
 
-  implicit val propsReuse: Reusability[Props]         = Reusability.by(_.observationId.format)
+  implicit val propsReuse: Reusability[Props]         = Reusability.by(_.observationId.value.format)
 
   private object Subscription extends GraphQLQuery {
     val document = """
@@ -209,60 +208,61 @@ object ConditionsPanel {
     ScalaComponent
       .builder[ConditionsPanel]("ConditionsPanel")
       .render { $ =>
-        implicit val appCtx = $.props.ctx
+        $.props.observationId.withCtx { implicit appCtx =>
+          SubscriptionRenderMod[Subscription.Data, Conditions](
+            appCtx.clients.conditions
+              .subscribe(Subscription)(
+                Subscription.Variables($.props.observationId.value.format).some
+              ),
+            _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
+          ) { view =>
+            val conditions = view.get
 
-        SubscriptionRenderMod[Subscription.Data, Conditions](
-          appCtx.clients.conditions
-            .subscribe(Subscription)(
-              Subscription.Variables($.props.observationId.format).some
-            ),
-          _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
-        ) { view =>
-          val conditions = view.get
+            UndoRegion[Conditions] { undoCtx =>
+              val modifyIO =
+                Modify($.props.observationId.value, conditions, view.set, undoCtx.setter)
+              def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
+                : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
 
-          UndoRegion[Conditions] { undoCtx =>
-            val modifyIO = Modify($.props.observationId, conditions, view.set, undoCtx.setter)
-            def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
-              : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
-
-            <.div(
-              Form(
-                FormGroup(widths = Two)(
-                  EnumSelect[ImageQuality]("Image Quality",
-                                           conditions.iq.some,
+              <.div(
+                Form(
+                  FormGroup(widths = Two)(
+                    EnumSelect[ImageQuality]("Image Quality",
+                                             conditions.iq.some,
+                                             "Select",
+                                             disabled = false,
+                                             modify(Conditions.iq, iqFields)
+                    ),
+                    EnumSelect[CloudCover]("Cloud Cover",
+                                           conditions.cc.some,
                                            "Select",
                                            disabled = false,
-                                           modify(Conditions.iq, iqFields)
+                                           modify(Conditions.cc, ccFields)
+                    )
                   ),
-                  EnumSelect[CloudCover]("Cloud Cover",
-                                         conditions.cc.some,
-                                         "Select",
-                                         disabled = false,
-                                         modify(Conditions.cc, ccFields)
+                  FormGroup(widths = Two)(
+                    EnumSelect[WaterVapor]("Water Vapor",
+                                           conditions.wv.some,
+                                           "Select",
+                                           disabled = false,
+                                           modify(Conditions.wv, wvFields)
+                    ),
+                    EnumSelect[SkyBackground]("Sky Background",
+                                              conditions.sb.some,
+                                              "Select",
+                                              disabled = false,
+                                              modify(Conditions.sb, sbFields)
+                    )
                   )
                 ),
-                FormGroup(widths = Two)(
-                  EnumSelect[WaterVapor]("Water Vapor",
-                                         conditions.wv.some,
-                                         "Select",
-                                         disabled = false,
-                                         modify(Conditions.wv, wvFields)
-                  ),
-                  EnumSelect[SkyBackground]("Sky Background",
-                                            conditions.sb.some,
-                                            "Select",
-                                            disabled = false,
-                                            modify(Conditions.sb, sbFields)
-                  )
+                Button(onClick = undoCtx.undo(conditions).runInCB, disabled = undoCtx.undoEmpty)(
+                  "Undo"
+                ),
+                Button(onClick = undoCtx.redo(conditions).runInCB, disabled = undoCtx.redoEmpty)(
+                  "Redo"
                 )
-              ),
-              Button(onClick = undoCtx.undo(conditions).runInCB, disabled = undoCtx.undoEmpty)(
-                "Undo"
-              ),
-              Button(onClick = undoCtx.redo(conditions).runInCB, disabled = undoCtx.redoEmpty)(
-                "Redo"
               )
-            )
+            }
           }
         }
       }

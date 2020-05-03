@@ -41,41 +41,40 @@ object Polls {
     def castingOff(pollId: UUID): IO[Unit] =
       $.modStateL(State.casting)(_ - pollId).to[IO]
 
-    def render(props: Props, state: State) = {
-      implicit val ctx = props.polls.ctx
+    def render(props: Props, state: State) =
+      props.polls.withCtx { implicit ctx =>
+        <.div(
+          props.polls.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Big)),
+          props.polls.get.renderFailed(_ => <.p("Failed to load")),
+          props.polls.get.render(polls =>
+            <.div(
+              polls.filter(_.options.nonEmpty).toTagMod { poll =>
+                val disabled = state.casting.contains(poll.id)
 
-      <.div(
-        props.polls.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Big)),
-        props.polls.get.renderFailed(_ => <.p("Failed to load")),
-        props.polls.get.render(polls =>
-          <.div(
-            polls.filter(_.options.nonEmpty).toTagMod { poll =>
-              val disabled = state.casting.contains(poll.id)
-
-              <.div(^.key := poll.id.toString)(
-                <.h2(poll.question),
-                <.div(^.key := "buttons")(
-                  poll.options.toTagMod { option =>
-                    <.span(^.key := option.id.toString)(
-                      Button(
-                        color = Blue,
-                        compact = true,
-                        disabled = disabled,
-                        onClick = castingOn(poll.id)
-                          .flatMap(_ => props.polls.actions(_.polls).vote(option.id))
-                          .runInCB
-                      )(option.text)
-                    )
-                  },
-                  Icon(name = "circle notch", loading = true, size = Large).when(disabled)
-                ),
-                <.div(^.key := "results", PollResults(poll.id, castingOff(poll.id)))
-              )
-            }
+                <.div(^.key := poll.id.toString)(
+                  <.h2(poll.question),
+                  <.div(^.key := "buttons")(
+                    poll.options.toTagMod { option =>
+                      <.span(^.key := option.id.toString)(
+                        Button(
+                          color = Blue,
+                          compact = true,
+                          disabled = disabled,
+                          onClick = castingOn(poll.id)
+                            .flatMap(_ => props.polls.actions(_.polls).vote(option.id))
+                            .runInCB
+                        )(option.text)
+                      )
+                    },
+                    Icon(name = "circle notch", loading = true, size = Large).when(disabled)
+                  ),
+                  <.div(^.key := "results", PollResults(poll.id, castingOff(poll.id)))
+                )
+              }
+            )
           )
         )
-      )
-    }
+      }
   }
 
   private val component =
