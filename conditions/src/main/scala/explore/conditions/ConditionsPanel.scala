@@ -181,7 +181,6 @@ object ConditionsPanel {
         lens,
         { c: Conditions =>
           for {
-            // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
             _ <- setState(c)
             _ <- mutate(observationId, fields(lens.get(c)))
           } yield ()
@@ -227,31 +226,31 @@ object ConditionsPanel {
               <.div(
                 Form(
                   FormGroup(widths = Two)(
-                    EnumSelect[ImageQuality]("Image Quality",
-                                             conditions.iq.some,
-                                             "Select",
-                                             disabled = false,
-                                             modify(Conditions.iq, iqFields)
+                    EnumSelect("Image Quality",
+                               conditions.iq.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.iq, iqFields)
                     ),
-                    EnumSelect[CloudCover]("Cloud Cover",
-                                           conditions.cc.some,
-                                           "Select",
-                                           disabled = false,
-                                           modify(Conditions.cc, ccFields)
+                    EnumSelect("Cloud Cover",
+                               conditions.cc.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.cc, ccFields)
                     )
                   ),
                   FormGroup(widths = Two)(
-                    EnumSelect[WaterVapor]("Water Vapor",
-                                           conditions.wv.some,
-                                           "Select",
-                                           disabled = false,
-                                           modify(Conditions.wv, wvFields)
+                    EnumSelect("Water Vapor",
+                               conditions.wv.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.wv, wvFields)
                     ),
-                    EnumSelect[SkyBackground]("Sky Background",
-                                              conditions.sb.some,
-                                              "Select",
-                                              disabled = false,
-                                              modify(Conditions.sb, sbFields)
+                    EnumSelect("Sky Background",
+                               conditions.sb.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.sb, sbFields)
                     )
                   )
                 ),

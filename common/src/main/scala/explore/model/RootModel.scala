@@ -14,8 +14,6 @@ import japgolly.scalajs.react._
 import diode.data._
 import explore.util.Pot._
 import io.chrisdavenport.log4cats.Logger
-import clue.Backend
-import clue.HttpClient
 import org.scalajs.dom
 import crystal.react.StreamRenderer
 import gem.Observation

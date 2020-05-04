@@ -22,6 +22,7 @@ import explore.model.Target
 import explore.model.AppContext
 import explore.model.AppConfig
 import japgolly.scalajs.react.vdom.VdomElement
+import org.log4s._
 
 trait AppMain extends IOApp {
 
@@ -33,6 +34,9 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
+    Log4sConfig.setLoggerThreshold("", Info)
+    // Log4sConfig.setLoggerThreshold("", AllThreshold)
+
     implicit val logger: Logger[IO] = Log4sLogger.createLocal[IO]
 
     implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
