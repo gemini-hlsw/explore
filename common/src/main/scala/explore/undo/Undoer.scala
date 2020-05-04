@@ -22,17 +22,17 @@ object Undoer {
 
   trait Setter[F[_], M] {
     def set[A](
-      m:    M,
-      lens: Lens[M, A],
-      setM: M => F[Unit]
-    )(v:    A): F[Unit]
+      m:        M,
+      lens:     Lens[M, A],
+      onChange: M => F[Unit]
+    )(v:        A): F[Unit]
 
     def mod[A](
-      m:    M,
-      lens: Lens[M, A],
-      setM: M => F[Unit]
-    )(f:    A => A): F[Unit] =
-      set(m, lens, setM)(f(lens.get(m)))
+      m:        M,
+      lens:     Lens[M, A],
+      onChange: M => F[Unit]
+    )(f:        A => A): F[Unit] =
+      set(m, lens, onChange)(f(lens.get(m)))
   }
 
   type Undo[F[_], M] = M => F[Unit]

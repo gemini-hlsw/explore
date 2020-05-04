@@ -5,9 +5,12 @@ package explore.undo
 
 import monocle._
 import cats.implicits._
+import mouse.boolean._
 import monocle.function.At
 
 trait IndexedColMod[F[_], Col[_], Idx, A, Id] extends At[Col[A], Id, Option[(A, Idx)]] {
+  protected val idLens: Lens[A, Id]
+
   type ElemWithIndex = Option[(A, Idx)]
   type Operation     = ElemWithIndex => ElemWithIndex
 
@@ -18,55 +21,61 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] extends At[Col[A], Id, Option[(A, 
   def insertWithIdx(col: Col[A], idx: Idx, a: A): Col[A]
 
   protected def setterForId(
-    getter: Getter[Col[A], ElemWithIndex]
+    getter:   Getter[Col[A], ElemWithIndex],
+    preserve: Boolean // If true, won't modify an existing element, just its location. Deletion is still possible.
   ): Setter[Col[A], ElemWithIndex] =
-    Setter[Col[A], ElemWithIndex] {
-      // If element is still in the collection, just modify it's location.
-      // If it isn't but now it has to be, reinstate it.
-      mod => col =>
-        val oldElemAndIndex    = getter.get(col)
-        val (baseCol, oldElem) =
-          oldElemAndIndex
-            .fold((col, none[A])) {
-              case (elem, idx) =>
-                (removeWithIdx(col, idx), elem.some)
-            }
-        val newElemAndIndex    = mod(oldElemAndIndex)
-        newElemAndIndex.fold(baseCol) {
-          case (newElem, idx) =>
-            insertWithIdx(baseCol, idx, oldElem.getOrElse(newElem))
-        }
+    Setter[Col[A], ElemWithIndex] { mod => col =>
+      val oldElemAndIndex    = getter.get(col)
+      val (baseCol, oldElem) =
+        oldElemAndIndex
+          .fold((col, none[A])) {
+            case (elem, idx) =>
+              (removeWithIdx(col, idx), elem.some)
+          }
+      val newElemAndIndex    = mod(oldElemAndIndex)
+      newElemAndIndex.fold(baseCol) {
+        case (newElem, idx) =>
+          insertWithIdx(baseCol, idx, preserve.fold(oldElem.getOrElse(newElem), newElem))
+      }
     }
 
   // In this version of `at`, the index is actually an id.
   override def at(id: Id): Lens[Col[A], ElemWithIndex] = {
     val getter = getterForId(id)
-    val setter = setterForId(getter)
+    val setter = setterForId(getter, preserve = false)
     Lens(getter.get)(setter.set)
   }
 
-  // Start Operations
+  // Start Element Operations
+  // Id is reinstated (it can't be modified.)
+  def unsafeMod(f: A => A): Operation =
+    _.map { case (value, idx) => (idLens.set(idLens.get(value))(f(value)), idx) }
 
-  // This is unsafe. There's no guarantee that Id is preserved.
-  def mod(f: A => A): Operation =
-    _.map { case (value, idx) => (f(value), idx) }
-
-  // This is unsafe. There's no guarantee that Id is preserved.
-  def set(a: A): Operation =
-    mod(_ => a)
-
-  def modIdx(f:   Idx => Idx): Operation =
-    _.map { case (value, idx) => (value, f(idx)) }
-
-  def setIdx(idx: Idx): Operation        =
-    modIdx(_ => idx)
+  // Id is reinstated (it can't be modified.)
+  def unsafeSet(a: A): Operation =
+    unsafeMod(_ => a)
 
   val delete: Operation =
     _ => none
 
-  // This is unsafe. There's no guarantee that Id is preserved.
-  def upsert(a: A, idx: Idx): Operation =
-    _ => (a, idx).some
+  // If updating, Id is reinstated (it can't be modified.)
+  def unsafeUpsert(a: A, idx: Idx): Operation =
+    _.map { case (value, _) => (idLens.set(idLens.get(value))(a), idx) }.orElse((a, idx).some)
+  // End Element Operations
 
-  // End Operations
+  object pos extends At[Col[A], Id, Option[(A, Idx)]] {
+    override def at(id: Id): Lens[Col[A], ElemWithIndex] = {
+      val getter = getterForId(id)
+      val setter = setterForId(getter, preserve = true)
+      Lens(getter.get)(setter.set)
+    }
+
+    // Start Position Operations
+    def mod(f:          Idx => Idx): Operation           =
+      _.map { case (value, idx) => (value, f(idx)) }
+
+    def set(idx:        Idx): Operation                  =
+      mod(_ => idx)
+    // End Position Operations
+  }
 }

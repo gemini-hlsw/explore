@@ -9,16 +9,17 @@ import scala.annotation.tailrec
 import explore.util.tree._
 import cats.kernel.Eq
 import monocle.Getter
+import monocle.Lens
 
 object TreeMod                                               {
   type Index[Id] =
     (Option[Id], Int) // (Parent's Id (unless it's the root), Position within parent's children)
 }
 
-class TreeMod[F[_], A, Id: Eq](getId: A => Id)
+class TreeMod[F[_], A, Id: Eq](protected val idLens: Lens[A, Id])
     extends IndexedColMod[F, Tree, TreeMod.Index[Id], A, Id] {
 
-  protected def hasId(id: Id)(a: A): Boolean = Eq[Id].eqv(id, getId(a))
+  protected def hasId(id: Id)(a: A): Boolean = Eq[Id].eqv(id, idLens.get(a))
 
   /*
   // TODO Convert all the logic to more optic'y way, with compositions.
@@ -34,7 +35,7 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
       def goNode(node: Node[A], idx: TreeMod.Index[Id]): Option[(A, TreeMod.Index[Id])] =
         hasId(id)(node.value).fold(
           (node.value, idx).some,
-          goChildren(node.children, getId(node.value).some)
+          goChildren(node.children, idLens.get(node.value).some)
         )
 
       @tailrec
@@ -60,7 +61,7 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
     def goChildren(children: List[Node[A]], parentId: Option[Id] = None): List[Node[A]] =
       (idx._1.forall(id => parentId.exists(pid => Eq[Id].eqv(id, pid)))).fold(
         children.take(idx._2) ++ children.drop(idx._2 + 1),
-        children.map(node => Node(node.value, goChildren(node.children, getId(node.value).some)))
+        children.map(node => Node(node.value, goChildren(node.children, idLens.get(node.value).some)))
       )
 
     Tree(goChildren(tree.children))
@@ -70,7 +71,7 @@ class TreeMod[F[_], A, Id: Eq](getId: A => Id)
     def goChildren(children: List[Node[A]], parentId: Option[Id] = None): List[Node[A]] =
       (idx._1.forall(id => parentId.exists(pid => Eq[Id].eqv(id, pid)))).fold(
         children.take(idx._2) ++ (Node(a) +: children.drop(idx._2)),
-        children.map(node => Node(node.value, goChildren(node.children, getId(node.value).some)))
+        children.map(node => Node(node.value, goChildren(node.children, idLens.get(node.value).some)))
       )
 
     Tree(goChildren(tree.children))

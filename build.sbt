@@ -2,6 +2,8 @@ val reactJS      = "16.7.0"
 val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
 val circe        = "0.13.0"
+val monocle      = "2.0.4"
+val mUnit        = "0.7.5"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -34,7 +36,7 @@ stage := {
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
     // Remove sbt-scalajs-bundler directory, which includes node_modules.
-    val bundlerDir =
+    val bundlerDir       =
       (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
     sbt.IO.delete(bundlerDir)
     // Remove coursier cache
@@ -64,7 +66,7 @@ lazy val conditions = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
 
-lazy val explore: Project = project
+lazy val explore: Project  = project
   .in(file("explore"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
@@ -72,9 +74,9 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "common" % "0.7.1",
+      "io.github.cquiroz.react" %%% "common"            % "0.7.1",
       "io.github.cquiroz.react" %%% "react-grid-layout" % "0.4.0",
-      "io.github.cquiroz.react" %%% "react-sizeme" % "0.3.3"
+      "io.github.cquiroz.react" %%% "react-sizeme"      % "0.3.3"
     ),
     // don't publish the demo
     publish := {},
@@ -84,7 +86,7 @@ lazy val explore: Project = project
   )
   .dependsOn(conditions)
 
-lazy val commonSettings = gspScalaJsSettings ++ Seq(
+lazy val commonSettings    = gspScalaJsSettings ++ Seq(
   scalaVersion := "2.13.1",
   description := "Explore",
   homepage := Some(url("https://github.com/geminihlsw/explore")),
@@ -94,34 +96,39 @@ lazy val commonSettings = gspScalaJsSettings ++ Seq(
 
 lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "test" % scalaJsReact % Test,
-    "edu.gemini" %%% "gsp-core-model" % "0.1.8",
-    "edu.gemini" %%% "gpp-ui" % "0.0.3",
-    "org.typelevel" %%% "cats-effect" % "2.1.3",
-    "org.typelevel" %%% "cats-core" % "2.1.1",
-    "org.typelevel" %%% "mouse" % "0.24",
-    "io.chrisdavenport" %%% "log4cats-core" % "1.0.1",
-    "io.chrisdavenport" %%% "log4cats-log4s" % "0.4.0-M1",
-    "io.github.cquiroz.react" %%% "react-semantic-ui" % "0.4.12",
-    "com.github.julien-truffaut" %%% "monocle-core" % "2.0.4",
-    "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.4",
-    "com.rpiaggio" %%% "crystal" % "0.1.6",
-    "com.rpiaggio" %%% "clue-scalajs" % "0.0.6",
-    "io.circe" %%% "circe-generic-extras" % "0.13.0",
-    "io.suzaku" %%% "diode-data" % "1.1.7",
-    "io.suzaku" %%% "diode-react" % "1.1.7.160",
-    "com.lihaoyi" %%% "utest" % "0.7.4" % Test
+    "com.github.japgolly.scalajs-react" %%% "core"                 % scalaJsReact,
+    "com.github.japgolly.scalajs-react" %%% "extra"                % scalaJsReact,
+    "com.github.japgolly.scalajs-react" %%% "test"                 % scalaJsReact % Test,
+    "edu.gemini"                        %%% "gsp-core-model"       % "0.1.8",
+    "edu.gemini"                        %%% "gpp-ui"               % "0.0.3",
+    "org.typelevel"                     %%% "cats-effect"          % "2.1.3",
+    "org.typelevel"                     %%% "cats-core"            % "2.1.1",
+    "org.typelevel"                     %%% "mouse"                % "0.24",
+    "io.chrisdavenport"                 %%% "log4cats-core"        % "1.0.1",
+    "io.chrisdavenport"                 %%% "log4cats-log4s"       % "0.4.0-M1",
+    "io.github.cquiroz.react"           %%% "react-semantic-ui"    % "0.4.12",
+    "com.github.julien-truffaut"        %%% "monocle-core"         % monocle,
+    "com.github.julien-truffaut"        %%% "monocle-macro"        % monocle,
+    "com.rpiaggio"                      %%% "crystal"              % "0.2.0",
+    "com.rpiaggio"                      %%% "clue-scalajs"         % "0.0.6",
+    "io.circe"                          %%% "circe-generic-extras" % "0.13.0",
+    "io.suzaku"                         %%% "diode-data"           % "1.1.7",
+    "io.suzaku"                         %%% "diode-react"          % "1.1.7.160"
   ) ++ Seq(
     "io.circe" %%% "circe-core",
     "io.circe" %%% "circe-generic",
     "io.circe" %%% "circe-parser"
-  ).map(_ % circe),
-  testFrameworks += new TestFramework("utest.runner.Framework")
+  ).map(_                                 % circe) ++
+    Seq(
+      "org.scalameta"              %%% "munit"            % mUnit,
+      "org.scalameta"              %%% "munit-scalacheck" % mUnit,
+      "org.typelevel"              %%% "discipline-core"  % "1.0.0",
+      "com.github.julien-truffaut" %%% "monocle-law"      % monocle
+    ).map(_ % Test),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
-lazy val commonWDS = Seq(
+lazy val commonWDS         = Seq(
   version in webpack := "4.41.2",
   version in startWebpackDevServer := "3.9.0",
   webpackConfigFile in fastOptJS := Some(
@@ -141,29 +148,29 @@ lazy val commonWDS = Seq(
   emitSourceMaps := false,
   // NPM libs for development, mostly to let webpack do its magic
   npmDevDependencies in Compile ++= Seq(
-    "postcss-loader" -> "3.0.0",
-    "autoprefixer" -> "9.7.1",
-    "url-loader" -> "2.2.0",
-    "file-loader" -> "4.2.0",
-    "css-loader" -> "3.2.0",
-    "style-loader" -> "1.0.0",
-    "less" -> "2.7.2",
-    "less-loader" -> "4.1.0",
-    "webpack-merge" -> "4.2.2",
-    "mini-css-extract-plugin" -> "0.8.0",
-    "webpack-dev-server-status-bar" -> "1.1.0",
-    "cssnano" -> "4.1.10",
-    "uglifyjs-webpack-plugin" -> "2.2.0",
-    "html-webpack-plugin" -> "3.2.0",
+    "postcss-loader"                     -> "3.0.0",
+    "autoprefixer"                       -> "9.7.1",
+    "url-loader"                         -> "2.2.0",
+    "file-loader"                        -> "4.2.0",
+    "css-loader"                         -> "3.2.0",
+    "style-loader"                       -> "1.0.0",
+    "less"                               -> "2.7.2",
+    "less-loader"                        -> "4.1.0",
+    "webpack-merge"                      -> "4.2.2",
+    "mini-css-extract-plugin"            -> "0.8.0",
+    "webpack-dev-server-status-bar"      -> "1.1.0",
+    "cssnano"                            -> "4.1.10",
+    "uglifyjs-webpack-plugin"            -> "2.2.0",
+    "html-webpack-plugin"                -> "3.2.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
-    "favicons-webpack-plugin" -> "0.0.9",
-    "why-did-you-update" -> "1.0.6",
-    "@packtracker/webpack-plugin" -> "2.2.0"
+    "favicons-webpack-plugin"            -> "0.0.9",
+    "why-did-you-update"                 -> "1.0.6",
+    "@packtracker/webpack-plugin"        -> "2.2.0"
   ),
   npmDependencies in Compile ++= Seq(
-    "react" -> reactJS,
-    "react-dom" -> reactJS,
+    "react"            -> reactJS,
+    "react-dom"        -> reactJS,
     "semantic-ui-less" -> SUI,
-    "prop-types" -> "15.7.2"
+    "prop-types"       -> "15.7.2"
   )
 )

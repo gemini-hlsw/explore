@@ -5,12 +5,15 @@ package explore.undo
 
 import cats.implicits._
 import monocle.Getter
+import cats.kernel.Eq
+import monocle.Lens
 
-class ListMod[F[_], A, Id](hasId: Id => A => Boolean) extends IndexedColMod[F, List, Int, A, Id] {
+class ListMod[F[_], A, Id: Eq](protected val idLens: Lens[A, Id])
+    extends IndexedColMod[F, List, Int, A, Id] {
 
   def getterForId(id: Id): Getter[List[A], Option[(A, Int)]] =
     Getter[List[A], Option[(A, Int)]](list =>
-      list.indexWhere(hasId(id)).some.filter(_ >= 0).map(i => (list(i), i))
+      list.indexWhere(a => Eq[Id].eqv(id, idLens.get(a))).some.filter(_ >= 0).map(i => (list(i), i))
     )
 
   override def removeWithIdx(list: List[A], idx: Int): List[A] =
