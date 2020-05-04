@@ -47,18 +47,19 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] extends At[Col[A], Id, Option[(A, 
   }
 
   // Start Element Operations
-  // Id is reinstated. Should we do this or report a warning? Lens is still unlawful.
-  def mod(f: A => A): Operation =
+  // Id is reinstated (it can't be modified.)
+  def unsafeMod(f: A => A): Operation =
     _.map { case (value, idx) => (idLens.set(idLens.get(value))(f(value)), idx) }
 
-  def set(a: A): Operation =
-    mod(_ => a)
+  // Id is reinstated (it can't be modified.)
+  def unsafeSet(a: A): Operation =
+    unsafeMod(_ => a)
 
   val delete: Operation =
     _ => none
 
-  // If updating, Id is reinstated. Should we do this or report a warning? Lens is still unlawful.
-  def upsert(a: A, idx: Idx): Operation =
+  // If updating, Id is reinstated (it can't be modified.)
+  def unsafeUpsert(a: A, idx: Idx): Operation =
     _.map { case (value, _) => (idLens.set(idLens.get(value))(a), idx) }.orElse((a, idx).some)
   // End Element Operations
 

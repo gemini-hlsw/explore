@@ -74,7 +74,7 @@ class UndoerSpec extends munit.FunSuite {
     (for {
       model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(listIntMod.pos.at(8), listIntMod.upsert(8, 3))
+      _        <- undoable.mod(listIntMod.pos.at(8), listIntMod.unsafeUpsert(8, 3))
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 8, 4, 5)))
       _        <- undoable.undo
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 4, 5)))
@@ -228,7 +228,7 @@ class UndoerSpec extends munit.FunSuite {
                  )
                )
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(treeIntMod.pos.at(8), treeIntMod.upsert(8, (1.some, 8)))
+      _        <- undoable.mod(treeIntMod.pos.at(8), treeIntMod.unsafeUpsert(8, (1.some, 8)))
       _        <- undoable.get.map(v =>
              assert(
                v == Tree(
