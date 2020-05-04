@@ -122,7 +122,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     Seq(
       "org.scalameta"              %%% "munit"            % mUnit,
       "org.scalameta"              %%% "munit-scalacheck" % mUnit,
-      "org.typelevel"              %%% "discipline-core"  % "1.0.0",
+      "org.typelevel"              %%% "discipline-core"  % "1.0.2",
       "com.github.julien-truffaut" %%% "monocle-law"      % monocle
     ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")
