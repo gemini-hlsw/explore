@@ -3,12 +3,9 @@
 
 package explore.model
 
-import japgolly.scalajs.react.Reusability
-
 sealed trait Target
 object Target {
   final case object M81 extends Target
   final case object M51 extends Target
 
-  implicit val reuse: Reusability[Target] = Reusability.derive
 }
