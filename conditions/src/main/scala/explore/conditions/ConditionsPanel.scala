@@ -177,10 +177,10 @@ object ConditionsPanel {
       setter.set(
         conditions,
         lens,
-        { mod: (Conditions => Conditions) =>
+        { value: A =>
           for {
-            _ <- modState(mod)
-            _ <- mutate(observationId, fields(lens.get(mod(conditions))))
+            _ <- (modState.apply _).compose(lens.set)(value)
+            _ <- mutate(observationId, fields(value))
           } yield ()
         }
       )

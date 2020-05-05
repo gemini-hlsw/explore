@@ -49,14 +49,14 @@ class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M])
     for {
       m <- model.get
       c <- undoer.ctx
-      _ <- c.setter.set[A](m, lens, model.update)(value)
+      _ <- c.setter.set[A](m, lens, (model.update _).compose(lens.set))(value)
     } yield ()
 
   def mod[A](lens: Lens[M, A], f:     A => A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
-      _ <- c.setter.mod[A](m, lens, model.update)(f)
+      _ <- c.setter.mod[A](m, lens, (model.update _).compose(lens.set))(f)
     } yield ()
 
   def undo: F[Unit] =
