@@ -85,11 +85,11 @@ lazy val targeteditor = project
   .dependsOn(common)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.2+4-5027c3f4-SNAPSHOT"
+      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.3"
     )
   )
 
-lazy val conditions = project
+lazy val conditions   = project
   .in(file("conditions"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)

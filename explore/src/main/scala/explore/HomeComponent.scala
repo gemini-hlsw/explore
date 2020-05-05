@@ -51,6 +51,9 @@ object HomeComponent {
       .initialState(0)
       .render_P { props =>
         props.withCtx { implicit ctx =>
+          val obsId = Observation
+            .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+            .inCtx(ctx)
           <.div(
             ^.cls := "rgl-area",
             SizeMe() { s =>
@@ -65,24 +68,19 @@ object HomeComponent {
                 layouts = layouts
               )(
                 <.div(
-                  ^.key := "tpe",
+                  ^.key := "conditions",
                   ^.cls := "tile",
                   Tile(
                     Tile.Props("Conditions"),
-                    ConditionsPanel(
-                      Observation
-                        .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
-                        .inCtx
-                    )
+                    ConditionsPanel(obsId)
                   )
                 ),
-                <.div(^.key := "coords", ^.cls := "tile", Tile(Tile.Props("Coordinates"), Imag())),
                 <.div(
-                  ^.key := "doc",
+                  ^.key := "target",
                   ^.cls := "tile",
                   Tile(
                     Tile.Props("Target Position"),
-                    <.div(Tpe(props.zoomL(RootModel.target)))
+                    <.div(TargetEditor(obsId))
                   )
                 )
               )

@@ -5,11 +5,14 @@ package explore.target
 
 import cats.effect.IO
 import cats.implicits._
-import clue.GraphQLQuery
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import react.common._
 import crystal.react._
-import explore._
-import explore.components.graphql.SubscriptionRenderMod
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import explore.implicits._
+import explore.components.graphql.SubscriptionRenderMod
 import explore.undo.Undoer
 import gem.Observation
 import gem.Target
@@ -30,9 +33,10 @@ import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
 import react.common._
+import clue.GraphQLQuery
 
 final case class TargetEditor(
-  observationId:    Observation.Id
+  observationId:    CtxIO[Observation.Id]
 )(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline override def render: VdomElement = TargetEditor.component(this)
@@ -83,7 +87,69 @@ object TargetEditor    {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  val component              =
+  object Mutation extends GraphQLQuery {
+    val document = """
+      mutation ($observationId: String, $fields: targets_set_input){
+        update_targets(_set: $fields, where: {
+          observation_id: {
+            _eq: $observationId
+          }
+        }) {
+          affected_rows
+        }
+      }
+    """
+
+    case class Fields(
+      name: Option[String] = None,
+      ra:   Option[String] = None,
+      dec:  Option[String] = None
+    )
+    object Fields    {
+      implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
+    }
+
+    case class Variables(observationId: String, fields: Fields)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
+
+    case class Data(update_conditions: JsonObject) // We are ignoring affected_rows
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
+
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  }
+
+  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
+    ctx: AppContextIO
+  ): IO[Unit] =
+    ctx.clients.conditions
+      .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+      .as(())
+
+  case class Modify(
+    observationId: Observation.Id,
+    target:        Target,
+    setState:      SetState[IO, Target],
+    setter:        Undoer.Setter[IO, Target]
+  )(implicit ctx:  AppContextIO) {
+    def apply[A](
+      lens:   Lens[Target, A],
+      fields: A => Mutation.Fields
+    )(
+      value:  A
+    ): IO[Unit] =
+      setter.set(
+        target,
+        lens,
+        { c: Target =>
+          for {
+            _ <- setState(c)
+            _ <- mutate(observationId, fields(lens.get(c)))
+          } yield ()
+        }
+      )(value)
+  }
+  val component =
     ScalaComponent
       .builder[Props]("TargetEditor")
       .render_P { props =>
@@ -91,10 +157,12 @@ object TargetEditor    {
         SubscriptionRenderMod[Subscription.Data, Target](
           appCtx.clients.conditions
             .subscribe(Subscription)(
-              Subscription.Variables(props.observationId.format).some
+              Subscription.Variables(props.observationId.value.format).some
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-        )(view => TargetBody(view))
+        ) { view =>
+          TargetBody(props.observationId.value, view)
+        }
       }
       .build
 
