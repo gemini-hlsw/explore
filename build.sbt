@@ -1,3 +1,6 @@
+import sbtcrossproject.crossProject
+import sbtcrossproject.CrossType
+
 val reactJS      = "16.7.0"
 val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
@@ -10,8 +13,6 @@ parallelExecution in (ThisBuild, Test) := false
 cancelable in Global := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-
-resolvers in Global += Resolver.sonatypeRepo("public")
 
 addCommandAlias(
   "exploreWDS",
@@ -45,31 +46,40 @@ stage := {
   }
 }
 
-lazy val root =
-  project
-    .in(file("."))
-    .settings(name := "explore-root")
-    .settings(commonSettings: _*)
-    .aggregate(common, conditions, explore)
+lazy val root = project
+  .in(file("."))
+  .settings(name := "explore-root")
+  .settings(commonSettings: _*)
+  .aggregate(model.jvm, model.js, common, conditions, explore)
+
+lazy val model = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("model"))
+  .settings(commonSettings: _*)
+  .settings(commonLibSettings: _*)
+  .jsSettings(
+    scalaJSModuleKind := ModuleKind.CommonJSModule
+  )
 
 lazy val common = project
   .in(file("common"))
   .settings(commonSettings: _*)
-  .settings(commonLibSettings: _*)
+  .settings(commonJsLibSettings: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
+  .dependsOn(model.js)
 
 lazy val conditions = project
   .in(file("conditions"))
   .settings(commonSettings: _*)
-  .settings(commonLibSettings: _*)
+  .settings(commonJsLibSettings: _*)
   .settings(commonWDS: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
 
-lazy val explore: Project  = project
+lazy val explore: Project    = project
   .in(file("explore"))
   .settings(commonSettings: _*)
-  .settings(commonLibSettings: _*)
+  .settings(commonJsLibSettings: _*)
   .settings(commonWDS: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
@@ -86,7 +96,7 @@ lazy val explore: Project  = project
   )
   .dependsOn(conditions)
 
-lazy val commonSettings    = gspScalaJsSettings ++ Seq(
+lazy val commonSettings      = Seq(
   scalaVersion := "2.13.1",
   description := "Explore",
   homepage := Some(url("https://github.com/geminihlsw/explore")),
@@ -94,31 +104,27 @@ lazy val commonSettings    = gspScalaJsSettings ++ Seq(
   scalacOptions += "-Ymacro-annotations"
 )
 
-lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
+lazy val commonLibSettings   = Seq(
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core"                 % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "extra"                % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "test"                 % scalaJsReact % Test,
-    "edu.gemini"                        %%% "gsp-core-model"       % "0.1.8",
-    "edu.gemini"                        %%% "gpp-ui"               % "0.0.3",
-    "org.typelevel"                     %%% "cats-effect"          % "2.1.3",
-    "org.typelevel"                     %%% "cats-core"            % "2.1.1",
-    "org.typelevel"                     %%% "mouse"                % "0.24",
-    "io.chrisdavenport"                 %%% "log4cats-core"        % "1.0.1",
-    "io.chrisdavenport"                 %%% "log4cats-log4s"       % "0.4.0-M1",
-    "io.github.cquiroz.react"           %%% "react-semantic-ui"    % "0.4.12",
-    "com.github.julien-truffaut"        %%% "monocle-core"         % monocle,
-    "com.github.julien-truffaut"        %%% "monocle-macro"        % monocle,
-    "com.rpiaggio"                      %%% "crystal"              % "0.2.0",
-    "com.rpiaggio"                      %%% "clue-scalajs"         % "0.0.6",
-    "io.circe"                          %%% "circe-generic-extras" % "0.13.0",
-    "io.suzaku"                         %%% "diode-data"           % "1.1.7",
-    "io.suzaku"                         %%% "diode-react"          % "1.1.7.160"
+    "edu.gemini"                 %%% "gsp-core-model"       % "0.1.8",
+    "org.typelevel"              %%% "cats-effect"          % "2.1.3",
+    "org.typelevel"              %%% "cats-core"            % "2.1.1",
+    "org.typelevel"              %%% "mouse"                % "0.24",
+    "io.chrisdavenport"          %%% "log4cats-core"        % "1.0.1",
+    "io.chrisdavenport"          %%% "log4cats-log4s"       % "0.4.0-M1",
+    "com.github.julien-truffaut" %%% "monocle-core"         % monocle,
+    "com.github.julien-truffaut" %%% "monocle-macro"        % monocle,
+    "com.rpiaggio"               %%% "crystal"              % "0.2.0",
+    "io.circe"                   %%% "circe-generic-extras" % "0.13.0",
+    "io.suzaku"                  %%% "diode-data"           % "1.1.7",
+    "com.rpiaggio"               %%% "clue-core"            % "0.0.7",
+    "edu.gemini"                 %%% "gsp-math-testkit"     % "0.1.17" % Test,
+    "edu.gemini"                 %%% "gsp-core-testkit"     % "0.1.8"  % Test
   ) ++ Seq(
     "io.circe" %%% "circe-core",
     "io.circe" %%% "circe-generic",
     "io.circe" %%% "circe-parser"
-  ).map(_                                 % circe) ++
+  ).map(_                          % circe) ++
     Seq(
       "org.scalameta"              %%% "munit"            % mUnit,
       "org.scalameta"              %%% "munit-scalacheck" % mUnit,
@@ -128,7 +134,19 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-lazy val commonWDS         = Seq(
+lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
+  libraryDependencies ++= Seq(
+    "com.github.japgolly.scalajs-react" %%% "core"              % scalaJsReact,
+    "com.github.japgolly.scalajs-react" %%% "extra"             % scalaJsReact,
+    "com.github.japgolly.scalajs-react" %%% "test"              % scalaJsReact % Test,
+    "io.suzaku"                         %%% "diode-react"       % "1.1.7.160",
+    "io.github.cquiroz.react"           %%% "react-semantic-ui" % "0.4.12",
+    "com.rpiaggio"                      %%% "clue-scalajs"      % "0.0.7",
+    "edu.gemini"                        %%% "gpp-ui"            % "0.0.3"
+  )
+)
+
+lazy val commonWDS           = Seq(
   version in webpack := "4.41.2",
   version in startWebpackDevServer := "3.9.0",
   webpackConfigFile in fastOptJS := Some(

@@ -24,8 +24,6 @@ final case class Tpe(target: ViewCtxIO[Option[Target]]) extends ReactProps {
 object Tpe {
   type Props = Tpe
 
-  private implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   trait ViewOpts extends js.Object {
     var fov: Double
     var target: String
@@ -54,6 +52,5 @@ object Tpe {
           )
         )
       }
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }
