@@ -14,8 +14,6 @@ cancelable in Global := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-resolvers in Global += Resolver.sonatypeRepo("public")
-
 addCommandAlias(
   "exploreWDS",
   "; explore/fastOptJS::stopWebpackDevServer; explore/fastOptJS::startWebpackDevServer; ~explore/fastOptJS"
