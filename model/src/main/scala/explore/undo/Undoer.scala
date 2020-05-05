@@ -24,13 +24,13 @@ object Undoer {
     def set[A](
       m:        M,
       lens:     Lens[M, A],
-      onChange: M => F[Unit]
+      onChange: (M => M) => F[Unit] // Undoer will tell the client how to modify M.
     )(v:        A): F[Unit]
 
     def mod[A](
       m:        M,
       lens:     Lens[M, A],
-      onChange: M => F[Unit]
+      onChange: (M => M) => F[Unit]
     )(f:        A => A): F[Unit] =
       set(m, lens, onChange)(f(lens.get(m)))
   }
@@ -85,14 +85,14 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
 
   protected val set: Undoer.Setter[F, M] = new Undoer.Setter[F, M] {
     override def set[A](
-      m:    M,
-      lens: Lens[M, A],
-      setM: M => F[Unit]
-    )(v:    A): F[Unit] =
+      m:        M,
+      lens:     Lens[M, A],
+      onChange: (M => M) => F[Unit]
+    )(v:        A): F[Unit] =
       for {
-        _ <- pushUndo(Restorer[F, M, A](m, lens, setM))
+        _ <- pushUndo(Restorer[F, M, A](m, lens, onChange))
         _ <- resetRedo
-        _ <- setM(lens.set(v)(m))
+        _ <- onChange(lens.set(v))
       } yield ()
   }
 
