@@ -29,7 +29,7 @@ import io.circe.JsonObject
 import crystal.react.implicits._
 import monocle.macros.Lenses
 import monocle.function.Cons.headOption
-import crystal.react.SetState
+import crystal.react.ModState
 import cats.effect.IO
 import monocle.Lens
 import react.semanticui.elements.button.Button
@@ -167,26 +167,24 @@ object ConditionsPanel {
   case class Modify(
     observationId: Observation.Id,
     conditions:    Conditions,
-    setState:      SetState[IO, Conditions],
+    modState:      ModState[IO, Conditions],
     setter:        Undoer.Setter[IO, Conditions]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
-      lens:   Lens[Conditions, A],
+      get:    Conditions => A,
+      set:    A => Conditions => Conditions,
       fields: A => Mutation.Fields
-    )(
-      value:  A
-    ): IO[Unit] =
+    ): A => IO[Unit] =
       setter.set(
         conditions,
-        lens,
-        { c: Conditions =>
+        get,
+        { value: A =>
           for {
-            // _ <- IO(println(s"MODIFY! [${fields(v)}]"))
-            _ <- setState(c)
-            _ <- mutate(observationId, fields(lens.get(c)))
+            _ <- (modState.apply _).compose(set)(value)
+            _ <- mutate(observationId, fields(value))
           } yield ()
         }
-      )(value)
+      )
   }
 
   private def someEnumTag[E: Enumerated](e: E): Option[String] =
@@ -220,38 +218,38 @@ object ConditionsPanel {
 
             UndoRegion[Conditions] { undoCtx =>
               val modifyIO =
-                Modify($.props.observationId.value, conditions, view.set, undoCtx.setter)
+                Modify($.props.observationId.value, conditions, view.mod, undoCtx.setter)
               def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
-                : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
+                : A => Callback = { v: A => modifyIO(lens.get, lens.set, fields)(v).runInCB }
 
               <.div(
                 Form(
                   FormGroup(widths = Two)(
-                    EnumSelect[ImageQuality]("Image Quality",
-                                             conditions.iq.some,
-                                             "Select",
-                                             disabled = false,
-                                             modify(Conditions.iq, iqFields)
+                    EnumSelect("Image Quality",
+                               conditions.iq.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.iq, iqFields)
                     ),
-                    EnumSelect[CloudCover]("Cloud Cover",
-                                           conditions.cc.some,
-                                           "Select",
-                                           disabled = false,
-                                           modify(Conditions.cc, ccFields)
+                    EnumSelect("Cloud Cover",
+                               conditions.cc.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.cc, ccFields)
                     )
                   ),
                   FormGroup(widths = Two)(
-                    EnumSelect[WaterVapor]("Water Vapor",
-                                           conditions.wv.some,
-                                           "Select",
-                                           disabled = false,
-                                           modify(Conditions.wv, wvFields)
+                    EnumSelect("Water Vapor",
+                               conditions.wv.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.wv, wvFields)
                     ),
-                    EnumSelect[SkyBackground]("Sky Background",
-                                              conditions.sb.some,
-                                              "Select",
-                                              disabled = false,
-                                              modify(Conditions.sb, sbFields)
+                    EnumSelect("Sky Background",
+                               conditions.sb.some,
+                               "Select",
+                               disabled = false,
+                               modify(Conditions.sb, sbFields)
                     )
                   )
                 ),

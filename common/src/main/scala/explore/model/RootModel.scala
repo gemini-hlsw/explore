@@ -3,7 +3,6 @@
 
 package explore.model
 
-import actions._
 import cats.implicits._
 import cats.effect._
 import clue._
@@ -11,21 +10,15 @@ import sttp.model.Uri
 import sttp.model.Uri._
 import monocle.macros.Lenses
 import japgolly.scalajs.react._
-import diode.data._
-import explore.util.Pot._
 import io.chrisdavenport.log4cats.Logger
-import clue.Backend
-import clue.HttpClient
 import org.scalajs.dom
 import crystal.react.StreamRenderer
 import gem.Observation
 
 @Lenses
 case class RootModel(
-  id:       Option[Observation.Id] = None,
-  target:   Option[Target] = None,
-  todoList: Pot[List[Task]] = Pot.empty,
-  polls:    Pot[List[Poll]] = Pot.empty
+  id:     Option[Observation.Id] = None,
+  target: Option[Target] = None
 )
 object RootModel  {
   implicit val observationIdReuse: Reusability[Observation.Id] =
@@ -73,8 +66,7 @@ case class Clients[F[_]: ConcurrentEffect](
 }
 
 case class Actions[F[_]](
-  todoList: TodoListActionInterpreter[F],
-  polls:    PollsActionInterpreter[F]
+  // interpreters go here
 )
 
 case class AppContext[F[_]](
@@ -103,9 +95,6 @@ object AppContext {
                   todoClient,
                   pollsClient
                 )
-      actions           = Actions(
-                  new TodoListActionInterpreter[F](clients.todo),
-                  new PollsActionInterpreter[F](pollsClient)
-                )
+      actions           = Actions[F]()
     } yield AppContext[F](clients, actions)
 }

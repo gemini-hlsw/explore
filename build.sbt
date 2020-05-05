@@ -26,6 +26,10 @@ addCommandAlias(
   "stopWDS",
   "fastOptJS::stopWebpackDevServer"
 )
+addCommandAlias(
+  "quickTest",
+  "modelJVM/test"
+)
 
 // For Heroku deployment
 val stage = taskKey[Unit]("Stage and clean task")

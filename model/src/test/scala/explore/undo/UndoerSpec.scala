@@ -12,16 +12,18 @@ import explore.undo._
 import explore.util.tree._
 import monocle.macros.Lenses
 import monocle.function.all._
-import monocle.Traversal
 import monocle.Lens
+import monocle.Setter
 
 class UndoerSpec extends munit.FunSuite {
 
-  def id[A] = Iso.id[A].asLens
+  def idLens[A] = Iso.id[A].asLens
+
+  def id[A] = GetSet(idLens[A])
 
   class ListModByIdEq[F[_], A, Id: Eq](idLens: Lens[A, Id]) extends ListMod[F, A, Id](idLens)
 
-  class ListModIdentityId[F[_], A: Eq] extends ListModByIdEq[F, A, A](id[A])
+  class ListModIdentityId[F[_], A: Eq] extends ListModByIdEq[F, A, A](idLens[A])
 
   val listIntMod = new ListModIdentityId[IO, Int]
 
@@ -48,7 +50,7 @@ class UndoerSpec extends munit.FunSuite {
     (for {
       model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(listIntMod.pos.at(3), listIntMod.pos.set(8))
+      _        <- undoable.mod(listIntMod.pos.withId(3), listIntMod.pos.set(8))
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 4, 5, 3)))
       _        <- undoable.undo
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 4, 5)))
@@ -61,7 +63,7 @@ class UndoerSpec extends munit.FunSuite {
     (for {
       model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(listIntMod.pos.at(3), listIntMod.delete)
+      _        <- undoable.mod(listIntMod.withId(3), listIntMod.delete)
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 4, 5)))
       _        <- undoable.undo
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 4, 5)))
@@ -74,7 +76,7 @@ class UndoerSpec extends munit.FunSuite {
     (for {
       model    <- Ref[IO].of(List(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(listIntMod.pos.at(8), listIntMod.unsafeUpsert(8, 3))
+      _        <- undoable.mod(listIntMod.withId(8), listIntMod.upsert(8, 3))
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 8, 4, 5)))
       _        <- undoable.undo
       _        <- undoable.get.map(v => assertEquals(v, List(1, 2, 3, 4, 5)))
@@ -91,9 +93,10 @@ class UndoerSpec extends munit.FunSuite {
 
   val vListMod = new ListModByIdEq[IO, V, Int](V.id)
 
-  def externalVListSetS(id: Int): Traversal[List[V], String] =
+  def externalVListSetS(id: Int): Setter[List[V], String] =
     vListMod
-      .at(id)
+      .withId(id)
+      .setter
       .composeTraversal(each)
       .composeLens(first)
       .composeLens(V.s)
@@ -102,7 +105,7 @@ class UndoerSpec extends munit.FunSuite {
     (for {
       model    <- Ref[IO].of(List(V(1), V(2), V(3), V(4), V(5)))
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(vListMod.pos.at(3), vListMod.pos.set(8))
+      _        <- undoable.mod(vListMod.pos.withId(3), vListMod.pos.set(8))
       _        <- undoable.get.map(v =>
              assertEquals(v, List(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
            )
@@ -132,7 +135,7 @@ class UndoerSpec extends munit.FunSuite {
 
   class TreeModByIdEq[F[_], A, Id: Eq](idLens: Lens[A, Id]) extends TreeMod[F, A, Id](idLens)
 
-  class TreeModIdentityId[F[_], A: Eq] extends TreeModByIdEq[F, A, A](id[A])
+  class TreeModIdentityId[F[_], A: Eq] extends TreeModByIdEq[F, A, A](idLens[A])
 
   val treeIntMod = new TreeModIdentityId[IO, Int]
 
@@ -145,7 +148,7 @@ class UndoerSpec extends munit.FunSuite {
                  )
                )
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(treeIntMod.pos.at(3), treeIntMod.pos.set((4.some, 1)))
+      _        <- undoable.mod(treeIntMod.pos.withId(3), treeIntMod.pos.set((4.some, 1)))
       _        <- undoable.get.map(v =>
              assert(
                v ==
@@ -187,7 +190,7 @@ class UndoerSpec extends munit.FunSuite {
                  )
                )
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(treeIntMod.pos.at(3), treeIntMod.delete)
+      _        <- undoable.mod(treeIntMod.withId(3), treeIntMod.delete)
       _        <- undoable.get.map(v =>
              assert(
                v ==
@@ -228,7 +231,7 @@ class UndoerSpec extends munit.FunSuite {
                  )
                )
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(treeIntMod.pos.at(8), treeIntMod.unsafeUpsert(8, (1.some, 8)))
+      _        <- undoable.mod(treeIntMod.withId(8), treeIntMod.upsert(8, (1.some, 8)))
       _        <- undoable.get.map(v =>
              assert(
                v == Tree(
@@ -260,9 +263,10 @@ class UndoerSpec extends munit.FunSuite {
 
   val vTreeMod = new TreeModByIdEq[IO, V, Int](V.id)
 
-  def externalVTreeSetS(id: Int): Traversal[Tree[V], String] =
+  def externalVTreeSetS(id: Int): Setter[Tree[V], String] =
     vTreeMod
-      .at(id)
+      .withId(id)
+      .setter
       .composeTraversal(each)
       .composeLens(first)
       .composeLens(V.s)
@@ -276,7 +280,7 @@ class UndoerSpec extends munit.FunSuite {
                  )
                )
       undoable <- TestUndoable(model)
-      _        <- undoable.mod(vTreeMod.pos.at(3), vTreeMod.pos.set((4.some, 1)))
+      _        <- undoable.mod(vTreeMod.pos.withId(3), vTreeMod.pos.set((4.some, 1)))
       _        <- undoable.get.map(v =>
              assert(
                v == Tree(
