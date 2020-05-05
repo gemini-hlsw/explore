@@ -110,7 +110,7 @@ lazy val commonLibSettings = gspScalaJsSettings ++ Seq(
     "com.github.julien-truffaut"        %%% "monocle-core"         % monocle,
     "com.github.julien-truffaut"        %%% "monocle-macro"        % monocle,
     "com.rpiaggio"                      %%% "crystal"              % "0.2.0",
-    "com.rpiaggio"                      %%% "clue-scalajs"         % "0.0.6",
+    "com.rpiaggio"                      %%% "clue-scalajs"         % "0.0.7",
     "io.circe"                          %%% "circe-generic-extras" % "0.13.0",
     "io.suzaku"                         %%% "diode-data"           % "1.1.7",
     "io.suzaku"                         %%% "diode-react"          % "1.1.7.160"
