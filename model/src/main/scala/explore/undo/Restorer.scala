@@ -3,7 +3,6 @@
 
 package explore.undo
 
-import monocle.Lens
 import cats.Functor
 
 // We don't use a case class to avoid the type parameter on T
@@ -13,22 +12,19 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
   type T // T = Value type
 
   val value: T               // Value that will be restored upon undo/redo
-  val lens: Lens[
-    M,
-    T
-  ]                          // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
+  val getter: M => T         // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
   val onChange: T => F[Unit] // Modify the model
 
   def restore(
     m: M
   ): F[Restorer[F, M]] = // Actually restores the value and returns the reverse restorer
-    functorF.map(onChange(value))(_ => Restorer[F, M, T](m, lens, onChange))
+    functorF.map(onChange(value))(_ => Restorer[F, M, T](m, getter, onChange))
 
   override def toString(): String = s"Restorer($value, ...)"
 }
 
 object Restorer {
-  def apply[F[_], M, A](m: M, _lens: Lens[M, A], _onChange: A => F[Unit])(implicit
+  def apply[F[_], M, A](m: M, _getter: M => A, _onChange: A => F[Unit])(implicit
     ff:                    Functor[F]
   ): Restorer[F, M] =
     new Restorer[F, M] {
@@ -36,9 +32,9 @@ object Restorer {
 
       type T = A
 
-      override val value = _lens.get(m)
+      override val value = _getter(m)
 
-      override val lens = _lens
+      override val getter = _getter
 
       override val onChange = _onChange
     }

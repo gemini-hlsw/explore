@@ -171,15 +171,16 @@ object ConditionsPanel {
     setter:        Undoer.Setter[IO, Conditions]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
-      lens:   Lens[Conditions, A],
+      get:    Conditions => A,
+      set:    A => Conditions => Conditions,
       fields: A => Mutation.Fields
     ): A => IO[Unit] =
       setter.set(
         conditions,
-        lens,
+        get,
         { value: A =>
           for {
-            _ <- (modState.apply _).compose(lens.set)(value)
+            _ <- (modState.apply _).compose(set)(value)
             _ <- mutate(observationId, fields(value))
           } yield ()
         }
@@ -219,7 +220,7 @@ object ConditionsPanel {
               val modifyIO =
                 Modify($.props.observationId.value, conditions, view.mod, undoCtx.setter)
               def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
-                : A => Callback = { v: A => modifyIO(lens, fields)(v).runInCB }
+                : A => Callback = { v: A => modifyIO(lens.get, lens.set, fields)(v).runInCB }
 
               <.div(
                 Form(

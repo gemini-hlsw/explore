@@ -23,16 +23,16 @@ object Undoer {
   trait Setter[F[_], M] {
     def set[A](
       m:        M,
-      lens:     Lens[M, A],
+      getter:   M => A,
       onChange: A => F[Unit]
     )(v:        A): F[Unit]
 
     def mod[A](
       m:        M,
-      lens:     Lens[M, A],
+      getter:   M => A,
       onChange: A => F[Unit]
     )(f:        A => A): F[Unit] =
-      set(m, lens, onChange)(f(lens.get(m)))
+      set(m, getter, onChange)(f(getter(m)))
   }
 
   type Undo[F[_], M] = M => F[Unit]
@@ -86,11 +86,11 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
   protected val set: Undoer.Setter[F, M] = new Undoer.Setter[F, M] {
     override def set[A](
       m:        M,
-      lens:     Lens[M, A],
+      getter:   M => A,
       onChange: A => F[Unit]
     )(v:        A): F[Unit] =
       for {
-        _ <- pushUndo(Restorer[F, M, A](m, lens, onChange))
+        _ <- pushUndo(Restorer[F, M, A](m, getter, onChange))
         _ <- resetRedo
         _ <- onChange(v)
       } yield ()
