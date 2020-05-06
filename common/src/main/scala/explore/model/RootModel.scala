@@ -18,9 +18,10 @@ import gem.Observation
 @Lenses
 case class RootModel(
   id:     Option[Observation.Id] = None,
-  target: Option[ExploreTarget] = None
+  target: Option[ExploreSiderealTarget] = None
 )
 object RootModel  {
+  import explore.model.reusability._
   implicit val observationIdReuse: Reusability[Observation.Id] =
     Reusability.never // This is just for temporary testing!!!!
   implicit val reuse: Reusability[RootModel] = Reusability.derive

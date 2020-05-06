@@ -11,15 +11,12 @@ import explore._
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
-import gem.EphemerisKey
 import gem.Observation
-import gem.Target
 import gpp.ui.forms._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.HourAngle
-import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -35,20 +32,19 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._
+import explore.model.ModelOptics
+import explore.model.SiderealTarget
 
 final case class TargetBody(
   observationId:    Observation.Id,
-  target:           View[IO, Target]
+  target:           View[IO, SiderealTarget]
 )(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline override def render: VdomElement = TargetBody.component(this)
-  val aladinCoords: Option[Coordinates]    = target.get.track match {
-    case Right(pm) => pm.baseCoordinates.some
-    case _         => none
-  }
+  val aladinCoords: Coordinates            = target.get.track.baseCoordinates
 }
 
-object TargetBody      {
+object TargetBody extends ModelOptics {
   type Props = TargetBody
   val AladinComp = Aladin.component
 
@@ -76,23 +72,6 @@ object TargetBody      {
     def setDec(dec: Option[Declination], cb: Callback = Callback.empty): Callback =
       bs.setStateOptionL(State.decValue)(dec, cb)
 
-    val pmRa: Lens[ProperMotion, RightAscension]       =
-      ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
-    val pmDec: Lens[ProperMotion, Declination]         =
-      ProperMotion.baseCoordinates ^|-> Coordinates.declination
-    val targetRA: Lens[Target, Option[RightAscension]] =
-      Target.track ^|-> Lens[Either[EphemerisKey, ProperMotion], Option[RightAscension]](
-        _.toOption.map(pmRa.get)
-      )(ra => t => t.bimap(identity, pmRa.set(ra.getOrElse(RightAscension.Zero))))
-    val targetDec: Lens[Target, Option[Declination]]   =
-      Target.track ^|-> Lens[Either[EphemerisKey, ProperMotion], Option[Declination]](
-        _.toOption.map(pmDec.get)
-      )(dec => t => t.bimap(identity, pmDec.set(dec.getOrElse(Declination.Zero))))
-    val targetPropsL                                   =
-      Lens[Target, (String, Option[RightAscension], Option[Declination])](t =>
-        (t.name, targetRA.get(t), targetDec.get(t))
-      )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
-
     def render(props:          Props, state:     State)           = {
       implicit val appCtx = props.ctx
       val raEV            =
@@ -103,14 +82,14 @@ object TargetBody      {
         StateSnapshot[String](state.searchTerm)(updateSearchOp)
 
       val target = props.target.get
-      UndoRegion[Target] { undoCtx =>
+      UndoRegion[SiderealTarget] { undoCtx =>
         val modifyIO =
-          TargetEditor.Modify(props.observationId, target, props.target.set, undoCtx.setter)
+          TargetEditor.Modify(props.observationId, target, props.target.mod, undoCtx.setter)
         def modify[A](
-          lens:   Lens[Target, A],
+          lens:   Lens[SiderealTarget, A],
           fields: A => TargetEditor.Mutation.Fields
         ): A => Callback = { v: A =>
-          modifyIO(lens, fields)(v).runInCB
+          modifyIO(lens.get, lens.set, fields)(v).runInCB
         }
         def goTo(search: String): Callback =
           ref.get
@@ -127,18 +106,18 @@ object TargetBody      {
                         .getOption(Angle.fromDoubleDegrees(b.toDouble))
                         .getOrElse(Declination.Zero)
                     setRa(ra.some) *> setDec(dec.some) *> modify[
-                      (String, Option[RightAscension], Option[Declination])
+                      (String, RightAscension, Declination)
                     ](
                       targetPropsL,
                       {
                         case (n, r, d) =>
                           TargetEditor.Mutation.Fields(
                             name = n.some,
-                            ra = r.map(RightAscension.fromStringHMS.reverseGet),
-                            dec = d.map(Declination.fromStringSignedDMS.reverseGet)
+                            ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                            dec = Declination.fromStringSignedDMS.reverseGet(d).some
                           )
                       }
-                    )((search, ra.some, dec.some))
+                    )((search, ra, dec))
                   },
                   Callback.log("error")
                 )
@@ -164,7 +143,7 @@ object TargetBody      {
                   FormInputEV(name = "search",
                               id = "search",
                               snapshot = searchEV,
-                              label = "Target",
+                              label = "SiderealTarget",
                               focus = true,
                               icon = Icon("search")
                   ),
@@ -203,29 +182,23 @@ object TargetBody      {
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
       bs.setState(stateFromProps(nextProps)) *> Callback.log(currentProps.toString()) *>
-        nextProps.aladinCoords
-          .map(c =>
-            Callback.log(s"${c.ra.toHourAngle.toDoubleHours}, ${c.dec.toAngle.toDoubleDegrees}")
-          )
-          .getOrEmpty *>
+        // nextProps.aladinCoords
+        //   .map(c =>
+        //     Callback.log(s"${c.ra.toHourAngle.toDoubleHours}, ${c.dec.toAngle.toDoubleDegrees}")
+        //   )
+        // .getOrEmpty *>
         ref.get
-          .flatMap(r =>
-            CallbackOption.liftOptionCallback(
-              nextProps.aladinCoords.map(c =>
-                r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
-              )
-            )
-          )
+          .flatMapCB { r =>
+            val c = nextProps.aladinCoords
+            r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
+          }
           .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
 
   }
 
   def stateFromProps(props: Props): State = {
     val target = props.target.get
-    val coords = target.track match {
-      case Right(pm) => pm.baseCoordinates
-      case _         => Coordinates.Zero
-    }
+    val coords = props.aladinCoords
     State(target.name, target.name, coords.ra, coords.dec)
   }
 

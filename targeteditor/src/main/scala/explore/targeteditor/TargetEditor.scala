@@ -15,7 +15,6 @@ import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.undo.Undoer
 import gem.Observation
-import gem.Target
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.Epoch
@@ -29,25 +28,24 @@ import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
 import react.common._
 import clue.GraphQLQuery
+import explore.model.SiderealTarget
 
 final case class TargetEditor(
   observationId:    CtxIO[Observation.Id]
 )(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline override def render: VdomElement = TargetEditor.component(this)
-  // val searchTerm                          = target.zoomL(ExploreTarget.searchTermL).get
 }
 
 object TargetEditor    {
   type Props = TargetEditor
 
-  implicit val targetDecoder = new Decoder[Target] {
-    final def apply(c: HCursor): Decoder.Result[Target] =
+  implicit val targetDecoder = new Decoder[SiderealTarget] {
+    final def apply(c: HCursor): Decoder.Result[SiderealTarget] =
       for {
         name <- c.downField("name").as[String]
         ra   <- c.downField("ra").as[String].map(RightAscension.fromStringHMS.getOption)
@@ -60,7 +58,7 @@ object TargetEditor    {
                        none,
                        none
           )
-        Target(name, coords.asRight)
+        SiderealTarget(name, coords)
       }
   }
 
@@ -80,7 +78,7 @@ object TargetEditor    {
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     @Lenses
-    case class Data(targets: List[Target])
+    case class Data(targets: List[SiderealTarget])
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -128,23 +126,24 @@ object TargetEditor    {
 
   case class Modify(
     observationId: Observation.Id,
-    target:        Target,
-    setState:      SetState[IO, Target],
-    setter:        Undoer.Setter[IO, Target]
+    target:        SiderealTarget,
+    modState:      ModState[IO, SiderealTarget],
+    setter:        Undoer.Setter[IO, SiderealTarget]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
-      lens:   Lens[Target, A],
+      get:    SiderealTarget => A,
+      set:    A => SiderealTarget => SiderealTarget,
       fields: A => Mutation.Fields
     )(
       value:  A
     ): IO[Unit] =
       setter.set(
         target,
-        lens,
-        { c: Target =>
+        get,
+        { value: A =>
           for {
-            _ <- setState(c)
-            _ <- mutate(observationId, fields(lens.get(c)))
+            _ <- (modState.apply _).compose(set)(value)
+            _ <- mutate(observationId, fields(value))
           } yield ()
         }
       )(value)
@@ -154,7 +153,7 @@ object TargetEditor    {
       .builder[Props]("TargetEditor")
       .render_P { props =>
         implicit val appCtx = props.ctx
-        SubscriptionRenderMod[Subscription.Data, Target](
+        SubscriptionRenderMod[Subscription.Data, SiderealTarget](
           appCtx.clients.conditions
             .subscribe(Subscription)(
               Subscription.Variables(props.observationId.value.format).some
