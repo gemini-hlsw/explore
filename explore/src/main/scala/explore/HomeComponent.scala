@@ -70,17 +70,15 @@ object HomeComponent {
                 <.div(
                   ^.key := "conditions",
                   ^.cls := "tile",
-                  Tile(
-                    Tile.Props("Conditions"),
+                  Tile("Conditions")(
                     ConditionsPanel(obsId)
                   )
                 ),
                 <.div(
                   ^.key := "target",
                   ^.cls := "tile",
-                  Tile(
-                    Tile.Props("Target Position"),
-                    <.div(TargetEditor(obsId))
+                  Tile("Target Position")(
+                    TargetEditor(obsId)
                   )
                 )
               )
