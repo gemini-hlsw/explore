@@ -85,7 +85,7 @@ lazy val targeteditor = project
   .dependsOn(common)
   .settings(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.3"
+      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.6"
     )
   )
 

@@ -11,6 +11,9 @@ import explore._
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
+import explore.model.ModelOptics
+import explore.model.SiderealTarget
+import explore.target.TargetQueries._
 import gem.Observation
 import gsp.math.Angle
 import gsp.math.Coordinates
@@ -26,9 +29,6 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
-import explore.model.ModelOptics
-import explore.model.SiderealTarget
-import explore.target.TargetQueries._
 
 final case class TargetBody(
   observationId:    Observation.Id,
@@ -146,11 +146,6 @@ object TargetBody extends ModelOptics {
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
       bs.setState(stateFromProps(nextProps)) *> Callback.log(currentProps.toString()) *>
-        // nextProps.aladinCoords
-        //   .map(c =>
-        //     Callback.log(s"${c.ra.toHourAngle.toDoubleHours}, ${c.dec.toAngle.toDoubleDegrees}")
-        //   )
-        // .getOrEmpty *>
         ref.get
           .flatMapCB { r =>
             val c = nextProps.aladinCoords
@@ -171,7 +166,6 @@ object TargetBody extends ModelOptics {
       .builder[Props]("TargetBody")
       .initialStateFromProps(stateFromProps)
       .renderBackend[Backend]
-      // .componentDidMount(_.backend.onMount)
       .componentWillReceiveProps($ => $.backend.newProps($.currentProps, $.nextProps))
       .build
 

@@ -27,7 +27,19 @@ if (process.env.NODE_ENV !== "production") {
       "Button",
       "Icon",
       "DropdownItem",
-      "DropdownMenu"
+      "DropdownMenu",
+      "GridColumn",
+      "Dropdown",
+      "FormField",
+      "FormDropdown",
+      "FormInput",
+      "Input",
+      "Form",
+      "GridRow",
+      "Grid",
+      "GridColumn",
+      "FormCheckbox",
+      "Checkbox"
     ]
   });
 }

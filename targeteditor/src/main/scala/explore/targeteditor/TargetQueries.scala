@@ -5,10 +5,10 @@ package explore.target
 
 import cats.effect.IO
 import cats.implicits._
+import clue.GraphQLQuery
 import crystal.react._
-import io.circe.{ Decoder, Encoder }
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import explore.implicits._
+import explore.model.SiderealTarget
 import explore.undo.Undoer
 import gem.Observation
 import gsp.math.Coordinates
@@ -23,8 +23,6 @@ import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import monocle.macros.Lenses
-import clue.GraphQLQuery
-import explore.model.SiderealTarget
 
 object TargetQueries {
 

@@ -6,10 +6,13 @@ package explore.model
 import cats._
 import cats.implicits._
 import gem.Target
+import gsp.math.ProperMotion
 import monocle.Lens
 import monocle.macros.Lenses
-import gsp.math.ProperMotion
 
+/**
+  * A refinement of gem.Tracker meant for sidereal targets
+  */
 @Lenses
 final case class SiderealTarget(name: String, track: ProperMotion)
 
@@ -17,10 +20,14 @@ object SiderealTarget        {
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }
 
+/**
+  * A Sidereal target from a UI point of view containing local state, e.g. catalog selected, etc
+  */
 @Lenses
 final case class ExploreSiderealTarget(searchTerm: String, target: Option[SiderealTarget])
 
 object ExploreSiderealTarget {
+  implicit val siderealTargetEq: Eq[ExploreSiderealTarget] = Eq.by(x => (x.searchTerm, x.target))
 
   def apply(target: Target): Option[ExploreSiderealTarget] =
     target.track

@@ -3,11 +3,11 @@
 
 package explore.undo
 
-import monocle.Lens
 import cats.FlatMap
-import cats.implicits._
-import cats.effect.Sync
 import cats.Monoid
+import cats.effect.Sync
+import cats.implicits._
+import monocle.Lens
 
 object Undoer {
   type Stack[F[_], M] = List[Restorer[F, M]]

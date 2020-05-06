@@ -4,17 +4,17 @@
 package explore.target
 
 import cats.implicits._
-import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
+import explore.implicits._
+import explore.model.SiderealTarget
+import explore.target.TargetQueries._
 import gem.Observation
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
+import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
-import explore.model.SiderealTarget
-import explore.target.TargetQueries._
+import react.common._
+import react.common._
 
 final case class TargetEditor(
   observationId:    CtxIO[Observation.Id]

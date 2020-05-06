@@ -8,10 +8,10 @@
   dependencies:
     regenerator-runtime "^0.13.2"
 
-"@cquiroz/aladin-lite@0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@cquiroz/aladin-lite/-/aladin-lite-0.1.2.tgz#53389408da05aa9bae5ed2042424f32b27cdca34"
-  integrity sha512-cC7nLti8qkWQ+dWMI+3uXT18bUOkUvYEVzBUXBWpH8CKpMy+r9/r22O2TCeVG6CAu6F5RsrjWxRLMphU/8jR8A==
+"@cquiroz/aladin-lite@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@cquiroz/aladin-lite/-/aladin-lite-0.1.5.tgz#04f5a47c990cbb7c757d701dec1a5f8371924dab"
+  integrity sha512-w+p/GNOQUn6VJGko+sINiQUHS1+KpLyNKR9ijJCVB/qd9KutZjgbVHRNKwe0GCvhE4uRoukVKK4jb/hVfnzAmA==
   dependencies:
     jquery "^1.12.4"
     raf "^3.4.1"

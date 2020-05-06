@@ -6,7 +6,6 @@ package explore
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.collections.menu._
-import react.semanticui.sizes._
 import react.common._
 import explore.components.ui.GPPStyles
 
@@ -17,8 +16,6 @@ final case class Tile(title: String) extends ReactPropsWithChildren {
 object Tile {
   type Props = Tile
 
-  // This was preventing from rerendering when children changed.
-  // implicit val reuseProps: Reusability[Props] = Reusability.derive[Props]
   val component =
     ScalaComponent
       .builder[Props]("Tile")
@@ -26,7 +23,6 @@ object Tile {
       .render_PC { (p, c) =>
         <.div(
           Menu(
-            size = Mini,
             attached = MenuAttached.Top,
             compact = true,
             borderless = true,
@@ -38,7 +34,6 @@ object Tile {
           c
         )
       }
-      // .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

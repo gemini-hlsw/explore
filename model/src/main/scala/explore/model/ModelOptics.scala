@@ -3,11 +3,11 @@
 
 package explore.model
 
-import monocle.Lens
-import gsp.math.ProperMotion
-import gsp.math.RightAscension
 import gsp.math.Coordinates
 import gsp.math.Declination
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
+import monocle.Lens
 
 /**
   * Contains a set of useful optics to explore the model
@@ -27,15 +27,20 @@ trait ModelOptics {
     ProperMotion.baseCoordinates ^|-> Coordinates.declination
 
   /**
-    * Lens to an optional RightAscension of a target, it is unlawful as we can only
-    * use it on sidereal targets
+    * Lens to the RightAscension of a sidereal target
     */
   val targetRA: Lens[SiderealTarget, RightAscension] =
     SiderealTarget.track ^|-> properMotionRA
 
+  /**
+    * Lens to the Declination of a sidereal target
+    */
   val targetDec: Lens[SiderealTarget, Declination] =
     SiderealTarget.track ^|-> properMotionDec
 
+  /**
+    * Lens used to change name and coordinates of a target
+    */
   val targetPropsL =
     Lens[SiderealTarget, (String, RightAscension, Declination)](t =>
       (t.name, targetRA.get(t), targetDec.get(t))

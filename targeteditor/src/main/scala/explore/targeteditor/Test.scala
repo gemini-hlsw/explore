@@ -3,8 +3,7 @@
 
 package explore.target
 
-import scala.scalajs.js
-
+import crystal.implicits._
 import explore.AppMain
 import explore._
 import explore.model._
@@ -13,9 +12,7 @@ import gem.ProgramId
 import gsp.math.Index
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import crystal.implicits._
-
-import js.annotation._
+import scala.scalajs.js.annotation._
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {

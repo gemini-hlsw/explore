@@ -3,10 +3,13 @@
 
 package explore.target
 
+import cats.effect.IO
 import cats.implicits._
+import crystal.react.implicits._
 import explore._
 import explore.implicits._
-import crystal.react.implicits._
+import explore.model.SiderealTarget
+import explore.undo.Undoer
 import gpp.ui.forms._
 import gsp.math.Coordinates
 import gsp.math.Declination
@@ -22,9 +25,6 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._
-import explore.model.SiderealTarget
-import explore.undo.Undoer
-import cats.effect.IO
 
 final case class CoordinatesForm(
   target:           SiderealTarget,

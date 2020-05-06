@@ -9,4 +9,6 @@ import explore.model.arb.all._
 
 class ModelSuite extends munit.FunSuite with Discipline {
   checkAll("Eq[Conditions]", EqTests[Conditions].eqv)
+  checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
+  checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)
 }

@@ -3,8 +3,8 @@
 
 package explore.undo
 
-import monocle._
 import cats.implicits._
+import monocle._
 import mouse.boolean._
 
 trait IndexedColMod[F[_], Col[_], Idx, A, Id] {

@@ -3,8 +3,8 @@
 
 package explore.undo
 
-import monocle.Lens
 import monocle.Getter
+import monocle.Lens
 import monocle.Setter
 
 // This is not a Lens. It doesn't abide by any laws. It's just convenience to group a getter and setter functions.
