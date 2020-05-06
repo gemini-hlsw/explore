@@ -6,6 +6,7 @@ package explore.target
 import cats.implicits._
 import explore._
 import explore.implicits._
+import crystal.react.implicits._
 import gpp.ui.forms._
 import gsp.math.Coordinates
 import gsp.math.Declination
@@ -22,10 +23,14 @@ import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._
 import explore.model.SiderealTarget
+import explore.undo.Undoer
+import cats.effect.IO
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
-  goTo:             (String) => Callback
+  searchAndGo:      String => Callback,
+  goToRaDec:        Coordinates => Callback,
+  undoCtx:          Undoer.Context[IO, SiderealTarget]
 )(implicit val ctx: AppContextIO)
     extends ReactProps {
   @inline override def render: VdomElement = CoordinatesForm.component(this)
@@ -64,7 +69,7 @@ object CoordinatesForm {
       val searchEV =
         StateSnapshot[String](state.searchTerm)(updateSearchOp)
 
-      Form(size = Mini, onSubmit = props.goTo(searchEV.value).when(state.shouldSearch).void)(
+      Form(size = Mini, onSubmit = props.searchAndGo(searchEV.value).when(state.shouldSearch).void)(
         FormDropdown(
           label = "Type",
           value = 0,
@@ -96,9 +101,19 @@ object CoordinatesForm {
                       optic = InputOptics.fromFormat(Declination.fromStringSignedDMS),
                       label = "Dec"
           ),
-          FormButton(width = Two, size = Small, icon = true, label = "X")(
+          FormButton(width = Two,
+                     size = Small,
+                     icon = true,
+                     label = "X",
+                     onClick = props.goToRaDec(Coordinates(state.raValue, state.decValue))
+          )(
             Icon("angle right")
           )
+        ),
+        FormButton(onClick = props.undoCtx.undo(props.target).runInCB,
+                   disabled = props.undoCtx.undoEmpty
+        )(
+          "Undo"
         )
       )
     }

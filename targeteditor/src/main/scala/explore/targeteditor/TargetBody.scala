@@ -80,7 +80,14 @@ object TargetBody extends ModelOptics {
         ): A => Callback = { v: A =>
           modifyIO(lens.get, lens.set, fields)(v).runInCB
         }
-        def goTo(search: String): Callback =
+        val gotoRaDec    = (coords: Coordinates) =>
+          ref.get
+            .flatMapCB(
+              _.backend
+                .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
+            )
+            .toCallback
+        val searchAndGo  = (search: String) =>
           ref.get
             .flatMapCB(
               _.backend
@@ -111,6 +118,7 @@ object TargetBody extends ModelOptics {
                   Callback.log("error")
                 )
             )
+            .toCallback
 
         <.div(
           ^.height := "100%",
@@ -120,12 +128,15 @@ object TargetBody extends ModelOptics {
             ^.height := "100%",
             GridRow(stretched = true)(
               GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                CoordinatesForm(props.target.get, goTo _)
+                CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
               ),
-              GridColumn(stretched = true, computer = Twelve)(
+              GridColumn(stretched = true, computer = Nine)(
                 AladinComp.withRef(ref) {
                   Aladin(target = state.aladinCoords, fov = 0.25, showGotoControl = false)
                 }
+              ),
+              GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
+                CataloguesForm(props.target.get)
               )
             )
           )
