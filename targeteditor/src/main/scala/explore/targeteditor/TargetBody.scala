@@ -12,7 +12,6 @@ import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import gem.Observation
-import gpp.ui.forms._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
@@ -20,20 +19,16 @@ import gsp.math.HourAngle
 import gsp.math.RightAscension
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.aladin.Aladin
 import react.common._
-import react.semanticui.collections.form._
 import react.semanticui.collections.grid._
-import react.semanticui.elements.icon.Icon
-import react.semanticui.modules.dropdown.DropdownItem
-import react.semanticui.sizes._
 import react.semanticui.widths._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
+import explore.target.TargetQueries._
 
 final case class TargetBody(
   observationId:    Observation.Id,
@@ -74,20 +69,14 @@ object TargetBody extends ModelOptics {
 
     def render(props:          Props, state:     State)           = {
       implicit val appCtx = props.ctx
-      val raEV            =
-        StateSnapshot[RightAscension](state.raValue)(setRa)
-      val decEV           =
-        StateSnapshot[Declination](state.decValue)(setDec)
-      val searchEV        =
-        StateSnapshot[String](state.searchTerm)(updateSearchOp)
 
       val target = props.target.get
       UndoRegion[SiderealTarget] { undoCtx =>
         val modifyIO =
-          TargetEditor.Modify(props.observationId, target, props.target.mod, undoCtx.setter)
+          Modify(props.observationId, target, props.target.mod, undoCtx.setter)
         def modify[A](
           lens:   Lens[SiderealTarget, A],
-          fields: A => TargetEditor.Mutation.Fields
+          fields: A => Mutation.Fields
         ): A => Callback = { v: A =>
           modifyIO(lens.get, lens.set, fields)(v).runInCB
         }
@@ -111,7 +100,7 @@ object TargetBody extends ModelOptics {
                       targetPropsL,
                       {
                         case (n, r, d) =>
-                          TargetEditor.Mutation.Fields(
+                          Mutation.Fields(
                             name = n.some,
                             ra = RightAscension.fromStringHMS.reverseGet(r).some,
                             dec = Declination.fromStringSignedDMS.reverseGet(d).some
@@ -131,43 +120,7 @@ object TargetBody extends ModelOptics {
             ^.height := "100%",
             GridRow(stretched = true)(
               GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                Form(size = Mini, onSubmit = goTo(searchEV.value).when(state.shouldSearch).void)(
-                  FormDropdown(
-                    label = "Type",
-                    value = 0,
-                    selection = true,
-                    options = List(DropdownItem(value = 0, text = "Sidereal"),
-                                   DropdownItem(value = 1, text = "Non-sidereal")
-                    )
-                  ),
-                  FormInputEV(name = "search",
-                              id = "search",
-                              snapshot = searchEV,
-                              label = "SiderealTarget",
-                              focus = true,
-                              icon = Icon("search")
-                  ),
-                  FormGroup(widths = FormWidths.Equal)(
-                    FormInputEV(
-                      width = Seven,
-                      name = "ra",
-                      id = "ra",
-                      snapshot = raEV,
-                      optic = InputOptics.fromFormat(RightAscension.fromStringHMS),
-                      label = "RA"
-                    ),
-                    FormInputEV(width = Seven,
-                                name = "dec",
-                                id = "dec",
-                                snapshot = decEV,
-                                optic = InputOptics.fromFormat(Declination.fromStringSignedDMS),
-                                label = "Dec"
-                    ),
-                    FormButton(width = Two, size = Small, icon = true, label = "X")(
-                      Icon("angle right")
-                    )
-                  )
-                )
+                CoordinatesForm(props.target.get, goTo _)
               ),
               GridColumn(stretched = true, computer = Twelve)(
                 AladinComp.withRef(ref) {
