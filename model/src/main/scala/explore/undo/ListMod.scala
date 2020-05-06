@@ -4,8 +4,8 @@
 package explore.undo
 
 import cats.implicits._
-import monocle.Getter
 import cats.kernel.Eq
+import monocle.Getter
 import monocle.Lens
 
 class ListMod[F[_], A, Id: Eq](protected val idLens: Lens[A, Id])

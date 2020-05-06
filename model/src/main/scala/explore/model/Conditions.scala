@@ -5,8 +5,8 @@ package explore.model
 
 import cats._
 import cats.implicits._
+import explore.model.enum._
 import monocle.macros.Lenses
-import enum._
 
 @Lenses
 final case class Conditions(

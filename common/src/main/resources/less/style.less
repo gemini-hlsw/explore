@@ -1,6 +1,7 @@
 @import "~theme/modules/sidebar.variables";
 
 @gridSpace: 5px;
+@minHeight: 2.85714286em; // TODO: Calculate this on less
 
 html,
 body {
@@ -114,4 +115,17 @@ body {
 
 .pushable > .pusher {
   width: ~"calc(100% - @{wideWidth})";
+}
+
+.gpp-form {
+  padding-top: 1em;
+}
+
+.gpp-tile {
+  height: ~"calc(100% - @{minHeight}/2)";
+  width: 100%;
+}
+
+.react-aladin {
+  margin: 2px;
 }
