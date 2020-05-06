@@ -14,7 +14,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
-import react.common._
 
 final case class TargetEditor(
   observationId:    CtxIO[Observation.Id]
@@ -30,15 +29,16 @@ object TargetEditor    {
     ScalaComponent
       .builder[Props]("TargetEditor")
       .render_P { props =>
-        implicit val appCtx = props.ctx
-        SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-          appCtx.clients.conditions
-            .subscribe(Subscription)(
-              Subscription.Variables(props.observationId.value.format).some
-            ),
-          _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-        ) { view =>
-          TargetBody(props.observationId.value, view)
+        props.observationId.withCtx { implicit appCtx =>
+          SubscriptionRenderMod[Subscription.Data, SiderealTarget](
+            appCtx.clients.conditions
+              .subscribe(Subscription)(
+                Subscription.Variables(props.observationId.value.format).some
+              ),
+            _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
+          ) { view =>
+            TargetBody(props.observationId.value, view)
+          }
         }
       }
       .build
