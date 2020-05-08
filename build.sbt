@@ -35,6 +35,11 @@ addCommandAlias(
   "; targeteditor/fastOptJS::stopWebpackDevServer; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
 )
 
+addCommandAlias(
+  "fixImports",
+  "; scalafix OrganizeImports"
+)
+
 // For Heroku deployment
 val stage = taskKey[Unit]("Stage and clean task")
 
@@ -150,6 +155,7 @@ lazy val commonLibSettings   = Seq(
       "org.scalameta"              %%% "munit"            % mUnit,
       "org.scalameta"              %%% "munit-scalacheck" % mUnit,
       "org.typelevel"              %%% "discipline-core"  % "1.0.2",
+      "org.typelevel"              %%% "discipline-munit" % "0.2.0",
       "com.github.julien-truffaut" %%% "monocle-law"      % monocle
     ).map(_ % Test),
   testFrameworks += new TestFramework("munit.Framework")

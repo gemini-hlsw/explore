@@ -2,7 +2,8 @@
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 import cats.effect.IO
-import crystal.{ Ctx, View }
+import crystal.Ctx
+import crystal.View
 import explore.model.AppContext
 
 package explore {

@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.kernel.laws.discipline._
-import org.typelevel.discipline.munit.Discipline
 import explore.model.arb.all._
+import munit.DisciplineSuite
 
-class ModelSuite extends munit.FunSuite with Discipline {
+class ModelSuite extends DisciplineSuite {
   checkAll("Eq[Conditions]", EqTests[Conditions].eqv)
   checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
   checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)

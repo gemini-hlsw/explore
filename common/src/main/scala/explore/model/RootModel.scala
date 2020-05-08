@@ -3,17 +3,17 @@
 
 package explore.model
 
-import cats.implicits._
 import cats.effect._
+import cats.implicits._
 import clue._
-import sttp.model.Uri
-import sttp.model.Uri._
-import monocle.macros.Lenses
-import japgolly.scalajs.react._
-import io.chrisdavenport.log4cats.Logger
-import org.scalajs.dom
 import crystal.react.StreamRenderer
 import gem.Observation
+import io.chrisdavenport.log4cats.Logger
+import japgolly.scalajs.react._
+import monocle.macros.Lenses
+import org.scalajs.dom
+import sttp.model.Uri
+import sttp.model.Uri._
 
 @Lenses
 case class RootModel(

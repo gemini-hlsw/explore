@@ -3,39 +3,41 @@
 
 package explore.conditions
 
-import explore.implicits._
+import cats.Show
+import cats.effect.IO
 import cats.implicits._
+import clue.GraphQLQuery
+import crystal.react.ModState
+import crystal.react.implicits._
+import explore.components.graphql.SubscriptionRenderMod
+import explore.components.undo.UndoRegion
+import explore.implicits._
+import explore.model.Conditions
+import explore.model.enum.CloudCover
+import explore.model.enum.ImageQuality
+import explore.model.enum.SkyBackground
+import explore.model.enum.WaterVapor
+import explore.undo.Undoer
+import gem.Observation
+import gem.util.Enumerated
+import gpp.ui.forms.EnumSelect
+import io.circe.Decoder
+import io.circe.DecodingFailure
+import io.circe.Encoder
+import io.circe.HCursor
+import io.circe.JsonObject
+import io.circe.generic.semiauto.deriveDecoder
+import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
+import monocle.function.Cons.headOption
+import monocle.macros.Lenses
 import react.common._
-import gem.Observation
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
-import explore.model.enum.ImageQuality
-import explore.model.enum.CloudCover
-import explore.model.enum.WaterVapor
-import explore.model.enum.SkyBackground
-import react.semanticui.widths._
-import explore.model.Conditions
-import explore.components.graphql.SubscriptionRenderMod
-import clue.GraphQLQuery
-import io.circe.{ Decoder, Encoder }
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import cats.Show
-import gem.util.Enumerated
-import io.circe.HCursor
-import io.circe.DecodingFailure
-import io.circe.JsonObject
-import crystal.react.implicits._
-import monocle.macros.Lenses
-import monocle.function.Cons.headOption
-import crystal.react.ModState
-import cats.effect.IO
-import monocle.Lens
 import react.semanticui.elements.button.Button
-import explore.components.undo.UndoRegion
-import gpp.ui.forms.EnumSelect
-import explore.undo.Undoer
+import react.semanticui.widths._
 
 /*
 query {
