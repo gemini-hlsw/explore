@@ -1,12 +1,9 @@
 import sbtcrossproject.crossProject
 import sbtcrossproject.CrossType
+import Settings.Libraries._
 
-val reactJS      = "16.7.0"
-val scalaJsReact = "1.6.0"
-val SUI          = "2.4.1"
-val circe        = "0.13.0"
-val monocle      = "2.0.4"
-val mUnit        = "0.7.5"
+val reactJS = "16.7.0"
+val SUI     = "2.4.1"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -89,12 +86,11 @@ lazy val targeteditor = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
   .settings(
-    libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "react-aladin" % "0.0.6"
-    )
+    libraryDependencies ++=
+      ReactAladin.value
   )
 
-lazy val conditions   = project
+lazy val conditions = project
   .in(file("conditions"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
@@ -102,18 +98,17 @@ lazy val conditions   = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
 
-lazy val explore: Project    = project
+lazy val explore: Project = project
   .in(file("explore"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonWDS: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
-    libraryDependencies ++= Seq(
-      "io.github.cquiroz.react" %%% "common"            % "0.7.1",
-      "io.github.cquiroz.react" %%% "react-grid-layout" % "0.4.0",
-      "io.github.cquiroz.react" %%% "react-sizeme"      % "0.3.4"
-    ),
+    libraryDependencies ++=
+      ReactCommon.value ++
+        ReactGridLayout.value ++
+        ReactSizeMe.value,
     // don't publish the demo
     publish := {},
     publishLocal := {},
@@ -131,49 +126,39 @@ lazy val commonSettings      = Seq(
 )
 
 lazy val commonLibSettings   = Seq(
-  libraryDependencies ++= Seq(
-    "edu.gemini"                 %%% "gsp-core-model"       % "0.1.8",
-    "org.typelevel"              %%% "cats-effect"          % "2.1.3",
-    "org.typelevel"              %%% "cats-core"            % "2.1.1",
-    "org.typelevel"              %%% "mouse"                % "0.24",
-    "io.chrisdavenport"          %%% "log4cats-core"        % "1.0.1",
-    "io.chrisdavenport"          %%% "log4cats-log4s"       % "0.4.0-M1",
-    "com.github.julien-truffaut" %%% "monocle-core"         % monocle,
-    "com.github.julien-truffaut" %%% "monocle-macro"        % monocle,
-    "com.rpiaggio"               %%% "crystal"              % "0.2.0",
-    "io.circe"                   %%% "circe-generic-extras" % "0.13.0",
-    "io.suzaku"                  %%% "diode-data"           % "1.1.7",
-    "com.rpiaggio"               %%% "clue-core"            % "0.0.7",
-    "edu.gemini"                 %%% "gsp-math-testkit"     % "0.1.17" % Test,
-    "edu.gemini"                 %%% "gsp-core-testkit"     % "0.1.8"  % Test
-  ) ++ Seq(
-    "io.circe" %%% "circe-core",
-    "io.circe" %%% "circe-generic",
-    "io.circe" %%% "circe-parser"
-  ).map(_                          % circe) ++
-    Seq(
-      "org.scalameta"              %%% "munit"            % mUnit,
-      "org.scalameta"              %%% "munit-scalacheck" % mUnit,
-      "org.typelevel"              %%% "discipline-core"  % "1.0.2",
-      "org.typelevel"              %%% "discipline-munit" % "0.2.0",
-      "com.github.julien-truffaut" %%% "monocle-law"      % monocle
-    ).map(_ % Test),
+  libraryDependencies ++= (Seq("edu.gemini" %%% "gsp-core-model" % "0.1.8") ++
+    Cats.value ++
+    Mouse.value ++
+    CatsEffect.value ++
+    Log4Cats.value ++
+    Monocle.value ++
+    Circe.value ++
+    Crystal.value ++
+    Clue.value ++
+    DiodeData.value ++
+    In(Test)(
+      MUnit.value ++
+        Discipline.value ++
+        MonocleLaw.value ++
+        GSPMathTestKit.value ++
+        GSPCoreTestKit.value
+    )),
   testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core"              % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "extra"             % scalaJsReact,
-    "com.github.japgolly.scalajs-react" %%% "test"              % scalaJsReact % Test,
-    "io.suzaku"                         %%% "diode-react"       % "1.1.7.160",
-    "io.github.cquiroz.react"           %%% "react-semantic-ui" % "0.4.12",
-    "com.rpiaggio"                      %%% "clue-scalajs"      % "0.0.7",
-    "edu.gemini"                        %%% "gpp-ui"            % "0.0.3"
-  )
+  libraryDependencies ++=
+    ScalaJSReact.value ++
+      ReactSemanticUI.value ++
+      ClueScalaJS.value ++
+      DiodeReact.value ++
+      GPPUI.value ++
+      In(Test)(
+        ScalaJSReactTest.value
+      )
 )
 
-lazy val commonWDS           = Seq(
+lazy val commonWDS = Seq(
   version in webpack := "4.41.2",
   version in startWebpackDevServer := "3.9.0",
   webpackConfigFile in fastOptJS := Some(
