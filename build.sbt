@@ -6,7 +6,7 @@ val scalaJsReact = "1.6.0"
 val SUI          = "2.4.1"
 val circe        = "0.13.0"
 val monocle      = "2.0.4"
-val mUnit        = "0.7.5"
+val mUnit        = "0.7.6"
 
 parallelExecution in (ThisBuild, Test) := false
 
