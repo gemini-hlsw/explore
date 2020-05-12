@@ -3,8 +3,8 @@
 
 package explore.model
 
-import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.CatsReact._
+import japgolly.scalajs.react.Reusability
 
 /**
   * Reusability instances for model classes

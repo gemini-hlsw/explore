@@ -3,13 +3,14 @@
 
 package explore.undo
 
+import scala.annotation.tailrec
+
 import cats.implicits._
 import cats.kernel.Eq
 import explore.util.tree._
 import monocle.Getter
 import monocle.Lens
 import mouse.boolean._
-import scala.annotation.tailrec
 
 object TreeMod                                               {
   type Index[Id] =

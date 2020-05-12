@@ -104,7 +104,7 @@ object TargetQueries {
   ): IO[Unit] =
     ctx.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
-      .as(())
+      .void
 
   case class Modify(
     observationId: Observation.Id,

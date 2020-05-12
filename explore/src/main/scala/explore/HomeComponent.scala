@@ -3,20 +3,21 @@
 
 package explore
 
-import explore.implicits._
+import crystal.implicits._
 import explore.conditions.ConditionsPanel
+import explore.implicits._
 import explore.target.TargetEditor
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.gridlayout._
 import react.sizeme._
+
 import model._
-import gem.Observation
-import gem.ProgramId
-import gsp.math.Index
-import crystal.implicits._
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(

@@ -3,13 +3,13 @@
 
 package explore
 
-import explore.model._
-import japgolly.scalajs.react.extra.router._
-import gem.Observation
-import japgolly.scalajs.react.MonocleReact._
-import monocle.Prism
-import japgolly.scalajs.react.Callback
 import crystal.react.implicits._
+import explore.model._
+import gem.Observation
+import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.extra.router._
+import monocle.Prism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

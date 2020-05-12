@@ -3,11 +3,11 @@
 
 package explore
 
+import explore.components.ui.GPPStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.collections.menu._
 import react.common._
-import explore.components.ui.GPPStyles
+import react.semanticui.collections.menu._
 
 final case class Tile(title: String) extends ReactPropsWithChildren {
   @inline override def render = Tile.component(this)

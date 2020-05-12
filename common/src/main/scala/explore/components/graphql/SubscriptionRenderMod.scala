@@ -3,24 +3,25 @@
 
 package explore.components.graphql
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+import cats.Monoid
+import cats.effect.ConcurrentEffect
+import cats.effect.IO
+import cats.effect.Timer
+import cats.implicits._
+import clue.GraphQLStreamingClient
+import crystal.View
+import crystal.react.StreamRendererMod
+import crystal.react.implicits._
+import diode.data._
+import diode.react.ReactPot._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
-import clue.GraphQLStreamingClient
-import cats.implicits._
-import cats.effect.IO
-import crystal._
-import crystal.react.implicits._
-import diode.data._
-import diode.react.ReactPot._
-import crystal.react.StreamRendererMod
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import cats.effect.Timer
-import cats.effect.ConcurrentEffect
-import cats.Monoid
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:       IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -51,7 +52,7 @@ object SubscriptionRenderMod {
     subscription: Option[
       GraphQLStreamingClient[F]#Subscription[D]
     ] = None,
-    renderer:     Option[StreamRendererMod[F, Pot[A]]] = None
+    renderer:     Option[StreamRendererMod.Component[F, Pot[A]]] = None
   )
 
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always

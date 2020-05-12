@@ -4,15 +4,17 @@
 package explore.conditions
 
 import scala.scalajs.js
-import js.annotation._
+
+import crystal.implicits._
+import explore.AppMain
+import explore._
+import explore.model.RootModel
 import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
-import explore.model.RootModel
-import explore.AppMain
 import japgolly.scalajs.react.vdom.VdomElement
-import explore._
-import crystal.implicits._
+
+import js.annotation._
 
 @JSExportTopLevel("Test")
 object Test extends AppMain {

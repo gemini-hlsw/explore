@@ -4,12 +4,14 @@
 package explore
 
 import scala.scalajs.js
-import js.annotation._
-import japgolly.scalajs.react.extra.router._
-import explore.model.RootModel
-import japgolly.scalajs.react.vdom.VdomElement
+
 import explore.Routing
+import explore.model.RootModel
+import japgolly.scalajs.react.extra.router._
+import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+
+import js.annotation._
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {

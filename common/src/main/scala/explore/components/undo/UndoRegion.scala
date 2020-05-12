@@ -3,16 +3,16 @@
 
 package explore.components.undo
 
-import react.common.ReactProps
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import cats.effect.Async
 import cats.effect.IO
 import cats.implicits._
-import monocle.macros.Lenses
-import crystal.react.implicits._
-import cats.effect.Async
 import cats.kernel.Monoid
+import crystal.react.implicits._
 import explore.undo._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import monocle.macros.Lenses
+import react.common.ReactProps
 
 final case class UndoRegion[M](
   renderer: Undoer.Context[IO, M] => VdomElement

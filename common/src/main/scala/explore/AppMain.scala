@@ -3,26 +3,28 @@
 
 package explore
 
-import cats.implicits._
+import scala.scalajs.js
+
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import org.scalajs.dom
-import scala.scalajs.js
-import js.annotation._
-import crystal.react.AppRoot
-import io.chrisdavenport.log4cats.Logger
+import cats.implicits._
 import clue.Backend
 import clue.StreamingBackend
 import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
-import io.chrisdavenport.log4cats.log4s.Log4sLogger
-import explore.model.RootModel
-import explore.model.ExploreSiderealTarget
-import explore.model.AppContext
+import crystal.react.AppRoot
 import explore.model.AppConfig
+import explore.model.AppContext
+import explore.model.ExploreSiderealTarget
+import explore.model.RootModel
+import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.log4s.Log4sLogger
 import japgolly.scalajs.react.vdom.VdomElement
 import org.log4s._
+import org.scalajs.dom
+
+import js.annotation._
 
 trait AppMain extends IOApp {
 

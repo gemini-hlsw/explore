@@ -3,8 +3,8 @@
 
 package explore.util
 
-import japgolly.scalajs.react._
 import diode.data._
+import japgolly.scalajs.react._
 
 object Pot {
   implicit def potReuse[A: Reusability]: Reusability[Pot[A]] =
