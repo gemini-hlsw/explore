@@ -14,7 +14,7 @@ object Settings {
     val diodeData       = "1.1.7"
     val diodeReact      = "1.1.7.160"
     val discipline      = "1.0.2"
-    val disciplineMUnit = "0.2.0"
+    val disciplineMUnit = "0.2.1"
     val gspCoreTestKit  = "0.1.8"
     val gspMathTestKit  = "0.1.17"
     val gppUI           = "0.0.3"
