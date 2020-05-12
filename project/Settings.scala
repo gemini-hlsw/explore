@@ -18,7 +18,7 @@ object Settings {
     val gspCoreTestKit  = "0.1.8"
     val gspMathTestKit  = "0.1.17"
     val gppUI           = "0.0.3"
-    val log4Cats        = "1.0.1"
+    val log4Cats        = "1.1.1"
     val log4CatsLog4s   = "0.4.0-M1"
     val monocle         = "2.0.4"
     val mouse           = "0.24"
