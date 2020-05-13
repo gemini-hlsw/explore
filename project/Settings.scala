@@ -22,7 +22,7 @@ object Settings {
     val log4CatsLog4s   = "0.4.0-M1"
     val monocle         = "2.0.4"
     val mouse           = "0.24"
-    val mUnit           = "0.7.5"
+    val mUnit           = "0.7.7"
     val reactAladin     = "0.0.7"
     val reactCommon     = "0.7.1"
     val reactGridLayout = "0.4.0"
