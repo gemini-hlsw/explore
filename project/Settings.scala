@@ -23,7 +23,7 @@ object Settings {
     val monocle         = "2.0.4"
     val mouse           = "0.24"
     val mUnit           = "0.7.5"
-    val reactAladin     = "0.0.7"
+    val reactAladin     = "0.0.8"
     val reactCommon     = "0.7.1"
     val reactGridLayout = "0.4.0"
     val reactSemanticUI = "0.4.12"
