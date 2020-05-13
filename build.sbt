@@ -126,7 +126,7 @@ lazy val commonSettings      = Seq(
 )
 
 lazy val commonLibSettings   = Seq(
-  libraryDependencies ++= (Seq("edu.gemini" %%% "gsp-core-model" % "0.1.8") ++
+  libraryDependencies ++= (Seq("edu.gemini" %%% "gsp-core-model" % "0.2.0") ++
     Cats.value ++
     Mouse.value ++
     CatsEffect.value ++
