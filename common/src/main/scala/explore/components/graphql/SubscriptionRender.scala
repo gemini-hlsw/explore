@@ -12,6 +12,7 @@ import crystal.react.StreamRenderer
 import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
+import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -25,9 +26,10 @@ final case class SubscriptionRender[D, A](
   val valueRender: A => VdomNode,
   val onNewData:   IO[Unit] = IO.unit
 )(implicit
-  val ce:          ConcurrentEffect[IO]
+  val ce:          ConcurrentEffect[IO],
+  val logger:      Logger[IO]
 ) extends SubscriptionRender.Props[IO, D, A]
-    with ReactProps       {
+    with ReactProps {
   override def render: VdomElement =
     SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
 }
@@ -39,6 +41,7 @@ object SubscriptionRender {
     val valueRender: A => VdomNode
     val onNewData: F[Unit]
     implicit val ce: ConcurrentEffect[F]
+    implicit val logger: Logger[F]
   }
 
   final case class State[F[_], D, A](
@@ -67,8 +70,9 @@ object SubscriptionRender {
           )
         )
       }
-      .componentWillMount { $ =>
-        implicit val ce = $.props.ce
+      .componentDidMount { $ =>
+        implicit val ce     = $.props.ce
+        implicit val logger = $.props.logger
 
         $.props.subscribe.flatMap { subscription =>
           $.setStateIn[F](

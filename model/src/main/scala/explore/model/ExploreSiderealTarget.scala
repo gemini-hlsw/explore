@@ -33,9 +33,4 @@ object ExploreSiderealTarget {
     target.track
       .map(pm => ExploreSiderealTarget(target.name, SiderealTarget(target.name, pm).some))
       .toOption
-
-  val searchTermL: Lens[Option[ExploreSiderealTarget], String] =
-    Lens[Option[ExploreSiderealTarget], String](_.map(_.searchTerm).orEmpty)(b =>
-      s => s.map(_.copy(searchTerm = b))
-    )
 }

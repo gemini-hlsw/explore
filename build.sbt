@@ -2,8 +2,8 @@ import sbtcrossproject.crossProject
 import sbtcrossproject.CrossType
 import Settings.Libraries._
 
-val reactJS = "16.7.0"
-val SUI     = "2.4.1"
+val reactJS = "16.13.1"
+val SUILess = "2.4.1"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -68,7 +68,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .jsSettings(
-    scalaJSModuleKind := ModuleKind.CommonJSModule
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
 
 lazy val common = project
@@ -117,32 +117,33 @@ lazy val explore: Project = project
   )
   .dependsOn(conditions, targeteditor)
 
-lazy val commonSettings      = Seq(
-  scalaVersion := "2.13.1",
+lazy val commonSettings = Seq(
+  scalaVersion := "2.13.2",
   description := "Explore",
   homepage := Some(url("https://github.com/geminihlsw/explore")),
   licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
   scalacOptions += "-Ymacro-annotations"
 )
 
-lazy val commonLibSettings   = Seq(
-  libraryDependencies ++= (Seq("edu.gemini" %%% "gsp-core-model" % "0.1.8") ++
-    Cats.value ++
-    Mouse.value ++
-    CatsEffect.value ++
-    Log4Cats.value ++
-    Monocle.value ++
-    Circe.value ++
-    Crystal.value ++
-    Clue.value ++
-    DiodeData.value ++
-    In(Test)(
-      MUnit.value ++
-        Discipline.value ++
-        MonocleLaw.value ++
-        GSPMathTestKit.value ++
-        GSPCoreTestKit.value
-    )),
+lazy val commonLibSettings = Seq(
+  libraryDependencies ++=
+    GSPCore.value ++
+      Cats.value ++
+      Mouse.value ++
+      CatsEffect.value ++
+      Log4Cats.value ++
+      Monocle.value ++
+      Circe.value ++
+      Crystal.value ++
+      Clue.value ++
+      DiodeData.value ++
+      In(Test)(
+        MUnit.value ++
+          Discipline.value ++
+          MonocleLaw.value ++
+          GSPMathTestKit.value ++
+          GSPCoreTestKit.value
+      ),
   testFrameworks += new TestFramework("munit.Framework")
 )
 
@@ -151,7 +152,7 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
-      DiodeReact.value ++
+      // DiodeReact.value ++
       GPPUI.value ++
       In(Test)(
         ScalaJSReactTest.value
@@ -159,8 +160,8 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
 )
 
 lazy val commonWDS = Seq(
-  version in webpack := "4.41.2",
-  version in startWebpackDevServer := "3.9.0",
+  version in webpack := "4.43.0",
+  version in startWebpackDevServer := "3.11.0",
   webpackConfigFile in fastOptJS := Some(
     (sourceDirectory in (common, Compile)).value / "webpack" / "dev.webpack.config.js"
   ),
@@ -175,32 +176,33 @@ lazy val commonWDS = Seq(
   webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
   webpackBundlingMode in fullOptJS := BundlingMode.Application,
   test := {},
-  emitSourceMaps := false,
+  scalaJSLinkerConfig in (Compile, fastOptJS) ~= { _.withSourceMap(false) },
+  scalaJSLinkerConfig in (Compile, fullOptJS) ~= { _.withSourceMap(false) },
   // NPM libs for development, mostly to let webpack do its magic
   npmDevDependencies in Compile ++= Seq(
     "postcss-loader"                     -> "3.0.0",
-    "autoprefixer"                       -> "9.7.1",
-    "url-loader"                         -> "2.2.0",
-    "file-loader"                        -> "4.2.0",
-    "css-loader"                         -> "3.2.0",
-    "style-loader"                       -> "1.0.0",
-    "less"                               -> "2.7.2",
-    "less-loader"                        -> "4.1.0",
+    "autoprefixer"                       -> "9.7.6",
+    "url-loader"                         -> "4.1.0",
+    "file-loader"                        -> "6.0.0",
+    "css-loader"                         -> "3.5.3",
+    "style-loader"                       -> "1.2.1",
+    "less"                               -> "3.11.1",
+    "less-loader"                        -> "6.1.0",
     "webpack-merge"                      -> "4.2.2",
-    "mini-css-extract-plugin"            -> "0.8.0",
-    "webpack-dev-server-status-bar"      -> "1.1.0",
+    "mini-css-extract-plugin"            -> "0.9.0",
+    "webpack-dev-server-status-bar"      -> "1.1.2",
     "cssnano"                            -> "4.1.10",
     "uglifyjs-webpack-plugin"            -> "2.2.0",
-    "html-webpack-plugin"                -> "3.2.0",
+    "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
-    "favicons-webpack-plugin"            -> "0.0.9",
-    "why-did-you-update"                 -> "1.0.6",
+    "favicons-webpack-plugin"            -> "3.0.1",
+    "why-did-you-update"                 -> "1.0.8",
     "@packtracker/webpack-plugin"        -> "2.2.0"
   ),
   npmDependencies in Compile ++= Seq(
     "react"            -> reactJS,
     "react-dom"        -> reactJS,
-    "semantic-ui-less" -> SUI,
+    "semantic-ui-less" -> SUILess,
     "prop-types"       -> "15.7.2"
   )
 )

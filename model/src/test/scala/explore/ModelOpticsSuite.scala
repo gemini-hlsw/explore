@@ -22,5 +22,4 @@ class ModelOpticsSuite
   checkAll("targetRA", LensTests(ModelOptics.targetRA))
   checkAll("targetDec", LensTests(ModelOptics.targetDec))
   checkAll("targetPropsL", LensTests(ModelOptics.targetPropsL))
-  checkAll("searchTermL", LensTests(ExploreSiderealTarget.searchTermL))
 }

@@ -85,14 +85,14 @@ object TargetQueries {
       ra:   Option[String] = None,
       dec:  Option[String] = None
     )
-    object Fields    {
+    object Fields {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
     case class Variables(observationId: String, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-    case class Data(update_conditions: JsonObject) // We are ignoring affected_rows
+    case class Data(update_targets: JsonObject) // We are ignoring affected_rows
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -100,7 +100,7 @@ object TargetQueries {
   }
 
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
-    ctx: AppContextIO
+    ctx:                            AppContextIO
   ): IO[Unit] =
     ctx.clients.conditions
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
