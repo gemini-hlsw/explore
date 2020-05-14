@@ -50,7 +50,7 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] {
     _.map { case (value, idx) => (idLens.set(idLens.get(value))(f(value)), idx) }
 
   // Id is reinstated (it can't be modified.)
-  def set(a: A): Operation =
+  def set(a: A): Operation      =
     mod(_ => a)
 
   val delete: Operation =
@@ -69,10 +69,10 @@ trait IndexedColMod[F[_], Col[_], Idx, A, Id] {
     }
 
     // Start Position Operations
-    def mod(f:     Idx => Idx): Operation             =
+    def mod(f:   Idx => Idx): Operation =
       _.map { case (value, idx) => (value, f(idx)) }
 
-    def set(idx:   Idx): Operation                    =
+    def set(idx: Idx): Operation        =
       mod(_ => idx)
     // End Position Operations
   }

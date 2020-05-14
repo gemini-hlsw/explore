@@ -16,7 +16,7 @@ import monocle.macros.Lenses
 @Lenses
 final case class SiderealTarget(name: String, track: ProperMotion)
 
-object SiderealTarget        {
+object SiderealTarget {
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }
 

@@ -14,7 +14,7 @@ import gsp.math.ProperMotion
 trait ArbSiderealTarget {
   import gsp.math.arb.ArbProperMotion._
 
-  implicit val targetArb                                  = Arbitrary[SiderealTarget] {
+  implicit val targetArb = Arbitrary[SiderealTarget] {
     for {
       n <- arbitrary[String]
       p <- arbitrary[ProperMotion]
