@@ -29,12 +29,8 @@ object RootModel {
 
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
-  conditionsURL: Uri =
-    uri"wss://explore-hasura.herokuapp.com/v1/graphql",   //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
-  swapiURL:      Uri =
-    AppConfig.baseUri.path("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
-  todoURL:       Uri = AppConfig.baseUri.path("/api/tasks"),
-  pollURL:       Uri = uri"wss://realtime-poll.demo.hasura.app/v1/graphql"
+  programsURL: Uri =
+    uri"wss://explore-hasura.herokuapp.com/v1/graphql" //AppConfig.wsBaseUri.path("/api/programs/v1/graphql"),
 )
 object AppConfig {
   lazy val baseUri: Uri = {
@@ -53,16 +49,13 @@ object AppConfig {
 }
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  conditions: GraphQLStreamingClient[F],
-  starWars:   GraphQLClient[F],
-  todo:       GraphQLClient[F],
-  polls:      GraphQLStreamingClient[F]
+  programs: GraphQLStreamingClient[F]
 ) {
-  lazy val pollConnectionStatus =
-    StreamRenderer.build(polls.statusStream, Reusability.derive)
+  lazy val programsConnectionStatus =
+    StreamRenderer.build(programs.statusStream, Reusability.derive)
 
   def close(): F[Unit] =
-    polls.close()
+    programs.close()
 }
 
 case class Actions[F[_]](
@@ -86,16 +79,8 @@ object AppContext {
     config: AppConfig
   ): F[AppContext[F]] =
     for {
-      conditionsClient <- ApolloStreamingClient.of(config.conditionsURL)
-      swClient         <- HttpClient.of(config.swapiURL)
-      todoClient       <- HttpClient.of(config.todoURL)
-      pollsClient      <- ApolloStreamingClient.of(config.pollURL)
-      clients           = Clients(
-                  conditionsClient,
-                  swClient,
-                  todoClient,
-                  pollsClient
-                )
-      actions           = Actions[F]()
+      programsClient <- ApolloStreamingClient.of(config.programsURL)
+      clients         = Clients(programsClient)
+      actions         = Actions[F]()
     } yield AppContext[F](clients, actions)
 }

@@ -31,7 +31,7 @@ object TargetEditor {
       .render_P { props =>
         props.observationId.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-            appCtx.clients.conditions
+            appCtx.clients.programs
               .subscribe(Subscription)(
                 Subscription.Variables(props.observationId.value.format).some
               ),

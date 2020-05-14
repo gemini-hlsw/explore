@@ -102,7 +102,7 @@ object TargetQueries {
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
     ctx:                            AppContextIO
   ): IO[Unit] =
-    ctx.clients.conditions
+    ctx.clients.programs
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
       .void
 
