@@ -153,7 +153,6 @@ exports.minifyJavaScript = () => ({
     minimizer: [
       new TerserWebpackPlugin({
         parallel: true,
-        terserOptions: { mangle: true },
         sourceMap: false
       })
     ]
