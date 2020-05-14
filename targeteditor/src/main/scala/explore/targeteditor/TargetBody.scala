@@ -155,7 +155,7 @@ object TargetBody extends ModelOptics {
 
   val component =
     ScalaComponent
-      .builder[Props]("TargetBody")
+      .builder[Props]
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .build

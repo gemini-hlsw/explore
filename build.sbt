@@ -196,7 +196,6 @@ lazy val commonWDS = Seq(
     "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
     "favicons-webpack-plugin"            -> "3.0.1",
-    "why-did-you-update"                 -> "1.0.8",
     "@packtracker/webpack-plugin"        -> "2.2.0"
   ),
   npmDependencies in Compile ++= Seq(

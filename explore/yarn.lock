@@ -4920,11 +4920,6 @@ react-draggable@^4.0.0, react-draggable@^4.0.3:
     classnames "^2.2.5"
     prop-types "^15.6.0"
 
-react-fast-compare@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-2.0.4.tgz#e84b4d455b0fec113e0402c329352715196f81f9"
-  integrity sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==
-
 react-grid-layout@0.18.3:
   version "0.18.3"
   resolved "https://registry.yarnpkg.com/react-grid-layout/-/react-grid-layout-0.18.3.tgz#4f9540199f35211077eae0aa5bc83096a672c39c"
@@ -6387,14 +6382,6 @@ which@^1.2.14, which@^1.2.9:
   resolved "https://registry.yarnpkg.com/which/-/which-1.3.1.tgz#a45043d54f5805316da8d62f9f50918d3da70b0a"
   dependencies:
     isexe "^2.0.0"
-
-why-did-you-update@1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/why-did-you-update/-/why-did-you-update-1.0.8.tgz#3c766730824598ff65ff0d96e070ffa28c0b00f9"
-  integrity sha512-P1m7cho3o+otR8+WvHYrM+SJHCdvhS+FI6NOwZm6JNdhItbDnuZFD9uxvKIQYXxAkBV5qJtCNF/e2RwCDeAV5g==
-  dependencies:
-    lodash "^4.17.11"
-    react-fast-compare "^2.0.4"
 
 wide-align@^1.1.0:
   version "1.1.3"

@@ -22,7 +22,7 @@ final case class UndoRegion[M](
     UndoRegion.component(this.asInstanceOf[UndoRegion.Props[IO, Any]])
 }
 
-object UndoRegion   {
+object UndoRegion {
   protected trait Props[F[_], M] {
     val renderer: Undoer.Context[F, M] => VdomElement
   }
@@ -59,7 +59,7 @@ object UndoRegion   {
 
   protected def componentBuilder[M] =
     ScalaComponent
-      .builder[Props[IO, M]]("Undoer")
+      .builder[Props[IO, M]]
       .initialState(State[IO, M]())
       .renderBackend[Backend[IO, M]]
       .configure(Reusability.shouldComponentUpdate)

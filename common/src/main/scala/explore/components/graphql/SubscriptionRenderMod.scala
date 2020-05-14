@@ -63,7 +63,7 @@ object SubscriptionRenderMod {
 
   protected def componentBuilder[F[_], D, A](implicit monoid: Monoid[F[Unit]]) =
     ScalaComponent
-      .builder[Props[F, D, A]]("SubscriptionRenderMod")
+      .builder[Props[F, D, A]]
       .initialState(State[F, D, A]())
       .render { $ =>
         React.Fragment(

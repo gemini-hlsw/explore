@@ -136,7 +136,7 @@ object CoordinatesForm {
 
   val component =
     ScalaComponent
-      .builder[Props]("CoordinatesForm")
+      .builder[Props]
       .initialStateFromProps(stateFromProps)
       .renderBackend[Backend]
       .build

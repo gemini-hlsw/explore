@@ -22,12 +22,12 @@ final case class TargetEditor(
   @inline override def render: VdomElement = TargetEditor.component(this)
 }
 
-object TargetEditor    {
+object TargetEditor {
   type Props = TargetEditor
 
   val component =
     ScalaComponent
-      .builder[Props]("TargetEditor")
+      .builder[Props]
       .render_P { props =>
         props.observationId.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
