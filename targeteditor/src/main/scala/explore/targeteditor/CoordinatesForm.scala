@@ -68,7 +68,7 @@ object CoordinatesForm {
 
       Form(
         size = Mini,
-        onSubmit = Callback.log(state.toString) >> props
+        onSubmit = props
           .searchAndGo(searchEV.value)
           .when(state.searchTerm =!= props.target.name)
           .void

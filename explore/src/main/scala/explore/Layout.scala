@@ -56,7 +56,14 @@ object OTLayout {
               visible = s.menu
             )(
               MenuHeader()(
-                p.viewCtxIO.value.get.id.map(_.format).getOrElse[String]("No Observation")
+                <.div(
+                  p.viewCtxIO.value.get.obsId.map(_.format).getOrElse[String]("No Observation")
+                ),
+                <.div(
+                  p.viewCtxIO.value.get.target
+                    .map(_.name)
+                    .getOrElse[String]("No Target")
+                )
               ),
               MenuItem(as = "a", className = "sidetab")("Targets"),
               MenuItem(as = "a", className = "sidetab")("P II")

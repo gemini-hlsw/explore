@@ -54,7 +54,7 @@ object HomeComponent {
         props.withCtx { implicit ctx =>
           val obsId = Observation
             .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
-            .inCtx(ctx)
+
           <.div(
             ^.cls := "rgl-area",
             SizeMe() { s =>
@@ -72,14 +72,14 @@ object HomeComponent {
                   ^.key := "conditions",
                   ^.cls := "tile",
                   Tile("Conditions")(
-                    ConditionsPanel(obsId)
+                    ConditionsPanel(obsId.inCtx(ctx))
                   )
                 ),
                 <.div(
                   ^.key := "target",
                   ^.cls := "tile",
                   Tile("Target Position")(
-                    TargetEditor(obsId)
+                    TargetEditor(obsId, props.zoomL(RootModel.target))
                   )
                 )
               )

@@ -17,8 +17,8 @@ import sttp.model.Uri._
 
 @Lenses
 case class RootModel(
-  id:     Option[Observation.Id] = None,
-  target: Option[ExploreSiderealTarget] = None
+  obsId:  Option[Observation.Id] = None,
+  target: Option[SiderealTarget] = None
 )
 object RootModel {
   import explore.model.reusability._

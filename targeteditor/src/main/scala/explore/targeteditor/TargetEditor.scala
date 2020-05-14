@@ -16,9 +16,9 @@ import monocle.function.Cons.headOption
 import react.common._
 
 final case class TargetEditor(
-  observationId:    CtxIO[Observation.Id]
-)(implicit val ctx: AppContextIO)
-    extends ReactProps {
+  observationId: Observation.Id,
+  globalTarget:  ViewCtxIO[Option[SiderealTarget]]
+) extends ReactProps {
   @inline override def render: VdomElement = TargetEditor.component(this)
 }
 
@@ -29,15 +29,15 @@ object TargetEditor {
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        props.observationId.withCtx { implicit appCtx =>
+        props.globalTarget.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
             appCtx.clients.programs
               .subscribe(Subscription)(
-                Subscription.Variables(props.observationId.value.format).some
+                Subscription.Variables(props.observationId.format).some
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-          ) { view =>
-            TargetBody(props.observationId.value, view)
+          ) { target =>
+            TargetBody(props.observationId, target, props.globalTarget)
           }
         }
       }

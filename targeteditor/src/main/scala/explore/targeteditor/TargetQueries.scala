@@ -107,11 +107,12 @@ object TargetQueries {
       .void
 
   case class Modify(
-    observationId: Observation.Id,
-    target:        SiderealTarget,
-    modState:      ModState[IO, SiderealTarget],
-    setter:        Undoer.Setter[IO, SiderealTarget]
-  )(implicit ctx:  AppContextIO) {
+    observationId:  Observation.Id,
+    target:         SiderealTarget,
+    modState:       ModState[IO, SiderealTarget],
+    setGlobalState: SiderealTarget => IO[Unit],
+    setter:         Undoer.Setter[IO, SiderealTarget]
+  )(implicit ctx:   AppContextIO) {
     def apply[A](
       get:    SiderealTarget => A,
       set:    A => SiderealTarget => SiderealTarget,
@@ -125,6 +126,7 @@ object TargetQueries {
         { value: A =>
           for {
             _ <- (modState.apply _).compose(set)(value)
+            _ <- setGlobalState(set(value)(target))
             _ <- mutate(observationId, fields(value))
           } yield ()
         }

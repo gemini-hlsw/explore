@@ -42,10 +42,10 @@ object Routing {
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {
-          case (_, ObsPage(id), viewCtx) =>
-            viewCtx.zoomL(RootModel.id).set(Option(id)).runInCB *>
-              Callback.log(s"id:1 $id")
-          case _                         => Callback.empty
+          case (_, ObsPage(obsId), viewCtx) =>
+            viewCtx.zoomL(RootModel.obsId).set(Option(obsId)).runInCB *>
+              Callback.log(s"id:1 $obsId")
+          case _                            => Callback.empty
         }
         .renderWithP(layout)
         .logToConsole
@@ -55,5 +55,5 @@ object Routing {
     c: RouterCtl[Page],
     r: ResolutionWithProps[Page, ViewCtxIO[RootModel]]
   ): ViewCtxIO[RootModel] => VdomElement =
-    viewCtx => OTLayout(c, r)(viewCtx)
+    OTLayout(c, r)
 }
