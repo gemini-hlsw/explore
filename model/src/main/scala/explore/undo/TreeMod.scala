@@ -12,7 +12,7 @@ import monocle.Getter
 import monocle.Lens
 import mouse.boolean._
 
-object TreeMod                                               {
+object TreeMod {
   type Index[Id] =
     (Option[Id], Int) // (Parent's Id (unless it's the root), Position within parent's children)
 }
@@ -31,7 +31,7 @@ class TreeMod[F[_], A, Id: Eq](protected val idLens: Lens[A, Id])
     Tree.children.composeGetter(nodeListGetterForId(id))
    */
 
-  def getterForId(id:              Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
+  def getterForId(id: Id): Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] =
     Getter[Tree[A], Option[(A, TreeMod.Index[Id])]] { tree =>
       def goNode(node: Node[A], idx: TreeMod.Index[Id]): Option[(A, TreeMod.Index[Id])] =
         hasId(id)(node.value).fold(

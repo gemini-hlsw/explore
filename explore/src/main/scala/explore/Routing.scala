@@ -29,7 +29,7 @@ class Routing(viewCtx: ViewCtxIO[RootModel]) {
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 
-  val config: RouterConfig[Page]             = RouterConfigDsl[Page].buildConfig { dsl =>
+  val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
     import dsl._
 
     (emptyRule

@@ -34,7 +34,7 @@ const Web = Merge(
   {
     mode: "production",
     entry: {
-      explore: [path.resolve(parts.localResourcesDir, "./prod.js")]
+      "explore-opt": path.resolve(parts.localResourcesDir, "./prod.js") // If name is the same as scala.js output, it's not emitted twice.
     },
     output: {
       path: parts.stageDir,
@@ -50,8 +50,7 @@ const Web = Merge(
       }),
       new HtmlWebpackPlugin({
         title: "Explore",
-        filename: "index.html",
-        chunks: ["explore"]
+        filename: "index.html"
       }),
       new FaviconsWebpackPlugin({
         logo: path.resolve(parts.resourcesDir, "images/logo.png"),

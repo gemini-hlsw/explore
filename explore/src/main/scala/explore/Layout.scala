@@ -24,7 +24,7 @@ object OTLayout {
 
   private val component =
     ScalaComponent
-      .builder[OTLayout]("Demo")
+      .builder[OTLayout]
       .initialState(State(true))
       .renderPS { ($, p, s) =>
         <.div(

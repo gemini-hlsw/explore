@@ -14,7 +14,7 @@ import explore.model.ExploreSiderealTarget
 trait ArbExploreSiderealTarget {
   import explore.model.arb.ArbSiderealTarget._
 
-  implicit val exploreSiderealTargetArb                                 = Arbitrary[ExploreSiderealTarget] {
+  implicit val exploreSiderealTargetArb = Arbitrary[ExploreSiderealTarget] {
     for {
       s <- arbitrary[String]
       t <- arbitrary[Option[SiderealTarget]]

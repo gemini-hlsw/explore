@@ -20,7 +20,7 @@ case class RootModel(
   id:     Option[Observation.Id] = None,
   target: Option[ExploreSiderealTarget] = None
 )
-object RootModel  {
+object RootModel {
   import explore.model.reusability._
   implicit val observationIdReuse: Reusability[Observation.Id] =
     Reusability.never // This is just for temporary testing!!!!
@@ -30,13 +30,13 @@ object RootModel  {
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
   conditionsURL: Uri =
-    uri"wss://explore-hasura.herokuapp.com/v1/graphql", //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
+    uri"wss://explore-hasura.herokuapp.com/v1/graphql",   //AppConfig.wsBaseUri.path("/api/conditions/v1/graphql"),
   swapiURL:      Uri =
     AppConfig.baseUri.path("/api/grackle-demo/starwars"), //"https://api.graph.cool/simple/v1/swapi"
   todoURL:       Uri = AppConfig.baseUri.path("/api/tasks"),
   pollURL:       Uri = uri"wss://realtime-poll.demo.hasura.app/v1/graphql"
 )
-object AppConfig  {
+object AppConfig {
   lazy val baseUri: Uri = {
     val location = dom.window.location.toString
     Uri.parse(location).getOrElse(throw new Exception(s"Could not parse URL [$location]"))
@@ -52,12 +52,12 @@ object AppConfig  {
   }*/
 }
 
-case class Clients[F[_]: ConcurrentEffect](
+case class Clients[F[_]: ConcurrentEffect: Logger](
   conditions: GraphQLStreamingClient[F],
   starWars:   GraphQLClient[F],
   todo:       GraphQLClient[F],
   polls:      GraphQLStreamingClient[F]
-)                 {
+) {
   lazy val pollConnectionStatus =
     StreamRenderer.build(polls.statusStream, Reusability.derive)
 
@@ -70,12 +70,13 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  clients:   Clients[F],
-  actions:   Actions[F]
+  clients:    Clients[F],
+  actions:    Actions[F]
 )(implicit
-  val cs:    ContextShift[F],
-  val timer: Timer[F]
-)                 {
+  val cs:     ContextShift[F],
+  val timer:  Timer[F],
+  val logger: Logger[F]
+) {
   def cleanup(): F[Unit] =
     clients.close()
 }

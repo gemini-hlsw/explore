@@ -89,7 +89,7 @@ object ConditionsPanel {
       } yield Conditions(cc, iq, sb, wv)
   }
 
-  implicit val propsReuse: Reusability[Props]         = Reusability.by(_.observationId.value.format)
+  implicit val propsReuse: Reusability[Props] = Reusability.by(_.observationId.value.format)
 
   private object Subscription extends GraphQLQuery {
     val document = """
@@ -114,7 +114,7 @@ object ConditionsPanel {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  private object Mutation     extends GraphQLQuery {
+  private object Mutation extends GraphQLQuery {
     val document = """
       mutation ($observationId: String, $fields: conditions_set_input){
         update_conditions(_set: $fields, where: {
@@ -133,7 +133,7 @@ object ConditionsPanel {
       sky_background: Option[String] = None,
       water_vapor:    Option[String] = None
     )
-    object Fields    {
+    object Fields {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
@@ -206,7 +206,7 @@ object ConditionsPanel {
 
   protected val component =
     ScalaComponent
-      .builder[ConditionsPanel]("ConditionsPanel")
+      .builder[ConditionsPanel]
       .render { $ =>
         $.props.observationId.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, Conditions](

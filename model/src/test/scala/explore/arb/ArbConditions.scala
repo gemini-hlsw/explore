@@ -13,7 +13,7 @@ import gem.arb.ArbEnumerated._
 
 trait ArbConditions {
 
-  implicit val conArb                      = Arbitrary[Conditions] {
+  implicit val conArb = Arbitrary[Conditions] {
     for {
       cc <- arbitrary[CloudCover]
       iq <- arbitrary[ImageQuality]

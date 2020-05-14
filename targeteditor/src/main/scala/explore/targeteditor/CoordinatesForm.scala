@@ -22,6 +22,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
+import react.semanticui.elements.button.Button
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._
@@ -41,14 +42,10 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    initialSearchTerm: String,
-    searchTerm:        String,
-    raValue:           RightAscension,
-    decValue:          Declination
-  ) {
-    val aladinCoords: String  = Coordinates.fromHmsDms.reverseGet(Coordinates(raValue, decValue))
-    val shouldSearch: Boolean = initialSearchTerm =!= searchTerm
-  }
+    searchTerm: String,
+    raValue:    RightAscension,
+    decValue:   Declination
+  )
 
   class Backend(bs: BackendScope[Props, State]) {
 
@@ -61,7 +58,7 @@ object CoordinatesForm {
     def setDec(dec: Option[Declination], cb: Callback = Callback.empty): Callback =
       bs.setStateOptionL(State.decValue)(dec, cb)
 
-    def render(props:       Props, state: State) = {
+    def render(props: Props, state: State) = {
       val raEV     =
         StateSnapshot[RightAscension](state.raValue)(setRa)
       val decEV    =
@@ -69,7 +66,13 @@ object CoordinatesForm {
       val searchEV =
         StateSnapshot[String](state.searchTerm)(updateSearchOp)
 
-      Form(size = Mini, onSubmit = props.searchAndGo(searchEV.value).when(state.shouldSearch).void)(
+      Form(
+        size = Mini,
+        onSubmit = Callback.log(state.toString) >> props
+          .searchAndGo(searchEV.value)
+          .when(state.searchTerm =!= props.target.name)
+          .void
+      )(
         FormDropdown(
           label = "Type",
           value = 0,
@@ -112,28 +115,30 @@ object CoordinatesForm {
         ),
         FormButton(onClick = props.undoCtx.undo(props.target).runInCB,
                    disabled = props.undoCtx.undoEmpty
+        )("Undo"),
+        FormButton(onClick = props.undoCtx.redo(props.target).runInCB,
+                   disabled = props.undoCtx.redoEmpty
+        )("Redo"),
+        Button( // Form submit isn't triggered without this. Remove this when submit and buttons are working again in explore.
+          ^.tpe := "submit"
         )(
-          "Undo"
+          "Submit"
         )
       )
     }
-
-    def newProps(nextProps: Props): Callback =
-      bs.setState(stateFromProps(nextProps))
   }
 
   def stateFromProps(props: Props): State = {
     val target = props.target
     val coords = target.track.baseCoordinates
-    State(target.name, target.name, coords.ra, coords.dec)
+    State(target.name, coords.ra, coords.dec)
   }
 
   val component =
     ScalaComponent
-      .builder[Props]("CoordinatesForm")
+      .builder[Props]
       .initialStateFromProps(stateFromProps)
       .renderBackend[Backend]
-      .componentWillReceiveProps($ => $.setState(stateFromProps($.nextProps)))
       .build
 
 }

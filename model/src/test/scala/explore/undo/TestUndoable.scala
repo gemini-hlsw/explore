@@ -34,7 +34,7 @@ class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]])(implicit
     stacks.get.map(context)
 }
 
-object TestUndoer        {
+object TestUndoer {
   def apply[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]): F[TestUndoer[F, M]] =
     for {
       stacks <- Ref[F].of(TestStacks[F, M]())
@@ -44,14 +44,14 @@ object TestUndoer        {
 class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M]) {
   def get: F[M] = model.get
 
-  def set[A](getSet: GetSet[M, A], value: A): F[Unit]      =
+  def set[A](getSet: GetSet[M, A], value: A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
       _ <- c.setter.set[A](m, getSet.get, (model.update _).compose(getSet.set))(value)
     } yield ()
 
-  def mod[A](getSet: GetSet[M, A], f:     A => A): F[Unit] =
+  def mod[A](getSet: GetSet[M, A], f: A => A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
@@ -73,7 +73,7 @@ class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M])
     } yield ()
 }
 
-object TestUndoable      {
+object TestUndoable {
   def apply[F[_]: Sync, M](
     model:           Ref[F, M]
   )(implicit monoid: Monoid[F[Unit]]): F[TestUndoable[F, M]] =

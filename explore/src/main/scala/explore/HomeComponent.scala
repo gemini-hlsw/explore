@@ -48,7 +48,7 @@ object HomeComponent {
 
   protected val component =
     ScalaComponent
-      .builder[Props]("Home")
+      .builder[Props]
       .initialState(0)
       .render_P { props =>
         props.withCtx { implicit ctx =>

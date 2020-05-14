@@ -20,12 +20,12 @@ final case class CataloguesForm(
   @inline override def render: VdomElement = CataloguesForm.component(this)
 }
 
-object CataloguesForm  {
+object CataloguesForm {
   type Props = CataloguesForm
 
   val component =
     ScalaComponent
-      .builder[Props]("CataloguesForm")
+      .builder[Props]
       .stateless
       .render(_ =>
         Form(size = Mini)(

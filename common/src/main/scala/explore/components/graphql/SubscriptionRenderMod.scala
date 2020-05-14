@@ -17,6 +17,7 @@ import crystal.react.StreamRendererMod
 import crystal.react.implicits._
 import diode.data._
 import diode.react.ReactPot._
+import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -31,9 +32,10 @@ final case class SubscriptionRenderMod[D, A](
   val onNewData:   IO[Unit] = IO.unit
 )(implicit
   val ce:          ConcurrentEffect[IO],
-  val timer:       Timer[IO]
+  val timer:       Timer[IO],
+  val logger:      Logger[IO]
 ) extends SubscriptionRenderMod.Props[IO, D, A]
-    with ReactProps          {
+    with ReactProps {
   override def render: VdomElement =
     SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod.Props[IO, Any, Any]])
 }
@@ -46,6 +48,7 @@ object SubscriptionRenderMod {
     val onNewData: F[Unit]
     implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
+    implicit val logger: Logger[F]
   }
 
   protected final case class State[F[_], D, A](
@@ -60,7 +63,7 @@ object SubscriptionRenderMod {
 
   protected def componentBuilder[F[_], D, A](implicit monoid: Monoid[F[Unit]]) =
     ScalaComponent
-      .builder[Props[F, D, A]]("SubscriptionRenderMod")
+      .builder[Props[F, D, A]]
       .initialState(State[F, D, A]())
       .render { $ =>
         React.Fragment(
@@ -78,9 +81,10 @@ object SubscriptionRenderMod {
           )
         )
       }
-      .componentWillMount { $ =>
-        implicit val ce    = $.props.ce
-        implicit val timer = $.props.timer
+      .componentDidMount { $ =>
+        implicit val ce     = $.props.ce
+        implicit val timer  = $.props.timer
+        implicit val logger = $.props.logger
 
         $.props.subscribe.flatMap { subscription =>
           $.setStateIn[F](
