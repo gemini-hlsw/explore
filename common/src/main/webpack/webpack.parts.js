@@ -6,7 +6,7 @@ const path = require("path");
 const Webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const UglifyWebpackPlugin = require("uglifyjs-webpack-plugin");
+const TerserWebpackPlugin = require('terser-webpack-plugin');
 const cssnano = require("cssnano");
 
 // Dir at the top of the project
@@ -151,9 +151,9 @@ exports.minifyJavaScript = () => ({
   optimization: {
     minimize: true,
     minimizer: [
-      new UglifyWebpackPlugin({
+      new TerserWebpackPlugin({
         parallel: true,
-        uglifyOptions: { mangle: true },
+        terserOptions: { mangle: true },
         sourceMap: false
       })
     ]

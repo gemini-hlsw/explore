@@ -192,7 +192,7 @@ lazy val commonWDS = Seq(
     "mini-css-extract-plugin"            -> "0.9.0",
     "webpack-dev-server-status-bar"      -> "1.1.2",
     "cssnano"                            -> "4.1.10",
-    "uglifyjs-webpack-plugin"            -> "2.2.0",
+    "terser-webpack-plugin"              -> "3.0.1",
     "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
     "favicons-webpack-plugin"            -> "3.0.1",
