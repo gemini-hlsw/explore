@@ -75,7 +75,12 @@ lazy val common = project
   .in(file("common"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
-  .enablePlugins(ScalaJSBundlerPlugin)
+  .settings(
+    npmDependencies in Compile ++= Seq(
+      "loglevel" -> "1.6.8"
+    )
+  )
+  .enablePlugins(ScalaJSBundlerPlugin, ScalablyTypedConverterPlugin)
   .dependsOn(model.js)
 
 lazy val targeteditor = project
@@ -131,7 +136,6 @@ lazy val commonLibSettings = Seq(
       Cats.value ++
       Mouse.value ++
       CatsEffect.value ++
-      Log4Cats.value ++
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
@@ -148,12 +152,14 @@ lazy val commonLibSettings = Seq(
 )
 
 lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
+  resolvers += Resolver.bintrayRepo("oyvindberg", "ScalablyTyped"),
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
       // DiodeReact.value ++
       GPPUI.value ++
+      Log4Cats.value ++
       In(Test)(
         ScalaJSReactTest.value
       )

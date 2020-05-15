@@ -9,3 +9,7 @@ addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.0")
 addSbtPlugin("edu.gemini" % "sbt-gsp" % "0.2.0")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
+
+resolvers += Resolver.bintrayRepo("oyvindberg", "converter")
+
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta12")
