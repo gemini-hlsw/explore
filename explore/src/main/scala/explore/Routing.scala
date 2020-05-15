@@ -10,6 +10,7 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import monocle.Prism
+import japgolly.scalajs.react.vdom.VdomElement
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -19,7 +20,7 @@ sealed trait Page    extends Product with Serializable
 case object HomePage extends Page
 final case class ObsPage(obsId: Observation.Id) extends Page
 
-class Routing(viewCtx: ViewCtxIO[RootModel]) {
+object Routing {
 
   private val obsIdP: Prism[String, ObsPage] =
     Prism[String, ObsPage] {
@@ -29,26 +30,30 @@ class Routing(viewCtx: ViewCtxIO[RootModel]) {
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 
-  val config: RouterConfig[Page] = RouterConfigDsl[Page].buildConfig { dsl =>
-    import dsl._
+  val config: RouterWithPropsConfig[Page, ViewCtxIO[RootModel]] =
+    RouterWithPropsConfigDsl[Page, ViewCtxIO[RootModel]].buildConfig { dsl =>
+      import dsl._
 
-    (emptyRule
-      | staticRoute(root, HomePage) ~> render(HomeComponent(viewCtx))
-      | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> render(
-        HomeComponent(viewCtx)
-      ))
-      .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
-      .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
-      .onPostRender {
-        case (_, ObsPage(id)) =>
-          viewCtx.zoomL(RootModel.id).set(Option(id)).runInCB *>
-            Callback.log(s"id:1 $id")
-        case _                => Callback.empty
-      }
-      .renderWith(layout)
-      .logToConsole
-  }
+      (emptyRule
+        | staticRoute(root, HomePage) ~> renderP(viewCtx => HomeComponent(viewCtx))
+        | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(viewCtx =>
+          HomeComponent(viewCtx)
+        ))
+        .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
+        .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
+        .onPostRenderP {
+          case (_, ObsPage(obsId), viewCtx) =>
+            viewCtx.zoomL(RootModel.obsId).set(Option(obsId)).runInCB *>
+              Callback.log(s"id:1 $obsId")
+          case _                            => Callback.empty
+        }
+        .renderWithP(layout)
+        .logToConsole
+    }
 
-  private def layout(c: RouterCtl[Page], r: Resolution[Page]) =
-    OTLayout(c, r)(viewCtx.get)
+  private def layout(
+    c: RouterCtl[Page],
+    r: ResolutionWithProps[Page, ViewCtxIO[RootModel]]
+  ): ViewCtxIO[RootModel] => VdomElement =
+    OTLayout(c, r)
 }

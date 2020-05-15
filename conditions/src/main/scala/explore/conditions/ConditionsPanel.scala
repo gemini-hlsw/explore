@@ -162,7 +162,7 @@ object ConditionsPanel {
   private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
     ctx:                            AppContextIO
   ): IO[Unit] =
-    ctx.clients.conditions
+    ctx.clients.programs
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
       .void
 
@@ -210,7 +210,7 @@ object ConditionsPanel {
       .render { $ =>
         $.props.observationId.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, Conditions](
-            appCtx.clients.conditions
+            appCtx.clients.programs
               .subscribe(Subscription)(
                 Subscription.Variables($.props.observationId.value.format).some
               ),

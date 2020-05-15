@@ -68,7 +68,7 @@ object CoordinatesForm {
 
       Form(
         size = Mini,
-        onSubmit = Callback.log(state.toString) >> props
+        onSubmit = props
           .searchAndGo(searchEV.value)
           .when(state.searchTerm =!= props.target.name)
           .void
@@ -118,12 +118,7 @@ object CoordinatesForm {
         )("Undo"),
         FormButton(onClick = props.undoCtx.redo(props.target).runInCB,
                    disabled = props.undoCtx.redoEmpty
-        )("Redo"),
-        Button( // Form submit isn't triggered without this. Remove this when submit and buttons are working again in explore.
-          ^.tpe := "submit"
-        )(
-          "Submit"
-        )
+        )("Redo")
       )
     }
   }

@@ -16,14 +16,11 @@ import js.annotation._
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {
 
-  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement = {
-    val routing = new Routing(viewCtx) // !!! This creates a new router on each render.
+  private val router = RouterWithProps(BaseUrl.fromWindowOrigin, Routing.config)
 
-    val (router, _) = Router.componentAndCtl(BaseUrl.fromWindowOrigin, routing.config)
-
+  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement =
     <.div(
-      router()
+      router(viewCtx)
     )
-  }
 
 }

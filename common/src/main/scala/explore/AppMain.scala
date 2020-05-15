@@ -47,7 +47,7 @@ trait AppMain extends IOApp {
 
     implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
-    val initialModel = RootModel(target = ExploreSiderealTarget("M81", none).some)
+    val initialModel = RootModel()
 
     AppContext.from[IO](AppConfig()).map { implicit ctx =>
       val RootComponent = AppRoot[IO](initialModel, ctx)(rootComponent, ctx.cleanup.some)
