@@ -65,6 +65,7 @@ object HomeComponent {
                 className = "layout",
                 rowHeight = 30,
                 draggableHandle = ".tileTitle",
+                useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
                 onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
                 layouts = layouts
               )(
