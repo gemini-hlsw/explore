@@ -8,8 +8,7 @@ const PackTracker = Merge(Web, {
       project_token: '6804e495-5d60-40d7-a2cc-25875362aadc',
       upload: true,
       fail_build: true,
-      branch: process.env.GITHUB_REF.split("/")[2],
-      exclude_assets: [/explore-opt.*/]
+      branch: process.env.GITHUB_REF.split("/")[2]
     })
   ]
 });
