@@ -10,24 +10,28 @@ import cats.implicits._
 import clue.GraphQLStreamingClient
 import crystal.react.StreamRenderer
 import crystal.react.implicits._
-import diode.data._
-import diode.react.ReactPot._
+import crystal.data.Pot
+import crystal.data.Pot._
+import crystal.data.react._
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
+import react.semanticui.collections.message.Message
 
 final case class SubscriptionRender[D, A](
-  subscribe:       IO[GraphQLStreamingClient[IO]#Subscription[D]],
-  streamModifier:  fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
+  subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
+  streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender: A => VdomNode,
-  val onNewData:   IO[Unit] = IO.unit
+  val valueRender:   A => VdomNode,
+  val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
+  val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val ce:          ConcurrentEffect[IO],
-  val logger:      Logger[IO]
+  val ce:            ConcurrentEffect[IO],
+  val logger:        Logger[IO]
 ) extends SubscriptionRender.Props[IO, D, A]
     with ReactProps {
   override def render: VdomElement =
@@ -39,6 +43,8 @@ object SubscriptionRender {
     val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
     val valueRender: A => VdomNode
+    val pendingRender: Long => VdomNode
+    val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
     implicit val ce: ConcurrentEffect[F]
     implicit val logger: Logger[F]
@@ -61,12 +67,7 @@ object SubscriptionRender {
       .render { $ =>
         React.Fragment(
           $.state.renderer.fold[VdomNode](EmptyVdom)(
-            _ { resultsPot =>
-              React.Fragment(
-                resultsPot.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                resultsPot.render(results => $.props.valueRender(results))
-              )
-            }
+            _(_.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender))
           )
         )
       }

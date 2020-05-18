@@ -10,9 +10,7 @@ object Settings {
     val catsEffect       = "2.1.3"
     val circe            = "0.13.0"
     val clue             = "0.1.0"
-    val crystal          = "0.3.0"
-    val diodeData        = "1.1.8"
-    // val diodeReact      = "1.1.8"
+    val crystal          = "0.3.1"
     val discipline       = "1.0.2"
     val disciplineMUnit  = "0.2.2"
     val gspCore          = "0.2.0"
@@ -78,18 +76,6 @@ object Settings {
         "com.rpiaggio" %%% "crystal"
       )(crystal)
     )
-
-    val DiodeData = Def.setting(
-      deps(
-        "io.suzaku" %%% "diode-data"
-      )(diodeData)
-    )
-
-    // val DiodeReact = Def.setting(
-    //   deps(
-    //     "io.suzaku" %%% "diode-react"
-    //   )(diodeReact)
-    // )
 
     val Discipline = Def.setting(
       Seq(
