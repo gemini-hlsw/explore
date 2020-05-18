@@ -24,7 +24,7 @@ object Settings {
     val mouse            = "0.25"
     val mUnit            = "0.7.7"
     val reactAladin      = "0.1.1"
-    val reactCommon      = "0.8.1"
+    val reactCommon      = "0.8.2"
     val reactGridLayout  = "0.5.0"
     val reactSemanticUI  = "0.5.0"
     val reactSizeMe      = "0.4.0"
