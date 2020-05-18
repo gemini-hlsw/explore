@@ -80,7 +80,7 @@ lazy val common = project
       "loglevel" -> "1.6.8"
     )
   )
-  .enablePlugins(ScalaJSBundlerPlugin, ScalablyTypedConverterPlugin)
+  .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(model.js)
 
 lazy val targeteditor = project
@@ -152,7 +152,6 @@ lazy val commonLibSettings = Seq(
 )
 
 lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
-  resolvers += Resolver.bintrayRepo("oyvindberg", "ScalablyTyped"),
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
