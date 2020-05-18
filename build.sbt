@@ -75,6 +75,11 @@ lazy val common = project
   .in(file("common"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(
+    npmDependencies in Compile ++= Seq(
+      "loglevel" -> "1.6.8"
+    )
+  )
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(model.js)
 
@@ -131,7 +136,6 @@ lazy val commonLibSettings = Seq(
       Cats.value ++
       Mouse.value ++
       CatsEffect.value ++
-      Log4Cats.value ++
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
@@ -154,6 +158,7 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
       ClueScalaJS.value ++
       // DiodeReact.value ++
       GPPUI.value ++
+      Log4Cats.value ++
       In(Test)(
         ScalaJSReactTest.value
       )

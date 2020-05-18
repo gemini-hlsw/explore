@@ -19,13 +19,12 @@ import explore.model.AppContext
 import explore.model.ExploreSiderealTarget
 import explore.model.RootModel
 import io.chrisdavenport.log4cats.Logger
-// import io.chrisdavenport.log4cats.log4s.Log4sLogger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
-// import org.log4s._
 import org.scalajs.dom
 
 import js.annotation._
+import log4cats.loglevel.LogLevelLogger
 
 trait AppMain extends IOApp {
 
@@ -39,9 +38,8 @@ trait AppMain extends IOApp {
   override final def run(args: List[String]): IO[ExitCode] = {
     ReusabilityOverlay.overrideGloballyInDev()
 
-    // Log4sConfig.setLoggerThreshold("", Info) // AllThreshold for tracing
-    // implicit val logger: Logger[IO] = Log4sLogger.createLocal[IO]
-    implicit val logger: Logger[IO] = io.chrisdavenport.log4cats.noop.NoOpLogger.impl[IO]
+    LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
+    implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
     implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
 
