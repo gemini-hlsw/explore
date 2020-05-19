@@ -6,7 +6,6 @@ package explore.components.graphql
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import cats.Monoid
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.effect.Timer
@@ -16,7 +15,6 @@ import crystal.View
 import crystal.react.StreamRendererMod
 import crystal.react.implicits._
 import crystal.data.Pot
-import crystal.data.Pot._
 import crystal.data.react._
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
@@ -25,6 +23,7 @@ import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 import react.semanticui.collections.message.Message
+import explore.model.reusability
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -37,7 +36,8 @@ final case class SubscriptionRenderMod[D, A](
 )(implicit
   val ce:            ConcurrentEffect[IO],
   val timer:         Timer[IO],
-  val logger:        Logger[IO]
+  val logger:        Logger[IO],
+  val reuse:         Reusability[A]
 ) extends SubscriptionRenderMod.Props[IO, D, A]
     with ReactProps {
   override def render: VdomElement =
@@ -55,19 +55,20 @@ object SubscriptionRenderMod {
     implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
     implicit val logger: Logger[F]
+    implicit val reuse: Reusability[A]
   }
 
   protected final case class State[F[_], D, A](
     subscription: Option[
       GraphQLStreamingClient[F]#Subscription[D]
     ] = None,
-    renderer:     Option[StreamRendererMod.Component[F, Pot[A]]] = None
+    renderer:     Option[StreamRendererMod.Component[F, A]] = None
   )
 
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
   implicit protected def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
 
-  protected def componentBuilder[F[_], D, A](implicit monoid: Monoid[F[Unit]]) =
+  protected def componentBuilder[F[_], D, A] =
     ScalaComponent
       .builder[Props[F, D, A]]
       .initialState(State[F, D, A]())
@@ -87,6 +88,7 @@ object SubscriptionRenderMod {
         implicit val ce     = $.props.ce
         implicit val timer  = $.props.timer
         implicit val logger = $.props.logger
+        implicit val reuse  = $.props.reuse
 
         $.props.subscribe.flatMap { subscription =>
           $.setStateIn[F](
@@ -96,9 +98,7 @@ object SubscriptionRenderMod {
                 .build(
                   $.props
                     .streamModifier(subscription.stream)
-                    .map[Pot[A]](a => Ready(a))
-                    .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                    .cons1(Pending()),
+                    .flatTap(_ => fs2.Stream.eval($.props.onNewData)),
                   holdAfterMod = (2 seconds).some
                 )
                 .some
@@ -109,7 +109,7 @@ object SubscriptionRenderMod {
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
 
-        $.state.subscription.map(_.stop).orEmpty.runInCB
+        $.state.subscription.map(_.stop.runInCB).getOrEmpty
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

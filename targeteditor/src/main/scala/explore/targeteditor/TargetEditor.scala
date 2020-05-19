@@ -11,7 +11,7 @@ import explore.target.TargetQueries._
 import gem.Observation
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.CatsReact._
 import monocle.function.Cons.headOption
 import react.common._
 
@@ -24,6 +24,8 @@ final case class TargetEditor(
 
 object TargetEditor {
   type Props = TargetEditor
+
+  protected implicit val targetReuse: Reusability[SiderealTarget] = Reusability.byEq
 
   val component =
     ScalaComponent
