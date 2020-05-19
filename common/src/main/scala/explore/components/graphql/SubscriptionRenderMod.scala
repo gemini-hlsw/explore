@@ -15,25 +15,29 @@ import clue.GraphQLStreamingClient
 import crystal.View
 import crystal.react.StreamRendererMod
 import crystal.react.implicits._
-import diode.data._
-import diode.react.ReactPot._
+import crystal.data.Pot
+import crystal.data.Pot._
+import crystal.data.react._
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
+import react.semanticui.collections.message.Message
 
 final case class SubscriptionRenderMod[D, A](
-  subscribe:       IO[GraphQLStreamingClient[IO]#Subscription[D]],
-  streamModifier:  fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
+  subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
+  streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender: View[IO, A] => VdomNode,
-  val onNewData:   IO[Unit] = IO.unit
+  val valueRender:   View[IO, A] => VdomNode,
+  val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
+  val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val ce:          ConcurrentEffect[IO],
-  val timer:       Timer[IO],
-  val logger:      Logger[IO]
+  val ce:            ConcurrentEffect[IO],
+  val timer:         Timer[IO],
+  val logger:        Logger[IO]
 ) extends SubscriptionRenderMod.Props[IO, D, A]
     with ReactProps {
   override def render: VdomElement =
@@ -45,6 +49,8 @@ object SubscriptionRenderMod {
     val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
     val valueRender: View[F, A] => VdomNode
+    val pendingRender: Long => VdomNode
+    val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
     implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
@@ -69,13 +75,9 @@ object SubscriptionRenderMod {
         React.Fragment(
           $.state.renderer.fold[VdomNode](EmptyVdom)(
             _ { view =>
-              React.Fragment(
-                view.get.renderPending(_ => Icon(name = "spinner", loading = true, size = Large)),
-                view.get.render(_ =>
-                  $.props.valueRender(
-                    view.zoom(_.get)(f => _.map(f))
-                  )
-                )
+              view.get.fold($.props.pendingRender,
+                            $.props.errorRender,
+                            value => $.props.valueRender(view.zoom(_ => value)(f => _.map(f)))
               )
             }
           )

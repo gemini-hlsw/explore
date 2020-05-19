@@ -140,7 +140,6 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Clue.value ++
-      DiodeData.value ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++
@@ -156,7 +155,6 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
-      // DiodeReact.value ++
       GPPUI.value ++
       Log4Cats.value ++
       In(Test)(
