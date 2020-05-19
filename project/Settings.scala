@@ -25,7 +25,7 @@ object Settings {
     val mUnit            = "0.7.7"
     val reactAladin      = "0.1.1"
     val reactCommon      = "0.8.2"
-    val reactGridLayout  = "0.5.0"
+    val reactGridLayout  = "0.5.1"
     val reactSemanticUI  = "0.5.1"
     val reactSizeMe      = "0.4.1"
     val scalaJsReact     = "1.7.0"
