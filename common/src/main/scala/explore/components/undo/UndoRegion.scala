@@ -13,14 +13,16 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common.ReactProps
+import japgolly.scalajs.react.component.Scala
+
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Scala
+import japgolly.scalajs.react.vdom.VdomElement
 
 final case class UndoRegion[M](
   renderer: Undoer.Context[IO, M] => VdomElement
-) extends UndoRegion.Props[IO, M]
-    with ReactProps {
-  @inline override def render: VdomElement =
-    UndoRegion.component(this.asInstanceOf[UndoRegion.Props[IO, Any]])
-}
+) extends ReactProps(UndoRegion.component)
+    with UndoRegion.Props[IO, M]
 
 object UndoRegion {
   protected trait Props[F[_], M] {
@@ -65,5 +67,5 @@ object UndoRegion {
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  protected val component = componentBuilder[Any]
+  val component = componentBuilder[Any]
 }

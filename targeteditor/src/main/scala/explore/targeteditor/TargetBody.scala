@@ -35,10 +35,9 @@ final case class TargetBody(
   observationId: Observation.Id,
   target:        View[IO, SiderealTarget],
   globalTarget:  ViewCtxIO[Option[SiderealTarget]]
-) extends ReactProps {
-  @inline override def render: VdomElement = TargetBody.component(this)
-  val aladinCoords: Coordinates            = target.get.track.baseCoordinates
-  val aladinCoordsStr: String              = Coordinates.fromHmsDms.reverseGet(aladinCoords)
+) extends ReactProps[TargetBody](TargetBody.component) {
+  val aladinCoords: Coordinates = target.get.track.baseCoordinates
+  val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
 }
 
 object TargetBody extends ModelOptics {
@@ -131,9 +130,8 @@ object TargetBody extends ModelOptics {
               ^.height := "100%",
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm.component.withKey(coordinatesKey(props.target.get))(
-                    CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
-                  )
+                  CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
+                    .withKey(coordinatesKey(props.target.get))
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(ref) {

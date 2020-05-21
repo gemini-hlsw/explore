@@ -61,9 +61,7 @@ mutation {
 
 final case class ConditionsPanel(
   observationId: CtxIO[Observation.Id]
-) extends ReactProps {
-  @inline override def render: VdomElement = ConditionsPanel.component(this)
-}
+) extends ReactProps[ConditionsPanel](ConditionsPanel.component)
 
 object ConditionsPanel {
   type Props = ConditionsPanel

@@ -24,6 +24,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 import react.semanticui.collections.message.Message
 import explore.model.reusability
+import japgolly.scalajs.react.component.Scala
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -38,11 +39,8 @@ final case class SubscriptionRenderMod[D, A](
   val timer:         Timer[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
-) extends SubscriptionRenderMod.Props[IO, D, A]
-    with ReactProps {
-  override def render: VdomElement =
-    SubscriptionRenderMod.component(this.asInstanceOf[SubscriptionRenderMod.Props[IO, Any, Any]])
-}
+) extends ReactProps(SubscriptionRenderMod.component)
+    with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
   trait Props[F[_], D, A] {

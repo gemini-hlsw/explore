@@ -18,9 +18,7 @@ import react.common._
 final case class TargetEditor(
   observationId: Observation.Id,
   globalTarget:  ViewCtxIO[Option[SiderealTarget]]
-) extends ReactProps {
-  @inline override def render: VdomElement = TargetEditor.component(this)
-}
+) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
   type Props = TargetEditor

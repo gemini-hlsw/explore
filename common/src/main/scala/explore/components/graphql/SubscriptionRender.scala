@@ -31,11 +31,8 @@ final case class SubscriptionRender[D, A](
   val ce:            ConcurrentEffect[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
-) extends SubscriptionRender.Props[IO, D, A]
-    with ReactProps {
-  override def render: VdomElement =
-    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
-}
+) extends ReactProps(SubscriptionRender.component)
+    with SubscriptionRender.Props[IO, D, A]
 
 object SubscriptionRender {
   trait Props[F[_], D, A] {

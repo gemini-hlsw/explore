@@ -33,9 +33,7 @@ final case class CoordinatesForm(
   goToRaDec:        Coordinates => Callback,
   undoCtx:          Undoer.Context[IO, SiderealTarget]
 )(implicit val ctx: AppContextIO)
-    extends ReactProps {
-  @inline override def render: VdomElement = CoordinatesForm.component(this)
-}
+    extends ReactProps[CoordinatesForm](CoordinatesForm.component)
 
 object CoordinatesForm {
   type Props = CoordinatesForm

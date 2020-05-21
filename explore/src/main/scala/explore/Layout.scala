@@ -11,13 +11,11 @@ import react.common._
 import react.semanticui.As
 import react.semanticui.collections.menu._
 import react.semanticui.modules.sidebar._
+import react.gridlayout.Layout
 
 final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, ViewCtxIO[RootModel]])(
   val viewCtxIO:             ViewCtxIO[RootModel]
-) extends ReactProps {
-
-  @inline def render: VdomElement = OTLayout.component(this)
-}
+) extends ReactProps[OTLayout](OTLayout.component)
 
 object OTLayout {
 

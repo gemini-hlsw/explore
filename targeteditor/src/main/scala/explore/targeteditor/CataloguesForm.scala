@@ -16,9 +16,7 @@ import react.semanticui.sizes._
 final case class CataloguesForm(
   target:           SiderealTarget
 )(implicit val ctx: AppContextIO)
-    extends ReactProps {
-  @inline override def render: VdomElement = CataloguesForm.component(this)
-}
+    extends ReactProps[CataloguesForm](CataloguesForm.component)
 
 object CataloguesForm {
   type Props = CataloguesForm
