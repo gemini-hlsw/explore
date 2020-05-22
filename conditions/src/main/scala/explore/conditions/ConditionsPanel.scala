@@ -38,6 +38,8 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.elements.button.Button
 import react.semanticui.widths._
+import crystal.react.AppRoot
+import explore.AppCtx
 
 /*
 query {
@@ -60,7 +62,7 @@ mutation {
  */
 
 final case class ConditionsPanel(
-  observationId: CtxIO[Observation.Id]
+  observationId: Observation.Id
 ) extends ReactProps[ConditionsPanel](ConditionsPanel.component)
 
 object ConditionsPanel {
@@ -88,7 +90,7 @@ object ConditionsPanel {
   }
 
   protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by(_.observationId.value.format)
+    Reusability.by(_.observationId.format)
 
   protected implicit def enumReuse[A: Enumerated]: Reusability[A] =
     Reusability.by(implicitly[Enumerated[A]].tag)
@@ -162,19 +164,19 @@ object ConditionsPanel {
   implicit val showImageQuality: Show[ImageQuality] =
     Show.show(_.label)
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
-    ctx:                            AppContextIO
-  ): IO[Unit] =
-    ctx.clients.programs
-      .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
-      .void
+  private def mutate(observationId: Observation.Id, fields: Mutation.Fields): IO[Unit] =
+    AppCtx.flatMap(
+      _.clients.programs
+        .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+        .void
+    )
 
   case class Modify(
     observationId: Observation.Id,
     conditions:    Conditions,
     modState:      ModState[IO, Conditions],
     setter:        Undoer.Setter[IO, Conditions]
-  )(implicit ctx:  AppContextIO) {
+  ) {
     def apply[A](
       get:    Conditions => A,
       set:    A => Conditions => Conditions,
@@ -211,11 +213,11 @@ object ConditionsPanel {
     ScalaComponent
       .builder[ConditionsPanel]
       .render { $ =>
-        $.props.observationId.withCtx { implicit appCtx =>
+        AppCtx.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, Conditions](
             appCtx.clients.programs
               .subscribe(Subscription)(
-                Subscription.Variables($.props.observationId.value.format).some
+                Subscription.Variables($.props.observationId.format).some
               ),
             _.map(Subscription.Data.conditions.composeOptional(headOption).getOption _).unNone
           ) { view =>
@@ -223,7 +225,7 @@ object ConditionsPanel {
 
             UndoRegion[Conditions] { undoCtx =>
               val modifyIO =
-                Modify($.props.observationId.value, conditions, view.mod, undoCtx.setter)
+                Modify($.props.observationId, conditions, view.mod, undoCtx.setter)
               def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields)
                 : A => Callback = { v: A => modifyIO(lens.get, lens.set, fields)(v).runInCB }
 

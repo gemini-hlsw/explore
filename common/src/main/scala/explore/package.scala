@@ -2,15 +2,13 @@
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 import cats.effect.IO
-import crystal.Ctx
-import crystal.View
+import crystal.ViewF
 import explore.model.AppContext
 
 package explore {
   trait ShorthandTypes {
     type AppContextIO = AppContext[IO]
-    type CtxIO[A]     = Ctx[AppContextIO, A]
-    type ViewCtxIO[A] = CtxIO[View[IO, A]]
+    type View[A]      = ViewF[IO, A]
   }
 }
 

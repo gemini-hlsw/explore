@@ -18,15 +18,12 @@ import japgolly.scalajs.react.vdom.html_<^._
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {
 
-  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement = {
+  override def rootComponent(view: View[RootModel]): VdomElement = {
     val obsId =
       Observation
         .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-    <.div(^.height := "100vh",
-          ^.width := "100%",
-          TargetEditor(obsId, viewCtx.zoomL(RootModel.target))
-    )
+    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(obsId, view.zoomL(RootModel.target)))
   }
 
 }

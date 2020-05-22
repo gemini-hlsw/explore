@@ -13,8 +13,8 @@ import react.semanticui.As
 import react.semanticui.collections.menu._
 import react.semanticui.modules.sidebar._
 
-final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, ViewCtxIO[RootModel]])(
-  val viewCtxIO:             ViewCtxIO[RootModel]
+final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
+  val view:                  View[RootModel]
 ) extends ReactProps[OTLayout](OTLayout.component)
 
 object OTLayout {
@@ -55,10 +55,10 @@ object OTLayout {
             )(
               MenuHeader()(
                 <.div(
-                  p.viewCtxIO.value.get.obsId.map(_.format).getOrElse[String]("No Observation")
+                  p.view.get.obsId.map(_.format).getOrElse[String]("No Observation")
                 ),
                 <.div(
-                  p.viewCtxIO.value.get.target
+                  p.view.get.target
                     .map(_.name)
                     .getOrElse[String]("No Target")
                 )
@@ -67,7 +67,7 @@ object OTLayout {
               MenuItem(as = "a", className = "sidetab")("P II")
             ),
             SidebarPusher(dimmed = false)(
-              p.r.renderP(p.viewCtxIO)
+              p.r.renderP(p.view)
             )
           )
         )

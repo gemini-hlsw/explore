@@ -4,6 +4,7 @@
 package explore
 
 import crystal.implicits._
+import crystal.react.implicits._
 import explore.conditions.ConditionsPanel
 import explore.implicits._
 import explore.target.TargetEditor
@@ -42,51 +43,49 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = ViewCtxIO[RootModel]
-
-  private implicit val propsReuse: Reusability[Props] = ViewCtxIOReusability[RootModel]
+  type Props = View[RootModel]
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .initialState(0)
       .render_P { props =>
-        props.withCtx { implicit ctx =>
-          val obsId = Observation
-            .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+        // AppMain.withCtxNow { implicit ctx =>
+        val obsId = Observation
+          .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-          <.div(
-            ^.cls := "rgl-area",
-            SizeMe() { s =>
-              ResponsiveReactGridLayout(
-                s.width,
-                margin = (5: JsNumber, 5: JsNumber),
-                containerPadding = (5: JsNumber, 5: JsNumber),
-                className = "layout",
-                rowHeight = 30,
-                draggableHandle = ".tileTitle",
-                useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
-                onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                layouts = layouts
-              )(
-                <.div(
-                  ^.key := "conditions",
-                  ^.cls := "tile",
-                  Tile("Conditions")(
-                    ConditionsPanel(obsId.inCtx(ctx))
-                  )
-                ),
-                <.div(
-                  ^.key := "target",
-                  ^.cls := "tile",
-                  Tile("Target Position")(
-                    TargetEditor(obsId, props.zoomL(RootModel.target))
-                  )
+        <.div(
+          ^.cls := "rgl-area",
+          SizeMe() { s =>
+            ResponsiveReactGridLayout(
+              s.width,
+              margin = (5: JsNumber, 5: JsNumber),
+              containerPadding = (5: JsNumber, 5: JsNumber),
+              className = "layout",
+              rowHeight = 30,
+              draggableHandle = ".tileTitle",
+              useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
+              onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+              layouts = layouts
+            )(
+              <.div(
+                ^.key := "conditions",
+                ^.cls := "tile",
+                Tile("Conditions")(
+                  ConditionsPanel(obsId)
+                )
+              ),
+              <.div(
+                ^.key := "target",
+                ^.cls := "tile",
+                Tile("Target Position")(
+                  TargetEditor(obsId, props.zoomL(RootModel.target))
                 )
               )
-            }
-          )
-        }
+            )
+          }
+        )
+        // }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

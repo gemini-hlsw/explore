@@ -11,7 +11,8 @@ import cats.effect.IO
 import cats.effect.Timer
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.View
+import explore.View
+import crystal.ViewF
 import crystal.data.Pot
 import crystal.data.react._
 import crystal.react.StreamRendererMod
@@ -30,7 +31,7 @@ final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender:   View[IO, A] => VdomNode,
+  val valueRender:   View[A] => VdomNode,
   val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
@@ -46,7 +47,7 @@ object SubscriptionRenderMod {
   trait Props[F[_], D, A] {
     val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-    val valueRender: View[F, A] => VdomNode
+    val valueRender: ViewF[F, A] => VdomNode
     val pendingRender: Long => VdomNode
     val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
@@ -73,11 +74,8 @@ object SubscriptionRenderMod {
       .render { $ =>
         React.Fragment(
           $.state.renderer.fold[VdomNode](EmptyVdom)(
-            _ { view =>
-              view.get.fold($.props.pendingRender,
-                            $.props.errorRender,
-                            value => $.props.valueRender(view.zoom(_ => value)(f => _.map(f)))
-              )
+            _ {
+              _.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender)
             }
           )
         )

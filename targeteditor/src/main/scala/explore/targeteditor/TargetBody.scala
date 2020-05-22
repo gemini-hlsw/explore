@@ -5,7 +5,7 @@ package explore.target
 
 import cats.effect.IO
 import cats.implicits._
-import crystal.View
+import explore.View
 import crystal.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
@@ -29,11 +29,12 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import explore.AppCtx
 
 final case class TargetBody(
   observationId: Observation.Id,
-  target:        View[IO, SiderealTarget],
-  globalTarget:  ViewCtxIO[Option[SiderealTarget]]
+  target:        View[SiderealTarget],
+  globalTarget:  View[Option[SiderealTarget]]
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -63,7 +64,7 @@ object TargetBody extends ModelOptics {
       s"${target.name}#${target.track.baseCoordinates.show}"
 
     def render(props: Props) =
-      props.globalTarget.withCtx { implicit appCtx =>
+      AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>

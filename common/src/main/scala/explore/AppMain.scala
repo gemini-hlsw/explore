@@ -5,10 +5,12 @@ package explore
 
 import scala.scalajs.js
 
+import cats.Id
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
 import cats.implicits._
+import cats.effect._
 import clue.Backend
 import clue.StreamingBackend
 import clue.js.AjaxJSBackend
@@ -23,13 +25,16 @@ import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
+import crystal.AppRootContext
 
 import js.annotation._
+
+object AppCtx extends AppRootContext[AppContextIO]
 
 trait AppMain extends IOApp {
 
   def rootComponent(
-    viewCtx: ViewCtxIO[RootModel]
+    view: View[RootModel]
   ): VdomElement
 
   @JSExport
@@ -47,8 +52,11 @@ trait AppMain extends IOApp {
 
     val initialModel = RootModel()
 
-    AppContext.from[IO](AppConfig()).map { implicit ctx =>
-      val RootComponent = AppRoot[IO](initialModel, ctx)(rootComponent, ctx.cleanup.some)
+    for {
+      ctx <- AppContext.from[IO](AppConfig())
+      _   <- AppCtx.initIn[IO](ctx)
+    } yield {
+      val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup.some)
 
       val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
