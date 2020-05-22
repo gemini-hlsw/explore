@@ -21,8 +21,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form._
-import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._

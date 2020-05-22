@@ -9,8 +9,8 @@ import gem.Observation
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
-import monocle.Prism
 import japgolly.scalajs.react.vdom.VdomElement
+import monocle.Prism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

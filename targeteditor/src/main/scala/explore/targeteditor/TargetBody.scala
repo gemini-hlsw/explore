@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.implicits._
 import crystal.View
 import crystal.react.implicits._
-// import explore._
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
@@ -19,6 +18,7 @@ import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.HourAngle
+import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -29,7 +29,6 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
-import gsp.math.ProperMotion
 
 final case class TargetBody(
   observationId: Observation.Id,

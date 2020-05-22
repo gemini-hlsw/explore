@@ -10,14 +10,10 @@ import cats.kernel.Monoid
 import crystal.react.implicits._
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common.ReactProps
-import japgolly.scalajs.react.component.Scala
-
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.Scala
-import japgolly.scalajs.react.vdom.VdomElement
 
 final case class UndoRegion[M](
   renderer: Undoer.Context[IO, M] => VdomElement

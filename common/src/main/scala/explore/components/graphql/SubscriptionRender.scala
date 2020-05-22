@@ -7,18 +7,18 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.react.StreamRenderer
-import crystal.react.implicits._
 import crystal.data.Pot
 import crystal.data.react._
+import crystal.react.StreamRenderer
+import crystal.react.implicits._
+import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
+import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
-import react.semanticui.collections.message.Message
-import explore.model.reusability
 final case class SubscriptionRender[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _

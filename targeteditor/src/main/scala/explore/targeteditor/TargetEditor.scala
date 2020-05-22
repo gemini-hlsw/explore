@@ -9,9 +9,9 @@ import explore.implicits._
 import explore.model.SiderealTarget
 import explore.target.TargetQueries._
 import gem.Observation
+import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.CatsReact._
 import monocle.function.Cons.headOption
 import react.common._
 
