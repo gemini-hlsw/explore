@@ -89,7 +89,12 @@ object ConditionsPanel {
       } yield Conditions(cc, iq, sb, wv)
   }
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(_.observationId.value.format)
+  protected implicit val propsReuse: Reusability[Props] =
+    Reusability.by(_.observationId.value.format)
+
+  protected implicit def enumReuse[A: Enumerated]: Reusability[A] =
+    Reusability.by(implicitly[Enumerated[A]].tag)
+  protected implicit val conditionsReuse: Reusability[Conditions] = Reusability.derive
 
   private object Subscription extends GraphQLQuery {
     val document = """

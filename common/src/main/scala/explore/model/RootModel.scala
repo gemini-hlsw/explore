@@ -51,8 +51,10 @@ object AppConfig {
 case class Clients[F[_]: ConcurrentEffect: Logger](
   programs: GraphQLStreamingClient[F]
 ) {
+  protected implicit val statusReuse: Reusability[StreamingClientStatus] = Reusability.derive
+
   lazy val programsConnectionStatus =
-    StreamRenderer.build(programs.statusStream, Reusability.derive)
+    StreamRenderer.build(programs.statusStream)
 
   def close(): F[Unit] =
     programs.close()
