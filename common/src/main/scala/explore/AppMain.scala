@@ -21,10 +21,10 @@ import explore.model.RootModel
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
+import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
 
 import js.annotation._
-import log4cats.loglevel.LogLevelLogger
 
 trait AppMain extends IOApp {
 

@@ -7,18 +7,18 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.react.StreamRenderer
-import crystal.react.implicits._
 import crystal.data.Pot
 import crystal.data.react._
+import crystal.react.StreamRenderer
+import crystal.react.implicits._
+import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
+import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
-import react.semanticui.collections.message.Message
-import explore.model.reusability
 final case class SubscriptionRender[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
@@ -31,11 +31,8 @@ final case class SubscriptionRender[D, A](
   val ce:            ConcurrentEffect[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
-) extends SubscriptionRender.Props[IO, D, A]
-    with ReactProps {
-  override def render: VdomElement =
-    SubscriptionRender.component(this.asInstanceOf[SubscriptionRender.Props[IO, Any, Any]])
-}
+) extends ReactProps(SubscriptionRender.component)
+    with SubscriptionRender.Props[IO, D, A]
 
 object SubscriptionRender {
   trait Props[F[_], D, A] {

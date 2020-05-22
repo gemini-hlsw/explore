@@ -9,18 +9,16 @@ import explore.implicits._
 import explore.model.SiderealTarget
 import explore.target.TargetQueries._
 import gem.Observation
+import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.CatsReact._
 import monocle.function.Cons.headOption
 import react.common._
 
 final case class TargetEditor(
   observationId: Observation.Id,
   globalTarget:  ViewCtxIO[Option[SiderealTarget]]
-) extends ReactProps {
-  @inline override def render: VdomElement = TargetEditor.component(this)
-}
+) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
   type Props = TargetEditor
