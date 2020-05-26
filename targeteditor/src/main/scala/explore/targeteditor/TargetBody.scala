@@ -30,11 +30,13 @@ import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
 import explore.AppCtx
+import explore.model.Conditions
 
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  globalTarget:  View[Option[SiderealTarget]]
+  globalTarget:  View[Option[SiderealTarget]],
+  conditions:    Conditions
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -131,7 +133,8 @@ object TargetBody extends ModelOptics {
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
-                    .withKey(coordinatesKey(props.target.get))
+                    .withKey(coordinatesKey(props.target.get)),
+                  props.conditions.toString
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(ref) {

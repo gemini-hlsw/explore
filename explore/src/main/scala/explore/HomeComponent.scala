@@ -3,9 +3,11 @@
 
 package explore
 
+import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
 import explore.conditions.ConditionsPanel
+import explore.conditions.ConditionsQueries._
 import explore.implicits._
 import explore.target.TargetEditor
 import gem.Observation
@@ -14,11 +16,14 @@ import gsp.math.Index
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.function.Cons.headOption
 import react.common._
 import react.gridlayout._
 import react.sizeme._
 
 import model._
+import explore.components.graphql.SubscriptionRenderMod
+import gem.util.Enumerated
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -45,47 +50,62 @@ object HomeComponent {
 
   type Props = View[RootModel]
 
+  protected implicit def enumReuse[A: Enumerated]: Reusability[A] =
+    Reusability.by(implicitly[Enumerated[A]].tag)
+  protected implicit val conditionsReuse: Reusability[Conditions] = Reusability.derive
+
   protected val component =
     ScalaComponent
       .builder[Props]
       .initialState(0)
       .render_P { props =>
-        // AppMain.withCtxNow { implicit ctx =>
         val obsId = Observation
           .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-        <.div(
-          ^.cls := "rgl-area",
-          SizeMe() { s =>
-            ResponsiveReactGridLayout(
-              s.width,
-              margin = (5: JsNumber, 5: JsNumber),
-              containerPadding = (5: JsNumber, 5: JsNumber),
-              className = "layout",
-              rowHeight = 30,
-              draggableHandle = ".tileTitle",
-              useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
-              onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-              layouts = layouts
-            )(
-              <.div(
-                ^.key := "conditions",
-                ^.cls := "tile",
-                Tile("Conditions")(
-                  ConditionsPanel(obsId)
-                )
+        AppCtx.withCtx { implicit appCtx =>
+          SubscriptionRenderMod[Subscription.Data, Conditions](
+            appCtx.clients.programs
+              .subscribe(Subscription)(
+                Subscription.Variables(obsId.format).some
               ),
-              <.div(
-                ^.key := "target",
-                ^.cls := "tile",
-                Tile("Target Position")(
-                  TargetEditor(obsId, props.zoomL(RootModel.target))
+            _.map(
+              Subscription.Data.conditions.composeOptional(headOption).getOption _
+            ).unNone
+          ) { conditions =>
+            <.div(
+              ^.cls := "rgl-area",
+              SizeMe() { s =>
+                ResponsiveReactGridLayout(
+                  s.width,
+                  margin = (5: JsNumber, 5: JsNumber),
+                  containerPadding = (5: JsNumber, 5: JsNumber),
+                  className = "layout",
+                  rowHeight = 30,
+                  draggableHandle = ".tileTitle",
+                  useCSSTransforms =
+                    false, // Not ideal, but fixes flicker on first update (0.18.3).
+                  onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                  layouts = layouts
+                )(
+                  <.div(
+                    ^.key := "conditions",
+                    ^.cls := "tile",
+                    Tile("Conditions")(
+                      ConditionsPanel(obsId, conditions)
+                    )
+                  ),
+                  <.div(
+                    ^.key := "target",
+                    ^.cls := "tile",
+                    Tile("Target Position")(
+                      TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get)
+                    )
+                  )
                 )
-              )
+              }
             )
           }
-        )
-        // }
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

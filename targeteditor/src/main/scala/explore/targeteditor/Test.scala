@@ -23,7 +23,10 @@ object Test extends AppMain {
       Observation
         .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(obsId, view.zoomL(RootModel.target)))
+    <.div(^.height := "100vh",
+          ^.width := "100%",
+          TargetEditor(obsId, view.zoomL(RootModel.target), null)
+    )
   }
 
 }

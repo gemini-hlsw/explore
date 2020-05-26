@@ -13,6 +13,7 @@ import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
 import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.vdom.html_<^._
 
 import js.annotation._
 
@@ -20,9 +21,10 @@ import js.annotation._
 object Test extends AppMain {
 
   override def rootComponent(view: View[RootModel]): VdomElement =
-    ConditionsPanel(
-      Observation
-        .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
-    )
+    <.div
+  // ConditionsPanel(
+  // Observation
+  // .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+  // )
 
 }

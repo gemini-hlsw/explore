@@ -15,10 +15,12 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
 import explore.AppCtx
+import explore.model.Conditions
 
 final case class TargetEditor(
   observationId: Observation.Id,
-  globalTarget:  View[Option[SiderealTarget]]
+  globalTarget:  View[Option[SiderealTarget]],
+  conditions:    Conditions
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -38,7 +40,7 @@ object TargetEditor {
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
           ) { target =>
-            TargetBody(props.observationId, target, props.globalTarget)
+            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
           }
         }
       }
