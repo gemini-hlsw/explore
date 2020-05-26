@@ -34,19 +34,6 @@ object TargetEditor {
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        val reusableRendererFromProps: Reusable[Props => View[SiderealTarget] => VdomNode] =
-          Reusable.fn { props => target =>
-            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
-          }
-
-        val reusableRenderer: Reusable[View[SiderealTarget] => VdomNode] =
-          Reusable.implicitly(props).ap(reusableRendererFromProps)
-        // Reusable.fn { target =>
-        // TargetBody(props.observationId, target, props.globalTarget, props.conditions)
-        // }
-
-// def reusableRenderer(o): Reusable[View[SiderealTarget] => VdomNode] =
-
         AppCtx.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
             appCtx.clients.programs
@@ -54,7 +41,9 @@ object TargetEditor {
                 Subscription.Variables(props.observationId.format).some
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-          )(reusableRenderer)
+          ) { target =>
+            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
+          }
         }
       }
       .build

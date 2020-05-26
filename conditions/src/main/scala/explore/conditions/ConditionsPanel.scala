@@ -58,7 +58,7 @@ object ConditionsPanel {
       .render { $ =>
         val conditions = $.props.conditions.get
 
-        UndoRegion[Conditions](Reusable.fn { undoCtx =>
+        UndoRegion[Conditions] { undoCtx =>
           val modifyIO =
             Modify($.props.observationId, conditions, $.props.conditions.mod, undoCtx.setter)
           def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields): A => Callback = {
@@ -104,7 +104,7 @@ object ConditionsPanel {
               "Redo"
             )
           )
-        })
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

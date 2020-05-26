@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.conditions
 
 import cats.effect.IO
@@ -5,11 +8,14 @@ import cats.implicits._
 import clue.GraphQLQuery
 import crystal.react.ModState
 import explore.AppCtx
+import explore.implicits._
+import explore.components.graphql.SubscriptionRenderMod
 import explore.model.Conditions
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
+import explore.model.reusability._
 import explore.undo.Undoer
 import gem.Observation
 import gem.util.Enumerated
@@ -20,6 +26,9 @@ import io.circe.HCursor
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
+import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.vdom.html_<^._
+import monocle.function.Cons.headOption
 import monocle.macros.Lenses
 
 object ConditionsQueries {
@@ -164,4 +173,19 @@ mutation {
         .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
         .void
     )
+
+  def conditionsSubscription(
+    obsId:  Observation.Id
+  )(render: View[Conditions] => VdomNode): SubscriptionRenderMod[Subscription.Data, Conditions] =
+    AppCtx.withCtx { implicit appCtx =>
+      SubscriptionRenderMod[Subscription.Data, Conditions](
+        appCtx.clients.programs
+          .subscribe(Subscription)(
+            Subscription.Variables(obsId.format).some
+          ),
+        _.map(
+          Subscription.Data.conditions.composeOptional(headOption).getOption _
+        ).unNone
+      )(render)
+    }
 }

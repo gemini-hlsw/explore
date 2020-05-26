@@ -54,7 +54,8 @@ object SubscriptionRender {
     renderer:     Option[StreamRenderer.Component[A]] = None
   )
 
-  implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
+  // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
+  implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.never
   implicit def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
 
   protected def componentBuilder[F[_], D, A] =

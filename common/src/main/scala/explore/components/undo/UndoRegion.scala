@@ -16,13 +16,13 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class UndoRegion[M](
-  renderer: Reusable[Undoer.Context[IO, M] => VdomElement]
+  renderer: Undoer.Context[IO, M] => VdomElement
 ) extends ReactProps(UndoRegion.component)
     with UndoRegion.Props[IO, M]
 
 object UndoRegion {
   protected trait Props[F[_], M] {
-    val renderer: Reusable[Undoer.Context[F, M] => VdomElement]
+    val renderer: Undoer.Context[F, M] => VdomElement
   }
 
   @Lenses
@@ -31,15 +31,15 @@ object UndoRegion {
     redoStack: Undoer.Stack[F, M] = List.empty
   )
 
+  // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], M]: Reusability[Props[F, M]] =
-    Reusability.by(_.renderer)
-  // Reusability.never
-  implicit protected def stateReuse[F[_], M]: Reusability[State[F, M]] =
     Reusability.never
+  // Internal changes in the stacks do not trigger rerenders.
+  implicit protected def stateReuse[F[_], M]: Reusability[State[F, M]] =
+    Reusability.always
 
-  protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])(implicit
-    monoid:                                  Monoid[F[Unit]]
-  ) extends Undoer[F, M] {
+  protected class Backend[F[_]: Async, M]($ : BackendScope[Props[F, M], State[F, M]])
+      extends Undoer[F, M] {
     type Stacks = State[F, M]
 
     override lazy val getStacks: F[Stacks] = $.stateIn[F]

@@ -59,52 +59,38 @@ object HomeComponent {
         val obsId = Observation
           .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-        val reusableRenderer: Reusable[View[Conditions] => VdomNode] =
-          Reusable.fn { conditions =>
-            <.div(
-              ^.cls := "rgl-area",
-              SizeMe() { s =>
-                ResponsiveReactGridLayout(
-                  s.width,
-                  margin = (5: JsNumber, 5: JsNumber),
-                  containerPadding = (5: JsNumber, 5: JsNumber),
-                  className = "layout",
-                  rowHeight = 30,
-                  draggableHandle = ".tileTitle",
-                  useCSSTransforms =
-                    false, // Not ideal, but fixes flicker on first update (0.18.3).
-                  onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                  layouts = layouts
-                )(
-                  <.div(
-                    ^.key := "conditions",
-                    ^.cls := "tile",
-                    Tile("Conditions")(
-                      ConditionsPanel(obsId, conditions)
-                    )
-                  ),
-                  <.div(
-                    ^.key := "target",
-                    ^.cls := "tile",
-                    Tile("Target Position")(
-                      TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get)
-                    )
+        conditionsSubscription(obsId) { conditions =>
+          <.div(
+            ^.cls := "rgl-area",
+            SizeMe() { s =>
+              ResponsiveReactGridLayout(
+                s.width,
+                margin = (5: JsNumber, 5: JsNumber),
+                containerPadding = (5: JsNumber, 5: JsNumber),
+                className = "layout",
+                rowHeight = 30,
+                draggableHandle = ".tileTitle",
+                useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
+                onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                layouts = layouts
+              )(
+                <.div(
+                  ^.key := "conditions",
+                  ^.cls := "tile",
+                  Tile("Conditions")(
+                    ConditionsPanel(obsId, conditions)
+                  )
+                ),
+                <.div(
+                  ^.key := "target",
+                  ^.cls := "tile",
+                  Tile("Target Position")(
+                    TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get)
                   )
                 )
-              }
-            )
-          }
-
-        AppCtx.withCtx { implicit appCtx =>
-          SubscriptionRenderMod[Subscription.Data, Conditions](
-            appCtx.clients.programs
-              .subscribe(Subscription)(
-                Subscription.Variables(obsId.format).some
-              ),
-            _.map(
-              Subscription.Data.conditions.composeOptional(headOption).getOption _
-            ).unNone
-          )(reusableRenderer)
+              )
+            }
+          )
         }
       }
       .configure(Reusability.shouldComponentUpdate)

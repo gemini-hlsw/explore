@@ -23,7 +23,6 @@ import monocle.function.Cons.headOption
 
 import js.annotation._
 import explore.AppCtx
-import japgolly.scalajs.react.Reusable
 
 @JSExportTopLevel("Test")
 object Test extends AppMain {
@@ -31,22 +30,9 @@ object Test extends AppMain {
   private val obsId = Observation
     .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-  val reusableRenderer: Reusable[View[Conditions] => VdomNode] =
-    Reusable.fn { conditions =>
-      ConditionsPanel(obsId, conditions)
-    }
-
   override def rootComponent(view: View[RootModel]): VdomElement =
-    AppCtx.withCtx { implicit appCtx =>
-      SubscriptionRenderMod[Subscription.Data, Conditions](
-        appCtx.clients.programs
-          .subscribe(Subscription)(
-            Subscription.Variables(obsId.format).some
-          ),
-        _.map(
-          Subscription.Data.conditions.composeOptional(headOption).getOption _
-        ).unNone
-      )(reusableRenderer)
+    conditionsSubscription(obsId) { conditions =>
+      ConditionsPanel(obsId, conditions)
     }
 
 }
