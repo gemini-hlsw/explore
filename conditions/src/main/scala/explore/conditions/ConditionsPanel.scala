@@ -15,6 +15,7 @@ import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
+import explore.model.reusability._
 import gem.Observation
 import gem.util.Enumerated
 import gpp.ui.forms.EnumSelect
@@ -37,12 +38,7 @@ final case class ConditionsPanel(
 object ConditionsPanel {
   type Props = ConditionsPanel
 
-  protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by(_.observationId.format)
-
-  protected implicit def enumReuse[A: Enumerated]: Reusability[A] =
-    Reusability.by(implicitly[Enumerated[A]].tag)
-  protected implicit val conditionsReuse: Reusability[Conditions] = Reusability.derive
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   implicit val showSkyBackground: Show[SkyBackground] =
     Show.show(_.label)
@@ -62,11 +58,12 @@ object ConditionsPanel {
       .render { $ =>
         val conditions = $.props.conditions.get
 
-        UndoRegion[Conditions] { undoCtx =>
+        UndoRegion[Conditions](Reusable.fn { undoCtx =>
           val modifyIO =
             Modify($.props.observationId, conditions, $.props.conditions.mod, undoCtx.setter)
           def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields): A => Callback = {
-            v: A => modifyIO(lens.get, lens.set, fields)(v).runInCB
+            v: A =>
+              modifyIO(lens.get, lens.set, fields)(v).runInCB
           }
 
           <.div(
@@ -107,7 +104,7 @@ object ConditionsPanel {
               "Redo"
             )
           )
-        }
+        })
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

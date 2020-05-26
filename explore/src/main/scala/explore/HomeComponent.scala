@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import explore.conditions.ConditionsPanel
 import explore.conditions.ConditionsQueries._
 import explore.implicits._
+import explore.model.reusability._
 import explore.target.TargetEditor
 import gem.Observation
 import gem.ProgramId
@@ -50,10 +51,6 @@ object HomeComponent {
 
   type Props = View[RootModel]
 
-  protected implicit def enumReuse[A: Enumerated]: Reusability[A] =
-    Reusability.by(implicitly[Enumerated[A]].tag)
-  protected implicit val conditionsReuse: Reusability[Conditions] = Reusability.derive
-
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -62,16 +59,8 @@ object HomeComponent {
         val obsId = Observation
           .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-        AppCtx.withCtx { implicit appCtx =>
-          SubscriptionRenderMod[Subscription.Data, Conditions](
-            appCtx.clients.programs
-              .subscribe(Subscription)(
-                Subscription.Variables(obsId.format).some
-              ),
-            _.map(
-              Subscription.Data.conditions.composeOptional(headOption).getOption _
-            ).unNone
-          ) { conditions =>
+        val reusableRenderer: Reusable[View[Conditions] => VdomNode] =
+          Reusable.fn { conditions =>
             <.div(
               ^.cls := "rgl-area",
               SizeMe() { s =>
@@ -105,6 +94,17 @@ object HomeComponent {
               }
             )
           }
+
+        AppCtx.withCtx { implicit appCtx =>
+          SubscriptionRenderMod[Subscription.Data, Conditions](
+            appCtx.clients.programs
+              .subscribe(Subscription)(
+                Subscription.Variables(obsId.format).some
+              ),
+            _.map(
+              Subscription.Data.conditions.composeOptional(headOption).getOption _
+            ).unNone
+          )(reusableRenderer)
         }
       }
       .configure(Reusability.shouldComponentUpdate)

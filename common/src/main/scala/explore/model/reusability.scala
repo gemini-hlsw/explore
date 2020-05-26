@@ -5,12 +5,17 @@ package explore.model
 
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
+import gem.util.Enumerated
+import gem.Observation
 
 /**
   * Reusability instances for model classes
   */
 object reusability {
+  implicit val obsIdReuse: Reusability[Observation.Id]            = Reusability.by(_.format)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]   = Reusability.byEq
-  implicit val expTargetReuse: Reusability[ExploreSiderealTarget] =
-    Reusability.derive[ExploreSiderealTarget]
+  implicit val expTargetReuse: Reusability[ExploreSiderealTarget] = Reusability.derive
+  implicit def enumReuse[A: Enumerated]: Reusability[A]           =
+    Reusability.by(implicitly[Enumerated[A]].tag)
+  implicit val conditionsReuse: Reusability[Conditions]           = Reusability.derive
 }

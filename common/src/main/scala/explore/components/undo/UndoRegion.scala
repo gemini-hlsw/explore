@@ -16,13 +16,13 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class UndoRegion[M](
-  renderer: Undoer.Context[IO, M] => VdomElement
+  renderer: Reusable[Undoer.Context[IO, M] => VdomElement]
 ) extends ReactProps(UndoRegion.component)
     with UndoRegion.Props[IO, M]
 
 object UndoRegion {
   protected trait Props[F[_], M] {
-    val renderer: Undoer.Context[F, M] => VdomElement
+    val renderer: Reusable[Undoer.Context[F, M] => VdomElement]
   }
 
   @Lenses
@@ -32,7 +32,8 @@ object UndoRegion {
   )
 
   implicit protected def propsReuse[F[_], M]: Reusability[Props[F, M]] =
-    Reusability.always
+    Reusability.by(_.renderer)
+  // Reusability.never
   implicit protected def stateReuse[F[_], M]: Reusability[State[F, M]] =
     Reusability.never
 

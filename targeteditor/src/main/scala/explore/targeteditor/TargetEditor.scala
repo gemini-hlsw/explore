@@ -4,9 +4,11 @@
 package explore.target
 
 import cats.implicits._
+import crystal.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.SiderealTarget
+import explore.model.reusability._
 import explore.target.TargetQueries._
 import gem.Observation
 import japgolly.scalajs.react.CatsReact._
@@ -26,12 +28,25 @@ final case class TargetEditor(
 object TargetEditor {
   type Props = TargetEditor
 
-  protected implicit val targetReuse: Reusability[SiderealTarget] = Reusability.byEq
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val component =
     ScalaComponent
       .builder[Props]
       .render_P { props =>
+        val reusableRendererFromProps: Reusable[Props => View[SiderealTarget] => VdomNode] =
+          Reusable.fn { props => target =>
+            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
+          }
+
+        val reusableRenderer: Reusable[View[SiderealTarget] => VdomNode] =
+          Reusable.implicitly(props).ap(reusableRendererFromProps)
+        // Reusable.fn { target =>
+        // TargetBody(props.observationId, target, props.globalTarget, props.conditions)
+        // }
+
+// def reusableRenderer(o): Reusable[View[SiderealTarget] => VdomNode] =
+
         AppCtx.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
             appCtx.clients.programs
@@ -39,9 +54,7 @@ object TargetEditor {
                 Subscription.Variables(props.observationId.format).some
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-          ) { target =>
-            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
-          }
+          )(reusableRenderer)
         }
       }
       .build

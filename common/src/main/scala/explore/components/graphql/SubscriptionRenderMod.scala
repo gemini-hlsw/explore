@@ -31,7 +31,7 @@ final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender:   View[A] => VdomNode,
+  val valueRender:   Reusable[View[A] => VdomNode],
   val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
@@ -47,7 +47,7 @@ object SubscriptionRenderMod {
   trait Props[F[_], D, A] {
     val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-    val valueRender: ViewF[F, A] => VdomNode
+    val valueRender: Reusable[ViewF[F, A] => VdomNode]
     val pendingRender: Long => VdomNode
     val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
@@ -64,7 +64,9 @@ object SubscriptionRenderMod {
     renderer:     Option[StreamRendererMod.Component[F, A]] = None
   )
 
-  implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
+  implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =
+    Reusability.by(_.valueRender)
+  // Reusability.never
   implicit protected def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
 
   protected def componentBuilder[F[_], D, A] =

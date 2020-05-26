@@ -12,6 +12,7 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
+import explore.model.reusability._
 import explore.target.TargetQueries._
 import gem.Observation
 import gsp.math.Angle
@@ -31,6 +32,8 @@ import react.semanticui.collections.grid._
 import react.semanticui.widths._
 import explore.AppCtx
 import explore.model.Conditions
+import explore.undo.Undoer
+import scala.reflect.ClassTag
 
 final case class TargetBody(
   observationId: Observation.Id,
@@ -44,6 +47,9 @@ final case class TargetBody(
 
 object TargetBody extends ModelOptics {
   type Props = TargetBody
+
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+
   val AladinComp = Aladin.component
 
   class Backend(bs: BackendScope[Props, Unit]) {
@@ -69,85 +75,96 @@ object TargetBody extends ModelOptics {
       AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
 
-        UndoRegion[SiderealTarget] { undoCtx =>
-          val modifyIO    =
-            Modify(props.observationId,
-                   target,
-                   props.target.mod,
-                   (props.globalTarget.set _).compose(_.some),
-                   undoCtx.setter
-            )
-
-          def modify[A](
-            lens:   Lens[SiderealTarget, A],
-            fields: A => Mutation.Fields
-          ): A => Callback = { v: A =>
-            modifyIO(lens.get, lens.set, fields)(v).runInCB
-          }
-          val gotoRaDec   = (coords: Coordinates) =>
-            ref.get
-              .flatMapCB(
-                _.backend
-                  .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
+        val reusableRendererFromProps
+          : Reusable[Props => Undoer.Context[IO, SiderealTarget] => VdomElement] =
+          Reusable.fn { props => undoCtx =>
+            val modifyIO    =
+              Modify(props.observationId,
+                     target,
+                     props.target.mod,
+                     (props.globalTarget.set _).compose(_.some),
+                     undoCtx.setter
               )
-              .toCallback
-          val searchAndGo = (search: String) =>
-            ref.get
-              .flatMapCB(
-                _.backend
-                  .gotoObject(
-                    search,
-                    (a, b) => {
-                      val ra  = RightAscension.fromHourAngle.get(
-                        HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
-                      )
-                      val dec =
-                        Declination.fromAngle
-                          .getOption(Angle.fromDoubleDegrees(b.toDouble))
-                          .getOrElse(Declination.Zero)
-                      setRa(ra) *> setDec(dec) *> modify[
-                        (String, RightAscension, Declination)
-                      ](
-                        targetPropsL,
-                        {
-                          case (n, r, d) =>
-                            Mutation.Fields(
-                              name = n.some,
-                              ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                              dec = Declination.fromStringSignedDMS.reverseGet(d).some
-                            )
-                        }
-                      )((search, ra, dec))
-                    },
-                    Callback.log("error")
-                  )
-              )
-              .toCallback
 
-          <.div(
-            ^.height := "100%",
-            ^.width := "100%",
-            ^.cls := "check",
-            Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
+            def modify[A](
+              lens:   Lens[SiderealTarget, A],
+              fields: A => Mutation.Fields
+            ): A => Callback = { v: A =>
+              modifyIO(lens.get, lens.set, fields)(v).runInCB
+            }
+            val gotoRaDec   = (coords: Coordinates) =>
+              ref.get
+                .flatMapCB(
+                  _.backend
+                    .gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
+                               coords.dec.toAngle.toDoubleDegrees
+                    )
+                )
+                .toCallback
+            val searchAndGo = (search: String) =>
+              ref.get
+                .flatMapCB(
+                  _.backend
+                    .gotoObject(
+                      search,
+                      (a, b) => {
+                        val ra  = RightAscension.fromHourAngle.get(
+                          HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
+                        )
+                        val dec =
+                          Declination.fromAngle
+                            .getOption(Angle.fromDoubleDegrees(b.toDouble))
+                            .getOrElse(Declination.Zero)
+                        setRa(ra) *> setDec(dec) *> modify[
+                          (String, RightAscension, Declination)
+                        ](
+                          targetPropsL,
+                          {
+                            case (n, r, d) =>
+                              Mutation.Fields(
+                                name = n.some,
+                                ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                                dec = Declination.fromStringSignedDMS.reverseGet(d).some
+                              )
+                          }
+                        )((search, ra, dec))
+                      },
+                      Callback.log("error")
+                    )
+                )
+                .toCallback
+
+            <.div(
               ^.height := "100%",
-              GridRow(stretched = true)(
-                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
-                    .withKey(coordinatesKey(props.target.get)),
-                  props.conditions.toString
-                ),
-                GridColumn(stretched = true, computer = Nine)(
-                  AladinComp.withRef(ref) {
-                    Aladin(target = props.aladinCoordsStr, fov = 0.25, showGotoControl = false)
-                  }
-                ),
-                GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(props.target.get)
+              ^.width := "100%",
+              ^.cls := "check",
+              Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
+                ^.height := "100%",
+                GridRow(stretched = true)(
+                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                    CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
+                      .withKey(coordinatesKey(props.target.get)),
+                    props.conditions.toString
+                  ),
+                  GridColumn(stretched = true, computer = Nine)(
+                    AladinComp.withRef(ref) {
+                      Aladin(target = props.aladinCoordsStr, fov = 0.25, showGotoControl = false)
+                    }
+                  ),
+                  GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
+                    CataloguesForm(props.target.get)
+                  )
                 )
               )
             )
-          )
-        }
+          }
+
+        val reusableRenderer: Reusable[Undoer.Context[IO, SiderealTarget] => VdomElement] =
+          Reusable
+            .implicitly(props)
+            .ap(reusableRendererFromProps)
+
+        UndoRegion[SiderealTarget](reusableRenderer)
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
