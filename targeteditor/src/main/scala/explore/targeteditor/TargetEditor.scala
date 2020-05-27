@@ -14,10 +14,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
+import explore.AppCtx
 
 final case class TargetEditor(
   observationId: Observation.Id,
-  globalTarget:  ViewCtxIO[Option[SiderealTarget]]
+  globalTarget:  View[Option[SiderealTarget]]
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -29,7 +30,7 @@ object TargetEditor {
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        props.globalTarget.withCtx { implicit appCtx =>
+        AppCtx.withCtx { implicit appCtx =>
           SubscriptionRenderMod[Subscription.Data, SiderealTarget](
             appCtx.clients.programs
               .subscribe(Subscription)(

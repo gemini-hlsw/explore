@@ -30,22 +30,22 @@ object Routing {
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 
-  val config: RouterWithPropsConfig[Page, ViewCtxIO[RootModel]] =
-    RouterWithPropsConfigDsl[Page, ViewCtxIO[RootModel]].buildConfig { dsl =>
+  val config: RouterWithPropsConfig[Page, View[RootModel]] =
+    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 
       (emptyRule
-        | staticRoute(root, HomePage) ~> renderP(viewCtx => HomeComponent(viewCtx))
-        | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(viewCtx =>
-          HomeComponent(viewCtx)
+        | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
+        | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(view =>
+          HomeComponent(view)
         ))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {
-          case (_, ObsPage(obsId), viewCtx) =>
-            viewCtx.zoomL(RootModel.obsId).set(Option(obsId)).runInCB *>
+          case (_, ObsPage(obsId), view) =>
+            view.zoomL(RootModel.obsId).set(Option(obsId)).runInCB *>
               Callback.log(s"id:1 $obsId")
-          case _                            => Callback.empty
+          case _                         => Callback.empty
         }
         .renderWithP(layout)
         .logToConsole
@@ -53,7 +53,7 @@ object Routing {
 
   private def layout(
     c: RouterCtl[Page],
-    r: ResolutionWithProps[Page, ViewCtxIO[RootModel]]
-  ): ViewCtxIO[RootModel] => VdomElement =
+    r: ResolutionWithProps[Page, View[RootModel]]
+  ): View[RootModel] => VdomElement =
     OTLayout(c, r)
 }

@@ -18,9 +18,9 @@ object ExploreMain extends AppMain {
 
   private val router = RouterWithProps(BaseUrl.fromWindowOrigin, Routing.config)
 
-  override def rootComponent(viewCtx: ViewCtxIO[RootModel]): VdomElement =
+  override def rootComponent(view: View[RootModel]): VdomElement =
     <.div(
-      router(viewCtx)
+      router(view)
     )
 
 }
