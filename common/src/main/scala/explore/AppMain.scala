@@ -37,6 +37,13 @@ object AppCtx extends AppRootContext[AppContextIO]
 
 trait AppMain extends IOApp {
 
+  LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
+  implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
+
+  implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
+
+  implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
+
   def rootComponent(
     view: View[RootModel]
   ): VdomElement
@@ -46,13 +53,6 @@ trait AppMain extends IOApp {
 
   override final def run(args: List[String]): IO[ExitCode] = {
     ReusabilityOverlay.overrideGloballyInDev()
-
-    LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
-    implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
-
-    implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
-
-    implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
     val initialModel = RootModel(tabs =
       Zipper.fromNel(
