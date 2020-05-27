@@ -16,13 +16,13 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class UndoRegion[M](
-  renderer: Undoer.Context[IO, M] => VdomElement
+  renderer: Undoer.Context[IO, M] => VdomNode
 ) extends ReactProps(UndoRegion.component)
     with UndoRegion.Props[IO, M]
 
 object UndoRegion {
   protected trait Props[F[_], M] {
-    val renderer: Undoer.Context[F, M] => VdomElement
+    val renderer: Undoer.Context[F, M] => VdomNode
   }
 
   @Lenses
@@ -50,7 +50,7 @@ object UndoRegion {
 
     override lazy val redoStack = State.redoStack
 
-    def render(props: Props[F, M], state: State[F, M]): VdomElement =
+    def render(props: Props[F, M], state: State[F, M]): VdomNode =
       // println(s"UNDO STACK: [${state.undoStack}]")
       // println(s"REDO STACK: [${state.redoStack}]")
       props.renderer(context(state))
