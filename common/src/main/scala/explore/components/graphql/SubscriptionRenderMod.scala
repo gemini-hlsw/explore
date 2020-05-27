@@ -64,8 +64,13 @@ object SubscriptionRenderMod {
     renderer:     Option[StreamRendererMod.Component[F, A]] = None
   )
 
-  implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.always
+  // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
+  implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =
+    Reusability.never
   implicit protected def stateReuse[F[_], D, A]: Reusability[State[F, D, A]] = Reusability.never
+
+  implicit protected def renderReuse[F[_], A]: Reusability[Pot[ViewF[F, A]] => VdomNode] =
+    Reusability.never
 
   protected def componentBuilder[F[_], D, A] =
     ScalaComponent

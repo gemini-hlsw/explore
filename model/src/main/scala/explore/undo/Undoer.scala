@@ -7,6 +7,7 @@ import cats.FlatMap
 import cats.Monoid
 import cats.effect.Sync
 import cats.implicits._
+import crystal.implicits._
 import monocle.Lens
 
 object Undoer {
@@ -40,7 +41,7 @@ object Undoer {
   type Redo[F[_], M] = M => F[Unit]
 }
 
-abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
+abstract class Undoer[F[_]: Sync, M] {
   type Stacks
 
   val getStacks: F[Stacks]
@@ -101,7 +102,9 @@ abstract class Undoer[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]) {
     popFrom: F[Option[Restorer[F, M]]],
     pushTo:  Restorer[F, M] => F[Unit]
   )(m:       M): F[Unit] =
-    popFrom.flatMap(_.map(restorer => restorer.restore(m).flatMap(pushTo)).orEmpty)
+    popFrom.flatMap(
+      _.map(restorer => restorer.restore(m).flatMap(pushTo)).orUnit
+    )
 
   protected val undo: Undoer.Undo[F, M] =
     restore(popUndo, pushRedo)

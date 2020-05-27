@@ -12,6 +12,8 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
+import explore.model.reusability._
+import explore.model.show._
 import explore.target.TargetQueries._
 import gem.Observation
 import gsp.math.Angle
@@ -30,11 +32,17 @@ import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
 import explore.AppCtx
+import explore.model.Conditions
+import explore.undo.Undoer
+import scala.reflect.ClassTag
+import gem.util.Enumerated
+import cats.Show
 
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  globalTarget:  View[Option[SiderealTarget]]
+  globalTarget:  View[Option[SiderealTarget]],
+  conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -42,6 +50,9 @@ final case class TargetBody(
 
 object TargetBody extends ModelOptics {
   type Props = TargetBody
+
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+
   val AladinComp = Aladin.component
 
   class Backend(bs: BackendScope[Props, Unit]) {
@@ -122,6 +133,17 @@ object TargetBody extends ModelOptics {
               )
               .toCallback
 
+          def renderCond[A: Show](name: String, a: A): VdomNode =
+            <.div(s"$name: ${a.show}")
+
+          def renderConds(conditions: Conditions): VdomNode =
+            <.div(
+              renderCond("Image Quality", conditions.iq),
+              renderCond("Cloud Cover", conditions.cc),
+              renderCond("Water Vapor", conditions.wv),
+              renderCond("Sky Background", conditions.sb)
+            )
+
           <.div(
             ^.height := "100%",
             ^.width := "100%",
@@ -131,7 +153,8 @@ object TargetBody extends ModelOptics {
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
-                    .withKey(coordinatesKey(props.target.get))
+                    .withKey(coordinatesKey(props.target.get)),
+                  props.conditions.whenDefined(renderConds)
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(ref) {

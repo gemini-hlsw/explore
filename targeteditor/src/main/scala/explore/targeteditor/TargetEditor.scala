@@ -4,9 +4,11 @@
 package explore.target
 
 import cats.implicits._
+import crystal.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.SiderealTarget
+import explore.model.reusability._
 import explore.target.TargetQueries._
 import gem.Observation
 import japgolly.scalajs.react.CatsReact._
@@ -15,16 +17,18 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
 import explore.AppCtx
+import explore.model.Conditions
 
 final case class TargetEditor(
   observationId: Observation.Id,
-  globalTarget:  View[Option[SiderealTarget]]
+  globalTarget:  View[Option[SiderealTarget]],
+  conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
   type Props = TargetEditor
 
-  protected implicit val targetReuse: Reusability[SiderealTarget] = Reusability.byEq
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val component =
     ScalaComponent
@@ -38,7 +42,7 @@ object TargetEditor {
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
           ) { target =>
-            TargetBody(props.observationId, target, props.globalTarget)
+            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
           }
         }
       }

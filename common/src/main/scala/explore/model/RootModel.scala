@@ -7,6 +7,7 @@ import cats.effect._
 import cats.implicits._
 import clue._
 import crystal.react.StreamRenderer
+import explore.model.reusability._
 import gem.Observation
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
@@ -21,9 +22,6 @@ case class RootModel(
   target: Option[SiderealTarget] = None
 )
 object RootModel {
-  import explore.model.reusability._
-  implicit val observationIdReuse: Reusability[Observation.Id] =
-    Reusability.never // This is just for temporary testing!!!!
   implicit val reuse: Reusability[RootModel] = Reusability.derive
 }
 

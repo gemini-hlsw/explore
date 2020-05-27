@@ -5,6 +5,7 @@ package explore.target
 
 import scala.scalajs.js.annotation._
 
+import cats.implicits._
 import crystal.implicits._
 import explore.AppMain
 import explore._
@@ -23,7 +24,10 @@ object Test extends AppMain {
       Observation
         .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(obsId, view.zoomL(RootModel.target)))
+    <.div(^.height := "100vh",
+          ^.width := "100%",
+          TargetEditor(obsId, view.zoomL(RootModel.target), none)
+    )
   }
 
 }
