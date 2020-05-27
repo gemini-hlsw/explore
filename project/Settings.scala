@@ -6,27 +6,28 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats             = "2.1.1"
-    val catsEffect       = "2.1.3"
-    val circe            = "0.13.0"
-    val clue             = "0.1.0"
-    val crystal          = "0.5.2"
-    val discipline       = "1.0.2"
-    val disciplineMUnit  = "0.2.2"
-    val gspCore          = "0.2.1"
-    val gspMathTestKit   = "0.2.1"
-    val gppUI            = "0.1.5"
-    val log4Cats         = "1.1.1"
-    val log4CatsLogLevel = "0.0.2"
-    val monocle          = "2.0.4"
-    val mouse            = "0.25"
-    val mUnit            = "0.7.9"
-    val reactAladin      = "0.1.2"
-    val reactCommon      = "0.9.1"
-    val reactGridLayout  = "0.5.3"
-    val reactSemanticUI  = "0.5.6"
-    val reactSizeMe      = "0.4.3"
-    val scalaJsReact     = "1.7.0"
+    val cats              = "2.1.1"
+    val catsEffect        = "2.1.3"
+    val circe             = "0.13.0"
+    val clue              = "0.1.1"
+    val crystal           = "0.5.2"
+    val discipline        = "1.0.2"
+    val disciplineMUnit   = "0.2.2"
+    val gspCore           = "0.2.1"
+    val gspMathTestKit    = "0.2.1"
+    val gppUI             = "0.1.5"
+    val log4Cats          = "1.1.1"
+    val log4CatsLogLevel  = "0.0.2"
+    val monocle           = "2.0.4"
+    val mouse             = "0.25"
+    val mUnit             = "0.7.9"
+    val reactAladin       = "0.1.2"
+    val reactAtlasKitTree = "0.2.3"
+    val reactCommon       = "0.9.1"
+    val reactGridLayout   = "0.5.3"
+    val reactSemanticUI   = "0.5.6"
+    val reactSizeMe       = "0.4.3"
+    val scalaJsReact      = "1.7.0"
   }
 
   object Libraries {
@@ -146,6 +147,14 @@ object Settings {
       deps(
         "io.github.cquiroz.react" %%% "react-aladin"
       )(reactAladin)
+    )
+
+    val ReactAtlasKitTree = Def.setting(
+      deps(
+        "com.rpiaggio" %%% "scalajs-react-atlaskit-tree"
+      )(
+        reactAtlasKitTree
+      )
     )
 
     val ReactCommon = Def.setting(

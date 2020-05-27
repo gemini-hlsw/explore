@@ -24,7 +24,7 @@ import monocle.function.Cons.headOption
 import js.annotation._
 import explore.AppCtx
 
-@JSExportTopLevel("Test")
+@JSExportTopLevel("CondTest")
 object Test extends AppMain {
 
   private val obsId = Observation

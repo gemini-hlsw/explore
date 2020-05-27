@@ -7,11 +7,15 @@ import cats.implicits._
 import cats.kernel.Eq
 import monocle.Getter
 import monocle.Lens
+import monocle.Iso
 
 class ListMod[F[_], A, Id: Eq](protected val idLens: Lens[A, Id])
-    extends IndexedColMod[F, List, Int, A, Id] {
+    extends IndexedCollMod[F, List, Int, A, cats.Id, Id] {
 
-  def getterForId(id: Id): Getter[List[A], Option[(A, Int)]] =
+  override protected val valueLens: Lens[A, A] = Iso.id.asLens
+  override protected val pureNode              = identity
+
+  override def getterForId(id: Id): Getter[List[A], Option[(A, Int)]] =
     Getter[List[A], Option[(A, Int)]](list =>
       list.indexWhere(a => Eq[Id].eqv(id, idLens.get(a))).some.filter(_ >= 0).map(i => (list(i), i))
     )
