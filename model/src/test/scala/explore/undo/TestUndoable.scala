@@ -17,9 +17,7 @@ case class TestStacks[F[_], A](
   redoStack: Undoer.Stack[F, A] = List.empty
 )
 
-class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]])(implicit
-  monoid:                               Monoid[F[Unit]]
-) extends Undoer[F, M] {
+class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]]) extends Undoer[F, M] {
   type Stacks = TestStacks[F, M]
 
   override lazy val getStacks: F[Stacks] = stacks.get
@@ -35,7 +33,7 @@ class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]])(implicit
 }
 
 object TestUndoer {
-  def apply[F[_]: Sync, M](implicit monoid: Monoid[F[Unit]]): F[TestUndoer[F, M]] =
+  def apply[F[_]: Sync, M]: F[TestUndoer[F, M]] =
     for {
       stacks <- Ref[F].of(TestStacks[F, M]())
     } yield new TestUndoer(stacks)
@@ -75,8 +73,8 @@ class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M])
 
 object TestUndoable {
   def apply[F[_]: Sync, M](
-    model:           Ref[F, M]
-  )(implicit monoid: Monoid[F[Unit]]): F[TestUndoable[F, M]] =
+    model: Ref[F, M]
+  ): F[TestUndoable[F, M]] =
     for {
       undoer <- TestUndoer[F, M]
     } yield new TestUndoable(model, undoer)
