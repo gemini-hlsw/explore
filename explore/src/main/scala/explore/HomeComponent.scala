@@ -85,7 +85,7 @@ object HomeComponent {
                   ^.key := "target",
                   ^.cls := "tile",
                   Tile("Target Position")(
-                    TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get)
+                    TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get.some)
                   )
                 )
               )

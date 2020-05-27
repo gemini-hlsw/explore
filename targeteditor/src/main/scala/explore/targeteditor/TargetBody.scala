@@ -42,7 +42,7 @@ final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
   globalTarget:  View[Option[SiderealTarget]],
-  conditions:    Conditions
+  conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -154,7 +154,7 @@ object TargetBody extends ModelOptics {
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
                     .withKey(coordinatesKey(props.target.get)),
-                  renderConds(props.conditions)
+                  props.conditions.whenDefined(renderConds)
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(ref) {

@@ -22,7 +22,7 @@ import explore.model.Conditions
 final case class TargetEditor(
   observationId: Observation.Id,
   globalTarget:  View[Option[SiderealTarget]],
-  conditions:    Conditions
+  conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
