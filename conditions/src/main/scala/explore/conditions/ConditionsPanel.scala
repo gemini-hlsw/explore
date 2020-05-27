@@ -16,6 +16,7 @@ import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
+import explore.model.show._
 import gem.Observation
 import gem.util.Enumerated
 import gpp.ui.forms.EnumSelect
@@ -39,18 +40,6 @@ object ConditionsPanel {
   type Props = ConditionsPanel
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
-  implicit val showSkyBackground: Show[SkyBackground] =
-    Show.show(_.label)
-
-  implicit val showWaterVapor: Show[WaterVapor] =
-    Show.show(_.label)
-
-  implicit val showCloudCover: Show[CloudCover] =
-    Show.show(_.label)
-
-  implicit val showImageQuality: Show[ImageQuality] =
-    Show.show(_.label)
 
   protected val component =
     ScalaComponent
