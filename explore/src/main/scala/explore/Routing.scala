@@ -25,8 +25,6 @@ object Routing {
   private val obsIdP: Prism[String, ObsPage] =
     Prism[String, ObsPage] {
       case s =>
-        println(s)
-        println(Observation.Id.fromString(s))
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 

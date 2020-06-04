@@ -27,9 +27,33 @@ body {
   background: darkgray;
 }
 
-.sidetab {
-  // transform: rotate(-90deg);
-  writing-mode: sideways-lr;
+// Main grid
+.main-grid {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 50px auto;
+  grid-template-rows: 42px auto;
+  grid-template-areas:
+    "header header"
+    "sidebar body";
+}
+
+.main-body {
+  grid-area: body;
+}
+
+.main-title {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+}
+
+.main-header {
+  grid-area: header;
+}
+
+.sidetabs {
+  grid-area: sidebar;
+  background: darkgrey;
 }
 
 // React grid layout
@@ -113,10 +137,7 @@ body {
   cursor: se-resize;
 }
 
-.pushable > .pusher {
-  width: ~"calc(100% - @{wideWidth})";
-}
-
+// Form propreties
 .gpp-form {
   padding-top: 1em;
 }
@@ -128,4 +149,56 @@ body {
 
 .react-aladin {
   margin: 2px;
+}
+
+// Side tabs
+.sidetabs-body {
+  background: red;
+//  display: flex;
+  // flex-direction: column;
+  // justify-content: flex-start;
+  // flex-wrap: nowrap;
+  // align-items: center;
+  // position: relative;
+  height: 100%;
+}
+
+.vertical-button2 {
+  writing-mode: vertical-rl;
+  display: block;
+  transform: rotate(-90deg);
+}
+.vertical-button {
+  // In an ideal world this would do the trick but chrome doesn't support this
+  // writing-mode: vertical-rl;
+  margin-top: -50%;
+  // padding: 100%;
+  // writing-mode: vertical-rl;
+  // display: inline-block;
+    display: block;
+    // align-self: center;
+  transform-origin: top left;
+  transform: rotate(-90deg) translateX(-100%) translateY(20%);
+  // transform: rotate(180deg);
+}
+
+.vertical-button-group {
+  // writing-mode: sideways-lr;
+  // background: blue;
+  // transform: rotate(-90deg) translateX(-100%);// translateX(-50%) translateY(5%);
+  // width: 50%;
+  // display: inline-block;
+  // transform: rotate(-90deg) translateX(-200%);
+  // align-self: stretch;
+  margin-top: 0px;
+  // z-index: -999;
+}
+
+.rotation-wrapper-outer {
+  display: table;
+    // align-self: center;
+}
+.rotation-wrapper-inner {
+  padding: 50% 0;
+  height: 0;
 }
