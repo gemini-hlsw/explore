@@ -3,8 +3,6 @@
 
 package explore
 
-import scala.scalajs.js
-
 import cats.Id
 import cats.effect.ExitCode
 import cats.effect.IO
@@ -27,6 +25,7 @@ import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
 import crystal.AppRootContext
 
+import scala.scalajs.js
 import js.annotation._
 
 object AppCtx extends AppRootContext[AppContextIO]

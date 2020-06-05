@@ -17,8 +17,6 @@ object GPPStyles {
 
   val SideTabsBody: Css         = Css("sidetabs-body")
   val VerticalButton: Css       = Css("vertical-button")
-  val VerticalButton2: Css      = Css("vertical-button2")
-  val VerticalButtonGroup: Css  = Css("vertical-button-group")
   val RotationWrapperOuter: Css = Css("rotation-wrapper-outer")
   val RotationWrapperInner: Css = Css("rotation-wrapper-inner")
 }

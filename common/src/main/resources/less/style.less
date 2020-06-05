@@ -1,5 +1,8 @@
 @import "~theme/modules/sidebar.variables";
 
+// vertical buttons
+@import "verticalbuttons.less";
+
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 
@@ -153,52 +156,6 @@ body {
 
 // Side tabs
 .sidetabs-body {
-  background: red;
-//  display: flex;
-  // flex-direction: column;
-  // justify-content: flex-start;
-  // flex-wrap: nowrap;
-  // align-items: center;
-  // position: relative;
   height: 100%;
 }
 
-.vertical-button2 {
-  writing-mode: vertical-rl;
-  display: block;
-  transform: rotate(-90deg);
-}
-.vertical-button {
-  // In an ideal world this would do the trick but chrome doesn't support this
-  // writing-mode: vertical-rl;
-  margin-top: -50%;
-  // padding: 100%;
-  // writing-mode: vertical-rl;
-  // display: inline-block;
-    display: block;
-    // align-self: center;
-  transform-origin: top left;
-  transform: rotate(-90deg) translateX(-100%) translateY(20%);
-  // transform: rotate(180deg);
-}
-
-.vertical-button-group {
-  // writing-mode: sideways-lr;
-  // background: blue;
-  // transform: rotate(-90deg) translateX(-100%);// translateX(-50%) translateY(5%);
-  // width: 50%;
-  // display: inline-block;
-  // transform: rotate(-90deg) translateX(-200%);
-  // align-self: stretch;
-  margin-top: 0px;
-  // z-index: -999;
-}
-
-.rotation-wrapper-outer {
-  display: table;
-    // align-self: center;
-}
-.rotation-wrapper-inner {
-  padding: 50% 0;
-  height: 0;
-}

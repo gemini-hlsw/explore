@@ -3,8 +3,9 @@
 
 package explore
 
-import explore.model._
+import cats.implicits._
 import explore.components.ui.GPPStyles
+import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -47,7 +48,15 @@ object OTLayout {
           ),
           <.div(
             GPPStyles.SideTabs,
-            SideTabs(p.c)
+            SideTabs(p.c,
+                     SideButton("Overview").some,
+                     List(
+                       SideButton("Observations"),
+                       SideButton("Target"),
+                       SideButton("Configurations"),
+                       SideButton("Constraints")
+                     )
+            )
           ),
           <.div(
             GPPStyles.MainBody,

@@ -6,6 +6,7 @@ package explore
 import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
+import explore.components.graphql.SubscriptionRenderMod
 import explore.conditions.ConditionsPanel
 import explore.conditions.ConditionsQueries._
 import explore.implicits._
@@ -13,6 +14,7 @@ import explore.model.reusability._
 import explore.target.TargetEditor
 import gem.Observation
 import gem.ProgramId
+import gem.util.Enumerated
 import gsp.math.Index
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
@@ -23,8 +25,6 @@ import react.gridlayout._
 import react.sizeme._
 
 import model._
-import explore.components.graphql.SubscriptionRenderMod
-import gem.util.Enumerated
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
