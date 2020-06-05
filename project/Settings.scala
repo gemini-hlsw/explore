@@ -149,7 +149,8 @@ object Settings {
 
     val ReactCommon = Def.setting(
       deps(
-        "io.github.cquiroz.react" %%% "common"
+        "io.github.cquiroz.react" %%% "common",
+        "io.github.cquiroz.react" %%% "cats"
       )(reactCommon)
     )
 

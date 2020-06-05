@@ -1,5 +1,8 @@
 @import "~theme/modules/sidebar.variables";
 
+// vertical buttons
+@import "verticalbuttons.less";
+
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 
@@ -27,9 +30,33 @@ body {
   background: darkgray;
 }
 
-.sidetab {
-  // transform: rotate(-90deg);
-  writing-mode: sideways-lr;
+// Main grid
+.main-grid {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 50px auto;
+  grid-template-rows: 42px auto;
+  grid-template-areas:
+    "header header"
+    "sidebar body";
+}
+
+.main-body {
+  grid-area: body;
+}
+
+.main-title {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+}
+
+.main-header {
+  grid-area: header;
+}
+
+.sidetabs {
+  grid-area: sidebar;
+  background: darkgrey;
 }
 
 // React grid layout
@@ -113,10 +140,7 @@ body {
   cursor: se-resize;
 }
 
-.pushable > .pusher {
-  width: ~"calc(100% - @{wideWidth})";
-}
-
+// Form propreties
 .gpp-form {
   padding-top: 1em;
 }
@@ -129,3 +153,9 @@ body {
 .react-aladin {
   margin: 2px;
 }
+
+// Side tabs
+.sidetabs-body {
+  height: 100%;
+}
+

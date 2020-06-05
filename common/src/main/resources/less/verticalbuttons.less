@@ -1,0 +1,20 @@
+
+// Styles to wrap buttons so they are rotated but respect their layout
+// See:
+// https://stackoverflow.com/questions/16301625/rotated-elements-in-css-that-affect-their-parents-height-correctly
+.vertical-button {
+  // In an ideal world this would do the trick but chrome doesn't support this
+  // writing-mode: vertical-rl;
+  margin-top: -50%;
+  display: block;
+  transform-origin: top left;
+  transform: rotate(-90deg) translateX(-100%) translateY(20%);
+}
+
+.rotation-wrapper-outer {
+  display: table;
+}
+.rotation-wrapper-inner {
+  padding: 50% 0;
+  height: 0;
+}
