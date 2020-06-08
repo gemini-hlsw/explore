@@ -24,7 +24,7 @@ object Settings {
     val reactAladin      = "0.1.1"
     val reactCommon      = "0.9.1"
     val reactGridLayout  = "0.5.3"
-    val reactSemanticUI  = "0.5.5"
+    val reactSemanticUI  = "0.5.6"
     val reactSizeMe      = "0.4.3"
     val scalaJsReact     = "1.7.0"
   }
