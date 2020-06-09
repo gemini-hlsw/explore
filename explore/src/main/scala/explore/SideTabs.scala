@@ -36,27 +36,6 @@ final case class SideTabs(
 object SideTabs {
   type Props = SideTabs
 
-  // TODO Move this to semanticui-react
-  val allWidths: Map[Int, SemanticWidth] =
-    Map(
-      1  -> One,
-      2  -> Two,
-      3  -> Three,
-      4  -> Four,
-      5  -> Five,
-      6  -> Six,
-      7  -> Seven,
-      8  -> Eight,
-      9  -> Nine,
-      10 -> Ten,
-      11 -> Eleven,
-      12 -> Twelve,
-      13 -> Thirteen,
-      14 -> Fourteen,
-      15 -> Fifteen,
-      16 -> Sixteen
-    )
-
   implicit val reuse: Reusability[Props] = Reusability.caseClassExcept("router")
 
   private val component =
@@ -69,7 +48,7 @@ object SideTabs {
           p.topButton.map(b => VerticalSection()(Button(b.title))),
           Divider(hidden = true),
           VerticalSection()(
-            ButtonGroup(widths = allWidths.get(p.sectionButtons.length).orUndefined)(
+            ButtonGroup(widths = widthOf(p.sectionButtons.length))(
               // Due to the css rotations these need to be in reversed order
               p.sectionButtons.reverse.map(b => Button(b.title)).toTagMod
             )
