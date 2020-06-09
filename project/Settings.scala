@@ -13,7 +13,7 @@ object Settings {
     val crystal          = "0.5.1"
     val discipline       = "1.0.2"
     val disciplineMUnit  = "0.2.2"
-    val gspCore          = "0.2.0"
+    val gspCore          = "0.2.1"
     val gspMathTestKit   = "0.2.0"
     val gppUI            = "0.1.4"
     val log4Cats         = "1.1.1"
