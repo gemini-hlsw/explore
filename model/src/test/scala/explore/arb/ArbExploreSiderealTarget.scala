@@ -3,13 +3,13 @@
 
 package explore.model.arb
 
+import explore.model.ExploreSiderealTarget
+import explore.model.SiderealTarget
+import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import gem.arb.ArbEnumerated._
-import explore.model.SiderealTarget
-import explore.model.ExploreSiderealTarget
 
 trait ArbExploreSiderealTarget {
   import explore.model.arb.ArbSiderealTarget._

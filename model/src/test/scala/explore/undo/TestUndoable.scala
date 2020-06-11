@@ -3,13 +3,13 @@
 
 package explore.undo
 
-import explore.undo.Undoer
-import cats.effect.Sync
-import cats.Monoid
 import cats.FlatMap
-import cats.implicits._
-import monocle.macros.Lenses
+import cats.Monoid
+import cats.effect.Sync
 import cats.effect.concurrent.Ref
+import cats.implicits._
+import explore.undo.Undoer
+import monocle.macros.Lenses
 
 @Lenses
 case class TestStacks[F[_], A](

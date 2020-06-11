@@ -4,19 +4,18 @@
 package explore.components.graphql
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.effect.Timer
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import explore.View
 import crystal.ViewF
 import crystal.data.Pot
 import crystal.data.react._
 import crystal.react.StreamRendererMod
 import crystal.react.implicits._
+import explore.View
 import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
@@ -26,6 +25,8 @@ import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
+
+import scala.language.postfixOps
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],

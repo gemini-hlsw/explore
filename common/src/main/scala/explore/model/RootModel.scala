@@ -9,6 +9,7 @@ import clue._
 import crystal.react.StreamRenderer
 import explore.model.reusability._
 import gem.Observation
+import gpp.util.Zipper
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import monocle.macros.Lenses
@@ -19,7 +20,8 @@ import sttp.model.Uri._
 @Lenses
 case class RootModel(
   obsId:  Option[Observation.Id] = None,
-  target: Option[SiderealTarget] = None
+  target: Option[SiderealTarget] = None,
+  tabs:   Zipper[SideButton]
 )
 object RootModel {
   implicit val reuse: Reusability[RootModel] = Reusability.derive
@@ -31,10 +33,10 @@ case class AppConfig(
     uri"wss://explore-hasura.herokuapp.com/v1/graphql" //AppConfig.wsBaseUri.path("/api/programs/v1/graphql"),
 )
 object AppConfig {
-  lazy val baseUri: Uri = {
-    val location = dom.window.location.toString
-    Uri.parse(location).getOrElse(throw new Exception(s"Could not parse URL [$location]"))
-  }
+  // lazy val baseUri: Uri = {
+  //   val location = dom.window.location.toString
+  //   Uri.parse(location).getOrElse(throw new Exception(s"Could not parse URL [$location]"))
+  // }
 
   /*lazy val wsBaseUri: Uri = {
     val uri = baseUri

@@ -4,12 +4,12 @@
 package explore.model
 
 import cats.implicits._
-import munit.DisciplineSuite
-import monocle.law.discipline.LensTests
-import gsp.math.arb.ArbRightAscension
-import gsp.math.arb.ArbProperMotion
-import gsp.math.arb.ArbDeclination
 import explore.model.arb.all._
+import gsp.math.arb.ArbDeclination
+import gsp.math.arb.ArbProperMotion
+import gsp.math.arb.ArbRightAscension
+import monocle.law.discipline.LensTests
+import munit.DisciplineSuite
 import munit.DisciplineSuite
 
 class ModelOpticsSuite
