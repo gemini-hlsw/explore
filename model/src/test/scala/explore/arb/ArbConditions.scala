@@ -3,13 +3,13 @@
 
 package explore.model.arb
 
+import explore.model.Conditions
+import explore.model.enum._
+import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import explore.model.enum._
-import explore.model.Conditions
-import gem.arb.ArbEnumerated._
 
 trait ArbConditions {
 

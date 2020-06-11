@@ -6,8 +6,11 @@ package explore
 import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
-import explore.Page
+import explore.model.Page
+import explore.model.SideButton
+import explore.model.reusability._
 import explore.components.ui.GPPStyles
+import gpp.util.Zipper
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,72 +23,35 @@ import react.semanticui.elements.divider.Divider
 import react.semanticui.sizes._
 import react.semanticui.widths._
 
-final case class SideButton(title: String)
-
-object SideButton {
-  implicit val reuse: Reusability[SideButton] =
-    Reusability.derive
-}
-
-final case class SideTabs(
-  router:         RouterCtl[Page],
-  topButton:      Option[SideButton],
-  sectionButtons: List[SideButton]
-) extends ReactProps[SideTabs](SideTabs.component)
+final case class SideTabs[P](
+  router: RouterCtl[P],
+  tabs:   Zipper[SideButton]
+) extends ReactProps[SideTabs[_]](SideTabs.component)
 
 object SideTabs {
-  type Props = SideTabs
+  type Props = SideTabs[_]
 
-  implicit val reuse: Reusability[Props] = Reusability.caseClassExcept("router")
+  implicit val reuse: Reusability[Props] = Reusability.by(_.tabs)
 
   private val component =
     ScalaComponent
       .builder[Props]
       .stateless
-      .render_P(p =>
+      .render_P { p =>
+        val tabsL = p.tabs.toNel
+        val focus = p.tabs.focus
         <.div(
           GPPStyles.SideTabsBody,
-          p.topButton.map(b => VerticalSection()(Button(b.title))),
+          VerticalSection()(Button(active = tabsL.head === focus)(tabsL.head.title)),
           Divider(hidden = true),
           VerticalSection()(
-            ButtonGroup(widths = widthOf(p.sectionButtons.length))(
+            ButtonGroup(widths = widthOf(tabsL.length))(
               // Due to the css rotations these need to be in reversed order
-              p.sectionButtons.reverse.map(b => Button(b.title)).toTagMod
+              tabsL.tail.reverse.map(b => Button(active = b === focus)(b.title)).toTagMod
             )
           )
         )
-      )
-      .configure(Reusability.shouldComponentUpdate)
-      .build
-}
-
-/**
-  * Component that uses css tricks to support properly rotated components
-  * respecting the layout. see:
-  * https://stackoverflow.com/questions/16301625/rotated-elements-in-css-that-affect-their-parents-height-correctly
-  * It requires css to work properly
-  */
-final case class VerticalSection()
-    extends ReactPropsWithChildren[VerticalSection](VerticalSection.component)
-
-object VerticalSection {
-  type Props = VerticalSection
-
-  implicit val reuse: Reusability[Props] = Reusability.always
-
-  private val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_C(c =>
-        <.div(
-          GPPStyles.RotationWrapperOuter,
-          <.div(
-            GPPStyles.RotationWrapperInner,
-            <.div(GPPStyles.VerticalButton, c)
-          )
-        )
-      )
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

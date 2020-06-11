@@ -3,29 +3,34 @@
 
 package explore
 
+import scala.scalajs.js
+
 import cats.Id
+import cats.data.NonEmptyList
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.implicits._
 import cats.effect._
+import cats.implicits._
 import clue.Backend
 import clue.StreamingBackend
 import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
+import crystal.AppRootContext
 import crystal.react.AppRoot
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreSiderealTarget
 import explore.model.RootModel
+import explore.model.SideButton
+import gpp.util.Zipper
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
+import org.scalactic.anyvals.NonEmptyMap
 import org.scalajs.dom
-import crystal.AppRootContext
 
-import scala.scalajs.js
 import js.annotation._
 
 object AppCtx extends AppRootContext[AppContextIO]
@@ -49,7 +54,16 @@ trait AppMain extends IOApp {
 
     implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
-    val initialModel = RootModel()
+    val initialModel = RootModel(tabs =
+      Zipper.fromNel(
+        NonEmptyList.of(SideButton("Overview"),
+                        SideButton("Observations"),
+                        SideButton("Target"),
+                        SideButton("Configurations"),
+                        SideButton("Constraints")
+        )
+      )
+    )
 
     for {
       ctx <- AppContext.from[IO](AppConfig())

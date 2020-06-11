@@ -86,7 +86,8 @@ object Settings {
 
     val GSPCore = Def.setting(
       deps(
-        "edu.gemini" %%% "gsp-core-model"
+        "edu.gemini" %%% "gsp-core-model",
+        "edu.gemini" %%% "gpp-core-util"
       )(gspCore)
     )
 

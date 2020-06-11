@@ -5,6 +5,8 @@ package explore
 
 import crystal.react.implicits._
 import explore.model._
+import explore.model.Page
+import explore.model.Page._
 import gem.Observation
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
@@ -15,10 +17,6 @@ import monocle.Prism
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
 case object LabelsElement extends ElementItem
-
-sealed trait Page    extends Product with Serializable
-case object HomePage extends Page
-final case class ObsPage(obsId: Observation.Id) extends Page
 
 object Routing {
 

@@ -11,4 +11,5 @@ class ModelSuite extends DisciplineSuite {
   checkAll("Eq[Conditions]", EqTests[Conditions].eqv)
   checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
   checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)
+  checkAll("Eq[SideButton]", EqTests[SideButton].eqv)
 }

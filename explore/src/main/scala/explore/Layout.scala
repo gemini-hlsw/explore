@@ -48,15 +48,7 @@ object OTLayout {
           ),
           <.div(
             GPPStyles.SideTabs,
-            SideTabs(p.c,
-                     SideButton("Overview").some,
-                     List(
-                       SideButton("Observations"),
-                       SideButton("Target"),
-                       SideButton("Configurations"),
-                       SideButton("Constraints")
-                     )
-            )
+            SideTabs(p.c, p.view.zoomL(RootModel.tabs).get)
           ),
           <.div(
             GPPStyles.MainBody,
