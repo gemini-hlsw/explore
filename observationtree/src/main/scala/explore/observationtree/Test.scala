@@ -17,9 +17,11 @@ import cats.effect.SyncIO
 import crystal.react.StreamRendererMod
 import explore.model.reusability._
 import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.extra.router.RouterLogic
+import explore.model.Page
 
 @JSExportTopLevel("ObsTreeTest")
-object Test extends AppMain {
+object Test extends AppMain with DummyRouting {
 
   val obsRef = SignallingRef
     .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)

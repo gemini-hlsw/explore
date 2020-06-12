@@ -7,6 +7,7 @@ import cats.effect._
 import cats.implicits._
 import clue._
 import crystal.react.StreamRenderer
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import gem.Observation
 import gpp.util.Zipper
@@ -16,12 +17,13 @@ import monocle.macros.Lenses
 import org.scalajs.dom
 import sttp.model.Uri
 import sttp.model.Uri._
+import japgolly.scalajs.react.extra.router.RouterCtl
 
 @Lenses
 case class RootModel(
   obsId:  Option[Observation.Id] = None,
   target: Option[SiderealTarget] = None,
-  tabs:   Zipper[SideButton]
+  tabs:   Zipper[AppTab]
 )
 object RootModel {
   implicit val reuse: Reusability[RootModel] = Reusability.derive
@@ -66,7 +68,8 @@ case class Actions[F[_]](
 
 case class AppContext[F[_]](
   clients:    Clients[F],
-  actions:    Actions[F]
+  actions:    Actions[F],
+  routerCtl:  RouterCtl[Page]
 )(implicit
   val cs:     ContextShift[F],
   val timer:  Timer[F],
@@ -78,11 +81,12 @@ case class AppContext[F[_]](
 
 object AppContext {
   def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: StreamingBackend](
-    config: AppConfig
+    config:    AppConfig,
+    routerCtl: RouterCtl[Page]
   ): F[AppContext[F]] =
     for {
       programsClient <- ApolloStreamingClient.of(config.programsURL)
       clients         = Clients(programsClient)
       actions         = Actions[F]()
-    } yield AppContext[F](clients, actions)
+    } yield AppContext[F](clients, actions, routerCtl)
 }

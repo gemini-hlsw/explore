@@ -3,6 +3,7 @@
 
 package explore
 
+import cats.implicits._
 import crystal.react.implicits._
 import explore.model._
 import explore.model.Page
@@ -38,13 +39,12 @@ object Routing {
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {
-          case (_, ObsPage(obsId), view) =>
-            view.zoomL(RootModel.obsId).set(Option(obsId)).runInCB *>
-              Callback.log(s"id:1 $obsId")
-          case _                         => Callback.empty
+          case (prev, next, view) if prev =!= next.some =>
+            view.zoomL(RootModelRouting.lens).set(next).runInCB
+          case _                                        => Callback.empty
         }
         .renderWithP(layout)
-        .logToConsole
+    // .logToConsole
     }
 
   private def layout(

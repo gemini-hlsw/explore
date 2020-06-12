@@ -141,7 +141,7 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactSizeMe.value
   )
-  .dependsOn(conditions, targeteditor)
+  .dependsOn(conditions, targeteditor, observationtree)
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
