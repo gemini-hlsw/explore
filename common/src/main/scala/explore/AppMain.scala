@@ -23,6 +23,7 @@ import explore.model.AppContext
 import explore.model.ExploreSiderealTarget
 import explore.model.RootModel
 import explore.model.enum.AppTab
+import explore.model.reusability._
 import gpp.util.Zipper
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
