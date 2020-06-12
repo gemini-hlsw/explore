@@ -17,7 +17,6 @@ import monocle.macros.Lenses
 import org.scalajs.dom
 import sttp.model.Uri
 import sttp.model.Uri._
-import japgolly.scalajs.react.extra.router.RouterCtl
 
 @Lenses
 case class RootModel(
@@ -68,8 +67,7 @@ case class Actions[F[_]](
 
 case class AppContext[F[_]](
   clients:    Clients[F],
-  actions:    Actions[F],
-  routerCtl:  RouterCtl[Page]
+  actions:    Actions[F]
 )(implicit
   val cs:     ContextShift[F],
   val timer:  Timer[F],
@@ -81,12 +79,11 @@ case class AppContext[F[_]](
 
 object AppContext {
   def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: StreamingBackend](
-    config:    AppConfig,
-    routerCtl: RouterCtl[Page]
+    config: AppConfig
   ): F[AppContext[F]] =
     for {
       programsClient <- ApolloStreamingClient.of(config.programsURL)
       clients         = Clients(programsClient)
       actions         = Actions[F]()
-    } yield AppContext[F](clients, actions, routerCtl)
+    } yield AppContext[F](clients, actions)
 }

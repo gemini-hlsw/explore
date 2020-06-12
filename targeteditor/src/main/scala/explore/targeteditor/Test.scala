@@ -16,7 +16,7 @@ import gsp.math.Index
 import japgolly.scalajs.react.vdom.html_<^._
 
 @JSExportTopLevel("TargetTest")
-object Test extends AppMain with DummyRouting {
+object Test extends AppMain {
 
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
     val obsId =

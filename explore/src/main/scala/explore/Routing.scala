@@ -40,7 +40,8 @@ object Routing {
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {
           case (prev, next, view) if prev =!= next.some =>
-            view.zoomL(RootModelRouting.lens).set(next).runInCB
+            Callback.log(s"Routing.onPostRender triggered [$prev] => [$next]") >>
+              view.zoomL(RootModelRouting.lens).set(next).runInCB
           case _                                        => Callback.empty
         }
         .renderWithP(layout)

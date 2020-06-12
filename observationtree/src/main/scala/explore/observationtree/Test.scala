@@ -21,7 +21,7 @@ import japgolly.scalajs.react.extra.router.RouterLogic
 import explore.model.Page
 
 @JSExportTopLevel("ObsTreeTest")
-object Test extends AppMain with DummyRouting {
+object Test extends AppMain {
 
   val obsRef = SignallingRef
     .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)
