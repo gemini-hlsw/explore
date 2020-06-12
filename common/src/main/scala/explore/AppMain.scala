@@ -36,6 +36,9 @@ import japgolly.scalajs.react.extra.router.RouterLogic
 import explore.model.Page
 import japgolly.scalajs.react.extra.router.RouterCtl
 import gem.util.Enumerated
+import gem.Observation
+import gem.ProgramId
+import gsp.math.Index
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -52,18 +55,22 @@ trait AppMain extends IOApp {
     view: View[RootModel]
   ): VdomElement
 
-  protected def routerCtl: RouterCtl[Page]
-
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
     ReusabilityOverlay.overrideGloballyInDev()
 
-    val initialModel = RootModel(tabs = Zipper.fromNel(AppTab.all))
+    val initialModel = RootModel(
+      obsId =
+        Observation // TODO Remove this, it's here termporarily for testing URL automatic derivation.
+          .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+          .some,
+      tabs = Zipper.fromNel(AppTab.all)
+    )
 
     for {
-      ctx <- AppContext.from[IO](AppConfig(), routerCtl)
+      ctx <- AppContext.from[IO](AppConfig())
       _   <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup.some)

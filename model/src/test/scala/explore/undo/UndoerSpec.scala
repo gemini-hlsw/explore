@@ -16,6 +16,7 @@ import monocle.Lens
 import monocle.Setter
 import monocle.function.all._
 import monocle.macros.Lenses
+import monocle.macros.GenLens
 
 class UndoerSpec extends munit.FunSuite {
 
@@ -87,10 +88,13 @@ class UndoerSpec extends munit.FunSuite {
     } yield ()).unsafeToFuture()
   }
 
-  @Lenses
+  // @Lenses
   case class V(id: Int, s: String)
   object V {
     def apply(id: Int): V = V(id, id.toString)
+    // @Lenses doesn't seem to be working for some reason...
+    val id: Lens[V, Int]   = GenLens[V](_.id)
+    val s: Lens[V, String] = GenLens[V](_.s)
   }
 
   val vListMod = new ListModByIdEq[IO, V, Int](V.id)
@@ -271,6 +275,7 @@ class UndoerSpec extends munit.FunSuite {
       .setter
       .composeTraversal(each)
       .composeLens(first)
+      .composeLens(Node.value)
       .composeLens(V.s)
 
   test("TreeObjModPosUndoRedo") {

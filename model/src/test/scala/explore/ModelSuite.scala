@@ -6,10 +6,11 @@ package explore.model
 import cats.kernel.laws.discipline._
 import explore.model.arb.all._
 import munit.DisciplineSuite
+import explore.model.enum.AppTab
 
 class ModelSuite extends DisciplineSuite {
   checkAll("Eq[Conditions]", EqTests[Conditions].eqv)
   checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
   checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)
-  checkAll("Eq[SideButton]", EqTests[SideButton].eqv)
+  checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
 }
