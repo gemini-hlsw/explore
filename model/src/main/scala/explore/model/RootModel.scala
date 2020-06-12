@@ -6,15 +6,11 @@ package explore.model
 import cats.effect._
 import cats.implicits._
 import clue._
-import crystal.react.StreamRenderer
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import gem.Observation
 import gpp.util.Zipper
 import io.chrisdavenport.log4cats.Logger
-import japgolly.scalajs.react._
 import monocle.macros.Lenses
-import org.scalajs.dom
 import sttp.model.Uri
 import sttp.model.Uri._
 
@@ -24,9 +20,6 @@ case class RootModel(
   target: Option[SiderealTarget] = None,
   tabs:   Zipper[AppTab]
 )
-object RootModel {
-  implicit val reuse: Reusability[RootModel] = Reusability.derive
-}
 
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
@@ -52,10 +45,8 @@ object AppConfig {
 case class Clients[F[_]: ConcurrentEffect: Logger](
   programs: GraphQLStreamingClient[F]
 ) {
-  protected implicit val statusReuse: Reusability[StreamingClientStatus] = Reusability.derive
-
-  lazy val programsConnectionStatus =
-    StreamRenderer.build(programs.statusStream)
+  // lazy val programsConnectionStatus =
+  // StreamRenderer.build(programs.statusStream)
 
   def close(): F[Unit] =
     programs.close()

@@ -11,11 +11,13 @@ import japgolly.scalajs.react.Reusability
 import gem.util.Enumerated
 import gem.Observation
 import java.time.Duration
+import clue.StreamingClientStatus
 
 /**
   * Reusability instances for model classes
   */
 object reusability {
+  implicit val statusReuse: Reusability[StreamingClientStatus]     = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                = Reusability.by(_.getSeconds)
   implicit val obsIdReuse: Reusability[Observation.Id]             = Reusability.by(_.format)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]    = Reusability.byEq
@@ -25,4 +27,5 @@ object reusability {
     Reusability.by(implicitly[Enumerated[A]].tag)
   implicit val conditionsReuse: Reusability[Conditions]            = Reusability.derive
   implicit def zipperReuse[A: Reusability]: Reusability[Zipper[A]] = Reusability.derive
+  implicit val reuse: Reusability[RootModel]                       = Reusability.derive
 }
