@@ -22,7 +22,7 @@ import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreSiderealTarget
 import explore.model.RootModel
-import explore.model.SideButton
+import explore.model.enum.AppTab
 import gpp.util.Zipper
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
@@ -32,6 +32,10 @@ import org.scalactic.anyvals.NonEmptyMap
 import org.scalajs.dom
 
 import js.annotation._
+import japgolly.scalajs.react.extra.router.RouterLogic
+import explore.model.Page
+import japgolly.scalajs.react.extra.router.RouterCtl
+import gem.util.Enumerated
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -44,9 +48,11 @@ trait AppMain extends IOApp {
 
   implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
 
-  def rootComponent(
+  protected def rootComponent(
     view: View[RootModel]
   ): VdomElement
+
+  protected def routerCtl: RouterCtl[Page]
 
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
@@ -54,19 +60,10 @@ trait AppMain extends IOApp {
   override final def run(args: List[String]): IO[ExitCode] = {
     ReusabilityOverlay.overrideGloballyInDev()
 
-    val initialModel = RootModel(tabs =
-      Zipper.fromNel(
-        NonEmptyList.of(SideButton("Overview"),
-                        SideButton("Observations"),
-                        SideButton("Target"),
-                        SideButton("Configurations"),
-                        SideButton("Constraints")
-        )
-      )
-    )
+    val initialModel = RootModel(tabs = Zipper.fromNel(AppTab.all))
 
     for {
-      ctx <- AppContext.from[IO](AppConfig())
+      ctx <- AppContext.from[IO](AppConfig(), routerCtl)
       _   <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup.some)

@@ -171,13 +171,13 @@ object TargetBody extends ModelOptics {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      Callback.log(currentProps.toString()) *>
-        ref.get
-          .flatMapCB { r =>
-            val c = nextProps.aladinCoords
-            r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
-          }
-          .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+      // Callback.log(currentProps.toString()) *>
+      ref.get
+        .flatMapCB { r =>
+          val c = nextProps.aladinCoords
+          r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
+        }
+        .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
   }
 
   val component =

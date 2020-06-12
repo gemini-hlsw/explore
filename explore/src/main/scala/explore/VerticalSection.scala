@@ -7,7 +7,6 @@ import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
 import explore.model.Page
-import explore.model.SideButton
 import explore.model.reusability._
 import explore.components.ui.GPPStyles
 import japgolly.scalajs.react._
@@ -31,8 +30,6 @@ final case class VerticalSection()
 object VerticalSection {
   type Props = VerticalSection
 
-  implicit val reuse: Reusability[Props] = Reusability.always
-
   private val component =
     ScalaComponent
       .builder[Props]
@@ -46,6 +43,5 @@ object VerticalSection {
           )
         )
       )
-      .configure(Reusability.shouldComponentUpdate)
       .build
 }

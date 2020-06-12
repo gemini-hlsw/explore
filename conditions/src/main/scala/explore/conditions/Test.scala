@@ -23,14 +23,17 @@ import monocle.function.Cons.headOption
 
 import js.annotation._
 import explore.AppCtx
+import japgolly.scalajs.react.extra.router.RouterLogic
+import explore.model.Page
+import explore.DummyRouting
 
 @JSExportTopLevel("CondTest")
-object Test extends AppMain {
+object Test extends AppMain with DummyRouting {
 
   private val obsId = Observation
     .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
-  override def rootComponent(view: View[RootModel]): VdomElement =
+  override protected def rootComponent(view: View[RootModel]): VdomElement =
     conditionsSubscription(obsId) { conditions =>
       ConditionsPanel(obsId, conditions)
     }
