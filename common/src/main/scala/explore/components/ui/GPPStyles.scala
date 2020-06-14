@@ -19,4 +19,6 @@ object GPPStyles {
   val VerticalButton: Css       = Css("vertical-button")
   val RotationWrapperOuter: Css = Css("rotation-wrapper-outer")
   val RotationWrapperInner: Css = Css("rotation-wrapper-inner")
+
+  val HVCenter: Css = Css("horizontal-vertical-center")
 }
