@@ -33,6 +33,7 @@ object Routing {
 
       (emptyRule
         | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
+        | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction())
         | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(view =>
           HomeComponent(view)
         ))

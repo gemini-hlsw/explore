@@ -10,12 +10,14 @@ import cats.implicits._
 sealed trait Page extends Product with Serializable
 
 object Page {
-  case object HomePage extends Page
+  case object HomePage        extends Page
+  case object ConstraintsPage extends Page
   final case class ObsPage(obsId: Observation.Id) extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
-    case (HomePage, HomePage)     => true
-    case (ObsPage(a), ObsPage(b)) => a === b
-    case _                        => false
+    case (HomePage, HomePage)               => true
+    case (ConstraintsPage, ConstraintsPage) => true
+    case (ObsPage(a), ObsPage(b))           => a === b
+    case _                                  => false
   }
 }
