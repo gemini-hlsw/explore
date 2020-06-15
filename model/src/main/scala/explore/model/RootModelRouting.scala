@@ -12,31 +12,33 @@ import gpp.util.Zipper
 
 object RootModelRouting {
 
-  protected def getPage(model: RootModel): Page = {
-    val pageOpt =
-      model.tabs.focus match {
-        case AppTab.Observations => model.obsId.map(ObsPage.apply)
-        case _                   => none
-      }
-    pageOpt.getOrElse(HomePage)
-  }
+  protected def getPage(model: RootModel): Page =
+    model.tabs.focus match {
+      case AppTab.Overview       => HomePage
+      case AppTab.Observations   => model.obsId.map(ObsPage.apply).getOrElse(HomePage)
+      case AppTab.Targets        => HomePage
+      case AppTab.Configurations => HomePage
+      case AppTab.Constraints    => ConstraintsPage
+    }
 
   protected def findEqFocus[A: Eq](zipper: Zipper[A], a: A): Option[Zipper[A]] =
     zipper.findFocus(_ === a)
+
+  protected def setTab(tab: AppTab)(model: RootModel): Option[RootModel] =
+    findEqFocus(RootModel.tabs.get(model), tab).map(z => RootModel.tabs.set(z)(model))
 
   protected def setPage(page: Page): RootModel => RootModel =
     model => {
       val modOpt =
         page match {
-          case ObsPage(obsId) =>
-            findEqFocus(RootModel.tabs.get(model), AppTab.Observations).map(z =>
-              RootModel.tabs.set(z) >>> RootModel.obsId.set(obsId.some)
-            )
-          case HomePage       =>
-            findEqFocus(RootModel.tabs.get(model), AppTab.Overview).map(z => RootModel.tabs.set(z))
-          case _              => none
+          case ObsPage(obsId)  =>
+            setTab(AppTab.Observations)(model).map(RootModel.obsId.set(obsId.some))
+          case ConstraintsPage =>
+            setTab(AppTab.Constraints)(model)
+          case HomePage        =>
+            setTab(AppTab.Overview)(model)
         }
-      modOpt.getOrElse(identity[RootModel] _)(model)
+      modOpt.getOrElse(model)
     }
 
   val lens: Lens[RootModel, Page] =

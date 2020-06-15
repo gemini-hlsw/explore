@@ -33,7 +33,7 @@ object SideTabs {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  private def componentBuilder[A] =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .stateless
@@ -64,6 +64,4 @@ object SideTabs {
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
-
-  val component = componentBuilder[Any]
 }

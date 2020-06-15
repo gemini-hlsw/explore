@@ -140,10 +140,8 @@ object TargetTree {
         $.modStateL(State.collapsedTargetIds)(_ - itemId)
 
     def onDragEnd(source: AtlasTree.Position, destination: Option[AtlasTree.Position]): Callback =
-      Callback(
-        println(
-          s"${scalajs.js.JSON.stringify(source)} ${destination.map(p => scalajs.js.JSON.stringify(p))}"
-        )
+      Callback.log(
+        s"${scalajs.js.JSON.stringify(source)} ${destination.map(p => scalajs.js.JSON.stringify(p))}"
       )
 
     def render(props: Props, state: State): VdomElement =

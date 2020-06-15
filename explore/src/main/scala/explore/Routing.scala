@@ -40,13 +40,15 @@ object Routing {
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {
-          case (prev, next, view) if prev =!= next.some =>
-            Callback.log(s"Routing.onPostRender triggered [$prev] => [$next]") >>
+          case (_, next, view) if next =!= RootModelRouting.lens.get(view.get) =>
+            Callback.log(
+              s"Routing.onPostRender triggered [${RootModelRouting.lens.get(view.get)}] => [$next]"
+            ) >>
               view.zoomL(RootModelRouting.lens).set(next).runInCB
-          case _                                        => Callback.empty
+          case _                                                               => Callback.empty
         }
         .renderWithP(layout)
-    // .logToConsole
+        .logToConsole
     }
 
   private def layout(
