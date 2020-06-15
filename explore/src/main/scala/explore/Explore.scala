@@ -5,6 +5,8 @@ package explore
 
 import scala.scalajs.js
 
+import cats.implicits._
+import crystal.react.implicits._
 import explore.Routing
 import explore.model.RootModel
 import japgolly.scalajs.react.extra.router._
@@ -12,15 +14,34 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 import js.annotation._
+import crystal.ViewF
+import cats.effect.IO
+import explore.model.RootModelRouting
+import explore.model.Page
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {
 
-  private val router = RouterWithProps(BaseUrl.fromWindowOrigin, Routing.config)
+  protected val (router, routerCtl) =
+    RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
+
+  protected def routingView(view: View[RootModel]): View[RootModel] =
+    ViewF[IO, RootModel](
+      view.get,
+      f =>
+        view.mod { model =>
+          val newModel = f(model)
+          // Having this here makes sure the URL update is always executed.
+          // Another option is to move it to AppRoot.componentDidUpdate, but it won't be
+          // executed if the application isn't rerendered because of reusability.
+          routerCtl.set(RootModelRouting.lens.get(newModel)).runNow()
+          newModel
+        }
+    )
 
   override def rootComponent(view: View[RootModel]): VdomElement =
     <.div(
-      router(view)
+      router(routingView(view))
     )
 
 }

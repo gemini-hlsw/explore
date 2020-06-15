@@ -6,8 +6,9 @@ package explore
 import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
+import crystal.react.implicits._
 import explore.model.Page
-import explore.model.SideButton
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.components.ui.GPPStyles
 import gpp.util.Zipper
@@ -23,31 +24,40 @@ import react.semanticui.elements.divider.Divider
 import react.semanticui.sizes._
 import react.semanticui.widths._
 
-final case class SideTabs[P](
-  router: RouterCtl[P],
-  tabs:   Zipper[SideButton]
-) extends ReactProps[SideTabs[_]](SideTabs.component)
+final case class SideTabs(
+  tabs: View[Zipper[AppTab]]
+) extends ReactProps[SideTabs](SideTabs.component)
 
 object SideTabs {
-  type Props = SideTabs[_]
+  type Props = SideTabs
 
-  implicit val reuse: Reusability[Props] = Reusability.by(_.tabs)
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  private val component =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .stateless
       .render_P { p =>
-        val tabsL = p.tabs.toNel
-        val focus = p.tabs.focus
+        val tabsL = p.tabs.get.toNel
+        val focus = p.tabs.get.focus
+
+        def tabButton(tab: AppTab): Button =
+          Button(positive = tab === focus,
+                 onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
+          )(tab.title)
+
         <.div(
           GPPStyles.SideTabsBody,
-          VerticalSection()(Button(active = tabsL.head === focus)(tabsL.head.title)),
+          VerticalSection()(
+            tabButton(tabsL.head)
+          ),
           Divider(hidden = true),
           VerticalSection()(
             ButtonGroup(widths = widthOf(tabsL.length))(
               // Due to the css rotations these need to be in reversed order
-              tabsL.tail.reverse.map(b => Button(active = b === focus)(b.title)).toTagMod
+              tabsL.tail.reverse
+                .map(tabButton)
+                .toTagMod
             )
           )
         )

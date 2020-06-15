@@ -15,21 +15,30 @@ addCommandAlias(
   "exploreWDS",
   "; explore/fastOptJS::stopWebpackDevServer; explore/fastOptJS::startWebpackDevServer; ~explore/fastOptJS"
 )
+
 addCommandAlias(
   "conditionsWDS",
   "; conditions/fastOptJS::stopWebpackDevServer; conditions/fastOptJS::startWebpackDevServer; ~conditions/fastOptJS"
 )
+
+addCommandAlias(
+  "targeteditorWDS",
+  "; targeteditor/fastOptJS::stopWebpackDevServer; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
+)
+
+addCommandAlias(
+  "observationtreeWDS",
+  "; observationtree/fastOptJS::stopWebpackDevServer; observationtree/fastOptJS::startWebpackDevServer; ~observationtree/fastOptJS"
+)
+
 addCommandAlias(
   "stopWDS",
   "fastOptJS::stopWebpackDevServer"
 )
+
 addCommandAlias(
   "quickTest",
   "modelJVM/test"
-)
-addCommandAlias(
-  "targeteditorWDS",
-  "; targeteditor/fastOptJS::stopWebpackDevServer; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
 )
 
 addCommandAlias(
@@ -103,6 +112,23 @@ lazy val conditions = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
 
+lazy val observationtree = project
+  .in(file("observationtree"))
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(commonWDS: _*)
+  .enablePlugins(ScalaJSBundlerPlugin)
+  .dependsOn(common)
+  .settings(
+    libraryDependencies ++=
+      ReactAtlasKitTree.value,
+    npmDependencies in Compile ++= Seq(
+      "core-js" -> "2.6.11" // Without this, core-js 3 is used, which conflicts with @babel/runtime-corejs2
+    ),
+    scalaJSLinkerConfig in (Compile, fastOptJS) ~= { _.withSourceMap(false) },
+    scalaJSLinkerConfig in (Compile, fullOptJS) ~= { _.withSourceMap(false) }
+  )
+
 lazy val explore: Project = project
   .in(file("explore"))
   .settings(commonSettings: _*)
@@ -113,21 +139,21 @@ lazy val explore: Project = project
     libraryDependencies ++=
       ReactCommon.value ++
         ReactGridLayout.value ++
-        ReactSizeMe.value,
-    // don't publish the demo
-    publish := {},
-    publishLocal := {},
-    publishArtifact := false,
-    Keys.`package` := file("")
+        ReactSizeMe.value
   )
-  .dependsOn(conditions, targeteditor)
+  .dependsOn(conditions, targeteditor, observationtree)
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
   description := "Explore",
   homepage := Some(url("https://github.com/geminihlsw/explore")),
   licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
-  scalacOptions += "-Ymacro-annotations"
+  scalacOptions += "-Ymacro-annotations",
+  // don't publish anything
+  publish := {},
+  publishLocal := {},
+  publishArtifact := false,
+  Keys.`package` := file("")
 )
 
 lazy val commonLibSettings = Seq(

@@ -48,7 +48,7 @@ object OTLayout {
           ),
           <.div(
             GPPStyles.SideTabs,
-            SideTabs(p.c, p.view.zoomL(RootModel.tabs).get)
+            SideTabs(p.view.zoomL(RootModel.tabs))
           ),
           <.div(
             GPPStyles.MainBody,

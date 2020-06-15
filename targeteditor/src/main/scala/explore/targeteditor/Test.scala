@@ -13,13 +13,12 @@ import explore.model._
 import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
-import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {
 
-  override def rootComponent(view: View[RootModel]): VdomElement = {
+  override protected def rootComponent(view: View[RootModel]): VdomElement = {
     val obsId =
       Observation
         .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
