@@ -3,8 +3,8 @@
 
 package explore
 
-import explore.components.ui.GPPStyles
 import explore.Icons.CogsIcon
+import explore.components.ui.GPPStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.sizes.Huge

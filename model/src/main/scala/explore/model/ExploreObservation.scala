@@ -3,11 +3,12 @@
 
 package explore.model
 
+import java.time.Duration
+import java.util.UUID
+
 import cats.Eq
 import cats.implicits._
 import explore.model.enum.ObsStatus
-import java.util.UUID
-import java.time.Duration
 import monocle.macros.Lenses
 
 @Lenses

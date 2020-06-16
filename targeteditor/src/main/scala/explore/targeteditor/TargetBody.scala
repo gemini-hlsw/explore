@@ -3,19 +3,26 @@
 
 package explore.target
 
+import scala.reflect.ClassTag
+
+import cats.Show
 import cats.effect.IO
 import cats.implicits._
-import explore.View
 import crystal.react.implicits._
+import explore.AppCtx
+import explore.View
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
+import explore.model.Conditions
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.model.show._
 import explore.target.TargetQueries._
+import explore.undo.Undoer
 import gem.Observation
+import gem.util.Enumerated
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
@@ -31,12 +38,6 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
-import explore.AppCtx
-import explore.model.Conditions
-import explore.undo.Undoer
-import scala.reflect.ClassTag
-import gem.util.Enumerated
-import cats.Show
 
 final case class TargetBody(
   observationId: Observation.Id,

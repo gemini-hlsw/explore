@@ -5,19 +5,19 @@ package explore
 
 import scala.scalajs.js
 
+import cats.effect.IO
 import cats.implicits._
+import crystal.ViewF
 import crystal.react.implicits._
 import explore.Routing
+import explore.model.Page
 import explore.model.RootModel
+import explore.model.RootModelRouting
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 import js.annotation._
-import crystal.ViewF
-import cats.effect.IO
-import explore.model.RootModelRouting
-import explore.model.Page
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {

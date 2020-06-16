@@ -3,8 +3,8 @@
 
 package explore.model.enum
 
-import gem.util.Enumerated
 import cats.data.NonEmptyList
+import gem.util.Enumerated
 
 sealed abstract class AppTab(val title: String) extends Product with Serializable
 
