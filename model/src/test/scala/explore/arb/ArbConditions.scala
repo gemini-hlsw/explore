@@ -13,7 +13,7 @@ import org.scalacheck.Cogen._
 
 trait ArbConditions {
 
-  implicit val conArb = Arbitrary[Conditions] {
+  implicit val conditionsArb = Arbitrary[Conditions] {
     for {
       cc <- arbitrary[CloudCover]
       iq <- arbitrary[ImageQuality]
@@ -22,7 +22,7 @@ trait ArbConditions {
     } yield Conditions(cc, iq, sb, wv)
   }
 
-  implicit val conCogen: Cogen[Conditions] =
+  implicit val conditionsCogen: Cogen[Conditions] =
     Cogen[(CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(c =>
       (c.cc, c.iq, c.sb, c.wv)
     )

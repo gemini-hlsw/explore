@@ -21,7 +21,7 @@ import react.common._
 
 final case class TargetEditor(
   observationId: Observation.Id,
-  globalTarget:  View[Option[SiderealTarget]],
+  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
@@ -42,7 +42,7 @@ object TargetEditor {
               ),
             _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
           ) { target =>
-            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
+            TargetBody(props.observationId, target, /*props.globalTarget,*/ props.conditions)
           }
         }
       }

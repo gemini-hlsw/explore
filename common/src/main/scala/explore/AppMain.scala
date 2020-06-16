@@ -21,6 +21,7 @@ import crystal.react.AppRoot
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreSiderealTarget
+import explore.model.Focused.FocusedObs
 import explore.model.Page
 import explore.model.RootModel
 import explore.model.enum.AppTab
@@ -64,11 +65,12 @@ trait AppMain extends IOApp {
     ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
-      obsId =
-        Observation // TODO Remove this, it's here termporarily for testing URL automatic derivation.
-          .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
-          .some,
-      tabs = EnumZipper.of[AppTab]
+      tabs = EnumZipper.of[AppTab],
+      focused = // TODO Remove this, it's here termporarily for testing URL automatic derivation.
+        FocusedObs(
+          Observation
+            .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+        ).some
     )
 
     for {

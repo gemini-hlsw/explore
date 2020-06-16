@@ -3,4 +3,9 @@
 
 package explore.model.arb
 
-object all extends ArbConditions with ArbSiderealTarget with ArbExploreSiderealTarget with ArbEnum
+object all
+    extends ArbConditions
+    with ArbSiderealTarget
+    with ArbExploreSiderealTarget
+    with ArbFocused
+    with ArbRootModel

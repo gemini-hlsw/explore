@@ -42,7 +42,7 @@ import react.semanticui.widths._
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  globalTarget:  View[Option[SiderealTarget]],
+  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
@@ -84,7 +84,7 @@ object TargetBody extends ModelOptics {
             Modify(props.observationId,
                    target,
                    props.target.mod,
-                   (props.globalTarget.set _).compose(_.some),
+                   //  (props.globalTarget.set _).compose(_.some),
                    undoCtx.setter
             )
 

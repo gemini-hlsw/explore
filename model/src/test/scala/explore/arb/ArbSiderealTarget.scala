@@ -24,6 +24,13 @@ trait ArbSiderealTarget {
   implicit val siderealTargetCogen: Cogen[SiderealTarget] =
     Cogen[(String, ProperMotion)].contramap(c => (c.name, c.track))
 
+  implicit val siderealTargetId: Arbitrary[SiderealTarget.Id] =
+    Arbitrary(
+      arbitrary[String].map(SiderealTarget.Id.apply)
+    )
+
+  implicit val cogSiderealTargetId: Cogen[SiderealTarget.Id] =
+    Cogen[String].contramap(_.id)
 }
 
 object ArbSiderealTarget extends ArbSiderealTarget

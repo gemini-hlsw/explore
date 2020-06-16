@@ -14,9 +14,24 @@ import monocle.macros.Lenses
   * A refinement of gem.Tracker meant for sidereal targets
   */
 @Lenses
-final case class SiderealTarget(name: String, track: ProperMotion)
+final case class SiderealTarget(name: String, track: ProperMotion) {
+  val id: SiderealTarget.Id = SiderealTarget.Id(name)
+}
 
 object SiderealTarget {
+  case class Id(id: String) extends AnyVal {
+    def format: String = id
+  }
+
+  object Id {
+    def fromString(s: String): Option[SiderealTarget.Id] = Id(s).some
+
+    def unsafeFromString(s: String): SiderealTarget.Id =
+      fromString(s).getOrElse(sys.error("Malformed SiderealTarget.Id: " + s))
+
+    implicit val eqId: Eq[Id] = Eq.by(_.id)
+  }
+
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }
 
