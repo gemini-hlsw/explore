@@ -14,6 +14,8 @@ import gpp.util.EnumZipper
 import gpp.util.Zipper
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.raw.JsNumber
+import react.common.implicits._
 
 /**
   * Reusability instances for model classes
@@ -30,5 +32,6 @@ object reusability {
   implicit val conditionsReuse: Reusability[Conditions]                    = Reusability.derive
   implicit def enumZipperReuse[A: Reusability]: Reusability[EnumZipper[A]] =
     Reusability.by(z => (z.lefts, z.focus, z.rights))
+  implicit val jsNumberReuse: Reusability[JsNumber]                        = Reusability.byEq
   implicit val reuse: Reusability[RootModel]                               = Reusability.derive
 }

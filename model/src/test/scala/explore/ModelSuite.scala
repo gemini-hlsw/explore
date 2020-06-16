@@ -5,8 +5,8 @@ package explore.model
 
 import cats.kernel.laws.discipline._
 import explore.model.arb.all._
-import munit.DisciplineSuite
 import explore.model.enum.AppTab
+import munit.DisciplineSuite
 
 class ModelSuite extends DisciplineSuite {
   checkAll("Eq[Conditions]", EqTests[Conditions].eqv)

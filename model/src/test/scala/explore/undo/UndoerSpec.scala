@@ -7,16 +7,16 @@ import cats.effect.IO
 import cats.effect.concurrent.Ref
 import cats.implicits._
 import cats.kernel.Eq
-import explore.undo._
 import explore.data.tree._
+import explore.undo._
 import monocle.Iso
-import monocle.macros.Lenses
-import monocle.function.all._
 import monocle.Lens
 import monocle.Setter
 import monocle.function.all._
-import monocle.macros.Lenses
+import monocle.function.all._
 import monocle.macros.GenLens
+import monocle.macros.Lenses
+import monocle.macros.Lenses
 
 class UndoerSpec extends munit.FunSuite {
 

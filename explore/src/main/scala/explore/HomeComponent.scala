@@ -7,9 +7,11 @@ import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
+import explore.components.ui.GPPStyles
 import explore.conditions.ConditionsPanel
 import explore.conditions.ConditionsQueries._
 import explore.implicits._
+import explore.model._
 import explore.model.reusability._
 import explore.target.TargetEditor
 import gem.Observation
@@ -21,10 +23,10 @@ import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
+import react.draggable.Axis
 import react.gridlayout._
+import react.resizable._
 import react.sizeme._
-
-import model._
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -51,41 +53,73 @@ object HomeComponent {
 
   type Props = View[RootModel]
 
+  final case class State(treeWidth: JsNumber)
+
+  implicit val stateReuse: Reusability[State] = Reusability.derive
+
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(0)
-      .render_P { props =>
+      .initialState(State(250))
+      .render { $ =>
+        val props = $.props
+        val state = $.state
         val obsId = Observation
           .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
 
+        val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
+
         conditionsSubscription(obsId) { conditions =>
           <.div(
-            ^.cls := "rgl-area",
+            GPPStyles.RGLArea,
             SizeMe() { s =>
-              ResponsiveReactGridLayout(
-                s.width,
-                margin = (5: JsNumber, 5: JsNumber),
-                containerPadding = (5: JsNumber, 5: JsNumber),
-                className = "layout",
-                rowHeight = 30,
-                draggableHandle = ".tileTitle",
-                useCSSTransforms = false, // Not ideal, but fixes flicker on first update (0.18.3).
-                // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                layouts = layouts
-              )(
-                <.div(
-                  ^.key := "conditions",
-                  ^.cls := "tile",
-                  Tile("Conditions")(
-                    ConditionsPanel(obsId, conditions)
-                  )
+              val treeWidth = state.treeWidth.toDouble
+              val coreWidth = s.width.toDouble - treeWidth
+
+              // Tree area
+              val tree =
+                <.div(^.width := treeWidth.px, GPPStyles.Tree)(
+                  <.div(GPPStyles.TreeBodyOuter, <.div(GPPStyles.TreeBodyInner, "Tree"))
+                )
+
+              <.div(
+                GPPStyles.TreeRGL,
+                Resizable(
+                  axis = Axis.X,
+                  width = treeWidth,
+                  height = Option(s.height).getOrElse(0),
+                  minConstraints = (200: JsNumber, 0: JsNumber),
+                  maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
+                  onResize = treeResize,
+                  resizeHandles = List(ResizeHandleAxis.East),
+                  content = tree
                 ),
-                <.div(
-                  ^.key := "target",
-                  ^.cls := "tile",
-                  Tile("Target Position")(
-                    TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get.some)
+                <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
+                  ResponsiveReactGridLayout(
+                    width = coreWidth,
+                    margin = (5: JsNumber, 5: JsNumber),
+                    containerPadding = (5: JsNumber, 5: JsNumber),
+                    rowHeight = 30,
+                    draggableHandle = ".tileTitle",
+                    useCSSTransforms =
+                      false, // Not ideal, but fixes flicker on first update (0.18.3).
+                    // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                    layouts = layouts
+                  )(
+                    <.div(
+                      ^.key := "conditions",
+                      ^.cls := "tile",
+                      Tile("Conditions")(
+                        ConditionsPanel(obsId, conditions)
+                      )
+                    ),
+                    <.div(
+                      ^.key := "target",
+                      ^.cls := "tile",
+                      Tile("Target Position")(
+                        TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get.some)
+                      )
+                    )
                   )
                 )
               )
