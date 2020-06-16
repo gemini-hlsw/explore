@@ -8,7 +8,7 @@ import cats.implicits._
 import clue._
 import explore.model.enum.AppTab
 import gem.Observation
-import gpp.util.Zipper
+import gpp.util.EnumZipper
 import io.chrisdavenport.log4cats.Logger
 import monocle.macros.Lenses
 import sttp.model.Uri
@@ -18,7 +18,7 @@ import sttp.model.Uri._
 case class RootModel(
   obsId:  Option[Observation.Id] = None,
   target: Option[SiderealTarget] = None,
-  tabs:   Zipper[AppTab]
+  tabs:   EnumZipper[AppTab]
 )
 
 case class AppConfig(

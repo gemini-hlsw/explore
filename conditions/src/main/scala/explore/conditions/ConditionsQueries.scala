@@ -8,8 +8,8 @@ import cats.implicits._
 import clue.GraphQLQuery
 import crystal.react.ModState
 import explore.AppCtx
-import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
+import explore.implicits._
 import explore.model.Conditions
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality

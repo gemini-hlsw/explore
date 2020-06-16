@@ -4,11 +4,11 @@
 package explore.model
 
 import cats.implicits._
-import monocle.Lens
-import explore.model.enum.AppTab
-import explore.model.Page._
 import cats.kernel.Eq
+import explore.model.Page._
+import explore.model.enum.AppTab
 import gpp.util.Zipper
+import monocle.Lens
 
 object RootModelRouting {
 
@@ -16,29 +16,26 @@ object RootModelRouting {
     model.tabs.focus match {
       case AppTab.Overview       => HomePage
       case AppTab.Observations   => model.obsId.map(ObsPage.apply).getOrElse(HomePage)
-      case AppTab.Targets        => HomePage
-      case AppTab.Configurations => HomePage
+      case AppTab.Targets        => model.obsId.map(TargetPage.apply).getOrElse(HomePage)
+      case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    => ConstraintsPage
     }
 
-  protected def findEqFocus[A: Eq](zipper: Zipper[A], a: A): Option[Zipper[A]] =
-    zipper.findFocus(_ === a)
-
-  protected def setTab(tab: AppTab)(model: RootModel): Option[RootModel] =
-    findEqFocus(RootModel.tabs.get(model), tab).map(z => RootModel.tabs.set(z)(model))
+  protected def setTab(tab: AppTab): RootModel => RootModel =
+    RootModel.tabs.modify(_.withFocus(tab))
 
   protected def setPage(page: Page): RootModel => RootModel =
-    model => {
-      val modOpt =
-        page match {
-          case ObsPage(obsId)  =>
-            setTab(AppTab.Observations)(model).map(RootModel.obsId.set(obsId.some))
-          case ConstraintsPage =>
-            setTab(AppTab.Constraints)(model)
-          case HomePage        =>
-            setTab(AppTab.Overview)(model)
-        }
-      modOpt.getOrElse(model)
+    page match {
+      case ObsPage(obsId)     =>
+        setTab(AppTab.Observations) >>> (RootModel.obsId.set(obsId.some))
+      case TargetPage(obsId)  =>
+        setTab(AppTab.Targets) >>> (RootModel.obsId.set(obsId.some))
+      case ConstraintsPage    =>
+        setTab(AppTab.Constraints)
+      case ConfigurationsPage =>
+        setTab(AppTab.Configurations)
+      case HomePage           =>
+        setTab(AppTab.Overview)
     }
 
   val lens: Lens[RootModel, Page] =

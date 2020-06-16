@@ -3,21 +3,25 @@
 
 package explore.model
 
-import gem.Observation
 import cats.Eq
 import cats.implicits._
+import gem.Observation
 
 sealed trait Page extends Product with Serializable
 
 object Page {
-  case object HomePage        extends Page
-  case object ConstraintsPage extends Page
+  case object HomePage           extends Page
   final case class ObsPage(obsId: Observation.Id) extends Page
+  final case class TargetPage(obsId: Observation.Id) extends Page
+  case object ConfigurationsPage extends Page
+  case object ConstraintsPage    extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
-    case (HomePage, HomePage)               => true
-    case (ConstraintsPage, ConstraintsPage) => true
-    case (ObsPage(a), ObsPage(b))           => a === b
-    case _                                  => false
+    case (HomePage, HomePage)                     => true
+    case (ObsPage(a), ObsPage(b))                 => a === b
+    case (TargetPage(a), TargetPage(b))           => a === b
+    case (ConfigurationsPage, ConfigurationsPage) => true
+    case (ConstraintsPage, ConstraintsPage)       => true
+    case _                                        => false
   }
 }

@@ -7,11 +7,11 @@ import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
 import crystal.react.implicits._
+import explore.components.ui.GPPStyles
 import explore.model.Page
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.components.ui.GPPStyles
-import gpp.util.Zipper
+import gpp.util.EnumZipper
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,7 +25,7 @@ import react.semanticui.sizes._
 import react.semanticui.widths._
 
 final case class SideTabs(
-  tabs: View[Zipper[AppTab]]
+  tabs: View[EnumZipper[AppTab]]
 ) extends ReactProps[SideTabs](SideTabs.component)
 
 object SideTabs {

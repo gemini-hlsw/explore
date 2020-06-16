@@ -5,7 +5,9 @@ package explore.conditions
 
 import cats.Show
 import cats.implicits._
+import crystal.react.AppRoot
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.undo.UndoRegion
 import explore.conditions.ConditionsQueries._
@@ -28,8 +30,6 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.elements.button.Button
 import react.semanticui.widths._
-import crystal.react.AppRoot
-import explore.AppCtx
 
 final case class ConditionsPanel(
   observationId: Observation.Id,

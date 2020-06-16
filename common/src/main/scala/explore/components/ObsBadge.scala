@@ -5,12 +5,12 @@ package explore.components
 
 import explore.model.ExploreObservation
 import explore.model.reusability._
+import gem.util.Enumerated
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.views.card._
 import react.common._
-import gem.util.Enumerated
 import react.semanticui.elements.icon.Icon
+import react.semanticui.views.card._
 
 final case class ObsBadge(obs: ExploreObservation, layout: ObsBadge.Layout)
     extends ReactProps[ObsBadge](ObsBadge.component)

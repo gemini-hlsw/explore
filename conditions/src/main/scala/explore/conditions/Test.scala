@@ -7,24 +7,24 @@ import scala.scalajs.js
 
 import cats.implicits._
 import crystal.implicits._
+import explore.AppCtx
 import explore.AppMain
-import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.conditions.ConditionsQueries._
+import explore.implicits._
 import explore.model.Conditions
+import explore.model.Page
 import explore.model.RootModel
 import explore.model.reusability._
 import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
+import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 
 import js.annotation._
-import explore.AppCtx
-import japgolly.scalajs.react.extra.router.RouterLogic
-import explore.model.Page
 
 @JSExportTopLevel("CondTest")
 object Test extends AppMain {

@@ -5,9 +5,9 @@ package explore
 
 import cats.implicits._
 import crystal.react.implicits._
-import explore.model._
 import explore.model.Page
 import explore.model.Page._
+import explore.model._
 import gem.Observation
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
@@ -27,16 +27,26 @@ object Routing {
         Observation.Id.fromString(s).map(ObsPage(_))
     }(p => p.obsId.format)
 
+  private val targetObsIdP: Prism[String, TargetPage] =
+    Prism[String, TargetPage] {
+      case s =>
+        Observation.Id.fromString(s).map(TargetPage(_))
+    }(p => p.obsId.format)
+
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 
       (emptyRule
         | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
-        | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction())
         | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(view =>
           HomeComponent(view)
-        ))
+        )
+        | dynamicRouteCT(("/target" / string("[a-zA-Z0-9-]+")).pmapL(targetObsIdP)) ~> renderP(
+          view => HomeComponent(view)
+        )
+        | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
+        | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
         .onPostRenderP {

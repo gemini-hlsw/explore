@@ -6,9 +6,9 @@ package explore
 import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
+import explore.components.ui.GPPStyles
 import explore.model.Page
 import explore.model.reusability._
-import explore.components.ui.GPPStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
