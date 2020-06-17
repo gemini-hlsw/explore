@@ -13,7 +13,7 @@ object Settings {
     val crystal           = "0.5.2"
     val discipline        = "1.0.2"
     val disciplineMUnit   = "0.2.2"
-    val gspCore           = "0.2.2"
+    val gspCore           = "0.2.2+2-f761a8af+20200617-1627-SNAPSHOT"
     val gspMathTestKit    = "0.2.1"
     val gppUI             = "0.1.5"
     val log4Cats          = "1.1.1"
@@ -88,8 +88,7 @@ object Settings {
 
     val GSPCore = Def.setting(
       deps(
-        "edu.gemini" %%% "gsp-core-model",
-        "edu.gemini" %%% "gpp-core-util"
+        "edu.gemini" %%% "gsp-core-model"
       )(gspCore)
     )
 

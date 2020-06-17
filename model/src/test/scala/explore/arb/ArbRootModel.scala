@@ -7,7 +7,8 @@ import explore.model.Focused
 import explore.model.RootModel
 import explore.model.enum.AppTab
 import gem.util.Enumerated
-import gpp.util.EnumZipper
+import gem.data.EnumZipper
+import gem.arb.ArbEnumZipper._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
@@ -17,14 +18,6 @@ import org.scalacheck.Gen._
 
 trait ArbRootModel {
   import explore.model.arb.ArbFocused._
-
-  implicit def arbEnumZipper[A: Enumerated]: Arbitrary[EnumZipper[A]] =
-    Arbitrary {
-      const(EnumZipper.of[A])
-    }
-
-  implicit def enumZipperCogen[A]: Cogen[EnumZipper[A]] =
-    Cogen[Unit].contramap(_ => ())
 
   implicit val rootModelArb = Arbitrary[RootModel] {
     for {

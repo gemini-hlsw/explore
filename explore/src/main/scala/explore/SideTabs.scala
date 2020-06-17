@@ -11,7 +11,7 @@ import explore.components.ui.GPPStyles
 import explore.model.Page
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import gpp.util.EnumZipper
+import gem.data.EnumZipper
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._

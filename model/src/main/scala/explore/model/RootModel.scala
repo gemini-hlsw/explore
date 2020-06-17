@@ -9,7 +9,7 @@ import cats.kernel.Eq
 import clue._
 import explore.model.enum.AppTab
 import gem.Observation
-import gpp.util.EnumZipper
+import gem.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
 import monocle.Optional
 import monocle.Prism

@@ -7,11 +7,9 @@ import java.time.Duration
 
 import clue.StreamingClientStatus
 import gem.Observation
-import gem.Observation
 import gem.util.Enumerated
-import gem.util.Enumerated
-import gpp.util.EnumZipper
-import gpp.util.Zipper
+import gem.data.EnumZipper
+import gem.data.Zipper
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber

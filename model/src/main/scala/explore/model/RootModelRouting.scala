@@ -8,7 +8,7 @@ import cats.kernel.Eq
 import explore.model.Focused.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
-import gpp.util.Zipper
+import gem.data.Zipper
 import monocle.Lens
 
 object RootModelRouting {

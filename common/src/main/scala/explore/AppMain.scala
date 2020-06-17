@@ -29,8 +29,8 @@ import explore.model.reusability._
 import gem.Observation
 import gem.ProgramId
 import gem.util.Enumerated
-import gpp.util.EnumZipper
-import gpp.util.Zipper
+import gem.data.EnumZipper
+import gem.data.Zipper
 import gsp.math.Index
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
@@ -38,7 +38,6 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
-import org.scalactic.anyvals.NonEmptyMap
 import org.scalajs.dom
 
 import js.annotation._
