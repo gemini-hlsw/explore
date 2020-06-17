@@ -15,10 +15,19 @@ object GPPStyles {
   val MainTitle: Css  = Css("main-title")
   val SideTabs: Css   = Css("sidetabs")
 
+  val ResizeHandle: Css  = Css("resize-handle")
+  val Tree: Css          = Css("tree")
+  val TreeBodyOuter: Css = Css("tree-body-outer")
+  val TreeBodyInner: Css = Css("tree-body-inner")
+  val TreeRGL: Css       = Css("tree-rgl")
+  val RGLBody: Css       = Css("rgl-body")
+  val RGLArea: Css       = Css("rgl-area")
+
   val SideTabsBody: Css         = Css("sidetabs-body")
   val VerticalButton: Css       = Css("vertical-button")
   val RotationWrapperOuter: Css = Css("rotation-wrapper-outer")
   val RotationWrapperInner: Css = Css("rotation-wrapper-inner")
 
   val HVCenter: Css = Css("horizontal-vertical-center")
+
 }

@@ -4,11 +4,11 @@
 package explore.model.arb
 
 import explore.model.enum.AppTab
+import gem.util.Enumerated
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import gem.util.Enumerated
 import org.scalacheck.Gen
 
 trait ArbEnum {

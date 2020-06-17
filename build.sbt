@@ -87,7 +87,9 @@ lazy val common = project
   .settings(
     npmDependencies in Compile ++= Seq(
       "loglevel" -> "1.6.8"
-    )
+    ),
+    libraryDependencies ++=
+      ReactCommon.value
   )
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(model.js)
@@ -139,6 +141,7 @@ lazy val explore: Project = project
     libraryDependencies ++=
       ReactCommon.value ++
         ReactGridLayout.value ++
+        ReactResizable.value ++
         ReactSizeMe.value
   )
   .dependsOn(conditions, targeteditor, observationtree)
