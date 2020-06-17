@@ -27,6 +27,7 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
+import explore.observationtree.TargetObsList
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -57,12 +58,34 @@ object HomeComponent {
 
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
+  // BEGIN DEMO PURPOSES - The stream should come from a DB
+  import fs2.concurrent.SignallingRef
+  import cats.effect.implicits._
+  import cats.effect.IO
+  import cats.effect.SyncIO
+  import crystal.react.StreamRendererMod
+  import explore.observationtree.TargetTreeTest
+
+  import AppCtx._
+
+  val TreeComponent =
+    AppCtx
+      .withCtx { implicit ctx =>
+        val obsRef =
+          SignallingRef
+            .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)
+            .unsafeRunSync()
+
+        StreamRendererMod.build(obsRef.discrete)
+      }
+  // END DEMO PURPOSES
+
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State(250))
+      .initialState(State(295))
       .render { $ =>
-        val props = $.props
+        // val props = $.props
         val state = $.state
         val obsId = Observation
           .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
@@ -79,7 +102,14 @@ object HomeComponent {
               // Tree area
               val tree =
                 <.div(^.width := treeWidth.px, GPPStyles.Tree)(
-                  <.div(GPPStyles.TreeBodyOuter, <.div(GPPStyles.TreeBodyInner, "Tree"))
+                  <.div(GPPStyles.TreeBodyOuter)(
+                    TreeComponent(
+                      _.map[VdomNode](obsView =>
+                        TargetObsList(TargetTreeTest.targets, obsView)
+                      ).toOption
+                        .getOrElse(<.div)
+                    )
+                  )
                 )
 
               <.div(
@@ -88,7 +118,7 @@ object HomeComponent {
                   axis = Axis.X,
                   width = treeWidth,
                   height = Option(s.height).getOrElse(0),
-                  minConstraints = (200: JsNumber, 0: JsNumber),
+                  minConstraints = (295: JsNumber, 0: JsNumber),
                   maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
                   onResize = treeResize,
                   resizeHandles = List(ResizeHandleAxis.East),
