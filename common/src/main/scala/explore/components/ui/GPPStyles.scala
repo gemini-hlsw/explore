@@ -32,4 +32,5 @@ object GPPStyles {
 
   val ObsTree: Css     = Css("obs-tree")
   val ObsTreeItem: Css = Css("obs-tree-item")
+  val ObsBadge: Css    = Css("obs-badge")
 }

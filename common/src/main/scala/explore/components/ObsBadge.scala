@@ -11,6 +11,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.views.card._
+import explore.components.ui.GPPStyles
 
 final case class ObsBadge(
   obs:      ExploreObservation,
@@ -44,7 +45,7 @@ object ObsBadge {
         val obs = props.obs
 
         <.small(
-          Card(raised = props.selected)(^.width := "100%")(
+          Card(raised = props.selected)(GPPStyles.ObsBadge)(
             CardContent(
               CardHeader(
                 props.layout match {
