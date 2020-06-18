@@ -5,9 +5,10 @@ package explore.model
 
 import cats.implicits._
 import cats.kernel.Eq
+import explore.model.Focused.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
-import gpp.util.Zipper
+import gem.data.Zipper
 import monocle.Lens
 
 object RootModelRouting {
@@ -15,8 +16,16 @@ object RootModelRouting {
   protected def getPage(model: RootModel): Page =
     model.tabs.focus match {
       case AppTab.Overview       => HomePage
-      case AppTab.Observations   => model.obsId.map(ObsPage.apply).getOrElse(HomePage)
-      case AppTab.Targets        => model.obsId.map(TargetPage.apply).getOrElse(HomePage)
+      case AppTab.Observations   =>
+        RootModel.focusedObsId
+          .getOption(model)
+          .map(ObsPage.apply)
+          .getOrElse(HomePage)
+      case AppTab.Targets        =>
+        RootModel.focusedTargetOrObsId
+          .getOption(model)
+          .map(_.fold(TargetPage.apply, TargetsObsPage.apply))
+          .getOrElse(HomePage)
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    => ConstraintsPage
     }
@@ -26,15 +35,17 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ObsPage(obsId)     =>
-        setTab(AppTab.Observations) >>> (RootModel.obsId.set(obsId.some))
-      case TargetPage(obsId)  =>
-        setTab(AppTab.Targets) >>> (RootModel.obsId.set(obsId.some))
-      case ConstraintsPage    =>
+      case ObsPage(obsId)        =>
+        setTab(AppTab.Observations) >>> (RootModel.focusedObsId.set(obsId))
+      case TargetPage(targetId)  =>
+        setTab(AppTab.Targets) >>> (RootModel.focusedTargetId.set(targetId))
+      case TargetsObsPage(obsId) =>
+        setTab(AppTab.Targets) >>> (RootModel.focusedObsId.set(obsId))
+      case ConstraintsPage       =>
         setTab(AppTab.Constraints)
-      case ConfigurationsPage =>
+      case ConfigurationsPage    =>
         setTab(AppTab.Configurations)
-      case HomePage           =>
+      case HomePage              =>
         setTab(AppTab.Overview)
     }
 

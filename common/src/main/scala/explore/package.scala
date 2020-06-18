@@ -3,12 +3,14 @@
 
 import cats.effect.IO
 import crystal.ViewF
+import crystal.ViewOptF
 import explore.model.AppContext
 
 package explore {
   trait ShorthandTypes {
     type AppContextIO = AppContext[IO]
     type View[A]      = ViewF[IO, A]
+    type ViewOpt[A]   = ViewOptF[IO, A]
   }
 }
 

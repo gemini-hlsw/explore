@@ -27,6 +27,7 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
+import explore.observationtree.TargetObsList
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -57,76 +58,115 @@ object HomeComponent {
 
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  protected val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(State(250))
-      .render { $ =>
-        val props = $.props
-        val state = $.state
-        val obsId = Observation
-          .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+  // BEGIN DEMO PURPOSES - The stream should come from a DB
+  import fs2.concurrent.SignallingRef
+  import cats.effect.implicits._
+  import cats.effect.IO
+  import cats.effect.SyncIO
+  import crystal.react.StreamRendererMod
+  import explore.observationtree.TargetTreeTest
 
-        val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
+  import AppCtx._
 
-        conditionsSubscription(obsId) { conditions =>
-          <.div(
-            GPPStyles.RGLArea,
-            SizeMe() { s =>
-              val treeWidth = state.treeWidth.toDouble
-              val coreWidth = s.width.toDouble - treeWidth
+  val TreeComponent =
+    AppCtx
+      .withCtx { implicit ctx =>
+        val obsRef =
+          SignallingRef
+            .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)
+            .unsafeRunSync()
 
-              // Tree area
-              val tree =
-                <.div(^.width := treeWidth.px, GPPStyles.Tree)(
-                  <.div(GPPStyles.TreeBodyOuter, <.div(GPPStyles.TreeBodyInner, "Tree"))
+        StreamRendererMod.build(obsRef.discrete)
+      }
+  // END DEMO PURPOSES
+
+  class Backend($ : BackendScope[Props, State]) {
+    private val targetEditorRef = Ref.toScalaComponent(TargetEditor.component)
+
+    def render(props: Props, state: State) = {
+      val obsId = Observation
+        .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+
+      val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
+
+      conditionsSubscription(obsId) { conditions =>
+        <.div(
+          GPPStyles.RGLArea,
+          SizeMe() { s =>
+            val treeWidth = state.treeWidth.toDouble
+            val coreWidth = s.width.toDouble - treeWidth
+
+            // Tree area
+            val tree =
+              <.div(^.width := treeWidth.px, GPPStyles.Tree)(
+                <.div(GPPStyles.TreeBodyOuter)(
+                  TreeComponent(
+                    _.map[VdomNode](obsView =>
+                      TargetObsList(
+                        TargetTreeTest.targets,
+                        obsView,
+                        props.zoomO(RootModel.focusedTargetOrObsId),
+                        targetId => targetEditorRef.get.flatMapCB(_.backend.searchTarget(targetId))
+                      )
+                    ).toOption
+                      .getOrElse(<.div)
+                  )
                 )
+              )
 
-              <.div(
-                GPPStyles.TreeRGL,
-                Resizable(
-                  axis = Axis.X,
-                  width = treeWidth,
-                  height = Option(s.height).getOrElse(0),
-                  minConstraints = (200: JsNumber, 0: JsNumber),
-                  maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
-                  onResize = treeResize,
-                  resizeHandles = List(ResizeHandleAxis.East),
-                  content = tree
-                ),
-                <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
-                  ResponsiveReactGridLayout(
-                    width = coreWidth,
-                    margin = (5: JsNumber, 5: JsNumber),
-                    containerPadding = (5: JsNumber, 5: JsNumber),
-                    rowHeight = 30,
-                    draggableHandle = ".tileTitle",
-                    useCSSTransforms =
-                      false, // Not ideal, but fixes flicker on first update (0.18.3).
-                    // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                    layouts = layouts
-                  )(
-                    <.div(
-                      ^.key := "conditions",
-                      ^.cls := "tile",
-                      Tile("Conditions")(
-                        ConditionsPanel(obsId, conditions)
-                      )
-                    ),
-                    <.div(
-                      ^.key := "target",
-                      ^.cls := "tile",
-                      Tile("Target Position")(
-                        TargetEditor(obsId, props.zoomL(RootModel.target), conditions.get.some)
-                      )
+            <.div(
+              GPPStyles.TreeRGL,
+              Resizable(
+                axis = Axis.X,
+                width = treeWidth,
+                height = Option(s.height).getOrElse(0),
+                minConstraints = (295: JsNumber, 0: JsNumber),
+                maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
+                onResize = treeResize,
+                resizeHandles = List(ResizeHandleAxis.East),
+                content = tree
+              ),
+              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
+                ResponsiveReactGridLayout(
+                  width = coreWidth,
+                  margin = (5: JsNumber, 5: JsNumber),
+                  containerPadding = (5: JsNumber, 5: JsNumber),
+                  rowHeight = 30,
+                  draggableHandle = ".tileTitle",
+                  useCSSTransforms =
+                    false, // Not ideal, but fixes flicker on first update (0.18.3).
+                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                  layouts = layouts
+                )(
+                  <.div(
+                    ^.key := "conditions",
+                    ^.cls := "tile",
+                    Tile("Conditions")(
+                      ConditionsPanel(obsId, conditions)
+                    )
+                  ),
+                  <.div(
+                    ^.key := "target",
+                    ^.cls := "tile",
+                    Tile("Target Position")(
+                      TargetEditor(obsId, /*props.zoomL(RootModel.target),*/ conditions.get.some)
+                        .withRef(targetEditorRef)
                     )
                   )
                 )
               )
-            }
-          )
-        }
+            )
+          }
+        )
       }
+    }
+  }
+
+  protected val component =
+    ScalaComponent
+      .builder[Props]
+      .initialState(State(295))
+      .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 

@@ -14,6 +14,8 @@ import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import monocle.Prism
+import monocle.Iso
+import java.util.UUID
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -21,17 +23,17 @@ case object LabelsElement extends ElementItem
 
 object Routing {
 
-  private val obsIdP: Prism[String, ObsPage] =
-    Prism[String, ObsPage] {
-      case s =>
-        Observation.Id.fromString(s).map(ObsPage(_))
-    }(p => p.obsId.format)
+  private val obsPageIso: Iso[ExploreObservation.Id, ObsPage] =
+    Iso[ExploreObservation.Id, ObsPage](ObsPage.apply)(_.obsId)
 
-  private val targetObsIdP: Prism[String, TargetPage] =
+  private val targetIdP: Prism[String, TargetPage] =
     Prism[String, TargetPage] {
       case s =>
-        Observation.Id.fromString(s).map(TargetPage(_))
-    }(p => p.obsId.format)
+        SiderealTarget.Id.fromString(s).map(TargetPage(_))
+    }(p => p.targetId.format)
+
+  private val targetObsPageIso: Iso[ExploreObservation.Id, TargetsObsPage] =
+    Iso[ExploreObservation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
 
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
@@ -39,16 +41,26 @@ object Routing {
 
       (emptyRule
         | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
-        | dynamicRouteCT(("/obs" / string("[a-zA-Z0-9-]+")).pmapL(obsIdP)) ~> renderP(view =>
-          HomeComponent(view)
-        )
-        | dynamicRouteCT(("/target" / string("[a-zA-Z0-9-]+")).pmapL(targetObsIdP)) ~> renderP(
+        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> renderP(view => HomeComponent(view))
+        | dynamicRouteCT(("/target" / string("[a-zA-Z0-9-\\s]+")).pmapL(targetIdP)) ~> renderP(
           view => HomeComponent(view)
+        )
+        | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
+          HomeComponent(view)
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
-        .verify(HomePage, ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")))
+        .verify(
+          HomePage,
+          // ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")),
+          ObsPage(UUID.randomUUID),
+          TargetPage(SiderealTarget.Id.unsafeFromString("NGC 891")),
+          // TargetsObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")),
+          TargetsObsPage(UUID.randomUUID),
+          ConfigurationsPage,
+          ConstraintsPage
+        )
         .onPostRenderP {
           case (_, next, view) if next =!= RootModelRouting.lens.get(view.get) =>
             Callback.log(

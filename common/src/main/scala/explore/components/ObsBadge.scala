@@ -12,8 +12,11 @@ import react.common._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.views.card._
 
-final case class ObsBadge(obs: ExploreObservation, layout: ObsBadge.Layout)
-    extends ReactProps[ObsBadge](ObsBadge.component)
+final case class ObsBadge(
+  obs:      ExploreObservation,
+  layout:   ObsBadge.Layout,
+  selected: Boolean = false
+) extends ReactProps[ObsBadge](ObsBadge.component)
 object ObsBadge {
   type Props = ObsBadge
 
@@ -41,7 +44,7 @@ object ObsBadge {
         val obs = props.obs
 
         <.small(
-          Card(
+          Card(raised = props.selected)(
             CardContent(
               CardHeader(
                 props.layout match {

@@ -21,7 +21,7 @@ import react.common._
 
 final case class TargetEditor(
   observationId: Observation.Id,
-  globalTarget:  View[Option[SiderealTarget]],
+  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
@@ -30,22 +30,35 @@ object TargetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  // class Backend($ : BackendScope[Props, Unit]) {
+  class Backend() {
+    private val targetBodyRef = Ref.toScalaComponent(TargetBody.component)
+
+    def searchTarget(targetId: SiderealTarget.Id): Callback =
+      targetBodyRef.get
+        .flatMapCB(_.backend.setTargetByName(targetId.id))
+
+    def render(props: Props) =
+      AppCtx.withCtx { implicit appCtx =>
+        SubscriptionRenderMod[Subscription.Data, SiderealTarget](
+          appCtx.clients.programs
+            .subscribe(Subscription)(
+              Subscription.Variables(props.observationId.format).some
+            ),
+          _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
+        ) { target =>
+          TargetBody(props.observationId, target, /*props.globalTarget,*/ props.conditions)
+            .withRef(targetBodyRef)
+        }
+      }
+  }
+
   val component =
     ScalaComponent
       .builder[Props]
-      .render_P { props =>
-        AppCtx.withCtx { implicit appCtx =>
-          SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-            appCtx.clients.programs
-              .subscribe(Subscription)(
-                Subscription.Variables(props.observationId.format).some
-              ),
-            _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-          ) { target =>
-            TargetBody(props.observationId, target, props.globalTarget, props.conditions)
-          }
-        }
-      }
+      .backend(_ => new Backend())
+      .renderBackend
+      // .renderBackend[Backend]
       .build
 
 }

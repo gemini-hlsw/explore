@@ -25,7 +25,7 @@ object Test extends AppMain {
 
     <.div(^.height := "100vh",
           ^.width := "100%",
-          TargetEditor(obsId, view.zoomL(RootModel.target), none)
+          TargetEditor(obsId, /*view.zoomL(RootModel.focusedTargetOrObsId),*/ none)
     )
   }
 

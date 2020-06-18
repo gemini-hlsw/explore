@@ -42,7 +42,7 @@ import react.semanticui.widths._
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  globalTarget:  View[Option[SiderealTarget]],
+  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
@@ -58,13 +58,16 @@ object TargetBody extends ModelOptics {
 
   class Backend(bs: BackendScope[Props, Unit]) {
     // Create a mutable reference
-    private val ref = Ref.toScalaComponent(AladinComp)
+    private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     private val raLens: Lens[SiderealTarget, RightAscension] =
       SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
 
     private val decLens: Lens[SiderealTarget, Declination] =
       SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
+
+    def setName(name: String): Callback =
+      bs.props >>= (_.target.zoomL(SiderealTarget.name).set(name).runInCB)
 
     def setRa(ra: RightAscension): Callback =
       bs.props >>= (_.target.zoomL(raLens).set(ra).runInCB)
@@ -75,16 +78,48 @@ object TargetBody extends ModelOptics {
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name}#${target.track.baseCoordinates.show}"
 
+    val gotoRaDec = (coords: Coordinates) =>
+      aladinRef.get
+        .flatMapCB(
+          _.backend
+            .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
+        )
+        .toCallback
+
+    def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
+      aladinRef.get
+        .flatMapCB(
+          _.backend
+            .gotoObject(
+              search,
+              (a, b) => {
+                val ra  = RightAscension.fromHourAngle.get(
+                  HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
+                )
+                val dec =
+                  Declination.fromAngle
+                    .getOption(Angle.fromDoubleDegrees(b.toDouble))
+                    .getOrElse(Declination.Zero)
+                setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
+              },
+              Callback.log("error")
+            )
+        )
+        .toCallback
+
+    def setTargetByName: String => Callback =
+      searchAndGo { case (name, _, _) => setName(name) }
+
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>
-          val modifyIO    =
+          val modifyIO =
             Modify(props.observationId,
                    target,
                    props.target.mod,
-                   (props.globalTarget.set _).compose(_.some),
+                   //  (props.globalTarget.set _).compose(_.some),
                    undoCtx.setter
             )
 
@@ -94,45 +129,23 @@ object TargetBody extends ModelOptics {
           ): A => Callback = { v: A =>
             modifyIO(lens.get, lens.set, fields)(v).runInCB
           }
-          val gotoRaDec   = (coords: Coordinates) =>
-            ref.get
-              .flatMapCB(
-                _.backend
-                  .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
+
+          val searchAndSet: String => Callback =
+            searchAndGo(
+              modify[
+                (String, RightAscension, Declination)
+              ](
+                targetPropsL,
+                {
+                  case (n, r, d) =>
+                    Mutation.Fields(
+                      name = n.some,
+                      ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                      dec = Declination.fromStringSignedDMS.reverseGet(d).some
+                    )
+                }
               )
-              .toCallback
-          val searchAndGo = (search: String) =>
-            ref.get
-              .flatMapCB(
-                _.backend
-                  .gotoObject(
-                    search,
-                    (a, b) => {
-                      val ra  = RightAscension.fromHourAngle.get(
-                        HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
-                      )
-                      val dec =
-                        Declination.fromAngle
-                          .getOption(Angle.fromDoubleDegrees(b.toDouble))
-                          .getOrElse(Declination.Zero)
-                      setRa(ra) *> setDec(dec) *> modify[
-                        (String, RightAscension, Declination)
-                      ](
-                        targetPropsL,
-                        {
-                          case (n, r, d) =>
-                            Mutation.Fields(
-                              name = n.some,
-                              ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                              dec = Declination.fromStringSignedDMS.reverseGet(d).some
-                            )
-                        }
-                      )((search, ra, dec))
-                    },
-                    Callback.log("error")
-                  )
-              )
-              .toCallback
+            )
 
           def renderCond[A: Show](name: String, a: A): VdomNode =
             <.div(s"$name: ${a.show}")
@@ -153,12 +166,12 @@ object TargetBody extends ModelOptics {
               ^.height := "100%",
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(props.target.get, searchAndGo, gotoRaDec, undoCtx)
+                  CoordinatesForm(props.target.get, searchAndSet, gotoRaDec, undoCtx)
                     .withKey(coordinatesKey(props.target.get)),
                   props.conditions.whenDefined(renderConds)
                 ),
                 GridColumn(stretched = true, computer = Nine)(
-                  AladinComp.withRef(ref) {
+                  AladinComp.withRef(aladinRef) {
                     Aladin(target = props.aladinCoordsStr, fov = 0.25, showGotoControl = false)
                   }
                 ),
@@ -173,7 +186,7 @@ object TargetBody extends ModelOptics {
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
       // Callback.log(currentProps.toString()) *>
-      ref.get
+      aladinRef.get
         .flatMapCB { r =>
           val c = nextProps.aladinCoords
           r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)

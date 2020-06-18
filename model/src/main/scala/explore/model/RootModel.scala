@@ -5,21 +5,38 @@ package explore.model
 
 import cats.effect._
 import cats.implicits._
+import cats.kernel.Eq
 import clue._
 import explore.model.enum.AppTab
 import gem.Observation
-import gpp.util.EnumZipper
+import gem.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
+import monocle.Optional
+import monocle.Prism
+import monocle.function.Possible.possible
+import monocle.macros.GenPrism
 import monocle.macros.Lenses
 import sttp.model.Uri
 import sttp.model.Uri._
 
 @Lenses
 case class RootModel(
-  obsId:  Option[Observation.Id] = None,
-  target: Option[SiderealTarget] = None,
-  tabs:   EnumZipper[AppTab]
+  tabs:    EnumZipper[AppTab],
+  focused: Option[Focused] = None
 )
+
+object RootModel {
+  implicit val eqRootModel: Eq[RootModel] = Eq.by(m => (m.tabs, m.focused))
+
+  val focusedOpt: Optional[RootModel, Focused]                                                    =
+    focused.composeOptional(possible)
+  val focusedObsId: Optional[RootModel, ExploreObservation.Id]                                    =
+    focusedOpt.composeOptional(Focused.obsId)
+  val focusedTargetId: Optional[RootModel, SiderealTarget.Id]                                     =
+    focusedOpt.composeOptional(Focused.targetId)
+  val focusedTargetOrObsId: Optional[RootModel, Either[SiderealTarget.Id, ExploreObservation.Id]] =
+    focusedOpt.composeOptional(Focused.targetOrObsId)
+}
 
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.

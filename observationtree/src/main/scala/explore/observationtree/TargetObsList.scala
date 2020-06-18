@@ -28,10 +28,14 @@ import monocle.std.option.some
 import monocle.Lens
 import monocle.Getter
 import monocle.Setter
+import explore.model.Focused
+import gem.Observation
 
 final case class TargetObsList(
-  targets:      List[SiderealTarget],
-  observations: View[List[ExploreObservation]]
+  targets:        List[SiderealTarget],
+  observations:   View[List[ExploreObservation]],
+  focused:        ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]],
+  onTargetSelect: SiderealTarget.Id => Callback
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -79,9 +83,11 @@ object TargetObsList {
             newTargetId <- result.destination.toOption.map(_.droppableId)
             target      <- props.targets.find(_.name === newTargetId)
           } yield {
+            val obsId = UUID.fromString(result.draggableId)
+
             val getSetWithId =
               obsListMod
-                .withId(UUID.fromString(result.draggableId))
+                .withId(obsId)
 
             val set =
               setter
@@ -97,7 +103,15 @@ object TargetObsList {
                         .composeOptionLens(first)
                         .composeOptionLens(ExploreObservation.target)
                         .set(value)
-                    )
+                    ) >> value
+                      .map(t =>
+                        props
+                          .onTargetSelect(t.id)
+                          .when(props.focused.getOption.flatMap(_.toOption).exists(_ === obsId))
+                          .void
+                      )
+                      .getOrEmpty
+                      .to[IO]
                   }
                 ) _
 
@@ -175,8 +189,15 @@ object TargetObsList {
                       )(
                         <.span(
                           opIcon,
-                          target.name,
-                          <.span(^.float.right, s"$obsCount Obs")
+                          <.span(
+                            target.name,
+                            <.span(^.float.right, s"$obsCount Obs"),
+                            ^.cursor.pointer,
+                            ^.onClick --> (props.focused
+                              .set(SiderealTarget.Id(targetId).asLeft)
+                              .runInCB >>
+                              props.onTargetSelect(SiderealTarget.Id(targetId)))
+                          )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
                           targetObs.zipWithIndex.toTagMod {
@@ -193,10 +214,19 @@ object TargetObsList {
                                     <.div(
                                       provided.innerRef,
                                       provided.draggableProps,
-                                      getObsStyle(provided.draggableStyle, snapshot)
+                                      getObsStyle(provided.draggableStyle, snapshot),
+                                      ^.cursor.pointer,
+                                      ^.onClick --> (props.focused
+                                        .set(obs.id.asRight)
+                                        .runInCB >> props.onTargetSelect(obs.target.id))
                                     )(
                                       decorateTopRight(
-                                        ObsBadge(obs, ObsBadge.Layout.ConfAndConstraints),
+                                        ObsBadge(obs,
+                                                 ObsBadge.Layout.ConfAndConstraints,
+                                                 selected = props.focused.getOption
+                                                   .flatMap(_.toOption)
+                                                   .exists(_ === obs.id)
+                                        ),
                                         dragIcon
                                       )
                                     )

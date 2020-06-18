@@ -6,6 +6,7 @@ package explore.model
 import cats.kernel.laws.discipline._
 import explore.model.arb.all._
 import explore.model.enum.AppTab
+import gem.arb.ArbEnumerated._
 import munit.DisciplineSuite
 
 class ModelSuite extends DisciplineSuite {
@@ -13,4 +14,6 @@ class ModelSuite extends DisciplineSuite {
   checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
   checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
+  checkAll("Eq[Focused]", EqTests[Focused].eqv)
+
 }
