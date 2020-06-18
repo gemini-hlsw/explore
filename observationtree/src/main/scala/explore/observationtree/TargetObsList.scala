@@ -28,10 +28,14 @@ import monocle.std.option.some
 import monocle.Lens
 import monocle.Getter
 import monocle.Setter
+import explore.model.Focused
+import gem.Observation
 
 final case class TargetObsList(
-  targets:      List[SiderealTarget],
-  observations: View[List[ExploreObservation]]
+  targets:        List[SiderealTarget],
+  observations:   View[List[ExploreObservation]],
+  focused:        ViewOpt[Either[SiderealTarget.Id, Observation.Id]],
+  onTargetSelect: SiderealTarget.Id => Callback
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -175,8 +179,15 @@ object TargetObsList {
                       )(
                         <.span(
                           opIcon,
-                          target.name,
-                          <.span(^.float.right, s"$obsCount Obs")
+                          <.span(
+                            target.name,
+                            <.span(^.float.right, s"$obsCount Obs"),
+                            ^.cursor.pointer,
+                            ^.onClick --> (props.focused
+                              .set(SiderealTarget.Id(targetId).asLeft)
+                              .runInCB >>
+                              props.onTargetSelect(SiderealTarget.Id(targetId)))
+                          )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
                           targetObs.zipWithIndex.toTagMod {
@@ -193,7 +204,12 @@ object TargetObsList {
                                     <.div(
                                       provided.innerRef,
                                       provided.draggableProps,
-                                      getObsStyle(provided.draggableStyle, snapshot)
+                                      getObsStyle(provided.draggableStyle, snapshot),
+                                      ^.cursor.pointer,
+                                      ^.onClick --> props.onTargetSelect(obs.target.id)
+                                      // ^.onClick --> props.focused
+                                      // .set(obs.) // We are using ExploreObservation here, instead of Observatin with Observation.Id
+                                      // .runInCB
                                     )(
                                       decorateTopRight(
                                         ObsBadge(obs, ObsBadge.Layout.ConfAndConstraints),

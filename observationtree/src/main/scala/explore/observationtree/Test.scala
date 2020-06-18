@@ -19,6 +19,7 @@ import explore.model.reusability._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.extra.router.RouterLogic
 import explore.model.Page
+import japgolly.scalajs.react.Callback
 
 @JSExportTopLevel("ObsTreeTest")
 object Test extends AppMain {
@@ -34,7 +35,13 @@ object Test extends AppMain {
     // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
     // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
     Component(
-      _.map[VdomNode](obsView => TargetObsList(TargetTreeTest.targets, obsView)).toOption
+      _.map[VdomNode](obsView =>
+        TargetObsList(TargetTreeTest.targets,
+                      obsView,
+                      view.zoomO(RootModel.focusedTargetOrObsId),
+                      _ => Callback.empty
+        )
+      ).toOption
         .getOrElse(<.div)
     )
 }
