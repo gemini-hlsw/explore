@@ -102,24 +102,26 @@ object HomeComponent {
             val tree =
               <.div(^.width := treeWidth.px, GPPStyles.Tree)(
                 <.div(GPPStyles.TreeBodyOuter)(
-                  TreeComponent(
-                    _.map[VdomNode](obsView =>
-                      TargetObsList(
-                        targets,
-                        obsView,
-                        props.zoomO(RootModel.focusedTargetOrObsId),
-                        targetId =>
-                          targets
-                            .find(_.id === targetId)
-                            .map(target =>
-                              targetEditorRef.get
-                                .flatMapCB(_.backend.searchTarget(target.name))
-                                .toCallback
-                            )
-                            .getOrEmpty
-                      )
-                    ).toOption
-                      .getOrElse(<.div)
+                  <.div(GPPStyles.TreeBodyInner)(
+                    TreeComponent(
+                      _.map[VdomNode](obsView =>
+                        TargetObsList(
+                          targets,
+                          obsView,
+                          props.zoomO(RootModel.focusedTargetOrObsId),
+                          targetId =>
+                            targets
+                              .find(_.id === targetId)
+                              .map(target =>
+                                targetEditorRef.get
+                                  .flatMapCB(_.backend.searchTarget(target.name))
+                                  .toCallback
+                              )
+                              .getOrEmpty
+                        )
+                      ).toOption
+                        .getOrElse(<.div)
+                    )
                   )
                 )
               )
@@ -130,7 +132,7 @@ object HomeComponent {
                 axis = Axis.X,
                 width = treeWidth,
                 height = Option(s.height).getOrElse(0),
-                minConstraints = (295: JsNumber, 0: JsNumber),
+                minConstraints = (250: JsNumber, 0: JsNumber),
                 maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),

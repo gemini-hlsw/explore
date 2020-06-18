@@ -27,21 +27,8 @@ object ExploreMain extends AppMain {
 
   protected def routingView(view: View[RootModel]): View[RootModel] =
     view.withOnMod { model =>
-      IO(println(RootModelRouting.lens.get(model))) >>
-        routerCtl.set(RootModelRouting.lens.get(model)).to[IO]
+      routerCtl.set(RootModelRouting.lens.get(model)).to[IO]
     }
-  // ViewF[IO, RootModel](
-  //   view.get,
-  //   f =>
-  //     view.mod { model =>
-  //       val newModel = f(model)
-  //       // Having this here makes sure the URL update is always executed.
-  //       // Another option is to move it to AppRoot.componentDidUpdate, but it won't be
-  //       // executed if the application isn't rerendered because of reusability.
-  //       routerCtl.set(RootModelRouting.lens.get(newModel)).runNow()
-  //       newModel
-  //     }
-  // )
 
   override def rootComponent(view: View[RootModel]): VdomElement =
     <.div(

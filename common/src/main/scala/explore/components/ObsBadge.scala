@@ -44,7 +44,7 @@ object ObsBadge {
         val obs = props.obs
 
         <.small(
-          Card(raised = props.selected)(
+          Card(raised = props.selected)(^.width := "100%")(
             CardContent(
               CardHeader(
                 props.layout match {

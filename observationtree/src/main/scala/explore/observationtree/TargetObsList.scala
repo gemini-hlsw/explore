@@ -30,6 +30,7 @@ import monocle.Getter
 import monocle.Setter
 import explore.model.Focused
 import gem.Observation
+import explore.components.ui.GPPStyles
 
 final case class TargetObsList(
   targets:        List[SiderealTarget],
@@ -151,7 +152,7 @@ object TargetObsList {
       val observations = props.observations.get
       val obsByTarget  = observations.groupBy(_.target)
 
-      <.div(^.width := "270px", ^.marginTop := "30px")(
+      <.div(GPPStyles.ObsTree, ^.marginTop := "30px")(
         UndoRegion[List[ExploreObservation]] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
@@ -202,7 +203,7 @@ object TargetObsList {
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
                           targetObs.zipWithIndex.toTagMod {
                             case (obs, idx) =>
-                              <.div(^.marginLeft := "25px", ^.padding := "5px")(
+                              <.div(GPPStyles.ObsTreeItem)(
                                 Draggable(obs.id.toString, idx) {
                                   case (provided, snapshot, _) =>
                                     def dragIcon =

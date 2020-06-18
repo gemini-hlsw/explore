@@ -36,10 +36,12 @@ object Test extends AppMain {
     // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
     Component(
       _.map[VdomNode](obsView =>
-        TargetObsList(TargetTreeTest.targets,
-                      obsView,
-                      view.zoomO(RootModel.focusedTargetOrObsId),
-                      _ => Callback.empty
+        <.div(^.width := "295px")(
+          TargetObsList(TargetTreeTest.targets,
+                        obsView,
+                        view.zoomO(RootModel.focusedTargetOrObsId),
+                        _ => Callback.empty
+          )
         )
       ).toOption
         .getOrElse(<.div)
