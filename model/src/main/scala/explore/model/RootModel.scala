@@ -28,13 +28,13 @@ case class RootModel(
 object RootModel {
   implicit val eqRootModel: Eq[RootModel] = Eq.by(m => (m.tabs, m.focused))
 
-  val focusedOpt: Optional[RootModel, Focused]                                             =
+  val focusedOpt: Optional[RootModel, Focused]                                                    =
     focused.composeOptional(possible)
-  val focusedObsId: Optional[RootModel, Observation.Id]                                    =
+  val focusedObsId: Optional[RootModel, ExploreObservation.Id]                                    =
     focusedOpt.composeOptional(Focused.obsId)
-  val focusedTargetId: Optional[RootModel, SiderealTarget.Id]                              =
+  val focusedTargetId: Optional[RootModel, SiderealTarget.Id]                                     =
     focusedOpt.composeOptional(Focused.targetId)
-  val focusedTargetOrObsId: Optional[RootModel, Either[SiderealTarget.Id, Observation.Id]] =
+  val focusedTargetOrObsId: Optional[RootModel, Either[SiderealTarget.Id, ExploreObservation.Id]] =
     focusedOpt.composeOptional(Focused.targetOrObsId)
 }
 

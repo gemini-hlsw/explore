@@ -11,9 +11,9 @@ sealed trait Page extends Product with Serializable
 
 object Page {
   case object HomePage           extends Page
-  final case class ObsPage(obsId: Observation.Id) extends Page
+  final case class ObsPage(obsId: ExploreObservation.Id) extends Page
   final case class TargetPage(targetId: SiderealTarget.Id) extends Page
-  final case class TargetsObsPage(obsId: Observation.Id) extends Page
+  final case class TargetsObsPage(obsId: ExploreObservation.Id) extends Page
   case object ConfigurationsPage extends Page
   case object ConstraintsPage    extends Page
 

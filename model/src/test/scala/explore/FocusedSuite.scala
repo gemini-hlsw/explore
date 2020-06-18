@@ -9,6 +9,7 @@ import explore.model.arb.all._
 import gem.arb.ArbObservation._
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite
+import org.scalacheck.Arbitrary._
 
 class FocusedSuite extends DisciplineSuite {
   checkAll("obsId", OptionalTests(Focused.obsId))

@@ -34,7 +34,7 @@ import gem.Observation
 final case class TargetObsList(
   targets:        List[SiderealTarget],
   observations:   View[List[ExploreObservation]],
-  focused:        ViewOpt[Either[SiderealTarget.Id, Observation.Id]],
+  focused:        ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]],
   onTargetSelect: SiderealTarget.Id => Callback
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
@@ -83,9 +83,11 @@ object TargetObsList {
             newTargetId <- result.destination.toOption.map(_.droppableId)
             target      <- props.targets.find(_.name === newTargetId)
           } yield {
+            val obsId = UUID.fromString(result.draggableId)
+
             val getSetWithId =
               obsListMod
-                .withId(UUID.fromString(result.draggableId))
+                .withId(obsId)
 
             val set =
               setter
@@ -101,7 +103,15 @@ object TargetObsList {
                         .composeOptionLens(first)
                         .composeOptionLens(ExploreObservation.target)
                         .set(value)
-                    )
+                    ) >> value
+                      .map(t =>
+                        props
+                          .onTargetSelect(t.id)
+                          .when(props.focused.getOption.flatMap(_.toOption).exists(_ === obsId))
+                          .void
+                      )
+                      .getOrEmpty
+                      .to[IO]
                   }
                 ) _
 
@@ -206,13 +216,17 @@ object TargetObsList {
                                       provided.draggableProps,
                                       getObsStyle(provided.draggableStyle, snapshot),
                                       ^.cursor.pointer,
-                                      ^.onClick --> props.onTargetSelect(obs.target.id)
-                                      // ^.onClick --> props.focused
-                                      // .set(obs.) // We are using ExploreObservation here, instead of Observatin with Observation.Id
-                                      // .runInCB
+                                      ^.onClick --> (props.focused
+                                        .set(obs.id.asRight)
+                                        .runInCB >> props.onTargetSelect(obs.target.id))
                                     )(
                                       decorateTopRight(
-                                        ObsBadge(obs, ObsBadge.Layout.ConfAndConstraints),
+                                        ObsBadge(obs,
+                                                 ObsBadge.Layout.ConfAndConstraints,
+                                                 selected = props.focused.getOption
+                                                   .flatMap(_.toOption)
+                                                   .exists(_ === obs.id)
+                                        ),
                                         dragIcon
                                       )
                                     )

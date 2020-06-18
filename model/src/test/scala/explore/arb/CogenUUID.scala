@@ -4,11 +4,11 @@
 package explore.model.arb
 
 import org.scalacheck.Cogen
+import java.util.UUID
 
-object all
-    extends ArbConditions
-    with ArbSiderealTarget
-    with ArbExploreSiderealTarget
-    with ArbFocused
-    with ArbRootModel
-    with CogenUUID
+trait CogenUUID {
+  implicit val cogenUUID: Cogen[UUID] =
+    Cogen[(Long, Long)].contramap(u => (u.getMostSignificantBits, u.getLeastSignificantBits))
+}
+
+object CogenUUID extends CogenUUID

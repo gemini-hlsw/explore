@@ -22,6 +22,8 @@ final case class ExploreObservation(
 )
 
 object ExploreObservation {
+  type Id = UUID
+
   implicit val equalObservation: Eq[ExploreObservation] =
     Eq.by(_.id)
 }

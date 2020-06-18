@@ -41,6 +41,7 @@ import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
 
 import js.annotation._
+import java.util.UUID
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -67,8 +68,9 @@ trait AppMain extends IOApp {
       tabs = EnumZipper.of[AppTab],
       focused = // TODO Remove this, it's here termporarily for testing URL automatic derivation.
         FocusedObs(
-          Observation
-            .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+          UUID.randomUUID
+          // Observation
+          // .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
         ).some
     )
 

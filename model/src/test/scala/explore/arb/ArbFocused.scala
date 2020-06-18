@@ -16,9 +16,11 @@ import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import org.scalacheck.Gen
 import org.scalacheck.Gen._
+import explore.model.ExploreObservation
 
 trait ArbFocused {
   import explore.model.arb.ArbSiderealTarget._
+  import explore.model.arb.CogenUUID._
 
   implicit val focusedArb: Arbitrary[Focused] =
     Arbitrary(
@@ -26,13 +28,13 @@ trait ArbFocused {
     )
 
   val genFocusedObs: Gen[Focused.FocusedObs] =
-    arbitrary[Observation.Id].map(FocusedObs.apply)
+    arbitrary[ExploreObservation.Id].map(FocusedObs.apply)
 
   val genFocusedTarget: Gen[Focused.FocusedTarget] =
     arbitrary[SiderealTarget.Id].map(FocusedTarget.apply)
 
   implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
-    Cogen[Observation.Id].contramap(_.obsId)
+    Cogen[ExploreObservation.Id].contramap(_.obsId)
 
   implicit val focusedTargetCogen: Cogen[Focused.FocusedTarget] =
     Cogen[SiderealTarget.Id].contramap(_.targetId)

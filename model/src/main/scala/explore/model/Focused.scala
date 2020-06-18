@@ -12,7 +12,7 @@ import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable
 object Focused {
-  @Lenses case class FocusedObs(obsId: Observation.Id) extends Focused
+  @Lenses case class FocusedObs(obsId: ExploreObservation.Id) extends Focused
   @Lenses case class FocusedTarget(targetId: SiderealTarget.Id) extends Focused
   // @Lenses case class FocusedConstraint(constraint: ???) extends Focused
   // @Lenses case class FocusedConfiguration(configuraton: ???) extends Focused
@@ -25,12 +25,12 @@ object Focused {
     case _                                    => false
   }
 
-  val obsId: Optional[Focused, Observation.Id]                                    =
+  val obsId: Optional[Focused, ExploreObservation.Id]                                    =
     GenPrism[Focused, FocusedObs].composeLens(FocusedObs.obsId)
-  val targetId: Optional[Focused, SiderealTarget.Id]                              =
+  val targetId: Optional[Focused, SiderealTarget.Id]                                     =
     GenPrism[Focused, FocusedTarget].composeLens(FocusedTarget.targetId)
-  val targetOrObsId: Optional[Focused, Either[SiderealTarget.Id, Observation.Id]] =
-    Optional[Focused, Either[SiderealTarget.Id, Observation.Id]] {
+  val targetOrObsId: Optional[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] =
+    Optional[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] {
       case FocusedObs(obsId)       => obsId.asRight.some
       case FocusedTarget(targetId) => targetId.asLeft.some
       case _                       => none
