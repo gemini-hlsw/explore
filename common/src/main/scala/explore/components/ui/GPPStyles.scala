@@ -18,6 +18,7 @@ object GPPStyles {
   val ResizeHandle: Css  = Css("resize-handle")
   val Tree: Css          = Css("tree")
   val TreeBodyOuter: Css = Css("tree-body-outer")
+  val TreeBodyInner: Css = Css("tree-body-inner")
   val TreeRGL: Css       = Css("tree-rgl")
   val RGLBody: Css       = Css("rgl-body")
   val RGLArea: Css       = Css("rgl-area")
@@ -29,4 +30,7 @@ object GPPStyles {
 
   val HVCenter: Css = Css("horizontal-vertical-center")
 
+  val ObsTree: Css     = Css("obs-tree")
+  val ObsTreeItem: Css = Css("obs-tree-item")
+  val ObsBadge: Css    = Css("obs-badge")
 }

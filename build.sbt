@@ -97,7 +97,7 @@ lazy val common = project
 lazy val targeteditor = project
   .in(file("targeteditor"))
   .settings(commonSettings: _*)
-  .settings(commonLibSettings: _*)
+  .settings(commonJsLibSettings: _*)
   .settings(commonWDS: _*)
   .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common)
@@ -188,7 +188,8 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
       Log4Cats.value ++
       In(Test)(
         ScalaJSReactTest.value
-      )
+      ),
+  dependencyOverrides ++= ScalaJSReact.value
 )
 
 lazy val commonWDS = Seq(

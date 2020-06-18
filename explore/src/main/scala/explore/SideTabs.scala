@@ -42,7 +42,7 @@ object SideTabs {
         val focus = p.tabs.get.focus
 
         def tabButton(tab: AppTab): Button =
-          Button(positive = tab === focus,
+          Button(active = tab === focus,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 

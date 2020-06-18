@@ -33,7 +33,7 @@ object AndOrTest {
       UUID.randomUUID,
       ExploreObservation(
         UUID.randomUUID,
-        SiderealTarget(targetName, null),
+        SiderealTarget(UUID.randomUUID, targetName, null),
         randomElement(ObsStatus.ObsStatusEnumerated.all),
         "GMOS-N R831 1x 300",
         "<0.8\" <0.3 mag Gray",
