@@ -4,4 +4,12 @@ This can be done similarly to what is described in https://devcenter.heroku.com/
 
 Furthermore, we will add `nginx` to serve the app and its static files, as well as define it as reverse proxy. For this we use https://github.com/heroku/heroku-buildpack-static, similarly to what is described in https://m.alphasights.com/using-nginx-on-heroku-to-serve-single-page-apps-and-avoid-cors-5d013b171a45. For development, we configure a similar proxy in Webpack Dev Server.
 
-However, we configure the buildpack stack in `app.json` instead of doing it manually as the tutorials show.
+The buildpacks are configured in `app.json`. If you want to avoid setting them up manually, you can have Heroku pick it by navigating to:
+
+https://heroku.com/deploy?template=https://github.com/gemini-hlsw/explore/tree/master (or your fork's and desired branch GitHub address)
+
+(`app.json` is also picked up for Review Apps when using Heroku CI).
+
+The resulting Heroku app won't be connected to the GitHub repo though. That has to be done manually via web: https://dashboard.heroku.com/apps/<<app-name>>/deploy/github
+
+

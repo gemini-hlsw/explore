@@ -9,28 +9,16 @@ import gem.Target
 import gsp.math.ProperMotion
 import monocle.Lens
 import monocle.macros.Lenses
+import java.util.UUID
 
 /**
   * A refinement of gem.Tracker meant for sidereal targets
   */
 @Lenses
-final case class SiderealTarget(name: String, track: ProperMotion) {
-  val id: SiderealTarget.Id = SiderealTarget.Id(name)
-}
+final case class SiderealTarget(id: UUID, name: String, track: ProperMotion)
 
 object SiderealTarget {
-  case class Id(id: String) extends AnyVal {
-    def format: String = id
-  }
-
-  object Id {
-    def fromString(s: String): Option[SiderealTarget.Id] = Id(s).some
-
-    def unsafeFromString(s: String): SiderealTarget.Id =
-      fromString(s).getOrElse(sys.error("Malformed SiderealTarget.Id: " + s))
-
-    implicit val eqId: Eq[Id] = Eq.by(_.id)
-  }
+  type Id = UUID
 
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }
@@ -46,6 +34,11 @@ object ExploreSiderealTarget {
 
   def apply(target: Target): Option[ExploreSiderealTarget] =
     target.track
-      .map(pm => ExploreSiderealTarget(target.name, SiderealTarget(target.name, pm).some))
+      .map(pm =>
+        ExploreSiderealTarget(
+          target.name,
+          SiderealTarget(UUID.randomUUID, target.name, pm).some
+        )
+      )
       .toOption
 }

@@ -78,6 +78,8 @@ object HomeComponent {
 
         StreamRendererMod.build(obsRef.discrete)
       }
+
+  val targets = TargetTreeTest.targets
   // END DEMO PURPOSES
 
   class Backend($ : BackendScope[Props, State]) {
@@ -103,10 +105,18 @@ object HomeComponent {
                   TreeComponent(
                     _.map[VdomNode](obsView =>
                       TargetObsList(
-                        TargetTreeTest.targets,
+                        targets,
                         obsView,
                         props.zoomO(RootModel.focusedTargetOrObsId),
-                        targetId => targetEditorRef.get.flatMapCB(_.backend.searchTarget(targetId))
+                        targetId =>
+                          targets
+                            .find(_.id === targetId)
+                            .map(target =>
+                              targetEditorRef.get
+                                .flatMapCB(_.backend.searchTarget(target.name))
+                                .toCallback
+                            )
+                            .getOrEmpty
                       )
                     ).toOption
                       .getOrElse(<.div)

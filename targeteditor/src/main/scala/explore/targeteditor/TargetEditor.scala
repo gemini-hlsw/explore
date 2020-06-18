@@ -34,9 +34,9 @@ object TargetEditor {
   class Backend() {
     private val targetBodyRef = Ref.toScalaComponent(TargetBody.component)
 
-    def searchTarget(targetId: SiderealTarget.Id): Callback =
+    def searchTarget(targetName: String): Callback =
       targetBodyRef.get
-        .flatMapCB(_.backend.setTargetByName(targetId.id))
+        .flatMapCB(_.backend.setTargetByName(targetName))
 
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>

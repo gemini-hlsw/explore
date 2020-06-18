@@ -25,6 +25,7 @@ object TargetTreeTest {
                    none
       )
     SiderealTarget(
+      UUID.randomUUID,
       name,
       coords
     )

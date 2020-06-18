@@ -42,7 +42,7 @@ object TargetObsList {
   type Props = TargetObsList
 
   @Lenses
-  case class State(collapsedTargetIds: Set[String] = HashSet.empty)
+  case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
 
   val obsListMod = new ListMod[IO, ExploreObservation, UUID](ExploreObservation.id)
 
@@ -119,10 +119,10 @@ object TargetObsList {
           }).getOrEmpty
         }
 
-    def toggleCollapsed(targetId: String): Callback =
+    def toggleCollapsed(targetId: SiderealTarget.Id): Callback =
       $.modStateL(State.collapsedTargetIds) { collapsed =>
         collapsed
-          .contains(targetId)
+          .exists(_ === targetId)
           .fold(collapsed - targetId, collapsed + targetId)
       }
 
@@ -165,7 +165,7 @@ object TargetObsList {
               ),
               props.targets.toTagMod {
                 target =>
-                  val targetId = target.name
+                  val targetId = target.id
 
                   val targetObs = obsByTarget.getOrElse(target, List.empty)
                   val obsCount  = targetObs.length
@@ -174,7 +174,7 @@ object TargetObsList {
                     targetObs.nonEmpty.fold(
                       Icon(
                         "chevron " + state.collapsedTargetIds
-                          .contains(targetId)
+                          .exists(_ === targetId)
                           .fold("right", "down")
                       )(^.cursor.pointer, ^.onClick --> toggleCollapsed(targetId)),
                       Icon("chevron right")
@@ -194,9 +194,9 @@ object TargetObsList {
                             <.span(^.float.right, s"$obsCount Obs"),
                             ^.cursor.pointer,
                             ^.onClick --> (props.focused
-                              .set(SiderealTarget.Id(targetId).asLeft)
+                              .set(targetId.asLeft)
                               .runInCB >>
-                              props.onTargetSelect(SiderealTarget.Id(targetId)))
+                              props.onTargetSelect(targetId))
                           )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(

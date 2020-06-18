@@ -26,11 +26,8 @@ object Routing {
   private val obsPageIso: Iso[ExploreObservation.Id, ObsPage] =
     Iso[ExploreObservation.Id, ObsPage](ObsPage.apply)(_.obsId)
 
-  private val targetIdP: Prism[String, TargetPage] =
-    Prism[String, TargetPage] {
-      case s =>
-        SiderealTarget.Id.fromString(s).map(TargetPage(_))
-    }(p => p.targetId.format)
+  private val targetPageIso: Iso[SiderealTarget.Id, TargetPage] =
+    Iso[SiderealTarget.Id, TargetPage](TargetPage.apply)(_.targetId)
 
   private val targetObsPageIso: Iso[ExploreObservation.Id, TargetsObsPage] =
     Iso[ExploreObservation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
@@ -42,8 +39,8 @@ object Routing {
       (emptyRule
         | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
         | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> renderP(view => HomeComponent(view))
-        | dynamicRouteCT(("/target" / string("[a-zA-Z0-9-\\s]+")).pmapL(targetIdP)) ~> renderP(
-          view => HomeComponent(view)
+        | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
+          HomeComponent(view)
         )
         | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
           HomeComponent(view)
@@ -53,24 +50,23 @@ object Routing {
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(
           HomePage,
-          // ObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")),
           ObsPage(UUID.randomUUID),
-          TargetPage(SiderealTarget.Id.unsafeFromString("NGC 891")),
-          // TargetsObsPage(Observation.Id.unsafeFromString("GS2020A-Q-1")),
+          TargetPage(UUID.randomUUID),
           TargetsObsPage(UUID.randomUUID),
           ConfigurationsPage,
           ConstraintsPage
         )
         .onPostRenderP {
-          case (_, next, view) if next =!= RootModelRouting.lens.get(view.get) =>
-            Callback.log(
-              s"Routing.onPostRender triggered [${RootModelRouting.lens.get(view.get)}] => [$next]"
-            ) >>
+          case (prev, next, view) if next.some =!= prev =>
+            Callback
+              .log(
+                s"Routing.onPostRender triggered [$prev] => [$next]"
+              ) >>
               view.zoomL(RootModelRouting.lens).set(next).runInCB
-          case _                                                               => Callback.empty
+          case _                                        => Callback.empty
         }
         .renderWithP(layout)
-        .logToConsole
+    // .logToConsole
     }
 
   private def layout(

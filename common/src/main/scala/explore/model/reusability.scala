@@ -22,7 +22,6 @@ object reusability {
   implicit val statusReuse: Reusability[StreamingClientStatus]             = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                        = Reusability.by(_.getSeconds)
   implicit val obsIdReuse: Reusability[Observation.Id]                     = Reusability.by(_.format)
-  implicit val targetIdReuse: Reusability[SiderealTarget.Id]               = Reusability.by(_.format)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]            = Reusability.byEq
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]          = Reusability.derive
   implicit val expObsReuse: Reusability[ExploreObservation]                = Reusability.derive

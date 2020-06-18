@@ -23,6 +23,7 @@ import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import monocle.macros.Lenses
+import java.util.UUID
 
 object TargetQueries {
 
@@ -40,7 +41,7 @@ object TargetQueries {
                        none,
                        none
           )
-        SiderealTarget(name, coords)
+        SiderealTarget(UUID.randomUUID, name, coords)
       }
   }
 
