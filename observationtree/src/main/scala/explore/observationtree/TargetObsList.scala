@@ -152,7 +152,7 @@ object TargetObsList {
       val observations = props.observations.get
       val obsByTarget  = observations.groupBy(_.target)
 
-      <.div(GPPStyles.ObsTree, ^.marginTop := "30px")(
+      <.div(GPPStyles.ObsTree)(
         UndoRegion[List[ExploreObservation]] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
