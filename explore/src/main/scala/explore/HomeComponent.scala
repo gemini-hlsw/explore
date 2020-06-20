@@ -132,8 +132,8 @@ object HomeComponent {
                 axis = Axis.X,
                 width = treeWidth,
                 height = Option(s.height).getOrElse(0),
-                minConstraints = (250: JsNumber, 0: JsNumber),
-                maxConstraints = (s.width.toDouble / 2: JsNumber, 0: JsNumber),
+                minConstraints = (250, 0),
+                maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),
                 content = tree
@@ -141,8 +141,8 @@ object HomeComponent {
               <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
                 ResponsiveReactGridLayout(
                   width = coreWidth,
-                  margin = (5: JsNumber, 5: JsNumber),
-                  containerPadding = (5: JsNumber, 5: JsNumber),
+                  margin = (5, 5),
+                  containerPadding = (5, 5),
                   rowHeight = 30,
                   draggableHandle = ".tileTitle",
                   useCSSTransforms =
