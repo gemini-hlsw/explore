@@ -27,7 +27,7 @@ object Settings {
     val reactGridLayout   = "0.6.0"
     val reactResizable    = "0.1.0"
     val reactSemanticUI   = "0.5.6"
-    val reactSizeMe       = "0.4.3"
+    val reactSizeMe       = "0.4.4"
     val scalaJsReact      = "1.7.2"
   }
 
