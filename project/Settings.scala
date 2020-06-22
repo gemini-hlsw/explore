@@ -15,7 +15,7 @@ object Settings {
     val disciplineMUnit   = "0.2.2"
     val gspCore           = "0.2.4"
     val gspMathTestKit    = "0.2.2"
-    val gppUI             = "0.1.5"
+    val gppUI             = "0.1.6"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
     val monocle           = "2.0.5"
