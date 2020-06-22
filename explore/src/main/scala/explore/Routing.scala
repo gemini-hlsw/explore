@@ -57,13 +57,16 @@ object Routing {
           ConstraintsPage
         )
         .onPostRenderP {
-          case (prev, next, view) if next.some =!= prev =>
+          case (prev, next, view)
+              if next.some =!= prev &&
+                // Short circuit if we get here because of a change in the model.
+                next =!= view.zoomL(RootModelRouting.lens).get =>
             Callback
               .log(
                 s"Routing.onPostRender triggered [$prev] => [$next]"
               ) >>
               view.zoomL(RootModelRouting.lens).set(next).runInCB
-          case _                                        => Callback.empty
+          case _ => Callback.empty
         }
         .renderWithP(layout)
     // .logToConsole
