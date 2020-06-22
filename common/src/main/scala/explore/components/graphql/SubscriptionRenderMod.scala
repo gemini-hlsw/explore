@@ -10,7 +10,7 @@ import cats.effect.IO
 import cats.effect.Timer
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.ViewF
+import crystal.data.ViewF
 import crystal.data.Pot
 import crystal.data.react._
 import crystal.react.StreamRendererMod
@@ -27,6 +27,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 import scala.language.postfixOps
+import cats.effect.ContextShift
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
@@ -39,6 +40,7 @@ final case class SubscriptionRenderMod[D, A](
 )(implicit
   val ce:            ConcurrentEffect[IO],
   val timer:         Timer[IO],
+  val cs:            ContextShift[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
 ) extends ReactProps(SubscriptionRenderMod.component)
@@ -54,6 +56,7 @@ object SubscriptionRenderMod {
     val onNewData: F[Unit]
     implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
+    implicit val cs: ContextShift[F]
     implicit val logger: Logger[F]
     implicit val reuse: Reusability[A]
   }
@@ -89,6 +92,7 @@ object SubscriptionRenderMod {
       .componentDidMount { $ =>
         implicit val ce     = $.props.ce
         implicit val timer  = $.props.timer
+        implicit val cs     = $.props.cs
         implicit val logger = $.props.logger
         implicit val reuse  = $.props.reuse
 

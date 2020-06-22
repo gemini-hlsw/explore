@@ -11,7 +11,7 @@ import explore.model.RootModel
 import cats.effect.concurrent.Ref
 import cats.effect.IO
 import explore.model.ExploreObservation
-import crystal.ViewF
+import crystal.data.ViewF
 import fs2.concurrent.SignallingRef
 import cats.effect.SyncIO
 import crystal.react.StreamRendererMod
@@ -39,7 +39,7 @@ object Test extends AppMain {
         <.div(^.width := "295px")(
           TargetObsList(TargetTreeTest.targets,
                         obsView,
-                        view.zoomO(RootModel.focusedTargetOrObsId),
+                        view.zoom(RootModel.focusedTargetOrObsId),
                         _ => Callback.empty
           )
         )

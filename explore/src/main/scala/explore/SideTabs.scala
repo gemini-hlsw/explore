@@ -7,6 +7,7 @@ import scala.scalajs.js.JSConverters._
 
 import cats.implicits._
 import crystal.react.implicits._
+import crystal.data.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.Page
 import explore.model.enum.AppTab

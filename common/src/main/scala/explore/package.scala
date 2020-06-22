@@ -2,8 +2,8 @@
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 import cats.effect.IO
-import crystal.ViewF
-import crystal.ViewOptF
+import crystal.data.ViewF
+import crystal.data.ViewOptF
 import explore.model.AppContext
 
 package explore {

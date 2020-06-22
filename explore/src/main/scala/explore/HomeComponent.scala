@@ -6,6 +6,7 @@ package explore
 import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
+import crystal.data.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.ui.GPPStyles
 import explore.conditions.ConditionsPanel
@@ -108,7 +109,7 @@ object HomeComponent {
                         TargetObsList(
                           targets,
                           obsView,
-                          props.zoomO(RootModel.focusedTargetOrObsId),
+                          props.zoom(RootModel.focusedTargetOrObsId),
                           targetId =>
                             targets
                               .find(_.id === targetId)

@@ -9,6 +9,7 @@ import cats.Show
 import cats.effect.IO
 import cats.implicits._
 import crystal.react.implicits._
+import crystal.data.react.implicits._
 import explore.AppCtx
 import explore.View
 import explore.components.ui.GPPStyles
@@ -67,13 +68,13 @@ object TargetBody extends ModelOptics {
       SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
 
     def setName(name: String): Callback =
-      bs.props >>= (_.target.zoomL(SiderealTarget.name).set(name).runInCB)
+      bs.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
 
     def setRa(ra: RightAscension): Callback =
-      bs.props >>= (_.target.zoomL(raLens).set(ra).runInCB)
+      bs.props >>= (_.target.zoom(raLens).set(ra).runInCB)
 
     def setDec(dec: Declination): Callback =
-      bs.props >>= (_.target.zoomL(decLens).set(dec).runInCB)
+      bs.props >>= (_.target.zoom(decLens).set(dec).runInCB)
 
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name}#${target.track.baseCoordinates.show}"

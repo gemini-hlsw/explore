@@ -7,6 +7,7 @@ import cats.Show
 import cats.implicits._
 import crystal.react.AppRoot
 import crystal.react.implicits._
+import crystal.data.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.undo.UndoRegion
