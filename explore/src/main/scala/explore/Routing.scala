@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.UUID
+
 import cats.implicits._
 import crystal.react.implicits._
 import explore.model.Page
@@ -13,9 +15,8 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
-import monocle.Prism
 import monocle.Iso
-import java.util.UUID
+import monocle.Prism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -57,13 +58,16 @@ object Routing {
           ConstraintsPage
         )
         .onPostRenderP {
-          case (prev, next, view) if next.some =!= prev =>
+          case (prev, next, view)
+              if next.some =!= prev &&
+                // Short circuit if we get here because of a change in the model.
+                next =!= view.zoom(RootModelRouting.lens).get =>
             Callback
               .log(
                 s"Routing.onPostRender triggered [$prev] => [$next]"
               ) >>
-              view.zoomL(RootModelRouting.lens).set(next).runInCB
-          case _                                        => Callback.empty
+              view.zoom(RootModelRouting.lens).set(next).runInCB
+          case _ => Callback.empty
         }
         .renderWithP(layout)
     // .logToConsole

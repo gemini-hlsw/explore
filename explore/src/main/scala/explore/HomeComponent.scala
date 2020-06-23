@@ -13,6 +13,7 @@ import explore.conditions.ConditionsQueries._
 import explore.implicits._
 import explore.model._
 import explore.model.reusability._
+import explore.observationtree.TargetObsList
 import explore.target.TargetEditor
 import gem.Observation
 import gem.ProgramId
@@ -27,7 +28,6 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
-import explore.observationtree.TargetObsList
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -108,7 +108,7 @@ object HomeComponent {
                         TargetObsList(
                           targets,
                           obsView,
-                          props.zoomO(RootModel.focusedTargetOrObsId),
+                          props.zoom(RootModel.focusedTargetOrObsId),
                           targetId =>
                             targets
                               .find(_.id === targetId)

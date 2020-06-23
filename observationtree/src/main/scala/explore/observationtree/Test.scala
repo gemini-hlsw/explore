@@ -39,7 +39,7 @@ object Test extends AppMain {
         <.div(^.width := "295px")(
           TargetObsList(TargetTreeTest.targets,
                         obsView,
-                        view.zoomO(RootModel.focusedTargetOrObsId),
+                        view.zoom(RootModel.focusedTargetOrObsId),
                         _ => Callback.empty
           )
         )

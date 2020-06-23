@@ -108,7 +108,7 @@ object TargetObsList {
                       .map(t =>
                         props
                           .onTargetSelect(t.id)
-                          .when(props.focused.getOption.flatMap(_.toOption).exists(_ === obsId))
+                          .when(props.focused.get.flatMap(_.toOption).exists(_ === obsId))
                           .void
                       )
                       .getOrEmpty
@@ -224,7 +224,7 @@ object TargetObsList {
                                       decorateTopRight(
                                         ObsBadge(obs,
                                                  ObsBadge.Layout.ConfAndConstraints,
-                                                 selected = props.focused.getOption
+                                                 selected = props.focused.get
                                                    .flatMap(_.toOption)
                                                    .exists(_ === obs.id)
                                         ),

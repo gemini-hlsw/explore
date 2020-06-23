@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.UUID
+
 import scala.scalajs.js
 
 import cats.Id
@@ -28,9 +30,9 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import gem.Observation
 import gem.ProgramId
-import gem.util.Enumerated
 import gem.data.EnumZipper
 import gem.data.Zipper
+import gem.util.Enumerated
 import gsp.math.Index
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
@@ -41,7 +43,6 @@ import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
 
 import js.annotation._
-import java.util.UUID
 
 object AppCtx extends AppRootContext[AppContextIO]
 

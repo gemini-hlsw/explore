@@ -7,9 +7,8 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.data.Pot
-import crystal.data.react._
-import crystal.react.StreamRenderer
+import crystal.Pot
+import crystal.react._
 import crystal.react.implicits._
 import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
