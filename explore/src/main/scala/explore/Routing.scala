@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.UUID
+
 import cats.implicits._
 import crystal.react.implicits._
 import explore.model.Page
@@ -13,9 +15,8 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
-import monocle.Prism
 import monocle.Iso
-import java.util.UUID
+import monocle.Prism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

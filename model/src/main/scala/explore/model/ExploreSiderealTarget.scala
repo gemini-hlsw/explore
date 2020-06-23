@@ -3,13 +3,14 @@
 
 package explore.model
 
+import java.util.UUID
+
 import cats._
 import cats.implicits._
 import gem.Target
 import gsp.math.ProperMotion
 import monocle.Lens
 import monocle.macros.Lenses
-import java.util.UUID
 
 /**
   * A refinement of gem.Tracker meant for sidereal targets

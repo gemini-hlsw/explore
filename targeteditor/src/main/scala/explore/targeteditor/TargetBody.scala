@@ -9,7 +9,6 @@ import cats.Show
 import cats.effect.IO
 import cats.implicits._
 import crystal.react.implicits._
-import crystal.data.react.implicits._
 import explore.AppCtx
 import explore.View
 import explore.components.ui.GPPStyles

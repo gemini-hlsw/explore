@@ -6,14 +6,14 @@ package explore.components.graphql
 import scala.concurrent.duration._
 
 import cats.effect.ConcurrentEffect
+import cats.effect.ContextShift
 import cats.effect.IO
 import cats.effect.Timer
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.data.ViewF
-import crystal.data.Pot
-import crystal.data.react._
-import crystal.react.StreamRendererMod
+import crystal.Pot
+import crystal.ViewF
+import crystal.react._
 import crystal.react.implicits._
 import explore.View
 import explore.model.reusability
@@ -27,7 +27,6 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 import scala.language.postfixOps
-import cats.effect.ContextShift
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],

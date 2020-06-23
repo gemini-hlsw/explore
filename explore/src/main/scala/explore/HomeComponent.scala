@@ -6,7 +6,6 @@ package explore
 import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
-import crystal.data.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.ui.GPPStyles
 import explore.conditions.ConditionsPanel
@@ -14,6 +13,7 @@ import explore.conditions.ConditionsQueries._
 import explore.implicits._
 import explore.model._
 import explore.model.reusability._
+import explore.observationtree.TargetObsList
 import explore.target.TargetEditor
 import gem.Observation
 import gem.ProgramId
@@ -28,7 +28,6 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
-import explore.observationtree.TargetObsList
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(

@@ -3,6 +3,8 @@
 
 package explore.target
 
+import java.util.UUID
+
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLQuery
@@ -23,7 +25,6 @@ import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import monocle.macros.Lenses
-import java.util.UUID
 
 object TargetQueries {
 

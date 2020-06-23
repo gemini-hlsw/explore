@@ -7,7 +7,7 @@ import scala.scalajs.js
 
 import cats.effect.IO
 import cats.implicits._
-import crystal.data.ViewF
+import crystal.ViewF
 import crystal.react.implicits._
 import explore.Routing
 import explore.model.Page

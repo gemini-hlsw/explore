@@ -10,7 +10,7 @@ object Settings {
     val catsEffect        = "2.1.3"
     val circe             = "0.13.0"
     val clue              = "0.1.1"
-    val crystal           = "0.6.1"
+    val crystal           = "0.7.0"
     val discipline        = "1.0.2"
     val disciplineMUnit   = "0.2.2"
     val gspCore           = "0.2.4"
