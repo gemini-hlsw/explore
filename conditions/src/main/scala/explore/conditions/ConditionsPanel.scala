@@ -30,6 +30,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.elements.button.Button
 import react.semanticui.widths._
+import explore.components.undo.UndoButtons
 
 final case class ConditionsPanel(
   observationId: Observation.Id,
@@ -63,12 +64,7 @@ object ConditionsPanel {
                   EnumViewSelect("Sky Background", undoViewZoom(Conditions.sb, sbFields).asOpt)
                 )
               ),
-              Button(onClick = undoCtx.undo(conditions.get).runInCB, disabled = undoCtx.undoEmpty)(
-                "Undo"
-              ),
-              Button(onClick = undoCtx.redo(conditions.get).runInCB, disabled = undoCtx.redoEmpty)(
-                "Redo"
-              )
+              UndoButtons(conditions.get, undoCtx)
             )
           }
         }

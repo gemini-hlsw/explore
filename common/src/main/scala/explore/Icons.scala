@@ -6,8 +6,9 @@ package explore
 import react.semanticui.elements.icon._
 
 object Icons {
-  val BarsIcon = Icon(name = "bars")
-  val HomeIcon = Icon(name = "home")
-  val CogsIcon = Icon(name = "cogs")
-
+  val Bars = Icon("bars")
+  val Home = Icon("home")
+  val Cogs = Icon("cogs")
+  val Undo = Icon("undo alternate")
+  val Redo = Icon("redo alternate")
 }

@@ -37,8 +37,7 @@ import explore.AppCtx
 final case class CoordinatesForm(
   target:           SiderealTarget,
   searchAndGo:      String => Callback,
-  goToRaDec:        Coordinates => Callback,
-  undoCtx:          Undoer.Context[IO, SiderealTarget]
+  goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component)
 
@@ -133,13 +132,7 @@ object CoordinatesForm {
             )(
               Icon("angle right")
             )
-          ),
-          FormButton(onClick = props.undoCtx.undo(props.target).runInCB,
-                     disabled = props.undoCtx.undoEmpty
-          )("Undo"),
-          FormButton(onClick = props.undoCtx.redo(props.target).runInCB,
-                     disabled = props.undoCtx.redoEmpty
-          )("Redo")
+          )
         )
       }
   }

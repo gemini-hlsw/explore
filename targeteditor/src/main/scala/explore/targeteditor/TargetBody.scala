@@ -38,6 +38,10 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import react.semanticui.elements.button.Button
+import react.semanticui.collections.form.FormButton
+import react.semanticui.collections.form.Form
+import explore.components.undo.UndoButtons
 
 final case class TargetBody(
   observationId: Observation.Id,
@@ -166,9 +170,10 @@ object TargetBody extends ModelOptics {
               ^.height := "100%",
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(props.target.get, searchAndSet, gotoRaDec, undoCtx)
-                    .withKey(coordinatesKey(props.target.get)),
-                  props.conditions.whenDefined(renderConds)
+                  CoordinatesForm(target, searchAndSet, gotoRaDec)
+                    .withKey(coordinatesKey(target)),
+                  props.conditions.whenDefined(renderConds),
+                  UndoButtons(target, undoCtx)
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(aladinRef) {
