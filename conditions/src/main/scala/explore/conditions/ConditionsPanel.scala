@@ -45,54 +45,32 @@ object ConditionsPanel {
     ScalaComponent
       .builder[ConditionsPanel]
       .render { $ =>
-        val conditions = $.props.conditions.get
+        val conditions = $.props.conditions
 
         UndoRegion[Conditions] { undoCtx =>
-          val modifyIO =
-            Modify($.props.observationId, conditions, $.props.conditions.mod, undoCtx.setter)
-          def modify[A](lens: Lens[Conditions, A], fields: A => Mutation.Fields): A => Callback = {
-            v: A =>
-              modifyIO(lens.get, lens.set, fields)(v).runInCB
-          }
+          val undoViewZoom =
+            UndoViewZoom($.props.observationId, conditions, undoCtx.setter)
 
-          <.div(
-            Form(
-              FormGroup(widths = Two)(
-                EnumSelect("Image Quality",
-                           conditions.iq.some,
-                           "Select",
-                           disabled = false,
-                           modify(Conditions.iq, iqFields)
+          AppCtx.withCtx { implicit appCtx =>
+            <.div(
+              Form(
+                FormGroup(widths = Two)(
+                  EnumViewSelect("Image Quality", undoViewZoom(Conditions.iq, iqFields).asOpt),
+                  EnumViewSelect("Cloud Cover", undoViewZoom(Conditions.cc, ccFields).asOpt)
                 ),
-                EnumSelect("Cloud Cover",
-                           conditions.cc.some,
-                           "Select",
-                           disabled = false,
-                           modify(Conditions.cc, ccFields)
+                FormGroup(widths = Two)(
+                  EnumViewSelect("Water Vapor", undoViewZoom(Conditions.wv, wvFields).asOpt),
+                  EnumViewSelect("Sky Background", undoViewZoom(Conditions.sb, sbFields).asOpt)
                 )
               ),
-              FormGroup(widths = Two)(
-                EnumSelect("Water Vapor",
-                           conditions.wv.some,
-                           "Select",
-                           disabled = false,
-                           modify(Conditions.wv, wvFields)
-                ),
-                EnumSelect("Sky Background",
-                           conditions.sb.some,
-                           "Select",
-                           disabled = false,
-                           modify(Conditions.sb, sbFields)
-                )
+              Button(onClick = undoCtx.undo(conditions.get).runInCB, disabled = undoCtx.undoEmpty)(
+                "Undo"
+              ),
+              Button(onClick = undoCtx.redo(conditions.get).runInCB, disabled = undoCtx.redoEmpty)(
+                "Redo"
               )
-            ),
-            Button(onClick = undoCtx.undo(conditions).runInCB, disabled = undoCtx.undoEmpty)(
-              "Undo"
-            ),
-            Button(onClick = undoCtx.redo(conditions).runInCB, disabled = undoCtx.redoEmpty)(
-              "Redo"
             )
-          )
+          }
         }
       }
       .configure(Reusability.shouldComponentUpdate)

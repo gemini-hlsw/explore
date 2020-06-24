@@ -30,6 +30,9 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
+import monocle.Lens
+import crystal.ViewF
+import cats.effect.ContextShift
 
 object ConditionsQueries {
   /*
@@ -129,26 +132,27 @@ mutation {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  case class Modify(
+  case class UndoViewZoom(
     observationId: Observation.Id,
-    conditions:    Conditions,
-    modState:      ModState[IO, Conditions],
+    view:          View[Conditions],
     setter:        Undoer.Setter[IO, Conditions]
   ) {
     def apply[A](
-      get:    Conditions => A,
-      set:    A => Conditions => Conditions,
-      fields: A => Mutation.Fields
-    ): A => IO[Unit] =
-      setter.set(
-        conditions,
-        get,
-        { value: A =>
-          for {
-            _ <- (modState.apply _).compose(set)(value)
-            _ <- mutate(observationId, fields(value))
-          } yield ()
-        }
+      lens:        Lens[Conditions, A],
+      fields:      A => Mutation.Fields
+    )(implicit cs: ContextShift[IO]): View[A] =
+      ViewF[IO, A](
+        lens.get(view.get),
+        setter.mod(
+          view.get,
+          lens.get,
+          { value: A =>
+            for {
+              _ <- view.mod.compose(lens.set)(value)
+              _ <- mutate(observationId, fields(value))
+            } yield ()
+          }
+        )
       )
   }
 
