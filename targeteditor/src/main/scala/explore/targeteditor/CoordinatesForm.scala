@@ -33,6 +33,7 @@ import monocle.Iso
 import cats.effect.Async
 import cats.effect.ContextShift
 import explore.AppCtx
+import explore.model.ModelOptics._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
@@ -51,33 +52,9 @@ object CoordinatesForm {
     decValue:   Declination
   )
 
-  private val coordsLens: Lens[SiderealTarget, Coordinates] =
-    SiderealTarget.track.composeLens(ProperMotion.baseCoordinates)
-
-  private val raLens: Lens[SiderealTarget, RightAscension] =
-    coordsLens.composeLens(Coordinates.rightAscension)
-
-  private val decLens: Lens[SiderealTarget, Declination] =
-    coordsLens.composeLens(Coordinates.declination)
-
   private val stateLens: Lens[SiderealTarget, State] =
-    Optics
-      .disjointZip(SiderealTarget.name, raLens, decLens)
+    targetPropsL
       .composeIso(Iso((State.apply _).tupled) { case State(name, ra, dec) => (name, ra, dec) })
-
-  // BEGIN Move to crystal
-  implicit class ViewFModuleOps(val viewFModule: ViewF.type) extends AnyVal {
-    def fromState[F[_]]: FromStateApply[F] =
-      new FromStateApply[F]()
-  }
-
-  class FromStateApply[F[_]]() {
-    def apply[S](
-      $              : BackendScope[_, S]
-    )(implicit async: Async[F], cs: ContextShift[F]): ViewF[F, S] =
-      ViewF($.state.runNow(), $.modStateIn[F])
-  }
-  // END Move to crystal
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -100,28 +77,28 @@ object CoordinatesForm {
                            DropdownItem(value = 1, text = "Non-sidereal")
             )
           ),
-          FormInputView(name = "search",
-                        id = "search",
-                        view = stateView.zoom(State.searchTerm),
-                        label = "Target",
-                        focus = true,
-                        icon = Icon("search")
+          FormInputEV(name = "search",
+                      id = "search",
+                      value = stateView.zoom(State.searchTerm),
+                      label = "Target",
+                      focus = true,
+                      icon = Icon("search")
           ),
           FormGroup(widths = FormWidths.Equal)(
-            FormInputView(
+            FormInputEV(
               width = Seven,
               name = "ra",
               id = "ra",
-              view = stateView.zoom(State.raValue),
-              optic = InputOptics.fromFormat(RightAscension.fromStringHMS),
+              value = stateView.zoom(State.raValue),
+              format = RightAscension.fromStringHMS,
               label = "RA"
             ),
-            FormInputView(
+            FormInputEV(
               width = Seven,
               name = "dec",
               id = "dec",
-              view = stateView.zoom(State.decValue),
-              optic = InputOptics.fromFormat(Declination.fromStringSignedDMS),
+              value = stateView.zoom(State.decValue),
+              format = Declination.fromStringSignedDMS,
               label = "Dec"
             ),
             FormButton(width = Two,

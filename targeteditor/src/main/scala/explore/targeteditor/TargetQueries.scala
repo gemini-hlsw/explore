@@ -25,6 +25,7 @@ import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import monocle.macros.Lenses
+import monocle.Lens
 
 object TargetQueries {
 
@@ -108,27 +109,23 @@ object TargetQueries {
       .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
       .void
 
-  case class Modify(
+  case class UndoViewZoom(
     observationId: Observation.Id,
-    target:        SiderealTarget,
-    modState:      ModState[IO, SiderealTarget],
-    // setGlobalState: SiderealTarget => IO[Unit],
+    view:          View[SiderealTarget],
     setter:        Undoer.Setter[IO, SiderealTarget]
   )(implicit ctx:  AppContextIO) {
     def apply[A](
-      get:    SiderealTarget => A,
-      set:    A => SiderealTarget => SiderealTarget,
+      lens:   Lens[SiderealTarget, A],
       fields: A => Mutation.Fields
     )(
       value:  A
     ): IO[Unit] =
       setter.set(
-        target,
-        get,
+        view.get,
+        lens.get,
         { value: A =>
           for {
-            _ <- (modState.apply _).compose(set)(value)
-            // _ <- setGlobalState(set(value)(target))
+            _ <- (view.mod).compose(lens.set)(value)
             _ <- mutate(observationId, fields(value))
           } yield ()
         }

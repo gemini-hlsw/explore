@@ -21,7 +21,7 @@ import explore.model.reusability._
 import explore.model.show._
 import gem.Observation
 import gem.util.Enumerated
-import gpp.ui.forms.EnumSelect
+import gpp.ui.forms.EnumViewSelect
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
@@ -31,6 +31,8 @@ import react.semanticui.collections.form.FormGroup
 import react.semanticui.elements.button.Button
 import react.semanticui.widths._
 import explore.components.undo.UndoButtons
+import react.semanticui.collections.form.FormField
+import react.semanticui.elements.label.Label
 
 final case class ConditionsPanel(
   observationId: Observation.Id,
@@ -53,15 +55,22 @@ object ConditionsPanel {
             UndoViewZoom($.props.observationId, conditions, undoCtx.setter)
 
           AppCtx.withCtx { implicit appCtx =>
+            def selectEnum[A: Enumerated: Show](
+              label:  String,
+              lens:   Lens[Conditions, A],
+              fields: A => Mutation.Fields
+            ) =
+              EnumViewSelect(undoViewZoom(lens, fields).asOpt, label = label)
+
             <.div(
               Form(
                 FormGroup(widths = Two)(
-                  EnumViewSelect("Image Quality", undoViewZoom(Conditions.iq, iqFields).asOpt),
-                  EnumViewSelect("Cloud Cover", undoViewZoom(Conditions.cc, ccFields).asOpt)
+                  selectEnum("Image Quality", Conditions.iq, iqFields),
+                  selectEnum("Cloud Cover", Conditions.cc, ccFields)
                 ),
                 FormGroup(widths = Two)(
-                  EnumViewSelect("Water Vapor", undoViewZoom(Conditions.wv, wvFields).asOpt),
-                  EnumViewSelect("Sky Background", undoViewZoom(Conditions.sb, sbFields).asOpt)
+                  selectEnum("Water Vapor", Conditions.wv, wvFields),
+                  selectEnum("Sky Background", Conditions.sb, sbFields)
                 )
               ),
               UndoButtons(conditions.get, undoCtx)

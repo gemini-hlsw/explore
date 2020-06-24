@@ -46,7 +46,6 @@ import explore.components.undo.UndoButtons
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
@@ -119,37 +118,25 @@ object TargetBody extends ModelOptics {
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>
-          val modifyIO =
-            Modify(props.observationId,
-                   target,
-                   props.target.mod,
-                   //  (props.globalTarget.set _).compose(_.some),
-                   undoCtx.setter
-            )
+          val undoViewZoom =
+            UndoViewZoom(props.observationId, props.target, undoCtx.setter)
 
-          def modify[A](
-            lens:   Lens[SiderealTarget, A],
-            fields: A => Mutation.Fields
-          ): A => Callback = { v: A =>
-            modifyIO(lens.get, lens.set, fields)(v).runInCB
-          }
+          val modify = undoViewZoom[
+            (String, RightAscension, Declination)
+          ](
+            targetPropsL,
+            {
+              case (n, r, d) =>
+                Mutation.Fields(
+                  name = n.some,
+                  ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                  dec = Declination.fromStringSignedDMS.reverseGet(d).some
+                )
+            }
+          ) _
 
           val searchAndSet: String => Callback =
-            searchAndGo(
-              modify[
-                (String, RightAscension, Declination)
-              ](
-                targetPropsL,
-                {
-                  case (n, r, d) =>
-                    Mutation.Fields(
-                      name = n.some,
-                      ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                      dec = Declination.fromStringSignedDMS.reverseGet(d).some
-                    )
-                }
-              )
-            )
+            searchAndGo(modify.andThen(_.runInCB))
 
           def renderCond[A: Show](name: String, a: A): VdomNode =
             <.div(s"$name: ${a.show}")
