@@ -14,7 +14,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
-import explore.target.TargetEditor
+import explore.targeteditor.TargetEditor
 import gem.Observation
 import gem.ProgramId
 import gem.util.Enumerated
