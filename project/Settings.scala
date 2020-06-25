@@ -23,7 +23,7 @@ object Settings {
     val mUnit             = "0.7.9"
     val reactAladin       = "0.1.2"
     val reactAtlasKitTree = "0.2.3"
-    val reactCommon       = "0.9.2"
+    val reactCommon       = "0.9.3"
     val reactGridLayout   = "0.6.1"
     val reactResizable    = "0.1.1"
     val reactSemanticUI   = "0.5.7"
