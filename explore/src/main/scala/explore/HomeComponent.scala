@@ -65,6 +65,7 @@ object HomeComponent {
   import cats.effect.SyncIO
   import crystal.react.StreamRendererMod
   import explore.observationtree.TargetTreeTest
+  import java.util.UUID
 
   import AppCtx._
 
@@ -86,12 +87,12 @@ object HomeComponent {
     private val targetEditorRef = Ref.toScalaComponent(TargetEditor.component)
 
     def render(props: Props, state: State) = {
-      val obsId = Observation
-        .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+      val constraintsId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
+      val targetId      = UUID.fromString("9be5789c-3ffe-48cd-8e8e-24fe3e4067ee")
 
       val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
 
-      constraintsSubscription(obsId) { constraints =>
+      constraintsSubscription(constraintsId) { constraints =>
         <.div(
           GPPStyles.RGLArea,
           SizeMe() { s =>
@@ -154,15 +155,15 @@ object HomeComponent {
                     ^.key := "constraints",
                     ^.cls := "tile",
                     Tile("Constraints")(
-                      ConstraintsPanel(obsId, constraints)
+                      ConstraintsPanel(constraintsId, constraints)
                     )
                   ),
                   <.div(
                     ^.key := "target",
                     ^.cls := "tile",
                     Tile("Target Position")(
-                      TargetEditor(obsId, /*props.zoomL(RootModel.target),*/ constraints.get.some)
-                        .withRef(targetEditorRef)
+                      TargetEditor(targetId, /*props.zoomL(RootModel.target),*/ constraints.get.some
+                      ).withRef(targetEditorRef)
                     )
                   )
                 )

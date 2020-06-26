@@ -42,11 +42,12 @@ import react.semanticui.elements.button.Button
 import react.semanticui.collections.form.FormButton
 import react.semanticui.collections.form.Form
 import explore.components.undo.UndoButtons
+import java.util.UUID
 
 final case class TargetBody(
-  observationId: Observation.Id,
-  target:        View[SiderealTarget],
-  constraints:   Option[Constraints] = None
+  id:          UUID,
+  target:      View[SiderealTarget],
+  constraints: Option[Constraints] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -118,10 +119,10 @@ object TargetBody extends ModelOptics {
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>
-          val undoViewZoom =
-            UndoViewZoom(props.observationId, props.target, undoCtx.setter)
+          val undoSet =
+            UndoSet(props.id, props.target, undoCtx.setter)
 
-          val modify = undoViewZoom[
+          val modify = undoSet[
             (String, RightAscension, Declination)
           ](
             targetPropsL,

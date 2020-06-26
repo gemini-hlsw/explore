@@ -74,6 +74,7 @@ INSERT INTO constraints VALUES(uuid('608c8407-63a5-4d26-970c-587486af57da'), 'Te
 INSERT INTO constraints VALUES(uuid('182926f3-998f-4a61-9df4-0bd318f7b677'), '<0.8" <0.3 mag Gray', 'Any', 'Any', 'Any', 'Any');
 INSERT INTO constraints VALUES(uuid('5d03a604-90d8-4791-b7e8-1b4d084e8889'), '<0.7" <0.3 mag Bright', 'Any', 'Any', 'Any', 'Any');
 
+INSERT INTO targets VALUES(uuid('9be5789c-3ffe-48cd-8e8e-24fe3e4067ee'), 'Sidereal', '09:55:33.173061', '+69:03:55.060919', 'M81');
 INSERT INTO targets VALUES(uuid('b9acf8b4-79e9-4c69-9a96-904746e127ab'), 'Sidereal', '02:41:45.232999', '+00:26:35.450016', 'NGC 1055');
 INSERT INTO targets VALUES(uuid('165cc9d7-0430-46a7-bebd-377bad83c184'), 'Sidereal', '23:46:58.557000', '+29:27:32.169996', 'NGC 7752');
 INSERT INTO targets VALUES(uuid('6d38c349-5189-4953-b337-ca8d72b61f2c'), 'Sidereal', '11:30:07.456000', '+09:16:35.870015', 'NGC 3705');

@@ -18,11 +18,12 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
+import java.util.UUID
 
 final case class TargetEditor(
-  observationId: Observation.Id,
+  id:          UUID,
   // globalTarget:  View[Option[SiderealTarget]],
-  constraints:   Option[Constraints] = None
+  constraints: Option[Constraints] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -43,11 +44,11 @@ object TargetEditor {
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
           appCtx.clients.programs
             .subscribe(Subscription)(
-              Subscription.Variables(props.observationId.format).some
+              Subscription.Variables(props.id).some
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.observationId, target, /*props.globalTarget,*/ props.constraints)
+          TargetBody(props.id, target, /*props.globalTarget,*/ props.constraints)
             .withRef(targetBodyRef)
         }
       }
