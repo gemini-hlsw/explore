@@ -56,7 +56,7 @@ object TargetsComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = ViewOpt[Focused]
+  type Props = View[Option[Either[SiderealTarget.Id, ExploreObservation.Id]]]
 
   final case class State(treeWidth: JsNumber)
 
@@ -70,8 +70,8 @@ object TargetsComponent {
 
       targetObsSubscription { (targets, obsView) =>
         val targetIdOpt = props.get.collect {
-          case FocusedTarget(targetId) => targetId.some
-          case FocusedObs(obsId)       => obsView.get.find(_.id === obsId).map(_.target.id)
+          case Left(targetId) => targetId.some
+          case Right(obsId)   => obsView.get.find(_.id === obsId).map(_.target.id)
         }.flatten
 
         <.div(
@@ -89,7 +89,7 @@ object TargetsComponent {
                       TargetObsList(
                         targets,
                         obsView,
-                        props.zoom(Focused.targetOrObsId)
+                        props
                       )
                     )
                   )

@@ -8,11 +8,12 @@ import explore.model.Focused
 import explore.model.arb.all._
 import gem.arb.ArbObservation._
 import monocle.law.discipline.OptionalTests
+import monocle.law.discipline.PrismTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary._
 
 class FocusedSuite extends DisciplineSuite {
   checkAll("obsId", OptionalTests(Focused.obsId))
   checkAll("targetId", OptionalTests(Focused.targetId))
-  checkAll("targetOrObsId", OptionalTests(Focused.targetOrObsId))
+  checkAll("targetOrObsId", PrismTests(Focused.targetOrObsId))
 }

@@ -37,7 +37,7 @@ import TargetObsQueries._
 final case class TargetObsList(
   targets:      List[SiderealTarget],
   observations: View[List[ExploreObservation]],
-  focused:      ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]]
+  focused:      View[Option[Either[SiderealTarget.Id, ExploreObservation.Id]]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -182,7 +182,7 @@ object TargetObsList {
                             target.name,
                             <.span(^.float.right, s"$obsCount Obs"),
                             ^.cursor.pointer,
-                            ^.onClick --> props.focused.set(targetId.asLeft).runInCB
+                            ^.onClick --> props.focused.set(targetId.asLeft.some).runInCB
                           )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
@@ -202,7 +202,7 @@ object TargetObsList {
                                       provided.draggableProps,
                                       getObsStyle(provided.draggableStyle, snapshot),
                                       ^.cursor.pointer,
-                                      ^.onClick --> props.focused.set(obs.id.asRight).runInCB
+                                      ^.onClick --> props.focused.set(obs.id.asRight.some).runInCB
                                     )(
                                       decorateTopRight(
                                         ObsBadge(obs,

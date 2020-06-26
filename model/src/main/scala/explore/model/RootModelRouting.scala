@@ -20,12 +20,12 @@ object RootModelRouting {
         RootModel.focusedObsId
           .getOption(model)
           .map(ObsPage.apply)
-          .getOrElse(HomePage)
+          .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
         RootModel.focusedTargetOrObsId
-          .getOption(model)
+          .get(model)
           .map(_.fold(TargetPage.apply, TargetsObsPage.apply))
-          .getOrElse(HomePage)
+          .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    => ConstraintsPage
     }
@@ -35,8 +35,12 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
+      case ObservationsBasePage  =>
+        setTab(AppTab.Observations)
       case ObsPage(obsId)        =>
         setTab(AppTab.Observations) >>> (RootModel.focusedObsId.set(obsId))
+      case TargetsBasePage       =>
+        setTab(AppTab.Targets)
       case TargetPage(targetId)  =>
         setTab(AppTab.Targets) >>> (RootModel.focusedTargetId.set(targetId))
       case TargetsObsPage(obsId) =>

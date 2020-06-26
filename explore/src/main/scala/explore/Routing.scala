@@ -40,12 +40,16 @@ object Routing {
 
       (emptyRule
         | staticRoute(root, HomePage) ~> render(UnderConstruction())
+        | staticRoute("/observations", ObservationsBasePage) ~> render(UnderConstruction())
         | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> render(UnderConstruction())
+        | staticRoute("/targets", TargetsBasePage) ~> renderP(view =>
+          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
+        )
         | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focused.composePrism(some)))
+          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
         )
         | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focused.composePrism(some)))
+          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
