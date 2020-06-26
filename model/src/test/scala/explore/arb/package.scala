@@ -6,7 +6,7 @@ package explore.model.arb
 import org.scalacheck.Cogen
 
 object all
-    extends ArbConditions
+    extends ArbConstraints
     with ArbSiderealTarget
     with ArbExploreSiderealTarget
     with ArbFocused

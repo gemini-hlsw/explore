@@ -10,7 +10,7 @@ import gem.arb.ArbEnumerated._
 import munit.DisciplineSuite
 
 class ModelSuite extends DisciplineSuite {
-  checkAll("Eq[Conditions]", EqTests[Conditions].eqv)
+  checkAll("Eq[Constraints]", EqTests[Constraints].eqv)
   checkAll("Eq[SiderealTarget]", EqTests[SiderealTarget].eqv)
   checkAll("Eq[ExploreSiderealTarget]", EqTests[ExploreSiderealTarget].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)

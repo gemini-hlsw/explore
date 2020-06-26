@@ -8,8 +8,8 @@ import crystal.implicits._
 import crystal.react.implicits._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.ui.GPPStyles
-import explore.conditions.ConditionsPanel
-import explore.conditions.ConditionsQueries._
+import explore.constraints.ConstraintsPanel
+import explore.constraints.ConstraintsQueries._
 import explore.implicits._
 import explore.model._
 import explore.model.reusability._
@@ -33,14 +33,14 @@ object HomeComponent {
   private val layoutLg: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "conditions")
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "constraints")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "conditions")
+      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "constraints")
     )
   )
 
@@ -91,7 +91,7 @@ object HomeComponent {
 
       val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
 
-      conditionsSubscription(obsId) { conditions =>
+      constraintsSubscription(obsId) { constraints =>
         <.div(
           GPPStyles.RGLArea,
           SizeMe() { s =>
@@ -151,17 +151,17 @@ object HomeComponent {
                   layouts = layouts
                 )(
                   <.div(
-                    ^.key := "conditions",
+                    ^.key := "constraints",
                     ^.cls := "tile",
-                    Tile("Conditions")(
-                      ConditionsPanel(obsId, conditions)
+                    Tile("Constraints")(
+                      ConstraintsPanel(obsId, constraints)
                     )
                   ),
                   <.div(
                     ^.key := "target",
                     ^.cls := "tile",
                     Tile("Target Position")(
-                      TargetEditor(obsId, /*props.zoomL(RootModel.target),*/ conditions.get.some)
+                      TargetEditor(obsId, /*props.zoomL(RootModel.target),*/ constraints.get.some)
                         .withRef(targetEditorRef)
                     )
                   )

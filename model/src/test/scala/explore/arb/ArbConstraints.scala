@@ -3,7 +3,7 @@
 
 package explore.model.arb
 
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.enum._
 import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
@@ -11,22 +11,22 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 
-trait ArbConditions {
+trait ArbConstraints {
 
-  implicit val conditionsArb = Arbitrary[Conditions] {
+  implicit val conditionsArb = Arbitrary[Constraints] {
     for {
       cc <- arbitrary[CloudCover]
       iq <- arbitrary[ImageQuality]
       sb <- arbitrary[SkyBackground]
       wv <- arbitrary[WaterVapor]
-    } yield Conditions(cc, iq, sb, wv)
+    } yield Constraints(cc, iq, sb, wv)
   }
 
-  implicit val conditionsCogen: Cogen[Conditions] =
+  implicit val conditionsCogen: Cogen[Constraints] =
     Cogen[(CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(c =>
       (c.cc, c.iq, c.sb, c.wv)
     )
 
 }
 
-object ArbConditions extends ArbConditions
+object ArbConstraints extends ArbConstraints

@@ -12,7 +12,7 @@ import crystal.react.ModState
 import explore.AppMain
 import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.RootModel
 import explore.model.reusability._
 import gem.Observation

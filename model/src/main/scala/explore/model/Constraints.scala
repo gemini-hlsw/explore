@@ -9,33 +9,33 @@ import explore.model.enum._
 import monocle.macros.Lenses
 
 @Lenses
-final case class Conditions(
+final case class Constraints(
   cc: CloudCover,
   iq: ImageQuality,
   sb: SkyBackground,
   wv: WaterVapor
 )
 
-object Conditions {
+object Constraints {
 
-  val Worst: Conditions =
-    Conditions(
+  val Worst: Constraints =
+    Constraints(
       CloudCover.Any,
       ImageQuality.Any,
       SkyBackground.Any,
       WaterVapor.Any
     )
 
-  val Nominal: Conditions =
-    Conditions(
+  val Nominal: Constraints =
+    Constraints(
       CloudCover.Percent50,
       ImageQuality.Percent70,
       SkyBackground.Percent50,
       WaterVapor.Any
     )
 
-  val Best: Conditions =
-    Conditions(
+  val Best: Constraints =
+    Constraints(
       // In the ODB model it's 20% but that value it's marked as obsolete
       // so I took the non-obsolete lowest value.
       CloudCover.Percent50,
@@ -44,13 +44,13 @@ object Conditions {
       WaterVapor.Percent20
     )
 
-  val Default: Conditions =
+  val Default: Constraints =
     Worst // Taken from ODB
 
-  implicit val equalConditions: Eq[Conditions] =
+  implicit val equalConstraints: Eq[Constraints] =
     Eq.by(x => (x.cc, x.iq, x.sb, x.wv))
 
-  implicit val showConditions: Show[Conditions] =
+  implicit val showConstraints: Show[Constraints] =
     Show.show(x => List(x.cc, x.iq, x.sb, x.wv).mkString(", "))
 
 }

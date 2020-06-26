@@ -8,7 +8,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.target.TargetQueries._
@@ -22,7 +22,7 @@ import react.common._
 final case class TargetEditor(
   observationId: Observation.Id,
   // globalTarget:  View[Option[SiderealTarget]],
-  conditions:    Option[Conditions] = None
+  constraints:   Option[Constraints] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -47,7 +47,7 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.observationId, target, /*props.globalTarget,*/ props.conditions)
+          TargetBody(props.observationId, target, /*props.globalTarget,*/ props.constraints)
             .withRef(targetBodyRef)
         }
       }
