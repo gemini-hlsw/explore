@@ -33,10 +33,11 @@ import react.semanticui.widths._
 import explore.components.undo.UndoButtons
 import react.semanticui.collections.form.FormField
 import react.semanticui.elements.label.Label
+import java.util.UUID
 
 final case class ConstraintsPanel(
-  observationId: Observation.Id,
-  Constraints:   View[Constraints]
+  id:          UUID,
+  Constraints: View[Constraints]
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -52,7 +53,7 @@ object ConstraintsPanel {
 
         UndoRegion[Constraints] { undoCtx =>
           val undoViewZoom =
-            UndoViewZoom($.props.observationId, constraints, undoCtx.setter)
+            UndoViewZoom($.props.id, constraints, undoCtx.setter)
 
           AppCtx.withCtx { implicit appCtx =>
             def selectEnum[A: Enumerated: Show](

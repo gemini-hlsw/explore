@@ -41,7 +41,7 @@ object RootModel {
 case class AppConfig(
   // CORS doesn't kick in for websockets, so we probably don't need proxying for WS.
   programsURL: Uri =
-    uri"wss://explore-hasura.herokuapp.com/v1/graphql" //AppConfig.wsBaseUri.path("/api/programs/v1/graphql"),
+    uri"wss://explore-db.herokuapp.com/v1/graphql" //AppConfig.wsBaseUri.path("/api/programs/v1/graphql"),
 )
 object AppConfig {
   // lazy val baseUri: Uri = {

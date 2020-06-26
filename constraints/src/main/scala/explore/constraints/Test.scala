@@ -23,18 +23,18 @@ import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
+import java.util.UUID
 
 import js.annotation._
 
 @JSExportTopLevel("ConsTest")
 object Test extends AppMain {
 
-  private val obsId = Observation
-    .Id(ProgramId.Science.fromString.getOption("GS-2020A-DS-1").get, Index.One)
+  private val constraintId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
 
   override protected def rootComponent(view: View[RootModel]): VdomElement =
-    constraintsSubscription(obsId) { constraints =>
-      ConstraintsPanel(obsId, constraints)
+    constraintsSubscription(constraintId) { constraints =>
+      ConstraintsPanel(constraintId, constraints)
     }
 
 }

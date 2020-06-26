@@ -33,6 +33,7 @@ import monocle.macros.Lenses
 import monocle.Lens
 import crystal.ViewF
 import cats.effect.ContextShift
+import java.util.UUID
 
 object ConstraintsQueries {
   /*
@@ -78,8 +79,8 @@ mutation {
 
   object Subscription extends GraphQLQuery {
     val document = """
-      subscription ($observationId: String!) {
-        Constraints(where: {observation_id: {_eq: $observationId}}) {
+      subscription ($id: uuid!) {
+        constraints(where: {id: {_eq: $id}}) {
           cloud_cover
           image_quality
           sky_background
@@ -87,12 +88,12 @@ mutation {
         }
       }
       """
+    case class Variables(id: UUID)
 
-    case class Variables(observationId: String)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     @Lenses
-    case class Data(Constraints: List[Constraints])
+    case class Data(constraints: List[Constraints])
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -101,12 +102,8 @@ mutation {
 
   object Mutation extends GraphQLQuery {
     val document = """
-      mutation ($observationId: String, $fields: Constraints_set_input){
-        update_Constraints(_set: $fields, where: {
-          observation_id: {
-            _eq: $observationId
-          }
-        }) {
+      mutation ($id: uuid, $fields: constraints_set_input){
+        update_constraints(_set: $fields, where: {id: {_eq: $id}}) {
           affected_rows
         }
       }
@@ -122,10 +119,10 @@ mutation {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
-    case class Variables(observationId: String, fields: Fields)
+    case class Variables(id: UUID, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-    case class Data(update_Constraints: JsonObject) // We are ignoring affected_rows
+    case class Data(update_constraints: JsonObject) // We are ignoring affected_rows
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -133,9 +130,9 @@ mutation {
   }
 
   case class UndoViewZoom(
-    observationId: Observation.Id,
-    view:          View[Constraints],
-    setter:        Undoer.Setter[IO, Constraints]
+    id:     UUID,
+    view:   View[Constraints],
+    setter: Undoer.Setter[IO, Constraints]
   ) {
     def apply[A](
       lens:        Lens[Constraints, A],
@@ -149,7 +146,7 @@ mutation {
           { value: A =>
             for {
               _ <- view.mod.compose(lens.set)(value)
-              _ <- mutate(observationId, fields(value))
+              _ <- mutate(id, fields(value))
             } yield ()
           }
         )
@@ -171,24 +168,24 @@ mutation {
   def sbFields(sb: SkyBackground): Mutation.Fields =
     Mutation.Fields(sky_background = someEnumTag(sb))
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields): IO[Unit] =
+  private def mutate(id: UUID, fields: Mutation.Fields): IO[Unit] =
     AppCtx.flatMap(
       _.clients.programs
-        .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+        .query(Mutation)(Mutation.Variables(id, fields).some)
         .void
     )
 
   def constraintsSubscription(
-    obsId:  Observation.Id
+    id:     UUID
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     AppCtx.withCtx { implicit appCtx =>
       SubscriptionRenderMod[Subscription.Data, Constraints](
         appCtx.clients.programs
           .subscribe(Subscription)(
-            Subscription.Variables(obsId.format).some
+            Subscription.Variables(id).some
           ),
         _.map(
-          Subscription.Data.Constraints.composeOptional(headOption).getOption _
+          Subscription.Data.constraints.composeOptional(headOption).getOption _
         ).unNone
       )(render)
     }
