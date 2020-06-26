@@ -33,29 +33,8 @@ import monocle.macros.Lenses
 import monocle.Lens
 import crystal.ViewF
 import cats.effect.ContextShift
-import java.util.UUID
 
 object ConstraintsQueries {
-  /*
-query {
-  Constraints {
-    observation_id
-  }
-}
-
-mutation {
-  insert_Constraints(objects: [{
-    observation_id: "368e5b67-6c1e-4d77-8547-ef16766802fe",
-    cloud_cover: "Any",
-    image_quality: "Any",
-    sky_background: "Any",
-    water_vapor: "Any"
-  }]) {
-    affected_rows
-  }
-}
-   */
-
   implicit def enumDecoder[E: Enumerated]: Decoder[E] =
     new Decoder[E] {
       final def apply(c: HCursor): Decoder.Result[E] =
@@ -67,7 +46,7 @@ mutation {
               .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
           )
     }
-  implicit val ConstraintsDecoder                     = new Decoder[Constraints] {
+  implicit val constraintsDecoder                     = new Decoder[Constraints] {
     final def apply(c: HCursor): Decoder.Result[Constraints] =
       for {
         cc <- c.downField("cloud_cover").as[CloudCover]
@@ -88,7 +67,7 @@ mutation {
         }
       }
       """
-    case class Variables(id: UUID)
+    case class Variables(id: Constraints.Id)
 
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
@@ -119,7 +98,7 @@ mutation {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
-    case class Variables(id: UUID, fields: Fields)
+    case class Variables(id: Constraints.Id, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     case class Data(update_constraints: JsonObject) // We are ignoring affected_rows
@@ -130,7 +109,7 @@ mutation {
   }
 
   case class UndoViewZoom(
-    id:     UUID,
+    id:     Constraints.Id,
     view:   View[Constraints],
     setter: Undoer.Setter[IO, Constraints]
   ) {
@@ -168,7 +147,7 @@ mutation {
   def sbFields(sb: SkyBackground): Mutation.Fields =
     Mutation.Fields(sky_background = someEnumTag(sb))
 
-  private def mutate(id: UUID, fields: Mutation.Fields): IO[Unit] =
+  private def mutate(id: Constraints.Id, fields: Mutation.Fields): IO[Unit] =
     AppCtx.flatMap(
       _.clients.programs
         .query(Mutation)(Mutation.Variables(id, fields).some)
@@ -176,7 +155,7 @@ mutation {
     )
 
   def constraintsSubscription(
-    id:     UUID
+    id:     Constraints.Id
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     AppCtx.withCtx { implicit appCtx =>
       SubscriptionRenderMod[Subscription.Data, Constraints](

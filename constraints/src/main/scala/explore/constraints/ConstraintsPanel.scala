@@ -33,11 +33,10 @@ import react.semanticui.widths._
 import explore.components.undo.UndoButtons
 import react.semanticui.collections.form.FormField
 import react.semanticui.elements.label.Label
-import java.util.UUID
 
 final case class ConstraintsPanel(
-  id:          UUID,
-  Constraints: View[Constraints]
+  id:          Constraints.Id,
+  constraints: View[Constraints]
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -49,7 +48,7 @@ object ConstraintsPanel {
     ScalaComponent
       .builder[ConstraintsPanel]
       .render { $ =>
-        val constraints = $.props.Constraints
+        val constraints = $.props.constraints
 
         UndoRegion[Constraints] { undoCtx =>
           val undoViewZoom =

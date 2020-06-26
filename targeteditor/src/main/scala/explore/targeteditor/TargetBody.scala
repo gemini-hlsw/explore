@@ -42,10 +42,9 @@ import react.semanticui.elements.button.Button
 import react.semanticui.collections.form.FormButton
 import react.semanticui.collections.form.Form
 import explore.components.undo.UndoButtons
-import java.util.UUID
 
 final case class TargetBody(
-  id:          UUID,
+  id:          SiderealTarget.Id,
   target:      View[SiderealTarget],
   constraints: Option[Constraints] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {

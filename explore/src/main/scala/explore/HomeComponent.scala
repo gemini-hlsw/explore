@@ -14,6 +14,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
+import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
 import gem.Observation
 import gem.ProgramId
@@ -28,6 +29,7 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
+import java.util.UUID
 
 object HomeComponent {
   private val layoutLg: Layout = Layout(
@@ -58,31 +60,6 @@ object HomeComponent {
 
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  // BEGIN DEMO PURPOSES - The stream should come from a DB
-  import fs2.concurrent.SignallingRef
-  import cats.effect.implicits._
-  import cats.effect.IO
-  import cats.effect.SyncIO
-  import crystal.react.StreamRendererMod
-  import explore.observationtree.TargetTreeTest
-  import java.util.UUID
-
-  import AppCtx._
-
-  val TreeComponent =
-    AppCtx
-      .withCtx { implicit ctx =>
-        val obsRef =
-          SignallingRef
-            .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)
-            .unsafeRunSync()
-
-        StreamRendererMod.build(obsRef.discrete)
-      }
-
-  val targets = TargetTreeTest.targets
-  // END DEMO PURPOSES
-
   class Backend($ : BackendScope[Props, State]) {
     private val targetEditorRef = Ref.toScalaComponent(TargetEditor.component)
 
@@ -104,24 +81,15 @@ object HomeComponent {
               <.div(^.width := treeWidth.px, GPPStyles.Tree)(
                 <.div(GPPStyles.TreeBodyOuter)(
                   <.div(GPPStyles.TreeBodyInner)(
-                    TreeComponent(
-                      _.map[VdomNode](obsView =>
+                    targetObsSubscription((targets, obsView) =>
+                      <.div(
                         TargetObsList(
                           targets,
                           obsView,
                           props.zoom(RootModel.focusedTargetOrObsId),
-                          targetId =>
-                            targets
-                              .find(_.id === targetId)
-                              .map(target =>
-                                targetEditorRef.get
-                                  .flatMapCB(_.backend.searchTarget(target.name))
-                                  .toCallback
-                              )
-                              .getOrEmpty
+                          _ => Callback.empty
                         )
-                      ).toOption
-                        .getOrElse(<.div)
+                      )
                     )
                   )
                 )
@@ -162,8 +130,7 @@ object HomeComponent {
                     ^.key := "target",
                     ^.cls := "tile",
                     Tile("Target Position")(
-                      TargetEditor(targetId, /*props.zoomL(RootModel.target),*/ constraints.get.some
-                      ).withRef(targetEditorRef)
+                      TargetEditor(targetId, constraints.get.some).withRef(targetEditorRef)
                     )
                   )
                 )

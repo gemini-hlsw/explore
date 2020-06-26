@@ -47,9 +47,8 @@ import js.annotation._
 object AppCtx extends AppRootContext[AppContextIO]
 
 trait AppMain extends IOApp {
-
-  // LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
-  LogLevelLogger.setLevel(LogLevelLogger.Level.DEBUG)
+  LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
+  // LogLevelLogger.setLevel(LogLevelLogger.Level.DEBUG)
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
   implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]

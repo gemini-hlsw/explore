@@ -10,6 +10,7 @@ import cats.implicits._
 import clue.GraphQLQuery
 import crystal.react._
 import explore.implicits._
+import explore.model.decoders._
 import explore.model.SiderealTarget
 import explore.undo.Undoer
 import gem.Observation
@@ -29,28 +30,11 @@ import monocle.Lens
 
 object TargetQueries {
 
-  implicit val targetDecoder = new Decoder[SiderealTarget] {
-    final def apply(c: HCursor): Decoder.Result[SiderealTarget] =
-      for {
-        name <- c.downField("name").as[String]
-        ra   <- c.downField("ra").as[String].map(RightAscension.fromStringHMS.getOption)
-        dec  <- c.downField("dec").as[String].map(Declination.fromStringSignedDMS.getOption)
-      } yield {
-        val coords =
-          ProperMotion((ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
-                       Epoch.J2000,
-                       none,
-                       none,
-                       none
-          )
-        SiderealTarget(UUID.randomUUID, name, coords)
-      }
-  }
-
   object Subscription extends GraphQLQuery {
     val document = """
       subscription ($id: uuid!) {
         targets(where: {id: {_eq: $id}}) {
+          id
           name
           object_type
           ra
@@ -92,7 +76,7 @@ object TargetQueries {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
-    case class Variables(id: UUID, fields: Fields)
+    case class Variables(id: SiderealTarget.Id, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     case class Data(update_targets: JsonObject) // We are ignoring affected_rows
@@ -102,7 +86,7 @@ object TargetQueries {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  private def mutate(id: UUID, fields: Mutation.Fields)(implicit
+  private def mutate(id: SiderealTarget.Id, fields: Mutation.Fields)(implicit
     ctx:                 AppContextIO
   ): IO[Unit] =
     ctx.clients.programs
@@ -110,7 +94,7 @@ object TargetQueries {
       .void
 
   case class UndoSet(
-    id:           UUID,
+    id:           SiderealTarget.Id,
     view:         View[SiderealTarget],
     setter:       Undoer.Setter[IO, SiderealTarget]
   )(implicit ctx: AppContextIO) {

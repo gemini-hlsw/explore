@@ -38,8 +38,8 @@ object Routing {
       import dsl._
 
       (emptyRule
-        | staticRoute(root, HomePage) ~> renderP(view => HomeComponent(view))
-        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> renderP(view => HomeComponent(view))
+        | staticRoute(root, HomePage) ~> render(UnderConstruction())
+        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> render(UnderConstruction())
         | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
           HomeComponent(view)
         )

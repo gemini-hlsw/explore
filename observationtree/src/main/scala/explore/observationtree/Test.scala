@@ -20,30 +20,23 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.extra.router.RouterLogic
 import explore.model.Page
 import japgolly.scalajs.react.Callback
+import TargetObsQueries._
 
 @JSExportTopLevel("ObsTreeTest")
 object Test extends AppMain {
-
-  val obsRef = SignallingRef
-    .in[SyncIO, IO, List[ExploreObservation]](TargetTreeTest.observations)
-    .unsafeRunSync()
-
-  val Component = StreamRendererMod.build(obsRef.discrete)
 
   override def rootComponent(view: View[RootModel]): VdomElement =
     // AndOrTest.render
     // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
     // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
-    Component(
-      _.map[VdomNode](obsView =>
-        <.div(^.width := "295px")(
-          TargetObsList(TargetTreeTest.targets,
-                        obsView,
-                        view.zoom(RootModel.focusedTargetOrObsId),
-                        _ => Callback.empty
-          )
+    targetObsSubscription((targets, obsView) =>
+      <.div(^.width := "295px")(
+        TargetObsList(
+          targets,
+          obsView,
+          view.zoom(RootModel.focusedTargetOrObsId),
+          _ => Callback.empty
         )
-      ).toOption
-        .getOrElse(<.div)
+      )
     )
 }

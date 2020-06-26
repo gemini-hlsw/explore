@@ -7,6 +7,7 @@ import cats._
 import cats.implicits._
 import explore.model.enum._
 import monocle.macros.Lenses
+import java.util.UUID
 
 @Lenses
 final case class Constraints(
@@ -17,6 +18,7 @@ final case class Constraints(
 )
 
 object Constraints {
+  type Id = UUID
 
   val Worst: Constraints =
     Constraints(
