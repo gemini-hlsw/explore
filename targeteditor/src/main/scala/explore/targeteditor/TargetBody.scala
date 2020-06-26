@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.target
+package explore.targeteditor
 
 import scala.reflect.ClassTag
 
@@ -38,11 +38,14 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import react.semanticui.elements.button.Button
+import react.semanticui.collections.form.FormButton
+import react.semanticui.collections.form.Form
+import explore.components.undo.UndoButtons
 
 final case class TargetBody(
   observationId: Observation.Id,
   target:        View[SiderealTarget],
-  // globalTarget:  View[Option[SiderealTarget]],
   conditions:    Option[Conditions] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
@@ -115,37 +118,25 @@ object TargetBody extends ModelOptics {
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>
-          val modifyIO =
-            Modify(props.observationId,
-                   target,
-                   props.target.mod,
-                   //  (props.globalTarget.set _).compose(_.some),
-                   undoCtx.setter
-            )
+          val undoViewZoom =
+            UndoViewZoom(props.observationId, props.target, undoCtx.setter)
 
-          def modify[A](
-            lens:   Lens[SiderealTarget, A],
-            fields: A => Mutation.Fields
-          ): A => Callback = { v: A =>
-            modifyIO(lens.get, lens.set, fields)(v).runInCB
-          }
+          val modify = undoViewZoom[
+            (String, RightAscension, Declination)
+          ](
+            targetPropsL,
+            {
+              case (n, r, d) =>
+                Mutation.Fields(
+                  name = n.some,
+                  ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                  dec = Declination.fromStringSignedDMS.reverseGet(d).some
+                )
+            }
+          ) _
 
           val searchAndSet: String => Callback =
-            searchAndGo(
-              modify[
-                (String, RightAscension, Declination)
-              ](
-                targetPropsL,
-                {
-                  case (n, r, d) =>
-                    Mutation.Fields(
-                      name = n.some,
-                      ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                      dec = Declination.fromStringSignedDMS.reverseGet(d).some
-                    )
-                }
-              )
-            )
+            searchAndGo(modify.andThen(_.runInCB))
 
           def renderCond[A: Show](name: String, a: A): VdomNode =
             <.div(s"$name: ${a.show}")
@@ -166,9 +157,10 @@ object TargetBody extends ModelOptics {
               ^.height := "100%",
               GridRow(stretched = true)(
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(props.target.get, searchAndSet, gotoRaDec, undoCtx)
-                    .withKey(coordinatesKey(props.target.get)),
-                  props.conditions.whenDefined(renderConds)
+                  CoordinatesForm(target, searchAndSet, gotoRaDec)
+                    .withKey(coordinatesKey(target)),
+                  props.conditions.whenDefined(renderConds),
+                  UndoButtons(target, undoCtx)
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(aladinRef) {

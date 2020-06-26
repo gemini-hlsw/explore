@@ -26,7 +26,7 @@ object Tile {
             borderless = true,
             tabular = MenuTabular.Right
           )(
-            MenuItem(as = "a")(Icons.BarsIcon, p.title)
+            MenuItem(as = "a")(Icons.Bars, p.title)
           ),
           GPPStyles.GPPTile,
           c

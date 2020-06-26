@@ -31,6 +31,7 @@ import monocle.Setter
 import explore.model.Focused
 import gem.Observation
 import explore.components.ui.GPPStyles
+import explore.components.undo.UndoButtons
 
 final case class TargetObsList(
   targets:        List[SiderealTarget],
@@ -156,14 +157,7 @@ object TargetObsList {
         UndoRegion[List[ExploreObservation]] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
-              <.div(
-                Button(onClick = undoCtx.undo(observations).runInCB, disabled = undoCtx.undoEmpty)(
-                  "Undo"
-                ),
-                Button(onClick = undoCtx.redo(observations).runInCB, disabled = undoCtx.redoEmpty)(
-                  "Redo"
-                )
-              ),
+              UndoButtons(observations, undoCtx),
               props.targets.toTagMod {
                 target =>
                   val targetId = target.id

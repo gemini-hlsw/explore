@@ -3,7 +3,7 @@
 
 package explore
 
-import explore.Icons.CogsIcon
+import explore.Icons
 import explore.components.ui.GPPStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,7 +20,7 @@ object UnderConstruction {
           GPPStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(GPPStyles.HVCenter, CogsIcon.copy(size = Huge))
+            <.div(GPPStyles.HVCenter, Icons.Cogs.copy(size = Huge))
           )
         )
       }

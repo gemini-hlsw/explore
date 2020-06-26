@@ -15,7 +15,7 @@ object Settings {
     val disciplineMUnit   = "0.2.2"
     val gspCore           = "0.2.4"
     val gspMathTestKit    = "0.2.2"
-    val gppUI             = "0.1.7"
+    val gppUI             = "0.2.0"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
     val monocle           = "2.0.5"
@@ -26,7 +26,7 @@ object Settings {
     val reactCommon       = "0.9.3"
     val reactGridLayout   = "0.6.1"
     val reactResizable    = "0.1.1"
-    val reactSemanticUI   = "0.5.7"
+    val reactSemanticUI   = "0.5.8"
     val reactSizeMe       = "0.4.4"
     val scalaJsReact      = "1.7.2"
   }
