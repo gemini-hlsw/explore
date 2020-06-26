@@ -30,8 +30,10 @@ import react.gridlayout._
 import react.resizable._
 import react.sizeme._
 import java.util.UUID
+import explore.model.Focused.FocusedTarget
+import explore.model.Focused.FocusedObs
 
-object HomeComponent {
+object TargetsComponent {
   private val layoutLg: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
@@ -54,22 +56,24 @@ object HomeComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = View[RootModel]
+  type Props = ViewOpt[Focused]
 
   final case class State(treeWidth: JsNumber)
 
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    private val targetEditorRef = Ref.toScalaComponent(TargetEditor.component)
-
     def render(props: Props, state: State) = {
       val constraintsId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
-      val targetId      = UUID.fromString("9be5789c-3ffe-48cd-8e8e-24fe3e4067ee")
 
       val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
 
-      constraintsSubscription(constraintsId) { constraints =>
+      targetObsSubscription { (targets, obsView) =>
+        val targetIdOpt = props.get.collect {
+          case FocusedTarget(targetId) => targetId.some
+          case FocusedObs(obsId)       => obsView.get.find(_.id === obsId).map(_.target.id)
+        }.flatten
+
         <.div(
           GPPStyles.RGLArea,
           SizeMe() { s =>
@@ -77,18 +81,15 @@ object HomeComponent {
             val coreWidth = s.width.toDouble - treeWidth
 
             // Tree area
-            val tree =
+            def tree(targets: List[SiderealTarget], obsView: View[List[ExploreObservation]]) =
               <.div(^.width := treeWidth.px, GPPStyles.Tree)(
                 <.div(GPPStyles.TreeBodyOuter)(
                   <.div(GPPStyles.TreeBodyInner)(
-                    targetObsSubscription((targets, obsView) =>
-                      <.div(
-                        TargetObsList(
-                          targets,
-                          obsView,
-                          props.zoom(RootModel.focusedTargetOrObsId),
-                          _ => Callback.empty
-                        )
+                    <.div(
+                      TargetObsList(
+                        targets,
+                        obsView,
+                        props.zoom(Focused.targetOrObsId)
                       )
                     )
                   )
@@ -105,35 +106,41 @@ object HomeComponent {
                 maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),
-                content = tree
+                content = tree(targets, obsView)
               ),
               <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
-                ResponsiveReactGridLayout(
-                  width = coreWidth,
-                  margin = (5, 5),
-                  containerPadding = (5, 5),
-                  rowHeight = 30,
-                  draggableHandle = ".tileTitle",
-                  useCSSTransforms =
-                    false, // Not ideal, but fixes flicker on first update (0.18.3).
-                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                  layouts = layouts
-                )(
-                  <.div(
-                    ^.key := "constraints",
-                    ^.cls := "tile",
-                    Tile("Constraints")(
-                      ConstraintsPanel(constraintsId, constraints)
+                constraintsSubscription(constraintsId) {
+                  constraints =>
+                    ResponsiveReactGridLayout(
+                      width = coreWidth,
+                      margin = (5, 5),
+                      containerPadding = (5, 5),
+                      rowHeight = 30,
+                      draggableHandle = ".tileTitle",
+                      useCSSTransforms =
+                        false, // Not ideal, but fixes flicker on first update (0.18.3).
+                      // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                      layouts = layouts
+                    )(
+                      <.div(
+                        ^.key := "constraints",
+                        ^.cls := "tile",
+                        Tile("Constraints")(
+                          ConstraintsPanel(constraintsId, constraints)
+                        )
+                      ),
+                      targetIdOpt.whenDefined(targetId =>
+                        <.div(
+                          ^.key := "target",
+                          ^.cls := "tile",
+                          Tile("Target Position")(
+                            TargetEditor(targetId, constraints.get.some)
+                              .withKey(targetId.toString)
+                          )
+                        )
+                      )
                     )
-                  ),
-                  <.div(
-                    ^.key := "target",
-                    ^.cls := "tile",
-                    Tile("Target Position")(
-                      TargetEditor(targetId, constraints.get.some).withRef(targetEditorRef)
-                    )
-                  )
-                )
+                }
               )
             )
           }

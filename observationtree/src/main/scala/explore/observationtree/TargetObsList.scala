@@ -35,10 +35,9 @@ import explore.components.undo.UndoButtons
 import TargetObsQueries._
 
 final case class TargetObsList(
-  targets:        List[SiderealTarget],
-  observations:   View[List[ExploreObservation]],
-  focused:        ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]],
-  onTargetSelect: SiderealTarget.Id => Callback
+  targets:      List[SiderealTarget],
+  observations: View[List[ExploreObservation]],
+  focused:      ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -108,16 +107,7 @@ object TargetObsList {
                         .set(value)
                     ) >>
                       // 2) Send mutation
-                      mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id))) >>
-                      value                 // 3) Change target editor
-                        .map(t =>
-                          props
-                            .onTargetSelect(t.id)
-                            .when(props.focused.get.flatMap(_.toOption).exists(_ === obsId))
-                            .void
-                        )
-                        .getOrEmpty
-                        .to[IO]
+                      mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
                   }
                 ) _
 
@@ -192,10 +182,7 @@ object TargetObsList {
                             target.name,
                             <.span(^.float.right, s"$obsCount Obs"),
                             ^.cursor.pointer,
-                            ^.onClick --> (props.focused
-                              .set(targetId.asLeft)
-                              .runInCB >>
-                              props.onTargetSelect(targetId))
+                            ^.onClick --> props.focused.set(targetId.asLeft).runInCB
                           )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
@@ -215,9 +202,7 @@ object TargetObsList {
                                       provided.draggableProps,
                                       getObsStyle(provided.draggableStyle, snapshot),
                                       ^.cursor.pointer,
-                                      ^.onClick --> (props.focused
-                                        .set(obs.id.asRight)
-                                        .runInCB >> props.onTargetSelect(obs.target.id))
+                                      ^.onClick --> props.focused.set(obs.id.asRight).runInCB
                                     )(
                                       decorateTopRight(
                                         ObsBadge(obs,

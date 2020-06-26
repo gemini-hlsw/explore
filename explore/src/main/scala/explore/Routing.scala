@@ -17,6 +17,7 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import monocle.Iso
 import monocle.Prism
+import monocle.std.option.some
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -41,10 +42,10 @@ object Routing {
         | staticRoute(root, HomePage) ~> render(UnderConstruction())
         | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> render(UnderConstruction())
         | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
-          HomeComponent(view)
+          TargetsComponent(view.zoom(RootModel.focused.composePrism(some)))
         )
         | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
-          HomeComponent(view)
+          TargetsComponent(view.zoom(RootModel.focused.composePrism(some)))
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))

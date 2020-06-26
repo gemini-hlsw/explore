@@ -21,7 +21,6 @@ import react.common._
 
 final case class TargetEditor(
   id:          SiderealTarget.Id,
-  // globalTarget:  View[Option[SiderealTarget]],
   constraints: Option[Constraints] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
@@ -30,14 +29,7 @@ object TargetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  // class Backend($ : BackendScope[Props, Unit]) {
   class Backend() {
-    private val targetBodyRef = Ref.toScalaComponent(TargetBody.component)
-
-    def searchTarget(targetName: String): Callback =
-      targetBodyRef.get
-        .flatMapCB(_.backend.setTargetByName(targetName))
-
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
@@ -47,8 +39,7 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.id, target, /*props.globalTarget,*/ props.constraints)
-            .withRef(targetBodyRef)
+          TargetBody(props.id, target, props.constraints)
         }
       }
   }
@@ -58,7 +49,6 @@ object TargetEditor {
       .builder[Props]
       .backend(_ => new Backend())
       .renderBackend
-      // .renderBackend[Backend]
       .build
 
 }
