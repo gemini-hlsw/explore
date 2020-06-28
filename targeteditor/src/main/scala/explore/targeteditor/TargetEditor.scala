@@ -8,7 +8,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.target.TargetQueries._
@@ -20,9 +20,8 @@ import monocle.function.Cons.headOption
 import react.common._
 
 final case class TargetEditor(
-  observationId: Observation.Id,
-  // globalTarget:  View[Option[SiderealTarget]],
-  conditions:    Option[Conditions] = None
+  id:          SiderealTarget.Id,
+  constraints: Option[Constraints] = None
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -30,25 +29,17 @@ object TargetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  // class Backend($ : BackendScope[Props, Unit]) {
   class Backend() {
-    private val targetBodyRef = Ref.toScalaComponent(TargetBody.component)
-
-    def searchTarget(targetName: String): Callback =
-      targetBodyRef.get
-        .flatMapCB(_.backend.setTargetByName(targetName))
-
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
           appCtx.clients.programs
             .subscribe(Subscription)(
-              Subscription.Variables(props.observationId.format).some
+              Subscription.Variables(props.id).some
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.observationId, target, /*props.globalTarget,*/ props.conditions)
-            .withRef(targetBodyRef)
+          TargetBody(props.id, target, props.constraints)
         }
       }
   }
@@ -58,7 +49,6 @@ object TargetEditor {
       .builder[Props]
       .backend(_ => new Backend())
       .renderBackend
-      // .renderBackend[Backend]
       .build
 
 }

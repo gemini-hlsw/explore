@@ -12,7 +12,7 @@ import crystal.react.ModState
 import explore.AppMain
 import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.RootModel
 import explore.model.reusability._
 import gem.Observation
@@ -21,7 +21,6 @@ import gsp.math.Index
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.MonocleReact._
-import java.util.UUID
 import monocle.function.Cons.headOption
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }

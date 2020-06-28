@@ -45,7 +45,7 @@ const Web = Merge(
           pathRewrite: { "^/api/conditions": "" },
           changeOrigin: true,
           ws: true
-        },*/
+        },
         "/api/tasks": {
           target: "https://todo-mongo-graphql-server.herokuapp.com",
           pathRewrite: { "^/api/tasks": "" },
@@ -55,7 +55,7 @@ const Web = Merge(
           target: "https://grackle-demo-staging.herokuapp.com",
           pathRewrite: { "^/api/grackle-demo": "" },
           changeOrigin: true
-        }
+        }*/
       }
     },
     plugins: [

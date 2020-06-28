@@ -13,7 +13,7 @@ import monocle.macros.Lenses
 
 @Lenses
 final case class ExploreObservation(
-  id:          UUID,
+  id:          ExploreObservation.Id,
   target:      SiderealTarget,
   status:      ObsStatus,
   conf:        String,

@@ -17,8 +17,8 @@ addCommandAlias(
 )
 
 addCommandAlias(
-  "conditionsWDS",
-  "; conditions/fastOptJS::stopWebpackDevServer; conditions/fastOptJS::startWebpackDevServer; ~conditions/fastOptJS"
+  "constraintsWDS",
+  "; constraints/fastOptJS::stopWebpackDevServer; constraints/fastOptJS::startWebpackDevServer; ~constraints/fastOptJS"
 )
 
 addCommandAlias(
@@ -69,7 +69,7 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, common, conditions, targeteditor, explore)
+  .aggregate(model.jvm, model.js, common, constraints, targeteditor, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -106,8 +106,8 @@ lazy val targeteditor = project
       ReactAladin.value
   )
 
-lazy val conditions = project
-  .in(file("conditions"))
+lazy val constraints = project
+  .in(file("constraints"))
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(commonWDS: _*)
@@ -144,7 +144,7 @@ lazy val explore: Project = project
         ReactResizable.value ++
         ReactSizeMe.value
   )
-  .dependsOn(conditions, targeteditor, observationtree)
+  .dependsOn(constraints, targeteditor, observationtree)
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",

@@ -32,12 +32,12 @@ import explore.model.Focused
 import gem.Observation
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
+import TargetObsQueries._
 
 final case class TargetObsList(
-  targets:        List[SiderealTarget],
-  observations:   View[List[ExploreObservation]],
-  focused:        ViewOpt[Either[SiderealTarget.Id, ExploreObservation.Id]],
-  onTargetSelect: SiderealTarget.Id => Callback
+  targets:      List[SiderealTarget],
+  observations: View[List[ExploreObservation]],
+  focused:      View[Option[Either[SiderealTarget.Id, ExploreObservation.Id]]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -46,7 +46,7 @@ object TargetObsList {
   @Lenses
   case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
 
-  val obsListMod = new ListMod[IO, ExploreObservation, UUID](ExploreObservation.id)
+  val obsListMod = new ListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
 
   implicit class LensOptionOps[S, A](val lens: Lens[S, Option[A]]) extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): Lens[S, Option[B]] =
@@ -100,20 +100,14 @@ object TargetObsList {
                     .composeOptionLens(ExploreObservation.target)
                     .get,
                   { value: Option[SiderealTarget] =>
-                    props.observations.mod(
+                    props.observations.mod( // 1) Update internal model
                       getSetWithId.setter
                         .composeOptionLens(first)
                         .composeOptionLens(ExploreObservation.target)
                         .set(value)
-                    ) >> value
-                      .map(t =>
-                        props
-                          .onTargetSelect(t.id)
-                          .when(props.focused.get.flatMap(_.toOption).exists(_ === obsId))
-                          .void
-                      )
-                      .getOrEmpty
-                      .to[IO]
+                    ) >>
+                      // 2) Send mutation
+                      mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
                   }
                 ) _
 
@@ -188,10 +182,7 @@ object TargetObsList {
                             target.name,
                             <.span(^.float.right, s"$obsCount Obs"),
                             ^.cursor.pointer,
-                            ^.onClick --> (props.focused
-                              .set(targetId.asLeft)
-                              .runInCB >>
-                              props.onTargetSelect(targetId))
+                            ^.onClick --> props.focused.set(targetId.asLeft.some).runInCB
                           )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
@@ -211,9 +202,7 @@ object TargetObsList {
                                       provided.draggableProps,
                                       getObsStyle(provided.draggableStyle, snapshot),
                                       ^.cursor.pointer,
-                                      ^.onClick --> (props.focused
-                                        .set(obs.id.asRight)
-                                        .runInCB >> props.onTargetSelect(obs.target.id))
+                                      ^.onClick --> props.focused.set(obs.id.asRight.some).runInCB
                                     )(
                                       decorateTopRight(
                                         ObsBadge(obs,

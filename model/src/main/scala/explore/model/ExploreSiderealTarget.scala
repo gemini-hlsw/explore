@@ -16,7 +16,7 @@ import monocle.macros.Lenses
   * A refinement of gem.Tracker meant for sidereal targets
   */
 @Lenses
-final case class SiderealTarget(id: UUID, name: String, track: ProperMotion)
+final case class SiderealTarget(id: SiderealTarget.Id, name: String, track: ProperMotion)
 
 object SiderealTarget {
   type Id = UUID

@@ -27,7 +27,7 @@ object reusability {
   implicit val expObsReuse: Reusability[ExploreObservation]                = Reusability.derive
   implicit def enumReuse[A: Enumerated]: Reusability[A]                    =
     Reusability.by(Enumerated[A].tag)
-  implicit val conditionsReuse: Reusability[Conditions]                    = Reusability.derive
+  implicit val constraintsReuse: Reusability[Constraints]                  = Reusability.derive
   implicit def enumZipperReuse[A: Reusability]: Reusability[EnumZipper[A]] =
     Reusability.by(z => (z.lefts, z.focus, z.rights))
   implicit val jsNumberReuse: Reusability[JsNumber]                        = Reusability.byEq

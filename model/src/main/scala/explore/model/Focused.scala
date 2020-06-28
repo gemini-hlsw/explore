@@ -9,6 +9,7 @@ import gem.Observation
 import monocle.Optional
 import monocle.macros.GenPrism
 import monocle.macros.Lenses
+import monocle.Prism
 
 sealed trait Focused extends Product with Serializable
 object Focused {
@@ -25,17 +26,17 @@ object Focused {
     case _                                    => false
   }
 
-  val obsId: Optional[Focused, ExploreObservation.Id]                                    =
+  val obsId: Optional[Focused, ExploreObservation.Id]                                 =
     GenPrism[Focused, FocusedObs].composeLens(FocusedObs.obsId)
-  val targetId: Optional[Focused, SiderealTarget.Id]                                     =
+  val targetId: Optional[Focused, SiderealTarget.Id]                                  =
     GenPrism[Focused, FocusedTarget].composeLens(FocusedTarget.targetId)
-  val targetOrObsId: Optional[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] =
-    Optional[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] {
+  val targetOrObsId: Prism[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] =
+    Prism[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] {
       case FocusedObs(obsId)       => obsId.asRight.some
       case FocusedTarget(targetId) => targetId.asLeft.some
       case _                       => none
-    } { e => _ =>
-      e match {
+    } {
+      _ match {
         case Right(obsId)   => FocusedObs(obsId)
         case Left(targetId) => FocusedTarget(targetId)
       }

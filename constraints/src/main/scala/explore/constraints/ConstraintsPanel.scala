@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.conditions
+package explore.constraints
 
 import cats.Show
 import cats.implicits._
@@ -10,9 +10,9 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.components.undo.UndoRegion
-import explore.conditions.ConditionsQueries._
+import explore.constraints.ConstraintsQueries._
 import explore.implicits._
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
@@ -34,30 +34,30 @@ import explore.components.undo.UndoButtons
 import react.semanticui.collections.form.FormField
 import react.semanticui.elements.label.Label
 
-final case class ConditionsPanel(
-  observationId: Observation.Id,
-  conditions:    View[Conditions]
-) extends ReactProps[ConditionsPanel](ConditionsPanel.component)
+final case class ConstraintsPanel(
+  id:          Constraints.Id,
+  constraints: View[Constraints]
+) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
-object ConditionsPanel {
-  type Props = ConditionsPanel
+object ConstraintsPanel {
+  type Props = ConstraintsPanel
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val component =
     ScalaComponent
-      .builder[ConditionsPanel]
+      .builder[ConstraintsPanel]
       .render { $ =>
-        val conditions = $.props.conditions
+        val constraints = $.props.constraints
 
-        UndoRegion[Conditions] { undoCtx =>
+        UndoRegion[Constraints] { undoCtx =>
           val undoViewZoom =
-            UndoViewZoom($.props.observationId, conditions, undoCtx.setter)
+            UndoViewZoom($.props.id, constraints, undoCtx.setter)
 
           AppCtx.withCtx { implicit appCtx =>
             def selectEnum[A: Enumerated: Show](
               label:  String,
-              lens:   Lens[Conditions, A],
+              lens:   Lens[Constraints, A],
               fields: A => Mutation.Fields
             ) =
               EnumViewSelect(undoViewZoom(lens, fields).asOpt, label = label)
@@ -65,15 +65,15 @@ object ConditionsPanel {
             <.div(
               Form(
                 FormGroup(widths = Two)(
-                  selectEnum("Image Quality", Conditions.iq, iqFields),
-                  selectEnum("Cloud Cover", Conditions.cc, ccFields)
+                  selectEnum("Image Quality", Constraints.iq, iqFields),
+                  selectEnum("Cloud Cover", Constraints.cc, ccFields)
                 ),
                 FormGroup(widths = Two)(
-                  selectEnum("Water Vapor", Conditions.wv, wvFields),
-                  selectEnum("Sky Background", Conditions.sb, sbFields)
+                  selectEnum("Water Vapor", Constraints.wv, wvFields),
+                  selectEnum("Sky Background", Constraints.sb, sbFields)
                 )
               ),
-              UndoButtons(conditions.get, undoCtx)
+              UndoButtons(constraints.get, undoCtx)
             )
           }
         }

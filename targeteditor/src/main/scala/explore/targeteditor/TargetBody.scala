@@ -14,7 +14,7 @@ import explore.View
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoRegion
 import explore.implicits._
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
 import explore.model.reusability._
@@ -44,9 +44,9 @@ import react.semanticui.collections.form.Form
 import explore.components.undo.UndoButtons
 
 final case class TargetBody(
-  observationId: Observation.Id,
-  target:        View[SiderealTarget],
-  conditions:    Option[Conditions] = None
+  id:          SiderealTarget.Id,
+  target:      View[SiderealTarget],
+  constraints: Option[Constraints] = None
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -118,10 +118,10 @@ object TargetBody extends ModelOptics {
         val target = props.target.get
 
         UndoRegion[SiderealTarget] { undoCtx =>
-          val undoViewZoom =
-            UndoViewZoom(props.observationId, props.target, undoCtx.setter)
+          val undoSet =
+            UndoSet(props.id, props.target, undoCtx.setter)
 
-          val modify = undoViewZoom[
+          val modify = undoSet[
             (String, RightAscension, Declination)
           ](
             targetPropsL,
@@ -141,12 +141,12 @@ object TargetBody extends ModelOptics {
           def renderCond[A: Show](name: String, a: A): VdomNode =
             <.div(s"$name: ${a.show}")
 
-          def renderConds(conditions: Conditions): VdomNode =
+          def renderConds(constraints: Constraints): VdomNode =
             <.div(
-              renderCond("Image Quality", conditions.iq),
-              renderCond("Cloud Cover", conditions.cc),
-              renderCond("Water Vapor", conditions.wv),
-              renderCond("Sky Background", conditions.sb)
+              renderCond("Image Quality", constraints.iq),
+              renderCond("Cloud Cover", constraints.cc),
+              renderCond("Water Vapor", constraints.wv),
+              renderCond("Sky Background", constraints.sb)
             )
 
           <.div(
@@ -159,7 +159,7 @@ object TargetBody extends ModelOptics {
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CoordinatesForm(target, searchAndSet, gotoRaDec)
                     .withKey(coordinatesKey(target)),
-                  props.conditions.whenDefined(renderConds),
+                  props.constraints.whenDefined(renderConds),
                   UndoButtons(target, undoCtx)
                 ),
                 GridColumn(stretched = true, computer = Nine)(

@@ -10,6 +10,7 @@ import cats.implicits._
 import clue.GraphQLQuery
 import crystal.react._
 import explore.implicits._
+import explore.model.decoders._
 import explore.model.SiderealTarget
 import explore.undo.Undoer
 import gem.Observation
@@ -29,28 +30,11 @@ import monocle.Lens
 
 object TargetQueries {
 
-  implicit val targetDecoder = new Decoder[SiderealTarget] {
-    final def apply(c: HCursor): Decoder.Result[SiderealTarget] =
-      for {
-        name <- c.downField("name").as[String]
-        ra   <- c.downField("ra").as[String].map(RightAscension.fromStringHMS.getOption)
-        dec  <- c.downField("dec").as[String].map(Declination.fromStringSignedDMS.getOption)
-      } yield {
-        val coords =
-          ProperMotion((ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
-                       Epoch.J2000,
-                       none,
-                       none,
-                       none
-          )
-        SiderealTarget(UUID.randomUUID, name, coords)
-      }
-  }
-
   object Subscription extends GraphQLQuery {
     val document = """
-      subscription ($observationId: String!) {
-        targets(where: {observation_id: {_eq: $observationId}}) {
+      subscription ($id: uuid!) {
+        targets(where: {id: {_eq: $id}}) {
+          id
           name
           object_type
           ra
@@ -59,7 +43,7 @@ object TargetQueries {
       }
       """
 
-    case class Variables(observationId: String)
+    case class Variables(id: UUID)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     @Lenses
@@ -72,10 +56,10 @@ object TargetQueries {
 
   object Mutation extends GraphQLQuery {
     val document = """
-      mutation ($observationId: String, $fields: targets_set_input){
+      mutation ($id: uuid, $fields: targets_set_input){
         update_targets(_set: $fields, where: {
-          observation_id: {
-            _eq: $observationId
+          id: {
+            _eq: $id
           }
         }) {
           affected_rows
@@ -92,7 +76,7 @@ object TargetQueries {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
-    case class Variables(observationId: String, fields: Fields)
+    case class Variables(id: SiderealTarget.Id, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     case class Data(update_targets: JsonObject) // We are ignoring affected_rows
@@ -102,18 +86,18 @@ object TargetQueries {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields)(implicit
-    ctx:                            AppContextIO
+  private def mutate(id: SiderealTarget.Id, fields: Mutation.Fields)(implicit
+    ctx:                 AppContextIO
   ): IO[Unit] =
     ctx.clients.programs
-      .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+      .query(Mutation)(Mutation.Variables(id, fields).some)
       .void
 
-  case class UndoViewZoom(
-    observationId: Observation.Id,
-    view:          View[SiderealTarget],
-    setter:        Undoer.Setter[IO, SiderealTarget]
-  )(implicit ctx:  AppContextIO) {
+  case class UndoSet(
+    id:           SiderealTarget.Id,
+    view:         View[SiderealTarget],
+    setter:       Undoer.Setter[IO, SiderealTarget]
+  )(implicit ctx: AppContextIO) {
     def apply[A](
       lens:   Lens[SiderealTarget, A],
       fields: A => Mutation.Fields
@@ -126,7 +110,7 @@ object TargetQueries {
         { value: A =>
           for {
             _ <- (view.mod).compose(lens.set)(value)
-            _ <- mutate(observationId, fields(value))
+            _ <- mutate(id, fields(value))
           } yield ()
         }
       )(value)

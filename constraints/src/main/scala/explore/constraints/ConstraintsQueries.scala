@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.conditions
+package explore.constraints
 
 import cats.effect.IO
 import cats.implicits._
@@ -10,7 +10,7 @@ import crystal.react.ModState
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
-import explore.model.Conditions
+import explore.model.Constraints
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
@@ -34,27 +34,7 @@ import monocle.Lens
 import crystal.ViewF
 import cats.effect.ContextShift
 
-object ConditionsQueries {
-  /*
-query {
-  conditions {
-    observation_id
-  }
-}
-
-mutation {
-  insert_conditions(objects: [{
-    observation_id: "368e5b67-6c1e-4d77-8547-ef16766802fe",
-    cloud_cover: "Any",
-    image_quality: "Any",
-    sky_background: "Any",
-    water_vapor: "Any"
-  }]) {
-    affected_rows
-  }
-}
-   */
-
+object ConstraintsQueries {
   implicit def enumDecoder[E: Enumerated]: Decoder[E] =
     new Decoder[E] {
       final def apply(c: HCursor): Decoder.Result[E] =
@@ -66,20 +46,20 @@ mutation {
               .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
           )
     }
-  implicit val conditionsDecoder                      = new Decoder[Conditions] {
-    final def apply(c: HCursor): Decoder.Result[Conditions] =
+  implicit val constraintsDecoder                     = new Decoder[Constraints] {
+    final def apply(c: HCursor): Decoder.Result[Constraints] =
       for {
         cc <- c.downField("cloud_cover").as[CloudCover]
         iq <- c.downField("image_quality").as[ImageQuality]
         sb <- c.downField("sky_background").as[SkyBackground]
         wv <- c.downField("water_vapor").as[WaterVapor]
-      } yield Conditions(cc, iq, sb, wv)
+      } yield Constraints(cc, iq, sb, wv)
   }
 
   object Subscription extends GraphQLQuery {
     val document = """
-      subscription ($observationId: String!) {
-        conditions(where: {observation_id: {_eq: $observationId}}) {
+      subscription ($id: uuid!) {
+        constraints(where: {id: {_eq: $id}}) {
           cloud_cover
           image_quality
           sky_background
@@ -87,12 +67,12 @@ mutation {
         }
       }
       """
+    case class Variables(id: Constraints.Id)
 
-    case class Variables(observationId: String)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
     @Lenses
-    case class Data(conditions: List[Conditions])
+    case class Data(constraints: List[Constraints])
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -101,12 +81,8 @@ mutation {
 
   object Mutation extends GraphQLQuery {
     val document = """
-      mutation ($observationId: String, $fields: conditions_set_input){
-        update_conditions(_set: $fields, where: {
-          observation_id: {
-            _eq: $observationId
-          }
-        }) {
+      mutation ($id: uuid, $fields: constraints_set_input){
+        update_constraints(_set: $fields, where: {id: {_eq: $id}}) {
           affected_rows
         }
       }
@@ -122,10 +98,10 @@ mutation {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
     }
 
-    case class Variables(observationId: String, fields: Fields)
+    case class Variables(id: Constraints.Id, fields: Fields)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-    case class Data(update_conditions: JsonObject) // We are ignoring affected_rows
+    case class Data(update_constraints: JsonObject) // We are ignoring affected_rows
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -133,12 +109,12 @@ mutation {
   }
 
   case class UndoViewZoom(
-    observationId: Observation.Id,
-    view:          View[Conditions],
-    setter:        Undoer.Setter[IO, Conditions]
+    id:     Constraints.Id,
+    view:   View[Constraints],
+    setter: Undoer.Setter[IO, Constraints]
   ) {
     def apply[A](
-      lens:        Lens[Conditions, A],
+      lens:        Lens[Constraints, A],
       fields:      A => Mutation.Fields
     )(implicit cs: ContextShift[IO]): View[A] =
       ViewF[IO, A](
@@ -149,7 +125,7 @@ mutation {
           { value: A =>
             for {
               _ <- view.mod.compose(lens.set)(value)
-              _ <- mutate(observationId, fields(value))
+              _ <- mutate(id, fields(value))
             } yield ()
           }
         )
@@ -171,24 +147,24 @@ mutation {
   def sbFields(sb: SkyBackground): Mutation.Fields =
     Mutation.Fields(sky_background = someEnumTag(sb))
 
-  private def mutate(observationId: Observation.Id, fields: Mutation.Fields): IO[Unit] =
+  private def mutate(id: Constraints.Id, fields: Mutation.Fields): IO[Unit] =
     AppCtx.flatMap(
       _.clients.programs
-        .query(Mutation)(Mutation.Variables(observationId.format, fields).some)
+        .query(Mutation)(Mutation.Variables(id, fields).some)
         .void
     )
 
-  def conditionsSubscription(
-    obsId:  Observation.Id
-  )(render: View[Conditions] => VdomNode): SubscriptionRenderMod[Subscription.Data, Conditions] =
+  def constraintsSubscription(
+    id:     Constraints.Id
+  )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     AppCtx.withCtx { implicit appCtx =>
-      SubscriptionRenderMod[Subscription.Data, Conditions](
+      SubscriptionRenderMod[Subscription.Data, Constraints](
         appCtx.clients.programs
           .subscribe(Subscription)(
-            Subscription.Variables(obsId.format).some
+            Subscription.Variables(id).some
           ),
         _.map(
-          Subscription.Data.conditions.composeOptional(headOption).getOption _
+          Subscription.Data.constraints.composeOptional(headOption).getOption _
         ).unNone
       )(render)
     }
