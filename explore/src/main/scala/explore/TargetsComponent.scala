@@ -56,7 +56,7 @@ object TargetsComponent {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = View[Option[Either[SiderealTarget.Id, ExploreObservation.Id]]]
+  type Props = View[Option[Focused]]
 
   final case class State(treeWidth: JsNumber)
 
@@ -70,8 +70,8 @@ object TargetsComponent {
 
       targetObsSubscription { (targets, obsView) =>
         val targetIdOpt = props.get.collect {
-          case Left(targetId) => targetId.some
-          case Right(obsId)   => obsView.get.find(_.id === obsId).map(_.target.id)
+          case FocusedTarget(targetId) => targetId.some
+          case FocusedObs(obsId)       => obsView.get.find(_.id === obsId).map(_.target.id)
         }.flatten
 
         <.div(
@@ -129,13 +129,15 @@ object TargetsComponent {
                           ConstraintsPanel(constraintsId, constraints)
                         )
                       ),
-                      targetIdOpt.whenDefined(targetId =>
-                        <.div(
-                          ^.key := "target",
-                          ^.cls := "tile",
-                          Tile("Target Position")(
-                            TargetEditor(targetId, constraints.get.some)
-                              .withKey(targetId.toString)
+                      <.div(
+                        ^.key := "target",
+                        ^.cls := "tile",
+                        Tile("Target Position")(
+                          <.span(
+                            targetIdOpt.whenDefined(targetId =>
+                              TargetEditor(targetId, constraints.get.some)
+                                .withKey(targetId.toString)
+                            )
                           )
                         )
                       )

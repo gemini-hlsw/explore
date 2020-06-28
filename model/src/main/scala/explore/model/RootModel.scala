@@ -16,9 +16,11 @@ import monocle.Prism
 import monocle.function.Possible.possible
 import monocle.macros.GenPrism
 import monocle.macros.Lenses
+import monocle.std.option.some
 import sttp.model.Uri
 import sttp.model.Uri._
 import monocle.Lens
+import explore.model.Focused.FocusedObs
 
 @Lenses
 case class RootModel(
@@ -28,18 +30,6 @@ case class RootModel(
 
 object RootModel {
   implicit val eqRootModel: Eq[RootModel] = Eq.by(m => (m.tabs, m.focused))
-
-  val focusedOpt: Optional[RootModel, Focused]                                  =
-    focused.composeOptional(possible)
-  val focusedObsId: Optional[RootModel, ExploreObservation.Id]                  =
-    focusedOpt.composeOptional(Focused.obsId)
-  val focusedTargetId: Optional[RootModel, SiderealTarget.Id]                   =
-    focusedOpt.composeOptional(Focused.targetId)
-  val focusedTargetOrObsId
-    : Lens[RootModel, Option[Either[SiderealTarget.Id, ExploreObservation.Id]]] =
-    Lens[RootModel, Option[Either[SiderealTarget.Id, ExploreObservation.Id]]](
-      _.focused.flatMap(Focused.targetOrObsId.getOption)
-    )(opt => _.copy(focused = opt.map(Focused.targetOrObsId.reverseGet)))
 }
 
 case class AppConfig(

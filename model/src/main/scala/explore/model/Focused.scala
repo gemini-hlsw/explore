@@ -25,21 +25,4 @@ object Focused {
     // case (FocusedConfiguration(a), FocusedConfiguration(b)) => a === b
     case _                                    => false
   }
-
-  val obsId: Optional[Focused, ExploreObservation.Id]                                 =
-    GenPrism[Focused, FocusedObs].composeLens(FocusedObs.obsId)
-  val targetId: Optional[Focused, SiderealTarget.Id]                                  =
-    GenPrism[Focused, FocusedTarget].composeLens(FocusedTarget.targetId)
-  val targetOrObsId: Prism[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] =
-    Prism[Focused, Either[SiderealTarget.Id, ExploreObservation.Id]] {
-      case FocusedObs(obsId)       => obsId.asRight.some
-      case FocusedTarget(targetId) => targetId.asLeft.some
-      case _                       => none
-    } {
-      _ match {
-        case Right(obsId)   => FocusedObs(obsId)
-        case Left(targetId) => FocusedTarget(targetId)
-      }
-    }
-
 }

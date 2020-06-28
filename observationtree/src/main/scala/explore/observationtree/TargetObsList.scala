@@ -33,11 +33,14 @@ import gem.Observation
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
 import TargetObsQueries._
+import explore.model.Focused.FocusedTarget
+import react.semanticui.modules.popup.PopupOn.Focus
+import explore.model.Focused.FocusedObs
 
 final case class TargetObsList(
   targets:      List[SiderealTarget],
   observations: View[List[ExploreObservation]],
-  focused:      View[Option[Either[SiderealTarget.Id, ExploreObservation.Id]]]
+  focused:      View[Option[Focused]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -182,7 +185,7 @@ object TargetObsList {
                             target.name,
                             <.span(^.float.right, s"$obsCount Obs"),
                             ^.cursor.pointer,
-                            ^.onClick --> props.focused.set(targetId.asLeft.some).runInCB
+                            ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
                           )
                         ),
                         TagMod.when(!state.collapsedTargetIds.contains(targetId))(
@@ -202,14 +205,15 @@ object TargetObsList {
                                       provided.draggableProps,
                                       getObsStyle(provided.draggableStyle, snapshot),
                                       ^.cursor.pointer,
-                                      ^.onClick --> props.focused.set(obs.id.asRight.some).runInCB
+                                      ^.onClick --> props.focused
+                                        .set(FocusedObs(obs.id).some)
+                                        .runInCB
                                     )(
                                       decorateTopRight(
                                         ObsBadge(obs,
                                                  ObsBadge.Layout.ConfAndConstraints,
                                                  selected = props.focused.get
-                                                   .flatMap(_.toOption)
-                                                   .exists(_ === obs.id)
+                                                   .exists(_ === FocusedObs(obs.id))
                                         ),
                                         dragIcon
                                       )
