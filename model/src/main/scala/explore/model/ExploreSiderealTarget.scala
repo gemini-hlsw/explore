@@ -11,6 +11,11 @@ import gem.Target
 import gsp.math.ProperMotion
 import monocle.Lens
 import monocle.macros.Lenses
+import gsp.math.Coordinates
+import gsp.math.RightAscension
+import gsp.math.Epoch
+import gsp.math.Declination
+import cats.effect.Sync
 
 /**
   * A refinement of gem.Tracker meant for sidereal targets
@@ -20,6 +25,22 @@ final case class SiderealTarget(id: SiderealTarget.Id, name: String, track: Prop
 
 object SiderealTarget {
   type Id = UUID
+
+  def New[F[_]: Sync]: F[SiderealTarget] =
+    Sync[F]
+      .delay(UUID.randomUUID())
+      .map(id =>
+        SiderealTarget(
+          id,
+          "New Target",
+          ProperMotion(Coordinates(RightAscension.Zero, Declination.Zero),
+                       Epoch.J2000,
+                       none,
+                       none,
+                       none
+          )
+        )
+      )
 
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }

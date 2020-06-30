@@ -4,7 +4,7 @@ import explore.implicits._
 import cats.implicits._
 import explore.model.SiderealTarget
 import explore.model.ExploreObservation
-import react.common.ReactProps
+import react.common._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.MonocleReact._
@@ -36,6 +36,8 @@ import TargetObsQueries._
 import explore.model.Focused.FocusedTarget
 import react.semanticui.modules.popup.PopupOn.Focus
 import explore.model.Focused.FocusedObs
+import explore.Icons
+import react.semanticui.elements.segment.Segment
 
 final case class TargetObsList(
   targets:      List[SiderealTarget],
@@ -85,8 +87,9 @@ object TargetObsList {
       (result, _) =>
         $.props >>= { props =>
           (for {
-            newTargetId <- result.destination.toOption.map(_.droppableId)
-            target      <- props.targets.find(_.name === newTargetId)
+            newTargetIdStr <- result.destination.toOption.map(_.droppableId)
+            newTargetId     = UUID.fromString(newTargetIdStr)
+            target         <- props.targets.find(_.id === newTargetId)
           } yield {
             val obsId = UUID.fromString(result.draggableId)
 
@@ -118,6 +121,31 @@ object TargetObsList {
           }).getOrEmpty
         }
 
+    // def newTarget(setter: Undoer.Setter[IO, List[ExploreObservation]]): Callback =
+    // $.props >>= { props =>
+    //   val set =
+    //     setter
+    //       .set[Option[SiderealTarget]](
+    //         props.observations.get,
+    //         getSetWithId.getter
+    //           .composeOptionLens(first)
+    //           .composeOptionLens(ExploreObservation.target)
+    //           .get,
+    //         { value: Option[SiderealTarget] =>
+    //           props.observations.mod( // 1) Update internal model
+    //             getSetWithId.setter
+    //               .composeOptionLens(first)
+    //               .composeOptionLens(ExploreObservation.target)
+    //               .set(value)
+    //           ) >>
+    //             // 2) Send mutation
+    //             mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
+    //         }
+    //       ) _
+
+    //   set(target.some).runInCB
+    // }
+
     def toggleCollapsed(targetId: SiderealTarget.Id): Callback =
       $.modStateL(State.collapsedTargetIds) { collapsed =>
         collapsed
@@ -146,6 +174,9 @@ object TargetObsList {
         decorated
       )
 
+    def getListStyle(isDragging: Boolean): TagMod =
+      GPPStyles.DraggingOver.when(isDragging)
+
     def render(props: Props, state: State): VdomElement = {
       val observations = props.observations.get
       val obsByTarget  = observations.groupBy(_.target)
@@ -154,7 +185,6 @@ object TargetObsList {
         UndoRegion[List[ExploreObservation]] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
-              UndoButtons(observations, undoCtx),
               props.targets.toTagMod {
                 target =>
                   val targetId = target.id
@@ -168,65 +198,85 @@ object TargetObsList {
                         "chevron " + state.collapsedTargetIds
                           .exists(_ === targetId)
                           .fold("right", "down")
-                      )(^.cursor.pointer, ^.onClick --> toggleCollapsed(targetId)),
+                      )(^.cursor.pointer,
+                        ^.onClick ==> { e: ReactEvent =>
+                          e.stopPropagationCB >> toggleCollapsed(targetId)
+                        }
+                      ),
                       Icon("chevron right")
                     )
 
-                  Droppable(target.name) {
-                    case (provided, _ /*snapshot*/ ) =>
+                  Droppable(target.id.toString) {
+                    case (provided, snapshot) =>
                       <.div(
                         provided.innerRef,
-                        provided.droppableProps
-                        // getListStyle(snapshot.isDraggingOver)
+                        provided.droppableProps,
+                        getListStyle(snapshot.isDraggingOver)
                       )(
-                        <.span(
-                          opIcon,
+                        Segment(vertical = true,
+                                raised = props.focused.get
+                                  .exists(_ === FocusedTarget(target.id)),
+                                clazz = GPPStyles.ObsTreeGroup
+                        )(
+                          ^.cursor.pointer,
+                          ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
+                        )(
                           <.span(
-                            target.name,
-                            <.span(^.float.right, s"$obsCount Obs"),
-                            ^.cursor.pointer,
-                            ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
-                          )
-                        ),
-                        TagMod.when(!state.collapsedTargetIds.contains(targetId))(
-                          targetObs.zipWithIndex.toTagMod {
-                            case (obs, idx) =>
-                              <.div(GPPStyles.ObsTreeItem)(
-                                Draggable(obs.id.toString, idx) {
-                                  case (provided, snapshot, _) =>
-                                    def dragIcon =
-                                      <.span(
-                                        provided.dragHandleProps,
-                                        Icon("sort")
-                                      )
+                            opIcon,
+                            <.span(
+                              // Segment(raised =
+                              //   props.focused.get
+                              //     .exists(_ === FocusedTarget(target.id))
+                              // )(
+                              target.name,
+                              <.span(^.float.right, s"$obsCount Obs")
+                            )
+                          ),
+                          TagMod.when(!state.collapsedTargetIds.contains(targetId))(
+                            targetObs.zipWithIndex.toTagMod {
+                              case (obs, idx) =>
+                                <.div(GPPStyles.ObsTreeItem)(
+                                  Draggable(obs.id.toString, idx) {
+                                    case (provided, snapshot, _) =>
+                                      def dragIcon =
+                                        <.span(
+                                          provided.dragHandleProps,
+                                          Icon("sort")
+                                        )
 
-                                    <.div(
-                                      provided.innerRef,
-                                      provided.draggableProps,
-                                      getObsStyle(provided.draggableStyle, snapshot),
-                                      ^.cursor.pointer,
-                                      ^.onClick --> props.focused
-                                        .set(FocusedObs(obs.id).some)
-                                        .runInCB
-                                    )(
-                                      decorateTopRight(
-                                        ObsBadge(obs,
-                                                 ObsBadge.Layout.ConfAndConstraints,
-                                                 selected = props.focused.get
-                                                   .exists(_ === FocusedObs(obs.id))
-                                        ),
-                                        dragIcon
+                                      <.div(
+                                        provided.innerRef,
+                                        provided.draggableProps,
+                                        getObsStyle(provided.draggableStyle, snapshot),
+                                        ^.cursor.pointer,
+                                        ^.onClick ==> { e: ReactEvent =>
+                                          e.stopPropagationCB >>
+                                            props.focused
+                                              .set(FocusedObs(obs.id).some)
+                                              .runInCB
+                                        }
+                                      )(
+                                        decorateTopRight(
+                                          ObsBadge(obs,
+                                                   ObsBadge.Layout.ConfAndConstraints,
+                                                   selected = props.focused.get
+                                                     .exists(_ === FocusedObs(obs.id))
+                                          ),
+                                          dragIcon
+                                        )
                                       )
-                                    )
-                                }
-                              )
-                          }
-                        ),
-                        provided.placeholder
-                        //<.span(^.display.none.when(targetObs.nonEmpty), provided.placeholder) // Doesn't really work.
+                                  }
+                                )
+                            }
+                          ),
+                          provided.placeholder
+                          //<.span(^.display.none.when(targetObs.nonEmpty), provided.placeholder) // Doesn't really work.
+                        )
                       )
                   }
-              }
+              },
+              UndoButtons(observations, undoCtx),
+              Button()(Icons.New)
             )
           )
         }
