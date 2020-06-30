@@ -180,7 +180,7 @@ object TargetObsQueries {
   implicit val targetsWithObsReusability: Reusability[TargetsWithObs] = Reusability.derive
 
   def targetObsSubscription(
-    render: (List[SiderealTarget], View[List[ExploreObservation]]) => VdomNode
+    render: View[TargetsWithObs] => VdomNode
   ): SubscriptionRenderMod[Subscription.Data, TargetsWithObs] =
     AppCtx.withCtx { implicit appCtx =>
       SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
@@ -189,6 +189,6 @@ object TargetObsQueries {
         _.map(
           Subscription.Data.targets.get
         )
-      )(two => render(two.get.targets, two.zoom(TargetsWithObs.obs)))
+      )(render)
     }
 }

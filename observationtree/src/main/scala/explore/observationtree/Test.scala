@@ -29,11 +29,10 @@ object Test extends AppMain {
     // AndOrTest.render
     // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
     // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
-    targetObsSubscription((targets, obsView) =>
+    targetObsSubscription(targetsWithObs =>
       <.div(^.width := "295px")(
         TargetObsList(
-          targets,
-          obsView,
+          targetsWithObs,
           view.zoom(RootModel.focused)
         )
       )

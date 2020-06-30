@@ -40,9 +40,8 @@ import explore.Icons
 import react.semanticui.elements.segment.Segment
 
 final case class TargetObsList(
-  targets:      List[SiderealTarget],
-  observations: View[List[ExploreObservation]],
-  focused:      View[Option[Focused]]
+  targetsWithObs: View[TargetsWithObs],
+  focused:        View[Option[Focused]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -82,14 +81,16 @@ object TargetObsList {
 
   class Backend($ : BackendScope[Props, State]) {
     def onDragEnd(
-      setter: Undoer.Setter[IO, List[ExploreObservation]]
+      setter: Undoer.Setter[IO, TargetsWithObs]
     ): (DropResult, ResponderProvided) => Callback =
       (result, _) =>
         $.props >>= { props =>
+          val obsView = props.targetsWithObs.zoom(TargetsWithObs.obs)
+
           (for {
             newTargetIdStr <- result.destination.toOption.map(_.droppableId)
             newTargetId     = UUID.fromString(newTargetIdStr)
-            target         <- props.targets.find(_.id === newTargetId)
+            target         <- props.targetsWithObs.get.targets.find(_.id === newTargetId)
           } yield {
             val obsId = UUID.fromString(result.draggableId)
 
@@ -100,13 +101,16 @@ object TargetObsList {
             val set =
               setter
                 .set[Option[SiderealTarget]](
-                  props.observations.get,
-                  getSetWithId.getter
-                    .composeOptionLens(first)
-                    .composeOptionLens(ExploreObservation.target)
+                  props.targetsWithObs.get,
+                  TargetsWithObs.obs
+                    .composeGetter(
+                      getSetWithId.getter
+                        .composeOptionLens(first)
+                        .composeOptionLens(ExploreObservation.target)
+                    )
                     .get,
                   { value: Option[SiderealTarget] =>
-                    props.observations.mod( // 1) Update internal model
+                    obsView.mod( // 1) Update internal model
                       getSetWithId.setter
                         .composeOptionLens(first)
                         .composeOptionLens(ExploreObservation.target)
@@ -178,14 +182,13 @@ object TargetObsList {
       GPPStyles.DraggingOver.when(isDragging)
 
     def render(props: Props, state: State): VdomElement = {
-      val observations = props.observations.get
-      val obsByTarget  = observations.groupBy(_.target)
+      val obsByTarget = props.targetsWithObs.get.obs.groupBy(_.target)
 
       <.div(GPPStyles.ObsTree)(
-        UndoRegion[List[ExploreObservation]] { undoCtx =>
+        UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
-              props.targets.toTagMod {
+              props.targetsWithObs.get.targets.toTagMod {
                 target =>
                   val targetId = target.id
 
@@ -275,7 +278,7 @@ object TargetObsList {
                       )
                   }
               },
-              UndoButtons(observations, undoCtx),
+              UndoButtons(props.targetsWithObs.get, undoCtx),
               Button()(Icons.New)
             )
           )
