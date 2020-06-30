@@ -132,7 +132,7 @@ object TargetObsQueries {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  object NewTarget extends GraphQLQuery {
+  object AddTarget extends GraphQLQuery {
     val document = """
       mutation($target: targets_insert_input!) {
         insert_targets_one(object: $target) {
@@ -144,7 +144,32 @@ object TargetObsQueries {
     case class Variables(target: SiderealTarget)
     object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
 
-    case class Data(insert_targets_one: SiderealTarget.Id)
+    case class Result(id: SiderealTarget.Id)
+    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
+
+    case class Data(insert_targets_one: Result)
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
+
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  }
+
+  object RemoveTarget extends GraphQLQuery {
+    val document = """
+      mutation ($id: uuid!) {
+        delete_targets_by_pk(id: $id) {
+          id
+        }
+      }
+    """
+
+    case class Variables(id: SiderealTarget.Id)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
+
+    case class Result(id: SiderealTarget.Id)
+    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
+
+    case class Data(delete_targets_by_pk: Result)
     object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
 
     implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
@@ -158,24 +183,19 @@ object TargetObsQueries {
         .void
     )
 
-  def createTarget(onError: Throwable => IO[Unit]): IO[SiderealTarget.Id] =
-    SiderealTarget
-      .New[IO]
-      .flatMap(target =>
-        Effect[IO]
-          .runAsync(
-            AppCtx.flatMap(
-              _.clients.programs
-                .query(NewTarget)(NewTarget.Variables(target).some)
-                .map(_.insert_targets_one)
-            )
-          ) {
-            case Left(t) => onError(t)
-            case _       => IO.unit
-          }
-          .toIO
-          .map(_ => target.id)
-      )
+  def insertTarget(target: SiderealTarget): IO[Unit] =
+    AppCtx.flatMap(
+      _.clients.programs
+        .query(AddTarget)(AddTarget.Variables(target).some)
+        .void
+    )
+
+  def removeTarget(id: SiderealTarget.Id): IO[Unit] =
+    AppCtx.flatMap(
+      _.clients.programs
+        .query(RemoveTarget)(RemoveTarget.Variables(id).some)
+        .void
+    )
 
   implicit val targetsWithObsReusability: Reusability[TargetsWithObs] = Reusability.derive
 

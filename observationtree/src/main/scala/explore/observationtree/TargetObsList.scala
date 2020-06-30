@@ -38,6 +38,7 @@ import react.semanticui.modules.popup.PopupOn.Focus
 import explore.model.Focused.FocusedObs
 import explore.Icons
 import react.semanticui.elements.segment.Segment
+import cats.effect.SyncIO
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
@@ -50,7 +51,8 @@ object TargetObsList {
   @Lenses
   case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
 
-  val obsListMod = new ListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
+  val obsListMod    = new ListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
+  val targetListMod = new ListMod[IO, SiderealTarget, SiderealTarget.Id](SiderealTarget.id)
 
   implicit class LensOptionOps[S, A](val lens: Lens[S, Option[A]]) extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): Lens[S, Option[B]] =
@@ -85,8 +87,6 @@ object TargetObsList {
     ): (DropResult, ResponderProvided) => Callback =
       (result, _) =>
         $.props >>= { props =>
-          val obsView = props.targetsWithObs.zoom(TargetsWithObs.obs)
-
           (for {
             newTargetIdStr <- result.destination.toOption.map(_.droppableId)
             newTargetId     = UUID.fromString(newTargetIdStr)
@@ -110,12 +110,14 @@ object TargetObsList {
                     )
                     .get,
                   { value: Option[SiderealTarget] =>
-                    obsView.mod( // 1) Update internal model
-                      getSetWithId.setter
-                        .composeOptionLens(first)
-                        .composeOptionLens(ExploreObservation.target)
-                        .set(value)
-                    ) >>
+                    props.targetsWithObs
+                      .zoom(TargetsWithObs.obs)
+                      .mod( // 1) Update internal model
+                        getSetWithId.setter
+                          .composeOptionLens(first)
+                          .composeOptionLens(ExploreObservation.target)
+                          .set(value)
+                      ) >>
                       // 2) Send mutation
                       mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
                   }
@@ -125,30 +127,39 @@ object TargetObsList {
           }).getOrEmpty
         }
 
-    // def newTarget(setter: Undoer.Setter[IO, List[ExploreObservation]]): Callback =
-    // $.props >>= { props =>
-    //   val set =
-    //     setter
-    //       .set[Option[SiderealTarget]](
-    //         props.observations.get,
-    //         getSetWithId.getter
-    //           .composeOptionLens(first)
-    //           .composeOptionLens(ExploreObservation.target)
-    //           .get,
-    //         { value: Option[SiderealTarget] =>
-    //           props.observations.mod( // 1) Update internal model
-    //             getSetWithId.setter
-    //               .composeOptionLens(first)
-    //               .composeOptionLens(ExploreObservation.target)
-    //               .set(value)
-    //           ) >>
-    //             // 2) Send mutation
-    //             mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
-    //         }
-    //       ) _
+    def newTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
+      $.props >>= { props =>
+        SiderealTarget.New[SyncIO].toCB >>= {
+          newTarget => // TODO .New[CallbackTo]... import react cats effect
+            val getSetWithId =
+              targetListMod
+                .withId(newTarget.id)
+            val upsert       =
+              targetListMod
+                .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-    //   set(target.some).runInCB
-    // }
+            val mod =
+              setter
+                .mod[targetListMod.ElemWithIndex](
+                  props.targetsWithObs.get,
+                  TargetsWithObs.targets
+                    .composeGetter(getSetWithId.getter)
+                    .get,
+                  { value: targetListMod.ElemWithIndex =>
+                    props.targetsWithObs
+                      .zoom(TargetsWithObs.targets)
+                      .mod(getSetWithId.setter.set(value)) >>
+                      // 2) Send mutation
+                      value.fold(props.focused.set(none) >> removeTarget(newTarget.id)) {
+                        case (target, _) =>
+                          insertTarget(target) >> props.focused.set(FocusedTarget(target.id).some)
+                      }
+                  }
+                ) _
+
+            mod(upsert).runInCB
+        }
+      }
 
     def toggleCollapsed(targetId: SiderealTarget.Id): Callback =
       $.modStateL(State.collapsedTargetIds) { collapsed =>
@@ -279,7 +290,7 @@ object TargetObsList {
                   }
               },
               UndoButtons(props.targetsWithObs.get, undoCtx),
-              Button()(Icons.New)
+              Button(onClick = newTarget(undoCtx.setter))(Icons.New)
             )
           )
         }
