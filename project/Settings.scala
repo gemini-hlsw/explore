@@ -28,7 +28,7 @@ object Settings {
     val reactResizable    = "0.1.1"
     val reactSemanticUI   = "0.5.8"
     val reactSizeMe       = "0.4.4"
-    val scalaJsReact      = "1.7.2"
+    val scalaJsReact      = "1.7.3"
   }
 
   object Libraries {
