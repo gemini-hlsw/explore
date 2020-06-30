@@ -3,6 +3,8 @@
 
 package explore.targeteditor
 
+import java.util.UUID
+
 import scala.scalajs.js.annotation._
 
 import cats.implicits._
@@ -14,7 +16,6 @@ import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
 import japgolly.scalajs.react.vdom.html_<^._
-import java.util.UUID
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {

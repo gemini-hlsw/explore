@@ -7,20 +7,14 @@ import cats.effect._
 import cats.implicits._
 import cats.kernel.Eq
 import clue._
+import explore.model.Focused.FocusedObs
 import explore.model.enum.AppTab
-import gem.Observation
 import gem.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
-import monocle.Optional
-import monocle.Prism
-import monocle.function.Possible.possible
-import monocle.macros.GenPrism
+import monocle.Lens
 import monocle.macros.Lenses
-import monocle.std.option.some
 import sttp.model.Uri
 import sttp.model.Uri._
-import monocle.Lens
-import explore.model.Focused.FocusedObs
 
 @Lenses
 case class RootModel(

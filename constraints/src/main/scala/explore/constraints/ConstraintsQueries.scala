@@ -3,9 +3,11 @@
 
 package explore.constraints
 
+import cats.effect.ContextShift
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLQuery
+import crystal.ViewF
 import crystal.react.ModState
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
@@ -28,11 +30,9 @@ import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
-import monocle.Lens
-import crystal.ViewF
-import cats.effect.ContextShift
 
 object ConstraintsQueries {
   implicit def enumDecoder[E: Enumerated]: Decoder[E] =

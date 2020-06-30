@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.UUID
+
 import cats.implicits._
 import crystal.implicits._
 import crystal.react.implicits._
@@ -11,6 +13,8 @@ import explore.components.ui.GPPStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsQueries._
 import explore.implicits._
+import explore.model.Focused.FocusedObs
+import explore.model.Focused.FocusedTarget
 import explore.model._
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
@@ -29,9 +33,6 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
-import java.util.UUID
-import explore.model.Focused.FocusedTarget
-import explore.model.Focused.FocusedObs
 
 object TargetsComponent {
   private val layoutLg: Layout = Layout(

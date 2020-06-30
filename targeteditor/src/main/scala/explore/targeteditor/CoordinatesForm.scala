@@ -3,21 +3,29 @@
 
 package explore.targeteditor
 
+import cats.effect.Async
+import cats.effect.ContextShift
 import cats.effect.IO
 import cats.implicits._
 import crystal.ViewF
 import crystal.react.implicits._
+import explore.AppCtx
+import explore.data.Optics
 import explore.implicits._
+import explore.model.ModelOptics._
 import explore.model.SiderealTarget
 import explore.undo.Undoer
 import gpp.ui.forms._
 import gsp.math.Coordinates
 import gsp.math.Declination
+import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Iso
+import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form._
@@ -26,14 +34,6 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 import react.semanticui.widths._
-import gsp.math.ProperMotion
-import monocle.Lens
-import explore.data.Optics
-import monocle.Iso
-import cats.effect.Async
-import cats.effect.ContextShift
-import explore.AppCtx
-import explore.model.ModelOptics._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,

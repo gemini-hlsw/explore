@@ -7,9 +7,9 @@ import cats.implicits._
 import cats.kernel.Eq
 import gem.Observation
 import monocle.Optional
+import monocle.Prism
 import monocle.macros.GenPrism
 import monocle.macros.Lenses
-import monocle.Prism
 
 sealed trait Focused extends Product with Serializable
 object Focused {

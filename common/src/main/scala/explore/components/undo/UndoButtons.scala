@@ -3,14 +3,14 @@
 
 package explore.components.undo
 
+import cats.effect.Effect
+import crystal.react.implicits._
+import explore.Icons
+import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.undo.Undoer
 import react.common.ReactProps
 import react.semanticui.elements.button.Button
-import crystal.react.implicits._
-import cats.effect.Effect
-import explore.Icons
 import react.semanticui.sizes._
 
 final case class UndoButtons[F[_], A](

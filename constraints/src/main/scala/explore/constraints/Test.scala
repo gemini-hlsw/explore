@@ -3,6 +3,8 @@
 
 package explore.constraints
 
+import java.util.UUID
+
 import scala.scalajs.js
 
 import cats.implicits._
@@ -23,7 +25,6 @@ import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
-import java.util.UUID
 
 import js.annotation._
 

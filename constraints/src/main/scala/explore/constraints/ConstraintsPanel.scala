@@ -9,6 +9,7 @@ import crystal.react.AppRoot
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
+import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.constraints.ConstraintsQueries._
 import explore.implicits._
@@ -27,12 +28,11 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.collections.form.FormField
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.elements.button.Button
-import react.semanticui.widths._
-import explore.components.undo.UndoButtons
-import react.semanticui.collections.form.FormField
 import react.semanticui.elements.label.Label
+import react.semanticui.widths._
 
 final case class ConstraintsPanel(
   id:          Constraints.Id,
