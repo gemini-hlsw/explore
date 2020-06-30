@@ -34,7 +34,7 @@ object Test extends AppMain {
         TargetObsList(
           targets,
           obsView,
-          view.zoom(RootModel.focusedTargetOrObsId)
+          view.zoom(RootModel.focused)
         )
       )
     )

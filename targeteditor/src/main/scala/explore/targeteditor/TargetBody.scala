@@ -12,6 +12,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.View
 import explore.components.ui.GPPStyles
+import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.Constraints
@@ -36,12 +37,11 @@ import monocle.Lens
 import monocle.macros.Lenses
 import react.aladin.Aladin
 import react.common._
-import react.semanticui.collections.grid._
-import react.semanticui.widths._
-import react.semanticui.elements.button.Button
-import react.semanticui.collections.form.FormButton
 import react.semanticui.collections.form.Form
-import explore.components.undo.UndoButtons
+import react.semanticui.collections.form.FormButton
+import react.semanticui.collections.grid._
+import react.semanticui.elements.button.Button
+import react.semanticui.widths._
 
 final case class TargetBody(
   id:          SiderealTarget.Id,

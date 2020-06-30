@@ -3,8 +3,16 @@
 
 package explore.model
 
+import java.time.Duration
+
 import cats.implicits._
+import explore.model.enum.ObsStatus
 import gem.util.Enumerated
+import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.Epoch
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.Encoder
@@ -12,13 +20,6 @@ import io.circe.HCursor
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.Coordinates
-import gsp.math.Epoch
-import gsp.math.ProperMotion
-import explore.model.enum.ObsStatus
-import java.time.Duration
 
 object decoders {
 

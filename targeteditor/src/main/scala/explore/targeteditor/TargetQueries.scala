@@ -10,8 +10,8 @@ import cats.implicits._
 import clue.GraphQLQuery
 import crystal.react._
 import explore.implicits._
-import explore.model.decoders._
 import explore.model.SiderealTarget
+import explore.model.decoders._
 import explore.undo.Undoer
 import gem.Observation
 import gsp.math.Coordinates
@@ -25,8 +25,8 @@ import io.circe.HCursor
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
-import monocle.macros.Lenses
 import monocle.Lens
+import monocle.macros.Lenses
 
 object TargetQueries {
 

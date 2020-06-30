@@ -6,6 +6,7 @@ package explore.model
 import cats.implicits._
 import cats.kernel.Eq
 import explore.model.Focused.FocusedObs
+import explore.model.Focused.FocusedTarget
 import explore.model.Page._
 import explore.model.enum.AppTab
 import gem.data.Zipper
@@ -17,14 +18,17 @@ object RootModelRouting {
     model.tabs.focus match {
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        RootModel.focusedObsId
-          .getOption(model)
-          .map(ObsPage.apply)
+        RootModel.focused
+          .get(model)
+          .collect { case FocusedObs(obsId) => ObsPage(obsId) }
           .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
-        RootModel.focusedTargetOrObsId
+        RootModel.focused
           .get(model)
-          .map(_.fold(TargetPage.apply, TargetsObsPage.apply))
+          .collect {
+            case FocusedObs(obsId)       => TargetsObsPage(obsId)
+            case FocusedTarget(targetId) => TargetPage(targetId)
+          }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    => ConstraintsPage
@@ -36,15 +40,15 @@ object RootModelRouting {
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
       case ObservationsBasePage  =>
-        setTab(AppTab.Observations)
+        setTab(AppTab.Observations) >>> RootModel.focused.set(none)
       case ObsPage(obsId)        =>
-        setTab(AppTab.Observations) >>> (RootModel.focusedObsId.set(obsId))
+        setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case TargetsBasePage       =>
-        setTab(AppTab.Targets)
+        setTab(AppTab.Targets) >>> RootModel.focused.set(none)
       case TargetPage(targetId)  =>
-        setTab(AppTab.Targets) >>> (RootModel.focusedTargetId.set(targetId))
+        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedTarget(targetId).some)
       case TargetsObsPage(obsId) =>
-        setTab(AppTab.Targets) >>> (RootModel.focusedObsId.set(obsId))
+        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case ConstraintsPage       =>
         setTab(AppTab.Constraints)
       case ConfigurationsPage    =>

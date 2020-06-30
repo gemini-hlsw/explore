@@ -43,20 +43,22 @@ object Routing {
         | staticRoute("/observations", ObservationsBasePage) ~> render(UnderConstruction())
         | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> render(UnderConstruction())
         | staticRoute("/targets", TargetsBasePage) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
+          TargetsComponent(view.zoom(RootModel.focused))
         )
         | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
+          TargetsComponent(view.zoom(RootModel.focused))
         )
         | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focusedTargetOrObsId))
+          TargetsComponent(view.zoom(RootModel.focused))
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(
           HomePage,
+          ObservationsBasePage,
           ObsPage(UUID.randomUUID),
+          TargetsBasePage,
           TargetPage(UUID.randomUUID),
           TargetsObsPage(UUID.randomUUID),
           ConfigurationsPage,
