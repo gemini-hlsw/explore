@@ -3,42 +3,42 @@
 
 package explore.observationtree
 
+import scala.annotation.tailrec
 import scala.scalajs.js
+import scala.scalajs.js.JSON
 
+import cats.effect.IO
 import cats.implicits._
+import cats.kernel.Eq
 import crystal.implicits._
-import crystal.react.implicits._
 import crystal.react.ModState
+import crystal.react.implicits._
+import explore.AppCtx
 import explore.AppMain
-import explore.implicits._
 import explore.components.graphql.SubscriptionRenderMod
+import explore.components.undo.UndoRegion
+import explore.data.tree._
+import explore.implicits._
 import explore.model.Constraints
 import explore.model.RootModel
 import explore.model.reusability._
+import explore.undo.TreeMod
+import explore.undo.Undoer
 import gem.Observation
 import gem.ProgramId
 import gsp.math.Index
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.MonocleReact._
 import monocle.function.Cons.headOption
+import monocle.macros.Lenses
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
+import react.common.ReactProps
+import react.semanticui.elements.button.Button
 
 import js.annotation._
 import js.JSConverters._
-import explore.AppCtx
-import explore.data.tree._
-import explore.undo.TreeMod
-import cats.effect.IO
-import scala.scalajs.js.JSON
-import scala.annotation.tailrec
-import cats.kernel.Eq
-import explore.components.undo.UndoRegion
-import explore.undo.Undoer
-import monocle.macros.Lenses
-import react.semanticui.elements.button.Button
-import react.common.ReactProps
 
 final case class TreeComp[A, Id](
   tree:              Tree[A],

@@ -3,8 +3,9 @@
 
 package explore.model.arb
 
-import org.scalacheck.Cogen
 import java.util.UUID
+
+import org.scalacheck.Cogen
 
 trait CogenUUID {
   implicit val cogenUUID: Cogen[UUID] =

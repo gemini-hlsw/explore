@@ -30,10 +30,11 @@ object GPPStyles {
 
   val HVCenter: Css = Css("horizontal-vertical-center")
 
-  val ObsTree: Css      = Css("obs-tree")
-  val ObsTreeGroup: Css = Css("obs-tree-group")
-  val ObsTreeItem: Css  = Css("obs-tree-item")
-  val ObsBadge: Css     = Css("obs-badge")
+  val ObsTree: Css            = Css("obs-tree")
+  val ObsTreeGroup: Css       = Css("obs-tree-group")
+  val ObsTreeGroupHeader: Css = Css("obs-tree-group-header")
+  val ObsTreeItem: Css        = Css("obs-tree-item")
+  val ObsBadge: Css           = Css("obs-badge")
 
   val DraggingOver: Css = Css("dragging-over")
 }

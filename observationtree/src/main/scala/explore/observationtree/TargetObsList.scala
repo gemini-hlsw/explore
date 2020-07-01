@@ -1,44 +1,51 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.observationtree
 
-import explore.implicits._
-import cats.implicits._
-import explore.model.SiderealTarget
-import explore.model.ExploreObservation
-import react.common._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.MonocleReact._
-import scalajs.js.|
-import explore.components.ObsBadge
-import scala.collection.immutable.HashSet
-import monocle.macros.Lenses
-import mouse.boolean._
-import react.semanticui.elements.icon.Icon
-import react.beautifuldnd._
-import crystal.react.implicits._
-import explore.components.undo.UndoRegion
-import react.semanticui.elements.button.Button
-import explore.undo.ListMod
-import cats.effect.IO
 import java.util.UUID
-import explore.undo.Undoer
-import monocle.function.Field1.first
-import monocle.function.Possible.possible
-import monocle.std.option.some
-import monocle.Lens
-import monocle.Getter
-import monocle.Setter
-import explore.model.Focused
-import gem.Observation
+
+import scala.collection.immutable.HashSet
+
+import cats.effect.IO
+import cats.effect.SyncIO
+import cats.implicits._
+import crystal.react.implicits._
+import explore.Icons
+import explore.components.ObsBadge
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
-import TargetObsQueries._
-import explore.model.Focused.FocusedTarget
-import react.semanticui.modules.popup.PopupOn.Focus
+import explore.components.undo.UndoRegion
+import explore.implicits._
+import explore.model.ExploreObservation
+import explore.model.Focused
 import explore.model.Focused.FocusedObs
-import explore.Icons
+import explore.model.Focused.FocusedTarget
+import explore.model.SiderealTarget
+import explore.undo.ListMod
+import explore.undo.Undoer
+import gem.Observation
+import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.effects.CallbackToEffects._
+import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Getter
+import monocle.Lens
+import monocle.Setter
+import monocle.function.Field1.first
+import monocle.function.Possible.possible
+import monocle.macros.Lenses
+import monocle.std.option.some
+import mouse.boolean._
+import react.beautifuldnd._
+import react.common._
+import react.semanticui.elements.button.Button
+import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
-import cats.effect.SyncIO
+import react.semanticui.modules.popup.PopupOn.Focus
+
+import scalajs.js.|
+import TargetObsQueries._
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
@@ -129,35 +136,34 @@ object TargetObsList {
 
     def newTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
       $.props >>= { props =>
-        SiderealTarget.New[SyncIO].toCB >>= {
-          newTarget => // TODO .New[CallbackTo]... import react cats effect
-            val getSetWithId =
-              targetListMod
-                .withId(newTarget.id)
-            val upsert       =
-              targetListMod
-                .upsert(newTarget, props.targetsWithObs.get.targets.length)
+        SiderealTarget.createNew[CallbackTo] >>= { newTarget =>
+          val getSetWithId =
+            targetListMod
+              .withId(newTarget.id)
+          val upsert       =
+            targetListMod
+              .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-            val mod =
-              setter
-                .mod[targetListMod.ElemWithIndex](
-                  props.targetsWithObs.get,
-                  TargetsWithObs.targets
-                    .composeGetter(getSetWithId.getter)
-                    .get,
-                  { value: targetListMod.ElemWithIndex =>
-                    props.targetsWithObs
-                      .zoom(TargetsWithObs.targets)
-                      .mod(getSetWithId.setter.set(value)) >>
-                      // 2) Send mutation
-                      value.fold(props.focused.set(none) >> removeTarget(newTarget.id)) {
-                        case (target, _) =>
-                          insertTarget(target) >> props.focused.set(FocusedTarget(target.id).some)
-                      }
-                  }
-                ) _
+          val mod =
+            setter
+              .mod[targetListMod.ElemWithIndex](
+                props.targetsWithObs.get,
+                TargetsWithObs.targets
+                  .composeGetter(getSetWithId.getter)
+                  .get,
+                { value: targetListMod.ElemWithIndex =>
+                  props.targetsWithObs
+                    .zoom(TargetsWithObs.targets)
+                    .mod(getSetWithId.setter.set(value)) >>
+                    // 2) Send mutation
+                    value.fold(props.focused.set(none) >> removeTarget(newTarget.id)) {
+                      case (target, _) =>
+                        insertTarget(target) >> props.focused.set(FocusedTarget(target.id).some)
+                    }
+                }
+              ) _
 
-            mod(upsert).runInCB
+          mod(upsert).runInCB
         }
       }
 
@@ -235,16 +241,12 @@ object TargetObsList {
                           ^.cursor.pointer,
                           ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
                         )(
-                          <.span(
-                            opIcon,
+                          <.span(GPPStyles.ObsTreeGroupHeader)(
                             <.span(
-                              // Segment(raised =
-                              //   props.focused.get
-                              //     .exists(_ === FocusedTarget(target.id))
-                              // )(
-                              target.name,
-                              <.span(^.float.right, s"$obsCount Obs")
-                            )
+                              opIcon,
+                              target.name
+                            ),
+                            <.span(^.float.right, s"$obsCount Obs")
                           ),
                           TagMod.when(!state.collapsedTargetIds.contains(targetId))(
                             targetObs.zipWithIndex.toTagMod {

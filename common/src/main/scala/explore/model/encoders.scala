@@ -3,11 +3,12 @@
 
 package explore.model
 
+import gsp.math.Declination
+import gsp.math.RightAscension
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.syntax._
-import gsp.math.RightAscension
-import gsp.math.Declination
+
 import ModelOptics._
 
 object encoders {

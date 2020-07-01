@@ -3,6 +3,8 @@
 
 package explore.model.arb
 
+import java.util.UUID
+
 import explore.model.SiderealTarget
 import gem.arb.ArbEnumerated._
 import gsp.math.ProperMotion
@@ -10,7 +12,6 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import java.util.UUID
 
 trait ArbSiderealTarget {
   import gsp.math.arb.ArbProperMotion._

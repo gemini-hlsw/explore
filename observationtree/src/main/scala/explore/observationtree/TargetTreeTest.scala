@@ -1,16 +1,20 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.observationtree
+
+import java.time.Duration
+import java.util.UUID
 
 import cats.implicits._
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.ProperMotion
-import gsp.math.Coordinates
-import gsp.math.Epoch
-import java.util.UUID
 import explore.model.enum.ObsStatus
-import java.time.Duration
+import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.Epoch
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
 
 object TargetTreeTest {
 

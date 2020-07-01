@@ -3,53 +3,54 @@
 
 package explore.observationtree
 
+import java.time.Duration
+import java.util.UUID
+
+import cats.Traverse
+import cats.effect.ContextShift
+import cats.effect.Effect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLQuery
+import crystal.ViewF
 import crystal.react.ModState
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.Constraints
+import explore.model.ExploreObservation
+import explore.model.SiderealTarget
+import explore.model.decoders._
+import explore.model.encoders._
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
+import explore.model.enum.ObsStatus
 import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
 import gem.Observation
 import gem.util.Enumerated
+import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.Epoch
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.Encoder
 import io.circe.HCursor
+import io.circe.Json
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
-import monocle.Lens
-import crystal.ViewF
-import cats.effect.ContextShift
-import explore.model.decoders._
-import explore.model.encoders._
-import explore.model.SiderealTarget
-import explore.model.ExploreObservation
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.ProperMotion
-import gsp.math.Epoch
 import org.locationtech.jts.geom.Coordinate
-import gsp.math.Coordinates
-import explore.model.enum.ObsStatus
-import java.time.Duration
-import io.circe.Json
-import cats.Traverse
-import japgolly.scalajs.react.Reusability
-import java.util.UUID
-import cats.effect.Effect
 
 object TargetObsQueries {
 
@@ -63,7 +64,7 @@ object TargetObsQueries {
       for {
         target  <- c.as[SiderealTarget]
         obsJson <- c.downField("observations").as[List[Json]].map(_.map(_.hcursor))
-        obsList <- Traverse[List].traverse(obsJson)(obsDecoder(target).apply)
+        obsList <- obsJson.traverse(obsDecoder(target).apply)
       } yield TargetWithObs(target, obsList)
   }
 

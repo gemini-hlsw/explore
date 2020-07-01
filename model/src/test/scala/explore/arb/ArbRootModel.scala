@@ -6,9 +6,9 @@ package explore.model.arb
 import explore.model.Focused
 import explore.model.RootModel
 import explore.model.enum.AppTab
-import gem.util.Enumerated
-import gem.data.EnumZipper
 import gem.arb.ArbEnumZipper._
+import gem.data.EnumZipper
+import gem.util.Enumerated
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
