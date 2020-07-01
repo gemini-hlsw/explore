@@ -34,6 +34,7 @@ object GPPStyles {
   val ObsTreeGroup: Css       = Css("obs-tree-group")
   val ObsTreeGroupHeader: Css = Css("obs-tree-group-header")
   val ObsTreeItem: Css        = Css("obs-tree-item")
+  val ObsTreeButtons: Css     = Css("obs-tree-buttons")
   val ObsBadge: Css           = Css("obs-badge")
 
   val DraggingOver: Css = Css("dragging-over")

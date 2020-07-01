@@ -132,6 +132,7 @@ body {
 
 // Inner area of the tree
 .tree-body-inner {
+  height: 100%;
 }
 
 .rgl-body {
@@ -143,7 +144,12 @@ body {
 
 .obs-tree {
   width: 100%;
+  height: 100%;
   margin-top: 20px;
+  padding-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .obs-tree-item {
@@ -163,6 +169,13 @@ body {
 .obs-tree-group-header {
   display: flex;
   justify-content: space-between;
+}
+
+.obs-tree-buttons {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .dragging-over {

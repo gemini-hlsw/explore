@@ -43,6 +43,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.modules.popup.PopupOn.Focus
+import react.semanticui.sizes._
 
 import scalajs.js.|
 import TargetObsQueries._
@@ -317,13 +318,18 @@ object TargetObsList {
                         )
                       )
                   }
-              },
-              UndoButtons(props.targetsWithObs.get, undoCtx),
-              Button(onClick = newTarget(undoCtx.setter))(Icons.New),
-              Button(onClick = deleteTarget(undoCtx.setter),
-                     disabled =
-                       deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
-              )(Icons.Delete)
+              }
+            ),
+            <.div(GPPStyles.ObsTreeButtons)(
+              <.div(
+                Button(size = Small, onClick = newTarget(undoCtx.setter))(Icons.New),
+                Button(size = Small,
+                       onClick = deleteTarget(undoCtx.setter),
+                       disabled =
+                         deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
+                )(Icons.Delete)
+              ),
+              UndoButtons(props.targetsWithObs.get, undoCtx)
             )
           )
         }
