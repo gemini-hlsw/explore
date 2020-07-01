@@ -47,7 +47,6 @@ import react.semanticui.sizes._
 
 import scalajs.js.|
 import TargetObsQueries._
-import gpp.svgdotjs.std.stdBooleans.`true`
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
