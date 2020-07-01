@@ -3,12 +3,13 @@
 
 package explore.observationtree
 
-import gem.Observation
 import java.util.UUID
-import gem.Target
-import monocle.macros.Lenses
-import monocle.Lens
+
 import explore.model.ExploreObservation
+import gem.Observation
+import gem.Target
+import monocle.Lens
+import monocle.macros.Lenses
 
 sealed trait ObsNode {
   val id: UUID

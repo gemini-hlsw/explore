@@ -1,19 +1,24 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.observationtree
 
-import explore.model.SiderealTarget
+import scala.collection.immutable.HashSet
+
+import explore.components.ObsBadge
+import explore.data.tree.Tree
 import explore.model.ExploreObservation
-import react.common.ReactProps
+import explore.model.SiderealTarget
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.MonocleReact._
-import scalajs.js.|
-import react.atlasKit.tree.{ Tree => AtlasTree }
-import explore.data.tree.Tree
-import explore.components.ObsBadge
-import scala.collection.immutable.HashSet
 import monocle.macros.Lenses
 import mouse.boolean._
+import react.atlasKit.tree.{ Tree => AtlasTree }
+import react.common.ReactProps
 import react.semanticui.elements.icon.Icon
+
+import scalajs.js.|
 
 // !!!! This approach does't seem to work using tree !!!!
 // See https://github.com/atlassian/react-beautiful-dnd/issues/374

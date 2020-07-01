@@ -65,4 +65,23 @@ object decoders {
         coords = ProperMotion(Coordinates(ra, dec), Epoch.J2000, none, none, none)
       } yield SiderealTarget(id, name, coords)
   }
+
+  def obsDecoder(target: SiderealTarget) =
+    new Decoder[ExploreObservation] {
+      final def apply(c: HCursor): Decoder.Result[ExploreObservation] =
+        for {
+          id              <- c.downField("id").as[ExploreObservation.Id]
+          status          <- c.downField("status").as[ObsStatus]
+          conf            <- c.downField("configuration").as[String]
+          constraintsName <- c.downField("constraint").downField("name").as[String]
+          duration        <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
+        } yield ExploreObservation(
+          id,
+          target,
+          status,
+          conf,
+          constraintsName,
+          duration
+        )
+    }
 }

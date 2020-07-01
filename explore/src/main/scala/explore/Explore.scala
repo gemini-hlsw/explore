@@ -21,7 +21,6 @@ import js.annotation._
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends AppMain {
-
   protected val (router, routerCtl) =
     RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 

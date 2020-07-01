@@ -4,22 +4,24 @@
 package explore.observationtree
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import japgolly.scalajs.react.vdom.html_<^._
+
+import cats.effect.IO
+import cats.effect.SyncIO
+import cats.effect.concurrent.Ref
+import crystal.ViewF
+import crystal.react.StreamRendererMod
 import explore.AppMain
 import explore._
-import explore.model.RootModel
-import cats.effect.concurrent.Ref
-import cats.effect.IO
 import explore.model.ExploreObservation
-import crystal.ViewF
-import fs2.concurrent.SignallingRef
-import cats.effect.SyncIO
-import crystal.react.StreamRendererMod
-import explore.model.reusability._
-import japgolly.scalajs.react.vdom.VdomNode
-import japgolly.scalajs.react.extra.router.RouterLogic
 import explore.model.Page
+import explore.model.RootModel
+import explore.model.reusability._
+import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.extra.router.RouterLogic
+import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.vdom.html_<^._
+
 import TargetObsQueries._
 
 @JSExportTopLevel("ObsTreeTest")
@@ -29,11 +31,10 @@ object Test extends AppMain {
     // AndOrTest.render
     // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
     // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
-    targetObsSubscription((targets, obsView) =>
+    targetObsSubscription(targetsWithObs =>
       <.div(^.width := "295px")(
         TargetObsList(
-          targets,
-          obsView,
+          targetsWithObs,
           view.zoom(RootModel.focused)
         )
       )

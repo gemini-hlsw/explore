@@ -3,23 +3,25 @@
 
 package explore.observationtree
 
-import cats.implicits._
-import cats.effect.IO
-import explore.implicits._
+import java.time.Duration
+import java.time.temporal.ChronoUnit._
 import java.util.UUID
-import japgolly.scalajs.react._
+
+import scala.util.Random
+
+import cats.effect.IO
+import cats.implicits._
+import explore.components.ObsBadge
 import explore.data.tree._
-import react.atlasKit.tree.{ Tree => AtlasTree }
-import japgolly.scalajs.react.vdom.html_<^._
-import mouse.boolean._
-import explore.undo.TreeMod
+import explore.implicits._
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
-import scala.util.Random
-import java.time.Duration
-import java.time.temporal.ChronoUnit._
-import explore.components.ObsBadge
+import explore.undo.TreeMod
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import mouse.boolean._
+import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
 
 object AndOrTest {

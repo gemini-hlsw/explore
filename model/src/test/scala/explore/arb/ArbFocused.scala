@@ -4,6 +4,7 @@
 package explore.model.arb
 
 import cats.implicits._
+import explore.model.ExploreObservation
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
@@ -16,7 +17,6 @@ import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import org.scalacheck.Gen
 import org.scalacheck.Gen._
-import explore.model.ExploreObservation
 
 trait ArbFocused {
   import explore.model.arb.ArbSiderealTarget._

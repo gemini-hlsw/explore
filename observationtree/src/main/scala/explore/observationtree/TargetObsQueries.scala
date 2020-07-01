@@ -3,50 +3,54 @@
 
 package explore.observationtree
 
+import java.time.Duration
+import java.util.UUID
+
+import cats.Traverse
+import cats.effect.ContextShift
+import cats.effect.Effect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLQuery
+import crystal.ViewF
 import crystal.react.ModState
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.Constraints
+import explore.model.ExploreObservation
+import explore.model.SiderealTarget
+import explore.model.decoders._
+import explore.model.encoders._
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
+import explore.model.enum.ObsStatus
 import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
 import gem.Observation
 import gem.util.Enumerated
+import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.Epoch
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.Encoder
 import io.circe.HCursor
+import io.circe.Json
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
-import monocle.Lens
-import crystal.ViewF
-import cats.effect.ContextShift
-import explore.model.decoders._
-import explore.model.SiderealTarget
-import explore.model.ExploreObservation
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.ProperMotion
-import gsp.math.Epoch
 import org.locationtech.jts.geom.Coordinate
-import gsp.math.Coordinates
-import explore.model.enum.ObsStatus
-import java.time.Duration
-import io.circe.Json
-import cats.Traverse
-import japgolly.scalajs.react.Reusability
 
 object TargetObsQueries {
 
@@ -60,23 +64,7 @@ object TargetObsQueries {
       for {
         target  <- c.as[SiderealTarget]
         obsJson <- c.downField("observations").as[List[Json]].map(_.map(_.hcursor))
-        obsList <- Traverse[List].traverse(obsJson) { obs =>
-                     for {
-                       id              <- obs.downField("id").as[ExploreObservation.Id]
-                       status          <- obs.downField("status").as[ObsStatus]
-                       conf            <- obs.downField("configuration").as[String]
-                       constraintsName <- obs.downField("constraint").downField("name").as[String]
-                       duration        <-
-                         obs.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
-                     } yield ExploreObservation(
-                       id,
-                       target,
-                       status,
-                       conf,
-                       constraintsName,
-                       duration
-                     )
-                   }
+        obsList <- obsJson.traverse(obsDecoder(target).apply)
       } yield TargetWithObs(target, obsList)
   }
 
@@ -145,6 +133,50 @@ object TargetObsQueries {
     implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
+  object AddTarget extends GraphQLQuery {
+    val document = """
+      mutation($target: targets_insert_input!) {
+        insert_targets_one(object: $target) {
+          id
+        }
+      }
+    """
+
+    case class Variables(target: SiderealTarget)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
+
+    case class Result(id: SiderealTarget.Id)
+    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
+
+    case class Data(insert_targets_one: Result)
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
+
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  }
+
+  object RemoveTarget extends GraphQLQuery {
+    val document = """
+      mutation ($id: uuid!) {
+        delete_targets_by_pk(id: $id) {
+          id
+        }
+      }
+    """
+
+    case class Variables(id: SiderealTarget.Id)
+    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
+
+    case class Result(id: SiderealTarget.Id)
+    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
+
+    case class Data(delete_targets_by_pk: Result)
+    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
+
+    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
+    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
+  }
+
   def mutateObs(obsId: ExploreObservation.Id, fields: ObsMutation.Fields): IO[Unit] =
     AppCtx.flatMap(
       _.clients.programs
@@ -152,10 +184,24 @@ object TargetObsQueries {
         .void
     )
 
+  def insertTarget(target: SiderealTarget): IO[Unit] =
+    AppCtx.flatMap(
+      _.clients.programs
+        .query(AddTarget)(AddTarget.Variables(target).some)
+        .void
+    )
+
+  def removeTarget(id: SiderealTarget.Id): IO[Unit] =
+    AppCtx.flatMap(
+      _.clients.programs
+        .query(RemoveTarget)(RemoveTarget.Variables(id).some)
+        .void
+    )
+
   implicit val targetsWithObsReusability: Reusability[TargetsWithObs] = Reusability.derive
 
   def targetObsSubscription(
-    render: (List[SiderealTarget], View[List[ExploreObservation]]) => VdomNode
+    render: View[TargetsWithObs] => VdomNode
   ): SubscriptionRenderMod[Subscription.Data, TargetsWithObs] =
     AppCtx.withCtx { implicit appCtx =>
       SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
@@ -164,6 +210,6 @@ object TargetObsQueries {
         _.map(
           Subscription.Data.targets.get
         )
-      )(two => render(two.get.targets, two.zoom(TargetsWithObs.obs)))
+      )(render)
     }
 }

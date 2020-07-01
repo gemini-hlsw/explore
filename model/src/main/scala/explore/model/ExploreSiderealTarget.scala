@@ -6,9 +6,14 @@ package explore.model
 import java.util.UUID
 
 import cats._
+import cats.effect.Sync
 import cats.implicits._
 import gem.Target
+import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.Epoch
 import gsp.math.ProperMotion
+import gsp.math.RightAscension
 import monocle.Lens
 import monocle.macros.Lenses
 
@@ -20,6 +25,22 @@ final case class SiderealTarget(id: SiderealTarget.Id, name: String, track: Prop
 
 object SiderealTarget {
   type Id = UUID
+
+  def createNew[F[_]: Sync]: F[SiderealTarget] =
+    Sync[F]
+      .delay(UUID.randomUUID())
+      .map(id =>
+        SiderealTarget(
+          id,
+          "New Target",
+          ProperMotion(Coordinates(RightAscension.Zero, Declination.Zero),
+                       Epoch.J2000,
+                       none,
+                       none,
+                       none
+          )
+        )
+      )
 
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }

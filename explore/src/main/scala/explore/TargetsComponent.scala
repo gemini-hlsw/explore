@@ -68,34 +68,33 @@ object TargetsComponent {
       val constraintsId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
 
       val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
+      val treeWidth  = state.treeWidth.toDouble
 
-      targetObsSubscription { (targets, obsView) =>
+      // Tree area
+      def tree(targetsWithObs: View[TargetsWithObs]) =
+        <.div(^.width := treeWidth.px, GPPStyles.Tree)(
+          <.div(GPPStyles.TreeBodyOuter)(
+            <.div(GPPStyles.TreeBodyInner)(
+              <.div(
+                TargetObsList(
+                  targetsWithObs,
+                  props
+                )
+              )
+            )
+          )
+        )
+
+      targetObsSubscription { targetsWithObs =>
         val targetIdOpt = props.get.collect {
           case FocusedTarget(targetId) => targetId.some
-          case FocusedObs(obsId)       => obsView.get.find(_.id === obsId).map(_.target.id)
+          case FocusedObs(obsId)       => targetsWithObs.get.obs.find(_.id === obsId).map(_.target.id)
         }.flatten
 
         <.div(
           GPPStyles.RGLArea,
           SizeMe() { s =>
-            val treeWidth = state.treeWidth.toDouble
             val coreWidth = s.width.toDouble - treeWidth
-
-            // Tree area
-            def tree(targets: List[SiderealTarget], obsView: View[List[ExploreObservation]]) =
-              <.div(^.width := treeWidth.px, GPPStyles.Tree)(
-                <.div(GPPStyles.TreeBodyOuter)(
-                  <.div(GPPStyles.TreeBodyInner)(
-                    <.div(
-                      TargetObsList(
-                        targets,
-                        obsView,
-                        props
-                      )
-                    )
-                  )
-                )
-              )
 
             <.div(
               GPPStyles.TreeRGL,
@@ -107,7 +106,7 @@ object TargetsComponent {
                 maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),
-                content = tree(targets, obsView)
+                content = tree(targetsWithObs)
               ),
               <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
                 constraintsSubscription(constraintsId) {

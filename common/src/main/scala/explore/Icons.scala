@@ -11,4 +11,5 @@ object Icons {
   val Cogs = Icon("cogs")
   val Undo = Icon("undo alternate")
   val Redo = Icon("redo alternate")
+  val New  = Icon("plus")
 }
