@@ -75,11 +75,9 @@ object TargetsComponent {
         <.div(^.width := treeWidth.px, GPPStyles.Tree)(
           <.div(GPPStyles.TreeBodyOuter)(
             <.div(GPPStyles.TreeBodyInner)(
-              <.div(
-                TargetObsList(
-                  targetsWithObs,
-                  props
-                )
+              TargetObsList(
+                targetsWithObs,
+                props
               )
             )
           )
@@ -102,7 +100,7 @@ object TargetsComponent {
                 axis = Axis.X,
                 width = treeWidth,
                 height = Option(s.height).getOrElse(0),
-                minConstraints = (250, 0),
+                minConstraints = (270, 0),
                 maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),

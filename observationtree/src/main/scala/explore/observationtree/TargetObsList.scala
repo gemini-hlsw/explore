@@ -43,6 +43,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.modules.popup.PopupOn.Focus
+import react.semanticui.sizes._
 
 import scalajs.js.|
 import TargetObsQueries._
@@ -89,7 +90,8 @@ object TargetObsList {
   }
 
   class Backend($ : BackendScope[Props, State]) {
-    def onDragEnd(
+
+    protected def onDragEnd(
       setter: Undoer.Setter[IO, TargetsWithObs]
     ): (DropResult, ResponderProvided) => Callback =
       (result, _) =>
@@ -134,37 +136,62 @@ object TargetObsList {
           }).getOrEmpty
         }
 
-    def newTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
+    protected def targetMod(
+      setter:         Undoer.Setter[IO, TargetsWithObs],
+      targetsWithObs: View[TargetsWithObs],
+      focused:        View[Option[Focused]],
+      targetId:       SiderealTarget.Id
+    ): targetListMod.Operation => IO[Unit] = {
+      val getSetWithId = targetListMod.withId(targetId)
+
+      setter
+        .mod[targetListMod.ElemWithIndex](
+          targetsWithObs.get,
+          TargetsWithObs.targets
+            .composeGetter(getSetWithId.getter)
+            .get,
+          { value: targetListMod.ElemWithIndex =>
+            targetsWithObs
+              .zoom(TargetsWithObs.targets)
+              .mod(getSetWithId.setter.set(value)) >>
+              // 2) Send mutation
+              value.fold(focused.set(none) >> removeTarget(targetId)) {
+                case (target, _) =>
+                  insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+              }
+          }
+        )
+    }
+
+    protected def newTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
       $.props >>= { props =>
         SiderealTarget.createNew[CallbackTo] >>= { newTarget =>
-          val getSetWithId =
-            targetListMod
-              .withId(newTarget.id)
-          val upsert       =
+          val upsert =
             targetListMod
               .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-          val mod =
-            setter
-              .mod[targetListMod.ElemWithIndex](
-                props.targetsWithObs.get,
-                TargetsWithObs.targets
-                  .composeGetter(getSetWithId.getter)
-                  .get,
-                { value: targetListMod.ElemWithIndex =>
-                  props.targetsWithObs
-                    .zoom(TargetsWithObs.targets)
-                    .mod(getSetWithId.setter.set(value)) >>
-                    // 2) Send mutation
-                    value.fold(props.focused.set(none) >> removeTarget(newTarget.id)) {
-                      case (target, _) =>
-                        insertTarget(target) >> props.focused.set(FocusedTarget(target.id).some)
-                    }
-                }
-              ) _
-
-          mod(upsert).runInCB
+          targetMod(setter, props.targetsWithObs, props.focused, newTarget.id)(upsert).runInCB
         }
+      }
+
+    protected def deleteTargetEnabled(
+      focused:        Option[Focused],
+      targetsWithObs: TargetsWithObs
+    ): Option[SiderealTarget.Id] =
+      focused.collect {
+        case FocusedTarget(targetId) if !targetsWithObs.obs.exists(_.target.id === targetId) =>
+          targetId
+      }
+
+    protected def deleteTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
+      $.props >>= { props =>
+        deleteTargetEnabled(props.focused.get, props.targetsWithObs.get)
+          .map(targetId =>
+            targetMod(setter, props.targetsWithObs, props.focused, targetId)(
+              targetListMod.delete
+            ).runInCB
+          )
+          .getOrEmpty
       }
 
     def toggleCollapsed(targetId: SiderealTarget.Id): Callback =
@@ -290,9 +317,18 @@ object TargetObsList {
                         )
                       )
                   }
-              },
-              UndoButtons(props.targetsWithObs.get, undoCtx),
-              Button(onClick = newTarget(undoCtx.setter))(Icons.New)
+              }
+            ),
+            <.div(GPPStyles.ObsTreeButtons)(
+              <.div(
+                Button(size = Small, onClick = newTarget(undoCtx.setter))(Icons.New),
+                Button(size = Small,
+                       onClick = deleteTarget(undoCtx.setter),
+                       disabled =
+                         deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
+                )(Icons.Delete)
+              ),
+              UndoButtons(props.targetsWithObs.get, undoCtx)
             )
           )
         }
