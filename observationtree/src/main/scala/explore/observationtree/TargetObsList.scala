@@ -15,13 +15,16 @@ import explore.components.ObsBadge
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ExploreObservation
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.SiderealTarget
-import explore.undo.ListMod
+import explore.optics.GetAdjust
+import explore.optics._
+import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -32,7 +35,6 @@ import monocle.Lens
 import monocle.Setter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
-import monocle.std.option.some
 import mouse.boolean._
 import react.beautifuldnd._
 import react.common._
@@ -54,37 +56,39 @@ object TargetObsList {
   @Lenses
   case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
 
-  val obsListMod    = new ListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
-  val targetListMod = new ListMod[IO, SiderealTarget, SiderealTarget.Id](SiderealTarget.id)
-
-  implicit class LensOptionOps[S, A](val lens: Lens[S, Option[A]]) extends AnyVal {
-    def composeOptionLens[B](other: Lens[A, B]): Lens[S, Option[B]] =
-      Lens(
-        lens.composePrism(some).composeLens(other).getOption
-      )(
-        _.fold(lens.set(none))(b => lens.composePrism(some).composeLens(other).set(b))
-      )
-  }
-
-  implicit class GetterOptionOps[S, A](val getter: Getter[S, Option[A]]) extends AnyVal {
-    def composeOptionLens[B](other: Lens[A, B]): Getter[S, Option[B]] =
-      Getter(
-        getter.composePrism(some).composeLens(other).headOption
-      )
-  }
-
-  implicit class SetterOptionOps[S, A](val setter: Setter[S, Option[A]]) extends AnyVal {
-    def composeOptionLens[B](other: Lens[A, B]): Setter[S, Option[B]] =
-      Setter { modOptB: (Option[B] => Option[B]) =>
-        setter.modify { optA =>
-          optA.flatMap[A] { a =>
-            modOptB(other.get(a).some).map(b => other.set(b)(a))
-          }
-        }
-      }
-  }
+  val obsListMod    =
+    new KIListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
+  val targetListMod = new KIListMod[IO, SiderealTarget, SiderealTarget.Id](SiderealTarget.id)
 
   class Backend($ : BackendScope[Props, State]) {
+
+    private def getTargetForObsWithId(
+      obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
+    ): Getter[TargetsWithObs, Option[SiderealTarget]] =
+      TargetsWithObs.obs
+        .composeGetter(
+          obsWithIndexGetter
+            .composeOptionLens(first)
+            .composeOptionLens(ExploreObservation.target)
+        )
+
+    private def setTargetForObsWithId(
+      targetsWithObs:     View[TargetsWithObs],
+      obsId:              ExploreObservation.Id,
+      obsWithIndexSetter: Adjuster[ObsList, obsListMod.ElemWithIndex]
+    ): Option[SiderealTarget] => IO[Unit] =
+      targetOpt =>
+        // 1) Update internal model
+        targetsWithObs
+          .zoom(TargetsWithObs.obs)
+          .mod(
+            obsWithIndexSetter
+              .composeOptionLens(first)
+              .composeOptionLens(ExploreObservation.target)
+              .set(targetOpt)
+          ) >>
+          // 2) Send mutation
+          mutateObs(obsId, ObsMutation.Fields(target_id = targetOpt.map(_.id)))
 
     protected def onDragEnd(
       setter: Undoer.Setter[IO, TargetsWithObs]
@@ -94,67 +98,58 @@ object TargetObsList {
           (for {
             newTargetIdStr <- result.destination.toOption.map(_.droppableId)
             newTargetId     = UUID.fromString(newTargetIdStr)
-            target         <- props.targetsWithObs.get.targets.find(_.id === newTargetId)
+            target         <- props.targetsWithObs.get.targets.getElement(newTargetId)
           } yield {
-            val obsId = UUID.fromString(result.draggableId)
+            val obsId: UUID = UUID.fromString(result.draggableId)
 
-            val getSetWithId =
-              obsListMod
-                .withId(obsId)
+            val obsWithId: GetAdjust[ObsList, obsListMod.ElemWithIndex] =
+              obsListMod.withKey(obsId)
 
-            val set =
+            val set: Option[SiderealTarget] => IO[Unit] =
               setter
                 .set[Option[SiderealTarget]](
                   props.targetsWithObs.get,
-                  TargetsWithObs.obs
-                    .composeGetter(
-                      getSetWithId.getter
-                        .composeOptionLens(first)
-                        .composeOptionLens(ExploreObservation.target)
-                    )
-                    .get,
-                  { value: Option[SiderealTarget] =>
-                    props.targetsWithObs
-                      .zoom(TargetsWithObs.obs)
-                      .mod( // 1) Update internal model
-                        getSetWithId.setter
-                          .composeOptionLens(first)
-                          .composeOptionLens(ExploreObservation.target)
-                          .set(value)
-                      ) >>
-                      // 2) Send mutation
-                      mutateObs(obsId, ObsMutation.Fields(target_id = value.map(_.id)))
-                  }
-                ) _
+                  getTargetForObsWithId(obsWithId.getter).get,
+                  setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId.adjuster)
+                )
 
             set(target.some).runInCB
           }).getOrEmpty
         }
 
-    protected def targetMod(
+    private def setTargetWithIndex(
+      targetsWithObs:        View[TargetsWithObs],
+      focused:               View[Option[Focused]],
+      targetId:              SiderealTarget.Id,
+      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
+    ): targetListMod.ElemWithIndex => IO[Unit] =
+      targetWithIndex =>
+        // 1) Update internal model
+        targetsWithObs
+          .zoom(TargetsWithObs.targets)
+          .mod(targetWithIndexSetter.set(targetWithIndex)) >>
+          // 2) Send mutation & adjust focus
+          targetWithIndex.fold(focused.set(none) >> removeTarget(targetId)) {
+            case (target, _) =>
+              insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+          }
+
+    private def targetMod(
       setter:         Undoer.Setter[IO, TargetsWithObs],
       targetsWithObs: View[TargetsWithObs],
       focused:        View[Option[Focused]],
       targetId:       SiderealTarget.Id
     ): targetListMod.Operation => IO[Unit] = {
-      val getSetWithId = targetListMod.withId(targetId)
+      val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
+        targetListMod.withKey(targetId)
 
       setter
         .mod[targetListMod.ElemWithIndex](
           targetsWithObs.get,
           TargetsWithObs.targets
-            .composeGetter(getSetWithId.getter)
+            .composeGetter(targetWithId.getter)
             .get,
-          { value: targetListMod.ElemWithIndex =>
-            targetsWithObs
-              .zoom(TargetsWithObs.targets)
-              .mod(getSetWithId.setter.set(value)) >>
-              // 2) Send mutation
-              value.fold(focused.set(none) >> removeTarget(targetId)) {
-                case (target, _) =>
-                  insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
-              }
-          }
+          setTargetWithIndex(targetsWithObs, focused, targetId, targetWithId.adjuster)
         )
     }
 
@@ -221,13 +216,13 @@ object TargetObsList {
       GPPStyles.DraggingOver.when(isDragging)
 
     def render(props: Props, state: State): VdomElement = {
-      val obsByTarget = props.targetsWithObs.get.obs.groupBy(_.target)
+      val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target)
 
       <.div(GPPStyles.ObsTree)(
         UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
-              props.targetsWithObs.get.targets.toTagMod {
+              props.targetsWithObs.get.targets.elements.toTagMod {
                 target =>
                   val targetId = target.id
 

@@ -8,6 +8,7 @@ import cats.implicits._
 import clue.GraphQLQuery
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
@@ -29,8 +30,11 @@ object TargetObsQueries {
 
   case class TargetWithObs(target: SiderealTarget, obs: List[ExploreObservation])
 
+  type TargetList = KeyedIndexedList[SiderealTarget.Id, SiderealTarget]
+  type ObsList    = KeyedIndexedList[ExploreObservation.Id, ExploreObservation]
+
   @Lenses
-  case class TargetsWithObs(targets: List[SiderealTarget], obs: List[ExploreObservation])
+  case class TargetsWithObs(targets: TargetList, obs: ObsList)
 
   implicit val targetWithObsDecoder = new Decoder[TargetWithObs] {
     final def apply(c: HCursor): Decoder.Result[TargetWithObs] =
@@ -44,7 +48,10 @@ object TargetObsQueries {
   implicit val targetsWithObsDecoder = new Decoder[TargetsWithObs] {
     final def apply(c: HCursor): Decoder.Result[TargetsWithObs] =
       c.as[List[TargetWithObs]].map { targetsWithObs =>
-        TargetsWithObs(targetsWithObs.map(_.target), targetsWithObs.flatMap(_.obs))
+        TargetsWithObs(
+          KeyedIndexedList.fromList(targetsWithObs.map(_.target), SiderealTarget.id.get),
+          KeyedIndexedList.fromList(targetsWithObs.flatMap(_.obs), ExploreObservation.id.get)
+        )
       }
   }
 
@@ -173,16 +180,18 @@ object TargetObsQueries {
 
   implicit val targetsWithObsReusability: Reusability[TargetsWithObs] = Reusability.derive
 
-  def targetObsSubscription(
-    render: View[TargetsWithObs] => VdomNode
-  ): SubscriptionRenderMod[Subscription.Data, TargetsWithObs] =
-    AppCtx.withCtx { implicit appCtx =>
-      SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
-        appCtx.clients.programs
-          .subscribe(Subscription)(),
-        _.map(
-          Subscription.Data.targets.get
-        )
-      )(render)
-    }
+  type SubscriptionRenderer =
+    (View[TargetsWithObs] => VdomNode) => SubscriptionRenderMod[Subscription.Data, TargetsWithObs]
+
+  val TargetObsSubscription: SubscriptionRenderer =
+    render =>
+      AppCtx.withCtx { implicit appCtx =>
+        SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
+          appCtx.clients.programs
+            .subscribe(Subscription)(),
+          _.map(
+            Subscription.Data.targets.get
+          )
+        )(render)
+      }
 }
