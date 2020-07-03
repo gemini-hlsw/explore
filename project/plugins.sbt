@@ -6,6 +6,6 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.18.0")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.0")
 
-addSbtPlugin("edu.gemini" % "sbt-gsp" % "0.2.2")
+addSbtPlugin("edu.gemini" % "sbt-gsp" % "0.2.3")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
