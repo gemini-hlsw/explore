@@ -1,6 +1,7 @@
 import "resources/theme/semantic.less";
 import "resources/less/style.less";
-import "resources/css/aladin.css";
+import "resources/less/components/visualization.less";
+import "resources/css/vendor/aladin.css";
 
 import App from "sjs/targeteditor-fastopt.js";
 

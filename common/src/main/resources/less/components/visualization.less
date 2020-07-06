@@ -1,0 +1,64 @@
+.react-aladin {
+  overflow: hidden; // Needed to keep the visualization svg inside the component
+}
+
+.jts {
+  position: relative;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.jts-polygon {
+  stroke: gray;
+  stroke-width: 2px;
+  fill: lightgray;
+  fill-opacity: 0.3;
+  vector-effect: non-scaling-stroke;
+}
+
+#sss {
+  position: absolute;
+}
+#probe {
+  stroke: red;
+  z-index: 1;
+  fill-opacity: 0.1;
+}
+
+#patrol-field {
+stroke: red;
+  stroke-dasharray: 10;
+}
+
+#science-area polygon {
+  stroke: purple;
+  fill: black;
+  fill-opacity: 1;
+}
+
+#science-ccd-offset polygon {
+  stroke: yellow;
+  fill-opacity: 0.1;
+}
+
+#science-ccd polygon {
+  stroke: cyan;
+  fill-opacity: 0.1;
+}
+
+// Shows a border around the whole SVG
+.jts-svg-border {
+  display: none;
+  stroke: yellow;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+}
+
+// Drawn X to indicate the target, or coordinates 0,0
+.jts-svg-center {
+  stroke: red;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+

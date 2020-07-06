@@ -21,13 +21,19 @@ import gsp.math.Declination
 import gsp.math.HourAngle
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
+import gsp.math.geom.jts.interpreter._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
+import react.aladin.JsAladin
 import react.aladin.Aladin
+import react.aladin.PixelScale
+import react.aladin.visualization
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import org.scalajs.dom.raw.Element
+import org.scalajs.dom.document
 
 final case class TargetBody(
   id:     SiderealTarget.Id,
@@ -98,6 +104,35 @@ object TargetBody extends ModelOptics {
     def setTargetByName: String => Callback =
       searchAndGo { case (name, _, _) => setName(name) }
 
+    def renderVisualization(div: Element, size: Size, pixelScale: => PixelScale): Callback =
+      Callback {
+        // Delete any viz previously rendered
+        val previous = Option(div.querySelector(".aladin-visualization"))
+        previous.foreach(div.removeChild)
+        val g        = document.createElement("div")
+        g.classList.add("aladin-visualization")
+        visualization.geometryForAladin(GmosGeometry.shapes(GmosGeometry.posAngle),
+                                        g,
+                                        size,
+                                        pixelScale,
+                                        GmosGeometry.ScaleFactor
+        )
+        div.appendChild(g)
+      }
+
+    def includeSvg(v: JsAladin): Unit = {
+      val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+      val div  = v.getParentDiv()
+      v.onZoomCB(renderVisualization(div, size, v.pixelScale))
+      ()
+    }
+
+    def updateVisualization(v: JsAladin): Callback = {
+      val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+      val div  = v.getParentDiv()
+      renderVisualization(div, size, v.pixelScale)
+    }
+
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
@@ -137,7 +172,11 @@ object TargetBody extends ModelOptics {
                 ),
                 GridColumn(stretched = true, computer = Nine)(
                   AladinComp.withRef(aladinRef) {
-                    Aladin(target = props.aladinCoordsStr, fov = 0.25, showGotoControl = false)
+                    Aladin(target = props.aladinCoordsStr,
+                           fov = 0.25,
+                           showGotoControl = false,
+                           customize = includeSvg _
+                    )
                   }
                 ),
                 GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
