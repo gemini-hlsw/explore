@@ -10,7 +10,6 @@ import gsp.math.arb.ArbProperMotion
 import gsp.math.arb.ArbRightAscension
 import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
-import munit.DisciplineSuite
 
 class ModelOpticsSuite
     extends DisciplineSuite

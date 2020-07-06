@@ -3,7 +3,6 @@
 
 package explore
 
-import cats.implicits._
 import cats.kernel.laws.discipline.EqTests
 import explore.model.RootModel
 import explore.model.arb.all._

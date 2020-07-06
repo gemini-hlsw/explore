@@ -10,7 +10,6 @@ import gem.util.Enumerated
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.semanticui.elements.icon.Icon
 import react.semanticui.views.card._
 
 final case class ObsBadge(

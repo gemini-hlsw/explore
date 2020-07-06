@@ -3,17 +3,13 @@
 
 package explore
 
-import cats.implicits._
 import explore.components.ui.GPPStyles
 import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.gridlayout.Layout
-import react.semanticui.As
 import react.semanticui.collections.menu._
-import react.semanticui.modules.sidebar._
 
 final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
   val view:                  View[RootModel]

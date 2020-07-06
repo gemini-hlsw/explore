@@ -5,10 +5,6 @@ package explore.model
 
 import cats.implicits._
 import cats.kernel.Eq
-import gem.Observation
-import monocle.Optional
-import monocle.Prism
-import monocle.macros.GenPrism
 import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable

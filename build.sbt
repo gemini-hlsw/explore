@@ -147,7 +147,7 @@ lazy val explore: Project = project
   .dependsOn(constraints, targeteditor, observationtree)
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.2",
+  scalaVersion := "2.13.3",
   description := "Explore",
   homepage := Some(url("https://github.com/geminihlsw/explore")),
   licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),

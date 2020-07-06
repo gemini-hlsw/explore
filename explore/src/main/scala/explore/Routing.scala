@@ -10,14 +10,11 @@ import crystal.react.implicits._
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
-import gem.Observation
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import monocle.Iso
-import monocle.Prism
-import monocle.std.option.some
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

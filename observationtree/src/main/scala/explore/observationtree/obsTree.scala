@@ -6,8 +6,6 @@ package explore.observationtree
 import java.util.UUID
 
 import explore.model.ExploreObservation
-import gem.Observation
-import gem.Target
 import monocle.Lens
 import monocle.macros.Lenses
 

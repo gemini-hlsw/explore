@@ -3,10 +3,7 @@
 
 package explore.targeteditor
 
-import scala.reflect.ClassTag
-
 import cats.Show
-import cats.effect.IO
 import cats.implicits._
 import crystal.react.implicits._
 import explore.AppCtx
@@ -21,26 +18,18 @@ import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.model.show._
 import explore.target.TargetQueries._
-import explore.undo.Undoer
-import gem.Observation
-import gem.util.Enumerated
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.HourAngle
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
-import monocle.macros.Lenses
 import react.aladin.Aladin
 import react.common._
-import react.semanticui.collections.form.Form
-import react.semanticui.collections.form.FormButton
 import react.semanticui.collections.grid._
-import react.semanticui.elements.button.Button
 import react.semanticui.widths._
 
 final case class TargetBody(

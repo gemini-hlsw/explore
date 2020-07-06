@@ -7,10 +7,8 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLStreamingClient
-import crystal.Pot
 import crystal.react._
 import crystal.react.implicits._
-import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -18,6 +16,7 @@ import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
+
 final case class SubscriptionRender[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
@@ -91,7 +90,7 @@ object SubscriptionRender {
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
 
-        $.state.subscription.map(_.stop.runInCB).getOrEmpty
+        $.state.subscription.map(_.stop().runInCB).getOrEmpty
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

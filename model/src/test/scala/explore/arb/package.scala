@@ -3,8 +3,6 @@
 
 package explore.model.arb
 
-import org.scalacheck.Cogen
-
 object all
     extends ArbConstraints
     with ArbSiderealTarget

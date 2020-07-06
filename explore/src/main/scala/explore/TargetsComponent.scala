@@ -6,13 +6,10 @@ package explore
 import java.util.UUID
 
 import cats.implicits._
-import crystal.implicits._
 import crystal.react.implicits._
-import explore.components.graphql.SubscriptionRenderMod
 import explore.components.ui.GPPStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsQueries._
-import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model._
@@ -20,14 +17,9 @@ import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
-import gem.Observation
-import gem.ProgramId
-import gem.util.Enumerated
-import gsp.math.Index
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.function.Cons.headOption
 import react.common._
 import react.draggable.Axis
 import react.gridlayout._

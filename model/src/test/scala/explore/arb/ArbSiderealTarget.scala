@@ -6,7 +6,6 @@ package explore.model.arb
 import java.util.UUID
 
 import explore.model.SiderealTarget
-import gem.arb.ArbEnumerated._
 import gsp.math.ProperMotion
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._

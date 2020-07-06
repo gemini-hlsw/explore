@@ -3,7 +3,6 @@
 
 package explore.model
 
-import cats.implicits._
 import cats.kernel.laws.discipline.EqTests
 import explore.model.Focused
 import explore.model.arb.all._

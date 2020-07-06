@@ -15,11 +15,7 @@ import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import io.circe.Decoder
 import io.circe.DecodingFailure
-import io.circe.Encoder
 import io.circe.HCursor
-import io.circe.JsonObject
-import io.circe.generic.semiauto.deriveDecoder
-import io.circe.generic.semiauto.deriveEncoder
 
 object decoders {
 

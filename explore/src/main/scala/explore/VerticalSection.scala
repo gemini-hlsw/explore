@@ -3,20 +3,10 @@
 
 package explore
 
-import scala.scalajs.js.JSConverters._
-
-import cats.implicits._
 import explore.components.ui.GPPStyles
-import explore.model.Page
-import explore.model.reusability._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.common.implicits._
-import react.semanticui.SemanticWidth
-import react.semanticui.sizes._
-import react.semanticui.widths._
 
 /**
   * Component that uses css tricks to support properly rotated components

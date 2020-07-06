@@ -5,21 +5,9 @@ package explore.observationtree
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 
-import cats.effect.IO
-import cats.effect.SyncIO
-import cats.effect.concurrent.Ref
-import crystal.ViewF
-import crystal.react.StreamRendererMod
 import explore.AppMain
 import explore._
-import explore.model.ExploreObservation
-import explore.model.Page
 import explore.model.RootModel
-import explore.model.reusability._
-import fs2.concurrent.SignallingRef
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.extra.router.RouterLogic
-import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 
 import TargetObsQueries._

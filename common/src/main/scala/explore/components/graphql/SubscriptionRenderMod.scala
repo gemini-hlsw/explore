@@ -16,10 +16,8 @@ import crystal.ViewF
 import crystal.react._
 import crystal.react.implicits._
 import explore.View
-import explore.model.reusability
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.collections.message.Message
@@ -114,7 +112,7 @@ object SubscriptionRenderMod {
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
 
-        $.state.subscription.map(_.stop.runInCB).getOrEmpty
+        $.state.subscription.map(_.stop().runInCB).getOrEmpty
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
