@@ -9,65 +9,66 @@ import monocle._
 import monocle.std.option.some
 
 package object optics {
-  type Adjuster[S, A] = PAdjuster[S, S, A, A]
+  implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
 
-  implicit class IsoOps[S, T, A, B](val self: PIso[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      new PAdjuster[S, T, A, B] {
-        def modify(f: A => B): S => T =
-          self.modify(f)
-
-        def set(b: B): S => T =
-          self.set(b)
+    @inline final def asAdjuster: Adjuster[From, To] =
+      new Adjuster[From, To] {
+        def modify(f: To => To): From => From = self.modify(f)
+        def set(to:   To): From => From       = self.set(to)
       }
   }
 
-  implicit class LensOps[S, T, A, B](val self: PLens[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      new PAdjuster[S, T, A, B] {
-        def modify(f: A => B): S => T =
-          self.modify(f)
+  implicit class LensOps[From, To](val self: Lens[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
 
-        def set(b: B): S => T =
-          self.set(b)
+    @inline final def asAdjuster: Adjuster[From, To] =
+      new Adjuster[From, To] {
+        def modify(f: To => To): From => From = self.modify(f)
+        def set(to:   To): From => From       = self.set(to)
       }
   }
 
-  implicit class PrismOps[S, T, A, B](val self: PPrism[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      new PAdjuster[S, T, A, B] {
-        def modify(f: A => B): S => T =
-          self.modify(f)
+  implicit class PrismOps[From, To](val self: Prism[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
 
-        def set(b: B): S => T =
-          self.set(b)
+    @inline final def asAdjuster: Adjuster[From, To] =
+      new Adjuster[From, To] {
+        def modify(f: To => To): From => From = self.modify(f)
+        def set(to:   To): From => From       = self.set(to)
       }
   }
 
-  implicit class OptionalOps[S, T, A, B](val self: POptional[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      new PAdjuster[S, T, A, B] {
-        def modify(f: A => B): S => T =
-          self.modify(f)
+  implicit class OptionalOps[From, To](val self: Optional[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
 
-        def set(b: B): S => T =
-          self.set(b)
+    @inline final def asAdjuster: Adjuster[From, To] =
+      new Adjuster[From, To] {
+        def modify(f: To => To): From => From = self.modify(f)
+        def set(to:   To): From => From       = self.set(to)
       }
   }
 
-  implicit class TraversalOps[S, T, A, B](val self: PTraversal[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      PAdjuster(self.modify)
+  implicit class TraversalOps[From, To](val self: Traversal[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
+
+    @inline final def asAdjuster: Adjuster[From, To] =
+      Adjuster(self.modify)
   }
 
-  implicit class SetterOps[S, T, A, B](val self: PSetter[S, T, A, B]) extends AnyVal {
-    @inline final def asAdjuster: PAdjuster[S, T, A, B] =
-      new PAdjuster[S, T, A, B] {
-        def modify(f: A => B): S => T =
-          self.modify(f)
+  implicit class SetterOps[From, To](val self: Setter[From, To]) extends AnyVal {
+    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.composeAdjuster(other)
 
-        def set(b: B): S => T =
-          self.set(b)
+    @inline final def asAdjuster: Adjuster[From, To] =
+      new Adjuster[From, To] {
+        def modify(f: To => To): From => From = self.modify(f)
+        def set(to:   To): From => From       = self.set(to)
       }
   }
 
