@@ -8,13 +8,9 @@ import java.util.UUID
 import scala.scalajs.js.annotation._
 
 import cats.implicits._
-import crystal.implicits._
 import explore.AppMain
 import explore._
 import explore.model._
-import gem.Observation
-import gem.ProgramId
-import gsp.math.Index
 import japgolly.scalajs.react.vdom.html_<^._
 
 @JSExportTopLevel("TargetTest")

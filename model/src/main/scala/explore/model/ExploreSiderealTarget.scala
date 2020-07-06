@@ -14,7 +14,6 @@ import gsp.math.Declination
 import gsp.math.Epoch
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
-import monocle.Lens
 import monocle.macros.Lenses
 
 /**

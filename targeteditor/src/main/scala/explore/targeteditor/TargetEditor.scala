@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.implicits._
-import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
@@ -12,8 +11,6 @@ import explore.model.Constraints
 import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.target.TargetQueries._
-import gem.Observation
-import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption

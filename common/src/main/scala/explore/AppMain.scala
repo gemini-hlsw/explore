@@ -3,16 +3,11 @@
 
 package explore
 
-import java.util.UUID
-
 import scala.scalajs.js
 
-import cats.Id
-import cats.data.NonEmptyList
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.effect._
 import cats.implicits._
 import clue.Backend
 import clue.StreamingBackend
@@ -22,22 +17,12 @@ import crystal.AppRootContext
 import crystal.react.AppRoot
 import explore.model.AppConfig
 import explore.model.AppContext
-import explore.model.ExploreSiderealTarget
-import explore.model.Focused.FocusedObs
-import explore.model.Page
 import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import gem.Observation
-import gem.ProgramId
 import gem.data.EnumZipper
-import gem.data.Zipper
-import gem.util.Enumerated
-import gsp.math.Index
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
-import japgolly.scalajs.react.extra.router.RouterCtl
-import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import org.scalajs.dom
@@ -72,7 +57,7 @@ trait AppMain extends IOApp {
       ctx <- AppContext.from[IO](AppConfig())
       _   <- AppCtx.initIn[IO](ctx)
     } yield {
-      val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup.some)
+      val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)
 
       val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")

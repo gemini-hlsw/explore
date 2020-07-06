@@ -9,8 +9,6 @@ import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.SiderealTarget
-import gem.Observation
-import gem.arb.ArbObservation._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
@@ -19,7 +17,6 @@ import org.scalacheck.Gen
 import org.scalacheck.Gen._
 
 trait ArbFocused {
-  import explore.model.arb.ArbSiderealTarget._
   import explore.model.arb.CogenUUID._
 
   implicit val focusedArb: Arbitrary[Focused] =

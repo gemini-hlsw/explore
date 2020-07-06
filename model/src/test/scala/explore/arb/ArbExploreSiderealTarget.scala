@@ -5,7 +5,6 @@ package explore.model.arb
 
 import explore.model.ExploreSiderealTarget
 import explore.model.SiderealTarget
-import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

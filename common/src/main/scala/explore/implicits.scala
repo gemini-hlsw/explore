@@ -4,13 +4,9 @@
 package explore
 
 import cats.effect.ContextShift
-import cats.effect.IO
 import cats.effect.Timer
-import crystal._
-import explore.model.Actions
 import explore.model.AppContext
 import io.chrisdavenport.log4cats.Logger
-import japgolly.scalajs.react.Reusability
 
 object implicits extends ShorthandTypes {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs

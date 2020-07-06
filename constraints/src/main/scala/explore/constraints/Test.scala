@@ -7,24 +7,12 @@ import java.util.UUID
 
 import scala.scalajs.js
 
-import cats.implicits._
-import crystal.implicits._
-import explore.AppCtx
 import explore.AppMain
-import explore.components.graphql.SubscriptionRenderMod
 import explore.constraints.ConstraintsQueries._
 import explore.implicits._
-import explore.model.Constraints
-import explore.model.Page
 import explore.model.RootModel
-import explore.model.reusability._
-import gem.Observation
-import gem.ProgramId
-import gsp.math.Index
-import japgolly.scalajs.react.extra.router.RouterLogic
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.function.Cons.headOption
 
 import js.annotation._
 

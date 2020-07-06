@@ -6,11 +6,8 @@ package explore
 import scala.scalajs.js
 
 import cats.effect.IO
-import cats.implicits._
-import crystal.ViewF
 import crystal.react.implicits._
 import explore.Routing
-import explore.model.Page
 import explore.model.RootModel
 import explore.model.RootModelRouting
 import japgolly.scalajs.react.extra.router._

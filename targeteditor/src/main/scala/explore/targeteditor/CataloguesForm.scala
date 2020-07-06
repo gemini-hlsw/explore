@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import explore._
 import explore.implicits._
 import explore.model.SiderealTarget
 import japgolly.scalajs.react._

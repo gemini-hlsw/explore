@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.implicits._
-import gem.Observation
 
 sealed trait Page extends Product with Serializable
 

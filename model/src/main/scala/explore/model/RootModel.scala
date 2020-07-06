@@ -7,11 +7,9 @@ import cats.effect._
 import cats.implicits._
 import cats.kernel.Eq
 import clue._
-import explore.model.Focused.FocusedObs
 import explore.model.enum.AppTab
 import gem.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
-import monocle.Lens
 import monocle.macros.Lenses
 import sttp.model.Uri
 import sttp.model.Uri._

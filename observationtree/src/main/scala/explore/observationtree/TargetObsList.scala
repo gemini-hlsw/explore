@@ -8,7 +8,6 @@ import java.util.UUID
 import scala.collection.immutable.HashSet
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.implicits._
 import crystal.react.implicits._
 import explore.Icons
@@ -24,7 +23,6 @@ import explore.model.Focused.FocusedTarget
 import explore.model.SiderealTarget
 import explore.undo.ListMod
 import explore.undo.Undoer
-import gem.Observation
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.effects.CallbackToEffects._
@@ -33,7 +31,6 @@ import monocle.Getter
 import monocle.Lens
 import monocle.Setter
 import monocle.function.Field1.first
-import monocle.function.Possible.possible
 import monocle.macros.Lenses
 import monocle.std.option.some
 import mouse.boolean._
@@ -42,10 +39,8 @@ import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
-import react.semanticui.modules.popup.PopupOn.Focus
 import react.semanticui.sizes._
 
-import scalajs.js.|
 import TargetObsQueries._
 
 final case class TargetObsList(

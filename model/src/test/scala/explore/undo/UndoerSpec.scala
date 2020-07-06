@@ -13,10 +13,7 @@ import monocle.Iso
 import monocle.Lens
 import monocle.Setter
 import monocle.function.all._
-import monocle.function.all._
 import monocle.macros.GenLens
-import monocle.macros.Lenses
-import monocle.macros.Lenses
 
 class UndoerSpec extends munit.FunSuite {
 

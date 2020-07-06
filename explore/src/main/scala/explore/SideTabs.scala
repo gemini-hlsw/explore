@@ -3,25 +3,18 @@
 
 package explore
 
-import scala.scalajs.js.JSConverters._
-
 import cats.implicits._
 import crystal.react.implicits._
 import explore.components.ui.GPPStyles
-import explore.model.Page
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import gem.data.EnumZipper
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.common.implicits._
-import react.semanticui.SemanticWidth
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.divider.Divider
-import react.semanticui.sizes._
 import react.semanticui.widths._
 
 final case class SideTabs(

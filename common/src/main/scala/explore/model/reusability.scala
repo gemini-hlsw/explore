@@ -8,7 +8,6 @@ import java.time.Duration
 import clue.StreamingClientStatus
 import gem.Observation
 import gem.data.EnumZipper
-import gem.data.Zipper
 import gem.util.Enumerated
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability

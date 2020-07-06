@@ -8,13 +8,10 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import gem.arb.ArbEnumZipper._
 import gem.data.EnumZipper
-import gem.util.Enumerated
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import org.scalacheck.Gen
-import org.scalacheck.Gen._
 
 trait ArbRootModel {
   import explore.model.arb.ArbFocused._

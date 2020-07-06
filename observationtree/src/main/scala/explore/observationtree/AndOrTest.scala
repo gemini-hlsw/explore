@@ -13,7 +13,6 @@ import cats.effect.IO
 import cats.implicits._
 import explore.components.ObsBadge
 import explore.data.tree._
-import explore.implicits._
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus

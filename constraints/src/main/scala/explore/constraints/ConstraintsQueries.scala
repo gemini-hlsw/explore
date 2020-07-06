@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLQuery
 import crystal.ViewF
-import crystal.react.ModState
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
@@ -19,7 +18,6 @@ import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
-import gem.Observation
 import gem.util.Enumerated
 import io.circe.Decoder
 import io.circe.DecodingFailure
@@ -28,7 +26,6 @@ import io.circe.HCursor
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
-import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import monocle.function.Cons.headOption

@@ -4,12 +4,10 @@
 package explore.model
 
 import cats.implicits._
-import cats.kernel.Eq
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.Page._
 import explore.model.enum.AppTab
-import gem.data.Zipper
 import monocle.Lens
 
 object RootModelRouting {

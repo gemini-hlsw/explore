@@ -4,7 +4,6 @@
 package explore.undo
 
 import cats.FlatMap
-import cats.Monoid
 import cats.effect.Sync
 import cats.implicits._
 import crystal.implicits._

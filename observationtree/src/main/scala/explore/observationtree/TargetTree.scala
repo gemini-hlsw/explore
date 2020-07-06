@@ -6,7 +6,6 @@ package explore.observationtree
 import scala.collection.immutable.HashSet
 
 import explore.components.ObsBadge
-import explore.data.tree.Tree
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import japgolly.scalajs.react.MonocleReact._
@@ -17,8 +16,6 @@ import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.common.ReactProps
 import react.semanticui.elements.icon.Icon
-
-import scalajs.js.|
 
 // !!!! This approach does't seem to work using tree !!!!
 // See https://github.com/atlassian/react-beautiful-dnd/issues/374
