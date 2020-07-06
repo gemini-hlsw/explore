@@ -4,20 +4,17 @@
 
 .jts {
   position: relative;
-  pointer-events: none;
-  z-index: 10;
+  pointer-events: none; // let aladin get pointer events
+  z-index: 10; // Needs a z-index to sit on top of the catalog
 }
 
 .jts-polygon {
+  display: none;
   stroke: gray;
   stroke-width: 2px;
   fill: lightgray;
   fill-opacity: 0.3;
-  vector-effect: non-scaling-stroke;
-}
-
-#sss {
-  position: absolute;
+  vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
 #probe {
   stroke: red;
@@ -57,6 +54,7 @@ stroke: red;
 
 // Drawn X to indicate the target, or coordinates 0,0
 .jts-svg-center {
+  display: none;
   stroke: red;
   stroke-width: 1px;
   vector-effect: non-scaling-stroke;
