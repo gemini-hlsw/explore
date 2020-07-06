@@ -8,11 +8,11 @@ import scala.collection.immutable.ListMap
 import cats.implicits._
 import cats.kernel.Eq
 import monocle.Lens
+import scala.collection.immutable.TreeSeqMap
 
 // Each element has a unique Key.
-// Elements can be accessed by Key in O(1).
-// Position in the list (index) can be accessed by Key in O(1).
-case class KeyedIndexedList[K, A] private (private val list: ListMap[K, (A, Int)]) {
+// Efficient loookup of elements and positions by Key.
+case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, Int)]) {
   def getElemAndIndex(id: K): Option[(A, Int)] = list.get(id)
   def getElement(id:      K): Option[A]        = list.get(id).map(_._1)
   def getIndex(id:        K): Option[Int]      = list.get(id).map(_._2)
@@ -26,7 +26,7 @@ case class KeyedIndexedList[K, A] private (private val list: ListMap[K, (A, Int)
   def removed(key: K): KeyedIndexedList[K, A] =
     getIndex(key)
       .fold(this)(idx =>
-        KeyedIndexedList.unsafeFromListMap(
+        KeyedIndexedList.unsafeFromTreeSeqMap(
           list
             .removed(key)
             .map(_ match {
@@ -40,8 +40,14 @@ case class KeyedIndexedList[K, A] private (private val list: ListMap[K, (A, Int)
 
   def exists(p: A => Boolean): Boolean = elements.exists(p)
 
-  def take(n: Int): KeyedIndexedList[K, A] = KeyedIndexedList.unsafeFromListMap(list.take(n))
-  def drop(n: Int): KeyedIndexedList[K, A] = KeyedIndexedList.unsafeFromListMap(list.drop(n))
+  def take(n: Int): KeyedIndexedList[K, A] = KeyedIndexedList.unsafeFromTreeSeqMap(list.take(n))
+  def drop(n: Int): KeyedIndexedList[K, A] =
+    KeyedIndexedList.unsafeFromTreeSeqMap(
+      list
+        .collect {
+          case (id, (a, i)) if i >= n => (id, (a, i - n))
+        }
+    )
 
   def inserted(key: K, elem: A, idx: Int): KeyedIndexedList[K, A] = {
     val fixedIdx = idx match {
@@ -50,7 +56,7 @@ case class KeyedIndexedList[K, A] private (private val list: ListMap[K, (A, Int)
       case i               => i
     }
     val baseList = removed(key).list
-    KeyedIndexedList.unsafeFromListMap(
+    KeyedIndexedList.unsafeFromTreeSeqMap(
       (baseList
         .take(fixedIdx) + ((key, (elem, fixedIdx)))) ++ baseList.drop(fixedIdx).map {
         case (k, (e, i)) => (k, (e, i + 1))
@@ -67,11 +73,11 @@ case class KeyedIndexedList[K, A] private (private val list: ListMap[K, (A, Int)
 
 object KeyedIndexedList {
   def fromList[K, A](list: List[A], keyGet: A => K): KeyedIndexedList[K, A] =
-    KeyedIndexedList(ListMap.from(list.distinctBy(keyGet).zipWithIndex.map {
+    KeyedIndexedList(TreeSeqMap.from(list.distinctBy(keyGet).zipWithIndex.map {
       case (a, idx) => (keyGet(a), (a, idx))
     }))
 
-  def unsafeFromListMap[K, A](list: ListMap[K, (A, Int)]): KeyedIndexedList[K, A] =
+  def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
   implicit def eqIdList[K: Eq, A: Eq]: Eq[KeyedIndexedList[K, A]] = Eq.by(_.list: Map[K, (A, Int)])
