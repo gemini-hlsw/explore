@@ -48,9 +48,15 @@ object TargetBody extends ModelOptics {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  final case class State(fov: Boolean)
+
+  object State {
+    val Default = State(false)
+  }
+
   val AladinComp = Aladin.component
 
-  class Backend(bs: BackendScope[Props, Unit]) {
+  class Backend(bs: BackendScope[Props, State]) {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
@@ -180,7 +186,7 @@ object TargetBody extends ModelOptics {
                   }
                 ),
                 GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(props.target.get)
+                  CataloguesForm(true)
                 )
               )
             )
@@ -201,6 +207,7 @@ object TargetBody extends ModelOptics {
   val component =
     ScalaComponent
       .builder[Props]
+      .initialState(State.Default)
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .build

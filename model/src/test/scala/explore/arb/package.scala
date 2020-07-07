@@ -5,6 +5,7 @@ package explore.model.arb
 
 object all
     extends ArbConstraints
+    with ArbTargetVisualOptions
     with ArbSiderealTarget
     with ArbExploreSiderealTarget
     with ArbFocused

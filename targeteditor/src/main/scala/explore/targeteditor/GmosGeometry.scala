@@ -50,8 +50,8 @@ object GmosGeometry {
   val ScaleFactor = 1000
 
   val pp: SvgPostProcessor = {
-    case p: Polygon   => p.addClass("jts-polygon")
-    case g: G         => g.addClass("jts-group")
+    case p: Polygon   => p.addClass("jts-polygon").addClass("jts")
+    case g: G         => g.addClass("jts-group").addClass("jts")
     case c: Container => c.addClass("jts")
     case a            => a
   }

@@ -19,14 +19,14 @@ import react.common.implicits._
   * Reusability instances for model classes
   */
 object reusability {
-  implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
-  implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
-  implicit val obsIdReuse: Reusability[Observation.Id]                                            = Reusability.by(_.format)
-  implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
-  implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                                 = Reusability.derive
-  implicit val constraintsReuse: Reusability[Constraints]                                         = Reusability.derive
-  implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
-  implicit def enumReuse[A: Enumerated]: Reusability[A]                                           =
+  implicit val statusReuse: Reusability[StreamingClientStatus]             = Reusability.derive
+  implicit val durationReuse: Reusability[Duration]                        = Reusability.by(_.getSeconds)
+  implicit val obsIdReuse: Reusability[Observation.Id]                     = Reusability.by(_.format)
+  implicit val siderealTargetReuse: Reusability[SiderealTarget]            = Reusability.byEq
+  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]        = Reusability.derive
+  implicit val expTargetReuse: Reusability[ExploreSiderealTarget]          = Reusability.derive
+  implicit val expObsReuse: Reusability[ExploreObservation]                = Reusability.derive
+  implicit def enumReuse[A: Enumerated]: Reusability[A]                    =
     Reusability.by(Enumerated[A].tag)
   implicit def enumZipperReuse[A: Reusability]: Reusability[EnumZipper[A]]                        =
     Reusability.by(z => (z.lefts, z.focus, z.rights))
