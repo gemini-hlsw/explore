@@ -1,0 +1,110 @@
+package explore.targeteditor
+
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import gsp.math.geom.jts.interpreter._
+import react.sizeme._
+import react.aladin._
+import react.common._
+import org.scalajs.dom.document
+import org.scalajs.dom.raw.Element
+import org.scalajs.dom.ext._
+import gsp.math.Coordinates
+import explore.model.TargetVisualOptions
+import explore.model.enum.Display
+
+final case class AladinContainer(coordinates: Coordinates, options: TargetVisualOptions)
+    extends ReactProps[AladinContainer](AladinContainer.component) {
+  val aladinCoordsStr: String = Coordinates.fromHmsDms.reverseGet(coordinates)
+}
+
+object AladinContainer {
+  type Props = AladinContainer
+
+  protected implicit val propsReuse: Reusability[Props] = Reusability.never
+
+  val AladinComp = Aladin.component
+
+  class Backend($ : BackendScope[Props, Unit]) {
+    // Create a mutable reference
+    private val ref = Ref.toScalaComponent(AladinComp)
+
+    def toggleVisibility(g: Element, selector: String, option: Display): Unit =
+      g.querySelectorAll(selector).foreach {
+        case e: Element =>
+          option.fold(e.classList.remove("visualization-display"),
+                      e.classList.add("visualization-display")
+          )
+      }
+
+    def renderVisualization(
+      div:        Element,
+      size:       Size,
+      pixelScale: => PixelScale,
+      options:    TargetVisualOptions
+    ): Callback =
+      Callback {
+        // Delete any viz previously rendered
+        val previous = Option(div.querySelector(".aladin-visualization"))
+        previous.foreach(div.removeChild)
+        val g        = document.createElement("div")
+        g.classList.add("aladin-visualization")
+        visualization.geometryForAladin(GmosGeometry.shapes(GmosGeometry.posAngle),
+                                        g,
+                                        size,
+                                        pixelScale,
+                                        GmosGeometry.ScaleFactor
+        )
+        // Switch the visibility
+        toggleVisibility(g, "#science-ccd polygon", options.fov)
+        toggleVisibility(g, "#science-ccd-offset polygon", options.offsets)
+        toggleVisibility(g, "#patrol-field", options.guiding)
+        toggleVisibility(g, "#probe", options.probe)
+        div.appendChild(g)
+      }
+
+    def includeSvg(options: TargetVisualOptions)(v: JsAladin): Unit = {
+      val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+      val div  = v.getParentDiv()
+      v.onZoomCB(renderVisualization(div, size, v.pixelScale, options))
+      ()
+    }
+
+    def updateVisualization(options: TargetVisualOptions)(v: JsAladin): Callback = {
+      val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+      val div  = v.getParentDiv()
+      renderVisualization(div, size, v.pixelScale, options)
+    }
+
+    def render(props: Props) =
+      // We want the aladin component inside SizeMe to re-render on resize
+      <.div(
+        ^.width := 100.pct,
+        ^.height := 100.pct,
+        SizeMe() { s =>
+          println(s.height)
+          AladinComp.withRef(ref) {
+            Aladin(showReticle = true,
+                   target = props.aladinCoordsStr,
+                   fov = 0.25,
+                   showGotoControl = false,
+                   customize = includeSvg(props.options) _
+            )
+          }
+        }
+      )
+
+    def recalculateView =
+      $.props >>= { p =>
+        ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization(p.options)))
+      }
+  }
+
+  val component =
+    ScalaComponent
+      .builder[Props]
+      .renderBackend[Backend]
+      .componentDidUpdate(_.backend.recalculateView)
+      .build
+
+}
