@@ -3,12 +3,10 @@
 
 package explore.data
 
-import scala.collection.immutable.ListMap
+import scala.collection.immutable.TreeSeqMap
 
 import cats.implicits._
 import cats.kernel.Eq
-import monocle.Lens
-import scala.collection.immutable.TreeSeqMap
 
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.
@@ -72,9 +70,9 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
 }
 
 object KeyedIndexedList {
-  def fromList[K, A](list: List[A], keyGet: A => K): KeyedIndexedList[K, A] =
-    KeyedIndexedList(TreeSeqMap.from(list.distinctBy(keyGet).zipWithIndex.map {
-      case (a, idx) => (keyGet(a), (a, idx))
+  def fromList[K, A](list: List[A], getKey: A => K): KeyedIndexedList[K, A] =
+    KeyedIndexedList(TreeSeqMap.from(list.distinctBy(getKey).zipWithIndex.map {
+      case (a, idx) => (getKey(a), (a, idx))
     }))
 
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =

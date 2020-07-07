@@ -15,7 +15,6 @@ import explore.components.ObsBadge
 import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
-import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ExploreObservation
 import explore.model.Focused
@@ -31,8 +30,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.effects.CallbackToEffects._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Getter
-import monocle.Lens
-import monocle.Setter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
 import mouse.boolean._

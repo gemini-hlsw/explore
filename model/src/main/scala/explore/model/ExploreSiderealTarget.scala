@@ -10,10 +10,8 @@ import cats.effect.Sync
 import cats.implicits._
 import gem.Target
 import gsp.math.Coordinates
-import gsp.math.Declination
 import gsp.math.Epoch
 import gsp.math.ProperMotion
-import gsp.math.RightAscension
 import monocle.macros.Lenses
 
 /**
@@ -32,12 +30,7 @@ object SiderealTarget {
         SiderealTarget(
           id,
           "New Target",
-          ProperMotion(Coordinates(RightAscension.Zero, Declination.Zero),
-                       Epoch.J2000,
-                       none,
-                       none,
-                       none
-          )
+          ProperMotion(Coordinates.Zero, Epoch.J2000, none, none, none)
         )
       )
 

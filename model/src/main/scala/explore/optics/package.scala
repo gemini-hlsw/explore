@@ -3,7 +3,6 @@
 
 package explore
 
-import cats._
 import cats.implicits._
 import monocle._
 import monocle.std.option.some

@@ -3,17 +3,12 @@
 
 package explore.undo
 
-import scala.collection.immutable.ListMap
-
-import cats.implicits._
-import cats.kernel.Eq
 import explore.data.KeyedIndexedList
 import monocle.Getter
 import monocle.Iso
 import monocle.Lens
-import mouse.boolean._
 
-class KIListMod[F[_], A, K: Eq](protected val keyLens: Lens[A, K])
+class KIListMod[F[_], A, K](protected val keyLens: Lens[A, K])
     extends IndexedCollMod[F, KeyedIndexedList, Int, A, cats.Id, K] {
 
   override protected val valueLens: Lens[A, A] = Iso.id.asLens
@@ -28,9 +23,9 @@ class KIListMod[F[_], A, K: Eq](protected val keyLens: Lens[A, K])
   override def insertWithIdx(
     kiList: KeyedIndexedList[K, A],
     idx:    Int,
-    a:      A
+    elem:   A
   ): KeyedIndexedList[K, A] = {
-    val key = keyLens.get(a)
-    kiList.inserted(key, a, idx)
+    val key = keyLens.get(elem)
+    kiList.inserted(key, elem, idx)
   }
 }

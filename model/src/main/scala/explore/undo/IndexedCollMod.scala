@@ -30,7 +30,7 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
 
   def insertWithIdx(col: Collection, idx: Idx, node: N[A]): Collection
 
-  protected def setterForKey(
+  protected def adjusterForKey(
     key:      K,
     getter:   Getter[Collection, ElemWithIndex],
     preserve: Boolean // If true, won't modify an existing element, just its location. Deletion is still possible.
@@ -52,9 +52,9 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
     }
 
   def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
-    val getter = getterForKey(key)
-    val setter = setterForKey(key, getter, preserve = false)
-    GetAdjust(getter, setter)
+    val getter   = getterForKey(key)
+    val adjuster = adjusterForKey(key, getter, preserve = false)
+    GetAdjust(getter, adjuster)
   }
 
   // Start Element Operations
@@ -77,13 +77,14 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
     _.map {
       case (node, _) => (valueLens.modify(value => keyLens.set(keyLens.get(value))(a))(node), idx)
     }.orElse((pureNode(a), idx).some)
+
   // End Element Operations
 
   object pos {
     def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
-      val getter = getterForKey(key)
-      val setter = setterForKey(key, getter, preserve = true)
-      GetAdjust(getter, setter)
+      val getter   = getterForKey(key)
+      val adjuster = adjusterForKey(key, getter, preserve = true)
+      GetAdjust(getter, adjuster)
     }
 
     // Start Position Operations

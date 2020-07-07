@@ -3,11 +3,6 @@
 
 package explore.optics
 
-import cats.Contravariant
-import cats.Functor
-import cats.arrow.Choice
-import cats.arrow.Profunctor
-import cats.syntax.either._
 import monocle._
 
 // An Adjuster is just like a Setter, but less strict: it does not abide by the "compose modify" law.
