@@ -37,23 +37,19 @@ object SiderealTarget {
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
 }
 
-@Lenses
-final case class TargetVisualOptions(fov: Boolean)
-
-object TargetVisualOptions {
-  val Default = TargetVisualOptions(false)
-
-  implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] = Eq.by(_.fov)
-}
-
 /**
   * A Sidereal target from a UI point of view containing local state, e.g. catalog selected, etc
   */
 @Lenses
-final case class ExploreSiderealTarget(searchTerm: String, target: Option[SiderealTarget], options: TargetVisualOptions)
+final case class ExploreSiderealTarget(
+  searchTerm: String,
+  target:     Option[SiderealTarget],
+  options:    TargetVisualOptions
+)
 
 object ExploreSiderealTarget {
-  implicit val siderealTargetEq: Eq[ExploreSiderealTarget] = Eq.by(x => (x.searchTerm, x.target, x.options))
+  implicit val siderealTargetEq: Eq[ExploreSiderealTarget] =
+    Eq.by(x => (x.searchTerm, x.target, x.options))
 
   def apply(target: Target): Option[ExploreSiderealTarget] =
     target.track
@@ -61,7 +57,7 @@ object ExploreSiderealTarget {
         ExploreSiderealTarget(
           target.name,
           SiderealTarget(UUID.randomUUID, target.name, pm).some,
-          TargetVisualOptions.Default,
+          TargetVisualOptions.Default
         )
       )
       .toOption

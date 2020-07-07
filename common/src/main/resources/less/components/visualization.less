@@ -17,13 +17,15 @@
   vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
 #probe {
+  display: none;
   stroke: red;
   z-index: 1;
   fill-opacity: 0.1;
 }
 
 #patrol-field {
-stroke: red;
+  display: none;
+  stroke: red;
   stroke-dasharray: 10;
 }
 
@@ -34,11 +36,13 @@ stroke: red;
 }
 
 #science-ccd-offset polygon {
+  display: none;
   stroke: yellow;
   fill-opacity: 0.1;
 }
 
 #science-ccd polygon {
+  display: none;
   stroke: cyan;
   fill-opacity: 0.1;
 }
@@ -60,3 +64,6 @@ stroke: red;
   vector-effect: non-scaling-stroke;
 }
 
+.visualization-display {
+  display: inline !important; // we use this as a toggle thus we need important set
+}

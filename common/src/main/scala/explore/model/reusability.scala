@@ -10,6 +10,7 @@ import explore.data.KeyedIndexedList
 import gem.Observation
 import gem.data.EnumZipper
 import gem.util.Enumerated
+import gpp.ui.reusability._
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
@@ -21,7 +22,6 @@ import react.common.implicits._
 object reusability {
   implicit val statusReuse: Reusability[StreamingClientStatus]             = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                        = Reusability.by(_.getSeconds)
-  implicit val obsIdReuse: Reusability[Observation.Id]                     = Reusability.by(_.format)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]            = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]        = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]          = Reusability.derive

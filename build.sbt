@@ -103,7 +103,8 @@ lazy val targeteditor = project
   .dependsOn(common)
   .settings(
     libraryDependencies ++=
-      ReactAladin.value
+      ReactAladin.value ++
+        ReactSizeMe.value
   )
 
 lazy val constraints = project
