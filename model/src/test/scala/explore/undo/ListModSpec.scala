@@ -6,9 +6,7 @@ package explore.undo
 import cats.effect.IO
 import cats.implicits._
 import munit.DisciplineSuite
-import monocle.Iso
 import monocle.Lens
-import monocle.law.discipline.SetterTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import explore.data.KeyedIndexedList

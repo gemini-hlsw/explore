@@ -6,15 +6,10 @@ package explore
 import cats.implicits._
 import munit.DisciplineSuite
 import monocle.macros.Lenses
-import monocle.Setter
-import monocle.law.discipline.SetterTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import cats.kernel.Eq
-import monocle.Lens
-import monocle.law.discipline.LensTests
 import explore.optics._
-import monocle.law.discipline.TraversalTests
 
 class OpticsSuite extends DisciplineSuite {
 

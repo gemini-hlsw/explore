@@ -3,6 +3,7 @@
 
 package explore.data.tree
 
+import cats.implicits._
 import cats.kernel.Eq
 import monocle.macros.Lenses
 
@@ -19,13 +20,13 @@ object Tree {
   def empty[A]: Tree[A] = Tree(List.empty)
   def apply[A](children: Node[A]*): Tree[A] = Tree(children.toList)
 
-  def eqTree[A]: Eq[Tree[A]] = Eq.fromUniversalEquals
+  implicit def eqTree[A: Eq]: Eq[Tree[A]] = Eq.by(_.children)
 }
 
 object Node {
-  def apply[A](a: A, children: Node[A]*): Node[A] = Node(a, children.toList)
+  def apply[A](value: A, children: Node[A]*): Node[A] = Node(value, children.toList)
 
-  def eqNode[A]: Eq[Node[A]] = Eq.fromUniversalEquals
+  implicit def eqNode[A: Eq]: Eq[Node[A]] = Eq.by(node => (node.value, node.children))
 }
 
 // Version with different types for internal and leaf nodes. I don't think this would work easily with tree component.

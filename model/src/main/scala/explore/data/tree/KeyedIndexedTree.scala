@@ -41,62 +41,56 @@ case class KeyedIndexedTree[K: Eq, A] private (
       children:  List[Node[IndexedElem[K, A]]],
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
-      (parentKey === idx.parentKey) match {
-        case true  =>
-          children.take(idx.childPos) ++ children.drop(idx.childPos + 1).map {
-            case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-              Node(IndexedElem(e, Index(pkey, pos - 1)), ch)
-          }
-        case false =>
-          children.map(node =>
-            Node(node.value, removeInChildren(idx)(node.children, getKey(node.value.elem).some))
-          )
-      }
+      if (parentKey === idx.parentKey)
+        children.take(idx.childPos) ++ children.drop(idx.childPos + 1).map {
+          case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
+            Node(IndexedElem(e, Index(pkey, pos - 1)), ch)
+        }
+      else
+        children.map(node =>
+          Node(node.value, removeInChildren(idx)(node.children, getKey(node.value.elem).some))
+        )
 
     byKey.get(key).fold(tree) { keyElemIndex =>
-      val idx = keyElemIndex.value.index
+      val idx: Index[K] = keyElemIndex.value.index
       Tree(removeInChildren(idx)(tree.children))
     }
   }
 
   def removed(key: K): KeyedIndexedTree[K, A] =
-    byKey.contains(key) match {
-      case true  =>
-        val newTree = removeInTree(key)
-        KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
-      case false => this
-    }
+    if (byKey.contains(key)) {
+      val newTree: Tree[IndexedElem[K, A]] = removeInTree(key)
+      KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
+    } else this
 
   def inserted(key: K, node: Node[A], idx: Index[K]): KeyedIndexedTree[K, A] = {
     def insertInChildren(
       children:  List[Node[IndexedElem[K, A]]],
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
-      (parentKey === idx.parentKey) match {
-        case true  =>
-          val fixedPos = idx.childPos match {
-            case i if i > children.length => children.length
-            case i if i < 0               => 0
-            case i                        => i
-          }
-          (children.take(fixedPos) :+
-            Node(IndexedElem(node.value, Index(parentKey, fixedPos)),
-                 indexedUniqueKeyChildren(node.children, getKey, key.some, byKey.keySet + key)
-            )) ++
-            children
-              .drop(fixedPos)
-              .map {
-                case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-                  Node(IndexedElem(e, Index(pkey, pos + 1)), ch)
-              }
-        case false =>
-          children.map(node =>
-            Node(node.value, insertInChildren(node.children, getKey(node.value.elem).some))
-          )
-      }
+      if (parentKey === idx.parentKey) {
+        val fixedPos: Int = idx.childPos match {
+          case i if i > children.length => children.length
+          case i if i < 0               => 0
+          case i                        => i
+        }
+        (children.take(fixedPos) :+
+          Node(IndexedElem(node.value, Index(parentKey, fixedPos)),
+               indexedUniqueKeyChildren(node.children, getKey, key.some, byKey.keySet + key)
+          )) ++
+          children
+            .drop(fixedPos)
+            .map {
+              case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
+                Node(IndexedElem(e, Index(pkey, pos + 1)), ch)
+            }
+      } else
+        children.map(node =>
+          Node(node.value, insertInChildren(node.children, getKey(node.value.elem).some))
+        )
 
-    val cleanTree = removeInTree(key)
-    val newTree   = Tree(insertInChildren(cleanTree.children))
+    val cleanTree: Tree[IndexedElem[K, A]] = removeInTree(key)
+    val newTree: Tree[IndexedElem[K, A]]   = Tree(insertInChildren(cleanTree.children))
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
 
@@ -113,12 +107,12 @@ object KeyedIndexedTree {
     parentKey: Option[K] = None,
     accumKeys: Set[K] = HashSet.empty[K]
   ): List[Node[IndexedElem[K, A]]] = {
-    val keyedNewNodes =
+    val keyedNewNodes: List[(K, Node[A])] =
       children
         .map(node => (getKey(node.value), node))
         .distinctBy(_._1) // key
         .filterNot((accumKeys.contains _).compose(_._1))
-    val newAccumKeys = accumKeys ++ keyedNewNodes.map(_._1)
+    val newAccumKeys: Set[K] = accumKeys ++ keyedNewNodes.map(_._1)
     keyedNewNodes.zipWithIndex.foldLeft(
       List.empty[Node[IndexedElem[K, A]]]
     ) {
@@ -145,9 +139,7 @@ object KeyedIndexedTree {
   }
 
   def fromTree[K: Eq, A](tree: Tree[A], getKey: A => K): KeyedIndexedTree[K, A] = {
-    // Although not stack safe, requires stack space proportional to the depth of the tree.
-
-    val indexedTree = Tree(indexedUniqueKeyChildren(tree.children, getKey))
+    val indexedTree: Tree[IndexedElem[K, A]] = Tree(indexedUniqueKeyChildren(tree.children, getKey))
     KeyedIndexedTree(buildKeyMap(indexedTree, getKey), indexedTree)(getKey)
   }
 }

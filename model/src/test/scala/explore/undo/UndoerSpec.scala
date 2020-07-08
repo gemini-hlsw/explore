@@ -9,12 +9,9 @@ import cats.implicits._
 import cats.kernel.Eq
 import explore.data.tree._
 import explore.undo._
-import monocle.Iso
 import monocle.Lens
-import monocle.Setter
 import monocle.function.all._
 import monocle.macros.GenLens
-import monocle.macros.Lenses
 import explore.data.KeyedIndexedList
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
@@ -121,29 +118,29 @@ class UndoerSpec extends munit.FunSuite {
       undoable <- TestUndoable(model)
       _        <- undoable.mod(vListMod.pos.withKey(3), vListMod.pos.set(8))
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
+                  )
       _        <- model.update(externalVListSetS(3).set("three")) // External modification, before undo
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
+                  )
       _        <- undoable.undo
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(3, "three"), V(4, "4"), V(5, "5")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(3, "three"), V(4, "4"), V(5, "5")))
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
+                  )
       _        <- undoable.undo
       _        <- model.update(externalVListSetS(3).set("tres")) // External modification, before redo
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(3, "tres"), V(4, "4"), V(5, "5")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(3, "tres"), V(4, "4"), V(5, "5")))
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "tres")))
-           )
+                    assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "tres")))
+                  )
     } yield ()).unsafeToFuture()
   }
 
@@ -160,143 +157,143 @@ class UndoerSpec extends munit.FunSuite {
   test("TreeModPosUndoRedo") {
     (for {
       model    <- Ref[IO].of(
-                 kiIntTree(
-                   Tree(
-                     Node(1, Node(2), Node(3)),
-                     Node(4, Node(5))
-                   )
-                 )
-               )
+                    kiIntTree(
+                      Tree(
+                        Node(1, Node(2), Node(3)),
+                        Node(4, Node(5))
+                      )
+                    )
+                  )
       undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.pos.withKey(3), treeIntMod.pos.set(Index(4.some, 1)))
       _        <- undoable.get.map(v =>
-             assertEquals(
-               v,
-               kiIntTree(
-                 Tree(
-                   Node(1, Node(2)),
-                   Node(4, Node(5), Node(3))
-                 )
-               )
-             )
-           )
+                    assertEquals(
+                      v,
+                      kiIntTree(
+                        Tree(
+                          Node(1, Node(2)),
+                          Node(4, Node(5), Node(3))
+                        )
+                      )
+                    )
+                  )
       _        <- undoable.undo
       _        <- undoable.get.map(v =>
-             assertEquals(
-               v,
-               kiIntTree(
-                 Tree(
-                   Node(1, Node(2), Node(3)),
-                   Node(4, Node(5))
-                 )
-               )
-             )
-           )
+                    assertEquals(
+                      v,
+                      kiIntTree(
+                        Tree(
+                          Node(1, Node(2), Node(3)),
+                          Node(4, Node(5))
+                        )
+                      )
+                    )
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2)),
-                              Node(4, Node(5), Node(3))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2)),
+                                     Node(4, Node(5), Node(3))
+                                   )
+                                 )
+                    )
+                  )
     } yield ()).unsafeToFuture()
   }
 
   test("TreeDeleteUndoRedo") {
     (for {
       model    <- Ref[IO].of(
-                 kiIntTree(
-                   Tree(
-                     Node(1, Node(2), Node(3)),
-                     Node(4, Node(5))
-                   )
-                 )
-               )
+                    kiIntTree(
+                      Tree(
+                        Node(1, Node(2), Node(3)),
+                        Node(4, Node(5))
+                      )
+                    )
+                  )
       undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.withKey(3), treeIntMod.delete)
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.undo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2), Node(3)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2), Node(3)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
     } yield ()).unsafeToFuture()
   }
 
   test("TreeInsertUndoRedo") {
     (for {
       model    <- Ref[IO].of(
-                 kiIntTree(
-                   Tree(
-                     Node(1, Node(2), Node(3)),
-                     Node(4, Node(5))
-                   )
-                 )
-               )
+                    kiIntTree(
+                      Tree(
+                        Node(1, Node(2), Node(3)),
+                        Node(4, Node(5))
+                      )
+                    )
+                  )
       undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.withKey(8), treeIntMod.upsert(8, Index(1.some, 8)))
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2), Node(3), Node(8)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2), Node(3), Node(8)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.undo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2), Node(3)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2), Node(3)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiIntTree(
-                            Tree(
-                              Node(1, Node(2), Node(3), Node(8)),
-                              Node(4, Node(5))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiIntTree(
+                                   Tree(
+                                     Node(1, Node(2), Node(3), Node(8)),
+                                     Node(4, Node(5))
+                                   )
+                                 )
+                    )
+                  )
     } yield ()).unsafeToFuture()
   }
 
@@ -316,82 +313,82 @@ class UndoerSpec extends munit.FunSuite {
   test("TreeObjModPosUndoRedo") {
     (for {
       model    <- Ref[IO].of(
-                 kiVTree(
-                   Tree(
-                     Node(V(1), Node(V(2)), Node(V(3))),
-                     Node(V(4), Node(V(5)))
-                   )
-                 )
-               )
+                    kiVTree(
+                      Tree(
+                        Node(V(1), Node(V(2)), Node(V(3))),
+                        Node(V(4), Node(V(5)))
+                      )
+                    )
+                  )
       undoable <- TestUndoable(model)
       _        <- undoable.mod(vTreeMod.pos.withKey(3), vTreeMod.pos.set(Index(4.some, 1)))
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiVTree(
-                            Tree(
-                              Node(V(1), Node(V(2))),
-                              Node(V(4), Node(V(5)), Node(V(3)))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiVTree(
+                                   Tree(
+                                     Node(V(1), Node(V(2))),
+                                     Node(V(4), Node(V(5)), Node(V(3)))
+                                   )
+                                 )
+                    )
+                  )
       _        <- model.update(externalVTreeSetS(3).set("three")) // External modification, before undo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiVTree(
-                            Tree(
-                              Node(V(1), Node(V(2))),
-                              Node(V(4), Node(V(5)), Node(V(3, "three")))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiVTree(
+                                   Tree(
+                                     Node(V(1), Node(V(2))),
+                                     Node(V(4), Node(V(5)), Node(V(3, "three")))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.undo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiVTree(
-                            Tree(
-                              Node(V(1), Node(V(2)), Node(V(3, "three"))),
-                              Node(V(4), Node(V(5)))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiVTree(
+                                   Tree(
+                                     Node(V(1), Node(V(2)), Node(V(3, "three"))),
+                                     Node(V(4), Node(V(5)))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.redo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiVTree(
-                            Tree(
-                              Node(V(1), Node(V(2))),
-                              Node(V(4), Node(V(5)), Node(V(3, "three")))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiVTree(
+                                   Tree(
+                                     Node(V(1), Node(V(2))),
+                                     Node(V(4), Node(V(5)), Node(V(3, "three")))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.undo
       _        <- model.update(externalVTreeSetS(3).set("tres")) // External modification, before undo
       _        <- undoable.get.map(v =>
-             assertEquals(v,
-                          kiVTree(
-                            Tree(
-                              Node(V(1), Node(V(2)), Node(V(3, "tres"))),
-                              Node(V(4), Node(V(5)))
-                            )
-                          )
-             )
-           )
+                    assertEquals(v,
+                                 kiVTree(
+                                   Tree(
+                                     Node(V(1), Node(V(2)), Node(V(3, "tres"))),
+                                     Node(V(4), Node(V(5)))
+                                   )
+                                 )
+                    )
+                  )
       _        <- undoable.redo
       _        <- undoable.get
-             .map(v =>
-               assertEquals(v,
-                            kiVTree(
-                              Tree(
-                                Node(V(1), Node(V(2))),
-                                Node(V(4), Node(V(5)), Node(V(3, "tres")))
-                              )
-                            )
-               )
-             )
+                    .map(v =>
+                      assertEquals(v,
+                                   kiVTree(
+                                     Tree(
+                                       Node(V(1), Node(V(2))),
+                                       Node(V(4), Node(V(5)), Node(V(3, "tres")))
+                                     )
+                                   )
+                      )
+                    )
     } yield ()).unsafeToFuture()
   }
 }

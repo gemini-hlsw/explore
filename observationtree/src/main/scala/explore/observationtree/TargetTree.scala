@@ -13,7 +13,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import mouse.boolean._
-import react.atlasKit.tree.{Tree => AtlasTree}
+import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.common.ReactProps
 import react.semanticui.elements.icon.Icon
 
