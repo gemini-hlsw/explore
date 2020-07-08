@@ -6,6 +6,7 @@ package explore.model.arb
 import java.util.UUID
 
 import explore.model.SiderealTarget
+import explore.model.arb.CogenUUID._
 import gsp.math.ProperMotion
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
@@ -24,7 +25,7 @@ trait ArbSiderealTarget {
   }
 
   implicit val siderealTargetCogen: Cogen[SiderealTarget] =
-    Cogen[(String, ProperMotion)].contramap(c => (c.name, c.track))
+    Cogen[(UUID, String, ProperMotion)].contramap(c => (c.id, c.name, c.track))
 }
 
 object ArbSiderealTarget extends ArbSiderealTarget
