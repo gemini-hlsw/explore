@@ -14,7 +14,6 @@ import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
 // import explore.model.reusability._
-import explore.model.show._
 import explore.target.TargetQueries._
 import gsp.math.Angle
 import gsp.math.Coordinates
@@ -34,11 +33,10 @@ import explore.model.TargetVisualOptions
 import monocle.macros.Lenses
 
 final case class TargetBody(
-  id:          SiderealTarget.Id,
-  target:      View[SiderealTarget],
-  constraints: Option[Constraints] = None,
-  options:     TargetVisualOptions,
-  optionsUpd:  TargetVisualOptions => Callback
+  id:         SiderealTarget.Id,
+  target:     View[SiderealTarget],
+  options:    TargetVisualOptions,
+  optionsUpd: TargetVisualOptions => Callback
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
 }

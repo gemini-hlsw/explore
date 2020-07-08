@@ -41,12 +41,7 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.id,
-                     target,
-                     props.constraints,
-                     state.options,
-                     $.setStateL(State.options)(_)
-          )
+          TargetBody(props.id, target, state.options, $.setStateL(State.options)(_))
         }
       }
   }
