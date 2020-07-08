@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.Show
 import cats.implicits._
 import crystal.react.implicits._
 import explore.AppCtx
@@ -12,11 +11,9 @@ import explore.components.ui.GPPStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
-import explore.model.Constraints
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
 import explore.model.reusability._
-import explore.model.show._
 import explore.target.TargetQueries._
 import gsp.math.Angle
 import gsp.math.Coordinates
@@ -33,9 +30,8 @@ import react.semanticui.collections.grid._
 import react.semanticui.widths._
 
 final case class TargetBody(
-  id:          SiderealTarget.Id,
-  target:      View[SiderealTarget],
-  constraints: Option[Constraints] = None
+  id:     SiderealTarget.Id,
+  target: View[SiderealTarget]
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
@@ -127,17 +123,6 @@ object TargetBody extends ModelOptics {
           val searchAndSet: String => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          def renderCond[A: Show](name: String, a: A): VdomNode =
-            <.div(s"$name: ${a.show}")
-
-          def renderConds(constraints: Constraints): VdomNode =
-            <.div(
-              renderCond("Image Quality", constraints.iq),
-              renderCond("Cloud Cover", constraints.cc),
-              renderCond("Water Vapor", constraints.wv),
-              renderCond("Sky Background", constraints.sb)
-            )
-
           <.div(
             ^.height := "100%",
             ^.width := "100%",
@@ -148,7 +133,6 @@ object TargetBody extends ModelOptics {
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CoordinatesForm(target, searchAndSet, gotoRaDec)
                     .withKey(coordinatesKey(target)),
-                  props.constraints.whenDefined(renderConds),
                   UndoButtons(target, undoCtx)
                 ),
                 GridColumn(stretched = true, computer = Nine)(

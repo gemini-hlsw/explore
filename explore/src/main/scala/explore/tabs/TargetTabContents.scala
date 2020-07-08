@@ -1,15 +1,12 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore
-
-import java.util.UUID
+package explore.tabs
 
 import cats.implicits._
 import crystal.react.implicits._
+import explore._
 import explore.components.ui.GPPStyles
-import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsQueries._
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model._
@@ -26,18 +23,16 @@ import react.gridlayout._
 import react.resizable._
 import react.sizeme._
 
-object TargetsComponent {
+object TargetTabContents {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "constraints")
+      LayoutItem(x = 0, y = 0, w = 12, h = 20, i = "target")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 7, i = "constraints")
+      LayoutItem(x = 0, y = 0, w = 12, h = 20, i = "target")
     )
   )
 
@@ -57,8 +52,6 @@ object TargetsComponent {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val constraintsId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
-
       val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
       val treeWidth  = state.treeWidth.toDouble
 
@@ -99,40 +92,29 @@ object TargetsComponent {
                 content = tree(targetsWithObs)
               ),
               <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
-                constraintsSubscription(constraintsId) {
-                  constraints =>
-                    ResponsiveReactGridLayout(
-                      width = coreWidth,
-                      margin = (5, 5),
-                      containerPadding = (5, 5),
-                      rowHeight = 30,
-                      draggableHandle = ".tileTitle",
-                      useCSSTransforms =
-                        false, // Not ideal, but fixes flicker on first update (0.18.3).
-                      // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                      layouts = layouts
-                    )(
-                      <.div(
-                        ^.key := "constraints",
-                        ^.cls := "tile",
-                        Tile("Constraints")(
-                          ConstraintsPanel(constraintsId, constraints)
-                        )
-                      ),
-                      <.div(
-                        ^.key := "target",
-                        ^.cls := "tile",
-                        Tile("Target Position")(
-                          <.span(
-                            targetIdOpt.whenDefined(targetId =>
-                              TargetEditor(targetId, constraints.get.some)
-                                .withKey(targetId.toString)
-                            )
-                          )
+                ResponsiveReactGridLayout(
+                  width = coreWidth,
+                  margin = (5, 5),
+                  containerPadding = (5, 5),
+                  rowHeight = 30,
+                  draggableHandle = ".tileTitle",
+                  useCSSTransforms =
+                    false, // Not ideal, but fixes flicker on first update (0.18.3).
+                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                  layouts = layouts
+                )(
+                  <.div(
+                    ^.key := "target",
+                    ^.cls := "tile",
+                    Tile("Target Position")(
+                      <.span(
+                        targetIdOpt.whenDefined(targetId =>
+                          TargetEditor(targetId).withKey(targetId.toString)
                         )
                       )
                     )
-                }
+                  )
+                )
               )
             )
           }

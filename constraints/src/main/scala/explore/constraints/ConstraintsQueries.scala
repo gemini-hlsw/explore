@@ -151,7 +151,7 @@ object ConstraintsQueries {
         .void
     )
 
-  def constraintsSubscription(
+  def ConstraintsSubscription(
     id:     Constraints.Id
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     AppCtx.withCtx { implicit appCtx =>

@@ -7,7 +7,6 @@ import cats.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
-import explore.model.Constraints
 import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.target.TargetQueries._
@@ -17,8 +16,7 @@ import monocle.function.Cons.headOption
 import react.common._
 
 final case class TargetEditor(
-  id:          SiderealTarget.Id,
-  constraints: Option[Constraints] = None
+  id: SiderealTarget.Id
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -36,7 +34,7 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.id, target, props.constraints)
+          TargetBody(props.id, target)
         }
       }
   }

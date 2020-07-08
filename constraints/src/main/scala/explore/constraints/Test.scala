@@ -22,7 +22,7 @@ object Test extends AppMain {
   private val constraintsId = UUID.fromString("608c8407-63a5-4d26-970c-587486af57da")
 
   override protected def rootComponent(view: View[RootModel]): VdomElement =
-    constraintsSubscription(constraintsId) { constraints =>
+    ConstraintsSubscription(constraintsId) { constraints =>
       ConstraintsPanel(constraintsId, constraints)
     }
 
