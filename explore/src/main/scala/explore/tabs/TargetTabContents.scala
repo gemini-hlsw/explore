@@ -19,31 +19,10 @@ import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.draggable.Axis
-import react.gridlayout._
 import react.resizable._
 import react.sizeme._
 
 object TargetTabContents {
-  private val layoutLg: Layout = Layout(
-    List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 20, i = "target")
-    )
-  )
-
-  private val layoutMd: Layout = Layout(
-    List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 20, i = "target")
-    )
-  )
-
-  private val layouts: Map[BreakpointName, (JsNumber, JsNumber, Layout)] =
-    Map(
-      (BreakpointName.lg, (1200, 12, layoutLg)),
-      (BreakpointName.md, (996, 10, layoutMd))
-      // (BreakpointName.sm, (768, 8, layout)),
-      // (BreakpointName.xs, (480, 6, layout))
-    )
-
   type Props = View[Option[Focused]]
 
   final case class State(treeWidth: JsNumber)
@@ -75,10 +54,9 @@ object TargetTabContents {
         }.flatten
 
         <.div(
-          GPPStyles.RGLArea,
+          GPPStyles.SinglePanelArea,
           SizeMe() { s =>
             val coreWidth = s.width.toDouble - treeWidth
-
             <.div(
               GPPStyles.TreeRGL,
               Resizable(
@@ -91,30 +69,19 @@ object TargetTabContents {
                 resizeHandles = List(ResizeHandleAxis.East),
                 content = tree(targetsWithObs)
               ),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
-                ResponsiveReactGridLayout(
-                  width = coreWidth,
-                  margin = (5, 5),
-                  containerPadding = (5, 5),
-                  rowHeight = 30,
-                  draggableHandle = ".tileTitle",
-                  useCSSTransforms =
-                    false, // Not ideal, but fixes flicker on first update (0.18.3).
-                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                  layouts = layouts
-                )(
-                  <.div(
-                    ^.key := "target",
-                    ^.cls := "tile",
-                    Tile("Target Position")(
-                      <.span(
-                        targetIdOpt.whenDefined(targetId =>
-                          TargetEditor(targetId).withKey(targetId.toString)
-                        )
-                      )
+              <.div(
+                GPPStyles.SinglePanelTile,
+                ^.width := coreWidth.px,
+                ^.left := treeWidth.px,
+                Tile("Target Position", movable = false)(
+                  <.span(
+                    targetIdOpt.whenDefined(targetId =>
+                      TargetEditor(targetId).withKey(targetId.toString)
                     )
                   )
                 )
+                // )
+                // )
               )
             )
           }

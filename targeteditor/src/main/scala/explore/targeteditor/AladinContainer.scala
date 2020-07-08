@@ -44,6 +44,7 @@ object AladinContainer {
     ): Callback =
       $.props |> { (p: Props) =>
         val options  = p.options
+        println("render")
         println(pixelScale)
         // Delete any viz previously rendered
         val previous = Option(div.querySelector(".aladin-visualization"))
@@ -76,6 +77,7 @@ object AladinContainer {
       println(v.getParentDiv().classList)
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
       println(size.width)
+      println(v.pixelScale)
       val div  = v.getParentDiv()
       renderVisualization(div, size, v.pixelScale)
     }

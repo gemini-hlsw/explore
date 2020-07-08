@@ -9,10 +9,13 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.collections.menu._
 
-final case class Tile(title: String) extends ReactPropsWithChildren[Tile](Tile.component)
+final case class Tile(title: String, movable: Boolean)
+    extends ReactPropsWithChildren[Tile](Tile.component)
 
 object Tile {
   type Props = Tile
+
+  implicit val propsReuse = Reusability.derive[Props]
 
   val component =
     ScalaComponent
@@ -21,17 +24,20 @@ object Tile {
       .render_PC { (p, c) =>
         <.div(
           Menu(
+            clazz = GPPStyles.GPPTileTitle,
             attached = MenuAttached.Top,
             compact = true,
             borderless = true,
+            secondary = true,
             tabular = MenuTabular.Right
           )(
-            MenuItem(as = "a")(Icons.Bars, p.title)
+            MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
           ),
           GPPStyles.GPPTile,
           c
         )
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

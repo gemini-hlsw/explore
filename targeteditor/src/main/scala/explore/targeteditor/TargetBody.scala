@@ -129,22 +129,21 @@ object TargetBody extends ModelOptics {
             println("outer")
             println(s.width)
             <.div(
-              ^.height := 100.pct,
+              ^.height := 90.pct,
               ^.width := 100.pct,
               Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
-                ^.height := "100%",
+                ^.height := "60%",
                 GridRow(stretched = true)(
                   GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                     CoordinatesForm(target, searchAndSet, gotoRaDec)
                       .withKey(coordinatesKey(target)),
                     UndoButtons(target, undoCtx)
                   ),
-                  GridColumn(stretched = true, computer = Nine)(
+                  GridColumn(stretched = true, computer = Eight)(
                     AladinContainer(s, props.aladinCoords, props.options.get)
                   ),
-                  GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
+                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                     CataloguesForm(props.options)
-                    // o => bs.setStateL(State.options)(o) *> props.optionsUpd(o)
                   )
                 )
               )
