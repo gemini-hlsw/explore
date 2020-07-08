@@ -41,6 +41,8 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import TargetObsQueries._
+import explore.model.ObsSummary
+import explore.model.TargetSummary
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
@@ -54,7 +56,7 @@ object TargetObsList {
   case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
 
   val obsListMod    =
-    new KIListMod[IO, ExploreObservation, ExploreObservation.Id](ExploreObservation.id)
+    new KIListMod[IO, ObsSummary, ExploreObservation.Id](ObsSummary.id)
   val targetListMod = new KIListMod[IO, SiderealTarget, SiderealTarget.Id](SiderealTarget.id)
 
   class Backend($ : BackendScope[Props, State]) {
@@ -62,12 +64,17 @@ object TargetObsList {
     private def getTargetForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
     ): Getter[TargetsWithObs, Option[SiderealTarget]] =
-      TargetsWithObs.obs
-        .composeGetter(
-          obsWithIndexGetter
-            .composeOptionLens(first)
-            .composeOptionLens(ExploreObservation.target)
-        )
+      Getter { two =>
+        val targetSummary =
+          TargetsWithObs.obs
+            .composeGetter(
+              obsWithIndexGetter
+                .composeOptionLens(first)
+                .composeOptionLens(ObsSummary.target)
+            )
+            .get(two)
+        targetSummary.flatMap(ts => two.targets.getElement(ts.id))
+      }
 
     private def setTargetForObsWithId(
       targetsWithObs:     View[TargetsWithObs],
@@ -81,8 +88,8 @@ object TargetObsList {
           .mod(
             obsWithIndexSetter
               .composeOptionLens(first)
-              .composeOptionLens(ExploreObservation.target)
-              .set(targetOpt)
+              .composeOptionLens(ObsSummary.target)
+              .set(targetOpt.map(TargetSummary.fromTarget))
           ) >>
           // 2) Send mutation
           mutateObs(obsId, ObsMutation.Fields(target_id = targetOpt.map(_.id)))
@@ -213,7 +220,7 @@ object TargetObsList {
       GPPStyles.DraggingOver.when(isDragging)
 
     def render(props: Props, state: State): VdomElement = {
-      val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target)
+      val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target.id)
 
       <.div(GPPStyles.ObsTree)(
         UndoRegion[TargetsWithObs] { undoCtx =>
@@ -223,7 +230,7 @@ object TargetObsList {
                 target =>
                   val targetId = target.id
 
-                  val targetObs = obsByTarget.getOrElse(target, List.empty)
+                  val targetObs = obsByTarget.getOrElse(targetId, List.empty)
                   val obsCount  = targetObs.length
 
                   val opIcon =

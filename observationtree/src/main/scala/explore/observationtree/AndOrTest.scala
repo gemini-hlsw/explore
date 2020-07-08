@@ -27,6 +27,7 @@ import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
 import explore.model.Constraints
 import explore.model.enum._
+import explore.model.ObsSummary
 
 object AndOrTest {
   private def randomElement[A](list: List[A]): A =
@@ -89,7 +90,7 @@ object AndOrTest {
 
   def renderObs(obs: ExploreObservation, dragIcon: VdomNode): VdomNode =
     wrap(^.width := "200px", ^.margin := "5px")(
-      ObsBadge(obs, ObsBadge.Layout.NameAndConf),
+      ObsBadge(ObsSummary.fromObs(obs), ObsBadge.Layout.NameAndConf),
       <.div(^.textAlign.right, dragIcon)
     )
 

@@ -75,7 +75,7 @@ object decoders {
       } yield Constraints(id, name, cc, iq, sb, wv)
   }
 
-  def obsDecoder(target: SiderealTarget) =
+  def obsDecoderForTarget(target: SiderealTarget) =
     new Decoder[ExploreObservation] {
       final def apply(c: HCursor): Decoder.Result[ExploreObservation] =
         for {

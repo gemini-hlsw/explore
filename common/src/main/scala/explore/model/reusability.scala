@@ -35,4 +35,7 @@ object reusability {
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
   implicit def idListReuse[Id: Reusability, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
+  implicit def targetSummaryReuse: Reusability[TargetSummary]                                     = Reusability.derive
+  implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
+  implicit def obsSummaryReuse: Reusability[ObsSummary]                                           = Reusability.derive
 }

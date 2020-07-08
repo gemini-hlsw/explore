@@ -11,9 +11,9 @@ import cats.kernel.Eq
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.
 case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, Int)]) {
-  def getElemAndIndex(id: K): Option[(A, Int)] = list.get(id)
-  def getElement(id:      K): Option[A]        = list.get(id).map(_._1)
-  def getIndex(id:        K): Option[Int]      = list.get(id).map(_._2)
+  def getElemAndIndex(key: K): Option[(A, Int)] = list.get(key)
+  def getElement(key:      K): Option[A]        = list.get(key).map(_._1)
+  def getIndex(key:        K): Option[Int]      = list.get(key).map(_._2)
 
   def elements: Iterable[A] = list.values.map(_._1)
 
@@ -28,8 +28,8 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
           list
             .removed(key)
             .map(_ match {
-              case (id, (a, i)) if i < idx => (id, (a, i))
-              case (id, (a, i)) if i > idx => (id, (a, i - 1))
+              case (key, (a, i)) if i < idx => (key, (a, i))
+              case (key, (a, i)) if i > idx => (key, (a, i - 1))
             })
         )
       )
