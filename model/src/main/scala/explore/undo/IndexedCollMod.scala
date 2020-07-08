@@ -4,76 +4,87 @@
 package explore.undo
 
 import cats.implicits._
+import explore.optics.Adjuster
+import explore.optics.GetAdjust
 import monocle._
+import monocle.function.Field1.first
+import monocle.std.option.some
 import mouse.boolean._
 
-trait IndexedCollMod[F[_], Coll[_], Idx, A, N[_], Id] { // N = Type of internal Node containing A. Can be Id for just A.
-  protected val idLens: Lens[A, Id]
+trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node containing A. Can be Id for just A.
+  protected val keyLens: Lens[A, K]
 
   protected val valueLens: Lens[N[A], A]
   protected val pureNode: A => N[A]
 
   type ElemWithIndex = Option[(N[A], Idx)]
   type Operation     = ElemWithIndex => ElemWithIndex
+  type Collection    = Coll[K, A]
 
-  protected def getterForId(id: Id): Getter[Coll[A], ElemWithIndex]
+  protected lazy val elemWithIndexKey: Optional[ElemWithIndex, K] =
+    some.composeLens(first[(N[A], Idx), N[A]]).composeLens(valueLens).composeLens(keyLens)
 
-  def removeWithIdx(col: Coll[A], idx: Idx): Coll[A]
+  protected def getterForKey(key: K): Getter[Collection, ElemWithIndex]
 
-  def insertWithIdx(col: Coll[A], idx: Idx, node: N[A]): Coll[A]
+  def removeWithKey(col: Collection, key: K): Collection
 
-  protected def setterForId(
-    getter:   Getter[Coll[A], ElemWithIndex],
+  def insertWithIdx(col: Collection, idx: Idx, node: N[A]): Collection
+
+  protected def adjusterForKey(
+    key:      K,
+    getter:   Getter[Collection, ElemWithIndex],
     preserve: Boolean // If true, won't modify an existing element, just its location. Deletion is still possible.
-  ): Setter[Coll[A], ElemWithIndex] =
-    Setter[Coll[A], ElemWithIndex] { mod => coll =>
-      val oldElemAndIndex     = getter.get(coll)
-      val (baseColl, oldElem) =
-        oldElemAndIndex
-          .fold((coll, none[N[A]])) {
-            case (elem, idx) =>
-              (removeWithIdx(coll, idx), elem.some)
-          }
-      val newElemAndIndex     = mod(oldElemAndIndex)
-      newElemAndIndex.fold(baseColl) {
+  ): Adjuster[Collection, ElemWithIndex] =
+    Adjuster[Collection, ElemWithIndex] { mod => coll =>
+      val oldElemAndIndex        = getter.get(coll)
+      val newElemAndIndex        = mod(oldElemAndIndex)
+      val newElemAndIndexWithKey = elemWithIndexKey.set(key)(newElemAndIndex) // Reinstate key
+
+      val baseColl = removeWithKey(coll, key)
+
+      newElemAndIndexWithKey.fold(baseColl) {
         case (newElem, idx) =>
-          insertWithIdx(baseColl, idx, preserve.fold(oldElem.getOrElse(newElem), newElem))
+          insertWithIdx(baseColl,
+                        idx,
+                        preserve.fold(oldElemAndIndex.map(_._1).getOrElse(newElem), newElem)
+          )
       }
     }
 
-  def withId(id: Id): GetSet[Coll[A], ElemWithIndex] = {
-    val getter = getterForId(id)
-    val setter = setterForId(getter, preserve = false)
-    GetSet(getter, setter)
+  def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
+    val getter   = getterForKey(key)
+    val adjuster = adjusterForKey(key, getter, preserve = false)
+    GetAdjust(getter, adjuster)
   }
 
   // Start Element Operations
-  // Id is reinstated (it can't be modified.)
+  // Key is reinstated (it can't be modified.)
   def mod(f: A => A): Operation =
     _.map {
       case (node, idx) =>
-        (valueLens.modify(value => idLens.set(idLens.get(value))(f(value)))(node), idx)
+        (valueLens.modify(value => keyLens.set(keyLens.get(value))(f(value)))(node), idx)
     }
 
-  // Id is reinstated (it can't be modified.)
+  // Key is reinstated (it can't be modified.)
   def set(a: A): Operation =
     mod(_ => a)
 
   val delete: Operation =
     _ => none
 
-  // If updating, Id is reinstated (it can't be modified.)
+  // If updating, key is reinstated (it can't be modified.)
   def upsert(a: A, idx: Idx): Operation =
     _.map {
-      case (node, _) => (valueLens.modify(value => idLens.set(idLens.get(value))(a))(node), idx)
+      case (node, _) => (valueLens.modify(value => keyLens.set(keyLens.get(value))(a))(node), idx)
     }.orElse((pureNode(a), idx).some)
+
   // End Element Operations
 
   object pos {
-    def withId(id: Id): GetSet[Coll[A], ElemWithIndex] = {
-      val getter = getterForId(id)
-      val setter = setterForId(getter, preserve = true)
-      GetSet(getter, setter)
+    def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
+      val getter   = getterForKey(key)
+      val adjuster = adjusterForKey(key, getter, preserve = true)
+      GetAdjust(getter, adjuster)
     }
 
     // Start Position Operations

@@ -18,8 +18,7 @@ object Test extends AppMain {
   override def rootComponent(view: View[RootModel]): VdomElement =
     // AndOrTest.render
     // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
-    // TargetObsList(TargetTreeTest.targets, ViewF(obs.get.unsafeRunSync(), obs.update))
-    targetObsSubscription(targetsWithObs =>
+    TargetObsSubscription(targetsWithObs =>
       <.div(^.width := "295px")(
         TargetObsList(
           targetsWithObs,

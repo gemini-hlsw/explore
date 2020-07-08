@@ -9,6 +9,7 @@ import cats.effect.concurrent.Ref
 import cats.implicits._
 import explore.undo.Undoer
 import monocle.macros.Lenses
+import explore.optics.GetAdjust
 
 @Lenses
 case class TestStacks[F[_], A](
@@ -41,14 +42,14 @@ object TestUndoer {
 class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M]) {
   def get: F[M] = model.get
 
-  def set[A](getSet: GetSet[M, A], value: A): F[Unit] =
+  def set[A](getSet: GetAdjust[M, A], value: A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx
       _ <- c.setter.set[A](m, getSet.get, (model.update _).compose(getSet.set))(value)
     } yield ()
 
-  def mod[A](getSet: GetSet[M, A], f: A => A): F[Unit] =
+  def mod[A](getSet: GetAdjust[M, A], f: A => A): F[Unit] =
     for {
       m <- model.get
       c <- undoer.ctx

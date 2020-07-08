@@ -36,8 +36,8 @@ object decoders {
       for {
         raStr <- c.as[String]
         ra    <- RightAscension.fromStringHMS
-                .getOption(raStr)
-                .toRight(DecodingFailure(s"Invalid RightAscension [$raStr]", List.empty))
+                   .getOption(raStr)
+                   .toRight(DecodingFailure(s"Invalid RightAscension [$raStr]", List.empty))
       } yield ra
   }
 
@@ -46,8 +46,8 @@ object decoders {
       for {
         decStr <- c.as[String]
         dec    <- Declination.fromStringSignedDMS
-                 .getOption(decStr)
-                 .toRight(DecodingFailure(s"Invalid Declination [$decStr]", List.empty))
+                    .getOption(decStr)
+                    .toRight(DecodingFailure(s"Invalid Declination [$decStr]", List.empty))
       } yield dec
   }
 

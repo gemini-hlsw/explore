@@ -75,10 +75,10 @@ object TargetsComponent {
           )
         )
 
-      targetObsSubscription { targetsWithObs =>
+      TargetObsSubscription { targetsWithObs =>
         val targetIdOpt = props.get.collect {
           case FocusedTarget(targetId) => targetId.some
-          case FocusedObs(obsId)       => targetsWithObs.get.obs.find(_.id === obsId).map(_.target.id)
+          case FocusedObs(obsId)       => targetsWithObs.get.obs.getElement(obsId).map(_.target.id)
         }.flatten
 
         <.div(

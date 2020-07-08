@@ -7,58 +7,57 @@ import scala.scalajs.js
 
 import cats.effect.IO
 import cats.implicits._
-import cats.kernel.Eq
 import crystal.react.ModState
 import crystal.react.implicits._
 import explore.components.undo.UndoRegion
+import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
 import explore.implicits._
-import explore.undo.TreeMod
+import explore.undo.KITreeMod
 import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
-import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.common.ReactProps
 import react.semanticui.elements.button.Button
 
 import js.JSConverters._
 
-final case class TreeComp[A, Id](
-  tree:              Tree[A],
-  getId:             A => Id,
-  idFromItemId:      AtlasTree.ItemId => Id,
-  treeMod:           TreeMod[IO, A, Id],
-  render:            AtlasTree.RenderItemParams[A] => VdomNode
-)(implicit val eqId: Eq[Id])
-    extends ReactProps[TreeComp[Any, Any]](TreeComp.component)
+final case class TreeComp[K, A](
+  tree:          KeyedIndexedTree[K, A],
+  keyToItemId:   K => AtlasTree.ItemId,
+  keyFromItemId: AtlasTree.ItemId => K,
+  treeMod:       KITreeMod[IO, A, K],
+  render:        AtlasTree.RenderItemParams[A] => VdomNode
+) extends ReactProps[TreeComp[Any, Any]](TreeComp.component)
 
 object TreeComp {
-  type Props[A, Id] = TreeComp[A, Id]
+  type Props[K, A] = TreeComp[K, A]
 
-  // Convert a (recursive) explore.data.Tree to a (flat) AtlasKit Tree Data.
-  private def treeToData[A, Id](
-    tree:         Tree[A],
-    getId:        A => String,
-    collapsedIds: Set[String]
+  // Convert a (recursive) KeyedIndexedTree to a (flat) AtlasKit Tree Data.
+  private def treeToData[K, A](
+    tree:             KeyedIndexedTree[K, A],
+    keyToItemId:      K => AtlasTree.ItemId,
+    collapsedItemIds: Set[AtlasTree.ItemId]
   ): AtlasTree.Data[A] = {
     def valueChildrenToData(
-      value:    Option[A],
-      children: List[Node[A]],
+      keyValue: Option[(K, A)],
+      children: List[Node[(K, A)]],
       accum:    List[(String, AtlasTree.Item[A])] = List.empty
     ): List[(String, AtlasTree.Item[A])] = {
-      val id = value.map(getId).getOrElse("")
+      val getKey: ((K, A)) => String = keyToItemId.compose((kv: (K, A)) => kv._1)
+      val key                        = keyValue.map(getKey).getOrElse("")
       children.foldLeft(
         accum :+
-          (id -> AtlasTree.Item[A](
-            id,
-            children.map(node => getId(node.value)),
+          (key -> AtlasTree.Item[A](
+            key,
+            children.map(node => getKey(node.value)),
             hasChildren = children.nonEmpty,
-            isExpanded = !collapsedIds.contains(id),
+            isExpanded = !collapsedItemIds.contains(key),
             isChildrenLoading = false,
-            value.orUndefined
+            keyValue.map(_._2).orUndefined
           ))
       ) {
         case (nodeAccum, node) => valueChildrenToData(node.value.some, node.children, nodeAccum)
@@ -67,84 +66,62 @@ object TreeComp {
 
     AtlasTree.Data(
       rootId = "",
-      items = valueChildrenToData(none, tree.children).toMap
+      items = valueChildrenToData(none, tree.asKeyedTree.children).toMap
     )
   }
 
-  // Given a tree index (Option[ParentId], ChildIndex), get the Option[Item] with that index.
-  // TODO Let's hava a tree where we can find a node by its index in constant time.
-  private def treeGet[A, Id: Eq](
-    tree:     Tree[A],
-    getId:    A => Id
-  )(parentId: Option[Id], index: Int): Option[Node[A]] = {
-    def go(value: Option[A], children: List[Node[A]]): Option[Node[A]] =
-      (value.map(getId) === parentId).fold(
-        children.get(index.toLong),
-        goChildren(children)
-      )
-
-    def goChildren(children: List[Node[A]]): Option[Node[A]] =
-      children match {
-        case Nil          => none
-        case head :: next => go(head.value.some, head.children).orElse(goChildren(next))
-      }
-
-    go(none, tree.children)
-  }
-
   @Lenses
-  final case class State[A](tree: Tree[A], collapsedIds: Set[AtlasTree.ItemId] = Set.empty)
+  final case class State[K, A](
+    tree:             KeyedIndexedTree[K, A],
+    collapsedItemIds: Set[AtlasTree.ItemId] = Set.empty
+  )
 
-  class Backend[A, Id]($ : BackendScope[Props[A, Id], State[A]]) {
+  class Backend[K, A]($ : BackendScope[Props[K, A], State[K, A]]) {
 
     // use onDragStart to get Item.id (instead of looking it up by position)
 
     val onCollapse =
       (itemId: AtlasTree.ItemId, _: AtlasTree.Path) =>
-        $.modStateL(State.collapsedIds[A])(_ + itemId)
+        $.modStateL(State.collapsedItemIds[K, A])(_ + itemId)
 
     val onExpand =
       (itemId: AtlasTree.ItemId, _: AtlasTree.Path) =>
-        $.modStateL(State.collapsedIds[A])(_ - itemId)
+        $.modStateL(State.collapsedItemIds[K, A])(_ - itemId)
 
     def onDragEnd(
-      tree:     Tree[A],
-      modState: ModState[IO, Tree[A]],
-      setter:   Undoer.Setter[IO, Tree[A]]
+      tree:     KeyedIndexedTree[K, A],
+      modState: ModState[IO, KeyedIndexedTree[K, A]],
+      setter:   Undoer.Setter[IO, KeyedIndexedTree[K, A]]
     )(source:   AtlasTree.Position, destination: Option[AtlasTree.Position]): Callback =
       $.props >>= { props =>
-        implicit val eqId = props.eqId
-
-        def pos2Index(pos: AtlasTree.Position): TreeMod.Index[Id] =
-          (pos.parentId.some.filterNot(_.isEmpty).map(props.idFromItemId), pos.index)
+        def pos2Index(pos: AtlasTree.Position): Index[K] =
+          Index(pos.parentId.some.filterNot(_.isEmpty).map(props.keyFromItemId), pos.index)
 
         (for {
-          dest <- destination
-          item <- (treeGet(tree, props.getId) _).tupled(
-                    pos2Index(source)
-                  )
+          dest      <- destination
+          keyedNode <- tree.getKeyedNodeByIdx(pos2Index(source))
         } yield {
 
           // println(s"Dragged Item: [$item]")
 
           val getSet   =
             props.treeMod.pos
-              .withId(props.getId(item.value))
-          val newValue = (item, pos2Index(dest))
+              .withKey(keyedNode._1)
+          val newValue = (keyedNode._2, pos2Index(dest))
           val modify   =
             setter
               .set(tree,
                    getSet.getter.get,
                    { value: props.treeMod.ElemWithIndex =>
-                     (modState.apply _).compose(getSet.setter.set)(value)
+                     (modState.apply _).compose(getSet.adjuster.set)(value)
                    }
               ) _
           modify(newValue.some).runInCB
         }).getOrEmpty
       }
 
-    def render(props: Props[A, Id], state: State[A]): VdomElement =
-      UndoRegion[Tree[A]] { undoCtx =>
+    def render(props: Props[K, A], state: State[K, A]): VdomElement =
+      UndoRegion[KeyedIndexedTree[K, A]] { undoCtx =>
         // println(state.tree)
 
         <.div(
@@ -155,7 +132,7 @@ object TreeComp {
             ^.overflow.auto // overflow.auto or overflow.scroll needed to drag'n'drop intermediate nodes
           )(
             AtlasTree[A](
-              tree = treeToData(state.tree, props.getId.andThen(_.toString), state.collapsedIds),
+              tree = treeToData(state.tree, props.keyToItemId, state.collapsedItemIds),
               renderItem = props.render,
               onCollapse = onCollapse,
               onExpand = onExpand,
@@ -179,10 +156,10 @@ object TreeComp {
       }
   }
 
-  def componentBuilder[A, Id] =
+  def componentBuilder[K, A] =
     ScalaComponent
-      .builder[Props[A, Id]]
-      .initialStateFromProps(props => State[A](props.tree))
+      .builder[Props[K, A]]
+      .initialStateFromProps(props => State(props.tree))
       .backend(new Backend(_))
       .renderBackend
       .build

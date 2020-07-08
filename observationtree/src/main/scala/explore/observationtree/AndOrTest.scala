@@ -16,7 +16,10 @@ import explore.data.tree._
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
-import explore.undo.TreeMod
+import explore.undo.KITreeMod
+import gsp.math.Coordinates
+import gsp.math.Epoch
+import gsp.math.ProperMotion
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import mouse.boolean._
@@ -34,7 +37,10 @@ object AndOrTest {
       UUID.randomUUID,
       ExploreObservation(
         UUID.randomUUID,
-        SiderealTarget(UUID.randomUUID, targetName, null),
+        SiderealTarget(UUID.randomUUID,
+                       targetName,
+                       ProperMotion(Coordinates.Zero, Epoch.J2000, none, none, none)
+        ),
         randomElement(ObsStatus.ObsStatusEnumerated.all),
         "GMOS-N R831 1x 300",
         "<0.8\" <0.3 mag Gray",
@@ -48,18 +54,21 @@ object AndOrTest {
   def and(andParams: String): ObsNode =
     ObsNode.And(UUID.randomUUID, andParams)
 
-  val initialTree: Tree[ObsNode] =
-    Tree(
-      Node(obs("NGC 1055")),
-      Node(obs("NGC 7752")),
-      Node(obs("NGC 1068")),
-      Node(or(""),
-           Node(obs("NGC 1087")),
-           Node(and(""), Node(obs("NGC 1087")), Node(obs("NGC 1087")))
-      )
+  val initialTree: KeyedIndexedTree[UUID, ObsNode] =
+    KeyedIndexedTree.fromTree(
+      Tree(
+        Node(obs("NGC 1055")),
+        Node(obs("NGC 7752")),
+        Node(obs("NGC 1068")),
+        Node(or(""),
+             Node(obs("NGC 1087")),
+             Node(and(""), Node(obs("NGC 1087")), Node(obs("NGC 1087")))
+        )
+      ),
+      ObsNode.id.get
     )
 
-  val obsTreeMod = new TreeMod[IO, ObsNode, UUID](ObsNode.id)
+  val obsTreeMod = new KITreeMod[IO, ObsNode, UUID](ObsNode.id)
 
   def wrap(divAttrs: TagMod*)(element: VdomNode, overlay: VdomNode): VdomNode =
     <.div(
@@ -91,7 +100,7 @@ object AndOrTest {
 
     val dragIcon = <.span(params.provided.dragHandleProps, ^.pointerEvents.all, Icon("sort"))
 
-    <.div(params.provided.innerRef, params.provided.draggableProps)(
+    <.div(params.provided.innerRef, params.provided.draggableProps, params.provided.draggableStyle)(
       params.item.data
         .map[VdomNode](_ match {
           case ObsNode.Obs(_, obs) => renderObs(obs, dragIcon)
@@ -105,5 +114,5 @@ object AndOrTest {
   }
 
   def render: VdomElement =
-    TreeComp[ObsNode, UUID](initialTree, ObsNode.id.get, UUID.fromString, obsTreeMod, renderItem)
+    TreeComp[UUID, ObsNode](initialTree, _.toString, UUID.fromString, obsTreeMod, renderItem)
 }
