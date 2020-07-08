@@ -53,7 +53,7 @@ object CataloguesForm {
       displayLens(TargetVisualOptions.probe)
   }
 
-  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.by(x => x.options)
+  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.by(_.options)
   implicit val stateReuse: Reusability[State]          = Reusability.derive
 
   // List of allowed angles, this would come from the model
@@ -75,8 +75,7 @@ object CataloguesForm {
     ScalaComponent
       .builder[Props]
       .initialStateFromProps(p => State(p.options))
-      .render { $ =>
-        println($.state)
+      .render($ =>
         Form(size = Mini)(
           FormDropdown(
             label = "Catalogues",
@@ -136,7 +135,7 @@ object CataloguesForm {
             }
           )
         )
-      }
+      )
       .configure(Reusability.shouldComponentUpdate)
       .build
 

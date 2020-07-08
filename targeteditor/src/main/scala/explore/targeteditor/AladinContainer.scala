@@ -40,10 +40,10 @@ object AladinContainer {
     def renderVisualization(
       div:        Element,
       size:       Size,
-      pixelScale: => PixelScale,
-      options:    TargetVisualOptions
+      pixelScale: => PixelScale
     ): Callback =
-      Callback {
+      $.props |> { (p: Props) =>
+        val options  = p.options
         // Delete any viz previously rendered
         val previous = Option(div.querySelector(".aladin-visualization"))
         previous.foreach(div.removeChild)
@@ -61,19 +61,20 @@ object AladinContainer {
         toggleVisibility(g, "#patrol-field", options.guiding)
         toggleVisibility(g, "#probe", options.probe)
         div.appendChild(g)
+        ()
       }
 
-    def includeSvg(options: TargetVisualOptions)(v: JsAladin): Unit = {
+    def includeSvg(v: JsAladin): Unit = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
       val div  = v.getParentDiv()
-      v.onZoomCB(renderVisualization(div, size, v.pixelScale, options))
+      v.onZoomCB(renderVisualization(div, size, v.pixelScale))
       ()
     }
 
-    def updateVisualization(options: TargetVisualOptions)(v: JsAladin): Callback = {
+    def updateVisualization(v: JsAladin): Callback = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
       val div  = v.getParentDiv()
-      renderVisualization(div, size, v.pixelScale, options)
+      renderVisualization(div, size, v.pixelScale)
     }
 
     def render(props: Props) =
@@ -88,16 +89,14 @@ object AladinContainer {
                    target = props.aladinCoordsStr,
                    fov = 0.25,
                    showGotoControl = false,
-                   customize = includeSvg(props.options) _
+                   customize = includeSvg _
             )
           }
         }
       )
 
     def recalculateView =
-      $.props >>= { p =>
-        ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization(p.options)))
-      }
+      ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
   }
 
   val component =

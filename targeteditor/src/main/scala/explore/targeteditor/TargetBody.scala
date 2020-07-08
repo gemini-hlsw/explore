@@ -13,7 +13,8 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
-import explore.model.reusability._
+// import explore.model.reusability._
+import explore.model.show._
 import explore.target.TargetQueries._
 import gsp.math.Angle
 import gsp.math.Coordinates
@@ -33,8 +34,11 @@ import explore.model.TargetVisualOptions
 import monocle.macros.Lenses
 
 final case class TargetBody(
-  id:     SiderealTarget.Id,
-  target: View[SiderealTarget]
+  id:          SiderealTarget.Id,
+  target:      View[SiderealTarget],
+  constraints: Option[Constraints] = None,
+  options:     TargetVisualOptions,
+  optionsUpd:  TargetVisualOptions => Callback
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
 }
@@ -42,7 +46,7 @@ final case class TargetBody(
 object TargetBody extends ModelOptics {
   type Props = TargetBody
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  // protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   @Lenses
   final case class State(options: TargetVisualOptions)
@@ -133,9 +137,8 @@ object TargetBody extends ModelOptics {
             searchAndGo(modify.andThen(_.runInCB))
 
           <.div(
-            ^.height := "100%",
-            ^.width := "100%",
-            ^.cls := "check",
+            ^.height := 100.pct,
+            ^.width := 100.pct,
             Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
               ^.height := "100%",
               GridRow(stretched = true)(
@@ -148,7 +151,9 @@ object TargetBody extends ModelOptics {
                   AladinContainer(props.aladinCoords, state.options)
                 ),
                 GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(TargetVisualOptions.Default, bs.setStateL(State.options)(_))
+                  CataloguesForm(props.options,
+                                 o => bs.setStateL(State.options)(o) *> props.optionsUpd(o)
+                  )
                 )
               )
             )
@@ -157,7 +162,6 @@ object TargetBody extends ModelOptics {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      // Callback.log(currentProps.toString()) *>
       aladinRef.get
         .flatMapCB { r =>
           val c = nextProps.aladinCoords

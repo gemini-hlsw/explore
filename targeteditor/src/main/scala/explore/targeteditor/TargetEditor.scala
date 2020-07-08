@@ -11,9 +11,12 @@ import explore.model.SiderealTarget
 import explore.model.reusability._
 import explore.target.TargetQueries._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
 import react.common._
+import explore.model.TargetVisualOptions
+import monocle.macros.Lenses
 
 final case class TargetEditor(
   id: SiderealTarget.Id
@@ -24,9 +27,13 @@ object TargetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  class Backend() {
-    def render(props: Props) =
+  @Lenses
+  final case class State(options: TargetVisualOptions)
+
+  class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props, state: State) =
       AppCtx.withCtx { implicit appCtx =>
+        // implicit val cs = appCtx.cs
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
           appCtx.clients.programs
             .subscribe(Subscription)(
@@ -34,7 +41,12 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.id, target)
+          TargetBody(props.id,
+                     target,
+                     props.constraints,
+                     state.options,
+                     $.setStateL(State.options)(_)
+          )
         }
       }
   }
@@ -42,8 +54,8 @@ object TargetEditor {
   val component =
     ScalaComponent
       .builder[Props]
-      .backend(_ => new Backend())
-      .renderBackend
+      .initialState(State(TargetVisualOptions.Default))
+      .renderBackend[Backend]
       .build
 
 }
