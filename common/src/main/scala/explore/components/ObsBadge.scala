@@ -4,16 +4,16 @@
 package explore.components
 
 import explore.components.ui.GPPStyles
-import explore.model.ExploreObservation
 import explore.model.reusability._
 import gem.util.Enumerated
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.views.card._
+import explore.model.ObsSummary
 
 final case class ObsBadge(
-  obs:      ExploreObservation,
+  obs:      ObsSummary,
   layout:   ObsBadge.Layout,
   selected: Boolean = false
 ) extends ReactProps[ObsBadge](ObsBadge.component)

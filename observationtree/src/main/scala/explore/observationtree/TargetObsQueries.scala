@@ -25,13 +25,14 @@ import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
+import explore.model.ObsSummary
 
 object TargetObsQueries {
 
-  case class TargetWithObs(target: SiderealTarget, obs: List[ExploreObservation])
+  case class TargetWithObs(target: SiderealTarget, obs: List[ObsSummary])
 
   type TargetList = KeyedIndexedList[SiderealTarget.Id, SiderealTarget]
-  type ObsList    = KeyedIndexedList[ExploreObservation.Id, ExploreObservation]
+  type ObsList    = KeyedIndexedList[ExploreObservation.Id, ObsSummary]
 
   @Lenses
   case class TargetsWithObs(targets: TargetList, obs: ObsList)
@@ -41,7 +42,7 @@ object TargetObsQueries {
       for {
         target  <- c.as[SiderealTarget]
         obsJson <- c.downField("observations").as[List[Json]].map(_.map(_.hcursor))
-        obsList <- obsJson.traverse(obsDecoder(target).apply)
+        obsList <- obsJson.traverse(ObsSummary.decoderForTarget(target).apply)
       } yield TargetWithObs(target, obsList)
   }
 
@@ -50,7 +51,7 @@ object TargetObsQueries {
       c.as[List[TargetWithObs]].map { targetsWithObs =>
         TargetsWithObs(
           KeyedIndexedList.fromList(targetsWithObs.map(_.target), SiderealTarget.id.get),
-          KeyedIndexedList.fromList(targetsWithObs.flatMap(_.obs), ExploreObservation.id.get)
+          KeyedIndexedList.fromList(targetsWithObs.flatMap(_.obs), ObsSummary.id.get)
         )
       }
   }
@@ -70,10 +71,6 @@ object TargetObsQueries {
             constraints {
               id
               name
-              cloud_cover
-              image_quality
-              sky_background
-              water_vapor
             }
             duration_seconds
           }
