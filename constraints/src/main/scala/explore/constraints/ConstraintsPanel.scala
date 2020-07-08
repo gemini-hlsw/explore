@@ -54,6 +54,9 @@ object ConstraintsPanel {
             <.div(
               Form(
                 FormGroup(widths = Two)(
+                  constraints.get.name
+                ),
+                FormGroup(widths = Two)(
                   selectEnum("Image Quality", Constraints.iq, iqFields),
                   selectEnum("Cloud Cover", Constraints.cc, ccFields)
                 ),

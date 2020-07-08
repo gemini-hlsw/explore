@@ -3,8 +3,6 @@
 
 package explore.tabs
 
-import java.util.UUID
-
 import crystal.react.implicits._
 import explore._
 import explore.components.ui.GPPStyles
@@ -81,8 +79,7 @@ object ObsTabContents {
             .flatten
             .whenDefined { obs =>
               val targetId      = obs.target.id
-              val constraintsId =
-                UUID.fromString("608c8407-63a5-4d26-970c-587486af57da") //obs.constraints.id
+              val constraintsId = obs.constraints.id
 
               <.div(
                 GPPStyles.RGLArea,
@@ -129,7 +126,7 @@ object ObsTabContents {
                             Tile("Constraints")(
                               ConstraintsSubscription(constraintsId) { constraints =>
                                 ConstraintsPanel(constraintsId, constraints)
-                              }
+                              }.withKey(constraintsId.toString)
                             )
                           )
                         )
