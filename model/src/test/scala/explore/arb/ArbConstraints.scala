@@ -26,8 +26,8 @@ trait ArbConstraints {
   }
 
   implicit val conditionsCogen: Cogen[Constraints] =
-    Cogen[(Constraints.Id, String, CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(c =>
-      (c.id, c.name, c.cc, c.iq, c.sb, c.wv)
+    Cogen[(Constraints.Id, String, CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(
+      c => (c.id, c.name, c.cc, c.iq, c.sb, c.wv)
     )
 
 }
