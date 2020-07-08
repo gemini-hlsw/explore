@@ -7,7 +7,6 @@ import java.util.UUID
 
 import scala.scalajs.js.annotation._
 
-import cats.implicits._
 import explore.AppMain
 import explore._
 import explore.model._
@@ -19,7 +18,7 @@ object Test extends AppMain {
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
     val id = UUID.fromString("9be5789c-3ffe-48cd-8e8e-24fe3e4067ee")
 
-    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(id, none))
+    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(id))
   }
 
 }

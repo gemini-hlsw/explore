@@ -1,12 +1,13 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore
+package explore.tabs
 
 import java.util.UUID
 
 import cats.implicits._
 import crystal.react.implicits._
+import explore._
 import explore.components.ui.GPPStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsQueries._
@@ -26,7 +27,7 @@ import react.gridlayout._
 import react.resizable._
 import react.sizeme._
 
-object TargetsComponent {
+object ObsTabContents {
   private val layoutLg: Layout = Layout(
     List(
       LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
@@ -99,40 +100,39 @@ object TargetsComponent {
                 content = tree(targetsWithObs)
               ),
               <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
-                constraintsSubscription(constraintsId) {
-                  constraints =>
-                    ResponsiveReactGridLayout(
-                      width = coreWidth,
-                      margin = (5, 5),
-                      containerPadding = (5, 5),
-                      rowHeight = 30,
-                      draggableHandle = ".tileTitle",
-                      useCSSTransforms =
-                        false, // Not ideal, but fixes flicker on first update (0.18.3).
-                      // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                      layouts = layouts
-                    )(
-                      <.div(
-                        ^.key := "constraints",
-                        ^.cls := "tile",
-                        Tile("Constraints")(
-                          ConstraintsPanel(constraintsId, constraints)
-                        )
-                      ),
-                      <.div(
-                        ^.key := "target",
-                        ^.cls := "tile",
-                        Tile("Target Position")(
-                          <.span(
-                            targetIdOpt.whenDefined(targetId =>
-                              TargetEditor(targetId, constraints.get.some)
-                                .withKey(targetId.toString)
-                            )
-                          )
+                ResponsiveReactGridLayout(
+                  width = coreWidth,
+                  margin = (5, 5),
+                  containerPadding = (5, 5),
+                  rowHeight = 30,
+                  draggableHandle = ".tileTitle",
+                  useCSSTransforms =
+                    false, // Not ideal, but fixes flicker on first update (0.18.3).
+                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                  layouts = layouts
+                )(
+                  <.div(
+                    ^.key := "target",
+                    ^.cls := "tile",
+                    Tile("Target Position")(
+                      <.span(
+                        targetIdOpt.whenDefined(targetId =>
+                          TargetEditor(targetId)
+                            .withKey(targetId.toString)
                         )
                       )
                     )
-                }
+                  ),
+                  <.div(
+                    ^.key := "constraints",
+                    ^.cls := "tile",
+                    Tile("Constraints")(
+                      ConstraintsSubscription(constraintsId) { constraints =>
+                        ConstraintsPanel(constraintsId, constraints)
+                      }
+                    )
+                  )
+                )
               )
             )
           }

@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
+import explore.tabs._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
@@ -37,16 +38,20 @@ object Routing {
 
       (emptyRule
         | staticRoute(root, HomePage) ~> render(UnderConstruction())
-        | staticRoute("/observations", ObservationsBasePage) ~> render(UnderConstruction())
-        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> render(UnderConstruction())
+        | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
+          ObsTabContents(view.zoom(RootModel.focused))
+        )
+        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> renderP(view =>
+          ObsTabContents(view.zoom(RootModel.focused))
+        )
         | staticRoute("/targets", TargetsBasePage) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focused))
+          TargetTabContents(view.zoom(RootModel.focused))
         )
         | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focused))
+          TargetTabContents(view.zoom(RootModel.focused))
         )
         | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
-          TargetsComponent(view.zoom(RootModel.focused))
+          TargetTabContents(view.zoom(RootModel.focused))
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))

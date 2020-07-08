@@ -23,7 +23,7 @@ import gsp.math.ProperMotion
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import mouse.boolean._
-import react.atlasKit.tree.{ Tree => AtlasTree }
+import react.atlasKit.tree.{Tree => AtlasTree}
 import react.semanticui.elements.icon.Icon
 
 object AndOrTest {
