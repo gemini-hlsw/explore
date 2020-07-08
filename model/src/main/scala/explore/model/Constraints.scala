@@ -12,48 +12,21 @@ import monocle.macros.Lenses
 
 @Lenses
 final case class Constraints(
-  cc: CloudCover,
-  iq: ImageQuality,
-  sb: SkyBackground,
-  wv: WaterVapor
+  id:   Constraints.Id,
+  name: String,
+  cc:   CloudCover,
+  iq:   ImageQuality,
+  sb:   SkyBackground,
+  wv:   WaterVapor
 )
 
 object Constraints {
   type Id = UUID
 
-  val Worst: Constraints =
-    Constraints(
-      CloudCover.Any,
-      ImageQuality.Any,
-      SkyBackground.Any,
-      WaterVapor.Any
-    )
-
-  val Nominal: Constraints =
-    Constraints(
-      CloudCover.Percent50,
-      ImageQuality.Percent70,
-      SkyBackground.Percent50,
-      WaterVapor.Any
-    )
-
-  val Best: Constraints =
-    Constraints(
-      // In the ODB model it's 20% but that value it's marked as obsolete
-      // so I took the non-obsolete lowest value.
-      CloudCover.Percent50,
-      ImageQuality.Percent20,
-      SkyBackground.Percent20,
-      WaterVapor.Percent20
-    )
-
-  val Default: Constraints =
-    Worst // Taken from ODB
-
   implicit val equalConstraints: Eq[Constraints] =
-    Eq.by(x => (x.cc, x.iq, x.sb, x.wv))
+    Eq.by(x => (x.id, x.name, x.cc, x.iq, x.sb, x.wv))
 
   implicit val showConstraints: Show[Constraints] =
-    Show.show(x => List(x.cc, x.iq, x.sb, x.wv).mkString(", "))
+    Show.show(x => s"$name (${List(x.cc, x.iq, x.sb, x.wv).mkString(", ")}")
 
 }

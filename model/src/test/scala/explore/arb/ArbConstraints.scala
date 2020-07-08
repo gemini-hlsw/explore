@@ -5,6 +5,7 @@ package explore.model.arb
 
 import explore.model.Constraints
 import explore.model.enum._
+import explore.model.arb.CogenUUID._
 import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
@@ -15,16 +16,18 @@ trait ArbConstraints {
 
   implicit val conditionsArb = Arbitrary[Constraints] {
     for {
+      id <- arbitrary[Constraints.Id]
+      nm <- arbitrary[String]
       cc <- arbitrary[CloudCover]
       iq <- arbitrary[ImageQuality]
       sb <- arbitrary[SkyBackground]
       wv <- arbitrary[WaterVapor]
-    } yield Constraints(cc, iq, sb, wv)
+    } yield Constraints(id, nm, cc, iq, sb, wv)
   }
 
   implicit val conditionsCogen: Cogen[Constraints] =
-    Cogen[(CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(c =>
-      (c.cc, c.iq, c.sb, c.wv)
+    Cogen[(Constraints.Id, String, CloudCover, ImageQuality, SkyBackground, WaterVapor)].contramap(
+      c => (c.id, c.name, c.cc, c.iq, c.sb, c.wv)
     )
 
 }

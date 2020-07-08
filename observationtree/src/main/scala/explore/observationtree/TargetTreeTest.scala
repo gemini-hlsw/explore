@@ -15,6 +15,8 @@ import gsp.math.Declination
 import gsp.math.Epoch
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
+import explore.model.Constraints
+import explore.model.enum._
 
 object TargetTreeTest {
 
@@ -49,10 +51,22 @@ object TargetTreeTest {
     ngc1087
   )
 
+  def constraints(name: String): Constraints =
+    Constraints(UUID.randomUUID,
+                name,
+                CloudCover.Any,
+                ImageQuality.Any,
+                SkyBackground.Any,
+                WaterVapor.Any
+    )
+
+  val constraints1 = constraints("<0.8\" <0.3 mag Gray")
+  val constraints2 = constraints("<0.7\" <0.3 mag Bright")
+
   def observation(
     target:      SiderealTarget,
     conf:        String,
-    constraints: String,
+    constraints: Constraints,
     duration:    Duration
   ): ExploreObservation =
     ExploreObservation(
@@ -66,9 +80,9 @@ object TargetTreeTest {
 
   val observations: List[ExploreObservation] =
     List(
-      observation(ngc1055, "GMOS-N R831 1x300\"", "<0.8\" <0.3 mag Gray", Duration.ofHours(2)),
-      observation(ngc7752, "GMOS-N R831 1x300\"", "<0.8\" <0.3 mag Gray", Duration.ofMinutes(82)),
-      observation(ngc1068, "GMOS-N R831 1x300\"", "<0.8\" <0.3 mag Gray", Duration.ofMinutes(105)),
-      observation(ngc1068, "GNIRS SXD 0.60\"", "<0.7\" <0.3 mag Bright", Duration.ofMinutes(92))
+      observation(ngc1055, "GMOS-N R831 1x300\"", constraints1, Duration.ofHours(2)),
+      observation(ngc7752, "GMOS-N R831 1x300\"", constraints1, Duration.ofMinutes(82)),
+      observation(ngc1068, "GMOS-N R831 1x300\"", constraints1, Duration.ofMinutes(105)),
+      observation(ngc1068, "GNIRS SXD 0.60\"", constraints2, Duration.ofMinutes(92))
     )
 }
