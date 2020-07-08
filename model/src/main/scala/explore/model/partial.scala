@@ -77,4 +77,23 @@ object ObsSummary {
           duration
         )
     }
+
+  implicit val decoder = new Decoder[ObsSummary] {
+    final def apply(c: HCursor): Decoder.Result[ObsSummary] =
+      for {
+        id          <- c.downField("id").as[ExploreObservation.Id]
+        status      <- c.downField("status").as[ObsStatus]
+        target      <- c.downField("target").as[TargetSummary]
+        conf        <- c.downField("configuration").as[String]
+        constraints <- c.downField("constraints").as[ConstraintsSummary]
+        duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
+      } yield ObsSummary(
+        id,
+        target,
+        status,
+        conf,
+        constraints,
+        duration
+      )
+  }
 }
