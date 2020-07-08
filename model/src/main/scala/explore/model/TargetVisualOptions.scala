@@ -8,6 +8,7 @@ import cats.implicits._
 import monocle.macros.Lenses
 import explore.model.enum.Display
 import gsp.math.Angle
+import gsp.math.syntax.int._
 
 @Lenses
 final case class TargetVisualOptions(
@@ -19,12 +20,8 @@ final case class TargetVisualOptions(
 )
 
 object TargetVisualOptions {
-  val Default = TargetVisualOptions(Display.Hidden,
-                                    Display.Hidden,
-                                    Display.Hidden,
-                                    Display.Hidden,
-                                    Angle.Angle0
-  )
+  val Default =
+    TargetVisualOptions(Display.Hidden, Display.Hidden, Display.Hidden, Display.Hidden, 145.deg)
 
   implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] =
     Eq.by(x => (x.fov, x.offsets, x.guiding, x.probe, x.posAngle))

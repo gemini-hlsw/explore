@@ -16,6 +16,10 @@ import monocle.macros.Lenses
 import monocle.Lens
 import explore.model.enum.Display
 import react.semanticui.addons.select.Select
+import cats.data.NonEmptyList
+import gsp.math.Angle
+import scala.collection.SortedMap
+import react.semanticui.collections.form.FormDropdown.FormDropdownProps
 
 final case class CataloguesForm(
   options:          TargetVisualOptions,
@@ -33,6 +37,9 @@ object CataloguesForm {
     def displayLens(l: Lens[TargetVisualOptions, Display]): Lens[State, Boolean] =
       State.options ^|-> l ^<-> Display.boolReverseIso
 
+    val posAngle: Lens[State, Angle] =
+      State.options ^|-> TargetVisualOptions.posAngle
+
     val fov: Lens[State, Boolean] =
       displayLens(TargetVisualOptions.fov)
 
@@ -49,11 +56,27 @@ object CataloguesForm {
   implicit val propsReuse: Reusability[CataloguesForm] = Reusability.by(x => x.options)
   implicit val stateReuse: Reusability[State]          = Reusability.derive
 
+  // List of allowed angles, this would come from the model
+  val angles: NonEmptyList[Angle] = NonEmptyList.of(Angle.Angle0,
+                                                    Angle.Angle90,
+                                                    GmosGeometry.posAngle,
+                                                    Angle.Angle180,
+                                                    Angle.Angle270
+  )
+
+  val angleItemsMap: SortedMap[Angle, Select.SelectItem] = SortedMap.from(angles.map { a =>
+    val value = Angle.degrees.get(a)
+    a -> new Select.SelectItem(value = value, text = value.toString)
+  }.toList)(Angle.AngleOrder.toOrdering)
+
+  val angleItems = angleItemsMap.values
+
   val component =
     ScalaComponent
       .builder[Props]
       .initialStateFromProps(p => State(p.options))
-      .render($ =>
+      .render { $ =>
+        println($.state)
         Form(size = Mini)(
           FormDropdown(
             label = "Catalogues",
@@ -95,9 +118,25 @@ object CataloguesForm {
               $.setState(ns, $.props.updateOptions(ns.options))
             }
           ),
-          FormSelect(label = "Position Angle", options = List(new Select.SelectItem()))
+          FormSelect(
+            label = "Position Angle",
+            options = angleItems.toList,
+            value = Angle.degrees.get($.state.options.posAngle),
+            onChange = (p: FormDropdownProps) => {
+              angleItemsMap
+                .collectFirst {
+                  case (a, i) if i.value == p.value => a
+                }
+                .map { a =>
+                  val ns = State.posAngle.set(a)($.state)
+                  $.setState(ns, $.props.updateOptions(ns.options))
+                }
+                .getOrEmpty
+
+            }
+          )
         )
-      )
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 

@@ -49,7 +49,7 @@ object AladinContainer {
         previous.foreach(div.removeChild)
         val g        = document.createElement("div")
         g.classList.add("aladin-visualization")
-        visualization.geometryForAladin(GmosGeometry.shapes(GmosGeometry.posAngle),
+        visualization.geometryForAladin(GmosGeometry.shapes(options.posAngle),
                                         g,
                                         size,
                                         pixelScale,
