@@ -16,6 +16,7 @@ import gsp.math.RightAscension
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.HCursor
+import explore.model.enum._
 
 object decoders {
 
@@ -62,21 +63,33 @@ object decoders {
       } yield SiderealTarget(id, name, coords)
   }
 
+  implicit val constraintsDecoder = new Decoder[Constraints] {
+    final def apply(c: HCursor): Decoder.Result[Constraints] =
+      for {
+        id   <- c.downField("id").as[SiderealTarget.Id]
+        name <- c.downField("name").as[String]
+        cc   <- c.downField("cloud_cover").as[CloudCover]
+        iq   <- c.downField("image_quality").as[ImageQuality]
+        sb   <- c.downField("sky_background").as[SkyBackground]
+        wv   <- c.downField("water_vapor").as[WaterVapor]
+      } yield Constraints(id, name, cc, iq, sb, wv)
+  }
+
   def obsDecoder(target: SiderealTarget) =
     new Decoder[ExploreObservation] {
       final def apply(c: HCursor): Decoder.Result[ExploreObservation] =
         for {
-          id              <- c.downField("id").as[ExploreObservation.Id]
-          status          <- c.downField("status").as[ObsStatus]
-          conf            <- c.downField("configuration").as[String]
-          constraintsName <- c.downField("constraint").downField("name").as[String]
-          duration        <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
+          id          <- c.downField("id").as[ExploreObservation.Id]
+          status      <- c.downField("status").as[ObsStatus]
+          conf        <- c.downField("configuration").as[String]
+          constraints <- c.downField("constraints").as[Constraints]
+          duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
         } yield ExploreObservation(
           id,
           target,
           status,
           conf,
-          constraintsName,
+          constraints,
           duration
         )
     }

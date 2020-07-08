@@ -67,8 +67,13 @@ object TargetObsQueries {
             id
             status
             configuration
-            constraint {
+            constraints {
+              id
               name
+              cloud_cover
+              image_quality
+              sky_background
+              water_vapor
             }
             duration_seconds
           }

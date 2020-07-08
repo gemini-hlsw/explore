@@ -25,11 +25,22 @@ import japgolly.scalajs.react.vdom.html_<^._
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
+import explore.model.Constraints
+import explore.model.enum._
 
 object AndOrTest {
   private def randomElement[A](list: List[A]): A =
     list(
       Random.between(0, list.length)
+    )
+
+  val constraints =
+    Constraints(UUID.randomUUID,
+                "<0.8\" <0.3 mag Gray",
+                CloudCover.Any,
+                ImageQuality.Any,
+                SkyBackground.Any,
+                WaterVapor.Any
     )
 
   def obs(targetName: String): ObsNode =
@@ -43,7 +54,7 @@ object AndOrTest {
         ),
         randomElement(ObsStatus.ObsStatusEnumerated.all),
         "GMOS-N R831 1x 300",
-        "<0.8\" <0.3 mag Gray",
+        constraints,
         Duration.of(Random.between(30L, 200L), MINUTES)
       )
     )

@@ -12,6 +12,7 @@ import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.Constraints
+import explore.model.decoders._
 import explore.model.enum.CloudCover
 import explore.model.enum.ImageQuality
 import explore.model.enum.SkyBackground
@@ -43,20 +44,13 @@ object ConstraintsQueries {
               .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
           )
     }
-  implicit val constraintsDecoder                     = new Decoder[Constraints] {
-    final def apply(c: HCursor): Decoder.Result[Constraints] =
-      for {
-        cc <- c.downField("cloud_cover").as[CloudCover]
-        iq <- c.downField("image_quality").as[ImageQuality]
-        sb <- c.downField("sky_background").as[SkyBackground]
-        wv <- c.downField("water_vapor").as[WaterVapor]
-      } yield Constraints(cc, iq, sb, wv)
-  }
 
   object Subscription extends GraphQLQuery {
     val document = """
       subscription ($id: uuid!) {
         constraints(where: {id: {_eq: $id}}) {
+          id
+          name
           cloud_cover
           image_quality
           sky_background

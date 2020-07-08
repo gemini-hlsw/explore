@@ -17,7 +17,7 @@ final case class ExploreObservation(
   target:      SiderealTarget,
   status:      ObsStatus,
   conf:        String,
-  constraints: String,
+  constraints: Constraints,
   duration:    Duration
 )
 
