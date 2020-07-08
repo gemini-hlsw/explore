@@ -1,16 +1,17 @@
 package explore.targeteditor
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import gsp.math.geom.jts.interpreter._
-import react.aladin._
-import react.common._
-import org.scalajs.dom.document
-import org.scalajs.dom.raw.Element
-import org.scalajs.dom.ext._
-import gsp.math.Coordinates
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
+import explore.model.reusability._
+import gsp.math.Coordinates
+import gsp.math.geom.jts.interpreter._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom.document
+import org.scalajs.dom.ext._
+import org.scalajs.dom.raw.Element
+import react.aladin._
+import react.common._
 
 final case class AladinContainer(s: Size, coordinates: Coordinates, options: TargetVisualOptions)
     extends ReactProps[AladinContainer](AladinContainer.component) {
@@ -20,7 +21,7 @@ final case class AladinContainer(s: Size, coordinates: Coordinates, options: Tar
 object AladinContainer {
   type Props = AladinContainer
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.never
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val AladinComp = Aladin.component
 
@@ -104,6 +105,7 @@ object AladinContainer {
       .builder[Props]
       .renderBackend[Backend]
       .componentDidUpdate(_.backend.recalculateView)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

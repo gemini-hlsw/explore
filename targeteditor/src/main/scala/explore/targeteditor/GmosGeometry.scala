@@ -2,20 +2,20 @@
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 package explore.targeteditor
 
-import cats.implicits._
 import cats.data.NonEmptyMap
-import gsp.math.geom.svg._
-import gsp.math.geom.ShapeExpression
-import gem.geom.GmosScienceAreaGeometry
-import gem.geom.GmosOiwfsProbeArm
-import gsp.math.geom.syntax.shapeexpression._
-import gsp.math.syntax.int._
-import gsp.math.Angle
-import gsp.math.Offset
-import gpp.svgdotjs.svgdotjsSvgJs.mod._
+import cats.implicits._
 import gem.enum.GmosNorthFpu
 import gem.enum.GmosSouthFpu
 import gem.enum.PortDisposition
+import gem.geom.GmosOiwfsProbeArm
+import gem.geom.GmosScienceAreaGeometry
+import gpp.svgdotjs.svgdotjsSvgJs.mod._
+import gsp.math.Angle
+import gsp.math.Offset
+import gsp.math.geom.ShapeExpression
+import gsp.math.geom.svg._
+import gsp.math.geom.syntax.shapeexpression._
+import gsp.math.syntax.int._
 
 /**
   * Test object to produce a gmos geometry. it is for demo purposes only

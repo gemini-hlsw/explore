@@ -3,22 +3,24 @@
 
 package explore.targeteditor
 
+import scala.collection.SortedMap
+
+import cats.data.NonEmptyList
+import crystal.react.implicits._
 import explore.View
 import explore.implicits._
-import crystal.react.implicits._
+import explore.model.TargetVisualOptions
+import explore.model.enum.Display
+import explore.model.reusability._
+import gsp.math.Angle
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
+import react.semanticui.addons.select.Select
+import react.semanticui.collections.form.FormDropdown.FormDropdownProps
 import react.semanticui.collections.form._
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
-import explore.model.enum.Display
-import explore.model.TargetVisualOptions
-import react.semanticui.addons.select.Select
-import cats.data.NonEmptyList
-import gsp.math.Angle
-import scala.collection.SortedMap
-import react.semanticui.collections.form.FormDropdown.FormDropdownProps
 
 final case class CataloguesForm(
   options:          View[TargetVisualOptions]
@@ -27,32 +29,7 @@ final case class CataloguesForm(
 
 object CataloguesForm {
   type Props = CataloguesForm
-
-  // @Lenses
-  // final case class State(options: TargetVisualOptions)
-  //
-  // object State {
-  //   def displayLens(l: Lens[TargetVisualOptions, Display]): Lens[State, Boolean] =
-  //     State.options ^|-> l ^<-> Display.boolReverseIso
-  //
-  //   val posAngle: Lens[State, Angle] =
-  //     State.options ^|-> TargetVisualOptions.posAngle
-  //
-  //   val fov: Lens[State, Boolean] =
-  //     displayLens(TargetVisualOptions.fov)
-  //
-  //   val guiding: Lens[State, Boolean] =
-  //     displayLens(TargetVisualOptions.guiding)
-  //
-  //   val offsets: Lens[State, Boolean] =
-  //     displayLens(TargetVisualOptions.offsets)
-  //
-  //   val probe: Lens[State, Boolean] =
-  //     displayLens(TargetVisualOptions.probe)
-  // }
-  //
-  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.never //.by(_.options)
-  // implicit val stateReuse: Reusability[State]          = Reusability.derive
+  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.derive
 
   // List of allowed angles, this would come from the model
   val angles: NonEmptyList[Angle] = NonEmptyList.of(Angle.Angle0,

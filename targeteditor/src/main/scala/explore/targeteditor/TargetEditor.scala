@@ -3,22 +3,22 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.implicits._
+import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.SiderealTarget
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
-import react.common._
-import explore.model.TargetVisualOptions
 import monocle.macros.Lenses
-import crystal.ViewF
-import cats.effect.IO
+import react.common._
 
 final case class TargetEditor(
   id: SiderealTarget.Id

@@ -13,7 +13,8 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
-// import explore.model.reusability._
+import explore.model.TargetVisualOptions
+import explore.model.reusability._
 import explore.target.TargetQueries._
 import gsp.math.Angle
 import gsp.math.Coordinates
@@ -28,7 +29,6 @@ import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
-import explore.model.TargetVisualOptions
 import react.sizeme.SizeMe
 
 final case class TargetBody(
@@ -42,16 +42,9 @@ final case class TargetBody(
 object TargetBody extends ModelOptics {
   type Props = TargetBody
 
-  // protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
-  // @Lenses
-  // final case class State(options: TargetVisualOptions)
-  //
-  // object State {
-  //   val Default = State(TargetVisualOptions.Default)
-  // }
-  //
   val AladinComp = Aladin.component
+
+  implicit val propsReuse = Reusability.derive[Props]
 
   class Backend(bs: BackendScope[Props, Unit]) {
     // Create a mutable reference
@@ -172,9 +165,9 @@ object TargetBody extends ModelOptics {
   val component =
     ScalaComponent
       .builder[Props]
-      // .initialState(State.Default)
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
