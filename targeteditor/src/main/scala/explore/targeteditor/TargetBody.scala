@@ -22,7 +22,6 @@ import gsp.math.HourAngle
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import react.aladin.Aladin
@@ -30,13 +29,12 @@ import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
 import explore.model.TargetVisualOptions
-import monocle.macros.Lenses
+import react.sizeme.SizeMe
 
 final case class TargetBody(
-  id:         SiderealTarget.Id,
-  target:     View[SiderealTarget],
-  options:    TargetVisualOptions,
-  optionsUpd: TargetVisualOptions => Callback
+  id:      SiderealTarget.Id,
+  target:  View[SiderealTarget],
+  options: View[TargetVisualOptions]
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
 }
@@ -46,16 +44,16 @@ object TargetBody extends ModelOptics {
 
   // protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  @Lenses
-  final case class State(options: TargetVisualOptions)
-
-  object State {
-    val Default = State(TargetVisualOptions.Default)
-  }
-
+  // @Lenses
+  // final case class State(options: TargetVisualOptions)
+  //
+  // object State {
+  //   val Default = State(TargetVisualOptions.Default)
+  // }
+  //
   val AladinComp = Aladin.component
 
-  class Backend(bs: BackendScope[Props, State]) {
+  class Backend(bs: BackendScope[Props, Unit]) {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
@@ -109,7 +107,7 @@ object TargetBody extends ModelOptics {
     def setTargetByName: String => Callback =
       searchAndGo { case (name, _, _) => setName(name) }
 
-    def render(props: Props, state: State) =
+    def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
 
@@ -134,28 +132,31 @@ object TargetBody extends ModelOptics {
           val searchAndSet: String => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          <.div(
-            ^.height := 100.pct,
-            ^.width := 100.pct,
-            Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
-              ^.height := "100%",
-              GridRow(stretched = true)(
-                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(target, searchAndSet, gotoRaDec)
-                    .withKey(coordinatesKey(target)),
-                  UndoButtons(target, undoCtx)
-                ),
-                GridColumn(stretched = true, computer = Nine)(
-                  AladinContainer(props.aladinCoords, state.options)
-                ),
-                GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(props.options,
-                                 o => bs.setStateL(State.options)(o) *> props.optionsUpd(o)
+          SizeMe() { s =>
+            println("outer")
+            println(s.width)
+            <.div(
+              ^.height := 100.pct,
+              ^.width := 100.pct,
+              Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
+                ^.height := "100%",
+                GridRow(stretched = true)(
+                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                    CoordinatesForm(target, searchAndSet, gotoRaDec)
+                      .withKey(coordinatesKey(target)),
+                    UndoButtons(target, undoCtx)
+                  ),
+                  GridColumn(stretched = true, computer = Nine)(
+                    AladinContainer(s, props.aladinCoords, props.options.get)
+                  ),
+                  GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
+                    CataloguesForm(props.options)
+                    // o => bs.setStateL(State.options)(o) *> props.optionsUpd(o)
                   )
                 )
               )
             )
-          )
+          }
         }
       }
 
@@ -171,7 +172,7 @@ object TargetBody extends ModelOptics {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State.Default)
+      // .initialState(State.Default)
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .build

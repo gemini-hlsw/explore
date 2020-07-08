@@ -3,7 +3,6 @@ package explore.targeteditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import gsp.math.geom.jts.interpreter._
-import react.sizeme._
 import react.aladin._
 import react.common._
 import org.scalajs.dom.document
@@ -13,7 +12,7 @@ import gsp.math.Coordinates
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 
-final case class AladinContainer(coordinates: Coordinates, options: TargetVisualOptions)
+final case class AladinContainer(s: Size, coordinates: Coordinates, options: TargetVisualOptions)
     extends ReactProps[AladinContainer](AladinContainer.component) {
   val aladinCoordsStr: String = Coordinates.fromHmsDms.reverseGet(coordinates)
 }
@@ -44,6 +43,7 @@ object AladinContainer {
     ): Callback =
       $.props |> { (p: Props) =>
         val options  = p.options
+        println(pixelScale)
         // Delete any viz previously rendered
         val previous = Option(div.querySelector(".aladin-visualization"))
         previous.foreach(div.removeChild)
@@ -72,7 +72,9 @@ object AladinContainer {
     }
 
     def updateVisualization(v: JsAladin): Callback = {
+      println(v.getParentDiv().classList)
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+      println(size.width)
       val div  = v.getParentDiv()
       renderVisualization(div, size, v.pixelScale)
     }
@@ -82,21 +84,19 @@ object AladinContainer {
       <.div(
         ^.width := 100.pct,
         ^.height := 100.pct,
-        SizeMe() { s =>
-          println(s.height)
-          AladinComp.withRef(ref) {
-            Aladin(showReticle = true,
-                   target = props.aladinCoordsStr,
-                   fov = 0.25,
-                   showGotoControl = false,
-                   customize = includeSvg _
-            )
-          }
+        AladinComp.withRef(ref) {
+          Aladin(showReticle = true,
+                 target = props.aladinCoordsStr,
+                 fov = 0.25,
+                 showGotoControl = false,
+                 customize = includeSvg _
+          )
         }
       )
 
     def recalculateView =
-      ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
+      Callback.log("didupdate") *>
+        ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
   }
 
   val component =

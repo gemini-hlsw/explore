@@ -22,8 +22,8 @@ object reusability {
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                               = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                                 = Reusability.derive
-  implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
   implicit val constraintsReuse: Reusability[Constraints]                                         = Reusability.derive
+  implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
   implicit val jsNumberReuse: Reusability[JsNumber]                                               = Reusability.byEq
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
   implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive

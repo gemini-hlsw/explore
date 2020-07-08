@@ -3,18 +3,17 @@
 
 package explore.targeteditor
 
+import explore.View
 import explore.implicits._
+import crystal.react.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.collections.form._
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
-import explore.model.TargetVisualOptions
-import explore.model.reusability._
-import monocle.macros.Lenses
-import monocle.Lens
 import explore.model.enum.Display
+import explore.model.TargetVisualOptions
 import react.semanticui.addons.select.Select
 import cats.data.NonEmptyList
 import gsp.math.Angle
@@ -22,39 +21,38 @@ import scala.collection.SortedMap
 import react.semanticui.collections.form.FormDropdown.FormDropdownProps
 
 final case class CataloguesForm(
-  options:          TargetVisualOptions,
-  updateOptions:    TargetVisualOptions => Callback
+  options:          View[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CataloguesForm](CataloguesForm.component)
 
 object CataloguesForm {
   type Props = CataloguesForm
 
-  @Lenses
-  final case class State(options: TargetVisualOptions)
-
-  object State {
-    def displayLens(l: Lens[TargetVisualOptions, Display]): Lens[State, Boolean] =
-      State.options ^|-> l ^<-> Display.boolReverseIso
-
-    val posAngle: Lens[State, Angle] =
-      State.options ^|-> TargetVisualOptions.posAngle
-
-    val fov: Lens[State, Boolean] =
-      displayLens(TargetVisualOptions.fov)
-
-    val guiding: Lens[State, Boolean] =
-      displayLens(TargetVisualOptions.guiding)
-
-    val offsets: Lens[State, Boolean] =
-      displayLens(TargetVisualOptions.offsets)
-
-    val probe: Lens[State, Boolean] =
-      displayLens(TargetVisualOptions.probe)
-  }
-
-  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.by(_.options)
-  implicit val stateReuse: Reusability[State]          = Reusability.derive
+  // @Lenses
+  // final case class State(options: TargetVisualOptions)
+  //
+  // object State {
+  //   def displayLens(l: Lens[TargetVisualOptions, Display]): Lens[State, Boolean] =
+  //     State.options ^|-> l ^<-> Display.boolReverseIso
+  //
+  //   val posAngle: Lens[State, Angle] =
+  //     State.options ^|-> TargetVisualOptions.posAngle
+  //
+  //   val fov: Lens[State, Boolean] =
+  //     displayLens(TargetVisualOptions.fov)
+  //
+  //   val guiding: Lens[State, Boolean] =
+  //     displayLens(TargetVisualOptions.guiding)
+  //
+  //   val offsets: Lens[State, Boolean] =
+  //     displayLens(TargetVisualOptions.offsets)
+  //
+  //   val probe: Lens[State, Boolean] =
+  //     displayLens(TargetVisualOptions.probe)
+  // }
+  //
+  implicit val propsReuse: Reusability[CataloguesForm] = Reusability.never //.by(_.options)
+  // implicit val stateReuse: Reusability[State]          = Reusability.derive
 
   // List of allowed angles, this would come from the model
   val angles: NonEmptyList[Angle] = NonEmptyList.of(Angle.Angle0,
@@ -71,11 +69,18 @@ object CataloguesForm {
 
   val angleItems = angleItemsMap.values
 
+  val fovL     = TargetVisualOptions.fov ^<-> Display.boolReverseIso
+  val guidingL = TargetVisualOptions.guiding ^<-> Display.boolReverseIso
+  val probeL   = TargetVisualOptions.probe ^<-> Display.boolReverseIso
+  val offsetsL = TargetVisualOptions.offsets ^<-> Display.boolReverseIso
+
   val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps(p => State(p.options))
-      .render($ =>
+      // .initialStateFromProps(p => State(p.options))
+      .render { $ =>
+        val optionsV = $.props.options
+        val options  = optionsV.get
         Form(size = Mini)(
           FormDropdown(
             label = "Catalogues",
@@ -87,55 +92,42 @@ object CataloguesForm {
           ),
           FormCheckbox(
             label = "CCD",
-            checked = $.state.options.fov.visible,
-            onChange = (b: Boolean) => {
-              val ns = State.fov.set(b)($.state)
-              $.setState(ns, $.props.updateOptions(ns.options))
-            }
+            checked = options.fov.visible,
+            onChange = (b: Boolean) => optionsV.zoom(fovL).set(b).runInCB
           ),
           FormCheckbox(
             label = "Patrol field",
-            checked = $.state.options.guiding.visible,
-            onChange = (b: Boolean) => {
-              val ns = State.guiding.set(b)($.state)
-              $.setState(ns, $.props.updateOptions(ns.options))
-            }
+            checked = options.guiding.visible,
+            onChange = (b: Boolean) => optionsV.zoom(guidingL).set(b).runInCB
           ),
           FormCheckbox(
             label = "Probe",
-            checked = $.state.options.probe.visible,
-            onChange = (b: Boolean) => {
-              val ns = State.probe.set(b)($.state)
-              $.setState(ns, $.props.updateOptions(ns.options))
-            }
+            checked = options.probe.visible,
+            onChange = (b: Boolean) => optionsV.zoom(probeL).set(b).runInCB
           ),
           FormCheckbox(
             label = "Offsets",
-            checked = $.state.options.offsets.visible,
-            onChange = (b: Boolean) => {
-              val ns = State.offsets.set(b)($.state)
-              $.setState(ns, $.props.updateOptions(ns.options))
-            }
+            checked = options.offsets.visible,
+            onChange = (b: Boolean) => optionsV.zoom(offsetsL).set(b).runInCB
           ),
           FormSelect(
             label = "Position Angle",
             options = angleItems.toList,
-            value = Angle.degrees.get($.state.options.posAngle),
+            value = Angle.degrees.get(options.posAngle),
             onChange = (p: FormDropdownProps) => {
               angleItemsMap
                 .collectFirst {
                   case (a, i) if i.value == p.value => a
                 }
                 .map { a =>
-                  val ns = State.posAngle.set(a)($.state)
-                  $.setState(ns, $.props.updateOptions(ns.options))
+                  optionsV.zoom(TargetVisualOptions.posAngle).set(a).runInCB
                 }
                 .getOrEmpty
 
             }
           )
         )
-      )
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 
