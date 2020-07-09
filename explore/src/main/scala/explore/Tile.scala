@@ -15,7 +15,8 @@ final case class Tile(title: String, movable: Boolean)
 object Tile {
   type Props = Tile
 
-  implicit val propsReuse = Reusability.derive[Props]
+  // Explicitly never reuse as we are not considering the content
+  implicit val propsReuse: Reusability[Tile] = Reusability.never
 
   val component =
     ScalaComponent

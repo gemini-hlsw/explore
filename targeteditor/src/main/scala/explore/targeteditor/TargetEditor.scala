@@ -27,10 +27,11 @@ final case class TargetEditor(
 object TargetEditor {
   type Props = TargetEditor
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
   @Lenses
   final case class State(options: TargetVisualOptions)
+
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) =
@@ -53,6 +54,7 @@ object TargetEditor {
       .builder[Props]
       .initialState(State(TargetVisualOptions.Default))
       .renderBackend[Backend]
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

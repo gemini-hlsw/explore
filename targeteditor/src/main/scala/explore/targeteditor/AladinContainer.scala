@@ -1,3 +1,6 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targeteditor
 
 import explore.model.TargetVisualOptions
@@ -12,10 +15,23 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
+import gsp.math.RightAscension
+import gsp.math.Declination
+import gsp.math.HourAngle
+import gsp.math.Angle
+import explore.View
+import explore.model.SiderealTarget
+import crystal.react.implicits._
+import gsp.math.ProperMotion
+import monocle.Lens
 
-final case class AladinContainer(s: Size, coordinates: Coordinates, options: TargetVisualOptions)
-    extends ReactProps[AladinContainer](AladinContainer.component) {
-  val aladinCoordsStr: String = Coordinates.fromHmsDms.reverseGet(coordinates)
+final case class AladinContainer(
+  s:       Size,
+  target:  View[SiderealTarget],
+  options: TargetVisualOptions
+) extends ReactProps[AladinContainer](AladinContainer.component) {
+  val aladinCoords: Coordinates = target.get.track.baseCoordinates
+  val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
 }
 
 object AladinContainer {
@@ -27,7 +43,49 @@ object AladinContainer {
 
   class Backend($ : BackendScope[Props, Unit]) {
     // Create a mutable reference
-    private val ref = Ref.toScalaComponent(AladinComp)
+    private val aladinRef = Ref.toScalaComponent(AladinComp)
+
+    private val raLens: Lens[SiderealTarget, RightAscension] =
+      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
+
+    private val decLens: Lens[SiderealTarget, Declination] =
+      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
+
+    def setRa(ra: RightAscension): Callback =
+      $.props >>= (_.target.zoom(raLens).set(ra).runInCB)
+
+    def setDec(dec: Declination): Callback =
+      $.props >>= (_.target.zoom(decLens).set(dec).runInCB)
+
+    val gotoRaDec = (coords: Coordinates) =>
+      aladinRef.get
+        .flatMapCB(
+          _.backend
+            .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
+        )
+        .toCallback
+
+    def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
+      Callback.log(search) *>
+        aladinRef.get
+          .flatMapCB(
+            _.backend
+              .gotoObject(
+                search,
+                (a, b) => {
+                  val ra  = RightAscension.fromHourAngle.get(
+                    HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
+                  )
+                  val dec =
+                    Declination.fromAngle
+                      .getOption(Angle.fromDoubleDegrees(b.toDouble))
+                      .getOrElse(Declination.Zero)
+                  setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
+                },
+                Callback.log("error")
+              )
+          )
+          .toCallback
 
     def toggleVisibility(g: Element, selector: String, option: Display): Unit =
       g.querySelectorAll(selector).foreach {
@@ -39,7 +97,7 @@ object AladinContainer {
 
     def renderVisualization(
       div:        Element,
-      size:       Size,
+      size:       => Size,
       pixelScale: => PixelScale
     ): Callback =
       $.props |> { (p: Props) =>
@@ -87,7 +145,7 @@ object AladinContainer {
       <.div(
         ^.width := 100.pct,
         ^.height := 100.pct,
-        AladinComp.withRef(ref) {
+        AladinComp.withRef(aladinRef) {
           Aladin(showReticle = true,
                  target = props.aladinCoordsStr,
                  fov = 0.25,
@@ -99,7 +157,7 @@ object AladinContainer {
 
     def recalculateView =
       Callback.log("didupdate") *>
-        ref.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
+        aladinRef.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
   }
 
   val component =

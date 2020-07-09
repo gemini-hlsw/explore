@@ -16,16 +16,11 @@ import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
-import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
-import gsp.math.HourAngle
-import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.Lens
-import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
@@ -42,59 +37,28 @@ final case class TargetBody(
 object TargetBody extends ModelOptics {
   type Props = TargetBody
 
-  val AladinComp = Aladin.component
+  val AladinRef = AladinContainer.component
 
   implicit val propsReuse = Reusability.derive[Props]
 
   class Backend(bs: BackendScope[Props, Unit]) {
     // Create a mutable reference
-    private val aladinRef = Ref.toScalaComponent(AladinComp)
-
-    private val raLens: Lens[SiderealTarget, RightAscension] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
-
-    private val decLens: Lens[SiderealTarget, Declination] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
+    private val aladinRef = Ref.toScalaComponent(AladinRef)
 
     def setName(name: String): Callback =
       bs.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
-
-    def setRa(ra: RightAscension): Callback =
-      bs.props >>= (_.target.zoom(raLens).set(ra).runInCB)
-
-    def setDec(dec: Declination): Callback =
-      bs.props >>= (_.target.zoom(decLens).set(dec).runInCB)
 
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name}#${target.track.baseCoordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
-        .flatMapCB(
-          _.backend
-            .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
-        )
+        .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
 
     def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
       aladinRef.get
-        .flatMapCB(
-          _.backend
-            .gotoObject(
-              search,
-              (a, b) => {
-                val ra  = RightAscension.fromHourAngle.get(
-                  HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
-                )
-                val dec =
-                  Declination.fromAngle
-                    .getOption(Angle.fromDoubleDegrees(b.toDouble))
-                    .getOrElse(Declination.Zero)
-                setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
-              },
-              Callback.log("error")
-            )
-        )
+        .flatMapCB(_.backend.searchAndGo(modify)(search))
         .toCallback
 
     def setTargetByName: String => Callback =
@@ -140,7 +104,9 @@ object TargetBody extends ModelOptics {
                     UndoButtons(target, undoCtx)
                   ),
                   GridColumn(stretched = true, computer = Eight)(
-                    AladinContainer(s, props.aladinCoords, props.options.get)
+                    AladinRef.withRef(aladinRef) {
+                      AladinContainer(s, props.target, props.options.get)
+                    }
                   ),
                   GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                     CataloguesForm(props.options)
@@ -153,12 +119,10 @@ object TargetBody extends ModelOptics {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      aladinRef.get
-        .flatMapCB { r =>
-          val c = nextProps.aladinCoords
-          r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
-        }
-        .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+      Callback.log(s"${nextProps.aladinCoords}") *>
+        gotoRaDec(nextProps.aladinCoords)
+          .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+          .void
   }
 
   val component =

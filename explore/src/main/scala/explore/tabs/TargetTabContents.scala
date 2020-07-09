@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.implicits._
-import crystal.react.implicits._
 import explore._
 import explore.components.ui.GPPStyles
 import explore.model.Focused.FocusedObs
@@ -27,6 +26,7 @@ object TargetTabContents {
 
   final case class State(treeWidth: JsNumber)
 
+  implicit val propsReuse: Reusability[Props] = Reusability.by(_.get)
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
@@ -80,8 +80,6 @@ object TargetTabContents {
                     )
                   )
                 )
-                // )
-                // )
               )
             )
           }

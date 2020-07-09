@@ -108,7 +108,7 @@ object ObsTabContents {
                   <.div(
                     ^.key := "target",
                     ^.cls := "tile",
-                    Tile("Target Position")(
+                    Tile("Target Position", movable = true)(
                       <.span(
                         obsSummaryOpt.whenDefined(obs =>
                           TargetEditor(obs.target.id).withKey(obs.target.id.toString)
@@ -120,7 +120,7 @@ object ObsTabContents {
                 <.div(
                   ^.key := "constraints",
                   ^.cls := "tile",
-                  Tile("Constraints")(
+                  Tile("Constraints", movable = true)(
                     <.span(
                       obsSummaryOpt.whenDefined(obs =>
                         ConstraintsSubscription(obs.constraints.id) { constraints =>
