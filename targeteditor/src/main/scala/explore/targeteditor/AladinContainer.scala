@@ -3,27 +3,27 @@
 
 package explore.targeteditor
 
+import crystal.react.implicits._
+import explore.View
+import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
+import gsp.math.Angle
 import gsp.math.Coordinates
+import gsp.math.Declination
+import gsp.math.HourAngle
+import gsp.math.ProperMotion
+import gsp.math.RightAscension
 import gsp.math.geom.jts.interpreter._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import monocle.Lens
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
-import gsp.math.RightAscension
-import gsp.math.Declination
-import gsp.math.HourAngle
-import gsp.math.Angle
-import explore.View
-import explore.model.SiderealTarget
-import crystal.react.implicits._
-import gsp.math.ProperMotion
-import monocle.Lens
 
 final case class AladinContainer(
   s:       Size,

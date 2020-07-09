@@ -7,15 +7,15 @@ import cats.effect.IO
 import cats.effect.concurrent.Ref
 import cats.implicits._
 import cats.kernel.Eq
+import explore.data.KeyedIndexedList
+import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
+import explore.optics.Adjuster
+import explore.optics.GetAdjust
 import explore.undo._
 import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
-import explore.data.KeyedIndexedList
-import explore.optics.Adjuster
-import explore.optics.GetAdjust
-import explore.data.tree.KeyedIndexedTree.Index
 
 class UndoerSpec extends munit.FunSuite {
 

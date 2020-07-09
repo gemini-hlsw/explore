@@ -12,6 +12,7 @@ import explore.constraints.ConstraintsQueries._
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.reusability._
+import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
 import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
@@ -22,7 +23,6 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
-import explore.observationtree.ObsList
 
 object ObsTabContents {
   private val layoutLg: Layout = Layout(

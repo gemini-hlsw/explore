@@ -3,12 +3,11 @@
 
 package explore.optics
 
-import monocle.law.discipline._
-import org.scalacheck.Prop._
-import org.scalacheck.Arbitrary
-import org.typelevel.discipline.Laws
-
 import cats.Eq
+import monocle.law.discipline._
+import org.scalacheck.Arbitrary
+import org.scalacheck.Prop._
+import org.typelevel.discipline.Laws
 
 object AdjusterTests extends Laws {
   def apply[S: Arbitrary: Eq, A: Arbitrary: Eq](

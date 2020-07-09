@@ -4,12 +4,12 @@
 package explore
 
 import cats.implicits._
-import munit.DisciplineSuite
-import monocle.macros.Lenses
-import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
 import cats.kernel.Eq
 import explore.optics._
+import monocle.macros.Lenses
+import munit.DisciplineSuite
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary._
 
 class OpticsSuite extends DisciplineSuite {
 

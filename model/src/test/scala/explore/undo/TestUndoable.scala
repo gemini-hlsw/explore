@@ -7,9 +7,9 @@ import cats.FlatMap
 import cats.effect.Sync
 import cats.effect.concurrent.Ref
 import cats.implicits._
+import explore.optics.GetAdjust
 import explore.undo.Undoer
 import monocle.macros.Lenses
-import explore.optics.GetAdjust
 
 @Lenses
 case class TestStacks[F[_], A](

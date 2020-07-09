@@ -8,12 +8,12 @@ import java.time.Duration
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
 import gpp.ui.reusability._
+import gsp.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
-import react.common.implicits._
 import react.common.Size
-import gsp.math.Coordinates
+import react.common.implicits._
 
 /**
   * Reusability instances for model classes

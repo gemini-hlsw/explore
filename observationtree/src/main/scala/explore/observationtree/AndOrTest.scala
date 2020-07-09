@@ -13,9 +13,12 @@ import cats.effect.IO
 import cats.implicits._
 import explore.components.ObsBadge
 import explore.data.tree._
+import explore.model.Constraints
 import explore.model.ExploreObservation
+import explore.model.ObsSummary
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
+import explore.model.enum._
 import explore.undo.KITreeMod
 import gsp.math.Coordinates
 import gsp.math.Epoch
@@ -25,9 +28,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
-import explore.model.Constraints
-import explore.model.enum._
-import explore.model.ObsSummary
 
 object AndOrTest {
   private def randomElement[A](list: List[A]): A =

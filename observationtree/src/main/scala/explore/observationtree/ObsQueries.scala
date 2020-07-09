@@ -7,15 +7,15 @@ import clue.GraphQLQuery
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
+import explore.model.ObsSummary
 import explore.model.decoders._
+import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
-import explore.model.reusability._
-import explore.model.ObsSummary
 
 object ObsQueries {
 

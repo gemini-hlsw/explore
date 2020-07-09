@@ -5,10 +5,10 @@ package explore.model
 
 import cats._
 import cats.implicits._
-import monocle.macros.Lenses
 import explore.model.enum.Display
 import gsp.math.Angle
 import gsp.math.syntax.int._
+import monocle.macros.Lenses
 
 @Lenses
 final case class TargetVisualOptions(
