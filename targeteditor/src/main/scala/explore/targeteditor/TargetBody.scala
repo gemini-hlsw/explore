@@ -90,8 +90,6 @@ object TargetBody extends ModelOptics {
             searchAndGo(modify.andThen(_.runInCB))
 
           SizeMe() { s =>
-            println("outer")
-            println(s.width)
             <.div(
               ^.height := 90.pct,
               ^.width := 100.pct,
@@ -119,10 +117,9 @@ object TargetBody extends ModelOptics {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      Callback.log(s"${nextProps.aladinCoords}") *>
-        gotoRaDec(nextProps.aladinCoords)
-          .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
-          .void
+      gotoRaDec(nextProps.aladinCoords)
+        .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+        .void
   }
 
   val component =

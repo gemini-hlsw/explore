@@ -54,7 +54,6 @@ object CataloguesForm {
   val component =
     ScalaComponent
       .builder[Props]
-      // .initialStateFromProps(p => State(p.options))
       .render { $ =>
         val optionsV = $.props.options
         val options  = optionsV.get

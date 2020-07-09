@@ -102,8 +102,6 @@ object AladinContainer {
     ): Callback =
       $.props |> { (p: Props) =>
         val options  = p.options
-        println("render")
-        println(pixelScale)
         // Delete any viz previously rendered
         val previous = Option(div.querySelector(".aladin-visualization"))
         previous.foreach(div.removeChild)
@@ -134,8 +132,6 @@ object AladinContainer {
     def updateVisualization(v: JsAladin): Callback = {
       println(v.getParentDiv().classList)
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
-      println(size.width)
-      println(v.pixelScale)
       val div  = v.getParentDiv()
       renderVisualization(div, size, v.pixelScale)
     }
@@ -156,8 +152,7 @@ object AladinContainer {
       )
 
     def recalculateView =
-      Callback.log("didupdate") *>
-        aladinRef.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
+      aladinRef.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
   }
 
   val component =
