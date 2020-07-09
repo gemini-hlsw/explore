@@ -3,16 +3,21 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.implicits._
+import crystal.ViewF
+import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.SiderealTarget
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.function.Cons.headOption
+import monocle.macros.Lenses
 import react.common._
 
 final case class TargetEditor(
@@ -22,9 +27,13 @@ final case class TargetEditor(
 object TargetEditor {
   type Props = TargetEditor
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  @Lenses
+  final case class State(options: TargetVisualOptions)
 
-  class Backend() {
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  protected implicit val stateReuse: Reusability[State] = Reusability.derive
+
+  class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
@@ -34,7 +43,8 @@ object TargetEditor {
             ),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
-          TargetBody(props.id, target)
+          val stateView = ViewF.fromState[IO]($).zoom(State.options)
+          TargetBody(props.id, target, stateView)
         }
       }
   }
@@ -42,8 +52,9 @@ object TargetEditor {
   val component =
     ScalaComponent
       .builder[Props]
-      .backend(_ => new Backend())
-      .renderBackend
+      .initialState(State(TargetVisualOptions.Default))
+      .renderBackend[Backend]
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

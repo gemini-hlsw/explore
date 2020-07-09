@@ -7,16 +7,16 @@ import java.time.Duration
 import java.util.UUID
 
 import cats.implicits._
+import explore.model.Constraints
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
+import explore.model.enum._
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.Epoch
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
-import explore.model.Constraints
-import explore.model.enum._
 
 object TargetTreeTest {
 

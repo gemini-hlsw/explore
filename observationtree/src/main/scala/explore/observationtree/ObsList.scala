@@ -6,14 +6,14 @@ package explore.observationtree
 import cats.implicits._
 import crystal.react.implicits._
 import explore._
-import explore.model.ObsSummary
+import explore.components.ObsBadge
+import explore.components.ui.GPPStyles
 import explore.model.Focused
-import react.common.ReactProps
+import explore.model.Focused.FocusedObs
+import explore.model.ObsSummary
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.components.ui.GPPStyles
-import explore.components.ObsBadge
-import explore.model.Focused.FocusedObs
+import react.common.ReactProps
 
 final case class ObsList(
   observations: View[List[ObsSummary]],

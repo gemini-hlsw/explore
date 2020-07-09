@@ -16,7 +16,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 object Test extends AppMain {
 
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
-    val id = UUID.fromString("9be5789c-3ffe-48cd-8e8e-24fe3e4067ee")
+    val id = UUID.fromString("fdc02840-1a52-48b5-9b77-7a8bd5b919d4")
 
     <.div(^.height := "100vh", ^.width := "100%", TargetEditor(id))
   }

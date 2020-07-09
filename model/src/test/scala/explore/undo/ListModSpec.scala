@@ -5,14 +5,14 @@ package explore.undo
 
 import cats.effect.IO
 import cats.implicits._
-import munit.DisciplineSuite
+import explore.data.KeyedIndexedList
+import explore.optics.AdjusterTests
+import monocle.Getter
 import monocle.Lens
+import monocle.macros.Lenses
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
-import explore.data.KeyedIndexedList
-import monocle.macros.Lenses
-import monocle.Getter
-import explore.optics.AdjusterTests
 
 class ListModSpec extends DisciplineSuite {
 

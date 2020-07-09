@@ -3,11 +3,12 @@
 
 package explore.model
 
-import explore.model.enum.ObsStatus
 import java.time.Duration
+
+import explore.model.decoders._
+import explore.model.enum.ObsStatus
 import io.circe.Decoder
 import io.circe.HCursor
-import explore.model.decoders._
 import monocle.macros.Lenses
 
 @Lenses

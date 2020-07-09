@@ -4,8 +4,8 @@
 package explore.model.arb
 
 import explore.model.Constraints
-import explore.model.enum._
 import explore.model.arb.CogenUUID._
+import explore.model.enum._
 import gem.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._

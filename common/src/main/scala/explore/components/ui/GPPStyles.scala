@@ -6,8 +6,9 @@ package explore.components.ui
 import react.common.style._
 
 object GPPStyles {
-  val GPPForm: Css = Css("gpp-form")
-  val GPPTile: Css = Css("gpp-tile")
+  val GPPForm: Css      = Css("gpp-form")
+  val GPPTile: Css      = Css("gpp-tile")
+  val GPPTileTitle: Css = Css("gpp-tile-title")
 
   val MainGrid: Css   = Css("main-grid")
   val MainHeader: Css = Css("main-header")
@@ -15,20 +16,23 @@ object GPPStyles {
   val MainTitle: Css  = Css("main-title")
   val SideTabs: Css   = Css("sidetabs")
 
-  val ResizeHandle: Css  = Css("resize-handle")
-  val Tree: Css          = Css("tree")
-  val TreeBodyOuter: Css = Css("tree-body-outer")
-  val TreeBodyInner: Css = Css("tree-body-inner")
-  val TreeRGL: Css       = Css("tree-rgl")
-  val RGLBody: Css       = Css("rgl-body")
-  val RGLArea: Css       = Css("rgl-area")
+  val ResizeHandle: Css    = Css("resize-handle")
+  val Tree: Css            = Css("tree")
+  val TreeBodyOuter: Css   = Css("tree-body-outer")
+  val TreeBodyInner: Css   = Css("tree-body-inner")
+  val TreeRGL: Css         = Css("tree-rgl")
+  val RGLBody: Css         = Css("rgl-body")
+  val RGLArea: Css         = Css("rgl-area")
+  val SinglePanelArea: Css = Css("single-panel-area")
+  val SinglePanelTile: Css = Css("single-panel-tile")
 
   val SideTabsBody: Css         = Css("sidetabs-body")
   val VerticalButton: Css       = Css("vertical-button")
   val RotationWrapperOuter: Css = Css("rotation-wrapper-outer")
   val RotationWrapperInner: Css = Css("rotation-wrapper-inner")
 
-  val HVCenter: Css = Css("horizontal-vertical-center")
+  val HVCenter: Css        = Css("horizontal-vertical-center")
+  val FullHeightWidth: Css = Css("full-height-width")
 
   val ObsTree: Css            = Css("obs-tree")
   val ObsTreeGroup: Css       = Css("obs-tree-group")

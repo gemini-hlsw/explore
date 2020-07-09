@@ -103,7 +103,8 @@ lazy val targeteditor = project
   .dependsOn(common)
   .settings(
     libraryDependencies ++=
-      ReactAladin.value
+      ReactAladin.value ++
+        ReactSizeMe.value
   )
 
 lazy val constraints = project
@@ -204,7 +205,7 @@ lazy val commonWDS = Seq(
   webpackMonitoredDirectories += (resourceDirectory in (common, Compile)).value,
   webpackMonitoredDirectories += ((sourceDirectory in (common, Compile)).value / "webpack"),
   webpackResources := ((sourceDirectory in (common, Compile)).value / "webpack") * "*.js",
-  includeFilter in webpackMonitoredFiles := "*",
+  webpackMonitoredFiles / includeFilter := "*",
   useYarn := true,
   webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
   webpackBundlingMode in fullOptJS := BundlingMode.Application,

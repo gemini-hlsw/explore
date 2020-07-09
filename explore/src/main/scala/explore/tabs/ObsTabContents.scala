@@ -12,6 +12,7 @@ import explore.constraints.ConstraintsQueries._
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.reusability._
+import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
 import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
@@ -22,7 +23,6 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.sizeme._
-import explore.observationtree.ObsList
 
 object ObsTabContents {
   private val layoutLg: Layout = Layout(
@@ -108,7 +108,7 @@ object ObsTabContents {
                   <.div(
                     ^.key := "target",
                     ^.cls := "tile",
-                    Tile("Target Position")(
+                    Tile("Target Position", movable = true)(
                       <.span(
                         obsSummaryOpt.whenDefined(obs =>
                           TargetEditor(obs.target.id).withKey(obs.target.id.toString)
@@ -120,7 +120,7 @@ object ObsTabContents {
                 <.div(
                   ^.key := "constraints",
                   ^.cls := "tile",
-                  Tile("Constraints")(
+                  Tile("Constraints", movable = true)(
                     <.span(
                       obsSummaryOpt.whenDefined(obs =>
                         ConstraintsSubscription(obs.constraints.id) { constraints =>

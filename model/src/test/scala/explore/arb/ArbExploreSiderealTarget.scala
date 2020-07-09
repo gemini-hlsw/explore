@@ -5,6 +5,7 @@ package explore.model.arb
 
 import explore.model.ExploreSiderealTarget
 import explore.model.SiderealTarget
+import explore.model.TargetVisualOptions
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
@@ -12,12 +13,14 @@ import org.scalacheck.Cogen._
 
 trait ArbExploreSiderealTarget {
   import explore.model.arb.ArbSiderealTarget._
+  import explore.model.arb.ArbTargetVisualOptions._
 
   implicit val exploreSiderealTargetArb = Arbitrary[ExploreSiderealTarget] {
     for {
       s <- arbitrary[String]
       t <- arbitrary[Option[SiderealTarget]]
-    } yield ExploreSiderealTarget(s, t)
+      o <- arbitrary[TargetVisualOptions]
+    } yield ExploreSiderealTarget(s, t, o)
   }
 
   implicit val exploreSiderealTargetCogen: Cogen[ExploreSiderealTarget] =

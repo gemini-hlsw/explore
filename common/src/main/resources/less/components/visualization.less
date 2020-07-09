@@ -1,0 +1,69 @@
+.react-aladin {
+  overflow: hidden; // Needed to keep the visualization svg inside the component
+}
+
+.jts {
+  position: relative;
+  pointer-events: none; // let aladin get pointer events
+  z-index: 10; // Needs a z-index to sit on top of the catalog
+}
+
+.jts-polygon {
+  // display: none;
+  stroke: gray;
+  stroke-width: 2px;
+  fill: lightgray;
+  fill-opacity: 0.3;
+  vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
+}
+#probe {
+  display: none;
+  stroke: red;
+  z-index: 1;
+  fill-opacity: 0.1;
+}
+
+#patrol-field {
+  display: none;
+  stroke: red;
+  stroke-dasharray: 10;
+}
+
+#science-area polygon {
+  stroke: purple;
+  fill: black;
+  fill-opacity: 1;
+}
+
+#science-ccd-offset polygon {
+  display: none;
+  stroke: yellow;
+  fill-opacity: 0.1;
+}
+
+#science-ccd polygon {
+  display: none;
+  stroke: cyan;
+  fill-opacity: 0.1;
+}
+
+// Shows a border around the whole SVG
+.jts-svg-border {
+  display: none;
+  stroke: yellow;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+}
+
+// Drawn X to indicate the target, or coordinates 0,0
+.jts-svg-center {
+  display: none;
+  stroke: red;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.visualization-display {
+  display: inline !important; // we use this as a toggle thus we need important set
+}

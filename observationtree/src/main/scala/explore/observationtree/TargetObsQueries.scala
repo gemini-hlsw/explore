@@ -11,6 +11,7 @@ import explore.components.graphql.SubscriptionRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ExploreObservation
+import explore.model.ObsSummary
 import explore.model.SiderealTarget
 import explore.model.decoders._
 import explore.model.encoders._
@@ -25,7 +26,6 @@ import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
-import explore.model.ObsSummary
 
 object TargetObsQueries {
 

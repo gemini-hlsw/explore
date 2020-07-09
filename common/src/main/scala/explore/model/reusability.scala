@@ -7,12 +7,12 @@ import java.time.Duration
 
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
-import gem.Observation
-import gem.data.EnumZipper
-import gem.util.Enumerated
+import gpp.ui.reusability._
+import gsp.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
+import react.common.Size
 import react.common.implicits._
 
 /**
@@ -21,18 +21,16 @@ import react.common.implicits._
 object reusability {
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
-  implicit val obsIdReuse: Reusability[Observation.Id]                                            = Reusability.by(_.format)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
+  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                               = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                                 = Reusability.derive
   implicit val constraintsReuse: Reusability[Constraints]                                         = Reusability.derive
   implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
-  implicit def enumReuse[A: Enumerated]: Reusability[A]                                           =
-    Reusability.by(Enumerated[A].tag)
-  implicit def enumZipperReuse[A: Reusability]: Reusability[EnumZipper[A]]                        =
-    Reusability.by(z => (z.lefts, z.focus, z.rights))
   implicit val jsNumberReuse: Reusability[JsNumber]                                               = Reusability.byEq
-  implicit val focusedReuse: Reusability[Focused]                                                 = Reusability.derive
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
+  implicit def coordinatesReuse: Reusability[Coordinates]                                         = Reusability.byEq
+  implicit def sizeReuse: Reusability[Size]                                                       = Reusability.by(x => (x.height, x.width))
+  implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive
   implicit def idListReuse[Id: Reusability, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
   implicit def targetSummaryReuse: Reusability[TargetSummary]                                     = Reusability.derive

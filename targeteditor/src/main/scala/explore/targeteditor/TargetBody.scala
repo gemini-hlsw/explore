@@ -13,86 +13,52 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.SiderealTarget
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
-import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
-import gsp.math.HourAngle
-import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.Lens
-import react.aladin.Aladin
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import react.sizeme.SizeMe
 
 final case class TargetBody(
-  id:     SiderealTarget.Id,
-  target: View[SiderealTarget]
+  id:      SiderealTarget.Id,
+  target:  View[SiderealTarget],
+  options: View[TargetVisualOptions]
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val aladinCoords: Coordinates = target.get.track.baseCoordinates
-  val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
 }
 
 object TargetBody extends ModelOptics {
   type Props = TargetBody
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  val AladinRef = AladinContainer.component
 
-  val AladinComp = Aladin.component
+  implicit val propsReuse = Reusability.derive[Props]
 
   class Backend(bs: BackendScope[Props, Unit]) {
     // Create a mutable reference
-    private val aladinRef = Ref.toScalaComponent(AladinComp)
-
-    private val raLens: Lens[SiderealTarget, RightAscension] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
-
-    private val decLens: Lens[SiderealTarget, Declination] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
+    private val aladinRef = Ref.toScalaComponent(AladinRef)
 
     def setName(name: String): Callback =
       bs.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
-
-    def setRa(ra: RightAscension): Callback =
-      bs.props >>= (_.target.zoom(raLens).set(ra).runInCB)
-
-    def setDec(dec: Declination): Callback =
-      bs.props >>= (_.target.zoom(decLens).set(dec).runInCB)
 
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name}#${target.track.baseCoordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
-        .flatMapCB(
-          _.backend
-            .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
-        )
+        .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
 
     def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
       aladinRef.get
-        .flatMapCB(
-          _.backend
-            .gotoObject(
-              search,
-              (a, b) => {
-                val ra  = RightAscension.fromHourAngle.get(
-                  HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
-                )
-                val dec =
-                  Declination.fromAngle
-                    .getOption(Angle.fromDoubleDegrees(b.toDouble))
-                    .getOrElse(Declination.Zero)
-                setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
-              },
-              Callback.log("error")
-            )
-        )
+        .flatMapCB(_.backend.searchAndGo(modify)(search))
         .toCallback
 
     def setTargetByName: String => Callback =
@@ -123,40 +89,37 @@ object TargetBody extends ModelOptics {
           val searchAndSet: String => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          <.div(
-            ^.height := "100%",
-            ^.width := "100%",
-            ^.cls := "check",
-            Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
-              ^.height := "100%",
-              GridRow(stretched = true)(
-                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(target, searchAndSet, gotoRaDec)
-                    .withKey(coordinatesKey(target)),
-                  UndoButtons(target, undoCtx)
-                ),
-                GridColumn(stretched = true, computer = Nine)(
-                  AladinComp.withRef(aladinRef) {
-                    Aladin(target = props.aladinCoordsStr, fov = 0.25, showGotoControl = false)
-                  }
-                ),
-                GridColumn(stretched = true, computer = Three, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(props.target.get)
+          SizeMe() { s =>
+            <.div(
+              ^.height := 90.pct,
+              ^.width := 100.pct,
+              Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
+                ^.height := "60%",
+                GridRow(stretched = true)(
+                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                    CoordinatesForm(target, searchAndSet, gotoRaDec)
+                      .withKey(coordinatesKey(target)),
+                    UndoButtons(target, undoCtx)
+                  ),
+                  GridColumn(stretched = true, computer = Eight)(
+                    AladinRef.withRef(aladinRef) {
+                      AladinContainer(s, props.target, props.options.get)
+                    }
+                  ),
+                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                    CataloguesForm(props.options)
+                  )
                 )
               )
             )
-          )
+          }
         }
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      // Callback.log(currentProps.toString()) *>
-      aladinRef.get
-        .flatMapCB { r =>
-          val c = nextProps.aladinCoords
-          r.backend.gotoRaDec(c.ra.toAngle.toDoubleDegrees, c.dec.toAngle.toDoubleDegrees)
-        }
+      gotoRaDec(nextProps.aladinCoords)
         .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+        .void
   }
 
   val component =
@@ -164,6 +127,7 @@ object TargetBody extends ModelOptics {
       .builder[Props]
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

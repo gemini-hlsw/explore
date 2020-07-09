@@ -20,7 +20,9 @@ import explore.model.ExploreObservation
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
+import explore.model.ObsSummary
 import explore.model.SiderealTarget
+import explore.model.TargetSummary
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
@@ -41,8 +43,6 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import TargetObsQueries._
-import explore.model.ObsSummary
-import explore.model.TargetSummary
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
