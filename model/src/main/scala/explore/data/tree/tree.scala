@@ -26,7 +26,8 @@ object Tree {
 object Node {
   def apply[A](value: A, children: Node[A]*): Node[A] = Node(value, children.toList)
 
-  implicit def eqNode[A: Eq]: Eq[Node[A]] = Eq.by(node => (node.value, node.children))
+  implicit def eqNode[A: Eq]: Eq[Node[A]] =
+    Eq.instance((node1, node2) => node1.value === node2.value && node1.children === node2.children)
 }
 
 // Version with different types for internal and leaf nodes. I don't think this would work easily with tree component.

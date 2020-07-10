@@ -18,9 +18,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
   private val getKey: A => K // Having in another param set keeps this out of equality
 ) {
 
-  def asTree: Tree[A] = tree.map(_.elem)
+  def toTree: Tree[A] = tree.map(_.elem)
 
-  def asKeyedTree: Tree[(K, A)] = tree.map(value => (getKey(value.elem), value.elem))
+  def toKeyedTree: Tree[(K, A)] = tree.map(value => (getKey(value.elem), value.elem))
 
   def getNodeAndIndexByKey(key: K): Option[(Node[A], Index[K])] =
     byKey.get(key).map { node =>
@@ -142,4 +142,7 @@ object KeyedIndexedTree {
     val indexedTree: Tree[IndexedElem[K, A]] = Tree(indexedUniqueKeyChildren(tree.children, getKey))
     KeyedIndexedTree(buildKeyMap(indexedTree, getKey), indexedTree)(getKey)
   }
+
+  implicit def eqKeyedIndexedTree[K: Eq, A: Eq]: Eq[KeyedIndexedTree[K, A]] =
+    Eq.by(_.toTree)
 }
