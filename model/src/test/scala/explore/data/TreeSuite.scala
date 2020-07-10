@@ -8,7 +8,12 @@ import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
 import explore.model.arb.all._
 import explore.data.tree.Tree
+import cats.laws.discipline.FunctorTests
+import explore.data.tree.Node
 
 class TreeSuite extends DisciplineSuite {
   checkAll("Eq[Tree]", EqTests[Tree[Int]].eqv)
+  checkAll("Eq[Node]", EqTests[Node[Int]].eqv)
+  checkAll("Functor[Tree]", FunctorTests[Tree].functor[Int, Int, Int])
+  checkAll("Functor[Node]", FunctorTests[Node].functor[Int, Int, Int])
 }

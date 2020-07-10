@@ -51,6 +51,14 @@ trait ArbTree {
       genTree[A]
     }
 
+  implicit def nodeArb[A](implicit arbA: Arbitrary[A]) =
+    Arbitrary[Node[A]] {
+      for {
+        depth <- Gen.choose(0, 6) // Limit max depth because of exponential blow
+        node  <- genIntermediateNode[A](depth)
+      } yield node
+    }
+
   implicit def cogenNode[A](implicit cogenA: Cogen[A]): Cogen[Node[A]] =
     Cogen[Node[A]]((s: Seed, node: Node[A]) =>
       node.children.foldLeft(cogenA.perturb(s, node.value))(cogenNode[A].perturb).next
