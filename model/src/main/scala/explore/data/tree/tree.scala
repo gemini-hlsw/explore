@@ -3,9 +3,8 @@
 
 package explore.data.tree
 
-import cats.Functor
+import cats._
 import cats.implicits._
-import cats.kernel.Eq
 import monocle.macros.Lenses
 
 @Lenses final case class Tree[A](children: List[Node[A]]) {
