@@ -196,10 +196,10 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
 lazy val commonWDS = Seq(
   webpack / version := "4.43.0",
   startWebpackDevServer / version := "3.11.0",
-  webpackConfigFile in fastOptJS := Some(
+  fastOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "dev.webpack.config.js"
   ),
-  webpackConfigFile in fullOptJS := Some(
+  fullOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
   webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
