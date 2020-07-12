@@ -66,7 +66,7 @@ object TreeComp {
 
     AtlasTree.Data(
       rootId = "",
-      items = valueChildrenToData(none, tree.asKeyedTree.children).toMap
+      items = valueChildrenToData(none, tree.toKeyedTree.children).toMap
     )
   }
 

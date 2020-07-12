@@ -11,3 +11,6 @@ object all
     with ArbFocused
     with ArbRootModel
     with CogenUUID
+    with ArbKeyedIndexedList
+    with ArbTree
+    with ArbKeyedIndexedTree

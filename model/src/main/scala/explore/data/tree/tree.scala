@@ -3,8 +3,8 @@
 
 package explore.data.tree
 
+import cats._
 import cats.implicits._
-import cats.kernel.Eq
 import monocle.macros.Lenses
 
 @Lenses final case class Tree[A](children: List[Node[A]]) {
@@ -21,12 +21,23 @@ object Tree {
   def apply[A](children: Node[A]*): Tree[A] = Tree(children.toList)
 
   implicit def eqTree[A: Eq]: Eq[Tree[A]] = Eq.by(_.children)
+
+  implicit val functorTree: Functor[Tree] =
+    new Functor[Tree] {
+      override def map[A, B](fa: Tree[A])(f: A => B): Tree[B] = fa.map(f)
+    }
 }
 
 object Node {
   def apply[A](value: A, children: Node[A]*): Node[A] = Node(value, children.toList)
 
-  implicit def eqNode[A: Eq]: Eq[Node[A]] = Eq.by(node => (node.value, node.children))
+  implicit def eqNode[A: Eq]: Eq[Node[A]] =
+    Eq.instance((node1, node2) => node1.value === node2.value && node1.children === node2.children)
+
+  implicit val functorNode: Functor[Node] =
+    new Functor[Node] {
+      override def map[A, B](fa: Node[A])(f: A => B): Node[B] = fa.map(f)
+    }
 }
 
 // Version with different types for internal and leaf nodes. I don't think this would work easily with tree component.
