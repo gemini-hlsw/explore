@@ -1,6 +1,5 @@
 const path = require("path");
 const Merge = require("webpack-merge");
-const Webpack = require("webpack");
 const parts = require("./webpack.parts");
 const ScalaJSConfig = require("./scalajs.webpack.config");
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
@@ -18,7 +17,7 @@ const Web = Merge(
   parts.extractCSS({
     devMode: false,
     use: ["css-loader", parts.autoprefix(), parts.lessLoader()], // Order is very important: css, post-css, less
-    ci: ci
+    ci: ci,
   }),
   parts.minifyJavaScript(),
   parts.minifyCSS({
@@ -26,37 +25,31 @@ const Web = Merge(
       safe: true,
       mergeLonghand: false, // Required to avoid merges of border properties that are unsafe
       discardComments: { removeAll: true },
-      autoprefixer: { disable: true } // Otherwise this conflicts with post-css autoprefixer
-    }
+      autoprefixer: { disable: true }, // Otherwise this conflicts with post-css autoprefixer
+    },
   }),
   parts.extraAssets,
   parts.fontAssets,
   {
     mode: "production",
     entry: {
-      "explore-opt": path.resolve(parts.localResourcesDir, "./prod.js") // If name is the same as scala.js output, it's not emitted twice.
+      "explore-opt": path.resolve(parts.localResourcesDir, "./prod.js"), // If name is the same as scala.js output, it's not emitted twice.
     },
     output: {
       path: parts.stageDir,
       filename: ci ? "[name].js" : "[name].[chunkhash].js",
-      publicPath: "/" // Required to make url navigation work
+      publicPath: "/", // Required to make url navigation work
     },
     plugins: [
-      // Useful to further minify react and make it faster in production
-      new Webpack.DefinePlugin({
-        "process.env": {
-          NODE_ENV: JSON.stringify("production")
-        }
-      }),
       new HtmlWebpackPlugin({
         title: "Explore",
-        filename: "index.html"
+        filename: "index.html",
       }),
       new FaviconsWebpackPlugin({
         logo: path.resolve(parts.resourcesDir, "images/logo.png"),
-        persistentCache: false
-      })
-    ]
+        persistentCache: false,
+      }),
+    ],
   }
 );
 

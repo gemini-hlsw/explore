@@ -194,28 +194,28 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
 )
 
 lazy val commonWDS = Seq(
-  version in webpack := "4.43.0",
-  version in startWebpackDevServer := "3.11.0",
+  webpack / version := "4.43.0",
+  startWebpackDevServer / version := "3.11.0",
   webpackConfigFile in fastOptJS := Some(
-    (sourceDirectory in (common, Compile)).value / "webpack" / "dev.webpack.config.js"
+    (common / Compile / sourceDirectory).value / "webpack" / "dev.webpack.config.js"
   ),
   webpackConfigFile in fullOptJS := Some(
-    (sourceDirectory in (common, Compile)).value / "webpack" / "prod.webpack.config.js"
+    (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
-  webpackMonitoredDirectories += (resourceDirectory in (common, Compile)).value,
-  webpackMonitoredDirectories += ((sourceDirectory in (common, Compile)).value / "webpack"),
-  webpackResources := ((sourceDirectory in (common, Compile)).value / "webpack") * "*.js",
+  webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
+  webpackMonitoredDirectories += ((common / Compile / sourceDirectory).value / "webpack"),
+  webpackResources := ((common / Compile / sourceDirectory).value / "webpack") * "*.js",
   webpackMonitoredFiles / includeFilter := "*",
   useYarn := true,
-  webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
-  webpackBundlingMode in fullOptJS := BundlingMode.Application,
+  fastOptJS / webpackBundlingMode := BundlingMode.LibraryOnly(),
+  fullOptJS / webpackBundlingMode := BundlingMode.Application,
   test := {},
-  scalaJSLinkerConfig in (Compile, fastOptJS) ~= { _.withSourceMap(false) },
-  scalaJSLinkerConfig in (Compile, fullOptJS) ~= { _.withSourceMap(false) },
+  Compile / fastOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
+  Compile / fullOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   // NPM libs for development, mostly to let webpack do its magic
   npmDevDependencies in Compile ++= Seq(
     "postcss-loader"                     -> "3.0.0",
-    "autoprefixer"                       -> "9.7.6",
+    "autoprefixer"                       -> "9.8.5",
     "url-loader"                         -> "4.1.0",
     "file-loader"                        -> "6.0.0",
     "css-loader"                         -> "3.5.3",
@@ -226,7 +226,7 @@ lazy val commonWDS = Seq(
     "mini-css-extract-plugin"            -> "0.9.0",
     "webpack-dev-server-status-bar"      -> "1.1.2",
     "cssnano"                            -> "4.1.10",
-    "terser-webpack-plugin"              -> "3.0.1",
+    "terser-webpack-plugin"              -> "3.0.6",
     "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
     "favicons-webpack-plugin"            -> "3.0.1",
