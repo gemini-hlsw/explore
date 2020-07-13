@@ -3,7 +3,7 @@ import sbtcrossproject.CrossType
 import Settings.Libraries._
 
 val reactJS = "16.13.1"
-val SUILess = "2.4.1"
+val FUILess = "2.8.6"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -235,7 +235,7 @@ lazy val commonWDS = Seq(
   npmDependencies in Compile ++= Seq(
     "react"            -> reactJS,
     "react-dom"        -> reactJS,
-    "semantic-ui-less" -> SUILess,
+    "fomantic-ui-less" -> FUILess,
     "prop-types"       -> "15.7.2"
   )
 )
