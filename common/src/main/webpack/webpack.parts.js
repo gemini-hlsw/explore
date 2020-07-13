@@ -131,6 +131,7 @@ module.exports.resolveSemanticUI = {
     alias: {
       // Required for the custom Semantic UI theme
       "../../theme.config$": path.join(resourcesDir, "theme/theme.config"),
+      "../semantic-ui/site": path.join(__dirname, "/semantic-ui/site")
     },
   },
 };
