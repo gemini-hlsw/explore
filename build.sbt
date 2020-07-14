@@ -103,7 +103,9 @@ lazy val targeteditor = project
   .dependsOn(common)
   .settings(
     libraryDependencies ++=
-      ReactAladin.value ++
+      GeminiLocales.value ++
+        ReactAladin.value ++
+        ReactHighcharts.value ++
         ReactSizeMe.value
   )
 
@@ -142,6 +144,7 @@ lazy val explore: Project = project
     libraryDependencies ++=
       ReactCommon.value ++
         ReactGridLayout.value ++
+        ReactHighcharts.value ++
         ReactResizable.value ++
         ReactSizeMe.value
   )
@@ -163,6 +166,7 @@ lazy val commonSettings = Seq(
 lazy val commonLibSettings = Seq(
   libraryDependencies ++=
     GSPCore.value ++
+      GSPMath.value ++
       Cats.value ++
       Mouse.value ++
       CatsEffect.value ++

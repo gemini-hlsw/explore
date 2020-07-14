@@ -19,9 +19,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import react.common._
-import react.semanticui.collections.grid._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
+import react.semanticui.collections.grid._
 import react.semanticui.widths._
 
 final case class ConstraintsPanel(

@@ -109,6 +109,13 @@ object TargetBody extends ModelOptics {
                 GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
                   CataloguesForm(props.options)
                 )
+              ),
+              GridRow()(
+                GridColumn(computer = Sixteen)(
+                  <.div()(
+                    SkyPlotSection(target.track.baseCoordinates)
+                  )
+                )
               )
             )
           }
