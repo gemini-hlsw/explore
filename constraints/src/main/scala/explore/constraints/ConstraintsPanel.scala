@@ -19,6 +19,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import react.common._
+import react.semanticui.collections.grid._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.widths._
@@ -51,21 +52,27 @@ object ConstraintsPanel {
             ) =
               EnumViewSelect(undoViewZoom(lens, fields).asOpt, label = label)
 
-            <.div(
-              Form(
-                FormGroup(widths = Two)(
-                  constraints.get.name
+            Grid(columns = One, stretched = true, padded = GridPadded.Horizontally)(
+              GridColumn(
+                GridRow(
+                  Form(
+                    FormGroup(widths = Two)(
+                      constraints.get.name
+                    ),
+                    FormGroup(widths = Two)(
+                      selectEnum("Image Quality", Constraints.iq, iqFields),
+                      selectEnum("Cloud Cover", Constraints.cc, ccFields)
+                    ),
+                    FormGroup(widths = Two)(
+                      selectEnum("Water Vapor", Constraints.wv, wvFields),
+                      selectEnum("Sky Background", Constraints.sb, sbFields)
+                    )
+                  )
                 ),
-                FormGroup(widths = Two)(
-                  selectEnum("Image Quality", Constraints.iq, iqFields),
-                  selectEnum("Cloud Cover", Constraints.cc, ccFields)
-                ),
-                FormGroup(widths = Two)(
-                  selectEnum("Water Vapor", Constraints.wv, wvFields),
-                  selectEnum("Sky Background", Constraints.sb, sbFields)
+                GridRow(
+                  UndoButtons(constraints.get, undoCtx)
                 )
-              ),
-              UndoButtons(constraints.get, undoCtx)
+              )
             )
           }
         }

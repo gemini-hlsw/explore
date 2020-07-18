@@ -115,17 +115,17 @@ object ObsTabContents {
                         )
                       )
                     )
-                  )
-                ),
-                <.div(
-                  ^.key := "constraints",
-                  ^.cls := "tile",
-                  Tile("Constraints", movable = true)(
-                    <.span(
-                      obsSummaryOpt.whenDefined(obs =>
-                        ConstraintsSubscription(obs.constraints.id) { constraints =>
-                          ConstraintsPanel(obs.constraints.id, constraints)
-                        }.withKey(obs.constraints.id.toString)
+                  ),
+                  <.div(
+                    ^.key := "constraints",
+                    ^.cls := "tile",
+                    Tile("Constraints", movable = true)(
+                      <.span(
+                        obsSummaryOpt.whenDefined(obs =>
+                          ConstraintsSubscription(obs.constraints.id) { constraints =>
+                            ConstraintsPanel(obs.constraints.id, constraints)
+                          }.withKey(obs.constraints.id.toString)
+                        )
                       )
                     )
                   )

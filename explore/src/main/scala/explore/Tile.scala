@@ -24,18 +24,20 @@ object Tile {
       .stateless
       .render_PC { (p, c) =>
         <.div(
-          Menu(
-            clazz = GPPStyles.GPPTileTitle,
-            attached = MenuAttached.Top,
-            compact = true,
-            borderless = true,
-            secondary = true,
-            tabular = MenuTabular.Right
-          )(
-            MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
-          ),
           GPPStyles.GPPTile,
-          c
+          <.div(
+            GPPStyles.GPPTileTitle,
+            Menu(
+              attached = MenuAttached.Top,
+              compact = true,
+              borderless = true,
+              secondary = true,
+              tabular = MenuTabular.Right
+            )(
+              MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
+            )
+          ),
+          <.div(GPPStyles.GPPTileBody, c)
         )
       }
       .configure(Reusability.shouldComponentUpdate)

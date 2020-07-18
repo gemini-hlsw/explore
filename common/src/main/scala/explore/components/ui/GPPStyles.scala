@@ -9,6 +9,7 @@ object GPPStyles {
   val GPPForm: Css      = Css("gpp-form")
   val GPPTile: Css      = Css("gpp-tile")
   val GPPTileTitle: Css = Css("gpp-tile-title")
+  val GPPTileBody: Css  = Css("gpp-tile-body")
 
   val MainGrid: Css   = Css("main-grid")
   val MainHeader: Css = Css("main-header")
