@@ -15,7 +15,6 @@ import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.divider.Divider
-import react.semanticui.widths._
 
 final case class SideTabs(
   tabs: View[EnumZipper[AppTab]]
@@ -34,22 +33,23 @@ object SideTabs {
         val tabsL = p.tabs.get.toNel
         val focus = p.tabs.get.focus
 
-        def tabButton(tab: AppTab): Button =
+        def tabButton(style: Css)(tab: AppTab): Button =
           Button(active = tab === focus,
+                 clazz = style,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 
         <.div(
           GPPStyles.SideTabsBody,
           VerticalSection()(
-            tabButton(tabsL.head)
+            tabButton(Css.Empty)(tabsL.head)
           ),
           Divider(hidden = true),
           VerticalSection()(
-            ButtonGroup(widths = widthOf(tabsL.length))(
+            ButtonGroup(
               // Due to the css rotations these need to be in reversed order
               tabsL.tail.reverse
-                .map(tabButton)
+                .map(tabButton(GPPStyles.SideButton))
                 .toTagMod
             )
           )
