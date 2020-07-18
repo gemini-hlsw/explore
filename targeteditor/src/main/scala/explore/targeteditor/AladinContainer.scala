@@ -125,12 +125,12 @@ object AladinContainer {
     def includeSvg(v: JsAladin): Unit = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
       val div  = v.getParentDiv()
-      v.onZoomCB(renderVisualization(div, size, v.pixelScale))
+      v.onFullScreenToggle(recalculateView)
+      v.onZoom(renderVisualization(div, size, v.pixelScale))
       ()
     }
 
     def updateVisualization(v: JsAladin): Callback = {
-      println(v.getParentDiv().classList)
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
       val div  = v.getParentDiv()
       renderVisualization(div, size, v.pixelScale)
