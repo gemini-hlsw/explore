@@ -89,7 +89,7 @@ object TargetBody extends ModelOptics {
           val searchAndSet: String => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          SizeMe() { s =>
+          SizeMe(monitorHeight = true) { s =>
             <.div(
               ^.height := 90.pct,
               ^.width := 100.pct,
