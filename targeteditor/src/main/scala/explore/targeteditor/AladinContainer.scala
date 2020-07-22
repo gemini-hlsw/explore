@@ -122,13 +122,9 @@ object AladinContainer {
         ()
       }
 
-    def includeSvg(v: JsAladin): Unit = {
-      val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
-      val div  = v.getParentDiv()
-      v.onFullScreenToggle(recalculateView)
-      v.onZoom(renderVisualization(div, size, v.pixelScale))
-      ()
-    }
+    def includeSvg(v: JsAladin): Callback =
+      v.onFullScreenToggle(recalculateView) *>
+        v.onZoom(recalculateView)
 
     def updateVisualization(v: JsAladin): Callback = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
@@ -152,7 +148,9 @@ object AladinContainer {
       )
 
     def recalculateView =
-      aladinRef.get.flatMapCB(r => r.backend.runOnAladinCB(updateVisualization))
+      aladinRef.get.flatMapCB(r =>
+        r.backend.recalculateView *> r.backend.runOnAladinCB(updateVisualization)
+      )
   }
 
   val component =
