@@ -90,25 +90,24 @@ object TargetBody extends ModelOptics {
             searchAndGo(modify.andThen(_.runInCB))
 
           SizeMe(monitorHeight = true) { s =>
-            <.div(
-              ^.height := 90.pct,
-              ^.width := 100.pct,
-              Grid(columns = Two, stretched = true, padded = GridPadded.Horizontally)(
-                ^.height := "60%",
-                GridRow(stretched = true)(
-                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                    CoordinatesForm(target, searchAndSet, gotoRaDec)
-                      .withKey(coordinatesKey(target)),
-                    UndoButtons(target, undoCtx)
-                  ),
-                  GridColumn(stretched = true, computer = Eight)(
-                    AladinRef.withRef(aladinRef) {
-                      AladinContainer(s, props.target, props.options.get)
-                    }
-                  ),
-                  GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                    CataloguesForm(props.options)
-                  )
+            Grid(columns = Three,
+                 clazz = GPPStyles.FullHeightWidth,
+                 stretched = true,
+                 padded = GridPadded.Horizontally
+            )(
+              GridRow(stretched = true)(
+                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                  CoordinatesForm(target, searchAndSet, gotoRaDec)
+                    .withKey(coordinatesKey(target)),
+                  UndoButtons(target, undoCtx)
+                ),
+                GridColumn(stretched = true, computer = Eight)(
+                  AladinRef.withRef(aladinRef) {
+                    AladinContainer(s, props.target, props.options.get)
+                  }
+                ),
+                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                  CataloguesForm(props.options)
                 )
               )
             )

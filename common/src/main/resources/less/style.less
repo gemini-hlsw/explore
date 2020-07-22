@@ -23,7 +23,7 @@ body {
 //
 .full-height-width {
   height: 100%;
-  width: 100%;;
+  width: 100%;
 }
 
 // Classes
@@ -71,10 +71,12 @@ body {
   border-bottom-color: fade(@borderColor, 100%);
 }
 
+.gpp-tile-body {
+  height: ~"calc(100% - @{minHeight}/2)";
+}
+
 .gpp-tile {
-  // height: ~"calc(100% - @{minHeight}/2)";
-  height: 100%;
-  width: 100%;
+  .full-height-width();
   background: @tileBackground;
 }
 
