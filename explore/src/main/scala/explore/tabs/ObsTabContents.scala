@@ -99,9 +99,7 @@ object ObsTabContents {
                   margin = (5, 5),
                   containerPadding = (5, 5),
                   rowHeight = 30,
-                  draggableHandle = ".tileTitle",
-                  useCSSTransforms =
-                    false, // Not ideal, but fixes flicker on first update (0.18.3).
+                  draggableHandle = s".${GPPStyles.GPPTileTitle.htmlClass}",
                   // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
                   layouts = layouts
                 )(
