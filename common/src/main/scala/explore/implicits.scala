@@ -30,11 +30,6 @@ trait ListImplicits {
 
   private object singleton extends Poly1 { implicit def anything[A] = at[A](List(_)) }
 
-  // def unzipN[L <: HList, Out <: HList](hlists: List[L])(implicit
-  //   mapper:                                    ops.hlist.Mapper.Aux[singleton.type, L, Out],
-  //   monoid:                                    Monoid[Out]
-  // ): Out = hlists.map(_.map(singleton)).combineAll
-
   implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
     def unzipN[Out <: HList](implicit
       mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
