@@ -13,8 +13,9 @@ object Settings {
     val crystal           = "0.7.1"
     val discipline        = "1.0.2"
     val disciplineMUnit   = "0.2.2"
+    val geminiLocales     = "0.5.0"
     val gspCore           = "0.2.8"
-    val gspMathTestKit    = "0.2.4"
+    val gspMath           = "0.2.7"
     val gppUI             = "0.2.7"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
@@ -25,6 +26,7 @@ object Settings {
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.4"
     val reactGridLayout   = "0.7.0"
+    val reactHighcharts   = "0.1.2"
     val reactResizable    = "0.1.2"
     val reactSemanticUI   = "0.5.9"
     val reactSizeMe       = "0.4.4"
@@ -86,6 +88,12 @@ object Settings {
       )
     )
 
+    val GeminiLocales = Def.setting(
+      deps(
+        "edu.gemini" %%% "gemini-locales"
+      )(geminiLocales)
+    )
+
     val GSPCore = Def.setting(
       deps(
         "edu.gemini" %%% "gsp-core-model"
@@ -98,10 +106,16 @@ object Settings {
       )(gspCore)
     )
 
+    val GSPMath = Def.setting(
+      deps(
+        "edu.gemini" %%% "gsp-math"
+      )(gspMath)
+    )
+
     val GSPMathTestKit = Def.setting(
       deps(
         "edu.gemini" %%% "gsp-math-testkit"
-      )(gspMathTestKit)
+      )(gspMath)
     )
 
     val GPPUI = Def.setting(
@@ -168,6 +182,12 @@ object Settings {
       deps(
         "io.github.cquiroz.react" %%% "react-grid-layout"
       )(reactGridLayout)
+    )
+
+    val ReactHighcharts = Def.setting(
+      deps(
+        "com.rpiaggio" %%% "scalajs-react-highcharts"
+      )(reactHighcharts)
     )
 
     val ReactResizable = Def.setting(

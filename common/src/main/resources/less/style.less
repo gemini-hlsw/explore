@@ -209,3 +209,36 @@ body {
 .dragging-over {
   background-color: gray;
 }
+
+.sky-plot {
+  height: 350px;
+}
+
+.sky-plot-section {
+  height: 390px;
+  background-color: white;
+  color: black;
+}
+
+.sky-plot-section .ui.checkbox + label {
+  color: black;
+}
+
+.sky-plot-controls {
+  display: flex;
+  justify-content: space-around;
+}
+
+.plot-toggle {
+  margin-left: 10px;
+  margin-right: 10px;
+  padding-top: 6px;
+}
+
+.plot-toggle.ui.slider.checkbox .box:before, .plot-toggle.ui.slider.checkbox label:before {
+  background-color: #545454 !important;
+}
+
+.plot-toggle.ui.slider.checkbox input:focus:checked ~ label:before {
+  background-color: #545454 !important;
+}
