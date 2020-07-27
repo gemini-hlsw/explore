@@ -59,4 +59,6 @@ object GPPStyles {
   val AladinDetailText: Css      = Css("aladin-detail-text")
   val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css    = Css("aladin-status-center-button")
+
+  val MoonPhase: Css = Css("moon-phase")
 }

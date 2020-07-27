@@ -27,12 +27,15 @@ import gpp.ui.reusability._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.skycalc.TwilightBoundType
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.MonocleReact._
 import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
 import shapeless._
+import reactmoon.MoonPhase
+import explore.components.ui.GPPStyles
 
 import js.JSConverters._
 
@@ -126,6 +129,8 @@ object SkyPlot {
         }
 
       val seriesData = seriesDataGen.from(series.unzipN)
+
+      val moonIllum = skyCalcResults(skyCalcResults.length / 2)._2.lunarIlluminatedFraction.toDouble
 
       def timeFormat(value: Double): String =
         ZonedDateTime
@@ -267,7 +272,20 @@ object SkyPlot {
             .toJSArray
         )
 
-      Chart(options).withKey(props.toString)
+      val moonPeriod = MoonCalc.approximatePeriod(start)
+      val full       = MoonCalc.getMoonTime(moonPeriod, MoonCalc.Phase.Full)
+      val waxing     = start.isBefore(full)
+      val moonPhase  = if (waxing) moonIllum / 2 else 1.0 - moonIllum / 2
+
+      <.span(
+        <.div(GPPStyles.MoonPhase)(
+          <.span(
+            MoonPhase(phase = moonPhase, size = 20, border = "1px solid black"),
+            <.small("%1.0f%%".format(moonIllum * 100))
+          )
+        ),
+        Chart(options).withKey(props.toString)
+      )
     }
   }
 

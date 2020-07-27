@@ -156,6 +156,13 @@ lazy val commonSettings = Seq(
   homepage := Some(url("https://github.com/geminihlsw/explore")),
   licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
   scalacOptions += "-Ymacro-annotations",
+  scalacOptions ~= (_.filterNot(
+    Set(
+      // By necessity facades will have unused params
+      "-Wdead-code",
+      "-Wunused:params"
+    )
+  )),
   // don't publish anything
   publish := {},
   publishLocal := {},
@@ -237,9 +244,11 @@ lazy val commonWDS = Seq(
     "@packtracker/webpack-plugin"        -> "2.2.0"
   ),
   npmDependencies in Compile ++= Seq(
-    "react"            -> reactJS,
-    "react-dom"        -> reactJS,
-    "fomantic-ui-less" -> FUILess,
-    "prop-types"       -> "15.7.2"
+    "react"             -> reactJS,
+    "react-dom"         -> reactJS,
+    "fomantic-ui-less"  -> FUILess,
+    "prop-types"        -> "15.7.2",
+    "react-moon"        -> "2.0.1",
+    "styled-components" -> "5.1.1"
   )
 )
