@@ -11,6 +11,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import cats.implicits._
@@ -18,6 +19,7 @@ import explore.implicits._
 import explore.model.reusability._
 import gem.enum.Site
 import gem.math.ObservingNight
+import gem.util.Enumerated
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
@@ -25,7 +27,9 @@ import gpp.ui.reusability._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.skycalc.TwilightBoundType
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
+import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
 import shapeless._
@@ -43,17 +47,39 @@ final case class SkyPlot(
 object SkyPlot {
   type Props = SkyPlot
 
+  @Lenses
+  case class State(shownSeries: HashSet[ElevationSeries] = HashSet(ElevationSeries.Elevation))
+
   implicit private val propsReuse: Reusability[Props] = Reusability.derive
+  // State doesn't trigger rerenders. We keep track of what is shown in case there is a
+  // rerender due to a change of properties.
+  implicit private val stateReuse: Reusability[State] = Reusability.always
 
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
-  private case class SeriesData(
+  protected case class SeriesData(
     targetAltitude:  List[Chart.Data],
     skyBrightness:   List[Chart.Data],
     parallaticAngle: List[Chart.Data],
     moonAltitude:    List[Chart.Data]
   )
+
+  sealed abstract class ElevationSeries(
+    val name:  String,
+    val yAxis: Int,
+    val data:  SeriesData => List[Chart.Data]
+  )
+  object ElevationSeries extends Enumerated[ElevationSeries] {
+    case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
+    case object ParallacticAngle extends ElevationSeries("Parallatic Angle", 1, _.parallaticAngle)
+    case object SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
+    case object LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
+
+    def tag(a: ElevationSeries) = a.name
+
+    val all = List(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
+  }
 
   private val seriesDataGen = Generic[SeriesData]
 
@@ -67,8 +93,13 @@ object SkyPlot {
     s"$degrees°$minutes′$seconds″"
   }
 
-  class Backend( /*$ : BackendScope[Props, State]*/ ) {
-    def render(props: Props) = {
+  class Backend($ : BackendScope[Props, State]) {
+    def toggleSeriesVisibility(series: ElevationSeries): Callback =
+      $.modStateL(State.shownSeries)(shownSeries =>
+        if (shownSeries.contains(series)) shownSeries - series else shownSeries + series
+      )
+
+    def render(props: Props, state: State) = {
       val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
       val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightBoundType.Official)
       val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightBoundType.Nautical)
@@ -218,26 +249,22 @@ object SkyPlot {
             )
         )
         .setSeries(
-          List(
-            SeriesLineOptions(line)
-              .setName("Elevation")
-              .setYAxis(0)
-              .setClassName("plot-target-elevation-series")
-              .setData(seriesData.targetAltitude.toJSArray),
-            SeriesLineOptions(line)
-              .setName("Parallatic Angle")
-              .setYAxis(1)
-              .setData(seriesData.parallaticAngle.toJSArray),
-            SeriesLineOptions(line)
-              .setName("Sky Brightness")
-              .setYAxis(2)
-              .setClassName("plot-sky-brightness-series")
-              .setData(seriesData.skyBrightness.toJSArray),
-            SeriesLineOptions(line)
-              .setName("Lunar Elevation")
-              .setYAxis(0)
-              .setData(seriesData.moonAltitude.toJSArray)
-          ).map(_.asInstanceOf[SeriesOptionsType]).toJSArray
+          ElevationSeries.all
+            .map(series =>
+              SeriesLineOptions(line)
+                .setName(series.name)
+                .setYAxis(series.yAxis)
+                .setData(series.data(seriesData).toJSArray)
+                .setVisible(state.shownSeries.contains(series))
+                .setEvents(
+                  SeriesEventsOptionsObject()
+                    .setLegendItemClick((_: Series, _: SeriesLegendItemClickEventObject) =>
+                      toggleSeriesVisibility(series).runNow()
+                    )
+                )
+            )
+            .map(_.asInstanceOf[SeriesOptionsType])
+            .toJSArray
         )
 
       Chart(options).withKey(props.toString)
@@ -247,8 +274,8 @@ object SkyPlot {
   val component =
     ScalaComponent
       .builder[Props]
-      .backend(_ => new Backend())
-      .renderBackend
+      .initialState(State())
+      .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 }
