@@ -229,7 +229,7 @@ object TargetObsList {
               props.targetsWithObs.get.targets.elements.toTagMod { target =>
                 val targetId = target.id
 
-                val targetObs = obsByTarget.getOrElse(targetId, List.empty)
+                val targetObs = obsByTarget.get(targetId).orEmpty
                 val obsCount  = targetObs.length
 
                 val opIcon =
@@ -240,7 +240,7 @@ object TargetObsList {
                         .fold("right", "down")
                     )(^.cursor.pointer,
                       ^.onClick ==> { e: ReactEvent =>
-                        e.stopPropagationCB >> toggleCollapsed(targetId)
+                        toggleCollapsed(targetId).asEventDefault(e).void
                       }
                     ),
                     Icon("chevron right")
