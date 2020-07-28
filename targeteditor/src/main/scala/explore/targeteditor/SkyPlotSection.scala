@@ -66,7 +66,7 @@ object SkyPlotSection {
     def render(props: Props, state: State) =
       <.div(GPPStyles.SkyPlotSection)(
         <.div(GPPStyles.SkyPlot)(
-          SkyPlot(state.site, props.coords, LocalDate.of(2020, 7, 14), state.zoneId, 350)
+          SkyPlot(state.site, props.coords, LocalDate.of(2020, 7, 28), state.zoneId, 350)
         ),
         <.div(GPPStyles.SkyPlotControls)(
           <.div(

@@ -62,10 +62,10 @@ object SkyPlot {
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   protected case class SeriesData(
-    targetAltitude:  List[Chart.Data],
-    skyBrightness:   List[Chart.Data],
-    parallaticAngle: List[Chart.Data],
-    moonAltitude:    List[Chart.Data]
+    targetAltitude:   List[Chart.Data],
+    skyBrightness:    List[Chart.Data],
+    parallacticAngle: List[Chart.Data],
+    moonAltitude:     List[Chart.Data]
   )
 
   sealed abstract class ElevationSeries(
@@ -75,7 +75,7 @@ object SkyPlot {
   )
   object ElevationSeries extends Enumerated[ElevationSeries] {
     case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
-    case object ParallacticAngle extends ElevationSeries("Parallatic Angle", 1, _.parallaticAngle)
+    case object ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
     case object SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
     case object LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
 
@@ -129,8 +129,6 @@ object SkyPlot {
         }
 
       val seriesData = seriesDataGen.from(series.unzipN)
-
-      val moonIllum = skyCalcResults(skyCalcResults.length / 2)._2.lunarIlluminatedFraction.toDouble
 
       def timeFormat(value: Double): String =
         ZonedDateTime
@@ -223,11 +221,11 @@ object SkyPlot {
               .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
             YAxisOptions()
               .setOpposite(true)
-              .setTitle(YAxisTitleOptions().setText("Parallatic angle"))
+              .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
               .setMin(-180)
               .setMax(180)
               .setTickInterval(60)
-              .setClassName("plot-axis-parallatic-angle")
+              .setClassName("plot-axis-parallactic-angle")
               .setShowEmpty(false)
               .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
             YAxisOptions()
@@ -272,10 +270,9 @@ object SkyPlot {
             .toJSArray
         )
 
-      val moonPeriod = MoonCalc.approximatePeriod(start)
-      val full       = MoonCalc.getMoonTime(moonPeriod, MoonCalc.Phase.Full)
-      val waxing     = start.isBefore(full)
-      val moonPhase  = if (waxing) moonIllum / 2 else 1.0 - moonIllum / 2
+      val (moonPhase, moonIllum) = skyCalcResults(
+        skyCalcResults.length / 2
+      ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
 
       <.span(
         <.div(GPPStyles.MoonPhase)(

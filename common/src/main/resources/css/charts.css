@@ -10,7 +10,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   stroke: #f45b5b;
 }
 
-/* Parallatic angle */
+/* Parallactic angle */
 .highcharts-color-1 {
   fill: #8bbc21;
   stroke: #8bbc21;
@@ -28,12 +28,12 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   stroke: #f7a35c;
 }
 
-.plot-axis-parallatic-angle {
+.plot-axis-parallactic-angle {
   stroke-width: 0;
   fill: #8bbc21;
 }
 
-.plot-axis-parallatic-angle text {
+.plot-axis-parallactic-angle text {
   fill: #8bbc21;
 }
 
