@@ -12,7 +12,7 @@ object Settings {
     val clue              = "0.1.1"
     val crystal           = "0.7.1"
     val discipline        = "1.0.3"
-    val disciplineMUnit   = "0.2.2"
+    val disciplineMUnit   = "0.2.3"
     val geminiLocales     = "0.5.0"
     val gspCore           = "0.2.8"
     val gspMath           = "0.2.7"
