@@ -22,7 +22,7 @@ object Settings {
     val monocle           = "2.0.5"
     val mouse             = "0.25"
     val mUnit             = "0.7.10"
-    val reactAladin       = "0.1.8"
+    val reactAladin       = "0.1.11"
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.4"
     val reactGridLayout   = "0.7.0"
