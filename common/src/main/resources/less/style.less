@@ -62,7 +62,7 @@ body {
 
 // Form propreties
 .gpp-form {
-  padding-top: 1em;
+  // padding-top: 1em;
 }
 
 .gpp-tile-title {
@@ -241,4 +241,27 @@ body {
 
 .plot-toggle.ui.slider.checkbox input:focus:checked ~ label:before {
   background-color: #545454 !important;
+}
+
+.ui.grid >.row > .column.aladin-column {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.aladin-column {
+}
+
+.aladin-container-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.aladin-container-body {
+  flex-grow: 1;
+  // margin-bottom: 0.2em;
+}
+.aladin-container-status {
+  margin-top: 0.2em;
+  flex-grow: 0;
 }

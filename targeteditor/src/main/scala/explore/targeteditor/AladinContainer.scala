@@ -11,6 +11,7 @@ import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
 import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
+import gpp.ui.reusability._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.Declination
@@ -28,6 +29,8 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
+import explore.components.ui.GPPStyles
+import react.semanticui.elements.divider.Divider
 
 @Lenses
 final case class AladinContainer(
@@ -46,14 +49,14 @@ object AladinContainer {
     * On the state we keep the svg to avoid recalculations during panning
     */
   @Lenses
-  final case class State(svg: Option[Svg])
+  final case class State(svg: Option[Svg], fov: Fov)
 
   object State {
-    val Zero: State = State(None)
+    val Zero: State = State(None, Fov(Angle.Angle0, Angle.Angle0))
   }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse                     = Reusability.always[State]
+  protected implicit val stateReuse: Reusability[State] = Reusability.by(_.fov.x)
 
   val AladinComp = Aladin.component
 
@@ -118,7 +121,7 @@ object AladinContainer {
       */
     def initialSvgState: Callback =
       aladinRef.get
-        .flatMapCB(_.backend.runOnAladinCB(v => updateSvgState(v.pixelScale)))
+        .flatMapCB(_.backend.runOnAladinCB(updateSvgState))
         .void
 
     /**
@@ -127,18 +130,18 @@ object AladinContainer {
       * @param pixelScale
       * @return
       */
-    def updateSvgState(pixelScale: PixelScale): CallbackTo[Svg] =
+    def updateSvgState(v: JsAladin): CallbackTo[Svg] =
       $.props.flatMap { p =>
         CallbackTo
           .pure(
             visualization
               .shapesToSvg(GmosGeometry.shapes(p.options.posAngle),
                            GmosGeometry.pp,
-                           pixelScale,
+                           v.pixelScale,
                            GmosGeometry.ScaleFactor
               )
           )
-          .flatTap(svg => $.setStateL(State.svg)(svg.some))
+          .flatTap(svg => $.setStateL(State.svg)(svg.some) *> $.setStateL(State.fov)(v.fov))
       }
 
     def renderVisualization(
@@ -191,7 +194,7 @@ object AladinContainer {
       $.state.flatMap(s => s.svg.map(updateVisualization(_)(v)).getOrEmpty)
 
     def onZoom(v: JsAladin): Callback =
-      updateSvgState(v.pixelScale).flatMap { s =>
+      updateSvgState(v).flatMap { s =>
         aladinRef.get.flatMapCB(r =>
           r.backend.recalculateView *>
             r.backend.runOnAladinCB(updateVisualization(s))
@@ -235,25 +238,39 @@ object AladinContainer {
         }
         .void
 
-    def render(props: Props) =
+    def formatAngle(angle: Angle): String = {
+      val dms     = Angle.DMS(angle)
+      val degrees = if (dms.degrees > 180) s"-${360 - dms.degrees}" else dms.degrees.toString
+      val minutes = "%02d".format(dms.arcminutes)
+      s"$degrees°$minutes"
+    }
+
+    def render(props: Props, state: State) =
       // We want the aladin component inside SizeMe to re-render on resize
       <.div(
-        ^.width := 100.pct,
-        ^.height := 100.pct,
-        AladinComp.withRef(aladinRef) {
-          Aladin(showReticle = false,
-                 target = props.aladinCoordsStr,
-                 fov = 0.25,
-                 showGotoControl = false,
-                 customize = includeSvg _
-          )
-        }
+        GPPStyles.AladinContainerColumn,
+        <.div(
+          GPPStyles.AladinContainerBody,
+          AladinComp.withRef(aladinRef) {
+            Aladin(showReticle = false,
+                   showLayersControl = false,
+                   target = props.aladinCoordsStr,
+                   fov = 0.25,
+                   showGotoControl = false,
+                   customize = includeSvg _
+            )
+          }
+        ),
+        <.div(GPPStyles.AladinContainerStatus,
+              s"Fov: ${formatAngle(state.fov.x)}",
+              Divider(vertical = true)
+        )
       )
 
     def recalculateView =
       aladinRef.get.flatMapCB { r =>
-        r.backend.pixelScale.flatMap { ps =>
-          updateSvgState(ps).flatMap { s =>
+        r.backend.runOnAladinCB { v =>
+          updateSvgState(v).flatMap { s =>
             r.backend.recalculateView *> r.backend.runOnAladinCB(updateVisualization(s))
           }
         }
