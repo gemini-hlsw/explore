@@ -15,7 +15,7 @@ object Settings {
     val disciplineMUnit   = "0.2.3"
     val geminiLocales     = "0.5.0"
     val gspCore           = "0.2.8"
-    val gspMath           = "0.2.7"
+    val gspMath           = "0.2.8"
     val gppUI             = "0.2.8"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
