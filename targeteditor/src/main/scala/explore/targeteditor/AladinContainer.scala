@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.implicits._
 import crystal.react.implicits._
 import explore.View
+import explore.Icons
 import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
@@ -30,7 +31,11 @@ import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
 import explore.components.ui.GPPStyles
-import react.semanticui.elements.divider.Divider
+import react.semanticui.elements.label.Label
+import react.semanticui.elements.label.LabelDetail
+import react.semanticui.sizes._
+import react.semanticui.elements.button.Button
+import react.semanticui.modules.popup.Popup
 
 @Lenses
 final case class AladinContainer(
@@ -49,14 +54,14 @@ object AladinContainer {
     * On the state we keep the svg to avoid recalculations during panning
     */
   @Lenses
-  final case class State(svg: Option[Svg], fov: Fov)
+  final case class State(svg: Option[Svg], fov: Fov, current: Coordinates)
 
   object State {
-    val Zero: State = State(None, Fov(Angle.Angle0, Angle.Angle0))
+    val Zero: State = State(None, Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
   }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] = Reusability.by(_.fov.x)
+  protected implicit val stateReuse: Reusability[State] = Reusability.by(s => (s.fov.x, s.current))
 
   val AladinComp = Aladin.component
 
@@ -141,7 +146,7 @@ object AladinContainer {
                            GmosGeometry.ScaleFactor
               )
           )
-          .flatTap(svg => $.setStateL(State.svg)(svg.some) *> $.setStateL(State.fov)(v.fov))
+          .flatTap(svg => $.modState((s: State) => s.copy(svg = svg.some, fov = v.fov)))
       }
 
     def renderVisualization(
@@ -182,7 +187,9 @@ object AladinContainer {
       v.onFullScreenToggle(recalculateView) *> // re render on screen toggle
         v.onZoom(onZoom(v)) *>                 // re render on zoom
         v.onPositionChanged(onPositionChanged(v)) *>
-        v.onMouseMove(s => Callback.log(s"$s"))
+        v.onMouseMove(s =>
+          Callback.log(s"$s") *> $.setStateL(State.current)(Coordinates(s.ra, s.dec))
+        )
 
     def updateVisualization(s: Svg)(v: JsAladin): Callback = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
@@ -245,7 +252,9 @@ object AladinContainer {
       s"$degrees°$minutes"
     }
 
-    def render(props: Props, state: State) =
+    def render(props: Props, state: State) = {
+      println("Render")
+      println(state.current)
       // We want the aladin component inside SizeMe to re-render on resize
       <.div(
         GPPStyles.AladinContainerColumn,
@@ -261,11 +270,24 @@ object AladinContainer {
             )
           }
         ),
-        <.div(GPPStyles.AladinContainerStatus,
-              s"Fov: ${formatAngle(state.fov.x)}",
-              Divider(vertical = true)
+        Label(content = "Fov:",
+              clazz = GPPStyles.AladinFOV,
+              size = Small,
+              detail = LabelDetail(formatAngle(state.fov.x))
+        ),
+        Label(content = "Cur:",
+              clazz = GPPStyles.AladinCurrentCoords,
+              size = Small,
+              detail = LabelDetail(Coordinates.fromHmsDms.reverseGet(state.current))
+        ),
+        <.div(
+          GPPStyles.AladinCenterButton,
+          Popup(content = "Center on target",
+                trigger = Button(size = Mini, icon = true)(Icons.Bullseye)
+          )
         )
       )
+    }
 
     def recalculateView =
       aladinRef.get.flatMapCB { r =>

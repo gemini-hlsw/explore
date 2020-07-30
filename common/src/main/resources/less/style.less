@@ -253,15 +253,35 @@ body {
 
 .aladin-container-column {
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr min-content;
+  grid-template-columns: 1fr 4fr min-content;
+  align-content: stretch;
+  grid-template-areas: "aladin aladin aladin"
+    "fov curr center";
 }
 
 .aladin-container-body {
-  flex-grow: 1;
-  // margin-bottom: 0.2em;
+  grid-area: aladin;
+  margin-bottom: 0.2em;
 }
+
 .aladin-container-status {
-  margin-top: 0.2em;
-  flex-grow: 0;
+}
+
+.aladin-status-fov {
+  grid-area: fov;
+  justify-self: start;
+  align-self: center;
+}
+
+.aladin-status-current-coordinates {
+  grid-area: curr;
+  justify-self: end;
+  align-self: center;
+}
+
+.aladin-status-center-button {
+  grid-area: center;
+  align-self: center;
 }

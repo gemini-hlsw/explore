@@ -55,4 +55,7 @@ object GPPStyles {
   val AladinContainerColumn: Css = Css("aladin-container-column")
   val AladinContainerBody: Css   = Css("aladin-container-body")
   val AladinContainerStatus: Css = Css("aladin-container-status")
+  val AladinFOV: Css             = Css("aladin-status-fov")
+  val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
+  val AladinCenterButton: Css    = Css("aladin-status-center-button")
 }
