@@ -15,6 +15,7 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import cats.implicits._
+import explore.components.ui.GPPStyles
 import explore.implicits._
 import explore.model.reusability._
 import gem.enum.Site
@@ -27,15 +28,14 @@ import gpp.ui.reusability._
 import gsp.math.Angle
 import gsp.math.Coordinates
 import gsp.math.skycalc.TwilightBoundType
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.MonocleReact._
 import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
-import shapeless._
 import reactmoon.MoonPhase
-import explore.components.ui.GPPStyles
+import shapeless._
 
 import js.JSConverters._
 

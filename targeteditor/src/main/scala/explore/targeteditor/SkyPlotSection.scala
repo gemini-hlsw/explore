@@ -21,8 +21,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common.ReactProps
-import react.semanticui.modules.checkbox.Checkbox
 import react.datepicker._
+import react.semanticui.modules.checkbox.Checkbox
 
 final case class SkyPlotSection(
   coords: Coordinates
