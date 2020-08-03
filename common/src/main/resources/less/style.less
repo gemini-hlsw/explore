@@ -60,9 +60,8 @@ body {
   background: darkgrey;
 }
 
-// Form propreties
+// Form properties
 .gpp-form {
-  // padding-top: 1em;
 }
 
 .gpp-tile-title {
@@ -255,7 +254,7 @@ body {
   height: 100%;
   display: grid;
   grid-template-rows: 1fr min-content;
-  grid-template-columns: 1fr 4fr min-content;
+  grid-template-columns: max-content 4fr min-content;
   align-content: stretch;
   grid-template-areas: "aladin aladin aladin"
     "fov curr center";
@@ -271,7 +270,7 @@ body {
 
 .aladin-status-fov {
   grid-area: fov;
-  justify-self: start;
+  justify-self: stretch;
   align-self: center;
 }
 
@@ -284,4 +283,8 @@ body {
 .aladin-status-center-button {
   grid-area: center;
   align-self: center;
+}
+
+.aladin-detail-text {
+  color: white;
 }

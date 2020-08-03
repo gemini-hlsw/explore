@@ -92,7 +92,6 @@ object TargetBody extends ModelOptics {
           Grid(columns = Three,
                clazz = GPPStyles.FullHeightWidth,
                stretched = true,
-               // celled = GridCelled.Celled,
                padded = GridPadded.Horizontally
           )(
             GridRow(stretched = true)(

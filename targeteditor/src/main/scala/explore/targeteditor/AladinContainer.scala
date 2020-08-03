@@ -3,10 +3,13 @@
 
 package explore.targeteditor
 
+import scala.math.rint
+
 import cats.implicits._
 import crystal.react.implicits._
-import explore.View
 import explore.Icons
+import explore.View
+import explore.components.ui.GPPStyles
 import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
@@ -14,9 +17,11 @@ import explore.model.reusability._
 import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
 import gpp.ui.reusability._
 import gsp.math.Angle
+import gsp.math.Angle.DMS
 import gsp.math.Coordinates
 import gsp.math.Declination
 import gsp.math.HourAngle
+import gsp.math.HourAngle.HMS
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
 import gsp.math.geom.jts.interpreter._
@@ -30,12 +35,11 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
-import explore.components.ui.GPPStyles
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelDetail
-import react.semanticui.sizes._
-import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
+import react.semanticui.sizes._
 
 @Lenses
 final case class AladinContainer(
@@ -60,8 +64,40 @@ object AladinContainer {
     val Zero: State = State(None, Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
   }
 
+  // TODO: We may want to move these to gsp-math
+  def formatHMS(hms: HMS): String =
+    f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d"
+
+  def formatDMS(dms: DMS): String = {
+    val prefix = if (dms.toAngle.toMicroarcseconds < 0) "-" else "+"
+    f"$prefix${dms.degrees}%02d:${dms.arcminutes}%02d:${dms.arcseconds}%02d"
+  }
+
+  def formatCoordinates(coords: Coordinates): String = {
+    val ra  = HMS(coords.ra.toHourAngle)
+    val dec = DMS(coords.dec.toAngle)
+    s"${formatHMS(ra)} ${formatDMS(dec)}"
+  }
+
+  def formatFov(angle: Angle): String = {
+    val dms        = Angle.DMS(angle)
+    val degrees    = dms.degrees
+    val arcminutes = dms.arcminutes
+    val arcseconds = dms.arcseconds
+    val mas        = rint(dms.milliarcseconds.toDouble / 10).toInt
+    if (degrees >= 45)
+      f"$degrees%02d°"
+    else if (degrees >= 1)
+      f"$degrees%02d°$arcminutes%02d′"
+    else if (arcminutes >= 10)
+      f"$arcminutes%02d′$arcseconds%01d″"
+    else
+      f"$arcseconds%01d.$mas%02d″"
+  }
+
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] = Reusability.by(s => (s.fov.x, s.current))
+  protected implicit val stateReuse: Reusability[State] =
+    Reusability.by(s => (formatFov(s.fov.x), formatCoordinates(s.current)))
 
   val AladinComp = Aladin.component
 
@@ -187,9 +223,7 @@ object AladinContainer {
       v.onFullScreenToggle(recalculateView) *> // re render on screen toggle
         v.onZoom(onZoom(v)) *>                 // re render on zoom
         v.onPositionChanged(onPositionChanged(v)) *>
-        v.onMouseMove(s =>
-          Callback.log(s"$s") *> $.setStateL(State.current)(Coordinates(s.ra, s.dec))
-        )
+        v.onMouseMove(s => $.setStateL(State.current)(Coordinates(s.ra, s.dec)))
 
     def updateVisualization(s: Svg)(v: JsAladin): Callback = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
@@ -245,17 +279,16 @@ object AladinContainer {
         }
         .void
 
-    def formatAngle(angle: Angle): String = {
-      val dms     = Angle.DMS(angle)
-      val degrees = if (dms.degrees > 180) s"-${360 - dms.degrees}" else dms.degrees.toString
-      val minutes = "%02d".format(dms.arcminutes)
-      s"$degrees°$minutes"
-    }
+    def centerOnTarget: Callback =
+      $.props.flatMap(p =>
+        aladinRef.get.flatMapCB(
+          _.backend.gotoRaDec(p.aladinCoords.ra.toAngle.toDoubleDegrees,
+                              p.aladinCoords.dec.toAngle.toSignedDoubleDegrees
+          )
+        )
+      )
 
-    def render(props: Props, state: State) = {
-      println("Render")
-      println(state.current)
-      // We want the aladin component inside SizeMe to re-render on resize
+    def render(props: Props, state: State) =
       <.div(
         GPPStyles.AladinContainerColumn,
         <.div(
@@ -273,21 +306,24 @@ object AladinContainer {
         Label(content = "Fov:",
               clazz = GPPStyles.AladinFOV,
               size = Small,
-              detail = LabelDetail(formatAngle(state.fov.x))
+              detail =
+                LabelDetail(clazz = GPPStyles.AladinDetailText, content = formatFov(state.fov.x))
         ),
-        Label(content = "Cur:",
-              clazz = GPPStyles.AladinCurrentCoords,
-              size = Small,
-              detail = LabelDetail(Coordinates.fromHmsDms.reverseGet(state.current))
+        Label(
+          content = "Cur:",
+          clazz = GPPStyles.AladinCurrentCoords,
+          size = Small,
+          detail = LabelDetail(clazz = GPPStyles.AladinDetailText,
+                               content = formatCoordinates(state.current)
+          )
         ),
         <.div(
           GPPStyles.AladinCenterButton,
           Popup(content = "Center on target",
-                trigger = Button(size = Mini, icon = true)(Icons.Bullseye)
+                trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(Icons.Bullseye)
           )
         )
       )
-    }
 
     def recalculateView =
       aladinRef.get.flatMapCB { r =>
@@ -304,7 +340,9 @@ object AladinContainer {
       .builder[Props]
       .initialState(State.Zero)
       .renderBackend[Backend]
-      .componentDidMount(_.backend.initialSvgState.void)
+      .componentDidMount($ =>
+        $.backend.initialSvgState *> $.setStateL(State.current)($.props.aladinCoords)
+      )
       .componentDidUpdate(_.backend.recalculateView)
       .configure(Reusability.shouldComponentUpdate)
       .build
