@@ -25,6 +25,7 @@ object Settings {
     val reactAladin       = "0.1.13"
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.6"
+    val reactDatepicker   = "0.0.4"
     val reactGridLayout   = "0.7.1"
     val reactHighcharts   = "0.1.2"
     val reactResizable    = "0.1.3"
@@ -176,6 +177,12 @@ object Settings {
         "io.github.cquiroz.react" %%% "common",
         "io.github.cquiroz.react" %%% "cats"
       )(reactCommon)
+    )
+
+    val ReactDatepicker = Def.setting(
+      deps(
+        "com.rpiaggio" %%% "scalajs-react-datepicker"
+      )(reactDatepicker)
     )
 
     val ReactGridLayout = Def.setting(

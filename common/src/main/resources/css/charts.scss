@@ -1,5 +1,4 @@
-@import 'https://code.highcharts.com/css/highcharts.css';
-/* TODO Can we import from the facade package? */
+@use "~highcharts/css/highcharts.scss";
 
 /* Using custom classes for series works, but messes up tooltip border colors.
 See https://github.com/highcharts/highcharts/issues/13320 */

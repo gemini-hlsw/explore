@@ -105,6 +105,7 @@ lazy val targeteditor = project
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
+        ReactDatepicker.value ++
         ReactHighcharts.value ++
         ReactSizeMe.value
   )
@@ -233,6 +234,8 @@ lazy val commonWDS = Seq(
     "style-loader"                       -> "1.2.1",
     "less"                               -> "3.11.1",
     "less-loader"                        -> "6.1.0",
+    "sass"                               -> "1.26.10",
+    "sass-loader"                        -> "9.0.2",
     "webpack-merge"                      -> "4.2.2",
     "mini-css-extract-plugin"            -> "0.9.0",
     "webpack-dev-server-status-bar"      -> "1.1.2",

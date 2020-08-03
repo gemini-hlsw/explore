@@ -55,10 +55,17 @@ module.exports.devServer = ({ host, port } = {}) => ({
   plugins: [new Webpack.HotModuleReplacementPlugin()],
 });
 
-module.exports.lessLoader = (options = {}) => {
+module.exports.lessLoader = (devMode) => {
   return {
     loader: "less-loader",
-    options: { sourceMap: true },
+    options: { sourceMap: devMode }
+  };
+};
+
+module.exports.sassLoader = (devMode) => {
+  return {
+    loader: "sass-loader",
+    options: { sourceMap: devMode }
   };
 };
 
@@ -67,7 +74,8 @@ module.exports.extractCSS = ({
   devMode,
   include,
   exclude,
-  use = [],
+  useLess = [],
+  useSass = [],
   ci = false,
 }) => {
   const filename = ci ? "[name].css" : "[name].[contenthash].css";
@@ -86,9 +94,17 @@ module.exports.extractCSS = ({
           include,
           exclude,
           use: [devMode ? "style-loader" : MiniCssExtractPlugin.loader].concat(
-            use
+            useLess
           ),
         },
+        {
+          test: /\.s(a|c)ss$/,
+          include,
+          exclude,
+          use: [devMode ? "style-loader" : MiniCssExtractPlugin.loader].concat(
+            useSass
+          ),
+        }        
       ],
     },
     plugins: [plugin],
