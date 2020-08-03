@@ -8,14 +8,20 @@
   z-index: 10; // Needs a z-index to sit on top of the catalog
 }
 
+@media (min-resolution: 2ddpx) {
+  svg {
+    shape-rendering: optimizeSpeed;
+  }
+}
+
 .jts-polygon {
-  // display: none;
   stroke: gray;
   stroke-width: 2px;
   fill: lightgray;
   fill-opacity: 0.3;
   vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
+
 #probe {
   display: none;
   stroke: red;
@@ -58,9 +64,8 @@
 
 // Drawn X to indicate the target, or coordinates 0,0
 .jts-svg-center {
-  display: none;
-  stroke: red;
-  stroke-width: 1px;
+  stroke: green;
+  stroke-width: 2px;
   vector-effect: non-scaling-stroke;
 }
 

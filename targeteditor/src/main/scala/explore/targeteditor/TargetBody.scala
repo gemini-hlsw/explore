@@ -89,36 +89,36 @@ object TargetBody extends ModelOptics {
           val searchAndSet: String => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          SizeMe(monitorHeight = true) { s =>
-            Grid(columns = Three,
-                 clazz = GPPStyles.FullHeightWidth,
-                 stretched = true,
-                 padded = GridPadded.Horizontally
-            )(
-              GridRow(stretched = true)(
-                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CoordinatesForm(target, searchAndSet, gotoRaDec)
-                    .withKey(coordinatesKey(target)),
-                  UndoButtons(target, undoCtx)
-                ),
-                GridColumn(stretched = true, computer = Eight)(
+          Grid(columns = Three,
+               clazz = GPPStyles.FullHeightWidth,
+               stretched = true,
+               padded = GridPadded.Horizontally
+          )(
+            GridRow(stretched = true)(
+              GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                CoordinatesForm(target, searchAndSet, gotoRaDec)
+                  .withKey(coordinatesKey(target)),
+                UndoButtons(target, undoCtx)
+              ),
+              GridColumn(stretched = true, computer = Eight, clazz = GPPStyles.AladinColumn)(
+                SizeMe(monitorHeight = true) { s =>
                   AladinRef.withRef(aladinRef) {
                     AladinContainer(s, props.target, props.options.get)
                   }
-                ),
-                GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
-                  CataloguesForm(props.options)
-                )
+                }
               ),
-              GridRow()(
-                GridColumn(computer = Sixteen)(
-                  <.div()(
-                    SkyPlotSection(target.track.baseCoordinates)
-                  )
+              GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+                CataloguesForm(props.options)
+              )
+            ),
+            GridRow()(
+              GridColumn(computer = Sixteen)(
+                <.div()(
+                  SkyPlotSection(target.track.baseCoordinates)
                 )
               )
             )
-          }
+          )
         }
       }
 

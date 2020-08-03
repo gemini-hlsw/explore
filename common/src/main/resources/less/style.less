@@ -60,9 +60,8 @@ body {
   background: darkgrey;
 }
 
-// Form propreties
+// Form properties
 .gpp-form {
-  padding-top: 1em;
 }
 
 .gpp-tile-title {
@@ -241,4 +240,51 @@ body {
 
 .plot-toggle.ui.slider.checkbox input:focus:checked ~ label:before {
   background-color: #545454 !important;
+}
+
+.ui.grid >.row > .column.aladin-column {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.aladin-column {
+}
+
+.aladin-container-column {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr min-content;
+  grid-template-columns: max-content 4fr min-content;
+  align-content: stretch;
+  grid-template-areas: "aladin aladin aladin"
+    "fov curr center";
+}
+
+.aladin-container-body {
+  grid-area: aladin;
+  margin-bottom: 0.2em;
+}
+
+.aladin-container-status {
+}
+
+.aladin-status-fov {
+  grid-area: fov;
+  justify-self: stretch;
+  align-self: center;
+}
+
+.aladin-status-current-coordinates {
+  grid-area: curr;
+  justify-self: end;
+  align-self: center;
+}
+
+.aladin-status-center-button {
+  grid-area: center;
+  align-self: center;
+}
+
+.aladin-detail-text {
+  color: white;
 }

@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@cquiroz/aladin-lite@0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@cquiroz/aladin-lite/-/aladin-lite-0.2.1.tgz#302e62d454841c1494a46677d0fb76297b1dffda"
-  integrity sha512-r3VtQczwOHCP09Za4/HWItBkxghsspuVuAZBSPCSv+C5C+2f3bYy7WVe8svEUTAc0IX5rEuPBdOgWlztBl/ovw==
+"@cquiroz/aladin-lite@0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@cquiroz/aladin-lite/-/aladin-lite-0.2.3.tgz#55c5d9c17099c97b42414177e8a4175b69879a54"
+  integrity sha512-yOs5EvTerBMO/hT5IYpM+lKZheRayuwSNbAVDvuvzgtCeaIMaNoyovzP5Lq7I7p1niVcQfELooXHu9lJUrW5Xg==
   dependencies:
     jquery "^1.12.4"
     raf "^3.4.1"
@@ -5892,10 +5892,10 @@ selfsigned@^1.10.7:
   dependencies:
     node-forge "0.9.0"
 
-semantic-ui-react@0.88.2:
-  version "0.88.2"
-  resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-0.88.2.tgz#3d4b54f8b799769b412435c8531475fd34aa4149"
-  integrity sha512-+02kN2z8PuA/cMdvDUsHhbJmBzxxgOXVHMFr9XK7zGb0wkW9A6OPQMFokWz7ozlVtKjN6r7zsb+Qvjk/qq1OWw==
+semantic-ui-react@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-1.0.0.tgz#5d9f6fc29a63a6f16413e9bea93fe4031332cc03"
+  integrity sha512-85mYHYuDBNa6la1BgKwuOSD1vcIPsFQEXRxGsZ9pUtE4iHlEcylF+x46NYHIGbBjlys63SpNH3PtK6VyZj9LBw==
   dependencies:
     "@babel/runtime" "^7.1.2"
     "@semantic-ui-react/event-stack" "^3.1.0"

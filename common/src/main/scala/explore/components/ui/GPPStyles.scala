@@ -50,4 +50,13 @@ object GPPStyles {
   val SkyPlotSection: Css  = Css("sky-plot-section")
   val SkyPlotControls: Css = Css("sky-plot-controls")
   val PlotToggle: Css      = Css("plot-toggle")
+
+  val AladinColumn: Css          = Css("aladin-column")
+  val AladinContainerColumn: Css = Css("aladin-container-column")
+  val AladinContainerBody: Css   = Css("aladin-container-body")
+  val AladinContainerStatus: Css = Css("aladin-container-status")
+  val AladinFOV: Css             = Css("aladin-status-fov")
+  val AladinDetailText: Css      = Css("aladin-detail-text")
+  val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
+  val AladinCenterButton: Css    = Css("aladin-status-center-button")
 }
