@@ -6,6 +6,7 @@ package explore.targeteditor
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 import cats.Eq
 import cats.implicits._
@@ -20,6 +21,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common.ReactProps
+import react.datepicker._
 import react.semanticui.modules.checkbox.Checkbox
 
 final case class SkyPlotSection(
@@ -39,7 +41,7 @@ object SkyPlotSection {
   }
 
   @Lenses
-  final case class State(site: Site, timeDisplay: TimeDisplay) {
+  final case class State(site: Site, date: LocalDate, timeDisplay: TimeDisplay) {
     def zoneId: ZoneId =
       timeDisplay match {
         case TimeDisplay.UTC  => ZoneOffset.UTC
@@ -66,7 +68,7 @@ object SkyPlotSection {
     def render(props: Props, state: State) =
       <.div(GPPStyles.SkyPlotSection)(
         <.div(GPPStyles.SkyPlot)(
-          SkyPlot(state.site, props.coords, LocalDate.of(2020, 7, 22), state.zoneId, 350)
+          SkyPlot(state.site, props.coords, state.date, state.zoneId, 350)
         ),
         <.div(GPPStyles.SkyPlotControls)(
           <.div(
@@ -83,6 +85,13 @@ object SkyPlotSection {
                     ^.cursor.pointer,
                     ^.onClick --> $.setStateL(State.site)(Site.GS)
             )
+          ),
+          <.div(
+            Datepicker(onChange =
+              (newValue, _) => $.setStateL(State.date)(newValue.toLocalDateOpt.get)
+            )
+              .selected(state.date.toJsDate)
+              .dateFormat("yyyy-MM-dd")
           ),
           <.div(
             <.label(TimeDisplay.UTC.toString,
@@ -107,7 +116,9 @@ object SkyPlotSection {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State(Site.GS, TimeDisplay.UTC))
+      .initialState(
+        State(Site.GS, ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1), TimeDisplay.UTC)
+      )
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build

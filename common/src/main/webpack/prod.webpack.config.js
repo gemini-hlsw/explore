@@ -6,6 +6,7 @@ const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const isDev = false;
 const ci = process.env.CI; // When on CI don't add hashes
 
 const Web = Merge(
@@ -16,7 +17,8 @@ const Web = Merge(
   parts.resourceModules,
   parts.extractCSS({
     devMode: false,
-    use: ["css-loader", parts.autoprefix(), parts.lessLoader()], // Order is very important: css, post-css, less
+    useLess: ["css-loader", parts.autoprefix(), parts.lessLoader(isDev)], // Order is very important: css, post-css, (le|sa)ss
+    useSass: ["css-loader", parts.autoprefix(), parts.sassLoader(isDev)],
     ci: ci,
   }),
   parts.minifyJavaScript(),

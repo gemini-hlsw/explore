@@ -15,6 +15,7 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import cats.implicits._
+import explore.components.ui.GPPStyles
 import explore.implicits._
 import explore.model.reusability._
 import gem.enum.Site
@@ -29,9 +30,11 @@ import gsp.math.Coordinates
 import gsp.math.skycalc.TwilightBoundType
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
+import reactmoon.MoonPhase
 import shapeless._
 
 import js.JSConverters._
@@ -59,10 +62,10 @@ object SkyPlot {
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   protected case class SeriesData(
-    targetAltitude:  List[Chart.Data],
-    skyBrightness:   List[Chart.Data],
-    parallaticAngle: List[Chart.Data],
-    moonAltitude:    List[Chart.Data]
+    targetAltitude:   List[Chart.Data],
+    skyBrightness:    List[Chart.Data],
+    parallacticAngle: List[Chart.Data],
+    moonAltitude:     List[Chart.Data]
   )
 
   sealed abstract class ElevationSeries(
@@ -72,7 +75,7 @@ object SkyPlot {
   )
   object ElevationSeries extends Enumerated[ElevationSeries] {
     case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
-    case object ParallacticAngle extends ElevationSeries("Parallatic Angle", 1, _.parallaticAngle)
+    case object ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
     case object SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
     case object LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
 
@@ -218,11 +221,11 @@ object SkyPlot {
               .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
             YAxisOptions()
               .setOpposite(true)
-              .setTitle(YAxisTitleOptions().setText("Parallatic angle"))
+              .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
               .setMin(-180)
               .setMax(180)
               .setTickInterval(60)
-              .setClassName("plot-axis-parallatic-angle")
+              .setClassName("plot-axis-parallactic-angle")
               .setShowEmpty(false)
               .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
             YAxisOptions()
@@ -267,7 +270,19 @@ object SkyPlot {
             .toJSArray
         )
 
-      Chart(options).withKey(props.toString)
+      val (moonPhase, moonIllum) = skyCalcResults(
+        skyCalcResults.length / 2
+      ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
+
+      <.span(
+        <.div(GPPStyles.MoonPhase)(
+          <.span(
+            MoonPhase(phase = moonPhase, size = 20, border = "1px solid black"),
+            <.small("%1.0f%%".format(moonIllum * 100))
+          )
+        ),
+        Chart(options).withKey(props.toString)
+      )
     }
   }
 

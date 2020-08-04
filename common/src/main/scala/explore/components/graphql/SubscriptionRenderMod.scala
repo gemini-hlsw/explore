@@ -4,6 +4,7 @@
 package explore.components.graphql
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import cats.effect.ConcurrentEffect
 import cats.effect.ContextShift
@@ -23,8 +24,6 @@ import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
-
-import scala.language.postfixOps
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
