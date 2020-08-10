@@ -20,7 +20,6 @@ import gsp.math.Angle
 import gsp.math.Angle.DMS
 import gsp.math.Coordinates
 import gsp.math.Declination
-import gsp.math.HourAngle
 import gsp.math.HourAngle.HMS
 import gsp.math.ProperMotion
 import gsp.math.RightAscension
@@ -133,13 +132,8 @@ object AladinContainer {
               .gotoObject(
                 search,
                 (a, b) => {
-                  val ra  = RightAscension.fromHourAngle.get(
-                    HourAngle.angle.reverseGet(Angle.fromDoubleDegrees(a.toDouble))
-                  )
-                  val dec =
-                    Declination.fromAngle
-                      .getOption(Angle.fromDoubleDegrees(b.toDouble))
-                      .getOrElse(Declination.Zero)
+                  val ra  = RightAscension.fromDoubleDegrees(a.toDouble)
+                  val dec = Declination.fromDoubleDegrees(b.toDouble).getOrElse(Declination.Zero)
                   setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
                 },
                 Callback.log("error")
@@ -194,10 +188,11 @@ object AladinContainer {
       $.props
         .map(_.aladinCoords)
         .toCBO
-        .flatMap(c => aladinRef.get.flatMapCB(_.backend.world2pix(c))) // calculate the offset
+        // calculate the offset
+        .flatMap(c => aladinRef.get.flatMapCB(_.backend.world2pix(c)))
         .zip($.props.map(_.options).toCBO)
         .map {
-          case (offsets: (Double, Double), options: TargetVisualOptions) =>
+          case (Some((x, y)), options: TargetVisualOptions) =>
             // Delete any viz previously rendered
             val previous = Option(div.querySelector(".aladin-visualization"))
             previous.foreach(div.removeChild)
@@ -208,7 +203,7 @@ object AladinContainer {
                                             size,
                                             pixelScale,
                                             GmosGeometry.ScaleFactor,
-                                            offsets
+                                            (x, y)
             )
             // Switch the visibility
             toggleVisibility(g, "#science-ccd polygon", options.fov)
@@ -217,6 +212,7 @@ object AladinContainer {
             toggleVisibility(g, "#probe", options.probe)
             div.appendChild(g)
             ()
+          case _                                            =>
         }
 
     def includeSvg(v: JsAladin): Callback =
@@ -261,18 +257,20 @@ object AladinContainer {
                   .flatMapCB(
                     _.backend.world2pix(Coordinates(p.aladinCoords.ra, p.aladinCoords.dec))
                   )
-                  .flatMapCB { off =>
-                    Callback {
-                      // Offset the visualization
-                      visualization
-                        .updatePosition(svg,
-                                        previous,
-                                        size,
-                                        v.pixelScale,
-                                        GmosGeometry.ScaleFactor,
-                                        off
-                        )
-                    }
+                  .flatMapCB {
+                    case Some(off) =>
+                      Callback {
+                        // Offset the visualization
+                        visualization
+                          .updatePosition(svg,
+                                          previous,
+                                          size,
+                                          v.pixelScale,
+                                          GmosGeometry.ScaleFactor,
+                                          off
+                          )
+                      }
+                    case _         => Callback.empty
                   }
                   .toCallback
             }.getOrEmpty
@@ -328,9 +326,9 @@ object AladinContainer {
     def recalculateView =
       aladinRef.get.flatMapCB { r =>
         r.backend.runOnAladinCB { v =>
-          updateSvgState(v).flatMap { s =>
+          updateSvgState(v).flatMap(s =>
             r.backend.recalculateView *> r.backend.runOnAladinCB(updateVisualization(s))
-          }
+          )
         }
       }
   }
