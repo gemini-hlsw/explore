@@ -19,7 +19,7 @@ object Settings {
     val gppUI             = "0.2.8"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
-    val monocle           = "2.0.5"
+    val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.11"
     val reactAladin       = "0.1.14"
