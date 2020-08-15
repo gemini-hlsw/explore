@@ -24,14 +24,14 @@ object Settings {
     val mUnit             = "0.7.11"
     val reactAladin       = "0.1.14"
     val reactAtlasKitTree = "0.2.3"
-    val reactCommon       = "0.9.6"
+    val reactCommon       = "0.9.7"
     val reactDatepicker   = "0.0.4"
-    val reactGridLayout   = "0.7.1"
+    val reactGridLayout   = "0.7.3"
     val reactHighcharts   = "0.1.2"
     val reactResizable    = "0.1.3"
-    val reactSemanticUI   = "0.6.2"
-    val reactSizeMe       = "0.4.7"
-    val scalaJsReact      = "1.7.4"
+    val reactSemanticUI   = "0.6.3"
+    val reactSizeMe       = "0.4.6"
+    val scalaJsReact      = "1.7.5"
   }
 
   object Libraries {
