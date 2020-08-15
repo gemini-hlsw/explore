@@ -26,7 +26,7 @@ object Settings {
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.6"
     val reactDatepicker   = "0.0.4"
-    val reactGridLayout   = "0.7.1"
+    val reactGridLayout   = "0.7.3"
     val reactHighcharts   = "0.1.2"
     val reactResizable    = "0.1.3"
     val reactSemanticUI   = "0.6.2"
