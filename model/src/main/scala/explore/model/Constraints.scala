@@ -27,6 +27,6 @@ object Constraints {
     Eq.by(x => (x.id, x.name, x.cc, x.iq, x.sb, x.wv))
 
   implicit val showConstraints: Show[Constraints] =
-    Show.show(x => s"$name (${List(x.cc, x.iq, x.sb, x.wv).mkString(", ")}")
+    Show.show(x => s"${x.name} (${List(x.cc, x.iq, x.sb, x.wv).mkString(", ")})")
 
 }
