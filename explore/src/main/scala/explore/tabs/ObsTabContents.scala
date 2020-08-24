@@ -6,6 +6,7 @@ package explore.tabs
 import cats.implicits._
 import crystal.react.implicits._
 import explore._
+import explore.components.Tile
 import explore.components.ui.GPPStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsQueries._
