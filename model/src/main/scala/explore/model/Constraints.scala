@@ -18,7 +18,15 @@ final case class Constraints(
   iq:   ImageQuality,
   sb:   SkyBackground,
   wv:   WaterVapor
-)
+) {
+  override def toString: String =
+    s"""$productPrefix(UUID.fromString("$id")
+       |"$name"
+       |CloudCover.$cc
+       |ImageQuality.$iq
+       |SkyBackground.$sb
+       |WaterVapor.$wv)""".stripMargin.replaceAll("\n", ", ")
+}
 
 object Constraints {
   type Id = UUID
@@ -26,7 +34,6 @@ object Constraints {
   implicit val equalConstraints: Eq[Constraints] =
     Eq.by(x => (x.id, x.name, x.cc, x.iq, x.sb, x.wv))
 
-  implicit val showConstraints: Show[Constraints] =
-    Show.show(x => s"$name (${List(x.cc, x.iq, x.sb, x.wv).mkString(", ")}")
+  implicit val showConstraints: Show[Constraints] = Show.fromToString
 
 }
