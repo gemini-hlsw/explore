@@ -1029,3 +1029,56 @@ img.partner-split-flag {
     outline: 1px var(--site-border-color) solid;
   }
 }
+
+i.icon.user-astronaut:before { content: "\f4fb"; }
+
+.ui.modal.explore-login-box > .content {
+  background-color: var(--modal-background);
+}
+
+.explore-login-box-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.explore-login-title-wrapper {
+  overflow: hidden;
+  margin-bottom: 4em;
+}
+
+.explore-login-title {
+  @spacing: 20px;
+  transform: translate(-100%, 0%);
+  font-weight: 300;
+  font-size: 3em;
+  text-transform: uppercase;
+  letter-spacing: @spacing;
+  text-indent: @spacing;
+  animation: showTopText 0.8s;
+  animation-delay: 0.2s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes showTopText {
+  0% { transform: translate3d(0, 100%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.explore-login-orcid-button {
+  display: flex;
+  align-items: center;
+}
+
+.ui.button.explore-login-button {
+  margin-bottom: 1em;
+}
+
+.explore-login-orcid-icon {
+  @logosize: 1.18em;
+  margin-right: 0.42em;
+  vertical-align: baseline;
+  width: @logosize;
+  height: @logosize;
+}
+

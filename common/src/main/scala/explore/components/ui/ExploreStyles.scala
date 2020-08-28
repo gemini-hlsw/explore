@@ -142,4 +142,14 @@ object ExploreStyles {
   val ButtonIcon: Css       = Css("explore-button-icon")
   val FormSectionLabel: Css = Css("explore-section-label")
   val UnitsLabel: Css       = Css("explore-units-label")
+
+  // Login box
+  val LoginBox: Css          = Css("explore-login-box")
+  val LoginBoxLayout: Css    = Css("explore-login-box-layout")
+  val LoginTitle: Css        = Css("explore-login-title")
+  val LoginTitleWrapper: Css = Css("explore-login-title-wrapper")
+  val LoginBoxButton: Css    = Css("explore-login-button")
+  val OrcidIcon: Css         = Css("explore-login-orcid-icon")
+  val LoginOrcidButton: Css  = Css("explore-login-orcid-button")
+
 }

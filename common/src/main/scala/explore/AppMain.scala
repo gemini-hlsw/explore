@@ -3,7 +3,6 @@
 
 package explore
 
-import scala.concurrent.duration._
 import scala.scalajs.js
 
 import cats.effect.ExitCode
@@ -109,7 +108,7 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
     for {
-      vault     <- SSOClient.whoami[IO](IO.fromFuture)
+      vault     <- SSOClient.vault[IO](IO.fromFuture)
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")

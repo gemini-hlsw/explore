@@ -48,7 +48,7 @@ object TopBar {
               MenuItem(as = "a", header = true)(
                 <.span(
                   ExploreStyles.LoginMenu,
-                  p.vault.zoom(UserVault.expiration).get.toEpochMilli
+                  p.vault.zoom(UserVault.user).get.displayName
                 ),
                 ConnectionsStatus()
               ),

@@ -24,4 +24,5 @@ object Icons {
   val Sort                = Icon("sort")
   val ExclamationTriangle = Icon("exclamation triangle")
   val Ban                 = Icon("ban")
+  val UserAstronaut       = Icon(className = "user-astronaut")
 }
