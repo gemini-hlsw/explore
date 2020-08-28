@@ -3,6 +3,7 @@
 
 package explore
 
+import scala.concurrent.duration._
 import scala.scalajs.js
 
 import cats.effect.ExitCode
@@ -15,13 +16,14 @@ import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
 import crystal.react.AppRoot
+import explore.common.SSOClient
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.RootModel
+import explore.model.UserVault
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -30,6 +32,8 @@ import org.scalajs.dom.ext._
 import sttp.model.Uri
 
 import js.annotation._
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -50,11 +54,11 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
-    ReusabilityOverlay.overrideGloballyInDev()
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
-    val initialModel = RootModel(
-      tabs = EnumZipper.of[AppTab],
-      focused = none
+    def initialModel(vault: UserVault) = RootModel(
+      vault = vault,
+      tabs = EnumZipper.of[AppTab]
     )
 
     def setupScheme: IO[Unit] =
@@ -65,7 +69,21 @@ trait AppMain extends IOApp {
         }
       }
 
+    def refreshToken(expiration:       Instant, v: View[RootModel]): IO[UserVault] =
+      IO(Instant.now).flatMap { n =>
+        val sleepTime = SSOClient.refreshTimoutDelta.max(
+          (n.until(expiration, ChronoUnit.SECONDS).seconds - SSOClient.refreshTimoutDelta)
+        )
+        IO.timer.sleep(sleepTime)
+      } *> SSOClient
+        .whoami[IO](IO.fromFuture)
+        .flatTap((u: UserVault) => v.zoom(RootModel.vault).set(u))
+
+    def repeatTokenRefresh(expiration: Instant, v: View[RootModel]): IO[Unit]      =
+      refreshToken(expiration, v).flatMap(u => repeatTokenRefresh(u.expiration, v))
+
     for {
+      vault        <- SSOClient.whoami[IO](IO.fromFuture)
       _            <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       exploreDBURI <-
         IO.fromEither(Uri.parse(BuildInfo.ExploreDBEndpoint).leftMap(new Exception(_)))
@@ -76,9 +94,13 @@ trait AppMain extends IOApp {
       _            <- setupScheme
     } yield {
       val RootComponent =
-        AppRoot[IO](initialModel)(rootComponent, onUnmount = (_: RootModel) => ctx.cleanup())
+        AppRoot[IO](initialModel(vault))(
+          rootComponent,
+          onMount = repeatTokenRefresh(vault.expiration, _),
+          onUnmount = (_: RootModel) => ctx.cleanup()
+        )
 
-      val container     = Option(dom.document.getElementById("root")).getOrElse {
+      val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)

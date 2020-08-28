@@ -16,5 +16,6 @@ class ModelSuite extends DisciplineSuite {
   checkAll("Eq[TargetVisualOptions]", EqTests[TargetVisualOptions].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
   checkAll("Eq[Focused]", EqTests[Focused].eqv)
+  checkAll("Eq[UserVault]", EqTests[UserVault].eqv)
 
 }

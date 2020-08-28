@@ -37,12 +37,12 @@ import react.beautifuldnd._
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import TargetObsQueries._
-import react.semanticui.elements.button.Button.ButtonProps
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
