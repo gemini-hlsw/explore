@@ -21,7 +21,7 @@ object Settings {
     val log4CatsLogLevel  = "0.0.2"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
-    val mUnit             = "0.7.11"
+    val mUnit             = "0.7.12"
     val reactAladin       = "0.1.14"
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.7"
