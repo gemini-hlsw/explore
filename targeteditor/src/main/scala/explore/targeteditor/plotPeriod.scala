@@ -7,10 +7,10 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
-import gem.Semester
-import gem.enum.Site
-import gem.math.LocalObservingNight
-import gem.math.ObservingNight
+import lucuma.core.model.Semester
+import lucuma.core.enum.Site
+import lucuma.core.model.LocalObservingNight
+import lucuma.core.model.ObservingNight
 
 sealed trait PlotPeriod {
   def start(site: Site): Instant

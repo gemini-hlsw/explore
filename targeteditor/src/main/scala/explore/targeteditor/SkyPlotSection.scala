@@ -12,9 +12,9 @@ import cats.Eq
 import cats.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.reusability._
-import gem.enum.Site
-import gpp.ui.reusability._
-import gsp.math.Coordinates
+import lucuma.core.enum.Site
+import lucuma.ui.reusability._
+import lucuma.core.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._

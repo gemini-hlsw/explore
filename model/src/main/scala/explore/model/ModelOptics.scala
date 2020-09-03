@@ -3,10 +3,10 @@
 
 package explore.model
 
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.ProperMotion
-import gsp.math.RightAscension
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RightAscension
 import monocle.Lens
 
 /**

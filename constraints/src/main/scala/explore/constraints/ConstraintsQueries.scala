@@ -19,7 +19,7 @@ import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.Encoder

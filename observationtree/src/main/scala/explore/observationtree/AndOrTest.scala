@@ -20,9 +20,9 @@ import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
 import explore.model.enum._
 import explore.undo.KITreeMod
-import gsp.math.Coordinates
-import gsp.math.Epoch
-import gsp.math.ProperMotion
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.math.ProperMotion
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import mouse.boolean._

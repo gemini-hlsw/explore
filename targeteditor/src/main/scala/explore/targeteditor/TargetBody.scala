@@ -16,9 +16,9 @@ import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.RightAscension
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._

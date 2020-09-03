@@ -12,7 +12,7 @@ import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
-import gsp.math.Angle
+import lucuma.core.math.Angle
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._

@@ -6,8 +6,8 @@ package explore.model.arb
 import explore.model.Focused
 import explore.model.RootModel
 import explore.model.enum.AppTab
-import gem.arb.ArbEnumZipper._
-import gem.data.EnumZipper
+import lucuma.core.data.EnumZipper
+import lucuma.core.data.arb.ArbEnumZipper._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

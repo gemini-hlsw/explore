@@ -5,9 +5,9 @@ package explore.model.arb
 
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
-import gem.arb.ArbEnumerated._
-import gsp.math.Angle
-import gsp.math.arb.ArbAngle._
+import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.math.Angle
+import lucuma.core.math.arb.ArbAngle._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

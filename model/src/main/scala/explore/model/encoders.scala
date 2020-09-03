@@ -3,8 +3,8 @@
 
 package explore.model
 
-import gsp.math.Declination
-import gsp.math.RightAscension
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.syntax._

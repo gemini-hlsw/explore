@@ -4,7 +4,7 @@
 package explore.model.enum
 
 import cats.data.NonEmptyList
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 import monocle.Iso
 
 /**

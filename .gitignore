@@ -16,10 +16,11 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 .idea/
+out/
 .vscode/
 .bloop/
 .metals/
-project/metals.sbt
+metals.sbt
 
 # Mac OS
 .DS_Store

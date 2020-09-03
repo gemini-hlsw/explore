@@ -8,7 +8,7 @@ import cats.implicits._
 import cats.kernel.Eq
 import clue._
 import explore.model.enum.AppTab
-import gem.data.EnumZipper
+import lucuma.core.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
 import monocle.macros.Lenses
 import sttp.model.Uri

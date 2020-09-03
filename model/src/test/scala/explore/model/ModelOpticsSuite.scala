@@ -5,9 +5,9 @@ package explore.model
 
 import cats.implicits._
 import explore.model.arb.all._
-import gsp.math.arb.ArbDeclination
-import gsp.math.arb.ArbProperMotion
-import gsp.math.arb.ArbRightAscension
+import lucuma.core.math.arb.ArbDeclination
+import lucuma.core.math.arb.ArbProperMotion
+import lucuma.core.math.arb.ArbRightAscension
 import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
 

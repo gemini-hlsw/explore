@@ -6,7 +6,7 @@ package explore.components
 import explore.components.ui.GPPStyles
 import explore.model.ObsSummary
 import explore.model.reusability._
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._

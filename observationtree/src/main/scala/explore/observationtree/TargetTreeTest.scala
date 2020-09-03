@@ -12,11 +12,11 @@ import explore.model.ExploreObservation
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
 import explore.model.enum._
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.Epoch
-import gsp.math.ProperMotion
-import gsp.math.RightAscension
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.Epoch
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RightAscension
 
 object TargetTreeTest {
 

@@ -173,8 +173,7 @@ lazy val commonSettings = Seq(
 
 lazy val commonLibSettings = Seq(
   libraryDependencies ++=
-    GSPCore.value ++
-      GSPMath.value ++
+    LucumaCore.value ++
       Cats.value ++
       Mouse.value ++
       CatsEffect.value ++
@@ -186,8 +185,7 @@ lazy val commonLibSettings = Seq(
         MUnit.value ++
           Discipline.value ++
           MonocleLaw.value ++
-          GSPMathTestKit.value ++
-          GSPCoreTestKit.value
+          LucumaCoreTestKit.value
       ),
   testFrameworks += new TestFramework("munit.Framework")
 )
@@ -197,7 +195,7 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
-      GPPUI.value ++
+      LucumaUI.value ++
       Log4Cats.value ++
       In(Test)(
         ScalaJSReactTest.value

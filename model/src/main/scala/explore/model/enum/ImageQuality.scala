@@ -3,7 +3,7 @@
 
 package explore.model.enum
 
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 
 sealed abstract class ImageQuality(val toInt: Int, val label: String)
     extends Product

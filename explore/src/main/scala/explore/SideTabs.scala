@@ -8,7 +8,7 @@ import crystal.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.enum.AppTab
 import gem.data.EnumZipper
-import gpp.ui.reusability._
+import lucuma.ui.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._

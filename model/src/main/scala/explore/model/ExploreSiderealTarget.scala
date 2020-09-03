@@ -8,10 +8,10 @@ import java.util.UUID
 import cats._
 import cats.effect.Sync
 import cats.implicits._
-import gem.Target
-import gsp.math.Coordinates
-import gsp.math.Epoch
-import gsp.math.ProperMotion
+import lucuma.core.model.Target
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.math.ProperMotion
 import monocle.macros.Lenses
 
 /**

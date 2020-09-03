@@ -7,11 +7,10 @@ import java.time.Duration
 import java.time.Instant
 
 import cats.implicits._
-import gem.enum.Site
-import gem.enum.implicits._
-import gsp.math.Coordinates
-import gsp.math.skycalc.ImprovedSkyCalc
-import gsp.math.skycalc.SkyCalcResults
+import lucuma.core.enum.Site
+import lucuma.core.math.Coordinates
+import lucuma.core.math.skycalc.ImprovedSkyCalc
+import lucuma.core.math.skycalc.SkyCalcResults
 
 object SkyCalc {
   // TODO Cache
@@ -23,7 +22,7 @@ object SkyCalc {
     every:            Duration,
     coordsForInstant: Instant => Coordinates
   ): List[(Instant, SkyCalcResults)] = {
-    val calc     = ImprovedSkyCalc(site.toPlace)
+    val calc     = ImprovedSkyCalc(site.place)
     val instants =
       List.unfold(start)(prev =>
         prev.plus(every).some.filter(_.isBefore(end)).map(i => (i, i))
