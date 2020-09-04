@@ -3,7 +3,6 @@
 
 package explore.constraints
 
-import cats.Show
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.undo.UndoButtons
@@ -11,10 +10,11 @@ import explore.components.undo.UndoRegion
 import explore.constraints.ConstraintsQueries._
 import explore.implicits._
 import explore.model.Constraints
+import explore.model.display._
 import explore.model.reusability._
-import explore.model.show._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import monocle.Lens
@@ -45,7 +45,7 @@ object ConstraintsPanel {
             UndoViewZoom($.props.id, constraints, undoCtx.setter)
 
           AppCtx.withCtx { implicit appCtx =>
-            def selectEnum[A: Enumerated: Show](
+            def selectEnum[A: Enumerated: Display](
               label:  String,
               lens:   Lens[Constraints, A],
               fields: A => Mutation.Fields
