@@ -29,7 +29,7 @@ jobs:
           cd explore/target/scala-2.13/scalajs-bundler/main/
           node node_modules/webpack/bin/webpack --bail --profile --json --config packtracker.webpack.config.js
         env:
-          SBT_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+          JVM_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
           PT_COMMIT: ${{ github.event.pull_request.head.sha }}
           PT_PRIOR_COMMIT: ${{ github.event.pull_request.base.sha }}
       - name: Export assets to packtracker merged
@@ -39,5 +39,5 @@ jobs:
           cd explore/target/scala-2.13/scalajs-bundler/main/
           node node_modules/webpack/bin/webpack --bail --profile --json --config packtracker.webpack.config.js
         env:
-          SBT_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+          JVM_OPTS: "-Xmx4096M -Xss2M -XX:ReservedCodeCacheSize=256M -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
           PT_COMMIT: ${{ github.sha }}

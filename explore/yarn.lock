@@ -5510,7 +5510,15 @@ react-redux@^7.0.3, react-redux@^7.1.1:
     prop-types "^15.7.2"
     react-is "^16.9.0"
 
-react-resizable@1.10.1, react-resizable@^1.10.0:
+react-resizable@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/react-resizable/-/react-resizable-2.0.0.tgz#e254908acd949e52015ecf56e9788dc73b8b510d"
+  integrity sha512-oNVMKk+IQNW+nxcCB1W1uShZLJhIh3TDSW8NAbfck6N2jsiUTQ/V5ozBVFEHlRsxgxkf2A22rZJnXLRCBF14OA==
+  dependencies:
+    prop-types "15.x"
+    react-draggable "^4.0.3"
+
+react-resizable@^1.10.0:
   version "1.10.1"
   resolved "https://registry.yarnpkg.com/react-resizable/-/react-resizable-1.10.1.tgz#f0c2cf1d83b3470b87676ce6d6b02bbe3f4d8cd4"
   integrity sha512-Jd/bKOKx6+19NwC4/aMLRu/J9/krfxlDnElP41Oc+oLiUWs/zwV1S9yBfBZRnqAwQb6vQ/HRSk3bsSWGSgVbpw==
