@@ -16,12 +16,12 @@ object Settings {
     val geminiLocales     = "0.5.0"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
-    val lucumaCore        = "0.4.0"
-    val lucumaUI          = "0.2.1+66-c7f16d94-SNAPSHOT"
+    val lucumaCore        = "0.4.1"
+    val lucumaUI          = "0.3.1"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.12"
-    val reactAladin       = "0.1.15"
+    val reactAladin       = "0.2.0"
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.7"
     val reactDatepicker   = "0.0.4"
@@ -147,7 +147,7 @@ object Settings {
 
     val ReactAladin = Def.setting(
       deps(
-        "io.github.cquiroz.react" %%% "react-aladin"
+        "edu.gemini" %%% "react-aladin"
       )(reactAladin)
     )
 

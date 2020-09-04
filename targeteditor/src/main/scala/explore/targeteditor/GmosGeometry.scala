@@ -8,8 +8,8 @@ import cats.implicits._
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
-import gem.geom.GmosOiwfsProbeArm
-import gem.geom.GmosScienceAreaGeometry
+import lucuma.core.geom.GmosOiwfsProbeArm
+import lucuma.core.geom.GmosScienceAreaGeometry
 import gpp.svgdotjs.svgdotjsSvgJs.mod._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
