@@ -4,7 +4,6 @@
 package explore.undo
 
 import cats.effect.IO
-import cats.implicits._
 import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
 import monocle.Getter

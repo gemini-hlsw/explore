@@ -5,7 +5,7 @@ package explore
 
 import java.util.UUID
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.model.Page
 import explore.model.Page._

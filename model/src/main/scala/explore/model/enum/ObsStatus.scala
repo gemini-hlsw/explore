@@ -3,7 +3,7 @@
 
 package explore.model.enum
 
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 
 sealed abstract class ObsStatus(val label: String) extends Product with Serializable
 

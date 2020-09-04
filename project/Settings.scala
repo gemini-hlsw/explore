@@ -6,7 +6,7 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats              = "2.1.1"
+    val cats              = "2.2.0"
     val catsEffect        = "2.1.4"
     val circe             = "0.13.0"
     val clue              = "0.1.2"
@@ -14,21 +14,20 @@ object Settings {
     val discipline        = "1.0.3"
     val disciplineMUnit   = "0.2.4"
     val geminiLocales     = "0.5.0"
-    val gspCore           = "0.2.8"
-    val gspMath           = "0.2.8"
-    val gppUI             = "0.2.9"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.0.2"
+    val lucumaCore        = "0.4.1"
+    val lucumaUI          = "0.3.1"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.12"
-    val reactAladin       = "0.1.15"
+    val reactAladin       = "0.2.0"
     val reactAtlasKitTree = "0.2.3"
     val reactCommon       = "0.9.7"
     val reactDatepicker   = "0.0.4"
     val reactGridLayout   = "0.7.3"
     val reactHighcharts   = "0.1.2"
-    val reactResizable    = "0.1.4"
+    val reactResizable    = "0.2.0"
     val reactSemanticUI   = "0.6.3"
     val reactSizeMe       = "0.4.6"
     val scalaJsReact      = "1.7.5"
@@ -95,41 +94,29 @@ object Settings {
       )(geminiLocales)
     )
 
-    val GSPCore = Def.setting(
-      deps(
-        "edu.gemini" %%% "gsp-core-model"
-      )(gspCore)
-    )
-
-    val GSPCoreTestKit = Def.setting(
-      deps(
-        "edu.gemini" %%% "gsp-core-testkit"
-      )(gspCore)
-    )
-
-    val GSPMath = Def.setting(
-      deps(
-        "edu.gemini" %%% "gsp-math"
-      )(gspMath)
-    )
-
-    val GSPMathTestKit = Def.setting(
-      deps(
-        "edu.gemini" %%% "gsp-math-testkit"
-      )(gspMath)
-    )
-
-    val GPPUI = Def.setting(
-      deps(
-        "edu.gemini" %%% "gpp-ui"
-      )(gppUI)
-    )
-
     val Log4Cats = Def.setting(
       Seq(
         "io.chrisdavenport" %%% "log4cats-core"     % log4Cats,
         "com.rpiaggio"      %%% "log4cats-loglevel" % log4CatsLogLevel
       )
+    )
+
+    val LucumaCore = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-core"
+      )(lucumaCore)
+    )
+
+    val LucumaCoreTestKit = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-core-testkit"
+      )(lucumaCore)
+    )
+
+    val LucumaUI = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-ui"
+      )(lucumaUI)
     )
 
     val Monocle = Def.setting(
@@ -160,7 +147,7 @@ object Settings {
 
     val ReactAladin = Def.setting(
       deps(
-        "io.github.cquiroz.react" %%% "react-aladin"
+        "edu.gemini" %%% "react-aladin"
       )(reactAladin)
     )
 

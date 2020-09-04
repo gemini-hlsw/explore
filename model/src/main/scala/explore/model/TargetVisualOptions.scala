@@ -4,10 +4,9 @@
 package explore.model
 
 import cats._
-import cats.implicits._
 import explore.model.enum.Display
-import gsp.math.Angle
-import gsp.math.syntax.int._
+import lucuma.core.math.Angle
+import lucuma.core.math.syntax.int._
 import monocle.macros.Lenses
 
 @Lenses

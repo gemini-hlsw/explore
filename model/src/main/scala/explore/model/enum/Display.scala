@@ -4,12 +4,12 @@
 package explore.model.enum
 
 import cats.data.NonEmptyList
-import gem.util.Enumerated
+import lucuma.core.util.Enumerated
 import monocle.Iso
 
 /**
-  * Enum to indicate visibility of an item, roughly equivalent to css display
-  */
+ * Enum to indicate visibility of an item, roughly equivalent to css display
+ */
 sealed trait Display extends Product with Serializable {
   def fold[A](hidden: => A, inline: => A): A =
     this match {

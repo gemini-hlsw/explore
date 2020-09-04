@@ -5,7 +5,7 @@ package explore.components.graphql
 
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLStreamingClient
 import crystal.react._
 import crystal.react.implicits._

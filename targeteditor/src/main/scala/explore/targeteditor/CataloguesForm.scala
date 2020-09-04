@@ -12,9 +12,9 @@ import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
-import gsp.math.Angle
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Angle
 import react.common._
 import react.semanticui.addons.select.Select
 import react.semanticui.collections.form.FormDropdown.FormDropdownProps

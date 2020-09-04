@@ -6,7 +6,7 @@ package explore.model.arb
 import explore.model.Constraints
 import explore.model.arb.CogenUUID._
 import explore.model.enum._
-import gem.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

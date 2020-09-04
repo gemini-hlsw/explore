@@ -3,7 +3,7 @@
 
 package explore.targeteditor
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.View
@@ -16,11 +16,11 @@ import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.RightAscension
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
 import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._

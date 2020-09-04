@@ -14,23 +14,23 @@ import java.time.format.DateTimeFormatter
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.components.ui.GPPStyles
 import explore.implicits._
 import explore.model.reusability._
-import gem.enum.Site
-import gem.math.ObservingNight
-import gem.util.Enumerated
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
-import gpp.ui.reusability._
-import gsp.math.Angle
-import gsp.math.Coordinates
-import gsp.math.skycalc.TwilightBoundType
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.Site
+import lucuma.core.enum.TwilightType
+import lucuma.core.math.Angle
+import lucuma.core.math.Coordinates
+import lucuma.core.model.ObservingNight
+import lucuma.core.util.Enumerated
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
@@ -104,8 +104,8 @@ object SkyPlot {
 
     def render(props: Props, state: State) = {
       val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
-      val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightBoundType.Official)
-      val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightBoundType.Nautical)
+      val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightType.Official)
+      val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
 
       val start          = tbOfficialNight.start
       val end            = tbOfficialNight.end

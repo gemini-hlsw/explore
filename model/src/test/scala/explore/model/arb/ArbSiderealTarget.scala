@@ -7,14 +7,14 @@ import java.util.UUID
 
 import explore.model.SiderealTarget
 import explore.model.arb.CogenUUID._
-import gsp.math.ProperMotion
+import lucuma.core.math.ProperMotion
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 
 trait ArbSiderealTarget {
-  import gsp.math.arb.ArbProperMotion._
+  import lucuma.core.math.arb.ArbProperMotion._
 
   implicit val targetArb = Arbitrary[SiderealTarget] {
     for {

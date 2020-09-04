@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import scala.math.rint
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
 import explore.View
@@ -15,18 +15,18 @@ import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
 import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
-import gpp.ui.reusability._
-import gsp.math.Angle
-import gsp.math.Angle.DMS
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.HourAngle.HMS
-import gsp.math.ProperMotion
-import gsp.math.RightAscension
-import gsp.math.geom.jts.interpreter._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.geom.jts.interpreter._
+import lucuma.core.math.Angle
+import lucuma.core.math.Angle.DMS
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.HourAngle.HMS
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RightAscension
+import lucuma.ui.reusability._
 import monocle.Lens
 import monocle.macros.Lenses
 import org.scalajs.dom.document
@@ -54,8 +54,8 @@ object AladinContainer {
   type Props = AladinContainer
 
   /**
-    * On the state we keep the svg to avoid recalculations during panning
-    */
+   * On the state we keep the svg to avoid recalculations during panning
+   */
   @Lenses
   final case class State(svg: Option[Svg], fov: Fov, current: Coordinates)
 
@@ -150,21 +150,21 @@ object AladinContainer {
       }
 
     /**
-      * Recalculate the svg, we keep it on the state for better performance
-      *
-      * @return
-      */
+     * Recalculate the svg, we keep it on the state for better performance
+     *
+     * @return
+     */
     def initialSvgState: Callback =
       aladinRef.get
         .flatMapCB(_.backend.runOnAladinCB(updateSvgState))
         .void
 
     /**
-      * Recalculate svg and store it on state
-      *
-      * @param pixelScale
-      * @return
-      */
+     * Recalculate svg and store it on state
+     *
+     * @param pixelScale
+     * @return
+     */
     def updateSvgState(v: JsAladin): CallbackTo[Svg] =
       $.props.flatMap { p =>
         CallbackTo
@@ -239,9 +239,9 @@ object AladinContainer {
       }
 
     /**
-      * Called when the position changes, i.e. aladin pans. We want to offset the visualization to
-      * keep the internal target correct
-      */
+     * Called when the position changes, i.e. aladin pans. We want to offset the visualization to
+     * keep the internal target correct
+     */
     def onPositionChanged(v: JsAladin)(s: PositionChanged): Callback =
       $.props
         .zip($.state)

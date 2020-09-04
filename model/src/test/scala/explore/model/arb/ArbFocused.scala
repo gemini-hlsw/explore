@@ -3,7 +3,7 @@
 
 package explore.model.arb
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.model.ExploreObservation
 import explore.model.Focused
 import explore.model.Focused.FocusedObs

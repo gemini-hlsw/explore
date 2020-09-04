@@ -9,16 +9,16 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 import cats.Eq
-import cats.implicits._
+import cats.syntax.all._
 import explore.components.ui.GPPStyles
 import explore.model.reusability._
-import gem.enum.Site
-import gpp.ui.reusability._
-import gsp.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.Site
+import lucuma.core.math.Coordinates
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common.ReactProps
 import react.datepicker._

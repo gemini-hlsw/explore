@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Eq
-import cats.implicits._
+import cats.syntax.all._
 
 sealed trait Page extends Product with Serializable
 

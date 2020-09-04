@@ -4,23 +4,22 @@
 package explore.targeteditor
 
 import cats.data.NonEmptyMap
-import cats.implicits._
-import gem.enum.GmosNorthFpu
-import gem.enum.GmosSouthFpu
-import gem.enum.PortDisposition
-import gem.geom.GmosOiwfsProbeArm
-import gem.geom.GmosScienceAreaGeometry
 import gpp.svgdotjs.svgdotjsSvgJs.mod._
-import gsp.math.Angle
-import gsp.math.Offset
-import gsp.math.geom.ShapeExpression
-import gsp.math.geom.svg._
-import gsp.math.geom.syntax.shapeexpression._
-import gsp.math.syntax.int._
+import lucuma.core.enum.GmosNorthFpu
+import lucuma.core.enum.GmosSouthFpu
+import lucuma.core.enum.PortDisposition
+import lucuma.core.geom.GmosOiwfsProbeArm
+import lucuma.core.geom.GmosScienceAreaGeometry
+import lucuma.core.geom.ShapeExpression
+import lucuma.core.geom.svg._
+import lucuma.core.geom.syntax.shapeexpression._
+import lucuma.core.math.Angle
+import lucuma.core.math.Offset
+import lucuma.core.math.syntax.int._
 
 /**
-  * Test object to produce a gmos geometry. it is for demo purposes only
-  */
+ * Test object to produce a gmos geometry. it is for demo purposes only
+ */
 object GmosGeometry {
 
   val posAngle: Angle =

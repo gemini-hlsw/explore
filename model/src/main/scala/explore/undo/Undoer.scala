@@ -5,7 +5,7 @@ package explore.undo
 
 import cats.FlatMap
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.all._
 import crystal.implicits._
 import monocle.Lens
 

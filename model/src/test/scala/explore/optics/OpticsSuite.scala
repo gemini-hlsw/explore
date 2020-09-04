@@ -3,7 +3,6 @@
 
 package explore
 
-import cats.implicits._
 import cats.kernel.Eq
 import explore.optics._
 import monocle.macros.Lenses

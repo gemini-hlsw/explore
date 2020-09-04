@@ -3,44 +3,44 @@
 
 package explore.model
 
-import gsp.math.Coordinates
-import gsp.math.Declination
-import gsp.math.ProperMotion
-import gsp.math.RightAscension
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RightAscension
 import monocle.Lens
 
 /**
-  * Contains a set of useful optics to explore the model
-  */
+ * Contains a set of useful optics to explore the model
+ */
 trait ModelOptics {
 
   /**
-    * Lens for right ascension of a ProperMotion
-    */
+   * Lens for right ascension of a ProperMotion
+   */
   val properMotionRA: Lens[ProperMotion, RightAscension] =
     ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
 
   /**
-    * Lens for declination of a ProperMotion
-    */
+   * Lens for declination of a ProperMotion
+   */
   val properMotionDec: Lens[ProperMotion, Declination] =
     ProperMotion.baseCoordinates ^|-> Coordinates.declination
 
   /**
-    * Lens to the RightAscension of a sidereal target
-    */
+   * Lens to the RightAscension of a sidereal target
+   */
   val targetRA: Lens[SiderealTarget, RightAscension] =
     SiderealTarget.track ^|-> properMotionRA
 
   /**
-    * Lens to the Declination of a sidereal target
-    */
+   * Lens to the Declination of a sidereal target
+   */
   val targetDec: Lens[SiderealTarget, Declination] =
     SiderealTarget.track ^|-> properMotionDec
 
   /**
-    * Lens used to change name and coordinates of a target
-    */
+   * Lens used to change name and coordinates of a target
+   */
   val targetPropsL =
     Lens[SiderealTarget, (String, RightAscension, Declination)](t =>
       (t.name, targetRA.get(t), targetDec.get(t))

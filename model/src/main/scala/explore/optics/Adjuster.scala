@@ -12,11 +12,13 @@ trait Adjuster[From, To] { self =>
 
   def modify(f: To => To): From => From
 
-  /** ************************************************************
-    */
+  /**
+   * ************************************************************
+   */
   /** Compose methods between an [[Adjuster]] and another Optics */
-  /** ************************************************************
-    */
+  /**
+   * ************************************************************
+   */
 
   /** compose an [[Adjuster]] with a [[Adjuster]] */
   @inline final def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =

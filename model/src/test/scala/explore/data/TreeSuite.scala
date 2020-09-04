@@ -3,7 +3,6 @@
 
 package explore.data
 
-import cats.implicits._
 import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
 import explore.model.arb.all._

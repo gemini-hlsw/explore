@@ -10,7 +10,7 @@ import java.util.UUID
 import scala.util.Random
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import explore.components.ObsBadge
 import explore.data.tree._
 import explore.model.Constraints
@@ -20,11 +20,11 @@ import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
 import explore.model.enum._
 import explore.undo.KITreeMod
-import gsp.math.Coordinates
-import gsp.math.Epoch
-import gsp.math.ProperMotion
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.math.ProperMotion
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon

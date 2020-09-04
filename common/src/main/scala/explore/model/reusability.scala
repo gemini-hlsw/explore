@@ -7,17 +7,17 @@ import java.time.Duration
 
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
-import gpp.ui.reusability._
-import gsp.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
+import lucuma.core.math.Coordinates
+import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
 
 /**
-  * Reusability instances for model classes
-  */
+ * Reusability instances for model classes
+ */
 object reusability {
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)

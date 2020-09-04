@@ -4,12 +4,12 @@
 package explore.model
 
 import cats.effect._
-import cats.implicits._
 import cats.kernel.Eq
+import cats.syntax.all._
 import clue._
 import explore.model.enum.AppTab
-import gem.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
+import lucuma.core.data.EnumZipper
 import monocle.macros.Lenses
 import sttp.model.Uri
 import sttp.model.Uri._
