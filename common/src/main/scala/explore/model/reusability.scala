@@ -7,11 +7,11 @@ import java.time.Duration
 
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
-import lucuma.ui.reusability._
-import lucuma.core.math.Coordinates
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
+import lucuma.core.math.Coordinates
+import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
 

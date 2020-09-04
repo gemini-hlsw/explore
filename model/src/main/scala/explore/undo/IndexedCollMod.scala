@@ -3,7 +3,7 @@
 
 package explore.undo
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import monocle._

@@ -10,7 +10,7 @@ import cats.effect.ConcurrentEffect
 import cats.effect.ContextShift
 import cats.effect.IO
 import cats.effect.Timer
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLStreamingClient
 import crystal.Pot
 import crystal.ViewF

@@ -13,10 +13,10 @@ import explore.implicits._
 import explore.model.Constraints
 import explore.model.reusability._
 import explore.model.show._
-import lucuma.core.util.Enumerated
-import lucuma.ui.forms.EnumViewSelect
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.util.Enumerated
+import lucuma.ui.forms.EnumViewSelect
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form

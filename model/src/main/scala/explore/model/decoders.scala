@@ -5,18 +5,18 @@ package explore.model
 
 import java.time.Duration
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.model.enum.ObsStatus
 import explore.model.enum._
-import lucuma.core.util.Enumerated
+import io.circe.Decoder
+import io.circe.DecodingFailure
+import io.circe.HCursor
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
-import io.circe.Decoder
-import io.circe.DecodingFailure
-import io.circe.HCursor
+import lucuma.core.util.Enumerated
 
 object decoders {
 

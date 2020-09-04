@@ -7,7 +7,6 @@ import java.time.Duration
 import java.util.UUID
 
 import cats.Eq
-import cats.implicits._
 import explore.model.enum.ObsStatus
 import monocle.macros.Lenses
 

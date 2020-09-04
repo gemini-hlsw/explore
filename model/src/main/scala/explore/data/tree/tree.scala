@@ -4,7 +4,7 @@
 package explore.data.tree
 
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 import monocle.macros.Lenses
 
 @Lenses final case class Tree[A](children: List[Node[A]]) {

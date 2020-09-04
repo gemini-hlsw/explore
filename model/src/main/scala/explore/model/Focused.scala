@@ -3,8 +3,8 @@
 
 package explore.model
 
-import cats.implicits._
 import cats.kernel.Eq
+import cats.syntax.all._
 import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable

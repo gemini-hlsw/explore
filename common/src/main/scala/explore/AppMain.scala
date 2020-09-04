@@ -8,7 +8,7 @@ import scala.scalajs.js
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.implicits._
+import cats.syntax.all._
 import clue.Backend
 import clue.StreamingBackend
 import clue.js.AjaxJSBackend
@@ -20,11 +20,11 @@ import explore.model.AppContext
 import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import lucuma.core.data.EnumZipper
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
+import lucuma.core.data.EnumZipper
 import org.scalajs.dom
 
 import js.annotation._

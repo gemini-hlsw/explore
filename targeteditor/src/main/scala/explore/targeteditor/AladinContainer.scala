@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import scala.math.rint
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
 import explore.View
@@ -15,7 +15,10 @@ import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
 import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
-import lucuma.ui.reusability._
+import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Angle.DMS
 import lucuma.core.math.Coordinates
@@ -23,10 +26,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
-import lucuma.core.geom.jts.interpreter._
-import japgolly.scalajs.react.MonocleReact._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reusability._
 import monocle.Lens
 import monocle.macros.Lenses
 import org.scalajs.dom.document

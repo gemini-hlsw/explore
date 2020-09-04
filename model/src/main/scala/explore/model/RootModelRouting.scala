@@ -3,7 +3,7 @@
 
 package explore.model
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.Page._

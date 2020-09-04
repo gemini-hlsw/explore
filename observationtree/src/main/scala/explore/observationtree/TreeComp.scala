@@ -6,7 +6,7 @@ package explore.observationtree
 import scala.scalajs.js
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.ModState
 import crystal.react.implicits._
 import explore.components.undo.UndoRegion

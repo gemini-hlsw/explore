@@ -4,7 +4,7 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLQuery
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod

@@ -6,7 +6,7 @@ package explore.targeteditor
 import java.time.Duration
 import java.time.Instant
 
-import cats.implicits._
+import cats.syntax.all._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc

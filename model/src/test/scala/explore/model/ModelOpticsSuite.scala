@@ -3,7 +3,6 @@
 
 package explore.model
 
-import cats.implicits._
 import explore.model.arb.all._
 import lucuma.core.math.arb.ArbDeclination
 import lucuma.core.math.arb.ArbProperMotion

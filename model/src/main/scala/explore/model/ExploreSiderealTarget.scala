@@ -7,16 +7,16 @@ import java.util.UUID
 
 import cats._
 import cats.effect.Sync
-import cats.implicits._
-import lucuma.core.model.Target
+import cats.syntax.all._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
 import lucuma.core.math.ProperMotion
+import lucuma.core.model.Target
 import monocle.macros.Lenses
 
 /**
-  * A refinement of gem.Tracker meant for sidereal targets
-  */
+ * A refinement of gem.Tracker meant for sidereal targets
+ */
 @Lenses
 final case class SiderealTarget(id: SiderealTarget.Id, name: String, track: ProperMotion)
 
@@ -38,8 +38,8 @@ object SiderealTarget {
 }
 
 /**
-  * A Sidereal target from a UI point of view containing local state, e.g. catalog selected, etc
-  */
+ * A Sidereal target from a UI point of view containing local state, e.g. catalog selected, etc
+ */
 @Lenses
 final case class ExploreSiderealTarget(
   searchTerm: String,

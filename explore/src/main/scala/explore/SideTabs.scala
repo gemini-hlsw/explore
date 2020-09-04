@@ -3,14 +3,14 @@
 
 package explore
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.enum.AppTab
-import lucuma.core.data.EnumZipper
-import lucuma.ui.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.data.EnumZipper
+import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup

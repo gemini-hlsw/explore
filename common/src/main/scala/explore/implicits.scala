@@ -8,7 +8,7 @@ import scala.annotation.unused
 import cats._
 import cats.effect.ContextShift
 import cats.effect.Timer
-import cats.implicits._
+import cats.syntax.all._
 import explore.model.AppContext
 import io.chrisdavenport.log4cats.Logger
 import shapeless._

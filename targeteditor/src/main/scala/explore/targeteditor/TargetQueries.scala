@@ -6,7 +6,7 @@ package explore.target
 import java.util.UUID
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLQuery
 import explore.implicits._
 import explore.model.SiderealTarget

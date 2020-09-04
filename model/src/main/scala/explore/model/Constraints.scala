@@ -6,7 +6,6 @@ package explore.model
 import java.util.UUID
 
 import cats._
-import cats.implicits._
 import explore.model.enum._
 import monocle.macros.Lenses
 

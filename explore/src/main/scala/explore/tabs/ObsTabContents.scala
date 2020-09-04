@@ -3,7 +3,7 @@
 
 package explore.tabs
 
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile

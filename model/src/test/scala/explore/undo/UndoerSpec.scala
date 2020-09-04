@@ -5,7 +5,7 @@ package explore.undo
 
 import cats.effect.IO
 import cats.effect.concurrent.Ref
-import cats.implicits._
+import cats.syntax.all._
 import cats.kernel.Eq
 import explore.data.KeyedIndexedList
 import explore.data.tree.KeyedIndexedTree.Index

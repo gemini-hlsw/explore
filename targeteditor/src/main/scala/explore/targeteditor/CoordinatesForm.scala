@@ -4,19 +4,19 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.implicits._
 import explore.model.ModelOptics._
 import explore.model.SiderealTarget
-import lucuma.ui.forms._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.forms._
 import monocle.Iso
 import monocle.Lens
 import monocle.macros.Lenses

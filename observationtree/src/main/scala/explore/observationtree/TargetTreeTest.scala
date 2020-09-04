@@ -6,7 +6,7 @@ package explore.observationtree
 import java.time.Duration
 import java.util.UUID
 
-import cats.implicits._
+import cats.syntax.all._
 import explore.model.Constraints
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget

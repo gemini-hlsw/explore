@@ -5,7 +5,7 @@ package explore.constraints
 
 import cats.effect.ContextShift
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLQuery
 import crystal.ViewF
 import explore.AppCtx
@@ -19,7 +19,6 @@ import explore.model.enum.SkyBackground
 import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
-import lucuma.core.util.Enumerated
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.Encoder
@@ -28,6 +27,7 @@ import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.util.Enumerated
 import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
