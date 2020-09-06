@@ -204,7 +204,7 @@ lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
 )
 
 lazy val commonWDS = Seq(
-  webpack / version := "4.43.0",
+  webpack / version := "4.44.1",
   startWebpackDevServer / version := "3.11.0",
   fastOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "dev.webpack.config.js"
@@ -212,6 +212,7 @@ lazy val commonWDS = Seq(
   fullOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
+  version in installJsdom := "16.4.0",
   webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
   webpackMonitoredDirectories += ((common / Compile / sourceDirectory).value / "webpack"),
   webpackResources := ((common / Compile / sourceDirectory).value / "webpack") * "*.js",
@@ -242,11 +243,12 @@ lazy val commonWDS = Seq(
     "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
     "favicons-webpack-plugin"            -> "3.0.1",
-    "@packtracker/webpack-plugin"        -> "2.2.0"
+    "@packtracker/webpack-plugin"        -> "2.3.0"
   ),
   npmDependencies in Compile ++= Seq(
     "react"             -> reactJS,
     "react-dom"         -> reactJS,
+    "react-is"          -> reactJS,
     "fomantic-ui-less"  -> FUILess,
     "prop-types"        -> "15.7.2",
     "react-moon"        -> "2.0.1",

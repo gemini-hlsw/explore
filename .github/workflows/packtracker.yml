@@ -18,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Set up Scala
         uses: olafurpg/setup-scala@v7
         with:
