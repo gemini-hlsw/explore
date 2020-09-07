@@ -3,7 +3,7 @@ import sbtcrossproject.CrossType
 import Settings.Libraries._
 
 val reactJS = "16.13.1"
-val FUILess = "2.8.6"
+val FUILess = "2.8.7"
 
 parallelExecution in (ThisBuild, Test) := false
 
