@@ -1516,6 +1516,21 @@ check-types@^8.0.3:
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/check-types/-/check-types-8.0.3.tgz#3356cca19c889544f2d7a95ed49ce508a0ecf552"
 
+chokidar@3.4.2, chokidar@^3.4.1:
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.4.2.tgz#38dc8e658dec3809741eb3ef7bb0a47fe424232d"
+  integrity sha512-IZHaDeBeI+sZJRX7lGcXsdzgvZqKv6sECqsbErJA4mHWfpRrD8B97kSFN4cQz6nGBGiuFia1MKR4d6c1o8Cv7A==
+  dependencies:
+    anymatch "~3.1.1"
+    braces "~3.0.2"
+    glob-parent "~5.1.0"
+    is-binary-path "~2.1.0"
+    is-glob "~4.0.1"
+    normalize-path "~3.0.0"
+    readdirp "~3.4.0"
+  optionalDependencies:
+    fsevents "~2.1.2"
+
 "chokidar@>=2.0.0 <4.0.0":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.4.1.tgz#e905bdecf10eaa0a0b1db0c664481cc4cbc22ba1"
@@ -1548,21 +1563,6 @@ chokidar@^2.1.8:
     upath "^1.1.1"
   optionalDependencies:
     fsevents "^1.2.7"
-
-chokidar@^3.4.1:
-  version "3.4.2"
-  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.4.2.tgz#38dc8e658dec3809741eb3ef7bb0a47fe424232d"
-  integrity sha512-IZHaDeBeI+sZJRX7lGcXsdzgvZqKv6sECqsbErJA4mHWfpRrD8B97kSFN4cQz6nGBGiuFia1MKR4d6c1o8Cv7A==
-  dependencies:
-    anymatch "~3.1.1"
-    braces "~3.0.2"
-    glob-parent "~5.1.0"
-    is-binary-path "~2.1.0"
-    is-glob "~4.0.1"
-    normalize-path "~3.0.0"
-    readdirp "~3.4.0"
-  optionalDependencies:
-    fsevents "~2.1.2"
 
 chownr@^1.1.1:
   version "1.1.3"
@@ -2817,10 +2817,10 @@ follow-redirects@^1.0.0:
   dependencies:
     debug "^3.0.0"
 
-fomantic-ui-less@2.8.6:
-  version "2.8.6"
-  resolved "https://registry.yarnpkg.com/fomantic-ui-less/-/fomantic-ui-less-2.8.6.tgz#097c1e68ca27e7330abed51fb844c433d7818300"
-  integrity sha512-mulCHd00ETdRSeuRqai03yW0XWq4wbmXrsWV7MvN4BufKxm4OLjK1dVhn/ULKShFPSqg+H3AYWw02cDioNA8kg==
+fomantic-ui-less@2.8.7:
+  version "2.8.7"
+  resolved "https://registry.yarnpkg.com/fomantic-ui-less/-/fomantic-ui-less-2.8.7.tgz#2129a056c65b97b68e30e364fbf3e114b909583f"
+  integrity sha512-qCZmm/eG3cvJOfJmyFYkM+iP4BlBX+hflwQ3mxNJg7QnClYao5N1ff6XrOQVWV8at10etYmSoJ7Q70YZRBKPkQ==
   dependencies:
     jquery "^3.4.0"
 
@@ -5492,7 +5492,7 @@ react-grid-layout@1.0.0:
     react-draggable "^4.0.0"
     react-resizable "^1.10.0"
 
-react-is@^16.6.3, react-is@^16.7.0, react-is@^16.8.6, react-is@^16.9.0:
+react-is@16.13.1, react-is@^16.6.3, react-is@^16.7.0, react-is@^16.8.6, react-is@^16.9.0:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
