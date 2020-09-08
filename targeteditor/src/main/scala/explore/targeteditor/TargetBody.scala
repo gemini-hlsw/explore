@@ -76,13 +76,12 @@ object TargetBody extends ModelOptics {
             (String, RightAscension, Declination)
           ](
             targetPropsL,
-            {
-              case (n, r, d) =>
-                Mutation.Fields(
-                  name = n.some,
-                  ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                  dec = Declination.fromStringSignedDMS.reverseGet(d).some
-                )
+            { case (n, r, d) =>
+              Mutation.Fields(
+                name = n.some,
+                ra = RightAscension.fromStringHMS.reverseGet(r).some,
+                dec = Declination.fromStringSignedDMS.reverseGet(d).some
+              )
             }
           ) _
 

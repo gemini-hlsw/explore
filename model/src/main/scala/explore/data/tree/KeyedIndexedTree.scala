@@ -80,9 +80,8 @@ case class KeyedIndexedTree[K: Eq, A] private (
           )) ++
           children
             .drop(fixedPos)
-            .map {
-              case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-                Node(IndexedElem(e, Index(pkey, pos + 1)), ch)
+            .map { case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
+              Node(IndexedElem(e, Index(pkey, pos + 1)), ch)
             }
       } else
         children.map(node =>
@@ -115,11 +114,10 @@ object KeyedIndexedTree {
     val newAccumKeys: Set[K] = accumKeys ++ keyedNewNodes.map(_._1)
     keyedNewNodes.zipWithIndex.foldLeft(
       List.empty[Node[IndexedElem[K, A]]]
-    ) {
-      case (nodes, ((key, node), idx)) =>
-        val newNodes = indexedUniqueKeyChildren(node.children, getKey, key.some, newAccumKeys)
-        val newNode  = Node(IndexedElem(node.value, Index(parentKey, idx)), newNodes)
-        nodes :+ newNode
+    ) { case (nodes, ((key, node), idx)) =>
+      val newNodes = indexedUniqueKeyChildren(node.children, getKey, key.some, newAccumKeys)
+      val newNode  = Node(IndexedElem(node.value, Index(parentKey, idx)), newNodes)
+      nodes :+ newNode
     }
   }
 
@@ -130,9 +128,8 @@ object KeyedIndexedTree {
     def childrenKeyMap(
       children: List[Node[IndexedElem[K, A]]]
     ): Map[K, Node[IndexedElem[K, A]]] =
-      children.foldLeft(HashMap.empty[K, Node[IndexedElem[K, A]]]) {
-        case (keyMap, node) =>
-          keyMap + (getKey(node.value.elem) -> node) ++ childrenKeyMap(node.children)
+      children.foldLeft(HashMap.empty[K, Node[IndexedElem[K, A]]]) { case (keyMap, node) =>
+        keyMap + (getKey(node.value.elem) -> node) ++ childrenKeyMap(node.children)
       }
 
     childrenKeyMap(tree.children)

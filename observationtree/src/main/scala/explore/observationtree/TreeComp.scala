@@ -59,8 +59,8 @@ object TreeComp {
             isChildrenLoading = false,
             keyValue.map(_._2).orUndefined
           ))
-      ) {
-        case (nodeAccum, node) => valueChildrenToData(node.value.some, node.children, nodeAccum)
+      ) { case (nodeAccum, node) =>
+        valueChildrenToData(node.value.some, node.children, nodeAccum)
       }
     }
 

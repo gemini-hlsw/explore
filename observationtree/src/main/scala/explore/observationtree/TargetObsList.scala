@@ -133,9 +133,8 @@ object TargetObsList {
           .zoom(TargetsWithObs.targets)
           .mod(targetWithIndexSetter.set(targetWithIndex)) >>
           // 2) Send mutation & adjust focus
-          targetWithIndex.fold(focused.set(none) >> removeTarget(targetId)) {
-            case (target, _) =>
-              insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+          targetWithIndex.fold(focused.set(none) >> removeTarget(targetId)) { case (target, _) =>
+            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
           }
 
     private def targetMod(
@@ -246,69 +245,66 @@ object TargetObsList {
                     Icon("chevron right")
                   )
 
-                Droppable(target.id.toString) {
-                  case (provided, snapshot) =>
-                    <.div(
-                      provided.innerRef,
-                      provided.droppableProps,
-                      getListStyle(snapshot.isDraggingOver)
+                Droppable(target.id.toString) { case (provided, snapshot) =>
+                  <.div(
+                    provided.innerRef,
+                    provided.droppableProps,
+                    getListStyle(snapshot.isDraggingOver)
+                  )(
+                    Segment(vertical = true,
+                            raised = props.focused.get
+                              .exists(_ === FocusedTarget(target.id)),
+                            clazz = GPPStyles.ObsTreeGroup
                     )(
-                      Segment(vertical = true,
-                              raised = props.focused.get
-                                .exists(_ === FocusedTarget(target.id)),
-                              clazz = GPPStyles.ObsTreeGroup
-                      )(
-                        ^.cursor.pointer,
-                        ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
-                      )(
-                        <.span(GPPStyles.ObsTreeGroupHeader)(
-                          <.span(
-                            opIcon,
-                            target.name
-                          ),
-                          <.span(^.float.right, s"$obsCount Obs")
+                      ^.cursor.pointer,
+                      ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
+                    )(
+                      <.span(GPPStyles.ObsTreeGroupHeader)(
+                        <.span(
+                          opIcon,
+                          target.name
                         ),
-                        TagMod.when(!state.collapsedTargetIds.contains(targetId))(
-                          targetObs.zipWithIndex.toTagMod {
-                            case (obs, idx) =>
-                              <.div(GPPStyles.ObsTreeItem)(
-                                Draggable(obs.id.toString, idx) {
-                                  case (provided, snapshot, _) =>
-                                    def dragIcon =
-                                      <.span(
-                                        provided.dragHandleProps,
-                                        Icon("sort")
-                                      )
+                        <.span(^.float.right, s"$obsCount Obs")
+                      ),
+                      TagMod.when(!state.collapsedTargetIds.contains(targetId))(
+                        targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                          <.div(GPPStyles.ObsTreeItem)(
+                            Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
+                              def dragIcon =
+                                <.span(
+                                  provided.dragHandleProps,
+                                  Icon("sort")
+                                )
 
-                                    <.div(
-                                      provided.innerRef,
-                                      provided.draggableProps,
-                                      getObsStyle(provided.draggableStyle, snapshot),
-                                      ^.cursor.pointer,
-                                      ^.onClick ==> { e: ReactEvent =>
-                                        e.stopPropagationCB >>
-                                          props.focused
-                                            .set(FocusedObs(obs.id).some)
-                                            .runInCB
-                                      }
-                                    )(
-                                      decorateTopRight(
-                                        ObsBadge(obs,
-                                                 ObsBadge.Layout.ConfAndConstraints,
-                                                 selected = props.focused.get
-                                                   .exists(_ === FocusedObs(obs.id))
-                                        ),
-                                        dragIcon
-                                      )
-                                    )
+                              <.div(
+                                provided.innerRef,
+                                provided.draggableProps,
+                                getObsStyle(provided.draggableStyle, snapshot),
+                                ^.cursor.pointer,
+                                ^.onClick ==> { e: ReactEvent =>
+                                  e.stopPropagationCB >>
+                                    props.focused
+                                      .set(FocusedObs(obs.id).some)
+                                      .runInCB
                                 }
+                              )(
+                                decorateTopRight(
+                                  ObsBadge(obs,
+                                           ObsBadge.Layout.ConfAndConstraints,
+                                           selected = props.focused.get
+                                             .exists(_ === FocusedObs(obs.id))
+                                  ),
+                                  dragIcon
+                                )
                               )
-                          }
-                        ),
-                        provided.placeholder
-                        //<.span(^.display.none.when(targetObs.nonEmpty), provided.placeholder) // Doesn't really work.
-                      )
+                            }
+                          )
+                        }
+                      ),
+                      provided.placeholder
+                      //<.span(^.display.none.when(targetObs.nonEmpty), provided.placeholder) // Doesn't really work.
                     )
+                  )
                 }
               }
             ),
