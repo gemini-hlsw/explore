@@ -1,0 +1,17 @@
+on:
+  pull_request:
+    types: [opened, closed]
+
+jobs:
+  clubhouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: singingwolfboy/create-linked-clubhouse-story@v1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          clubhouse-token: ${{ secrets.CLUBHOUSE_TOKEN }}
+          project-name: Explore
+          opened-state-name: Started
+          merged-state-name: Done
+          closed-state-name: Abandoned
+          ignored-users: scala-steward
