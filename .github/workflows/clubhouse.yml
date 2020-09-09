@@ -6,7 +6,7 @@ jobs:
   clubhouse:
     runs-on: ubuntu-latest
     steps:
-      - uses: singingwolfboy/create-linked-clubhouse-story@v1.3
+      - uses: singingwolfboy/create-linked-clubhouse-story@v1.4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           clubhouse-token: ${{ secrets.CLUBHOUSE_TOKEN }}
@@ -14,4 +14,4 @@ jobs:
           opened-state-name: Started
           merged-state-name: Done
           closed-state-name: Abandoned
-          ignored-users: scala-steward
+          ignored-users: geminihlswadmin
