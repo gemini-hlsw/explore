@@ -42,12 +42,11 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
 
       val baseColl = removeWithKey(coll, key)
 
-      newElemAndIndexWithKey.fold(baseColl) {
-        case (newElem, idx) =>
-          insertWithIdx(baseColl,
-                        idx,
-                        preserve.fold(oldElemAndIndex.map(_._1).getOrElse(newElem), newElem)
-          )
+      newElemAndIndexWithKey.fold(baseColl) { case (newElem, idx) =>
+        insertWithIdx(baseColl,
+                      idx,
+                      preserve.fold(oldElemAndIndex.map(_._1).getOrElse(newElem), newElem)
+        )
       }
     }
 
@@ -60,9 +59,8 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
   // Start Element Operations
   // Key is reinstated (it can't be modified.)
   def mod(f: A => A): Operation =
-    _.map {
-      case (node, idx) =>
-        (valueLens.modify(value => keyLens.set(keyLens.get(value))(f(value)))(node), idx)
+    _.map { case (node, idx) =>
+      (valueLens.modify(value => keyLens.set(keyLens.get(value))(f(value)))(node), idx)
     }
 
   // Key is reinstated (it can't be modified.)
@@ -74,8 +72,8 @@ trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of interna
 
   // If updating, key is reinstated (it can't be modified.)
   def upsert(a: A, idx: Idx): Operation =
-    _.map {
-      case (node, _) => (valueLens.modify(value => keyLens.set(keyLens.get(value))(a))(node), idx)
+    _.map { case (node, _) =>
+      (valueLens.modify(value => keyLens.set(keyLens.get(value))(a))(node), idx)
     }.orElse((pureNode(a), idx).some)
 
   // End Element Operations

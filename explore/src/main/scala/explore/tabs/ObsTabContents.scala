@@ -73,8 +73,8 @@ object ObsTabContents {
         )
 
       ObsSubscription { observations =>
-        val obsSummaryOpt = props.get.collect {
-          case FocusedObs(obsId) => observations.get.find(_.id === obsId)
+        val obsSummaryOpt = props.get.collect { case FocusedObs(obsId) =>
+          observations.get.find(_.id === obsId)
         }.flatten
 
         <.div(

@@ -112,20 +112,19 @@ object SkyPlot {
       val skyCalcResults =
         SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
       val series         = skyCalcResults
-        .map {
-          case (instant, results) =>
-            val millisSinceEpoch = instant.toEpochMilli.toDouble
+        .map { case (instant, results) =>
+          val millisSinceEpoch = instant.toEpochMilli.toDouble
 
-            def point(value: Double): Chart.Data =
-              PointOptionsObject()
-                .setX(millisSinceEpoch)
-                .setY(value)
+          def point(value: Double): Chart.Data =
+            PointOptionsObject()
+              .setX(millisSinceEpoch)
+              .setY(value)
 
-            point(results.altitude.toAngle.toSignedDoubleDegrees) ::
-              point(-results.totalSkyBrightness) ::
-              point(results.parallacticAngle.toSignedDoubleDegrees) ::
-              point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
-              HNil
+          point(results.altitude.toAngle.toSignedDoubleDegrees) ::
+            point(-results.totalSkyBrightness) ::
+            point(results.parallacticAngle.toSignedDoubleDegrees) ::
+            point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
+            HNil
         }
 
       val seriesData = seriesDataGen.from(series.unzipN)
