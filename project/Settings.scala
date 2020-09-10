@@ -29,7 +29,7 @@ object Settings {
     val reactHighcharts   = "0.2.0"
     val reactResizable    = "0.2.1"
     val reactSemanticUI   = "0.6.4"
-    val reactSizeMe       = "0.4.8"
+    val reactSizeMe       = "0.5.0"
     val scalaJsReact      = "1.7.5"
   }
 
