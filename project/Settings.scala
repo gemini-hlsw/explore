@@ -16,7 +16,7 @@ object Settings {
     val geminiLocales     = "0.5.0"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.0"
-    val lucumaCore        = "0.4.1"
+    val lucumaCore        = "0.4.3"
     val lucumaUI          = "0.3.2"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
@@ -25,11 +25,11 @@ object Settings {
     val reactAtlasKitTree = "0.3.0"
     val reactCommon       = "0.10.0"
     val reactDatepicker   = "0.1.0"
-    val reactGridLayout   = "0.7.4"
+    val reactGridLayout   = "0.8.0"
     val reactHighcharts   = "0.2.0"
     val reactResizable    = "0.2.1"
-    val reactSemanticUI   = "0.7.0"
-    val reactSizeMe       = "0.4.8"
+    val reactSemanticUI   = "0.6.4"
+    val reactSizeMe       = "0.5.0"
     val scalaJsReact      = "1.7.5"
   }
 
