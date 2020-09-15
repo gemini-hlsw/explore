@@ -18,4 +18,16 @@ object display {
 
   implicit val displayImageQuality: Display[ImageQuality] =
     Display.byShortName(_.label)
+
+  implicit val displayProposalClass: Display[ProposalClass] =
+    Display.byShortName(_.label)
+
+  implicit val displayKeywords: Display[Keyword] =
+    Display.byShortName(_.label)
+
+  implicit val displayTacCategory: Display[TacCategory] =
+    Display.byShortName(_.label)
+
+  implicit val displayToOActivation: Display[ToOActivation] =
+    Display.byShortName(_.label)
 }
