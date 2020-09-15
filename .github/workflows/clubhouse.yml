@@ -11,7 +11,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           clubhouse-token: ${{ secrets.CLUBHOUSE_TOKEN }}
           project-name: Explore
-          opened-state-name: Started
-          merged-state-name: Done
-          closed-state-name: Abandoned
+          opened-state-name: In Development
+          merged-state-name: Completed
           ignored-users: geminihlswadmin

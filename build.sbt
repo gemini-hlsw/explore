@@ -190,7 +190,7 @@ lazy val commonLibSettings = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-lazy val commonJsLibSettings = gspScalaJsSettings ++ commonLibSettings ++ Seq(
+lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
