@@ -15,6 +15,7 @@ import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
+import io.circe.Json
 
 /**
  * Reusability instances for model classes
@@ -39,4 +40,5 @@ object reusability {
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
   implicit def obsSummaryReuse: Reusability[ObsSummary]                                           = Reusability.derive
   implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.derive
+  implicit val jsonReuse: Reusability[Json]                                                       = Reusability.by_==
 }

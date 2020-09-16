@@ -6,15 +6,16 @@ package explore.model
 import cats.effect._
 import cats.syntax.all._
 import clue._
-import crystal.react.StreamRenderer
-import explore.model.reusability._
+import explore.GraphQLSchemas._
 import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
+import crystal.react.StreamRenderer
+import explore.model.reusability._
 
 case class AppConfig(odbURI: Uri)
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  odb: GraphQLStreamingClient[F]
+  odb: GraphQLStreamingClient[F, ObservationDB]
 ) {
   lazy val ODBConnectionStatus =
     StreamRenderer.build(odb.statusStream)
@@ -44,7 +45,7 @@ object AppContext {
     config: AppConfig
   ): F[AppContext[F]] =
     for {
-      programsClient <- ApolloStreamingClient.of[F](config.odbURI)
+      programsClient <- ApolloStreamingClient.of[F, ObservationDB](config.odbURI)
       clients         = Clients(programsClient)
       actions         = Actions[F]()
     } yield AppContext[F](clients, actions)

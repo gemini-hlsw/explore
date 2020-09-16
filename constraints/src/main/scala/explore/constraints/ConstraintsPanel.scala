@@ -23,6 +23,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
+import explore.GraphQLSchemas.ObservationDB.Types._
 
 final case class ConstraintsPanel(
   id:          Constraints.Id,
@@ -48,11 +49,9 @@ object ConstraintsPanel {
             def selectEnum[A: Enumerated: Display](
               label:  String,
               lens:   Lens[Constraints, A],
-              fields: A => Mutation.Fields
-            ) = {
-              val id = label.toLowerCase().replaceAll(" ", "-")
-              EnumViewSelect(id = id, value = undoViewZoom(lens, fields).asOpt, label = label)
-            }
+              fields: A => ConstraintsSetInput
+            ) =
+              EnumViewSelect(id = id, undoViewZoom(lens, fields).asOpt, label = label)
 
             Grid(columns = One, stretched = true, padded = GridPadded.Horizontally)(
               GridColumn(

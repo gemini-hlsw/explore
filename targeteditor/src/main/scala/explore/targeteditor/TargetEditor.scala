@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
@@ -37,10 +36,7 @@ object TargetEditor {
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-          appCtx.clients.odb
-            .subscribe(Subscription)(
-              Subscription.Variables(props.id).some
-            ),
+          Subscription.subscribe(props.id),
           _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
         ) { target =>
           val stateView = ViewF.fromState[IO]($).zoom(State.options)

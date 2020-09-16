@@ -9,6 +9,7 @@ import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import explore.model.enum._
 
 import ModelOptics._
 
@@ -27,11 +28,10 @@ object encoders {
       Json.obj(
         "id"          -> target.id.asJson,
         "name"        -> target.name.asJson,
-        "object_type" -> "SIDEREAL".asJson,
+        "object_type" -> (TargetType.Sidereal: TargetType).asJson,
         "ra"          -> targetRA.get(target).asJson,
         "dec"         -> targetDec.get(target).asJson
       )
-
   }
 
 }

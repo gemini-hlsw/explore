@@ -196,7 +196,28 @@ lazy val commonSettings = Seq(
   publish := {},
   publishLocal := {},
   publishArtifact := false,
-  Keys.`package` := file("")
+  Keys.`package` := file(""),
+  // This will go into a plugin.
+  scalacOptions += {
+    val thisProject    = thisProjectRef.value
+    val projects       = buildDependencies.value.classpathTransitiveRefs(thisProject) :+ thisProject
+    val schemaSettings =
+      projects
+        .filter(_.build.getScheme == "file")
+        .map(project =>
+          project.build.getSchemeSpecificPart + project.project
+        ) // Only works if project name == directory
+        // .map(_ + "/src/main/resources") // TODO Add test only when in test environment.
+        .flatMap(base =>
+          List(base + "/src/main/resources/graphql/schemas",
+               base + "/src/test/resources/graphql/schemas"
+          )
+        )
+        .map(s => s"clue.schemaDir=$s")
+        .mkString(",")
+    // println(schemaSettings)
+    "-Xmacro-settings:clue.defaultSchema=explore, clue.cats.eq=true, clue.cats.show=true, clue.monocle.lenses=true, clue.scalajs-react.reusability=true," + schemaSettings
+  }
 )
 
 lazy val commonLibSettings = Seq(
@@ -209,6 +230,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Clue.value ++
+      List("edu.gemini" %% "clue-macro" % "0.1.3+58-694961dd+20200929-1815-SNAPSHOT") ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++

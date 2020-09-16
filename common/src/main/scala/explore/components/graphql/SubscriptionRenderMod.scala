@@ -26,7 +26,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 final case class SubscriptionRenderMod[D, A](
-  subscribe:         IO[GraphQLStreamingClient[IO]#Subscription[D]],
+  subscribe:         IO[GraphQLStreamingClient[IO, _]#Subscription[D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
   val valueRender:   View[A] => VdomNode,
@@ -44,7 +44,7 @@ final case class SubscriptionRenderMod[D, A](
 
 object SubscriptionRenderMod {
   trait Props[F[_], D, A] {
-    val subscribe: F[GraphQLStreamingClient[F]#Subscription[D]]
+    val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
     val valueRender: ViewF[F, A] => VdomNode
     val pendingRender: Long => VdomNode
@@ -59,7 +59,7 @@ object SubscriptionRenderMod {
 
   protected final case class State[F[_], D, A](
     subscription: Option[
-      GraphQLStreamingClient[F]#Subscription[D]
+      GraphQLStreamingClient[F, _]#Subscription[D]
     ] = None,
     renderer:     Option[StreamRendererMod.Component[F, A]] = None
   )
