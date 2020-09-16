@@ -15,7 +15,7 @@ final case class ProposalDetails(
   proposalClass: ProposalClass,
   category:      TacCategory,
   toOActivation: ToOActivation,
-  keywords:      List[Keyword],
+  keywords:      Set[Keyword],
   abstrakt:      String
 )
 
