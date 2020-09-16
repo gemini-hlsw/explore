@@ -17,7 +17,7 @@ object Settings {
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.0"
     val lucumaCore        = "0.4.5"
-    val lucumaUI          = "0.3.2"
+    val lucumaUI          = "0.3.3"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.12"
