@@ -6,14 +6,16 @@ package explore.model.enum
 import cats.data.NonEmptyList
 import lucuma.core.util.Enumerated
 
-sealed abstract class AppTab(val title: String) extends Product with Serializable
+sealed abstract class AppTab(val title: String, val buttonGroup: Int)
+    extends Product
+    with Serializable
 
 object AppTab {
-  case object Overview       extends AppTab("Overview")
-  case object Observations   extends AppTab("Observations")
-  case object Targets        extends AppTab("Targets")
-  case object Configurations extends AppTab("Configurations")
-  case object Constraints    extends AppTab("Constraints")
+  case object Overview       extends AppTab("Overview", 1)
+  case object Observations   extends AppTab("Observations", 2)
+  case object Targets        extends AppTab("Targets", 2)
+  case object Configurations extends AppTab("Configurations", 2)
+  case object Constraints    extends AppTab("Constraints", 2)
 
   val all = NonEmptyList.of(Overview, Observations, Targets, Configurations, Constraints)
 
