@@ -25,6 +25,21 @@ object SideTabs {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  // This is a protected method on cats.Foldable. If we add
+  // fs2 to the project, we can switch to intersperse on fs2.Stream
+  def intersperseList[A](xs: List[A], x: A): List[A] = {
+    val bld = List.newBuilder[A]
+    val it  = xs.iterator
+    if (it.hasNext) {
+      bld += it.next()
+      while (it.hasNext) {
+        bld += x
+        bld += it.next()
+      }
+    }
+    bld.result()
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -33,26 +48,42 @@ object SideTabs {
         val tabsL = p.tabs.get.toNel
         val focus = p.tabs.get.focus
 
+        // group the tab buttons. Setting the value to 0 will
+        // cause the button to NOT be displayed.
+        def tabGrouping(tab: AppTab): Integer = tab match {
+          case AppTab.Overview       => 1
+          case AppTab.Observations   => 2
+          case AppTab.Targets        => 2
+          case AppTab.Configurations => 2
+          case AppTab.Constraints    => 2
+        }
+
         def tabButton(style: Css)(tab: AppTab): Button =
           Button(active = tab === focus,
                  clazz = style,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 
+        def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
+          case justOne :: Nil => VerticalSection()(tabButton(Css.Empty)(justOne))
+          case _              => VerticalSection()(ButtonGroup(tabs.reverse.map(tabButton(Css.Empty)).toTagMod))
+        }
+
+        val buttonSections: List[TagMod] =
+          tabsL.toList
+            .map(t => (tabGrouping(t), t))
+            .groupMap(_._1)(_._2)
+            .toList
+            .mapFilter { tup =>
+              if (tup._1 > 0) Some(makeButtonSection(tup._2))
+              else None
+            }
+
+        val taglist: List[TagMod] = intersperseList(buttonSections, Divider(hidden = true))
+
         <.div(
           GPPStyles.SideTabsBody,
-          VerticalSection()(
-            tabButton(Css.Empty)(tabsL.head)
-          ),
-          Divider(hidden = true),
-          VerticalSection()(
-            ButtonGroup(
-              // Due to the css rotations these need to be in reversed order
-              tabsL.tail.reverse
-                .map(tabButton(GPPStyles.SideButton))
-                .toTagMod
-            )
-          )
+          taglist.toTagMod
         )
       }
       .configure(Reusability.shouldComponentUpdate)
