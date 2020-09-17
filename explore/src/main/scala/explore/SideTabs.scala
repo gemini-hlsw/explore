@@ -58,15 +58,14 @@ object SideTabs {
           case AppTab.Constraints    => 2
         }
 
-        def tabButton(style: Css)(tab: AppTab): Button =
+        def tabButton(tab: AppTab): Button =
           Button(active = tab === focus,
-                 clazz = style,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 
         def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
-          case justOne :: Nil => VerticalSection()(tabButton(Css.Empty)(justOne))
-          case _              => VerticalSection()(ButtonGroup(tabs.reverse.map(tabButton(Css.Empty)).toTagMod))
+          case justOne :: Nil => VerticalSection()(tabButton(justOne))
+          case _              => VerticalSection()(ButtonGroup(tabs.reverse.map(tabButton).toTagMod))
         }
 
         val buttonSections: List[TagMod] =
