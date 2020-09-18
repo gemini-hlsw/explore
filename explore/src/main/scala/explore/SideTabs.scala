@@ -3,7 +3,7 @@
 
 package explore
 
-import cats.syntax.all._
+import cats.implicits._
 import crystal.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.enum.AppTab
@@ -40,13 +40,17 @@ object SideTabs {
 
         def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
           case justOne :: Nil => VerticalSection()(tabButton(justOne))
-          case _              => VerticalSection()(ButtonGroup(tabs.reverse.map(tabButton).toTagMod))
+          case _              =>
+            VerticalSection()(
+              ButtonGroup(tabs.sortBy(_.groupOrder.value).reverse.map(tabButton).toTagMod)
+            )
         }
 
         val buttonSections: List[TagMod] =
           tabsL.toList
             .groupBy(_.buttonGroup)
             .toList
+            .sortBy(_._1)
             .map(tup => makeButtonSection(tup._2))
 
         <.div(
