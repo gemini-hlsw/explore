@@ -6,7 +6,7 @@ jobs:
   clubhouse:
     runs-on: ubuntu-latest
     steps:
-      - uses: singingwolfboy/create-linked-clubhouse-story@v1.4
+      - uses: singingwolfboy/create-linked-clubhouse-story@v1.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           clubhouse-token: ${{ secrets.CLUBHOUSE_TOKEN }}
