@@ -4,42 +4,33 @@
 package explore.model.enum
 
 import cats.data.NonEmptyList
-import eu.timepit.refined.auto._
-import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.util.Enumerated
 
+/**
+ * Describes the application tab buttons in the sidebar
+ *
+ * @param title The text for the button
+ * @param buttonGroup Groups the buttons with the same value together
+ *
+ * Within a button group, order is determined by the AppTab Order instance,
+ * which is determined by the order in AppTab.all.
+ */
 sealed abstract class AppTab(
   val title:       String,
-  val buttonGroup: ButtonGroup,
-  val groupOrder:  PosInt
+  val buttonGroup: Int
 ) extends Product
     with Serializable
 
 object AppTab {
-  import ButtonGroup._
-
-  case object Overview       extends AppTab("Overview", OverviewButton, 1)
-  case object Observations   extends AppTab("Observations", ObservationGroup, 1)
-  case object Targets        extends AppTab("Targets", ObservationGroup, 2)
-  case object Configurations extends AppTab("Configurations", ObservationGroup, 3)
-  case object Constraints    extends AppTab("Constraints", ObservationGroup, 4)
+  case object Overview       extends AppTab("Overview", 1)
+  case object Observations   extends AppTab("Observations", 2)
+  case object Targets        extends AppTab("Targets", 2)
+  case object Configurations extends AppTab("Configurations", 2)
+  case object Constraints    extends AppTab("Constraints", 2)
 
   val all = NonEmptyList.of(Overview, Observations, Targets, Configurations, Constraints)
 
   /** @group Typeclass Instances */
   implicit val AppTabEnumerated: Enumerated[AppTab] =
-    Enumerated.of(all.head, all.tail: _*)
-}
-
-sealed abstract class ButtonGroup extends Product with Serializable
-
-object ButtonGroup {
-  case object OverviewButton   extends ButtonGroup
-  case object ObservationGroup extends ButtonGroup
-
-  // This defines the ordering of the groups.
-  val all = NonEmptyList.of(OverviewButton, ObservationGroup)
-
-  implicit val ButtonGroupEnumerated: Enumerated[ButtonGroup] =
     Enumerated.of(all.head, all.tail: _*)
 }

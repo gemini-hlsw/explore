@@ -42,7 +42,7 @@ object SideTabs {
           case justOne :: Nil => VerticalSection()(tabButton(justOne))
           case _              =>
             VerticalSection()(
-              ButtonGroup(tabs.sortBy(_.groupOrder.value).reverse.map(tabButton).toTagMod)
+              ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
             )
         }
 
