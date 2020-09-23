@@ -16,7 +16,6 @@ object GPPStyles {
   val MainBody: Css   = Css("main-body")
   val MainTitle: Css  = Css("main-title")
   val SideTabs: Css   = Css("sidetabs")
-  val SideButton: Css = Css("side-button")
 
   val ResizeHandle: Css    = Css("resize-handle")
   val Tree: Css            = Css("tree")

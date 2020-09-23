@@ -3,7 +3,7 @@
 
 package explore
 
-import cats.syntax.all._
+import cats.implicits._
 import crystal.react.implicits._
 import explore.components.ui.GPPStyles
 import explore.model.enum.AppTab
@@ -33,26 +33,29 @@ object SideTabs {
         val tabsL = p.tabs.get.toNel
         val focus = p.tabs.get.focus
 
-        def tabButton(style: Css)(tab: AppTab): Button =
+        def tabButton(tab: AppTab): Button =
           Button(active = tab === focus,
-                 clazz = style,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 
+        def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
+          case justOne :: Nil => VerticalSection()(tabButton(justOne))
+          case _              =>
+            VerticalSection()(
+              ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
+            )
+        }
+
+        val buttonSections: List[TagMod] =
+          tabsL.toList
+            .groupBy(_.buttonGroup)
+            .toList
+            .sortBy(_._1)
+            .map(tup => makeButtonSection(tup._2))
+
         <.div(
           GPPStyles.SideTabsBody,
-          VerticalSection()(
-            tabButton(Css.Empty)(tabsL.head)
-          ),
-          Divider(hidden = true),
-          VerticalSection()(
-            ButtonGroup(
-              // Due to the css rotations these need to be in reversed order
-              tabsL.tail.reverse
-                .map(tabButton(GPPStyles.SideButton))
-                .toTagMod
-            )
-          )
+          buttonSections.mkTagMod(Divider(hidden = true))
         )
       }
       .configure(Reusability.shouldComponentUpdate)
