@@ -10,6 +10,7 @@ sealed trait Page extends Product with Serializable
 
 object Page {
   case object HomePage                   extends Page
+  final case object ProposalPage         extends Page
   final case object ObservationsBasePage extends Page
   final case class ObsPage(obsId: ExploreObservation.Id) extends Page
   final case object TargetsBasePage      extends Page
@@ -20,6 +21,7 @@ object Page {
 
   implicit val eqPage: Eq[Page] = Eq.instance {
     case (HomePage, HomePage)                         => true
+    case (ProposalPage, ProposalPage)                 => true
     case (ObservationsBasePage, ObservationsBasePage) => true
     case (ObsPage(a), ObsPage(b))                     => a === b
     case (TargetsBasePage, TargetsBasePage)           => true

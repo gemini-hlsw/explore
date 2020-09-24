@@ -1,0 +1,77 @@
+/*
+  Style a readonly FormInput as static data. 
+  The FormInput requires a className of 'static-data'
+*/
+.ui.form .static-data input[readonly] {
+    background-color: @inputColor;
+    color: @inputBackground;
+}
+
+/*
+  Styles for FormStaticData
+*/
+.ui.form data.static-data {
+    background-color: @inputColor;
+    color: @inputBackground;
+    border-radius: @defaultBorderRadius;
+    border: @borderWidth solid @gray;
+    padding: calc(@inputVerticalPadding - @borderWidth) @inputHorizontalPadding;
+    line-height: @inputLineHeight;
+    
+}
+
+.ui.form data.static-data:focus {
+    border: @borderWidth solid @focusedFormBorderColor;
+    outline: 0;
+}
+
+/*
+  Hide the label by moving it offscreen - it will still be available
+  to screen readers.
+
+  Note that not providing a label will cause the field to float up
+  and be mis-aligned. Instead, provide a label and hide it.
+*/
+.ui.form .field.hide-label label {
+    margin-left: -100000px;
+} 
+
+/*
+  allows for the nesting of FormGroups
+*/
+.ui.form .fields .fields {
+    margin: 0;
+    padding: 0;
+}
+
+/*
+  The grow-* classes can be used to control the width of 
+  controls in a FormGroup via flex instead of width percents.
+  Instead of using something like:
+    FormGroup(widths = Two)(<form elements>)
+  Skip the "widths" above and add the grow-* classes to the
+  individual Form* controls within the FormGroup
+*/
+.ui.form .fields > .grow-one {
+    flex: 1;
+}
+
+.ui.form .fields > .grow-two {
+    flex: 2;
+}
+
+.ui.form .fields > grow-three {
+    flex: 3;
+}
+
+.ui.form .fields > .grow-four {
+    flex: 4;
+}
+
+/*
+  Applying to-end to a field will align that field and the ones
+  that follow it to the end of the FormGroup.
+*/
+.ui.form .fields .field.to-end {
+    margin-left: auto;
+}

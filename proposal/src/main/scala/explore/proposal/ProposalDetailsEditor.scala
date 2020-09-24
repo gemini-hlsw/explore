@@ -1,0 +1,127 @@
+// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
+package explore.proposal
+
+import cats.syntax.all._
+import crystal.react.implicits._
+import explore._
+import explore.components.ui.GPPStyles
+import explore.components.FormStaticData
+import explore.components.Tile
+import explore.model._
+import explore.model.display._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.forms._
+import react.common.implicits._
+import react.common.ReactProps
+import react.semanticui.collections.form._
+import react.semanticui.widths._
+import react.semanticui.addons.textarea.TextArea
+
+final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
+    extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)
+
+object ProposalDetailsEditor {
+  type Props = ProposalDetailsEditor
+
+  class Backend() {
+    def render(props: Props) = {
+      val details = props.proposalDetails
+      <.div(
+        <.div(
+          ^.key := "details",
+          GPPStyles.ProposalTile,
+          Tile("Details", movable = false)(
+            Form(
+              FormGroup(widths = Two)(
+                FormInputEV(
+                  id = "title",
+                  name = "title",
+                  className = "inverse",
+                  value = details.zoom(ProposalDetails.title),
+                  label = "Title"
+                ),
+                EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category")
+              ),
+              FormGroup(widths = Two)(
+                FormGroup(
+                  FormInput(
+                    value = details.get.pi.displayName,
+                    label = "Principle Investigator",
+                    clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
+                  )(
+                    ^.readOnly := true
+                  ),
+                  FormButton(icon = Icons.Edit,
+                             label = "Edit Principle Investigator",
+                             clazz = GPPStyles.HideLabel
+                  )
+                ),
+                EnumViewMultipleSelect(
+                  details.zoom(ProposalDetails.keywords),
+                  label = "Keywords",
+                  search = true
+                )
+              ),
+              FormGroup(widths = Two)(
+                FormGroup(
+                  FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
+                  FormStaticData(value = "<partner splits coming soon>",
+                                 id = "splits",
+                                 label = "Splits",
+                                 hideLabel = true
+                  ),
+                  FormButton(icon = Icons.Edit,
+                             label = "Edit requested time split",
+                             clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
+                  )
+                ),
+                EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
+                               label = "ToO Activation"
+                )
+              ),
+              FormGroup(widths = Two)(
+                EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
+                FormStaticData(value = "<Determined by observations>",
+                               label = "Band 3",
+                               id = "band3"
+                )
+              )
+            )
+          )
+        ),
+        <.div(
+          ^.key := "abstract",
+          GPPStyles.ProposalTile,
+          Tile("Abstract", movable = false)(
+            Form(
+              TextArea(
+                rows = 10,
+                value = details.zoom(ProposalDetails.abstrakt).get,
+                onChangeE = (_: Form.ReactFormEvent, tap: TextArea.TextAreaProps) => {
+                  details.zoom(ProposalDetails.abstrakt).set(tap.value.asInstanceOf[String]).runInCB
+                }
+              )
+            )
+          )
+        ),
+        <.div(
+          ^.key := "preview",
+          GPPStyles.ProposalTile,
+          Tile("Preview", movable = false)(
+            <.span("Placeholder for PDF preview.")
+          )
+        )
+      )
+    }
+  }
+
+  val component =
+    ScalaComponent
+      .builder[Props]
+      .renderBackend[Backend]
+      .build
+
+}

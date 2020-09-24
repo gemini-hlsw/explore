@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
+import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
@@ -38,6 +39,9 @@ object Routing {
 
       (emptyRule
         | staticRoute(root, HomePage) ~> render(UnderConstruction())
+        | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
+          ProposalTabContents(view.zoom(RootModel.focused))
+        )
         | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
@@ -58,6 +62,7 @@ object Routing {
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
         .verify(
           HomePage,
+          ProposalPage,
           ObservationsBasePage,
           ObsPage(UUID.randomUUID),
           TargetsBasePage,

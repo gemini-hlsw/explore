@@ -36,4 +36,17 @@ object reusability {
   implicit def targetSummaryReuse: Reusability[TargetSummary]                                     = Reusability.derive
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
   implicit def obsSummaryReuse: Reusability[ObsSummary]                                           = Reusability.derive
+  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.derive
+
+  // From lucuma-core
+  import eu.timepit.refined.types.numeric.PosLong
+  import lucuma.core.model._
+
+  implicit val posIntReuse: Reusability[PosLong]                 = Reusability.by(_.value)
+  implicit val userIdReuse: Reusability[User.Id]                 = Reusability.derive
+  implicit val orcidIdReuse: Reusability[OrcidId]                = Reusability.by(_.value.toString)
+  implicit val orcidProfileResuse: Reusability[OrcidProfile]     = Reusability.derive
+  implicit val standardRoleIdReuse: Reusability[StandardRole.Id] = Reusability.derive
+  implicit val standardRoleReuse: Reusability[StandardRole]      = Reusability.derive
+  implicit val standardUserReuse: Reusability[StandardUser]      = Reusability.derive
 }

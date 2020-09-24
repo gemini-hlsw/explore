@@ -11,6 +11,10 @@ object GPPStyles {
   val GPPTileTitle: Css = Css("gpp-tile-title")
   val GPPTileBody: Css  = Css("gpp-tile-body")
 
+  // re-evaluate the need/use of this as part of overall
+  // styling and layout
+  val ProposalTile: Css = Css("proposal-tile")
+
   val MainGrid: Css   = Css("main-grid")
   val MainHeader: Css = Css("main-header")
   val MainBody: Css   = Css("main-body")
@@ -60,4 +64,20 @@ object GPPStyles {
   val AladinCenterButton: Css    = Css("aladin-status-center-button")
 
   val MoonPhase: Css = Css("moon-phase")
+
+  // Semantic UI form overrides and extensions
+
+  val GrowOne: Css   = Css("grow-one")
+  val GrowTwo: Css   = Css("grow two")
+  val GrowThree: Css = Css("grow three")
+  val GrowFour: Css  = Css("grow four")
+
+  // Move an element to the end of the field wrapper
+  val ToEnd: Css = Css("to-end")
+
+  // Hide a label while keeping it accessible to screen readers
+  val HideLabel: Css = Css("hide-label")
+
+  // Change styles for a readonly input
+  val StaticData: Css = Css("static-data")
 }
