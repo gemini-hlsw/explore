@@ -29,7 +29,7 @@ object FormStaticData {
 
   val component =
     ScalaComponent
-      .builder[Props]("FormStaticData")
+      .builder[Props]
       .render_P { props =>
         <.div(
           props.modifiers.toTagMod,
