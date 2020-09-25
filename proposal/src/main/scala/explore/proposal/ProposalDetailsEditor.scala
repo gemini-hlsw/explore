@@ -17,7 +17,6 @@ import lucuma.ui.forms._
 import react.common.implicits._
 import react.common.ReactProps
 import react.semanticui.collections.form._
-import react.semanticui.widths._
 import react.semanticui.addons.textarea.TextArea
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
@@ -35,60 +34,52 @@ object ProposalDetailsEditor {
           GPPStyles.ProposalTile,
           Tile("Details", movable = false)(
             Form(
-              FormGroup(widths = Two)(
-                FormInputEV(
-                  id = "title",
-                  name = "title",
-                  className = "inverse",
-                  value = details.zoom(ProposalDetails.title),
-                  label = "Title"
+              GPPStyles.TwoColumnGrid,
+              FormInputEV(
+                id = "title",
+                name = "title",
+                className = "inverse",
+                value = details.zoom(ProposalDetails.title),
+                label = "Title"
+              ).withMods(^.autoFocus := true),
+              EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
+              <.div(
+                GPPStyles.CellWrapper,
+                FormInput(
+                  value = details.get.pi.displayName,
+                  label = "Principle Investigator",
+                  clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
+                )(
+                  ^.readOnly := true
                 ),
-                EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category")
-              ),
-              FormGroup(widths = Two)(
-                FormGroup(
-                  FormInput(
-                    value = details.get.pi.displayName,
-                    label = "Principle Investigator",
-                    clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
-                  )(
-                    ^.readOnly := true
-                  ),
-                  FormButton(icon = Icons.Edit,
-                             label = "Edit Principle Investigator",
-                             clazz = GPPStyles.HideLabel
-                  )
-                ),
-                EnumViewMultipleSelect(
-                  details.zoom(ProposalDetails.keywords),
-                  label = "Keywords",
-                  search = true
+                FormButton(icon = Icons.Edit,
+                           label = "Edit Principle Investigator",
+                           clazz = GPPStyles.HideLabel
                 )
               ),
-              FormGroup(widths = Two)(
-                FormGroup(
-                  FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
-                  FormStaticData(value = "<partner splits coming soon>",
-                                 id = "splits",
-                                 label = "Splits",
-                                 hideLabel = true
-                  ),
-                  FormButton(icon = Icons.Edit,
-                             label = "Edit requested time split",
-                             clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
-                  )
+              EnumViewMultipleSelect(
+                details.zoom(ProposalDetails.keywords),
+                label = "Keywords",
+                search = true
+              ),
+              <.div(
+                GPPStyles.CellWrapper,
+                FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
+                FormStaticData(value = "<partner splits coming soon>",
+                               id = "splits",
+                               label = "Splits",
+                               hideLabel = true
                 ),
-                EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
-                               label = "ToO Activation"
+                FormButton(icon = Icons.Edit,
+                           label = "Edit requested time split",
+                           clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
                 )
               ),
-              FormGroup(widths = Two)(
-                EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
-                FormStaticData(value = "<Determined by observations>",
-                               label = "Band 3",
-                               id = "band3"
-                )
-              )
+              EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
+                             label = "ToO Activation"
+              ),
+              EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
+              FormStaticData(value = "<Determined by observations>", label = "Band 3", id = "band3")
             )
           )
         ),

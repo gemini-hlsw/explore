@@ -3,6 +3,8 @@
 
 package explore.components.ui
 
+import cats.syntax.all._
+import react.common.implicits._
 import react.common.style._
 
 object GPPStyles {
@@ -66,14 +68,18 @@ object GPPStyles {
   val MoonPhase: Css = Css("moon-phase")
 
   // Semantic UI form overrides and extensions
+  val Grid: Css            = Css("gpp-grid")
+  val TwoColumnGrid: Css   = Grid |+| Css("gpp-two-columns")
+  val ThreeColumnGrid: Css = Grid |+| Css("gpp-three-columns")
+  val CellWrapper: Css     = Css("gpp-cell-wrapper")
 
-  val GrowOne: Css   = Css("grow-one")
-  val GrowTwo: Css   = Css("grow two")
-  val GrowThree: Css = Css("grow three")
-  val GrowFour: Css  = Css("grow four")
+  val GrowOne: Css   = Css("gpp-grow-one")
+  val GrowTwo: Css   = Css("gpp-grow-two")
+  val GrowThree: Css = Css("gpp-grow-three")
+  val GrowFour: Css  = Css("gpp-grow-four")
 
   // Move an element to the end of the field wrapper
-  val ToEnd: Css = Css("to-end")
+  val ToEnd: Css = Css("gpp-to-end")
 
   // Hide a label while keeping it accessible to screen readers
   val HideLabel: Css = Css("hide-label")
