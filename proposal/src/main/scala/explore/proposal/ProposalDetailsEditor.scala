@@ -25,94 +25,96 @@ final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
 object ProposalDetailsEditor {
   type Props = ProposalDetailsEditor
 
-  class Backend() {
-    def render(props: Props) = {
-      val details = props.proposalDetails
-      <.div(
-        <.div(
-          ^.key := "details",
-          GPPStyles.ProposalTile,
-          Tile("Details", movable = false)(
-            Form(
-              GPPStyles.TwoColumnGrid,
-              FormInputEV(
-                id = "title",
-                name = "title",
-                className = "inverse",
-                value = details.zoom(ProposalDetails.title),
-                label = "Title"
-              ).withMods(^.autoFocus := true),
-              EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
-              <.div(
-                GPPStyles.CellWrapper,
-                FormInput(
-                  value = details.get.pi.displayName,
-                  label = "Principle Investigator",
-                  clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
-                )(
-                  ^.readOnly := true
-                ),
-                FormButton(icon = Icons.Edit,
-                           label = "Edit Principle Investigator",
-                           clazz = GPPStyles.HideLabel
-                )
-              ),
-              EnumViewMultipleSelect(
-                details.zoom(ProposalDetails.keywords),
-                label = "Keywords",
-                search = true
-              ),
-              <.div(
-                GPPStyles.CellWrapper,
-                FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
-                FormStaticData(value = "<partner splits coming soon>",
-                               id = "splits",
-                               label = "Splits",
-                               hideLabel = true
-                ),
-                FormButton(icon = Icons.Edit,
-                           label = "Edit requested time split",
-                           clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
-                )
-              ),
-              EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
-                             label = "ToO Activation"
-              ),
-              EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
-              FormStaticData(value = "<Determined by observations>", label = "Band 3", id = "band3")
-            )
-          )
-        ),
-        <.div(
-          ^.key := "abstract",
-          GPPStyles.ProposalTile,
-          Tile("Abstract", movable = false)(
-            Form(
-              TextArea(
-                rows = 10,
-                value = details.zoom(ProposalDetails.abstrakt).get,
-                onChangeE = (_: Form.ReactFormEvent, tap: TextArea.TextAreaProps) => {
-                  details.zoom(ProposalDetails.abstrakt).set(tap.value.asInstanceOf[String]).runInCB
-                }
-              )
-            )
-          )
-        ),
-        <.div(
-          ^.key := "preview",
-          GPPStyles.ProposalTile,
-          Tile("Preview", movable = false)(
-            <.span("Placeholder for PDF preview.")
-          )
-        )
-      )
-    }
-  }
-
   val component =
     ScalaComponent
       .builder[Props]
-      .renderBackend[Backend]
+      .render_P { props =>
+        val details = props.proposalDetails
+        <.div(
+          <.div(
+            ^.key := "details",
+            GPPStyles.ProposalTile,
+            Tile("Details", movable = false)(
+              Form(
+                GPPStyles.TwoColumnGrid,
+                FormInputEV(
+                  id = "title",
+                  name = "title",
+                  className = "inverse",
+                  value = details.zoom(ProposalDetails.title),
+                  label = "Title"
+                ).withMods(^.autoFocus := true),
+                EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
+                <.div(
+                  GPPStyles.CellWrapper,
+                  FormInput(
+                    value = details.get.pi.displayName,
+                    label = "Principle Investigator",
+                    clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
+                  )(
+                    ^.readOnly := true
+                  ),
+                  FormButton(icon = Icons.Edit,
+                             label = "Edit Principle Investigator",
+                             clazz = GPPStyles.HideLabel
+                  )
+                ),
+                EnumViewMultipleSelect(
+                  details.zoom(ProposalDetails.keywords),
+                  label = "Keywords",
+                  search = true
+                ),
+                <.div(
+                  GPPStyles.CellWrapper,
+                  FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
+                  FormStaticData(value = "<partner splits coming soon>",
+                                 id = "splits",
+                                 label = "Splits",
+                                 hideLabel = true
+                  ),
+                  FormButton(icon = Icons.Edit,
+                             label = "Edit requested time split",
+                             clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
+                  )
+                ),
+                EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
+                               label = "ToO Activation"
+                ),
+                EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
+                FormStaticData(value = "<Determined by observations>",
+                               label = "Band 3",
+                               id = "band3"
+                )
+              )
+            )
+          ),
+          <.div(
+            ^.key := "abstract",
+            GPPStyles.ProposalTile,
+            Tile("Abstract", movable = false)(
+              Form(
+                TextArea(
+                  rows = 10,
+                  value = details.zoom(ProposalDetails.abstrakt).get,
+                  onChangeE = (_: Form.ReactFormEvent, tap: TextArea.TextAreaProps) => {
+                    details
+                      .zoom(ProposalDetails.abstrakt)
+                      .set(tap.value.asInstanceOf[String])
+                      .runInCB
+                  }
+                )
+              )
+            )
+          ),
+          <.div(
+            ^.key := "preview",
+            GPPStyles.ProposalTile,
+            Tile("Preview", movable = false)(
+              <.span("Placeholder for PDF preview.")
+            )
+          )
+        )
+      }
       .build
 
 }

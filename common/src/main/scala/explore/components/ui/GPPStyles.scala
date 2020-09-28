@@ -78,7 +78,7 @@ object GPPStyles {
   val GrowThree: Css = Css("gpp-grow-three")
   val GrowFour: Css  = Css("gpp-grow-four")
 
-  // Move an element to the end of the field wrapper
+  // Move an element to the end of the flex container
   val ToEnd: Css = Css("gpp-to-end")
 
   // Hide a label while keeping it accessible to screen readers
