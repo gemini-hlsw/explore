@@ -5,7 +5,6 @@ package explore.model
 
 import java.time.Duration
 
-import explore.model.decoders._
 import explore.model.enum.ObsStatus
 import io.circe.Decoder
 import io.circe.HCursor
@@ -70,7 +69,7 @@ object ObsSummary {
           id          <- c.downField("id").as[ExploreObservation.Id]
           status      <- c.downField("status").as[ObsStatus]
           conf        <- c.downField("configuration").as[String]
-          constraints <- c.downField("constraints").as[ConstraintsSummary]
+          constraints <- c.downField("constraint").as[ConstraintsSummary]
           duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
         } yield ObsSummary(
           id,
@@ -89,7 +88,7 @@ object ObsSummary {
         status      <- c.downField("status").as[ObsStatus]
         target      <- c.downField("target").as[TargetSummary]
         conf        <- c.downField("configuration").as[String]
-        constraints <- c.downField("constraints").as[ConstraintsSummary]
+        constraints <- c.downField("constraint").as[ConstraintsSummary]
         duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
       } yield ObsSummary(
         id,
