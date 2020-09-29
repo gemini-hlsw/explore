@@ -5,7 +5,7 @@ package explore
 
 import cats.implicits._
 import crystal.react.implicits._
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -54,7 +54,7 @@ object SideTabs {
             .map(tup => makeButtonSection(tup._2))
 
         <.div(
-          GPPStyles.SideTabsBody,
+          ExploreStyles.SideTabsBody,
           buttonSections.mkTagMod(Divider(hidden = true))
         )
       }

@@ -4,7 +4,7 @@
 package explore.components
 
 import explore.Icons
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -25,9 +25,9 @@ object Tile {
       .stateless
       .render_PC { (p, c) =>
         <.div(
-          GPPStyles.GPPTile,
+          ExploreStyles.Tile,
           <.div(
-            GPPStyles.GPPTileTitle,
+            ExploreStyles.TileTitle,
             Menu(
               attached = MenuAttached.Top,
               compact = true,
@@ -38,7 +38,7 @@ object Tile {
               MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
             )
           ),
-          <.div(GPPStyles.GPPTileBody, c)
+          <.div(ExploreStyles.TileBody, c)
         )
       }
       .configure(Reusability.shouldComponentUpdate)

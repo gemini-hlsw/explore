@@ -15,7 +15,7 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import cats.syntax.all._
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.reusability._
 import gpp.highcharts.highchartsStrings.line
@@ -274,7 +274,7 @@ object SkyPlot {
       ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
 
       <.span(
-        <.div(GPPStyles.MoonPhase)(
+        <.div(ExploreStyles.MoonPhase)(
           <.span(
             MoonPhase(phase = moonPhase, size = 20, border = "1px solid black"),
             <.small("%1.0f%%".format(moonIllum * 100))

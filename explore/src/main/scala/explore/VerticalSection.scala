@@ -3,7 +3,7 @@
 
 package explore
 
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -26,10 +26,10 @@ object VerticalSection {
       .stateless
       .render_C(c =>
         <.div(
-          GPPStyles.RotationWrapperOuter,
+          ExploreStyles.RotationWrapperOuter,
           <.div(
-            GPPStyles.RotationWrapperInner,
-            <.div(GPPStyles.VerticalButton, c)
+            ExploreStyles.RotationWrapperInner,
+            <.div(ExploreStyles.VerticalButton, c)
           )
         )
       )

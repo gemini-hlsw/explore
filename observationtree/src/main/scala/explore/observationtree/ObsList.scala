@@ -7,7 +7,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.ObsBadge
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
@@ -26,11 +26,11 @@ object ObsList {
   class Backend() {
     def render(props: Props): VdomElement = {
       println(props)
-      <.div(GPPStyles.ObsTree)(
+      <.div(ExploreStyles.ObsTree)(
         <.div(
           props.observations.get.toTagMod { obs =>
             <.div(
-              GPPStyles.ObsItem,
+              ExploreStyles.ObsItem,
               ^.cursor.pointer,
               ^.onClick ==> { e: ReactEvent =>
                 e.stopPropagationCB >>

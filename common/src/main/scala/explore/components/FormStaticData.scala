@@ -3,7 +3,7 @@
 
 package explore.components
 
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
@@ -33,11 +33,11 @@ object FormStaticData {
       .render_P { props =>
         <.div(
           props.modifiers.toTagMod,
-          (GPPStyles.HideLabel).when(props.hideLabel),
+          (ExploreStyles.HideLabel).when(props.hideLabel),
           ^.cls := "field",
           <.label(props.label, ^.htmlFor := props.id),
           <.div(^.cls := "ui input",
-                <.data(props.value, GPPStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
+                <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
           )
         )
       }

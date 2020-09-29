@@ -3,7 +3,7 @@
 
 package explore.components
 
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react._
@@ -44,7 +44,7 @@ object ObsBadge {
         val obs = props.obs
 
         <.small(
-          Card(raised = props.selected)(GPPStyles.ObsBadge)(
+          Card(raised = props.selected)(ExploreStyles.ObsBadge)(
             CardContent(
               CardHeader(
                 props.layout match {

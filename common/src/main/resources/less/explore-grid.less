@@ -3,14 +3,14 @@
 
 /*
  Overrides the default values of fields inside an SUI form.
- These values interfere with the gpp-grid layout.
+ These values interfere with the explore-grid layout.
  */
-.ui.form.gpp-grid .field {
+.ui.form.explore-grid .field {
     margin: 0;
     padding: 0;
 }
 
-.gpp-grid {
+.explore-grid {
     display: grid;
     grid-gap: 1em;
 
@@ -24,7 +24,7 @@
      A two column grid that devolves to a single column 
      when less than @two-column-breakpoint width.
      */
-    &.gpp-two-columns {
+    &.explore-two-columns {
         @media (min-width: @two-column-break) {
             grid-template-columns: 1fr 1fr;
         }
@@ -34,7 +34,7 @@
      A three column grid that devolves to a single column 
      when less than @three-column-breakpoint width.
      */
-    &.gpp-three-columns {
+    &.explore-three-columns {
         @media (min-width: @three-column-break) {
             grid-template-columns: 1fr 1fr 1fr;
         }
@@ -51,21 +51,21 @@
  nature of the grid - they will remain grouped together even
  when the grid goes down to one column.
 */
-.gpp-flex-container {
+.explore-flex-container {
     display: flex;
 
     .ui.form & > * + *, // override SUI 
-    .ui.form.gpp-grid & > * + *,
+    .ui.form.explore-grid & > * + *,
     > * + * {
         margin-left: 0.5em;
     }
 
     /*
-     The gpp-grow-* classes can be used to control the width of 
+     The explore-grow-* classes can be used to control the width of 
      elements in a cell wrapper via the flex grow attribute.
      */
     each(range(4), {
-        .gpp-grow-@{value} {
+        .explore-grow-@{value} {
             flex: @value;
         }
     });
@@ -74,8 +74,8 @@
      Applying to-end to an field will push that field and the ones
      that follow it to the end of the cell wrapper.
      */
-    .ui.form & .gpp-flex-end, // override SUI
-    .gpp-flex-end {
+    .ui.form & .explore-flex-end, // override SUI
+    .explore-flex-end {
         margin-left: auto;
     }
 }

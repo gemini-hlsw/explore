@@ -9,7 +9,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
 import explore.View
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
@@ -285,9 +285,9 @@ object AladinContainer {
 
     def render(props: Props, state: State) =
       <.div(
-        GPPStyles.AladinContainerColumn,
+        ExploreStyles.AladinContainerColumn,
         <.div(
-          GPPStyles.AladinContainerBody,
+          ExploreStyles.AladinContainerBody,
           AladinComp.withRef(aladinRef) {
             Aladin(showReticle = false,
                    showLayersControl = false,
@@ -298,22 +298,23 @@ object AladinContainer {
             )
           }
         ),
-        Label(content = "Fov:",
-              clazz = GPPStyles.AladinFOV,
-              size = Small,
-              detail =
-                LabelDetail(clazz = GPPStyles.AladinDetailText, content = formatFov(state.fov.x))
+        Label(
+          content = "Fov:",
+          clazz = ExploreStyles.AladinFOV,
+          size = Small,
+          detail =
+            LabelDetail(clazz = ExploreStyles.AladinDetailText, content = formatFov(state.fov.x))
         ),
         Label(
           content = "Cur:",
-          clazz = GPPStyles.AladinCurrentCoords,
+          clazz = ExploreStyles.AladinCurrentCoords,
           size = Small,
-          detail = LabelDetail(clazz = GPPStyles.AladinDetailText,
+          detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
                                content = formatCoordinates(state.current)
           )
         ),
         <.div(
-          GPPStyles.AladinCenterButton,
+          ExploreStyles.AladinCenterButton,
           Popup(content = "Center on target",
                 trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(Icons.Bullseye)
           )
