@@ -102,9 +102,16 @@ lazy val common = project
       "loglevel" -> "1.6.8"
     ),
     libraryDependencies ++=
-      ReactCommon.value
+      ReactCommon.value,
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoKeys ++= Seq[BuildInfoKey](
+      "ODBEndpoint" -> sys.env.getOrElse("ODB_ENDPOINT",
+                                         "wss://explore-hasura.herokuapp.com/v1/graphql"
+      )
+    ),
+    buildInfoPackage := "explore"
   )
-  .enablePlugins(ScalaJSBundlerPlugin)
+  .enablePlugins(ScalaJSBundlerPlugin, BuildInfoPlugin)
   .dependsOn(model.js)
 
 lazy val targeteditor = project

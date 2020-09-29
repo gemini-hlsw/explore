@@ -28,6 +28,7 @@ import lucuma.core.data.EnumZipper
 import org.scalajs.dom
 
 import js.annotation._
+import sttp.model.Uri
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -54,8 +55,9 @@ trait AppMain extends IOApp {
     )
 
     for {
-      ctx <- AppContext.from[IO](AppConfig())
-      _   <- AppCtx.initIn[IO](ctx)
+      odbURI <- IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
+      ctx    <- AppContext.from[IO](AppConfig(odbURI))
+      _      <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)
 
