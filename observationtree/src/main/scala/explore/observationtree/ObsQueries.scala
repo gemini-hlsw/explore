@@ -8,7 +8,6 @@ import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.ObsSummary
-import explore.model.decoders._
 import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.Encoder
@@ -32,7 +31,7 @@ object ObsQueries {
             name
           }
           configuration
-          constraints {
+          constraint {
             id
             name
           }

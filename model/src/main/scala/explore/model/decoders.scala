@@ -16,21 +16,8 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
-import lucuma.core.util.Enumerated
 
 object decoders {
-
-  implicit def enumDecoder[E: Enumerated]: Decoder[E] =
-    new Decoder[E] {
-      final def apply(c: HCursor): Decoder.Result[E] =
-        // TODO Obtain the failure CursorOp list from c.
-        c.as[String]
-          .flatMap(s =>
-            Enumerated[E]
-              .fromTag(s)
-              .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
-          )
-    }
 
   implicit val raDecoder = new Decoder[RightAscension] {
     final def apply(c: HCursor): Decoder.Result[RightAscension] =
@@ -82,7 +69,7 @@ object decoders {
           id          <- c.downField("id").as[ExploreObservation.Id]
           status      <- c.downField("status").as[ObsStatus]
           conf        <- c.downField("configuration").as[String]
-          constraints <- c.downField("constraints").as[Constraints]
+          constraints <- c.downField("constraint").as[Constraints]
           duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
         } yield ExploreObservation(
           id,

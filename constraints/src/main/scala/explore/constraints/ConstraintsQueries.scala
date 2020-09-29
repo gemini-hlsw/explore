@@ -20,9 +20,7 @@ import explore.model.enum.WaterVapor
 import explore.model.reusability._
 import explore.undo.Undoer
 import io.circe.Decoder
-import io.circe.DecodingFailure
 import io.circe.Encoder
-import io.circe.HCursor
 import io.circe.JsonObject
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
@@ -33,17 +31,6 @@ import monocle.function.Cons.headOption
 import monocle.macros.Lenses
 
 object ConstraintsQueries {
-  implicit def enumDecoder[E: Enumerated]: Decoder[E] =
-    new Decoder[E] {
-      final def apply(c: HCursor): Decoder.Result[E] =
-        // TODO Obtain the failure CursorOp list from c.
-        c.as[String]
-          .flatMap(s =>
-            Enumerated[E]
-              .fromTag(s)
-              .toRight(DecodingFailure(s"Invalid Enumerated value [$s] on [$c].", List.empty))
-          )
-    }
 
   object Subscription extends GraphQLQuery {
     val document = """

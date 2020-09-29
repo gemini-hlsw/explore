@@ -68,7 +68,7 @@ object TargetObsQueries {
             id
             status
             configuration
-            constraints {
+            constraint {
               id
               name
             }
