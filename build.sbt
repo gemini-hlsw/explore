@@ -32,6 +32,11 @@ addCommandAlias(
 )
 
 addCommandAlias(
+  "proposalWDS",
+  "; proposal/fastOptJS::stopWebpackDevServer; proposal/fastOptJS::startWebpackDevServer; ~proposal/fastOptJS"
+)
+
+addCommandAlias(
   "stopWDS",
   "fastOptJS::stopWebpackDevServer"
 )
@@ -69,7 +74,15 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, common, constraints, targeteditor, observationtree, explore)
+  .aggregate(model.jvm,
+             model.js,
+             common,
+             constraints,
+             targeteditor,
+             observationtree,
+             proposal,
+             explore
+  )
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -135,6 +148,14 @@ lazy val observationtree = project
     scalaJSLinkerConfig in (Compile, fullOptJS) ~= { _.withSourceMap(false) }
   )
 
+lazy val proposal = project
+  .in(file("proposal"))
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(commonWDS: _*)
+  .enablePlugins(ScalaJSBundlerPlugin)
+  .dependsOn(common)
+
 lazy val explore: Project = project
   .in(file("explore"))
   .settings(commonSettings: _*)
@@ -149,7 +170,7 @@ lazy val explore: Project = project
         ReactResizable.value ++
         ReactSizeMe.value
   )
-  .dependsOn(constraints, targeteditor, observationtree)
+  .dependsOn(constraints, targeteditor, observationtree, proposal)
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.3",

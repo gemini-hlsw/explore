@@ -14,6 +14,7 @@ object RootModelRouting {
 
   protected def getPage(model: RootModel): Page =
     model.tabs.focus match {
+      case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
         RootModel.focused
@@ -37,6 +38,7 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
+      case ProposalPage          => setTab(AppTab.Proposal) >>> RootModel.focused.set(none)
       case ObservationsBasePage  =>
         setTab(AppTab.Observations) >>> RootModel.focused.set(none)
       case ObsPage(obsId)        =>

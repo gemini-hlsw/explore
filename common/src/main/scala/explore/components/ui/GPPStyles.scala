@@ -3,6 +3,8 @@
 
 package explore.components.ui
 
+import cats.syntax.all._
+import react.common.implicits._
 import react.common.style._
 
 object GPPStyles {
@@ -10,6 +12,10 @@ object GPPStyles {
   val GPPTile: Css      = Css("gpp-tile")
   val GPPTileTitle: Css = Css("gpp-tile-title")
   val GPPTileBody: Css  = Css("gpp-tile-body")
+
+  // re-evaluate the need/use of this as part of overall
+  // styling and layout
+  val ProposalTile: Css = Css("proposal-tile")
 
   val MainGrid: Css   = Css("main-grid")
   val MainHeader: Css = Css("main-header")
@@ -60,4 +66,24 @@ object GPPStyles {
   val AladinCenterButton: Css    = Css("aladin-status-center-button")
 
   val MoonPhase: Css = Css("moon-phase")
+
+  // Semantic UI form overrides and extensions
+  val Grid: Css            = Css("gpp-grid")
+  val TwoColumnGrid: Css   = Grid |+| Css("gpp-two-columns")
+  val ThreeColumnGrid: Css = Grid |+| Css("gpp-three-columns")
+  val CellWrapper: Css     = Css("gpp-cell-wrapper")
+
+  val GrowOne: Css   = Css("gpp-grow-one")
+  val GrowTwo: Css   = Css("gpp-grow-two")
+  val GrowThree: Css = Css("gpp-grow-three")
+  val GrowFour: Css  = Css("gpp-grow-four")
+
+  // Move an element to the end of the flex container
+  val ToEnd: Css = Css("gpp-to-end")
+
+  // Hide a label while keeping it accessible to screen readers
+  val HideLabel: Css = Css("hide-label")
+
+  // Change styles for a readonly input
+  val StaticData: Css = Css("static-data")
 }

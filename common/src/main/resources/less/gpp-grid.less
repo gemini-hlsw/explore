@@ -1,0 +1,91 @@
+@two-column-break: 60em;
+@three-column-break: 90em;
+
+.gpp-grid {
+    display: grid;
+    grid-gap: 1em;
+
+    /*
+     You do not not to specify the row and column of each cell 
+     for most simple layouts, such as most forms. It will fill 
+     in each cell in a row and then go to the next column.
+    */
+
+    /*
+     A two column grid that devolves to a single column 
+     when less than @two-column-breakpoint width.
+     */
+    &.gpp-two-columns {
+        @media (min-width: @two-column-break) {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /*
+     A three column grid that devolves to a single column 
+     when less than @three-column-breakpoint width.
+     */
+    &.gpp-three-columns {
+        @media (min-width: @three-column-break) {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+
+    /*
+     Makes a flex layout container out of the grid cells. 
+     This will usually be used on a <div>.
+
+     Note that cell wrappers don't participate in the responsive
+     nature of the grid - they will remain grouped together even
+     when the grid goes down to one column.
+     */
+    .gpp-cell-wrapper {
+        display: flex;
+
+        .ui.form& > * + *, // override SUI 
+        > * + * {
+            margin-left: 0.5em;
+        }
+
+        /*
+         The gpp-grow-* classes can be used to control the width of 
+         elements in a cell wrapper via the flex grow attribute.
+         */
+        .gpp-grow {
+            &-one {
+                flex: 1;
+            }
+
+            &-two {
+                flex: 2;
+            }
+
+            &-three {
+                flex: 3;
+            }
+
+            &-four {
+                flex: 4;
+            }
+        }
+
+        /*
+         Applying to-end to an field will push that field and the ones
+         that follow it to the end of the cell wrapper.
+         */
+        .ui.form& .gpp-to-end, // override SUI
+        .gpp-to-end {
+            margin-left: auto;
+        }
+    }
+}
+
+/*
+ Overrides the default values of fields inside an SUI form.
+ These values interfere with the gpp-grid layout.
+ */
+ui.form.gpp-grid .field {
+    margin: 0;
+    padding: 0;
+}
+
