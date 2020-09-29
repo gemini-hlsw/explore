@@ -5,6 +5,7 @@ package explore.proposal
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
 import explore._
 import explore.components.ui.GPPStyles
 import explore.components.FormStaticData
@@ -46,11 +47,11 @@ object ProposalDetailsEditor {
                 ).withMods(^.autoFocus := true),
                 EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
                 <.div(
-                  GPPStyles.CellWrapper,
+                  GPPStyles.FlexContainer,
                   FormInput(
                     value = details.get.pi.displayName,
                     label = "Principle Investigator",
-                    clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
+                    clazz = GPPStyles.StaticData |+| GPPStyles.Grow(1)
                   )(
                     ^.readOnly := true
                   ),
@@ -65,7 +66,7 @@ object ProposalDetailsEditor {
                   search = true
                 ),
                 <.div(
-                  GPPStyles.CellWrapper,
+                  GPPStyles.FlexContainer,
                   FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
                   FormStaticData(value = "<partner splits coming soon>",
                                  id = "splits",

@@ -4,6 +4,8 @@
 package explore.components.ui
 
 import cats.syntax.all._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval
 import react.common.implicits._
 import react.common.style._
 
@@ -71,15 +73,12 @@ object GPPStyles {
   val Grid: Css            = Css("gpp-grid")
   val TwoColumnGrid: Css   = Grid |+| Css("gpp-two-columns")
   val ThreeColumnGrid: Css = Grid |+| Css("gpp-three-columns")
-  val CellWrapper: Css     = Css("gpp-cell-wrapper")
 
-  val GrowOne: Css   = Css("gpp-grow-one")
-  val GrowTwo: Css   = Css("gpp-grow-two")
-  val GrowThree: Css = Css("gpp-grow-three")
-  val GrowFour: Css  = Css("gpp-grow-four")
+  val FlexContainer: Css = Css("gpp-flex-container")
+  def Grow(i: Int Refined Interval.Closed[1, 4]): Css = Css(s"gpp-grow-$i")
 
   // Move an element to the end of the flex container
-  val ToEnd: Css = Css("gpp-to-end")
+  val ToEnd: Css = Css("gpp-flex-end")
 
   // Hide a label while keeping it accessible to screen readers
   val HideLabel: Css = Css("hide-label")

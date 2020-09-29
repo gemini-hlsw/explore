@@ -1,6 +1,15 @@
 @two-column-break: 60em;
 @three-column-break: 90em;
 
+/*
+ Overrides the default values of fields inside an SUI form.
+ These values interfere with the gpp-grid layout.
+ */
+.ui.form.gpp-grid .field {
+    margin: 0;
+    padding: 0;
+}
+
 .gpp-grid {
     display: grid;
     grid-gap: 1em;
@@ -31,61 +40,42 @@
         }
     }
 
-    /*
-     Makes a flex layout container out of the grid cells. 
-     This will usually be used on a <div>.
-
-     Note that cell wrappers don't participate in the responsive
-     nature of the grid - they will remain grouped together even
-     when the grid goes down to one column.
-     */
-    .gpp-cell-wrapper {
-        display: flex;
-
-        .ui.form& > * + *, // override SUI 
-        > * + * {
-            margin-left: 0.5em;
-        }
-
-        /*
-         The gpp-grow-* classes can be used to control the width of 
-         elements in a cell wrapper via the flex grow attribute.
-         */
-        .gpp-grow {
-            &-one {
-                flex: 1;
-            }
-
-            &-two {
-                flex: 2;
-            }
-
-            &-three {
-                flex: 3;
-            }
-
-            &-four {
-                flex: 4;
-            }
-        }
-
-        /*
-         Applying to-end to an field will push that field and the ones
-         that follow it to the end of the cell wrapper.
-         */
-        .ui.form& .gpp-to-end, // override SUI
-        .gpp-to-end {
-            margin-left: auto;
-        }
-    }
+    
 }
 
 /*
- Overrides the default values of fields inside an SUI form.
- These values interfere with the gpp-grid layout.
- */
-ui.form.gpp-grid .field {
-    margin: 0;
-    padding: 0;
-}
+ Makes a flex layout container. 
+ This will usually be used on a <div>.
 
+ Note that flex containers don't participate in the responsive
+ nature of the grid - they will remain grouped together even
+ when the grid goes down to one column.
+*/
+.gpp-flex-container {
+    display: flex;
+
+    .ui.form & > * + *, // override SUI 
+    .ui.form.gpp-grid & > * + *,
+    > * + * {
+        margin-left: 0.5em;
+    }
+
+    /*
+     The gpp-grow-* classes can be used to control the width of 
+     elements in a cell wrapper via the flex grow attribute.
+     */
+    each(range(4), {
+        .gpp-grow-@{value} {
+            flex: @value;
+        }
+    });
+
+    /*
+     Applying to-end to an field will push that field and the ones
+     that follow it to the end of the cell wrapper.
+     */
+    .ui.form & .gpp-flex-end, // override SUI
+    .gpp-flex-end {
+        margin-left: auto;
+    }
+}
