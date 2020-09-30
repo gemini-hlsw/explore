@@ -6,16 +6,18 @@ package explore.model
 import java.time.Duration
 
 import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ObsStatus
 import explore.model.enum._
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.HCursor
+import io.circe.refined._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 
 object decoders {
 
@@ -43,10 +45,10 @@ object decoders {
     final def apply(c: HCursor): Decoder.Result[SiderealTarget] =
       for {
         id    <- c.downField("id").as[SiderealTarget.Id]
-        name  <- c.downField("name").as[String]
+        name  <- c.downField("name").as[NonEmptyString]
         ra    <- c.downField("ra").as[RightAscension]
         dec   <- c.downField("dec").as[Declination]
-        coords = ProperMotion(Coordinates(ra, dec), Epoch.J2000, none, none, none)
+        coords = SiderealTracking(none, Coordinates(ra, dec), Epoch.J2000, none, none, none)
       } yield SiderealTarget(id, name, coords)
   }
 

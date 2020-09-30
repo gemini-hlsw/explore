@@ -13,10 +13,9 @@ import explore.model._
 import explore.model.enum._
 import explore.model.reusability._
 import fs2.concurrent.SignallingRef
-import japgolly.scalajs.react.vdom.html_<^._
-
-import lucuma.core.model._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model._
 
 object ProposalTabContents {
   type Props = View[Option[Focused]]

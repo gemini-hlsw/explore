@@ -48,7 +48,7 @@ object ObsBadge {
             CardContent(
               CardHeader(
                 props.layout match {
-                  case NameAndConf        => obs.target.name
+                  case NameAndConf        => obs.target.name.value
                   case ConfAndConstraints => obs.conf
                 }
               ),

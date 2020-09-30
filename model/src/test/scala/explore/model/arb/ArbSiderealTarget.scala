@@ -7,25 +7,27 @@ import java.util.UUID
 
 import explore.model.SiderealTarget
 import explore.model.arb.CogenUUID._
-import lucuma.core.math.ProperMotion
+import lucuma.core.model.SiderealTracking
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
+import eu.timepit.refined.scalacheck.string._
+import eu.timepit.refined.types.string._
 
 trait ArbSiderealTarget {
-  import lucuma.core.math.arb.ArbProperMotion._
+  import lucuma.core.model.arb.ArbSiderealTracking._
 
   implicit val targetArb = Arbitrary[SiderealTarget] {
     for {
       i <- arbitrary[UUID]
-      n <- arbitrary[String]
-      p <- arbitrary[ProperMotion]
+      n <- arbitrary[NonEmptyString]
+      p <- arbitrary[SiderealTracking]
     } yield SiderealTarget(i, n, p)
   }
 
   implicit val siderealTargetCogen: Cogen[SiderealTarget] =
-    Cogen[(UUID, String, ProperMotion)].contramap(c => (c.id, c.name, c.track))
+    Cogen[(UUID, String, SiderealTracking)].contramap(c => (c.id, c.name.value, c.track))
 }
 
 object ArbSiderealTarget extends ArbSiderealTarget

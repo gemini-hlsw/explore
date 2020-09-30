@@ -7,6 +7,10 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import eu.timepit.refined._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.collection._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.implicits._
 import explore.model.ModelOptics._
@@ -17,8 +21,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.ui.forms._
-import monocle.Iso
-import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form._
@@ -29,10 +31,14 @@ import react.semanticui.widths._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
-  searchAndGo:      String => Callback,
+  searchAndGo:      NonEmptyString => Callback,
   goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[CoordinatesForm](CoordinatesForm.component)
+    extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
+  def submit(searchTerm: String): Callback =
+    refineV[NonEmpty](searchTerm)
+      .fold(_ => Callback.empty, s => searchAndGo(s).when(s =!= target.name).asCBO)
+}
 
 object CoordinatesForm {
   type Props = CoordinatesForm
@@ -44,9 +50,10 @@ object CoordinatesForm {
     decValue:   Declination
   )
 
-  private val stateLens: Lens[SiderealTarget, State] =
-    targetPropsL
-      .composeIso(Iso((State.apply _).tupled) { case State(name, ra, dec) => (name, ra, dec) })
+  def initialState(p: Props): State = {
+    val r = targetPropsL.get(p.target)
+    Function.tupled(State.apply _)((r._1.value, r._2, r._3))
+  }
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -56,10 +63,7 @@ object CoordinatesForm {
 
         Form(
           size = Mini,
-          onSubmit = props
-            .searchAndGo(state.searchTerm)
-            .when(state.searchTerm =!= props.target.name)
-            .void
+          onSubmit = props.submit(state.searchTerm)
         )(
           FormDropdown(
             label = "Type",
@@ -109,7 +113,7 @@ object CoordinatesForm {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps((stateLens.get _).compose(_.target))
+      .initialStateFromProps(initialState(_))
       .renderBackend[Backend]
       .build
 

@@ -5,6 +5,7 @@ package explore.model
 
 import io.circe.Encoder
 import io.circe.Json
+import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
@@ -26,7 +27,7 @@ object encoders {
       Json.obj(
         "id"          -> target.id.asJson,
         "name"        -> target.name.asJson,
-        "object_type" -> "Sidereal".asJson,
+        "object_type" -> "SIDEREAL".asJson,
         "ra"          -> targetRA.get(target).asJson,
         "dec"         -> targetDec.get(target).asJson
       )

@@ -7,6 +7,9 @@ import java.time.Duration
 import java.util.UUID
 
 import cats.syntax.all._
+import eu.timepit.refined._
+import eu.timepit.refined.collection._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constraints
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
@@ -15,20 +18,21 @@ import explore.model.enum._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 
 object TargetTreeTest {
 
-  def target(name: String, raStr: String, decStr: String): SiderealTarget = {
+  def target(name: NonEmptyString, raStr: String, decStr: String): SiderealTarget = {
     val ra     = RightAscension.fromStringHMS.getOption(raStr)
     val dec    = Declination.fromStringSignedDMS.getOption(decStr)
     val coords =
-      ProperMotion((ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
-                   Epoch.J2000,
-                   none,
-                   none,
-                   none
+      SiderealTracking(none,
+                       (ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
+                       Epoch.J2000,
+                       none,
+                       none,
+                       none
       )
     SiderealTarget(
       UUID.randomUUID,
@@ -37,11 +41,11 @@ object TargetTreeTest {
     )
   }
 
-  val ngc1055 = target("NGC 1055", "02:41:45.232999", "+00:26:35.450016")
-  val ngc7752 = target("NGC 7752", "23:46:58.557000", "+29:27:32.169995")
-  val ngc3705 = target("NGC 3705", "11:30:07.456000", "+09:16:35.870015")
-  val ngc1068 = target("NGC 1068", "02:42:40.771000", "-00:00:47.840004")
-  val ngc1087 = target("NGC 1087", "02:46:25.154457", "-00:29:55.449960")
+  val ngc1055 = target(refineMV[NonEmpty]("NGC 1055"), "02:41:45.232999", "+00:26:35.450016")
+  val ngc7752 = target(refineMV[NonEmpty]("NGC 7752"), "23:46:58.557000", "+29:27:32.169995")
+  val ngc3705 = target(refineMV[NonEmpty]("NGC 3705"), "11:30:07.456000", "+09:16:35.870015")
+  val ngc1068 = target(refineMV[NonEmpty]("NGC 1068"), "02:42:40.771000", "-00:00:47.840004")
+  val ngc1087 = target(refineMV[NonEmpty]("NGC 1087"), "02:46:25.154457", "-00:29:55.449960")
 
   val targets = List(
     ngc1055,

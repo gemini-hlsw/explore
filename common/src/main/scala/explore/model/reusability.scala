@@ -6,6 +6,7 @@ package explore.model
 import java.time.Duration
 
 import clue.StreamingClientStatus
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
@@ -19,6 +20,7 @@ import react.common.implicits._
  * Reusability instances for model classes
  */
 object reusability {
+  implicit val nonEmptyStrinReuse: Reusability[NonEmptyString]                                    = Reusability.by(_.value)
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
