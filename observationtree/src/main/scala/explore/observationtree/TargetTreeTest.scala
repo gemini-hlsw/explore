@@ -7,8 +7,7 @@ import java.time.Duration
 import java.util.UUID
 
 import cats.syntax.all._
-import eu.timepit.refined._
-import eu.timepit.refined.collection._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constraints
 import explore.model.ExploreObservation
@@ -41,11 +40,11 @@ object TargetTreeTest {
     )
   }
 
-  val ngc1055 = target(refineMV[NonEmpty]("NGC 1055"), "02:41:45.232999", "+00:26:35.450016")
-  val ngc7752 = target(refineMV[NonEmpty]("NGC 7752"), "23:46:58.557000", "+29:27:32.169995")
-  val ngc3705 = target(refineMV[NonEmpty]("NGC 3705"), "11:30:07.456000", "+09:16:35.870015")
-  val ngc1068 = target(refineMV[NonEmpty]("NGC 1068"), "02:42:40.771000", "-00:00:47.840004")
-  val ngc1087 = target(refineMV[NonEmpty]("NGC 1087"), "02:46:25.154457", "-00:29:55.449960")
+  val ngc1055 = target("NGC 1055", "02:41:45.232999", "+00:26:35.450016")
+  val ngc7752 = target("NGC 7752", "23:46:58.557000", "+29:27:32.169995")
+  val ngc3705 = target("NGC 3705", "11:30:07.456000", "+09:16:35.870015")
+  val ngc1068 = target("NGC 1068", "02:42:40.771000", "-00:00:47.840004")
+  val ngc1087 = target("NGC 1087", "02:46:25.154457", "-00:29:55.449960")
 
   val targets = List(
     ngc1055,

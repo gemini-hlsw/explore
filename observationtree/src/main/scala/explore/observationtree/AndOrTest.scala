@@ -11,8 +11,7 @@ import scala.util.Random
 
 import cats.effect.IO
 import cats.syntax.all._
-import eu.timepit.refined._
-import eu.timepit.refined.collection._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ObsBadge
 import explore.data.tree._
@@ -72,15 +71,12 @@ object AndOrTest {
   val initialTree: KeyedIndexedTree[UUID, ObsNode] =
     KeyedIndexedTree.fromTree(
       Tree(
-        Node(obs(refineMV[NonEmpty]("NGC 1055"))),
-        Node(obs(refineMV[NonEmpty]("NGC 7752"))),
-        Node(obs(refineMV[NonEmpty]("NGC 1068"))),
+        Node(obs("NGC 1055")),
+        Node(obs("NGC 7752")),
+        Node(obs("NGC 1068")),
         Node(or(""),
-             Node(obs(refineMV[NonEmpty]("NGC 1087"))),
-             Node(and(""),
-                  Node(obs(refineMV[NonEmpty]("NGC 1087"))),
-                  Node(obs(refineMV[NonEmpty]("NGC 1087")))
-             )
+             Node(obs("NGC 1087")),
+             Node(and(""), Node(obs("NGC 1087")), Node(obs("NGC 1087")))
         )
       ),
       ObsNode.id.get
