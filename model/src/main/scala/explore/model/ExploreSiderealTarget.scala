@@ -8,9 +8,13 @@ import java.util.UUID
 import cats._
 import cats.effect.Sync
 import cats.syntax.all._
+import eu.timepit.refined._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.macros.Lenses
 
@@ -18,7 +22,11 @@ import monocle.macros.Lenses
  * A refinement of gem.Tracker meant for sidereal targets
  */
 @Lenses
-final case class SiderealTarget(id: SiderealTarget.Id, name: String, track: ProperMotion)
+final case class SiderealTarget(
+  id:    SiderealTarget.Id,
+  name:  NonEmptyString,
+  track: SiderealTracking
+)
 
 object SiderealTarget {
   type Id = UUID
@@ -29,8 +37,8 @@ object SiderealTarget {
       .map(id =>
         SiderealTarget(
           id,
-          "New Target",
-          ProperMotion(Coordinates.Zero, Epoch.J2000, none, none, none)
+          refineMV[NonEmpty]("New Target"),
+          SiderealTracking(none, Coordinates.Zero, Epoch.J2000, none, none, none)
         )
       )
 
@@ -55,7 +63,7 @@ object ExploreSiderealTarget {
     target.track
       .map(pm =>
         ExploreSiderealTarget(
-          target.name,
+          target.name.value,
           SiderealTarget(UUID.randomUUID, target.name, pm).some,
           TargetVisualOptions.Default
         )

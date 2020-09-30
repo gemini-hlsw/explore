@@ -262,7 +262,7 @@ object TargetObsList {
                       <.span(GPPStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
-                          target.name
+                          target.name.value
                         ),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),

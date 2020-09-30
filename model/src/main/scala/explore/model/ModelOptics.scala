@@ -3,10 +3,11 @@
 
 package explore.model
 
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import monocle.Lens
 
 /**
@@ -15,16 +16,16 @@ import monocle.Lens
 trait ModelOptics {
 
   /**
-   * Lens for right ascension of a ProperMotion
+   * Lens for right ascension of a SiderealTracking
    */
-  val properMotionRA: Lens[ProperMotion, RightAscension] =
-    ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
+  val properMotionRA: Lens[SiderealTracking, RightAscension] =
+    SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
 
   /**
-   * Lens for declination of a ProperMotion
+   * Lens for declination of a SiderealTracking
    */
-  val properMotionDec: Lens[ProperMotion, Declination] =
-    ProperMotion.baseCoordinates ^|-> Coordinates.declination
+  val properMotionDec: Lens[SiderealTracking, Declination] =
+    SiderealTracking.baseCoordinates ^|-> Coordinates.declination
 
   /**
    * Lens to the RightAscension of a sidereal target
@@ -42,7 +43,7 @@ trait ModelOptics {
    * Lens used to change name and coordinates of a target
    */
   val targetPropsL =
-    Lens[SiderealTarget, (String, RightAscension, Declination)](t =>
+    Lens[SiderealTarget, (NonEmptyString, RightAscension, Declination)](t =>
       (t.name, targetRA.get(t), targetDec.get(t))
     )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
 }

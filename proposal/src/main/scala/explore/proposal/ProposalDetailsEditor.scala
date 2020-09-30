@@ -6,18 +6,18 @@ package explore.proposal
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
-import explore.components.ui.GPPStyles
 import explore.components.FormStaticData
 import explore.components.Tile
+import explore.components.ui.GPPStyles
 import explore.model._
 import explore.model.display._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms._
-import react.common.implicits._
 import react.common.ReactProps
-import react.semanticui.collections.form._
+import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
+import react.semanticui.collections.form._
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
     extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)

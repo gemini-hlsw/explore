@@ -8,6 +8,7 @@ import java.util.UUID
 import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLQuery
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.SiderealTarget
 import explore.model.decoders._
@@ -15,6 +16,7 @@ import explore.undo.Undoer
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.JsonObject
+import io.circe.refined._
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import monocle.Lens
@@ -60,9 +62,9 @@ object TargetQueries {
     """
 
     case class Fields(
-      name: Option[String] = None,
-      ra:   Option[String] = None,
-      dec:  Option[String] = None
+      name: Option[NonEmptyString] = none,
+      ra:   Option[String] = none,
+      dec:  Option[String] = none
     )
     object Fields {
       implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)

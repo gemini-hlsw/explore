@@ -5,6 +5,9 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import eu.timepit.refined._
+import eu.timepit.refined.collection._
+import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.View
 import explore.components.ui.GPPStyles
@@ -45,23 +48,30 @@ object TargetBody extends ModelOptics {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
-    def setName(name: String): Callback =
+    def setName(name: NonEmptyString): Callback =
       bs.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
 
     private def coordinatesKey(target: SiderealTarget): String =
-      s"${target.name}#${target.track.baseCoordinates.show}"
+      s"${target.name.value}#${target.track.baseCoordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
 
-    def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
+    def searchAndGo(
+      modify: ((NonEmptyString, RightAscension, Declination)) => Callback
+    )(search: NonEmptyString) = {
+      val aladinModify = (s: String, r: RightAscension, d: Declination) =>
+        refineV[NonEmpty](s).fold(_ => Callback.empty, s => modify((s, r, d)))
       aladinRef.get
-        .flatMapCB(_.backend.searchAndGo(modify)(search))
+        .flatMapCB(
+          _.backend.searchAndGo(Function.tupled(aladinModify))(search.value)
+        )
         .toCallback
+    }
 
-    def setTargetByName: String => Callback =
+    def setTargetByName: NonEmptyString => Callback =
       searchAndGo { case (name, _, _) => setName(name) }
 
     def render(props: Props) =
@@ -73,7 +83,7 @@ object TargetBody extends ModelOptics {
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify = undoSet[
-            (String, RightAscension, Declination)
+            (NonEmptyString, RightAscension, Declination)
           ](
             targetPropsL,
             { case (n, r, d) =>
@@ -85,7 +95,7 @@ object TargetBody extends ModelOptics {
             }
           ) _
 
-          val searchAndSet: String => Callback =
+          val searchAndSet: NonEmptyString => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
           Grid(columns = Three,

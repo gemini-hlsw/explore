@@ -5,13 +5,15 @@ package explore.model
 
 import java.time.Duration
 
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ObsStatus
 import io.circe.Decoder
 import io.circe.HCursor
+import io.circe.refined._
 import monocle.macros.Lenses
 
 @Lenses
-final case class TargetSummary(id: SiderealTarget.Id, name: String)
+final case class TargetSummary(id: SiderealTarget.Id, name: NonEmptyString)
 
 object TargetSummary {
   def fromTarget(target: SiderealTarget): TargetSummary =
@@ -21,7 +23,7 @@ object TargetSummary {
     final def apply(c: HCursor): Decoder.Result[TargetSummary] =
       for {
         id   <- c.downField("id").as[SiderealTarget.Id]
-        name <- c.downField("name").as[String]
+        name <- c.downField("name").as[NonEmptyString]
       } yield TargetSummary(id, name)
   }
 }
