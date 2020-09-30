@@ -21,7 +21,7 @@ object Settings {
     val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.12"
-    val reactAladin       = "0.2.0"
+    val reactAladin       = "0.2.1"
     val reactAtlasKitTree = "0.3.0"
     val reactCommon       = "0.10.0"
     val reactDatepicker   = "0.1.0"
