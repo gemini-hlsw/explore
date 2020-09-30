@@ -37,7 +37,7 @@ final case class CoordinatesForm(
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(searchTerm: String): Callback =
     refineV[NonEmpty](searchTerm)
-      .fold(_ => Callback.empty, s => searchAndGo(s).when(s =!= target.name).asCBO)
+      .fold(_ => Callback.empty, s => searchAndGo(s).when_(s =!= target.name))
 }
 
 object CoordinatesForm {

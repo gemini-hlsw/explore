@@ -20,7 +20,7 @@ import react.common.implicits._
  * Reusability instances for model classes
  */
 object reusability {
-  implicit val nonEmptyStrinReuse: Reusability[NonEmptyString]                                    = Reusability.by(_.value)
+  implicit val nonEmptyStringReuse: Reusability[NonEmptyString]                                   = Reusability.by(_.value)
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
