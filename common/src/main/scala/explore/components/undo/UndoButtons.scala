@@ -6,6 +6,7 @@ package explore.components.undo
 import cats.effect.Effect
 import crystal.react.implicits._
 import explore.Icons
+import explore.components.WIP
 import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -30,18 +31,20 @@ object UndoButtons {
       .render_P { p =>
         implicit val effect = p.effect
 
-        <.div(
-          Button(onClick = p.undoCtx.undo(p.value).runInCB,
-                 size = p.size,
-                 disabled = p.undoCtx.undoEmpty
-          )(
-            Icons.Undo
-          ),
-          Button(onClick = p.undoCtx.redo(p.value).runInCB,
-                 size = p.size,
-                 disabled = p.undoCtx.redoEmpty
-          )(
-            Icons.Redo
+        WIP(
+          <.div(
+            Button(onClick = p.undoCtx.undo(p.value).runInCB,
+                   size = p.size,
+                   disabled = p.undoCtx.undoEmpty
+            )(
+              Icons.Undo
+            ),
+            Button(onClick = p.undoCtx.redo(p.value).runInCB,
+                   size = p.size,
+                   disabled = p.undoCtx.redoEmpty
+            )(
+              Icons.Redo
+            )
           )
         )
       }

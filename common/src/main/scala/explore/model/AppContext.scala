@@ -6,19 +6,21 @@ package explore.model
 import cats.effect._
 import cats.syntax.all._
 import clue._
+import crystal.react.StreamRenderer
+import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
 
-case class AppConfig(programsURL: Uri)
+case class AppConfig(odbURI: Uri)
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  programs: GraphQLStreamingClient[F]
+  odb: GraphQLStreamingClient[F]
 ) {
-  // lazy val programsConnectionStatus =
-  // StreamRenderer.build(programs.statusStream)
+  lazy val ODBConnectionStatus =
+    StreamRenderer.build(odb.statusStream)
 
   def close(): F[Unit] =
-    programs.close()
+    odb.close()
 }
 
 case class Actions[F[_]](
@@ -42,7 +44,7 @@ object AppContext {
     config: AppConfig
   ): F[AppContext[F]] =
     for {
-      programsClient <- ApolloStreamingClient.of[F](config.programsURL)
+      programsClient <- ApolloStreamingClient.of[F](config.odbURI)
       clients         = Clients(programsClient)
       actions         = Actions[F]()
     } yield AppContext[F](clients, actions)

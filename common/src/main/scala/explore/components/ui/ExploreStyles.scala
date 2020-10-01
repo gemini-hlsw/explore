@@ -86,6 +86,11 @@ object ExploreStyles {
   // Change styles for a readonly input
   val StaticData: Css = Css("static-data")
 
+  // Clue websocket connection status
+  val ConnectionOK: Css      = Css("connection-ok")
+  val ConnectionWarning: Css = Css("connection-warning")
+  val ConnectionError: Css   = Css("connection-error")
+
   // WIP
   val WIP: Css        = Css("wip")
   val WIPWarning: Css = Css("wip-warning")

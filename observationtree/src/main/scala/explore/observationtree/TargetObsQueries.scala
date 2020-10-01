@@ -161,21 +161,21 @@ object TargetObsQueries {
 
   def mutateObs(obsId: ExploreObservation.Id, fields: ObsMutation.Fields): IO[Unit] =
     AppCtx.flatMap(
-      _.clients.programs
+      _.clients.odb
         .query(ObsMutation)(ObsMutation.Variables(obsId, fields).some)
         .void
     )
 
   def insertTarget(target: SiderealTarget): IO[Unit] =
     AppCtx.flatMap(
-      _.clients.programs
+      _.clients.odb
         .query(AddTarget)(AddTarget.Variables(target).some)
         .void
     )
 
   def removeTarget(id: SiderealTarget.Id): IO[Unit] =
     AppCtx.flatMap(
-      _.clients.programs
+      _.clients.odb
         .query(RemoveTarget)(RemoveTarget.Variables(id).some)
         .void
     )
@@ -189,7 +189,7 @@ object TargetObsQueries {
     render =>
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
-          appCtx.clients.programs
+          appCtx.clients.odb
             .subscribe(Subscription)(),
           _.map(
             Subscription.Data.targets.get
