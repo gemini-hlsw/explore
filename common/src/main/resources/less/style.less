@@ -62,6 +62,19 @@ body {
   background: darkgrey;
 }
 
+// Taken from the definitíon of ui.button transition but removed background-color and background
+// When animating those two properties you see some flickering in FF
+.ui.button.side-button {
+  transition:
+  opacity @defaultDuration @defaultEasing,
+  color @defaultDuration @defaultEasing,
+  box-shadow @defaultDuration @defaultEasing,
+}
+
+// Form properties
+.gpp-form {
+}
+
 .explore-tile-title {
   border-bottom-style: solid;
   border-bottom-width: 1px;
