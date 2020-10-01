@@ -127,7 +127,7 @@ object ConstraintsQueries {
 
   private def mutate(id: Constraints.Id, fields: Mutation.Fields): IO[Unit] =
     AppCtx.flatMap(
-      _.clients.programs
+      _.clients.odb
         .query(Mutation)(Mutation.Variables(id, fields).some)
         .void
     )
@@ -137,7 +137,7 @@ object ConstraintsQueries {
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     AppCtx.withCtx { implicit appCtx =>
       SubscriptionRenderMod[Subscription.Data, Constraints](
-        appCtx.clients.programs
+        appCtx.clients.odb
           .subscribe(Subscription)(
             Subscription.Variables(id).some
           ),

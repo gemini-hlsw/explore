@@ -3,6 +3,7 @@
 
 package explore
 
+import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model._
 import japgolly.scalajs.react._
@@ -33,13 +34,11 @@ object OTLayout {
               borderless = true,
               tabular = MenuTabular.Right
             )(
-              MenuItem(as = "a")(
+              MenuItem(as = <.a)(
                 // Icons.BarsIcon,
-                <.span(
-                  ExploreStyles.MainTitle,
-                  "Explore"
-                )
-              )
+                <.span(ExploreStyles.MainTitle, "Explore")
+              ),
+              MenuItem(as = "span", position = MenuItemPosition.Right)(ConnectionsStatus())
             )
           ),
           <.div(

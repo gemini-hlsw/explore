@@ -37,7 +37,7 @@ object TargetEditor {
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-          appCtx.clients.programs
+          appCtx.clients.odb
             .subscribe(Subscription)(
               Subscription.Variables(props.id).some
             ),

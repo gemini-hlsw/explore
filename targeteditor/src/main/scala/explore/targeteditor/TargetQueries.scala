@@ -16,9 +16,9 @@ import explore.undo.Undoer
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.JsonObject
-import io.circe.refined._
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
+import io.circe.refined._
 import monocle.Lens
 import monocle.macros.Lenses
 
@@ -83,7 +83,7 @@ object TargetQueries {
   private def mutate(id: SiderealTarget.Id, fields: Mutation.Fields)(implicit
     ctx:                 AppContextIO
   ): IO[Unit] =
-    ctx.clients.programs
+    ctx.clients.odb
       .query(Mutation)(Mutation.Variables(id, fields).some)
       .void
 

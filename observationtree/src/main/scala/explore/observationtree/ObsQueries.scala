@@ -60,7 +60,7 @@ object ObsQueries {
     render =>
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, List[ObsSummary]](
-          appCtx.clients.programs
+          appCtx.clients.odb
             .subscribe(Subscription)(),
           _.map(
             Subscription.Data.observations.get
