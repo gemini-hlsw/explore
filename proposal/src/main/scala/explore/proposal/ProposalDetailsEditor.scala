@@ -5,10 +5,11 @@ package explore.proposal
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
 import explore._
 import explore.components.FormStaticData
 import explore.components.Tile
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model._
 import explore.model.display._
 import japgolly.scalajs.react._
@@ -33,10 +34,10 @@ object ProposalDetailsEditor {
         <.div(
           <.div(
             ^.key := "details",
-            GPPStyles.ProposalTile,
+            ExploreStyles.ProposalTile,
             Tile("Details", movable = false)(
               Form(
-                GPPStyles.TwoColumnGrid,
+                ExploreStyles.TwoColumnGrid,
                 FormInputEV(
                   id = "title",
                   name = "title",
@@ -46,17 +47,17 @@ object ProposalDetailsEditor {
                 ).withMods(^.autoFocus := true),
                 EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
                 <.div(
-                  GPPStyles.CellWrapper,
+                  ExploreStyles.FlexContainer,
                   FormInput(
                     value = details.get.pi.displayName,
                     label = "Principle Investigator",
-                    clazz = GPPStyles.StaticData |+| GPPStyles.GrowOne
+                    clazz = ExploreStyles.StaticData |+| ExploreStyles.Grow(1)
                   )(
                     ^.readOnly := true
                   ),
                   FormButton(icon = Icons.Edit,
                              label = "Edit Principle Investigator",
-                             clazz = GPPStyles.HideLabel
+                             clazz = ExploreStyles.HideLabel
                   )
                 ),
                 EnumViewMultipleSelect(
@@ -65,7 +66,7 @@ object ProposalDetailsEditor {
                   search = true
                 ),
                 <.div(
-                  GPPStyles.CellWrapper,
+                  ExploreStyles.FlexContainer,
                   FormStaticData(value = "7.50h", id = "requested", label = "Requested Time"),
                   FormStaticData(value = "<partner splits coming soon>",
                                  id = "splits",
@@ -74,7 +75,7 @@ object ProposalDetailsEditor {
                   ),
                   FormButton(icon = Icons.Edit,
                              label = "Edit requested time split",
-                             clazz = GPPStyles.HideLabel |+| GPPStyles.ToEnd
+                             clazz = ExploreStyles.HideLabel |+| ExploreStyles.ToEnd
                   )
                 ),
                 EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
@@ -90,7 +91,7 @@ object ProposalDetailsEditor {
           ),
           <.div(
             ^.key := "abstract",
-            GPPStyles.ProposalTile,
+            ExploreStyles.ProposalTile,
             Tile("Abstract", movable = false)(
               Form(
                 TextArea(
@@ -108,7 +109,7 @@ object ProposalDetailsEditor {
           ),
           <.div(
             ^.key := "preview",
-            GPPStyles.ProposalTile,
+            ExploreStyles.ProposalTile,
             Tile("Preview", movable = false)(
               <.span("Placeholder for PDF preview.")
             )

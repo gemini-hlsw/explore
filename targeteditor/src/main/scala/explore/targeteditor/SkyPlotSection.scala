@@ -10,7 +10,7 @@ import java.time.ZonedDateTime
 
 import cats.Eq
 import cats.syntax.all._
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.reusability._
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.MonocleReact._
@@ -66,18 +66,18 @@ object SkyPlotSection {
       }
 
     def render(props: Props, state: State) =
-      <.div(GPPStyles.SkyPlotSection)(
-        <.div(GPPStyles.SkyPlot)(
+      <.div(ExploreStyles.SkyPlotSection)(
+        <.div(ExploreStyles.SkyPlot)(
           SkyPlot(state.site, props.coords, state.date, state.zoneId, 350)
         ),
-        <.div(GPPStyles.SkyPlotControls)(
+        <.div(ExploreStyles.SkyPlotControls)(
           <.div(
             <.label(Site.GN.toString,
                     ^.cursor.pointer,
                     ^.onClick --> $.setStateL(State.site)(Site.GN)
             ),
             Checkbox(slider = true,
-                     clazz = GPPStyles.PlotToggle,
+                     clazz = ExploreStyles.PlotToggle,
                      onClick = toggleSite,
                      checked = state.site === Site.GS
             ),
@@ -99,7 +99,7 @@ object SkyPlotSection {
                     ^.onClick --> $.setStateL(State.timeDisplay)(TimeDisplay.UTC)
             ),
             Checkbox(slider = true,
-                     clazz = GPPStyles.PlotToggle,
+                     clazz = ExploreStyles.PlotToggle,
                      onClick = toggleTimeDisplay,
                      checked = state.timeDisplay === TimeDisplay.Site
             ),

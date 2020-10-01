@@ -1,0 +1,81 @@
+@two-column-break: 60em;
+@three-column-break: 90em;
+
+/*
+ Overrides the default values of fields inside an SUI form.
+ These values interfere with the explore-grid layout.
+ */
+.ui.form.explore-grid .field {
+    margin: 0;
+    padding: 0;
+}
+
+.explore-grid {
+    display: grid;
+    grid-gap: 1em;
+
+    /*
+     You do not not to specify the row and column of each cell 
+     for most simple layouts, such as most forms. It will fill 
+     in each cell in a row and then go to the next column.
+    */
+
+    /*
+     A two column grid that devolves to a single column 
+     when less than @two-column-breakpoint width.
+     */
+    &.explore-two-columns {
+        @media (min-width: @two-column-break) {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /*
+     A three column grid that devolves to a single column 
+     when less than @three-column-breakpoint width.
+     */
+    &.explore-three-columns {
+        @media (min-width: @three-column-break) {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+
+    
+}
+
+/*
+ Makes a flex layout container. 
+ This will usually be used on a <div>.
+
+ Note that flex containers don't participate in the responsive
+ nature of the grid - they will remain grouped together even
+ when the grid goes down to one column.
+*/
+.explore-flex-container {
+    display: flex;
+
+    .ui.form & > * + *, // override SUI 
+    .ui.form.explore-grid & > * + *,
+    > * + * {
+        margin-left: 0.5em;
+    }
+
+    /*
+     The explore-grow-* classes can be used to control the width of 
+     elements in a cell wrapper via the flex grow attribute.
+     */
+    each(range(4), {
+        .explore-grow-@{value} {
+            flex: @value;
+        }
+    });
+
+    /*
+     Applying to-end to an field will push that field and the ones
+     that follow it to the end of the cell wrapper.
+     */
+    .ui.form & .explore-flex-end, // override SUI
+    .explore-flex-end {
+        margin-left: auto;
+    }
+}

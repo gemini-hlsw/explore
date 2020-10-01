@@ -4,14 +4,15 @@
 package explore.components.ui
 
 import cats.syntax.all._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval
 import react.common.implicits._
 import react.common.style._
 
-object GPPStyles {
-  val GPPForm: Css      = Css("gpp-form")
-  val GPPTile: Css      = Css("gpp-tile")
-  val GPPTileTitle: Css = Css("gpp-tile-title")
-  val GPPTileBody: Css  = Css("gpp-tile-body")
+object ExploreStyles {
+  val Tile: Css      = Css("explore-tile")
+  val TileTitle: Css = Css("explore-tile-title")
+  val TileBody: Css  = Css("explore-tile-body")
 
   // re-evaluate the need/use of this as part of overall
   // styling and layout
@@ -68,18 +69,15 @@ object GPPStyles {
   val MoonPhase: Css = Css("moon-phase")
 
   // Semantic UI form overrides and extensions
-  val Grid: Css            = Css("gpp-grid")
-  val TwoColumnGrid: Css   = Grid |+| Css("gpp-two-columns")
-  val ThreeColumnGrid: Css = Grid |+| Css("gpp-three-columns")
-  val CellWrapper: Css     = Css("gpp-cell-wrapper")
+  val Grid: Css            = Css("explore-grid")
+  val TwoColumnGrid: Css   = Grid |+| Css("explore-two-columns")
+  val ThreeColumnGrid: Css = Grid |+| Css("explore-three-columns")
 
-  val GrowOne: Css   = Css("gpp-grow-one")
-  val GrowTwo: Css   = Css("gpp-grow-two")
-  val GrowThree: Css = Css("gpp-grow-three")
-  val GrowFour: Css  = Css("gpp-grow-four")
+  val FlexContainer: Css = Css("explore-flex-container")
+  def Grow(i: Int Refined Interval.Closed[1, 4]): Css = Css(s"explore-grow-$i")
 
   // Move an element to the end of the flex container
-  val ToEnd: Css = Css("gpp-to-end")
+  val ToEnd: Css = Css("explore-flex-end")
 
   // Hide a label while keeping it accessible to screen readers
   val HideLabel: Css = Css("hide-label")

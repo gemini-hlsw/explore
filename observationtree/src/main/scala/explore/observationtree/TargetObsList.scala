@@ -12,7 +12,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
 import explore.components.ObsBadge
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
@@ -216,12 +216,12 @@ object TargetObsList {
       )
 
     def getListStyle(isDragging: Boolean): TagMod =
-      GPPStyles.DraggingOver.when(isDragging)
+      ExploreStyles.DraggingOver.when(isDragging)
 
     def render(props: Props, state: State): VdomElement = {
       val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target.id)
 
-      <.div(GPPStyles.ObsTree)(
+      <.div(ExploreStyles.ObsTree)(
         UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
@@ -254,12 +254,12 @@ object TargetObsList {
                     Segment(vertical = true,
                             raised = props.focused.get
                               .exists(_ === FocusedTarget(target.id)),
-                            clazz = GPPStyles.ObsTreeGroup
+                            clazz = ExploreStyles.ObsTreeGroup
                     )(
                       ^.cursor.pointer,
                       ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
                     )(
-                      <.span(GPPStyles.ObsTreeGroupHeader)(
+                      <.span(ExploreStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
                           target.name.value
@@ -268,7 +268,7 @@ object TargetObsList {
                       ),
                       TagMod.when(!state.collapsedTargetIds.contains(targetId))(
                         targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                          <.div(GPPStyles.ObsTreeItem)(
+                          <.div(ExploreStyles.ObsTreeItem)(
                             Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
                               def dragIcon =
                                 <.span(
@@ -308,7 +308,7 @@ object TargetObsList {
                 }
               }
             ),
-            <.div(GPPStyles.ObsTreeButtons)(
+            <.div(ExploreStyles.ObsTreeButtons)(
               <.div(
                 Button(size = Small, onClick = newTarget(undoCtx.setter))(Icons.New),
                 Button(size = Small,

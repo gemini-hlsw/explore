@@ -7,7 +7,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsQueries._
 import explore.model.Focused.FocusedObs
@@ -61,9 +61,9 @@ object ObsTabContents {
 
       // Tree area
       def tree(observations: View[List[ObsSummary]]) =
-        <.div(^.width := treeWidth.px, GPPStyles.Tree)(
-          <.div(GPPStyles.TreeBodyOuter)(
-            <.div(GPPStyles.TreeBodyInner)(
+        <.div(^.width := treeWidth.px, ExploreStyles.Tree)(
+          <.div(ExploreStyles.TreeBodyOuter)(
+            <.div(ExploreStyles.TreeBodyInner)(
               ObsList(
                 observations,
                 props
@@ -78,12 +78,12 @@ object ObsTabContents {
         }.flatten
 
         <.div(
-          GPPStyles.RGLArea,
+          ExploreStyles.RGLArea,
           SizeMe() { s =>
             val coreWidth = s.width.toDouble - treeWidth
 
             <.div(
-              GPPStyles.TreeRGL,
+              ExploreStyles.TreeRGL,
               Resizable(
                 axis = Axis.X,
                 width = treeWidth,
@@ -94,13 +94,13 @@ object ObsTabContents {
                 resizeHandles = List(ResizeHandleAxis.East),
                 content = tree(observations)
               ),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, GPPStyles.RGLBody)(
+              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.RGLBody)(
                 ResponsiveReactGridLayout(
                   width = coreWidth,
                   margin = (5, 5),
                   containerPadding = (5, 5),
                   rowHeight = 30,
-                  draggableHandle = s".${GPPStyles.GPPTileTitle.htmlClass}",
+                  draggableHandle = s".${ExploreStyles.TileTitle.htmlClass}",
                   // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
                   layouts = layouts
                 )(

@@ -4,7 +4,7 @@
 package explore
 
 import explore.Icons
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.sizes.Huge
@@ -17,10 +17,10 @@ object UnderConstruction {
       .stateless
       .render { _ =>
         <.div(
-          GPPStyles.HVCenter,
+          ExploreStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(GPPStyles.HVCenter, Icons.Cogs.copy(size = Huge))
+            <.div(ExploreStyles.HVCenter, Icons.Cogs.copy(size = Huge))
           )
         )
       }

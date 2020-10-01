@@ -10,7 +10,7 @@ import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.View
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
@@ -99,24 +99,24 @@ object TargetBody extends ModelOptics {
             searchAndGo(modify.andThen(_.runInCB))
 
           Grid(columns = Three,
-               clazz = GPPStyles.FullHeightWidth,
+               clazz = ExploreStyles.FullHeightWidth,
                stretched = true,
                padded = GridPadded.Horizontally
           )(
             GridRow(stretched = true)(
-              GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+              GridColumn(stretched = true, computer = Four)(
                 CoordinatesForm(target, searchAndSet, gotoRaDec)
                   .withKey(coordinatesKey(target)),
                 UndoButtons(target, undoCtx)
               ),
-              GridColumn(stretched = true, computer = Eight, clazz = GPPStyles.AladinColumn)(
+              GridColumn(stretched = true, computer = Eight, clazz = ExploreStyles.AladinColumn)(
                 SizeMe(monitorHeight = true) { s =>
                   AladinRef.withRef(aladinRef) {
                     AladinContainer(s, props.target, props.options.get)
                   }
                 }
               ),
-              GridColumn(stretched = true, computer = Four, clazz = GPPStyles.GPPForm)(
+              GridColumn(stretched = true, computer = Four)(
                 CataloguesForm(props.options)
               )
             ),

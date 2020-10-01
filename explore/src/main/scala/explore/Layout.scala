@@ -3,7 +3,7 @@
 
 package explore
 
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
@@ -24,9 +24,9 @@ object OTLayout {
       .render_P { p =>
         <.div(
           ^.cls := "theme dimmable",
-          GPPStyles.MainGrid,
+          ExploreStyles.MainGrid,
           <.div(
-            GPPStyles.MainHeader,
+            ExploreStyles.MainHeader,
             Menu(
               attached = MenuAttached.Top,
               compact = true,
@@ -36,18 +36,18 @@ object OTLayout {
               MenuItem(as = "a")(
                 // Icons.BarsIcon,
                 <.span(
-                  GPPStyles.MainTitle,
+                  ExploreStyles.MainTitle,
                   "Explore"
                 )
               )
             )
           ),
           <.div(
-            GPPStyles.SideTabs,
+            ExploreStyles.SideTabs,
             SideTabs(p.view.zoom(RootModel.tabs))
           ),
           <.div(
-            GPPStyles.MainBody,
+            ExploreStyles.MainBody,
             p.r.renderP(p.view)
           )
         )

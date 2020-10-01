@@ -7,7 +7,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
-import explore.components.ui.GPPStyles
+import explore.components.ui.ExploreStyles
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model._
@@ -37,9 +37,9 @@ object TargetTabContents {
 
       // Tree area
       def tree(targetsWithObs: View[TargetsWithObs]) =
-        <.div(^.width := treeWidth.px, GPPStyles.Tree)(
-          <.div(GPPStyles.TreeBodyOuter)(
-            <.div(GPPStyles.TreeBodyInner)(
+        <.div(^.width := treeWidth.px, ExploreStyles.Tree)(
+          <.div(ExploreStyles.TreeBodyOuter)(
+            <.div(ExploreStyles.TreeBodyInner)(
               TargetObsList(
                 targetsWithObs,
                 props
@@ -55,11 +55,11 @@ object TargetTabContents {
         }.flatten
 
         <.div(
-          GPPStyles.SinglePanelArea,
+          ExploreStyles.SinglePanelArea,
           SizeMe() { s =>
             val coreWidth = s.width.toDouble - treeWidth
             <.div(
-              GPPStyles.TreeRGL,
+              ExploreStyles.TreeRGL,
               Resizable(
                 axis = Axis.X,
                 width = treeWidth,
@@ -71,7 +71,7 @@ object TargetTabContents {
                 content = tree(targetsWithObs)
               ),
               <.div(
-                GPPStyles.SinglePanelTile,
+                ExploreStyles.SinglePanelTile,
                 ^.width := coreWidth.px,
                 ^.left := treeWidth.px,
                 Tile("Target Position", movable = false)(

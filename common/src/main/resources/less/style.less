@@ -6,7 +6,7 @@
 @import "vendor/react-resizable.less";
 @import "vendor/react-grid-layout.less";
 
-@import "gpp-grid.less";
+@import "explore-grid.less";
 
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
@@ -62,21 +62,17 @@ body {
   background: darkgrey;
 }
 
-// Form properties
-.gpp-form {
-}
-
-.gpp-tile-title {
+.explore-tile-title {
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-bottom-color: fade(@borderColor, 100%);
 }
 
-.gpp-tile-body {
+.explore-tile-body {
   height: ~"calc(100% - @{minHeight}/2)";
 }
 
-.gpp-tile {
+.explore-tile {
   .full-height-width();
   background: @tileBackground;
 }
@@ -85,7 +81,7 @@ body {
   margin: 0.5em;
 }
 
-.proposal-tile .gpp-tile-body {
+.proposal-tile .explore-tile-body {
   padding: 1em;
 }
 
