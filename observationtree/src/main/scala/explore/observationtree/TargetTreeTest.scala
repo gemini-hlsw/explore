@@ -7,6 +7,8 @@ import java.time.Duration
 import java.util.UUID
 
 import cats.syntax.all._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constraints
 import explore.model.ExploreObservation
 import explore.model.SiderealTarget
@@ -15,20 +17,21 @@ import explore.model.enum._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 
 object TargetTreeTest {
 
-  def target(name: String, raStr: String, decStr: String): SiderealTarget = {
+  def target(name: NonEmptyString, raStr: String, decStr: String): SiderealTarget = {
     val ra     = RightAscension.fromStringHMS.getOption(raStr)
     val dec    = Declination.fromStringSignedDMS.getOption(decStr)
     val coords =
-      ProperMotion((ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
-                   Epoch.J2000,
-                   none,
-                   none,
-                   none
+      SiderealTracking(none,
+                       (ra, dec).mapN(Coordinates.apply).getOrElse(Coordinates.Zero),
+                       Epoch.J2000,
+                       none,
+                       none,
+                       none
       )
     SiderealTarget(
       UUID.randomUUID,

@@ -11,6 +11,8 @@ import scala.util.Random
 
 import cats.effect.IO
 import cats.syntax.all._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ObsBadge
 import explore.data.tree._
 import explore.model.Constraints
@@ -24,7 +26,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
+import lucuma.core.model.SiderealTracking
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
@@ -44,14 +46,14 @@ object AndOrTest {
                 WaterVapor.Any
     )
 
-  def obs(targetName: String): ObsNode =
+  def obs(targetName: NonEmptyString): ObsNode =
     ObsNode.Obs(
       UUID.randomUUID,
       ExploreObservation(
         UUID.randomUUID,
         SiderealTarget(UUID.randomUUID,
                        targetName,
-                       ProperMotion(Coordinates.Zero, Epoch.J2000, none, none, none)
+                       SiderealTracking(none, Coordinates.Zero, Epoch.J2000, none, none, none)
         ),
         randomElement(ObsStatus.ObsStatusEnumerated.all),
         "GMOS-N R831 1x 300",

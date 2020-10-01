@@ -24,8 +24,8 @@ import lucuma.core.math.Angle.DMS
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.HourAngle.HMS
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import lucuma.ui.reusability._
 import monocle.Lens
 import monocle.macros.Lenses
@@ -105,10 +105,10 @@ object AladinContainer {
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     private val raLens: Lens[SiderealTarget, RightAscension] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.rightAscension
+      SiderealTarget.track ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
 
     private val decLens: Lens[SiderealTarget, Declination] =
-      SiderealTarget.track ^|-> ProperMotion.baseCoordinates ^|-> Coordinates.declination
+      SiderealTarget.track ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.declination
 
     def setRa(ra: RightAscension): Callback =
       $.props >>= (_.target.zoom(raLens).set(ra).runInCB)
