@@ -35,7 +35,7 @@ object SideTabs {
 
         def tabButton(tab: AppTab): Button =
           Button(active = tab === focus,
-                 clazz = GPPStyles.SideButton,
+                 clazz = ExploreStyles.SideButton,
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
           )(tab.title)
 
