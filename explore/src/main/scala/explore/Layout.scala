@@ -37,7 +37,7 @@ object OTLayout {
                 // Icons.BarsIcon,
                 <.span(
                   ExploreStyles.MainTitle,
-                  "Explore"
+                  explore.components.WIP(<.span("Explore"))
                 )
               )
             )

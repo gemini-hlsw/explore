@@ -85,4 +85,8 @@ object ExploreStyles {
 
   // Change styles for a readonly input
   val StaticData: Css = Css("static-data")
+
+  // WIP
+  val WIP: Css        = Css("wip")
+  val WIPWarning: Css = Css("wip-warning")
 }

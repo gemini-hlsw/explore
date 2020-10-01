@@ -10,6 +10,7 @@ import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.View
+import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -122,7 +123,7 @@ object TargetBody extends ModelOptics {
             ),
             GridRow()(
               GridColumn(computer = Sixteen)(
-                <.div()(
+                WIP(
                   SkyPlotSection(target.track.baseCoordinates)
                 )
               )
