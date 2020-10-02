@@ -6,12 +6,11 @@ package explore.model
 import java.time.Duration
 
 import clue.StreamingClientStatus
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
-import lucuma.core.math.Coordinates
+import lucuma.core.math._
 import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
@@ -21,7 +20,6 @@ import io.circe.Json
  * Reusability instances for model classes
  */
 object reusability {
-  implicit val nonEmptyStringReuse: Reusability[NonEmptyString]                                   = Reusability.by(_.value)
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
@@ -31,6 +29,8 @@ object reusability {
   implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
   implicit val jsNumberReuse: Reusability[JsNumber]                                               = Reusability.byEq
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
+  implicit def raReuse: Reusability[RightAscension]                                               = Reusability.byEq
+  implicit def decReuse: Reusability[Declination]                                                 = Reusability.byEq
   implicit def coordinatesReuse: Reusability[Coordinates]                                         = Reusability.byEq
   implicit def sizeReuse: Reusability[Size]                                                       = Reusability.by(x => (x.height, x.width))
   implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive

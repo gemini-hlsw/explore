@@ -11,6 +11,8 @@ cancelable in Global := true
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+ThisBuild / useLog4J := true
+
 addCommandAlias(
   "exploreWDS",
   "; explore/fastOptJS::stopWebpackDevServer; explore/fastOptJS::startWebpackDevServer; ~explore/fastOptJS"
@@ -124,6 +126,8 @@ lazy val targeteditor = project
   .settings(
     libraryDependencies ++=
       GeminiLocales.value ++
+        LucumaCatalog.value ++
+        Sttp.value ++
         ReactAladin.value ++
         ReactDatepicker.value ++
         ReactHighcharts.value ++
@@ -172,6 +176,7 @@ lazy val explore: Project = project
   .settings(
     libraryDependencies ++=
       ReactCommon.value ++
+        Sttp.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value ++

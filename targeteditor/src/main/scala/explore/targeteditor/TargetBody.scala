@@ -5,9 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
-import eu.timepit.refined._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.View
@@ -28,6 +26,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import react.common._
 import explore.GraphQLSchemas.ObservationDB.Types._
+import lucuma.core.model.Target
 
 final case class TargetBody(
   id:      SiderealTarget.Id,
@@ -38,7 +37,9 @@ final case class TargetBody(
 }
 
 object TargetBody extends ModelOptics {
-  type Props = TargetBody
+  type Props          = TargetBody
+  // search term, after, on empty, on error
+  type SearchCallback = (NonEmptyString, Callback, Callback, Throwable => Callback) => Callback
 
   val AladinRef = AladinContainer.component
 
@@ -58,21 +59,6 @@ object TargetBody extends ModelOptics {
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
-
-    def searchAndGo(
-      modify: ((NonEmptyString, RightAscension, Declination)) => Callback
-    )(search: NonEmptyString) = {
-      val aladinModify = (s: String, r: RightAscension, d: Declination) =>
-        refineV[NonEmpty](s).fold(_ => Callback.empty, s => modify((s, r, d)))
-      aladinRef.get
-        .flatMapCB(
-          _.backend.searchAndGo(Function.tupled(aladinModify))(search.value)
-        )
-        .toCallback
-    }
-
-    def setTargetByName: NonEmptyString => Callback =
-      searchAndGo { case (name, _, _) => setName(name) }
 
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
@@ -95,8 +81,26 @@ object TargetBody extends ModelOptics {
             }
           ) _
 
-          val searchAndSet: NonEmptyString => Callback =
-            searchAndGo(modify.andThen(_.runInCB))
+          import japgolly.scalajs.react.effects.AsyncCallbackEffects._
+          val searchAndSet: SearchCallback =
+            (
+              term:       NonEmptyString,
+              onComplete: Callback,
+              onEmpty:    Callback,
+              onError:    Throwable => Callback
+            ) =>
+              SimbadSearch
+                .search(term)
+                .runInCBAndThen {
+                  case Some(Target(n, Right(st), _)) =>
+                    modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
+                      gotoRaDec(st.baseCoordinates) *> onComplete
+                  case Some(r)                       => Callback.log(s"Unknown target type $r")
+                  case None                          => onEmpty
+                }
+                .handleError { case t =>
+                  onError(t)
+                }
 
           React.Fragment(
             <.div(

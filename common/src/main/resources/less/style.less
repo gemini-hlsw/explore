@@ -13,6 +13,19 @@
 @resizeHandleWidth: 5px; // Width of the tree resize handle
 @tileBackground: black;
 
+:root {
+  --focus-inner-color: hsla(210, 52%, 42%, 1);
+  --focus-outer-color: hsla(200, 72%, 83%, 0.75);
+}
+
+i.circular.inverted.icon:hover,
+i.circular.inverted.icon:focus {
+  outline: none;
+  opacity: 1;
+  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
+    0 0 0 0.4rem var(--focus-outer-color);
+}
+
 html,
 body {
   box-sizing: border-box;
@@ -65,10 +78,9 @@ body {
 // Taken from the definitíon of ui.button transition but removed background-color and background
 // When animating those two properties you see some flickering in FF
 .ui.button.side-button {
-  transition:
-  opacity @defaultDuration @defaultEasing,
-  color @defaultDuration @defaultEasing,
-  box-shadow @defaultDuration @defaultEasing,
+  transition: opacity @defaultDuration @defaultEasing,
+    color @defaultDuration @defaultEasing,
+    box-shadow @defaultDuration @defaultEasing;
 }
 
 .explore-tile-title {
@@ -192,7 +204,7 @@ body {
 }
 
 .obs-item {
-  margin: 10px
+  margin: 10px;
 }
 
 .obs-tree-item {
@@ -250,7 +262,8 @@ body {
   padding-top: 6px;
 }
 
-.plot-toggle.ui.slider.checkbox .box:before, .plot-toggle.ui.slider.checkbox label:before {
+.plot-toggle.ui.slider.checkbox .box:before,
+.plot-toggle.ui.slider.checkbox label:before {
   background-color: #545454 !important;
 }
 
@@ -258,7 +271,7 @@ body {
   background-color: #545454 !important;
 }
 
-.ui.grid >.row > .column.aladin-column {
+.ui.grid > .row > .column.aladin-column {
   padding-top: 0px;
   padding-bottom: 0px;
 }
@@ -269,7 +282,8 @@ body {
   grid-template-rows: 1fr min-content;
   grid-template-columns: max-content 4fr min-content;
   align-content: stretch;
-  grid-template-areas: "aladin aladin aladin"
+  grid-template-areas:
+    "aladin aladin aladin"
     "fov curr center";
 }
 
@@ -306,17 +320,17 @@ body {
   z-index: 10;
 }
 
- .connection-ok {
-   color: greenyellow;
- }
+.connection-ok {
+  color: greenyellow;
+}
 
- .connection-warning {
-   color: gold;
- }
+.connection-warning {
+  color: gold;
+}
 
- .connection-error {
-   color: red;
- }
+.connection-error {
+  color: red;
+}
 
 .wip {
   position: relative;
@@ -331,7 +345,7 @@ body {
   text-align: center;
   border-radius: 6px;
   padding: 5px 0;
-  
+
   /* Position the tooltip */
   position: absolute;
   z-index: 1;

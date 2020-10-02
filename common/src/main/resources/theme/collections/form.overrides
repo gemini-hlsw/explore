@@ -35,3 +35,4 @@
 .ui.form .field.hide-label label {
     margin-left: -100000px;
 } 
+

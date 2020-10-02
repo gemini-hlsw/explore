@@ -17,6 +17,7 @@ object Settings {
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.0"
     val lucumaCore        = "0.5.0"
+    val lucumaCatalog     = "0.1.0"
     val lucumaUI          = "0.4.0"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
@@ -31,6 +32,7 @@ object Settings {
     val reactSemanticUI   = "0.8.0"
     val reactSizeMe       = "0.5.0"
     val scalaJsReact      = "1.7.5"
+    val sttp              = "3.0.0-RC5"
   }
 
   object Libraries {
@@ -105,6 +107,12 @@ object Settings {
       deps(
         "edu.gemini" %%% "lucuma-core"
       )(lucumaCore)
+    )
+
+    val LucumaCatalog = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-catalog"
+      )(lucumaCatalog)
     )
 
     val LucumaCoreTestKit = Def.setting(
@@ -216,6 +224,12 @@ object Settings {
       deps(
         "com.github.japgolly.scalajs-react" %%% "test"
       )(scalaJsReact)
+    )
+
+    val Sttp = Def.setting(
+      deps(
+        "com.softwaremill.sttp.client3" %%% "core"
+      )(sttp)
     )
   }
 }
