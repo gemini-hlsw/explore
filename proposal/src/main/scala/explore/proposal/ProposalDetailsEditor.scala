@@ -104,7 +104,7 @@ object ProposalDetailsEditor {
                 TextArea(
                   rows = 10,
                   value = details.zoom(ProposalDetails.abstrakt).get,
-                  onChangeE = (_: Form.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
+                  onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
                     details
                       .zoom(ProposalDetails.abstrakt)
                       .set(tap.value.asInstanceOf[String])
