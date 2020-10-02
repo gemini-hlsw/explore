@@ -13,3 +13,9 @@ https://heroku.com/deploy?template=https://github.com/gemini-hlsw/explore/tree/m
 The resulting Heroku app won't be connected to the GitHub repo though. That has to be done manually via web: https://dashboard.heroku.com/apps/<<app-name>>/deploy/github
 
 
+*BTW...*
+
+* `JVM` version is in `/system.properties`.
+* `node` version is in `/package.json`.
+* To perform a clean build, set environment variable `SBT_CLEAN=true` and then remove it after the build (otherwise all subsequent builds will do a clean build).
+* To clean the build cache: https://help.heroku.com/18PI5RSY/how-do-i-clear-the-build-cache
