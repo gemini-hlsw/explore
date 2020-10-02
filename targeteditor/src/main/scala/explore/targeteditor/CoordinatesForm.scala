@@ -73,8 +73,7 @@ object CoordinatesForm {
                            DropdownItem(value = 1, text = "Non-sidereal")
             )
           ),
-          FormInputEV(name = "search",
-                      id = "search",
+          FormInputEV(id = "search",
                       value = stateView.zoom(State.searchTerm),
                       label = "Target",
                       focus = true,
@@ -83,7 +82,6 @@ object CoordinatesForm {
           FormGroup(widths = FormWidths.Equal)(
             FormInputEV(
               width = Seven,
-              name = "ra",
               id = "ra",
               value = stateView.zoom(State.raValue),
               format = RightAscension.fromStringHMS,
@@ -91,7 +89,6 @@ object CoordinatesForm {
             ),
             FormInputEV(
               width = Seven,
-              name = "dec",
               id = "dec",
               value = stateView.zoom(State.decValue),
               format = Declination.fromStringSignedDMS,

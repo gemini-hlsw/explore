@@ -40,12 +40,14 @@ object ProposalDetailsEditor {
                 ExploreStyles.TwoColumnGrid,
                 FormInputEV(
                   id = "title",
-                  name = "title",
                   className = "inverse",
                   value = details.zoom(ProposalDetails.title),
                   label = "Title"
                 ).withMods(^.autoFocus := true),
-                EnumViewSelect(details.zoom(ProposalDetails.category).asOpt, label = "Category"),
+                EnumViewSelect(id = "category",
+                               value = details.zoom(ProposalDetails.category).asOpt,
+                               label = "Category"
+                ),
                 <.div(
                   ExploreStyles.FlexContainer,
                   FormInput(
@@ -61,7 +63,8 @@ object ProposalDetailsEditor {
                   )
                 ),
                 EnumViewMultipleSelect(
-                  details.zoom(ProposalDetails.keywords),
+                  id = "keywords",
+                  value = details.zoom(ProposalDetails.keywords),
                   label = "Keywords",
                   search = true
                 ),
@@ -78,10 +81,14 @@ object ProposalDetailsEditor {
                              clazz = ExploreStyles.HideLabel |+| ExploreStyles.ToEnd
                   )
                 ),
-                EnumViewSelect(details.zoom(ProposalDetails.toOActivation).asOpt,
+                EnumViewSelect(id = "too-activation",
+                               value = details.zoom(ProposalDetails.toOActivation).asOpt,
                                label = "ToO Activation"
                 ),
-                EnumViewSelect(details.zoom(ProposalDetails.proposalClass).asOpt, label = "Class"),
+                EnumViewSelect(id = "proposal-class",
+                               value = details.zoom(ProposalDetails.proposalClass).asOpt,
+                               label = "Class"
+                ),
                 FormStaticData(value = "<Determined by observations>",
                                label = "Band 3",
                                id = "band3"
@@ -97,7 +104,7 @@ object ProposalDetailsEditor {
                 TextArea(
                   rows = 10,
                   value = details.zoom(ProposalDetails.abstrakt).get,
-                  onChangeE = (_: Form.ReactFormEvent, tap: TextArea.TextAreaProps) => {
+                  onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
                     details
                       .zoom(ProposalDetails.abstrakt)
                       .set(tap.value.asInstanceOf[String])
