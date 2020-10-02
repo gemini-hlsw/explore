@@ -49,8 +49,10 @@ object ConstraintsPanel {
               label:  String,
               lens:   Lens[Constraints, A],
               fields: A => Mutation.Fields
-            ) =
-              EnumViewSelect(undoViewZoom(lens, fields).asOpt, label = label)
+            ) = {
+              val id = label.toLowerCase().replaceAll(" ", "-")
+              EnumViewSelect(id = id, value = undoViewZoom(lens, fields).asOpt, label = label)
+            }
 
             Grid(columns = One, stretched = true, padded = GridPadded.Horizontally)(
               GridColumn(
