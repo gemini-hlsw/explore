@@ -252,28 +252,29 @@ lazy val commonWDS = Seq(
   Compile / fastOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   // NPM libs for development, mostly to let webpack do its magic
-  npmDevDependencies in Compile ++= Seq(
-    "postcss-loader"                     -> "3.0.0",
-    "autoprefixer"                       -> "9.8.5",
+  Compile / npmDevDependencies ++= Seq(
+    "postcss"                            -> "8.1.1",
+    "postcss-loader"                     -> "4.0.3",
+    "autoprefixer"                       -> "10.0.1",
     "url-loader"                         -> "4.1.0",
     "file-loader"                        -> "6.0.0",
     "css-loader"                         -> "3.5.3",
     "style-loader"                       -> "1.2.1",
-    "less"                               -> "3.11.1",
-    "less-loader"                        -> "6.1.0",
-    "sass"                               -> "1.26.10",
+    "less"                               -> "3.12.2",
+    "less-loader"                        -> "7.0.1",
+    "sass"                               -> "1.26.11",
     "sass-loader"                        -> "9.0.2",
     "webpack-merge"                      -> "4.2.2",
     "mini-css-extract-plugin"            -> "0.9.0",
     "webpack-dev-server-status-bar"      -> "1.1.2",
     "cssnano"                            -> "4.1.10",
-    "terser-webpack-plugin"              -> "3.0.6",
+    "terser-webpack-plugin"              -> "4.2.2",
     "html-webpack-plugin"                -> "4.3.0",
     "optimize-css-assets-webpack-plugin" -> "5.0.3",
-    "favicons-webpack-plugin"            -> "3.0.1",
+    "favicons-webpack-plugin"            -> "4.2.0",
     "@packtracker/webpack-plugin"        -> "2.3.0"
   ),
-  npmDependencies in Compile ++= Seq(
+  Compile / npmDependencies ++= Seq(
     "react"             -> reactJS,
     "react-dom"         -> reactJS,
     "react-is"          -> reactJS,

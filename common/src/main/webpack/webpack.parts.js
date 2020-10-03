@@ -58,14 +58,14 @@ module.exports.devServer = ({ host, port } = {}) => ({
 module.exports.lessLoader = (devMode) => {
   return {
     loader: "less-loader",
-    options: { sourceMap: devMode }
+    options: { sourceMap: devMode },
   };
 };
 
 module.exports.sassLoader = (devMode) => {
   return {
     loader: "sass-loader",
-    options: { sourceMap: devMode }
+    options: { sourceMap: devMode },
   };
 };
 
@@ -104,7 +104,7 @@ module.exports.extractCSS = ({
           use: [devMode ? "style-loader" : MiniCssExtractPlugin.loader].concat(
             useSass
           ),
-        }        
+        },
       ],
     },
     plugins: [plugin],
@@ -116,8 +116,9 @@ exports.autoprefix = () => {
   return {
     loader: "postcss-loader",
     options: {
-      autoprefixer: module.exports.browsers,
-      plugins: () => [require("autoprefixer")()],
+      postcssOptions: {
+        plugins: [require("autoprefixer")()],
+      },
     },
   };
 };
@@ -147,7 +148,7 @@ module.exports.resolveSemanticUI = {
     alias: {
       // Required for the custom Semantic UI theme
       "../../theme.config$": path.join(resourcesDir, "theme/theme.config"),
-      "../semantic-ui/site": path.join(__dirname, "/semantic-ui/site")
+      "../semantic-ui/site": path.join(__dirname, "/semantic-ui/site"),
     },
   },
 };
