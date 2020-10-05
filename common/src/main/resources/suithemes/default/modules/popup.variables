@@ -50,7 +50,9 @@
 @arrowOffset: -(@arrowSize / 2) + @arrowJitter;
 
 @arrowStroke: @borderWidth;
-@arrowColor: darken(@borderColor, 10);
+// CSS VAR OVERRIDE
+//@arrowColor: darken(@borderColor, 10);
+@arrowColor: var(--gray-dark-10);
 
 /* Arrow color by position */
 @arrowTopBackground: @arrowBackground;

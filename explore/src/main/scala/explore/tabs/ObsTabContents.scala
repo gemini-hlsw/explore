@@ -128,7 +128,8 @@ object ObsTabContents {
                     )
                   )
                 )
-              )
+              ).when(false),
+              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.RGLPlaceholder)
             )
           }
         )

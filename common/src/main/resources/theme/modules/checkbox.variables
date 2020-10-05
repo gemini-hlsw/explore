@@ -4,5 +4,15 @@
 @radioFocusBulletColor: @gray-base;
 @radioActiveFocusBulletColor: @gray-base;
 @bulletColor: @gray-base;
-@checkboxActiveCheckColor: @gray-base;
+@checkboxActiveCheckColor: var(--checkbox-active-color);
+@checkboxBackground: var(--checkbox-background);
+@checkboxFocusBackground: var(--checkbox-focus-background);
+@checkboxActiveBackground: var(--checkbox-active-background);
+@checkboxActiveFocusBackground: var(--checkbox-active-focus-background);
 @checkboxActiveFocusCheckColor: @gray-base;
+
+/* @inputBorder: var(--input-border-color); */
+@checkboxBorder: 1px solid var(--checkbox-border-color);
+@checkboxActiveBorderColor: var(--checkbox-border-color);
+@checkboxHoverBorderColor: var(--checkbox-hover-color);
+/* @checkboxIndeterminateBorderColor: 10px solid red; */

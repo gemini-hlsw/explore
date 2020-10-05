@@ -1,4 +1,4 @@
 @background: @pageBackground;
 @borderColor: @gray;
-@stackedPageBackground: darken(@background, 10%);
+@stackedPageBackground: var(--segment-stacked-page-background);
 @attachedBorder: @borderWidth solid @gray;

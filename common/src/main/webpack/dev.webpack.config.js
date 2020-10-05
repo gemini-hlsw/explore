@@ -6,7 +6,9 @@ const parts = require("./webpack.parts");
 const ScalaJSConfig = require("./scalajs.webpack.config");
 
 const isDev = true;
-const isDevServer = process.argv.some(s => s.match(/webpack-dev-server\.js$/));
+const isDevServer = process.argv.some((s) =>
+  s.match(/webpack-dev-server\.js$/)
+);
 
 const Web = Merge(
   ScalaJSConfig,
@@ -17,23 +19,23 @@ const Web = Merge(
   parts.extractCSS({
     devMode: true,
     useLess: ["css-loader", parts.lessLoader(isDev)],
-    useSass: ["css-loader", parts.sassLoader(isDev)]
+    useSass: ["css-loader", parts.sassLoader(isDev)],
   }),
   parts.extraAssets,
   parts.fontAssets,
   {
     mode: "development",
     entry: {
-      demo: [path.resolve(parts.localResourcesDir, "./dev.js")]
+      demo: [path.resolve(parts.localResourcesDir, "./dev.js")],
     },
     output: {
-      publicPath: "/" // Required to make the url navigation work
+      publicPath: "/", // Required to make the url navigation work
     },
     module: {
       // Don't parse scala.js code. it's just too slow
-      noParse: function(content) {
+      noParse: function (content) {
         return content.endsWith("-fastopt");
-      }
+      },
     },
     // Custom dev server for the demo as we need a ws proxy
     devServer: {
@@ -58,7 +60,7 @@ const Web = Merge(
           pathRewrite: { "^/api/grackle-demo": "" },
           changeOrigin: true
         }*/
-      }
+      },
     },
     plugins: [
       // Needed to enable HMR
@@ -66,9 +68,10 @@ const Web = Merge(
       new HtmlWebpackPlugin({
         filename: "index.html",
         title: "Explore",
-        chunks: ["demo"]
-      })
-    ]
+        chunks: ["demo"],
+        meta: { "color-scheme": "dark" },
+      }),
+    ],
   }
 );
 

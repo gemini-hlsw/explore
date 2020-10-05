@@ -26,6 +26,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
 import org.scalajs.dom
+import org.scalajs.dom.ext._
 import sttp.model.Uri
 
 import js.annotation._
@@ -55,6 +56,11 @@ trait AppMain extends IOApp {
       tabs = EnumZipper.of[AppTab]
     )
 
+    def setupScheme: IO[Unit] =
+      IO.delay {
+        dom.document.getElementsByTagName("body").foreach(_.classList.add("dark-theme"))
+      }
+
     for {
       _            <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       exploreDBURI <-
@@ -63,6 +69,7 @@ trait AppMain extends IOApp {
         IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
       ctx          <- AppContext.from[IO](AppConfig(exploreDBURI, odbURI))
       _            <- AppCtx.initIn[IO](ctx)
+      _            <- setupScheme
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)
 

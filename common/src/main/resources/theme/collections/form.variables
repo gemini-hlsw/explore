@@ -1,7 +1,7 @@
 @selectColor: @gray-lighter;
-@inputColor: @gray-darker;
+@inputColor: var(--form-input-color);
 @textAreaFocusColor: @gray-darker;
-@inputFocusColor: @gray-darker;
+@inputFocusColor: var(--form-input-focus-color);
 
 // Use a reduced padding
 @tightInputVerticalPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2));
@@ -10,4 +10,8 @@
 @selectPadding: 0.62em @tightHorizontalPadding;
 
 @textAreaPadding: @tightVerticalPadding @tightHorizontalPadding;
+
+@inputBackground: var(--form-input-background);
+@inputFocusBorderColor: var(--form-input-focus-border-color);
+@inputFocusBoxShadow: var(--form-input-focus-box-shadow);
 
