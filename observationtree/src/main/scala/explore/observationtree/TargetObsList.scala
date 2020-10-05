@@ -41,6 +41,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+import explore.GraphQLSchemas.ObservationDB.Types._
 
 import TargetObsQueries._
 
@@ -92,7 +93,7 @@ object TargetObsList {
               .set(targetOpt.map(TargetSummary.fromTarget))
           ) >>
           // 2) Send mutation
-          mutateObs(obsId, ObsMutation.Fields(target_id = targetOpt.map(_.id)))
+          mutateObs(obsId, ObservationsSetInput(target_id = targetOpt.map(_.id)))
 
     protected def onDragEnd(
       setter: Undoer.Setter[IO, TargetsWithObs]

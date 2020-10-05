@@ -29,6 +29,7 @@ import react.common._
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
 import react.sizeme.SizeMe
+import explore.GraphQLSchemas.ObservationDB.Types._
 
 final case class TargetBody(
   id:      SiderealTarget.Id,
@@ -88,8 +89,8 @@ object TargetBody extends ModelOptics {
           ](
             targetPropsL,
             { case (n, r, d) =>
-              Mutation.Fields(
-                name = n.some,
+              TargetsSetInput(
+                name = n.value.some,
                 ra = RightAscension.fromStringHMS.reverseGet(r).some,
                 dec = Declination.fromStringSignedDMS.reverseGet(d).some
               )

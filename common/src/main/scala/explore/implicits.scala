@@ -9,6 +9,8 @@ import cats._
 import cats.effect.ContextShift
 import cats.effect.Timer
 import cats.syntax.all._
+import clue._
+import explore.GraphQLSchemas._
 import explore.model.AppContext
 import io.chrisdavenport.log4cats.Logger
 import shapeless._
@@ -42,4 +44,8 @@ object implicits extends ShorthandTypes with ListImplicits {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
   implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger
+  implicit def appContext2ODBClient[F[_]](implicit
+    ctx:                                                   AppContext[F]
+  ): GraphQLStreamingClient[F, ObservationDB] =
+    ctx.clients.odb
 }

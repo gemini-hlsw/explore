@@ -5,7 +5,7 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all._
-import clue.GraphQLQuery
+import clue.GraphQLOperation
 import explore.AppCtx
 import explore.components.graphql.SubscriptionRenderMod
 import explore.data.KeyedIndexedList
@@ -14,18 +14,16 @@ import explore.model.ExploreObservation
 import explore.model.ObsSummary
 import explore.model.SiderealTarget
 import explore.model.decoders._
-import explore.model.encoders._
 import explore.model.reusability._
 import io.circe.Decoder
-import io.circe.Encoder
 import io.circe.HCursor
 import io.circe.Json
-import io.circe.JsonObject
-import io.circe.generic.semiauto.deriveDecoder
-import io.circe.generic.semiauto.deriveEncoder
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
+import clue.macros.GraphQL
+import explore.GraphQLSchemas._
+import explore.GraphQLSchemas.ObservationDB.Types._
 
 object TargetObsQueries {
 
@@ -56,7 +54,8 @@ object TargetObsQueries {
       }
   }
 
-  object Subscription extends GraphQLQuery {
+  @GraphQL
+  object Subscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {
         targets {
@@ -78,44 +77,23 @@ object TargetObsQueries {
       }
     """
 
-    case class Variables()
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
     @Lenses
     case class Data(targets: TargetsWithObs)
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  object ObsMutation extends GraphQLQuery {
+  @GraphQL
+  object ObsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($id: uuid, $fields: observations_set_input){
+      mutation ($id: uuid!, $fields: observations_set_input!){
         update_observations(_set: $fields, where: {id: {_eq: $id}}) {
           affected_rows
         }
       }
     """
-
-    case class Fields(
-      target_id: Option[SiderealTarget.Id] = None
-    )
-    object Fields {
-      implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
-    }
-
-    case class Variables(id: ExploreObservation.Id, fields: Fields)
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
-    case class Data(update_observations: JsonObject) // We are ignoring affected_rows
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  object AddTarget extends GraphQLQuery {
+  @GraphQL(debug = false)
+  object AddTarget extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($target: targets_insert_input!) {
         insert_targets_one(object: $target) {
@@ -123,21 +101,10 @@ object TargetObsQueries {
         }
       }
     """
-
-    case class Variables(target: SiderealTarget)
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
-    case class Result(id: SiderealTarget.Id)
-    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
-
-    case class Data(insert_targets_one: Result)
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  object RemoveTarget extends GraphQLQuery {
+  @GraphQL
+  object RemoveTarget extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($id: uuid!) {
         delete_targets_by_pk(id: $id) {
@@ -145,40 +112,16 @@ object TargetObsQueries {
         }
       }
     """
-
-    case class Variables(id: SiderealTarget.Id)
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
-    case class Result(id: SiderealTarget.Id)
-    object Result { implicit val jsonDecoder: Decoder[Result] = deriveDecoder[Result] }
-
-    case class Data(delete_targets_by_pk: Result)
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  def mutateObs(obsId: ExploreObservation.Id, fields: ObsMutation.Fields): IO[Unit] =
-    AppCtx.flatMap(
-      _.clients.odb
-        .query(ObsMutation)(ObsMutation.Variables(obsId, fields).some)
-        .void
-    )
+  def mutateObs(obsId: ExploreObservation.Id, fields: ObservationsSetInput): IO[Unit] =
+    AppCtx.flatMap(implicit ctx => ObsMutation.execute(obsId, fields).void)
 
   def insertTarget(target: SiderealTarget): IO[Unit] =
-    AppCtx.flatMap(
-      _.clients.odb
-        .query(AddTarget)(AddTarget.Variables(target).some)
-        .void
-    )
+    AppCtx.flatMap(implicit ctx => AddTarget.execute(target).void)
 
   def removeTarget(id: SiderealTarget.Id): IO[Unit] =
-    AppCtx.flatMap(
-      _.clients.odb
-        .query(RemoveTarget)(RemoveTarget.Variables(id).some)
-        .void
-    )
+    AppCtx.flatMap(implicit ctx => RemoveTarget.execute(id).void)
 
   implicit val targetsWithObsReusability: Reusability[TargetsWithObs] = Reusability.derive
 
@@ -189,8 +132,7 @@ object TargetObsQueries {
     render =>
       AppCtx.withCtx { implicit appCtx =>
         SubscriptionRenderMod[Subscription.Data, TargetsWithObs](
-          appCtx.clients.odb
-            .subscribe(Subscription)(),
+          Subscription.subscribe(),
           _.map(
             Subscription.Data.targets.get
           )

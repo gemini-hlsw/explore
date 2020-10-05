@@ -3,28 +3,23 @@
 
 package explore.target
 
-import java.util.UUID
-
 import cats.effect.IO
-import cats.syntax.all._
-import clue.GraphQLQuery
-import eu.timepit.refined.types.string.NonEmptyString
+import clue.GraphQLOperation
 import explore.implicits._
 import explore.model.SiderealTarget
 import explore.model.decoders._
 import explore.undo.Undoer
-import io.circe.Decoder
-import io.circe.Encoder
-import io.circe.JsonObject
-import io.circe.generic.semiauto.deriveDecoder
-import io.circe.generic.semiauto.deriveEncoder
-import io.circe.refined._
 import monocle.Lens
 import monocle.macros.Lenses
+import clue.macros.GraphQL
+import explore.GraphQLSchemas._
+import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.model.reusability._
 
 object TargetQueries {
 
-  object Subscription extends GraphQLQuery {
+  @GraphQL
+  object Subscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription ($id: uuid!) {
         targets(where: {id: {_eq: $id}}) {
@@ -37,20 +32,14 @@ object TargetQueries {
       }
       """
 
-    case class Variables(id: UUID)
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
     @Lenses
     case class Data(targets: List[SiderealTarget])
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  object Mutation extends GraphQLQuery {
+  @GraphQL
+  object Mutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($id: uuid, $fields: targets_set_input){
+      mutation ($id: uuid!, $fields: targets_set_input!){
         update_targets(_set: $fields, where: {
           id: {
             _eq: $id
@@ -60,32 +49,12 @@ object TargetQueries {
         }
       }
     """
-
-    case class Fields(
-      name: Option[NonEmptyString] = none,
-      ra:   Option[String] = none,
-      dec:  Option[String] = none
-    )
-    object Fields {
-      implicit val jsonEncoder: Encoder[Fields] = deriveEncoder[Fields].mapJson(_.dropNullValues)
-    }
-
-    case class Variables(id: SiderealTarget.Id, fields: Fields)
-    object Variables { implicit val jsonEncoder: Encoder[Variables] = deriveEncoder[Variables] }
-
-    case class Data(update_targets: JsonObject) // We are ignoring affected_rows
-    object Data { implicit val jsonDecoder: Decoder[Data] = deriveDecoder[Data] }
-
-    implicit val varEncoder: Encoder[Variables] = Variables.jsonEncoder
-    implicit val dataDecoder: Decoder[Data]     = Data.jsonDecoder
   }
 
-  private def mutate(id: SiderealTarget.Id, fields: Mutation.Fields)(implicit
+  private def mutate(id: SiderealTarget.Id, fields: TargetsSetInput)(implicit
     ctx:                 AppContextIO
   ): IO[Unit] =
-    ctx.clients.odb
-      .query(Mutation)(Mutation.Variables(id, fields).some)
-      .void
+    Mutation.execute(id, fields).void
 
   case class UndoSet(
     id:           SiderealTarget.Id,
@@ -94,7 +63,7 @@ object TargetQueries {
   )(implicit ctx: AppContextIO) {
     def apply[A](
       lens:   Lens[SiderealTarget, A],
-      fields: A => Mutation.Fields
+      fields: A => TargetsSetInput
     )(
       value:  A
     ): IO[Unit] =

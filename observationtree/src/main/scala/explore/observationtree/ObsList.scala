@@ -24,8 +24,7 @@ object ObsList {
   type Props = ObsList
 
   class Backend() {
-    def render(props: Props): VdomElement = {
-      println(props)
+    def render(props: Props): VdomElement =
       <.div(ExploreStyles.ObsTree)(
         <.div(
           props.observations.get.toTagMod { obs =>
@@ -48,7 +47,6 @@ object ObsList {
           }
         )
       )
-    }
 
   }
 
