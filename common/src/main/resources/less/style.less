@@ -71,10 +71,6 @@ body {
   box-shadow @defaultDuration @defaultEasing,
 }
 
-// Form properties
-.gpp-form {
-}
-
 .explore-tile-title {
   border-bottom-style: solid;
   border-bottom-width: 1px;
@@ -88,6 +84,7 @@ body {
 .explore-tile {
   .full-height-width();
   background: @tileBackground;
+  overflow-y: auto;
 }
 
 .proposal-tile {
@@ -266,9 +263,6 @@ body {
   padding-bottom: 0px;
 }
 
-.aladin-column {
-}
-
 .aladin-container-column {
   height: 100%;
   display: grid;
@@ -282,9 +276,6 @@ body {
 .aladin-container-body {
   grid-area: aladin;
   margin-bottom: 0.2em;
-}
-
-.aladin-container-status {
 }
 
 .aladin-status-fov {
@@ -350,4 +341,37 @@ body {
 
 .wip:hover .wip-warning {
   visibility: visible;
+}
+
+// The Target Position layout
+@target-grid-responsive-cutoff: 1350px;
+
+.target-grid {
+  display: grid;
+
+  grid-gap: 1em;
+  padding: 1em;
+  grid-template-columns: 1fr 2fr 1fr;
+
+  @media (max-width: @target-grid-responsive-cutoff) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.target-aladin-cell {
+  min-height: 300px; // don't collapse in single column mode.
+}
+
+.target-skyplot-cell {
+  margin: 0 1em 1em;
+
+  & > .wip {
+    display: block; // makes skyplot fill the width.
+  }
+}
+
+// for the ra and dec inputs and the flex container
+// that holds them
+.target-ra-dec-min-width {
+  min-width: 7em;
 }

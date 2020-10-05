@@ -8,10 +8,12 @@ import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelOptics._
 import explore.model.SiderealTarget
@@ -23,11 +25,11 @@ import lucuma.core.math.RightAscension
 import lucuma.ui.forms._
 import monocle.macros.Lenses
 import react.common._
+import react.common.implicits._
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
-import react.semanticui.widths._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
@@ -62,9 +64,11 @@ object CoordinatesForm {
         val stateView = ViewF.fromState[IO]($)
 
         Form(
-          size = Mini,
+          size = Small,
           onSubmit = props.submit(state.searchTerm)
         )(
+          ExploreStyles.Grid,
+          ExploreStyles.Compact,
           FormDropdown(
             label = "Type",
             value = 0,
@@ -79,26 +83,28 @@ object CoordinatesForm {
                       focus = true,
                       icon = Icon("search")
           ),
-          FormGroup(widths = FormWidths.Equal)(
+          <.div(
+            ExploreStyles.FlexContainer,
+            ExploreStyles.TargetRaDecMinWidth,
             FormInputEV(
-              width = Seven,
               id = "ra",
               value = stateView.zoom(State.raValue),
               format = RightAscension.fromStringHMS,
-              label = "RA"
+              label = "RA",
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormInputEV(
-              width = Seven,
               id = "dec",
               value = stateView.zoom(State.decValue),
               format = Declination.fromStringSignedDMS,
-              label = "Dec"
+              label = "Dec",
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
-            FormButton(width = Two,
-                       size = Small,
-                       icon = true,
-                       label = "X",
-                       onClick = props.goToRaDec(Coordinates(state.raValue, state.decValue))
+            FormButton(
+              size = Small,
+              icon = true,
+              label = "X",
+              onClick = props.goToRaDec(Coordinates(state.raValue, state.decValue))
             )(
               Icon("angle right")
             )
