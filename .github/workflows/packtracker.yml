@@ -23,11 +23,11 @@ jobs:
       - name: Set up Scala
         uses: olafurpg/setup-scala@v7
         with:
-          java-version: adoptjdk@14         
+          java-version: adopt@1.11        
       - name: Export assets to packtracker
         if: github.event_name == 'pull_request'
         run: |
-          csbt explore/fullOptJS::webpack
+          sbt -v explore/fullOptJS::webpack
           cd explore/target/scala-2.13/scalajs-bundler/main/
           node node_modules/webpack/bin/webpack --bail --profile --json --config packtracker.webpack.config.js
         env:
@@ -37,7 +37,7 @@ jobs:
       - name: Export assets to packtracker merged
         if: github.event_name == 'push'
         run: |
-          csbt explore/fullOptJS::webpack
+          sbt -v explore/fullOptJS::webpack
           cd explore/target/scala-2.13/scalajs-bundler/main/
           node node_modules/webpack/bin/webpack --bail --profile --json --config packtracker.webpack.config.js
         env:
