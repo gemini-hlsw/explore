@@ -53,13 +53,21 @@ addCommandAlias(
   "; scalafix OrganizeImports"
 )
 
-// For Heroku deployment
-val stage = taskKey[Unit]("Stage and clean task")
+val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
+// For simplicity, the build's stage only deals with the explore app.
 stage := {
-  (explore / Compile / fullOptJS / webpack).value
+  val jsFiles = (explore / Compile / fullOptJS / webpack).value
+  IO.copy(
+    List(
+      ((explore / Compile / resourceDirectory).value / "static" / "static.json",
+       (explore / crossTarget).value / "stage" / "static.json"
+      )
+    )
+  )
   // https://devcenter.heroku.com/articles/reducing-the-slug-size-of-play-2-x-applications#using-sbt-to-clean-build-artifacts
   // If needed, caches can be purged manually: https://thoughtbot.com/blog/how-to-reduce-a-large-heroku-compiled-slug-size
+  // UPDATE 2020-10-08: We might not need this since we are not caching in GitHub. Leaving it in case we go back to build in Heroku.
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
     // Remove sbt-scalajs-bundler directory, which includes node_modules.

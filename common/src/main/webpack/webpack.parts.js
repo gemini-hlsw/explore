@@ -13,7 +13,7 @@ const cssnano = require("cssnano");
 const rootDir = path.resolve(__dirname, "../../../../");
 module.exports.rootDir = rootDir;
 module.exports.moduleName = path.basename(rootDir);
-module.exports.stageDir = path.resolve(__dirname, "../../stage/");
+module.exports.stageDir = path.resolve(__dirname, "../../stage/static/");
 
 // Resources dir on sbt
 const resourcesDir = path.resolve(rootDir, "../common/src/main/resources");
