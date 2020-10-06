@@ -21,7 +21,7 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-import japgolly.scalajs.react.extra.ReusabilityOverlay
+// import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -49,17 +49,19 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
-    ReusabilityOverlay.overrideGloballyInDev()
+    // ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
       tabs = EnumZipper.of[AppTab]
     )
 
     for {
-      _      <- logger.info(s"GIT Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
-      odbURI <- IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
-      ctx    <- AppContext.from[IO](AppConfig(odbURI))
-      _      <- AppCtx.initIn[IO](ctx)
+      _            <- logger.info(s"GIT Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+      odbURI       <- IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
+      lucumaODBURI <-
+        IO.fromEither(Uri.parse(BuildInfo.LucumaODBEndpoint).leftMap(new Exception(_)))
+      ctx          <- AppContext.from[IO](AppConfig(odbURI, lucumaODBURI))
+      _            <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)
 

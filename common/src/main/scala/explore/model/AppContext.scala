@@ -12,13 +12,17 @@ import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
 
-case class AppConfig(odbURI: Uri)
+case class AppConfig(odbURI: Uri, lucumaODBURI: Uri)
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  odb: GraphQLStreamingClient[F, ObservationDB]
+  odb:       GraphQLStreamingClient[F, ObservationDB],
+  lucumaODB: GraphQLStreamingClient[F, LucumaODB]
 ) {
   lazy val ODBConnectionStatus =
     StreamRenderer.build(odb.statusStream)
+
+  lazy val LucumaODBConnectionStatus =
+    StreamRenderer.build(lucumaODB.statusStream)
 
   def close(): F[Unit] =
     odb.close()
@@ -45,8 +49,9 @@ object AppContext {
     config: AppConfig
   ): F[AppContext[F]] =
     for {
-      programsClient <- ApolloStreamingClient.of[F, ObservationDB](config.odbURI)
-      clients         = Clients(programsClient)
-      actions         = Actions[F]()
+      odbClient       <- ApolloStreamingClient.of[F, ObservationDB](config.odbURI)
+      lucumaODBClient <- ApolloStreamingClient.of[F, LucumaODB](config.lucumaODBURI)
+      clients          = Clients(odbClient, lucumaODBClient)
+      actions          = Actions[F]()
     } yield AppContext[F](clients, actions)
 }

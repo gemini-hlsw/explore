@@ -48,4 +48,8 @@ object implicits extends ShorthandTypes with ListImplicits {
     ctx:                                                   AppContext[F]
   ): GraphQLStreamingClient[F, ObservationDB] =
     ctx.clients.odb
+  implicit def appContext2LucumaODBClient[F[_]](implicit
+    ctx: AppContext[F]
+  ): GraphQLStreamingClient[F, LucumaODB] =
+    ctx.clients.lucumaODB
 }

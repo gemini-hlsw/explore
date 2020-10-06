@@ -115,10 +115,14 @@ lazy val common = project
       ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoKeys ++= Seq[BuildInfoKey](
-      "ODBEndpoint" -> sys.env
+      "ODBEndpoint"       -> sys.env
         .get("ODB_ENDPOINT")
         .filter(_.trim.nonEmpty)
-        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql")
+        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql"),
+      "LucumaODBEndpoint" -> sys.env
+        .get("LUCUMA_ODB_ENDPOINT")
+        .filter(_.trim.nonEmpty)
+        .getOrElse("wss://lucuma-odb-staging.herokuapp.com/ws")
     ),
     buildInfoPackage := "explore"
   )
