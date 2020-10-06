@@ -8,8 +8,7 @@ import crystal.react.implicits._
 import explore._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.Focused.FocusedObs
-import explore.model.Focused.FocusedTarget
+import explore.model.Focused._
 import explore.model._
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
@@ -48,7 +47,7 @@ object TargetTabContents {
           )
         )
 
-      TargetObsSubscription { targetsWithObs =>
+      TargetObsLiveQuery { targetsWithObs =>
         val targetIdOpt = props.get.collect {
           case FocusedTarget(targetId) => targetId.some
           case FocusedObs(obsId)       => targetsWithObs.get.obs.getElement(obsId).map(_.target.id)

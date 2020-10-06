@@ -3,7 +3,7 @@
 
 package explore
 
-import java.util.UUID
+import scala.util.Random
 
 import cats.syntax.all._
 import crystal.react.implicits._
@@ -16,7 +16,10 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
-import monocle.Iso
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
+import lucuma.core.model.WithId
+import monocle.Prism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -24,14 +27,24 @@ case object LabelsElement extends ElementItem
 
 object Routing {
 
-  private val obsPageIso: Iso[ExploreObservation.Id, ObsPage] =
-    Iso[ExploreObservation.Id, ObsPage](ObsPage.apply)(_.obsId)
+  private def idPrism[Id <: WithId#Id, P <: Page](
+    idFromLong: Long => Either[String, Id],
+    pageFromId: Id => P,
+    idFromPage: P => Id
+  ): Prism[Long, P] =
+    Prism[Long, P](l => idFromLong(l).toOption.map(pageFromId))(idFromPage(_).value.value)
 
-  private val targetPageIso: Iso[SiderealTarget.Id, TargetPage] =
-    Iso[SiderealTarget.Id, TargetPage](TargetPage.apply)(_.targetId)
+  private val obsPage: Prism[Long, ObsPage] =
+    idPrism(Observation.Id.fromLong, ObsPage.apply, _.obsId)
 
-  private val targetObsPageIso: Iso[ExploreObservation.Id, TargetsObsPage] =
-    Iso[ExploreObservation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
+  private val targetPage: Prism[Long, TargetPage] =
+    idPrism(Target.Id.fromLong, TargetPage.apply, _.targetId)
+
+  private val targetObsPage: Prism[Long, TargetsObsPage] =
+    idPrism(Observation.Id.fromLong, TargetsObsPage.apply, _.obsId)
+
+  private def randomId[Id](fromLong: Long => Either[String, Id]): Id =
+    fromLong(Random.nextLong().abs.toLong).toOption.get
 
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
@@ -45,16 +58,16 @@ object Routing {
         | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
-        | dynamicRouteCT(("/obs" / uuid).xmapL(obsPageIso)) ~> renderP(view =>
+        | dynamicRouteCT(("/obs" / long).pmapL(obsPage)) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
         | staticRoute("/targets", TargetsBasePage) ~> renderP(view =>
           TargetTabContents(view.zoom(RootModel.focused))
         )
-        | dynamicRouteCT(("/target" / uuid).xmapL(targetPageIso)) ~> renderP(view =>
+        | dynamicRouteCT(("/target" / long).pmapL(targetPage)) ~> renderP(view =>
           TargetTabContents(view.zoom(RootModel.focused))
         )
-        | dynamicRouteCT(("/target/obs" / uuid).xmapL(targetObsPageIso)) ~> renderP(view =>
+        | dynamicRouteCT(("/target/obs" / long).pmapL(targetObsPage)) ~> renderP(view =>
           TargetTabContents(view.zoom(RootModel.focused))
         )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
@@ -64,10 +77,10 @@ object Routing {
           HomePage,
           ProposalPage,
           ObservationsBasePage,
-          ObsPage(UUID.randomUUID),
+          ObsPage(randomId(Observation.Id.fromLong)),
           TargetsBasePage,
-          TargetPage(UUID.randomUUID),
-          TargetsObsPage(UUID.randomUUID),
+          TargetPage(randomId(Target.Id.fromLong)),
+          TargetsObsPage(randomId(Observation.Id.fromLong)),
           ConfigurationsPage,
           ConstraintsPage
         )
@@ -76,11 +89,7 @@ object Routing {
               if next.some =!= prev &&
                 // Short circuit if we get here because of a change in the model.
                 next =!= view.zoom(RootModelRouting.lens).get =>
-            Callback
-              .log(
-                s"Routing.onPostRender triggered [$prev] => [$next]"
-              ) >>
-              view.zoom(RootModelRouting.lens).set(next).runInCB
+            view.zoom(RootModelRouting.lens).set(next).runInCB
           case _ => Callback.empty
         }
         .renderWithP(layout)

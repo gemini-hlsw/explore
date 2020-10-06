@@ -8,8 +8,9 @@ object Settings {
   object LibraryVersions {
     val cats              = "2.2.0"
     val catsEffect        = "2.2.0"
+    val chimney           = "0.5.3"
     val circe             = "0.13.0"
-    val clue              = "0.3.0"
+    val clue              = "0.3.1"
     val crystal           = "0.8.1"
     val discipline        = "1.0.3"
     val disciplineMUnit   = "0.3.0"
@@ -54,6 +55,12 @@ object Settings {
       deps(
         "org.typelevel" %%% "cats-effect"
       )(catsEffect)
+    )
+
+    val Chimney = Def.setting(
+      deps(
+        "io.scalaland" %%% "chimney"
+      )(chimney)
     )
 
     val Circe = Def.setting(

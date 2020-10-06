@@ -3,9 +3,11 @@
 
 package explore.components
 
+import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
 import crystal.Error
 import crystal.Pending
+import crystal.Pot
 import crystal.Ready
 import explore.AppCtx
 import explore.components.ui.ExploreStyles._
@@ -21,30 +23,35 @@ final case class ConnectionsStatus()
 object ConnectionsStatus {
   type Props = ConnectionsStatus
 
+  private def renderStatus(name: String)(status: Pot[StreamingClientStatus]): VdomNode = {
+    val (message, clazz) = status match {
+      case Error(t)     => (t.getMessage, ConnectionError)
+      case Pending(_)   => ("Mounting...", ConnectionWarning)
+      case Ready(value) =>
+        value match {
+          case Connecting => ("Connecting...", ConnectionWarning)
+          case Open       => ("Connected", ConnectionOK)
+          case Closing    => ("Closing...", ConnectionWarning)
+          case Closed     => ("Closed", ConnectionError)
+        }
+    }
+
+    Popup(
+      header = s"$name Connection Status",
+      content = message,
+      position = PopupPosition.BottomRight,
+      trigger = Icon(name = "circle", clazz = clazz)
+    )
+  }
+
   val component = ScalaComponent
     .builder[Props]
     .render(_ =>
       AppCtx.withCtx { ctx =>
-        ctx.clients.ODBConnectionStatus { status =>
-          val (message, clazz) = status match {
-            case Error(t)     => (t.getMessage, ConnectionError)
-            case Pending(_)   => ("Mounting...", ConnectionWarning)
-            case Ready(value) =>
-              value match {
-                case Connecting => ("Connecting...", ConnectionWarning)
-                case Open       => ("Connected", ConnectionOK)
-                case Closing    => ("Closing...", ConnectionWarning)
-                case Closed     => ("Closed", ConnectionError)
-              }
-          }
-
-          Popup(
-            header = "ODB Connection Status",
-            content = message,
-            position = PopupPosition.BottomRight,
-            trigger = Icon(name = "circle", clazz = clazz)
-          )
-        }
+        <.span(
+          ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")),
+          ctx.clients.ODBConnectionStatus(renderStatus("ODB"))
+        )
       }
     )
     .build

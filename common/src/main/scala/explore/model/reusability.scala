@@ -32,9 +32,9 @@ object reusability {
   implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive
   implicit def idListReuse[Id: Reusability, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
-  implicit def targetSummaryReuse: Reusability[TargetSummary]                                     = Reusability.derive
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
-  implicit def obsSummaryReuse: Reusability[ObsSummary]                                           = Reusability.derive
+  implicit def ObsSummaryReuse: Reusability[ObsSummary]                                           =
+    Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration))
   implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.derive
   implicit val jsonReuse: Reusability[Json]                                                       = Reusability.by_==
 }

@@ -3,24 +3,26 @@
 
 package explore.targeteditor
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
-import explore.components.graphql.SubscriptionRenderMod
+import explore.GraphQLSchemas.ObservationDB
+import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
-import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.function.Cons.headOption
+import lucuma.core.model.Target
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 
 final case class TargetEditor(
-  id: SiderealTarget.Id
+  id: Target.Id
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -35,12 +37,20 @@ object TargetEditor {
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
-        SubscriptionRenderMod[Subscription.Data, SiderealTarget](
-          Subscription.subscribe(props.id),
-          _.map(Subscription.Data.targets.composeOptional(headOption).getOption _).unNone
-        ) { target =>
-          val stateView = ViewF.fromState[IO]($).zoom(State.options)
-          TargetBody(props.id, target, stateView)
+        LiveQueryRenderMod[ObservationDB,
+                           TargetEditQuery.Data,
+                           Option[TargetEditQuery.Data.Target]
+        ](
+          TargetEditQuery.query(props.id),
+          _.target,
+          NonEmptyList.of(TargetUpdatedSubscription.subscribe(props.id))
+        ) { targetOpt =>
+          <.div(
+            targetOpt.get.whenDefined { _ =>
+              val stateView = ViewF.fromState[IO]($).zoom(State.options)
+              TargetBody(props.id, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+            }
+          )
         }
       }
   }

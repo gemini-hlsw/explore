@@ -3,19 +3,18 @@
 
 package explore.tabs
 
+import scala.annotation.unused
+
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsQueries._
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
-import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
@@ -72,8 +71,8 @@ object ObsTabContents {
           )
         )
 
-      ObsSubscription { observations =>
-        val obsSummaryOpt = props.get.collect { case FocusedObs(obsId) =>
+      ObsLiveQuery { observations =>
+        @unused val obsSummaryOpt = props.get.collect { case FocusedObs(obsId) =>
           observations.get.find(_.id === obsId)
         }.flatten
 
@@ -109,9 +108,9 @@ object ObsTabContents {
                     ^.cls := "tile",
                     Tile("Target Position", movable = true)(
                       <.span(
-                        obsSummaryOpt.whenDefined(obs =>
-                          TargetEditor(obs.target.id).withKey(obs.target.id.toString)
-                        )
+                        // obsSummaryOpt.whenDefined(obs =>
+                        //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
+                        // )
                       )
                     )
                   ),
@@ -120,11 +119,11 @@ object ObsTabContents {
                     ^.cls := "tile",
                     Tile("Constraints", movable = true)(
                       <.span(
-                        obsSummaryOpt.whenDefined(obs =>
-                          ConstraintsSubscription(obs.constraints.id) { constraints =>
-                            ConstraintsPanel(obs.constraints.id, constraints)
-                          }.withKey(obs.constraints.id.toString)
-                        )
+                        // obsSummaryOpt.whenDefined(obs =>
+                        //   ConstraintsSubscription(obs.constraints.id) { constraints =>
+                        //     ConstraintsPanel(obs.constraints.id, constraints)
+                        //   }.withKey(obs.constraints.id.toString)
+                        // )
                       )
                     )
                   )

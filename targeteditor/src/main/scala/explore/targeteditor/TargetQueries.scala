@@ -9,71 +9,126 @@ import clue.macros.GraphQL
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
-import explore.model.SiderealTarget
 import explore.model.decoders._
-import explore.model.reusability._
 import explore.undo.Undoer
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
+import lucuma.core.model.Target
+import lucuma.ui.reusability._
 import monocle.Lens
-import monocle.macros.Lenses
 
 object TargetQueries {
 
-  @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  @GraphQL(debug = false)
+  object TargetEditQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      subscription ($id: uuid!) {
-        targets(where: {id: {_eq: $id}}) {
+      query($id: TargetId!) {
+        target(targetId: $id) {
           id
           name
-          object_type
-          ra
-          dec
+          tracking {
+            ... on Sidereal {
+              coordinates {
+                ra {
+                  microarcseconds
+                }
+                dec {
+                  microarcseconds
+                }
+              }
+            }
+          }
         }
       }
       """
 
-    @Lenses
-    case class Data(targets: List[SiderealTarget])
+    object Data {
+      object Target {
+        object Tracking {
+          type Coordinates = lucuma.core.math.Coordinates
+        }
+      }
+    }
+  }
+
+  type TargetResult = TargetEditQuery.Data.Target
+  val TargetResult = TargetEditQuery.Data.Target
+
+  /**
+   * Lens for right ascension of a TargetResult.Tracking
+   */
+  val properMotionRA: Lens[TargetResult.Tracking, RightAscension] =
+    TargetResult.Tracking.coordinates ^|-> Coordinates.rightAscension
+
+  /**
+   * Lens for declination of a TargetResult.Tracking
+   */
+  val properMotionDec: Lens[TargetResult.Tracking, Declination] =
+    TargetResult.Tracking.coordinates ^|-> Coordinates.declination
+
+  /**
+   * Lens to the RightAscension of a sidereal target
+   */
+  val targetRA: Lens[TargetResult, RightAscension] =
+    TargetResult.tracking ^|-> properMotionRA
+
+  /**
+   * Lens to the Declination of a sidereal target
+   */
+  val targetDec: Lens[TargetResult, Declination] =
+    TargetResult.tracking ^|-> properMotionDec
+
+  /**
+   * Lens used to change name and coordinates of a target
+   */
+  val targetPropsL =
+    Lens[TargetResult, (String, RightAscension, Declination)](t =>
+      (t.name, targetRA.get(t), targetDec.get(t))
+    )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
+
+  @GraphQL
+  object TargetUpdatedSubscription extends GraphQLOperation[ObservationDB] {
+    val document = """
+      subscription($id: TargetId!) {
+        targetEdited(targetId: $id) {
+          id
+        }
+      }
+      """
   }
 
   @GraphQL
-  object Mutation extends GraphQLOperation[ObservationDB] {
+  object TargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($id: uuid!, $fields: targets_set_input!){
-        update_targets(_set: $fields, where: {
-          id: {
-            _eq: $id
-          }
-        }) {
-          affected_rows
+      mutation($input: EditSiderealInput!) {
+        updateSiderealTarget(input: $input) {
+          id
+          name
         }
       }
     """
   }
 
-  private def mutate(id: SiderealTarget.Id, fields: TargetsSetInput)(implicit
-    ctx:                 AppContextIO
-  ): IO[Unit] =
-    Mutation.execute(id, fields).void
-
   case class UndoSet(
-    id:           SiderealTarget.Id,
-    view:         View[SiderealTarget],
-    setter:       Undoer.Setter[IO, SiderealTarget]
+    id:           Target.Id,
+    view:         View[TargetResult],
+    setter:       Undoer.Setter[IO, TargetResult]
   )(implicit ctx: AppContextIO) {
     def apply[A](
-      lens:   Lens[SiderealTarget, A],
-      fields: A => TargetsSetInput
+      lens:      Lens[TargetResult, A],
+      setFields: A => EditSiderealInput => EditSiderealInput
     )(
-      value:  A
+      value:     A
     ): IO[Unit] =
       setter.set(
         view.get,
         lens.get,
         { value: A =>
           for {
-            _ <- (view.mod).compose(lens.set)(value)
-            _ <- mutate(id, fields(value))
+            _        <- (view.mod).compose(lens.set)(value)
+            editInput = setFields(value)(EditSiderealInput(id))
+            _        <- TargetMutation.execute(editInput)
           } yield ()
         }
       )(value)

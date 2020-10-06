@@ -26,6 +26,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
+import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
@@ -92,7 +93,12 @@ object AndOrTest {
 
   def renderObs(obs: ExploreObservation, dragIcon: VdomNode): VdomNode =
     wrap(^.width := "200px", ^.margin := "5px")(
-      ObsBadge(ObsSummary.fromObs(obs), ObsBadge.Layout.NameAndConf),
+      ObsBadge(
+        ObsSummary(Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
+                   obs.target.name
+        ),
+        ObsBadge.Layout.NameAndConf
+      ),
       <.div(^.textAlign.right, dragIcon)
     )
 

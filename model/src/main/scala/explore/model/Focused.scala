@@ -5,12 +5,14 @@ package explore.model
 
 import cats.kernel.Eq
 import cats.syntax.all._
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable
 object Focused {
-  @Lenses case class FocusedObs(obsId: ExploreObservation.Id) extends Focused
-  @Lenses case class FocusedTarget(targetId: SiderealTarget.Id) extends Focused
+  @Lenses case class FocusedObs(obsId: Observation.Id) extends Focused
+  @Lenses case class FocusedTarget(targetId: Target.Id) extends Focused
   // @Lenses case class FocusedConstraint(constraint: ???) extends Focused
   // @Lenses case class FocusedConfiguration(configuraton: ???) extends Focused
 

@@ -3,6 +3,8 @@
 
 package explore.targeteditor
 
+import scala.annotation.unused
+
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -15,8 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
-import explore.model.ModelOptics
-import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
@@ -26,6 +26,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.core.model.Target
+import lucuma.ui.reusability._
 import react.common._
 
 final case class SearchCallback(
@@ -37,14 +38,14 @@ final case class SearchCallback(
 }
 
 final case class TargetBody(
-  id:      SiderealTarget.Id,
-  target:  View[SiderealTarget],
+  id:      Target.Id,
+  target:  View[TargetResult],
   options: View[TargetVisualOptions]
 ) extends ReactProps[TargetBody](TargetBody.component) {
-  val aladinCoords: Coordinates = target.get.track.baseCoordinates
+  val aladinCoords: Coordinates = target.get.tracking.coordinates
 }
 
-object TargetBody extends ModelOptics {
+object TargetBody {
   type Props = TargetBody
   val AladinRef = AladinCell.component
 
@@ -54,11 +55,12 @@ object TargetBody extends ModelOptics {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
-    def setName(name: NonEmptyString): Callback =
-      $.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
+    def setName(name: String): Callback =
+      $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
 
-    private def coordinatesKey(target: SiderealTarget): String =
-      s"${target.name.value}#${target.track.baseCoordinates.show}"
+    @unused
+    private def coordinatesKey(target: TargetResult): String =
+      s"${target.name}#${target.tracking.coordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -69,23 +71,25 @@ object TargetBody extends ModelOptics {
       AppCtx.withCtx { implicit appCtx =>
         val target = props.target.get
 
-        UndoRegion[SiderealTarget] { undoCtx =>
+        UndoRegion[TargetResult] { undoCtx =>
           val undoSet =
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify = undoSet[
-            (NonEmptyString, RightAscension, Declination)
+            (String, RightAscension, Declination)
           ](
             targetPropsL,
             { case (n, r, d) =>
-              TargetsSetInput(
-                name = n.value.some,
-                ra = RightAscension.fromStringHMS.reverseGet(r).some,
-                dec = Declination.fromStringSignedDMS.reverseGet(d).some
-              )
+              input =>
+                input.copy(
+                  name = n.some,
+                  ra = RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some).some,
+                  dec = DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some).some
+                )
             }
           ) _
 
+          @unused
           val searchAndSet: SearchCallback => Callback = s =>
             SimbadSearch
               .search(s.searchTerm)
@@ -110,7 +114,7 @@ object TargetBody extends ModelOptics {
               AladinRef
                 .withRef(aladinRef) {
                   AladinCell(
-                    props.target.zoom(SiderealTarget.baseCoordinates),
+                    props.target.zoom(TargetResult.tracking ^|-> TargetResult.Tracking.coordinates),
                     props.options
                   )
                 },
@@ -119,7 +123,7 @@ object TargetBody extends ModelOptics {
             <.div(
               ExploreStyles.TargetSkyplotCell,
               WIP(
-                SkyPlotSection(target.track.baseCoordinates)
+                SkyPlotSection(target.tracking.coordinates)
               )
             )
           )
