@@ -78,13 +78,13 @@ body {
 }
 
 .explore-tile-body {
-  height: ~"calc(100% - @{minHeight}/2)";
+  height: ~"calc(100% - @{minHeight})";
+  overflow-y: auto;
 }
 
 .explore-tile {
   .full-height-width();
   background: @tileBackground;
-  overflow-y: auto;
 }
 
 .proposal-tile {
@@ -344,7 +344,7 @@ body {
 }
 
 // The Target Position layout
-@target-grid-responsive-cutoff: 1350px;
+@target-grid-responsive-cutoff: 992px;
 
 .target-grid {
   display: grid;
@@ -371,8 +371,16 @@ body {
   }
 }
 
+.coordinates-form {
+  margin-bottom: 1em;
+}
+
+.catalogue-form {
+  height: max-content; // keep it from expanding to fill cell
+}
+
 // for the ra and dec inputs and the flex container
 // that holds them
 .target-ra-dec-min-width {
-  min-width: 7em;
+  min-width: 3em;
 }

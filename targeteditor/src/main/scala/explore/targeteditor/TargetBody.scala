@@ -98,7 +98,7 @@ object TargetBody extends ModelOptics {
           val searchAndSet: NonEmptyString => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          <.div(
+          React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
               <.div(

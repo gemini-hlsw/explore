@@ -69,6 +69,7 @@ object CoordinatesForm {
         )(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
+          ExploreStyles.CoordinatesForm,
           FormDropdown(
             label = "Type",
             value = 0,
@@ -103,10 +104,11 @@ object CoordinatesForm {
             FormButton(
               size = Small,
               icon = true,
-              label = "X",
+              label = "Go To",
               onClick = props.goToRaDec(Coordinates(state.raValue, state.decValue))
             )(
-              Icon("angle right")
+              Icon("angle right"),
+              ExploreStyles.HideLabel
             )
           )
         )
