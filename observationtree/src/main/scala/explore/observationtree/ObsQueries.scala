@@ -4,15 +4,15 @@
 package explore.observationtree
 
 import clue.GraphQLOperation
+import clue.macros.GraphQL
 import explore.AppCtx
+import explore.GraphQLSchemas._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
-import clue.macros.GraphQL
-import explore.GraphQLSchemas._
 
 object ObsQueries {
 

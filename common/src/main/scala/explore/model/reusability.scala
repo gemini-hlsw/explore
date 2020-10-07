@@ -7,6 +7,7 @@ import java.time.Duration
 
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
+import io.circe.Json
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
@@ -14,7 +15,6 @@ import lucuma.core.math._
 import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
-import io.circe.Json
 
 /**
  * Reusability instances for model classes

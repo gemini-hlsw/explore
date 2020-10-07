@@ -1,15 +1,16 @@
 package explore.targeteditor
 
+import scala.concurrent.duration._
+
 import cats.data.Validated
-import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.model.Target
-import lucuma.core.enum.CatalogName
-import lucuma.catalog.VoTableParser
 import cats.effect._
 import cats.implicits._
+import eu.timepit.refined.types.string.NonEmptyString
 import fs2._
+import lucuma.catalog.VoTableParser
+import lucuma.core.enum.CatalogName
+import lucuma.core.model.Target
 import sttp.client3._
-import scala.concurrent.duration._
 
 object SimbadSearch {
   def search(term: NonEmptyString)(implicit cs: ContextShift[IO]): IO[Option[Target]] = {
@@ -29,15 +30,14 @@ object SimbadSearch {
               .emit[IO, String](_)
               .through(VoTableParser.targets(CatalogName.Simbad))
               .compile
-              .last
+              .toList
+              .map {
+                _.collect { case Validated.Valid(t) => t }.headOption
+              }
           )
           .map {
-            case Right(Some(Validated.Valid(t))) =>
-              println(s" SIMBAD: $t")
-              t.some
-            case e                               =>
-              println(s" SIMBAD: $e")
-              none
+            case Right(Some((t))) => t.some
+            case _                => none
           }
       }
 

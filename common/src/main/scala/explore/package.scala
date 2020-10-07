@@ -12,6 +12,7 @@ package explore {
     type View[A]      = ViewF[IO, A]
     type ViewOpt[A]   = ViewOptF[IO, A]
   }
+
 }
 
 package object explore extends explore.ShorthandTypes

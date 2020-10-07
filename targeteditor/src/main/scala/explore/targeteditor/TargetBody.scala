@@ -8,6 +8,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.View
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
@@ -24,9 +25,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
-import react.common._
-import explore.GraphQLSchemas.ObservationDB.Types._
 import lucuma.core.model.Target
+import react.common._
 
 final case class TargetBody(
   id:      SiderealTarget.Id,
@@ -91,15 +91,14 @@ object TargetBody extends ModelOptics {
             ) =>
               SimbadSearch
                 .search(term)
+                .attempt
                 .runInCBAndThen {
-                  case Some(Target(n, Right(st), _)) =>
+                  case Right(Some(Target(n, Right(st), _))) =>
                     modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
                       gotoRaDec(st.baseCoordinates) *> onComplete
-                  case Some(r)                       => Callback.log(s"Unknown target type $r")
-                  case None                          => onEmpty
-                }
-                .handleError { case t =>
-                  onError(t)
+                  case Right(Some(r))                       => Callback.log(s"Unknown target type $r")
+                  case Right(None)                          => onEmpty
+                  case Left(t)                              => onError(t)
                 }
 
           React.Fragment(

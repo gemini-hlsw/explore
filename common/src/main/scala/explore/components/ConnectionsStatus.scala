@@ -4,7 +4,9 @@
 package explore.components
 
 import clue.StreamingClientStatus._
-import crystal.{ Error, Pending, Ready }
+import crystal.Error
+import crystal.Pending
+import crystal.Ready
 import explore.AppCtx
 import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._

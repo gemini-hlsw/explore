@@ -16,14 +16,16 @@
 :root {
   --focus-inner-color: hsla(210, 52%, 42%, 1);
   --focus-outer-color: hsla(200, 72%, 83%, 0.75);
+  --error-label-color: @red;
 }
 
-i.circular.inverted.icon:hover,
-i.circular.inverted.icon:focus {
+// https://zellwk.com/blog/creating-focus-style/
+i.icon.explore-button-icon:hover,
+i.icon.explore-button-icon:focus {
   outline: none;
   opacity: 1;
   box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
-    0 0 0 0.4rem var(--focus-outer-color);
+    0 0 0 0.2rem var(--focus-outer-color);
 }
 
 html,
@@ -398,3 +400,12 @@ body {
 .target-ra-dec-min-width {
   min-width: 3em;
 }
+
+.error-label-mixin() {
+  color: var(--error-label-color);
+}
+
+.ui.form .field > .explore-error-label {
+  .error-label-mixin();
+}
+

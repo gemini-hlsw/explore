@@ -7,8 +7,11 @@ import cats.effect.ContextShift
 import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLOperation
+import clue.macros.GraphQL
 import crystal.ViewF
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.Constraints
@@ -23,9 +26,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
 import monocle.function.Cons.headOption
 import monocle.macros.Lenses
-import clue.macros.GraphQL
-import explore.GraphQLSchemas._
-import explore.GraphQLSchemas.ObservationDB.Types._
 
 object ConstraintsQueries {
   @GraphQL

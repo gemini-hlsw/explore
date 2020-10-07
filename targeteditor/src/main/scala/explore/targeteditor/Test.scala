@@ -9,9 +9,9 @@ import scala.scalajs.js.annotation._
 
 import explore.AppMain
 import explore._
+import explore.components.Tile
 import explore.model._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.components.Tile
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {

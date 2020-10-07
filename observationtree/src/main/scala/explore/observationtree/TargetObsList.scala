@@ -10,6 +10,7 @@ import scala.collection.immutable.HashSet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
@@ -41,7 +42,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
-import explore.GraphQLSchemas.ObservationDB.Types._
 
 import TargetObsQueries._
 
