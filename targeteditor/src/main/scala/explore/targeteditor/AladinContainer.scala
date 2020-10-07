@@ -42,7 +42,6 @@ import react.semanticui.sizes._
 
 @Lenses
 final case class AladinContainer(
-  s:       Size,
   target:  View[SiderealTarget],
   options: TargetVisualOptions
 ) extends ReactProps[AladinContainer](AladinContainer.component) {

@@ -27,7 +27,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import react.common._
-import react.sizeme.SizeMe
 import explore.GraphQLSchemas.ObservationDB.Types._
 
 final case class TargetBody(
@@ -109,10 +108,8 @@ object TargetBody extends ModelOptics {
               ),
               <.div(
                 ExploreStyles.TargetAladinCell,
-                SizeMe(monitorHeight = true) { s =>
-                  AladinRef.withRef(aladinRef) {
-                    AladinContainer(s, props.target, props.options.get)
-                  }
+                AladinRef.withRef(aladinRef) {
+                  AladinContainer(props.target, props.options.get)
                 }
               ),
               CataloguesForm(props.options)
