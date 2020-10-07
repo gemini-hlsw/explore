@@ -8,6 +8,7 @@ import scala.collection.SortedMap
 import cats.data.NonEmptyList
 import crystal.react.implicits._
 import explore.View
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
@@ -57,7 +58,10 @@ object CataloguesForm {
       .render { $ =>
         val optionsV = $.props.options
         val options  = optionsV.get
-        Form(size = Mini)(
+        Form(size = Small)(
+          ExploreStyles.Grid,
+          ExploreStyles.Compact,
+          ExploreStyles.CatalogueForm,
           FormDropdown(
             label = "Catalogues",
             value = 0,

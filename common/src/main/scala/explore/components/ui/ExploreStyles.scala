@@ -58,10 +58,8 @@ object ExploreStyles {
   val SkyPlotControls: Css = Css("sky-plot-controls")
   val PlotToggle: Css      = Css("plot-toggle")
 
-  val AladinColumn: Css          = Css("aladin-column")
   val AladinContainerColumn: Css = Css("aladin-container-column")
   val AladinContainerBody: Css   = Css("aladin-container-body")
-  val AladinContainerStatus: Css = Css("aladin-container-status")
   val AladinFOV: Css             = Css("aladin-status-fov")
   val AladinDetailText: Css      = Css("aladin-detail-text")
   val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
@@ -73,6 +71,7 @@ object ExploreStyles {
   val Grid: Css            = Css("explore-grid")
   val TwoColumnGrid: Css   = Grid |+| Css("explore-two-columns")
   val ThreeColumnGrid: Css = Grid |+| Css("explore-three-columns")
+  val Compact: Css         = Css("explore-compact")
 
   val FlexContainer: Css = Css("explore-flex-container")
   def Grow(i: Int Refined Interval.Closed[1, 4]): Css = Css(s"explore-grow-$i")
@@ -94,4 +93,12 @@ object ExploreStyles {
   // WIP
   val WIP: Css        = Css("wip")
   val WIPWarning: Css = Css("wip-warning")
+
+  // The Target tab contents
+  val TargetGrid: Css          = Css("target-grid")
+  val TargetAladinCell: Css    = Css("target-aladin-cell")
+  val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
+  val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
+  val CoordinatesForm: Css     = Css("coordinates-form")
+  val CatalogueForm: Css       = Css("catalogue-form")
 }

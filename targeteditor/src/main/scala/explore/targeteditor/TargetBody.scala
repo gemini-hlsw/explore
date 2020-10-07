@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
@@ -26,9 +27,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import react.common._
-import react.semanticui.collections.grid._
-import react.semanticui.widths._
-import react.sizeme.SizeMe
 import explore.GraphQLSchemas.ObservationDB.Types._
 
 final case class TargetBody(
@@ -100,33 +98,26 @@ object TargetBody extends ModelOptics {
           val searchAndSet: NonEmptyString => Callback =
             searchAndGo(modify.andThen(_.runInCB))
 
-          Grid(columns = Three,
-               clazz = ExploreStyles.FullHeightWidth,
-               stretched = true,
-               padded = GridPadded.Horizontally
-          )(
-            GridRow(stretched = true)(
-              GridColumn(stretched = true, computer = Four)(
+          React.Fragment(
+            <.div(
+              ExploreStyles.TargetGrid,
+              <.div(
                 CoordinatesForm(target, searchAndSet, gotoRaDec)
                   .withKey(coordinatesKey(target)),
                 UndoButtons(target, undoCtx)
               ),
-              GridColumn(stretched = true, computer = Eight, clazz = ExploreStyles.AladinColumn)(
-                SizeMe(monitorHeight = true) { s =>
-                  AladinRef.withRef(aladinRef) {
-                    AladinContainer(s, props.target, props.options.get)
-                  }
+              <.div(
+                ExploreStyles.TargetAladinCell,
+                AladinRef.withRef(aladinRef) {
+                  AladinContainer(props.target, props.options.get)
                 }
               ),
-              GridColumn(stretched = true, computer = Four)(
-                CataloguesForm(props.options)
-              )
+              CataloguesForm(props.options)
             ),
-            GridRow()(
-              GridColumn(computer = Sixteen)(
-                WIP(
-                  SkyPlotSection(target.track.baseCoordinates)
-                )
+            <.div(
+              ExploreStyles.TargetSkyplotCell,
+              WIP(
+                SkyPlotSection(target.track.baseCoordinates)
               )
             )
           )
