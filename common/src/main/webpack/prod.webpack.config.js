@@ -7,7 +7,7 @@ const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const isDev = false;
-const ci = process.env.CI; // When on CI don't add hashes
+const ci = process.env.CI === 'true'; // When on CI don't add hashes
 
 const Web = Merge(
   ScalaJSConfig,
