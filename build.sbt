@@ -113,11 +113,12 @@ lazy val common = project
     ),
     libraryDependencies ++=
       ReactCommon.value,
-    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoKeys ++= Seq[BuildInfoKey](
-      "ODBEndpoint" -> sys.env.getOrElse("ODB_ENDPOINT",
-                                         "wss://explore-hasura.herokuapp.com/v1/graphql"
-      )
+      "ODBEndpoint" -> sys.env
+        .get("ODB_ENDPOINT")
+        .filter(_.trim.nonEmpty)
+        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql")
     ),
     buildInfoPackage := "explore"
   )

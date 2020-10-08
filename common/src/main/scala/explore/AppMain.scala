@@ -56,6 +56,7 @@ trait AppMain extends IOApp {
     )
 
     for {
+      _      <- logger.info(s"GIT Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       odbURI <- IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
       ctx    <- AppContext.from[IO](AppConfig(odbURI))
       _      <- AppCtx.initIn[IO](ctx)
