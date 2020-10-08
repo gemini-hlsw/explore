@@ -5,6 +5,7 @@ package explore.constraints
 
 import crystal.react.implicits._
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.constraints.ConstraintsQueries._
@@ -23,7 +24,6 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.form.FormGroup
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
-import explore.GraphQLSchemas.ObservationDB.Types._
 
 final case class ConstraintsPanel(
   id:          Constraints.Id,

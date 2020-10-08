@@ -6,11 +6,11 @@ package explore.model
 import cats.effect._
 import cats.syntax.all._
 import clue._
+import crystal.react.StreamRenderer
 import explore.GraphQLSchemas._
+import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
-import crystal.react.StreamRenderer
-import explore.model.reusability._
 
 case class AppConfig(odbURI: Uri)
 

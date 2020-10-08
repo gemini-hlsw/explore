@@ -5,16 +5,16 @@ package explore.target
 
 import cats.effect.IO
 import clue.GraphQLOperation
+import clue.macros.GraphQL
+import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.SiderealTarget
 import explore.model.decoders._
+import explore.model.reusability._
 import explore.undo.Undoer
 import monocle.Lens
 import monocle.macros.Lenses
-import clue.macros.GraphQL
-import explore.GraphQLSchemas._
-import explore.GraphQLSchemas.ObservationDB.Types._
-import explore.model.reusability._
 
 object TargetQueries {
 

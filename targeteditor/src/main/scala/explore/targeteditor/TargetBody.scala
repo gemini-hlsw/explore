@@ -5,11 +5,10 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
-import eu.timepit.refined._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.View
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
@@ -26,8 +25,16 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.core.model.Target
 import react.common._
-import explore.GraphQLSchemas.ObservationDB.Types._
+
+final case class SearchCallback(
+  searchTerm: NonEmptyString,
+  onComplete: Option[Target] => Callback,
+  onError:    Throwable => Callback
+) {
+  def run: Callback = Callback.empty
+}
 
 final case class TargetBody(
   id:      SiderealTarget.Id,
@@ -39,7 +46,6 @@ final case class TargetBody(
 
 object TargetBody extends ModelOptics {
   type Props = TargetBody
-
   val AladinRef = AladinContainer.component
 
   implicit val propsReuse = Reusability.derive[Props]
@@ -58,21 +64,6 @@ object TargetBody extends ModelOptics {
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
-
-    def searchAndGo(
-      modify: ((NonEmptyString, RightAscension, Declination)) => Callback
-    )(search: NonEmptyString) = {
-      val aladinModify = (s: String, r: RightAscension, d: Declination) =>
-        refineV[NonEmpty](s).fold(_ => Callback.empty, s => modify((s, r, d)))
-      aladinRef.get
-        .flatMapCB(
-          _.backend.searchAndGo(Function.tupled(aladinModify))(search.value)
-        )
-        .toCallback
-    }
-
-    def setTargetByName: NonEmptyString => Callback =
-      searchAndGo { case (name, _, _) => setName(name) }
 
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
@@ -95,8 +86,18 @@ object TargetBody extends ModelOptics {
             }
           ) _
 
-          val searchAndSet: NonEmptyString => Callback =
-            searchAndGo(modify.andThen(_.runInCB))
+          val searchAndSet: SearchCallback => Callback = s =>
+            SimbadSearch
+              .search(s.searchTerm)
+              .attempt
+              .runInCBAndThen {
+                case Right(r @ Some(Target(n, Right(st), _))) =>
+                  modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
+                    gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
+                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
+                case Right(None)                              => s.onComplete(none)
+                case Left(t)                                  => s.onError(t)
+              }
 
           React.Fragment(
             <.div(

@@ -9,6 +9,7 @@ import scala.scalajs.js.annotation._
 
 import explore.AppMain
 import explore._
+import explore.components.Tile
 import explore.model._
 import japgolly.scalajs.react.vdom.html_<^._
 
@@ -16,9 +17,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 object Test extends AppMain {
 
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
-    val id = UUID.fromString("fdc02840-1a52-48b5-9b77-7a8bd5b919d4")
+    val id = UUID.fromString("b9acf8b4-79e9-4c69-9a96-904746e127ab")
 
-    <.div(^.height := "100vh", ^.width := "100%", TargetEditor(id))
+    <.div(^.height := "100vh",
+          ^.width := "100%",
+          Tile("Target", false)(
+            TargetEditor(id)
+          )
+    )
   }
 
 }

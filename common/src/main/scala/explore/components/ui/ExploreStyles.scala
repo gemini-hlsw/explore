@@ -72,6 +72,7 @@ object ExploreStyles {
   val TwoColumnGrid: Css   = Grid |+| Css("explore-two-columns")
   val ThreeColumnGrid: Css = Grid |+| Css("explore-three-columns")
   val Compact: Css         = Css("explore-compact")
+  val ErrorLabel: Css      = Css("explore-error-label")
 
   val FlexContainer: Css = Css("explore-flex-container")
   def Grow(i: Int Refined Interval.Closed[1, 4]): Css = Css(s"explore-grow-$i")
@@ -101,4 +102,7 @@ object ExploreStyles {
   val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
   val CoordinatesForm: Css     = Css("coordinates-form")
   val CatalogueForm: Css       = Css("catalogue-form")
+
+  // styles for icons that acts as buttons
+  val ButtonIcon: Css = Css("explore-button-icon")
 }

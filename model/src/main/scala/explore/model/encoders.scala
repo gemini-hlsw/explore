@@ -3,13 +3,13 @@
 
 package explore.model
 
+import explore.model.enum._
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
-import explore.model.enum._
 
 import ModelOptics._
 

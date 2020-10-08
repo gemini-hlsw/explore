@@ -26,9 +26,9 @@ import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
 import org.scalajs.dom
+import sttp.model.Uri
 
 import js.annotation._
-import sttp.model.Uri
 
 object AppCtx extends AppRootContext[AppContextIO]
 

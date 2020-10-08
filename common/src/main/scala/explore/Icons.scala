@@ -15,4 +15,5 @@ object Icons {
   val Delete   = Icon("trash alternate outline")
   val Bullseye = Icon("bullseye")
   val Edit     = Icon("edit")
+  val Search   = Icon("search")
 }

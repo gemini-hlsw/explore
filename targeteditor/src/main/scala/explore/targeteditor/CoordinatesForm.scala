@@ -9,37 +9,47 @@ import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
 import eu.timepit.refined.collection._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.Icons
 import explore.model.ModelOptics._
 import explore.model.SiderealTarget
+import explore.model.reusability._
+import explore.utils.abbreviate
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.core.model.Target
 import lucuma.ui.forms._
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
+import react.semanticui.elements.label._
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
-  searchAndGo:      NonEmptyString => Callback,
+  searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
-  def submit(searchTerm: String): Callback =
+  def submit(
+    searchTerm: String,
+    before:     Callback,
+    onComplete: Option[Target] => Callback,
+    onError:    Throwable => Callback
+  ): Callback =
     refineV[NonEmpty](searchTerm)
-      .fold(_ => Callback.empty, s => searchAndGo(s).when_(s =!= target.name))
+      .fold(_ => Callback.empty, s => before *> searchAndGo(SearchCallback(s, onComplete, onError)))
 }
 
 object CoordinatesForm {
@@ -47,15 +57,20 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    searchTerm: String,
-    raValue:    RightAscension,
-    decValue:   Declination
+    searchTerm:  String,
+    raValue:     RightAscension,
+    decValue:    Declination,
+    searching:   Boolean,
+    searchError: Option[String]
   )
 
   def initialState(p: Props): State = {
     val r = targetPropsL.get(p.target)
-    Function.tupled(State.apply _)((r._1.value, r._2, r._3))
+    Function.tupled(State.apply _)((r._1.value, r._2, r._3, false, none))
   }
+
+  implicit val stateReuse                     = Reusability.derive[State]
+  implicit val propsReuse: Reusability[Props] = Reusability.by(_.target)
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -63,26 +78,56 @@ object CoordinatesForm {
       AppCtx.withCtx { implicit appCtx =>
         val stateView = ViewF.fromState[IO]($)
 
-        Form(
-          size = Small,
-          onSubmit = props.submit(state.searchTerm)
-        )(
+        val searchComplete: Callback = $.setStateL(State.searching)(false)
+
+        val search: Callback =
+          props
+            .submit(
+              state.searchTerm,
+              $.setStateL(State.searching)(true),
+              t =>
+                searchComplete *> ($.setStateL(State.searchError)(
+                  s"'${abbreviate(state.searchTerm, 10)}' not found".some
+                )).when_(t.isEmpty),
+              t =>
+                searchComplete *> $.setStateL(State.searchError)(
+                  s"Search error ${abbreviate(t.getMessage, 10)}".some
+                )
+            )
+
+        def iconKeyPress(e: ReactKeyboardEvent): Callback =
+          search *> e.stopPropagationCB *> e.preventDefaultCB
+
+        val nameLabel = state.searchError match {
+          case Some(m) => Label(clazz = ExploreStyles.ErrorLabel)(m)
+          case _       => Label("Name")
+        }
+
+        Form(size = Small)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.CoordinatesForm,
-          FormDropdown(
+          FormSelect(
             label = "Type",
             value = 0,
-            selection = true,
             options = List(DropdownItem(value = 0, text = "Sidereal"),
                            DropdownItem(value = 1, text = "Non-sidereal")
             )
           ),
-          FormInputEV(id = "search",
-                      value = stateView.zoom(State.searchTerm),
-                      label = "Target",
-                      focus = true,
-                      icon = Icon("search")
+          FormInputEV(
+            id = "search",
+            value = stateView.zoom(State.searchTerm),
+            label = nameLabel,
+            focus = true,
+            loading = state.searching,
+            onChange = (_: String) => $.setStateL(State.searchError)(none),
+            icon = Icons.Search
+              .link(true)
+              .clazz(ExploreStyles.ButtonIcon)(
+                ^.tabIndex := 0,
+                ^.onKeyPress ==> iconKeyPress,
+                ^.onClick --> search
+              )
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -118,8 +163,9 @@ object CoordinatesForm {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps(initialState(_))
+      .initialStateFromProps(initialState)
       .renderBackend[Backend]
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
