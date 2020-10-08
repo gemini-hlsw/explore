@@ -18,6 +18,7 @@ jobs:
           java-version: adopt@1.11
       - name: Build application
         env: 
+          CI: false
           ODB_ENDPOINT: ${{ secrets.ODB_ENDPOINT }}
         run: sbt -v stage        
       - name: Heroku - Deploy
