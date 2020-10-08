@@ -15,14 +15,17 @@ import sttp.client3._
 object SimbadSearch {
   def search(term: NonEmptyString)(implicit cs: ContextShift[IO]): IO[Option[Target]] = {
     val backend  = FetchBackend()
-    def response = basicRequest
-      .post(
-        uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
+    def httpCall =
+      IO(
+        basicRequest
+          .post(
+            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
+          )
+          .readTimeout(5.seconds)
+          .send(backend)
       )
-      .readTimeout(5.seconds)
-      .send(backend)
 
-    IO.fromFuture(IO(response))
+    IO.fromFuture(httpCall)
       .flatMap {
         _.body
           .traverse(

@@ -28,6 +28,14 @@ import lucuma.core.math.RightAscension
 import lucuma.core.model.Target
 import react.common._
 
+final case class SearchCallback(
+  searchTerm: NonEmptyString,
+  onComplete: Option[Target] => Callback,
+  onError:    Throwable => Callback
+) {
+  def run: Callback = Callback.empty
+}
+
 final case class TargetBody(
   id:      SiderealTarget.Id,
   target:  View[SiderealTarget],
@@ -37,10 +45,7 @@ final case class TargetBody(
 }
 
 object TargetBody extends ModelOptics {
-  type Props          = TargetBody
-  // search term, after, on empty, on error
-  type SearchCallback = (NonEmptyString, Callback, Callback, Throwable => Callback) => Callback
-
+  type Props = TargetBody
   val AladinRef = AladinContainer.component
 
   implicit val propsReuse = Reusability.derive[Props]
@@ -81,25 +86,18 @@ object TargetBody extends ModelOptics {
             }
           ) _
 
-          import japgolly.scalajs.react.effects.AsyncCallbackEffects._
-          val searchAndSet: SearchCallback =
-            (
-              term:       NonEmptyString,
-              onComplete: Callback,
-              onEmpty:    Callback,
-              onError:    Throwable => Callback
-            ) =>
-              SimbadSearch
-                .search(term)
-                .attempt
-                .runInCBAndThen {
-                  case Right(Some(Target(n, Right(st), _))) =>
-                    modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
-                      gotoRaDec(st.baseCoordinates) *> onComplete
-                  case Right(Some(r))                       => Callback.log(s"Unknown target type $r")
-                  case Right(None)                          => onEmpty
-                  case Left(t)                              => onError(t)
-                }
+          val searchAndSet: SearchCallback => Callback = s =>
+            SimbadSearch
+              .search(s.searchTerm)
+              .attempt
+              .runInCBAndThen {
+                case Right(r @ Some(Target(n, Right(st), _))) =>
+                  modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
+                    gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
+                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
+                case Right(None)                              => s.onComplete(none)
+                case Left(t)                                  => s.onError(t)
+              }
 
           React.Fragment(
             <.div(

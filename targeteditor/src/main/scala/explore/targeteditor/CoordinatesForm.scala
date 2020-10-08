@@ -24,6 +24,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -37,19 +38,18 @@ import react.semanticui.sizes._
 
 final case class CoordinatesForm(
   target:           SiderealTarget,
-  searchAndGo:      TargetBody.SearchCallback,
+  searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(
     searchTerm: String,
     before:     Callback,
-    onComplete: Callback,
-    onEmpty:    Callback,
+    onComplete: Option[Target] => Callback,
     onError:    Throwable => Callback
   ): Callback =
     refineV[NonEmpty](searchTerm)
-      .fold(_ => Callback.empty, s => before *> searchAndGo(s, onComplete, onEmpty, onError))
+      .fold(_ => Callback.empty, s => before *> searchAndGo(SearchCallback(s, onComplete, onError)))
 }
 
 object CoordinatesForm {
@@ -85,10 +85,10 @@ object CoordinatesForm {
             .submit(
               state.searchTerm,
               $.setStateL(State.searching)(true),
-              searchComplete,
-              searchComplete *> $.setStateL(State.searchError)(
-                s"'${abbreviate(state.searchTerm, 10)}' not found".some
-              ),
+              t =>
+                searchComplete *> ($.setStateL(State.searchError)(
+                  s"'${abbreviate(state.searchTerm, 10)}' not found".some
+                )).when_(t.isEmpty),
               t =>
                 searchComplete *> $.setStateL(State.searchError)(
                   s"Search error ${abbreviate(t.getMessage, 10)}".some
