@@ -1,0 +1,14 @@
+name: Debug
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Debug
+        env: 
+          ODB_ENDPOINT: ${{ secrets.ODB_ENDPOINT }}
+        run: echo $ODB_ENDPOINT 

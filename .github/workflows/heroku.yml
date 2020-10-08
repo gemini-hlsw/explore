@@ -1,4 +1,4 @@
-name: Build slug with static assets and deploy to Heroku
+name: Deploy to Heroku
 
 on:
   push:
