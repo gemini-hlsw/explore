@@ -243,7 +243,7 @@ object TargetObsList {
                         toggleCollapsed(targetId).asEventDefault(e).void
                       }
                     ),
-                    Icon("chevron right")
+                    Icons.ChevronRight
                   )
 
                 Droppable(target.id.toString) { case (provided, snapshot) =>
@@ -257,7 +257,6 @@ object TargetObsList {
                               .exists(_ === FocusedTarget(target.id)),
                             clazz = ExploreStyles.ObsTreeGroup
                     )(
-                      ^.cursor.pointer,
                       ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
                     )(
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
@@ -274,14 +273,13 @@ object TargetObsList {
                               def dragIcon =
                                 <.span(
                                   provided.dragHandleProps,
-                                  Icon("sort")
+                                  Icons.Sort
                                 )
 
                               <.div(
                                 provided.innerRef,
                                 provided.draggableProps,
                                 getObsStyle(provided.draggableStyle, snapshot),
-                                ^.cursor.pointer,
                                 ^.onClick ==> { e: ReactEvent =>
                                   e.stopPropagationCB >>
                                     props.focused
@@ -330,7 +328,6 @@ object TargetObsList {
     ScalaComponent
       .builder[Props]
       .initialState(State())
-      .backend(new Backend(_))
-      .renderBackend
+      .renderBackend[Backend]
       .build
 }

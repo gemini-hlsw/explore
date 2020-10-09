@@ -1,1 +1,2 @@
 @activeBackgroundColor: @blue;
+@formVerticalPadding: (@inputVerticalPadding + ((1em - @inputLineHeight) / 2));
