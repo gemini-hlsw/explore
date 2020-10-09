@@ -1,5 +1,5 @@
 /*
-  Style a readonly FormInput as static data. 
+  Style a readonly FormInput as static data.
   The FormInput requires a className of 'static-data'
 */
 .ui.form .static-data input[readonly] {
@@ -17,7 +17,7 @@
     border: @borderWidth solid @gray;
     padding: calc(@inputVerticalPadding - @borderWidth) @inputHorizontalPadding;
     line-height: @inputLineHeight;
-    
+
 }
 
 .ui.form data.static-data:focus {
@@ -33,6 +33,11 @@
   and be mis-aligned. Instead, provide a label and hide it.
 */
 .ui.form .field.hide-label label {
-    margin-left: -100000px;
-} 
+    opacity: 0;
+}
 
+.ui.form .field .icon.button:not(.animated):not(.compact),
+.ui.form .field button {
+  padding: @tightVerticalPadding @tightHorizontalPadding;
+  line-height: @inputLineHeight;
+}

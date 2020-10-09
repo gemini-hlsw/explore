@@ -1,2 +1,2 @@
-@inputVerticalPadding   : @relative5px;
-@inputHorizontalPadding : @relative6px;
+@tightVerticalPadding   : @relative5px;
+@tightHorizontalPadding : @relative6px;

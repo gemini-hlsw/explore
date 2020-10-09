@@ -1,0 +1,7 @@
+// Use a reduced padding
+@inputPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2)) @tightHorizontalPadding;
+
+@selectPadding: 0.62em @tightHorizontalPadding;
+
+@textAreaPadding: @tightVerticalPadding @tightHorizontalPadding;
+

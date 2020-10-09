@@ -1,0 +1,12 @@
+@selectionBackground: @gray-light;
+@selectionTextColor: @lightTextColor;
+
+@selectionVerticalPadding: @tightVerticalPadding;
+@selectionHorizontalPadding: @tightHorizontalPadding;
+@menuInputHorizontalPadding: @tightHorizontalPadding;
+@selectionIconDistance: @tightHorizontalPadding + (@glyphWidth * 2);
+@multipleSelectionChildLeftMargin: (@tightHorizontalPadding - @multipleSelectionLeftPadding);
+
+@itemVerticalPadding: @tightVerticalPadding;
+@itemHorizontalPadding: @tightHorizontalPadding;
+
