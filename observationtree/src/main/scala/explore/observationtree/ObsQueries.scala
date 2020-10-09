@@ -19,7 +19,7 @@ object ObsQueries {
   // We will eventually need a structure to store the whole Observation info but only summaries of target/constraints/configuration.
 
   @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  object Subscription extends GraphQLOperation[ExploreDB] {
     val document = """
       subscription {
         observations {

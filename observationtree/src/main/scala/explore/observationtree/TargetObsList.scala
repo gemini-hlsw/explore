@@ -10,7 +10,7 @@ import scala.collection.immutable.HashSet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles

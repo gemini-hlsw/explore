@@ -10,7 +10,7 @@ import clue.GraphQLOperation
 import clue.macros.GraphQL
 import crystal.ViewF
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.GraphQLSchemas._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
@@ -29,7 +29,7 @@ import monocle.macros.Lenses
 
 object ConstraintsQueries {
   @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  object Subscription extends GraphQLOperation[ExploreDB] {
     val document = """
       subscription ($id: uuid!) {
         constraints(where: {id: {_eq: $id}}) {
@@ -48,7 +48,7 @@ object ConstraintsQueries {
   }
 
   @GraphQL
-  object Mutation extends GraphQLOperation[ObservationDB] {
+  object Mutation extends GraphQLOperation[ExploreDB] {
     val document = """
       mutation ($id: uuid!, $fields: constraints_set_input!){
         update_constraints(_set: $fields, where: {id: {_eq: $id}}) {

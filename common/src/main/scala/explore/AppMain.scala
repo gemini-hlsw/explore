@@ -57,10 +57,11 @@ trait AppMain extends IOApp {
 
     for {
       _            <- logger.info(s"GIT Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
-      odbURI       <- IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
-      lucumaODBURI <-
-        IO.fromEither(Uri.parse(BuildInfo.LucumaODBEndpoint).leftMap(new Exception(_)))
-      ctx          <- AppContext.from[IO](AppConfig(odbURI, lucumaODBURI))
+      exploreDBURI <-
+        IO.fromEither(Uri.parse(BuildInfo.ExploreDBEndpoint).leftMap(new Exception(_)))
+      odbURI       <-
+        IO.fromEither(Uri.parse(BuildInfo.ODBEndpoint).leftMap(new Exception(_)))
+      ctx          <- AppContext.from[IO](AppConfig(exploreDBURI, odbURI))
       _            <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)

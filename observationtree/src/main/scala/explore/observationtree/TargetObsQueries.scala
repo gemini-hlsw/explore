@@ -8,7 +8,7 @@ import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.GraphQLSchemas._
 import explore.components.graphql.SubscriptionRenderMod
 import explore.data.KeyedIndexedList
@@ -55,7 +55,7 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  object Subscription extends GraphQLOperation[ExploreDB] {
     val document = """
       subscription {
         targets {
@@ -82,7 +82,7 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object ObsMutation extends GraphQLOperation[ObservationDB] {
+  object ObsMutation extends GraphQLOperation[ExploreDB] {
     val document = """
       mutation ($id: uuid!, $fields: observations_set_input!){
         update_observations(_set: $fields, where: {id: {_eq: $id}}) {
@@ -93,7 +93,7 @@ object TargetObsQueries {
   }
 
   @GraphQL(debug = false)
-  object AddTarget extends GraphQLOperation[ObservationDB] {
+  object AddTarget extends GraphQLOperation[ExploreDB] {
     val document = """
       mutation($target: targets_insert_input!) {
         insert_targets_one(object: $target) {
@@ -104,7 +104,7 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object RemoveTarget extends GraphQLOperation[ObservationDB] {
+  object RemoveTarget extends GraphQLOperation[ExploreDB] {
     val document = """
       mutation ($id: uuid!) {
         delete_targets_by_pk(id: $id) {

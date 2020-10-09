@@ -10,7 +10,7 @@ import explore.model.enum._
 object GraphQLSchemas {
 
   @GraphQLSchema(debug = false)
-  object LucumaODB {
+  object ObservationDB {
     object Scalars {
       type AsterismId    = String
       type BigDecimal    = scala.BigDecimal
@@ -25,7 +25,7 @@ object GraphQLSchemas {
   }
 
   @GraphQLSchema(debug = false)
-  object ObservationDB {
+  object ExploreDB {
     object Scalars {
       type Cloudcover       = CloudCover
       type Imagequality     = ImageQuality

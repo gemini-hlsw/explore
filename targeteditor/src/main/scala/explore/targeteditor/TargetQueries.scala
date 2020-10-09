@@ -6,7 +6,7 @@ package explore.target
 import cats.effect.IO
 import clue.GraphQLOperation
 import clue.macros.GraphQL
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.SiderealTarget
@@ -19,7 +19,7 @@ import monocle.macros.Lenses
 object TargetQueries {
 
   @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  object Subscription extends GraphQLOperation[ExploreDB] {
     val document = """
       subscription ($id: uuid!) {
         targets(where: {id: {_eq: $id}}) {
@@ -37,7 +37,7 @@ object TargetQueries {
   }
 
   @GraphQL
-  object Mutation extends GraphQLOperation[ObservationDB] {
+  object Mutation extends GraphQLOperation[ExploreDB] {
     val document = """
       mutation ($id: uuid!, $fields: targets_set_input!){
         update_targets(_set: $fields, where: {

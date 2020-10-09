@@ -52,7 +52,7 @@ object ConnectionsStatus {
       AppCtx.withCtx { ctx =>
         <.span(
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
-          ctx.clients.LucumaODBConnectionStatus(renderStatus("Lucuma ODB"))
+          ctx.clients.ObservationDBConnectionStatus(renderStatus("Lucuma ODB"))
         )
       }
     )

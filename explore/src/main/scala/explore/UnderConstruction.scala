@@ -9,7 +9,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.sizes.Huge
 import clue.GraphQLOperation
-import explore.GraphQLSchemas.LucumaODB
+import explore.GraphQLSchemas.ObservationDB
 import clue.macros.GraphQL
 import explore.components.graphql.SubscriptionRender
 import explore.implicits._
@@ -17,10 +17,10 @@ import explore.implicits._
 object UnderConstruction {
 
   @GraphQL(debug = false)
-  object LucumaTestSubscription extends GraphQLOperation[LucumaODB] {
+  object LucumaTestSubscription extends GraphQLOperation[ObservationDB] {
     val document =
       """subscription {
-        targetEdited {
+        targetEdited(id: "t-2") {
           id
           oldValue {
             name

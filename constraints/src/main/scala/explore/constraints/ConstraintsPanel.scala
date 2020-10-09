@@ -5,7 +5,7 @@ package explore.constraints
 
 import crystal.react.implicits._
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.constraints.ConstraintsQueries._

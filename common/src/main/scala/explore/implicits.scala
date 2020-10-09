@@ -44,12 +44,12 @@ object implicits extends ShorthandTypes with ListImplicits {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
   implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger
-  implicit def appContext2ODBClient[F[_]](implicit
+  implicit def appContext2ExploreDBClient[F[_]](implicit
     ctx:                                                   AppContext[F]
+  ): GraphQLStreamingClient[F, ExploreDB] =
+    ctx.clients.exploreDB
+  implicit def appContext2ODBClient[F[_]](implicit
+    ctx: AppContext[F]
   ): GraphQLStreamingClient[F, ObservationDB] =
     ctx.clients.odb
-  implicit def appContext2LucumaODBClient[F[_]](implicit
-    ctx: AppContext[F]
-  ): GraphQLStreamingClient[F, LucumaODB] =
-    ctx.clients.lucumaODB
 }

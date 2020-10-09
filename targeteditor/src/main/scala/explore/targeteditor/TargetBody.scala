@@ -8,7 +8,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.View
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
