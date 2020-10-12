@@ -5,19 +5,26 @@ package explore.model
 
 import cats._
 import explore.model.enum._
+import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser
 import monocle.macros.Lenses
 
 @Lenses
 final case class ProposalDetails(
-  title:         String,
-  pi:            StandardUser,
-  proposalClass: ProposalClass,
-  category:      TacCategory,
-  toOActivation: ToOActivation,
-  keywords:      Set[Keyword],
-  abstrakt:      String
+  title:          String,
+  pi:             StandardUser,
+  proposalClass:  ProposalClass,
+  category:       TacCategory,
+  toOActivation:  ToOActivation,
+  keywords:       Set[Keyword],
+  abstrakt:       String,
+  partnerSplits:  List[PartnerSplit],
+  band1And2Hours: Double,
+  band3Hours:     Double
 )
+
+@Lenses
+final case class PartnerSplit(partner: Partner, percent: Int)
 
 object ProposalDetails {
   implicit val equalProposalDetails: Eq[ProposalDetails] = Eq.fromUniversalEquals

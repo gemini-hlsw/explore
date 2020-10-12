@@ -36,7 +36,10 @@ object ProposalTabContents {
       TacCategory.StarAndPlanetFormation,
       ToOActivation.None,
       Set.empty,
-      ""
+      "",
+      List.empty,
+      24.2,
+      7.5
     )
 
     def render() =

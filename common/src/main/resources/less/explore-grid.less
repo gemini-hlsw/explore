@@ -56,6 +56,10 @@
 .explore-flex-container {
     display: flex;
 
+    &.explore-flex-wrap {
+        flex-wrap: wrap;
+    }
+
     .ui.form & > * + *, // override SUI 
     .ui.form.explore-grid & > * + *,
     > * + * {
@@ -64,11 +68,21 @@
 
     /*
      The explore-grow-* classes can be used to control the width of 
-     elements in a cell wrapper via the flex grow attribute.
+     elements in a flex container via the flex grow attribute.
      */
-    each(range(4), {
+    each(range(0, 4), {
         .explore-grow-@{value} {
             flex: @value;
+        }
+    });
+
+    /*
+     The explore-shrink-* classes can be used to control the width of 
+     elements in a flex container via the flex shrink attribute.
+     */
+    each(range(0, 4), {
+        .explore-shrink-@{value} {
+            flex-shrink: @value;
         }
     });
 

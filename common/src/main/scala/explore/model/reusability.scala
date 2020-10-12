@@ -35,6 +35,7 @@ object reusability {
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
   implicit def ObsSummaryReuse: Reusability[ObsSummary]                                           =
     Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration))
-  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.derive
+  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.byEq
+  implicit def partnerSplittReuse: Reusability[PartnerSplit]                                      = Reusability.derive
   implicit val jsonReuse: Reusability[Json]                                                       = Reusability.by_==
 }

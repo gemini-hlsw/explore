@@ -67,6 +67,12 @@ object ExploreStyles {
 
   val MoonPhase: Css = Css("moon-phase")
 
+  val PartnerSplitData: Css = Css("partner-split-data")
+  val PartnerSplitFlag: Css = Css("partner-split-flag")
+
+  val PartnerSplitsEditorError: Css = Css("partner-splits-editor-error")
+  val PartnerSplitsEditorTable: Css = Css("partner-splits-editor-table")
+
   // Semantic UI form overrides and extensions
   val Grid: Css            = Css("explore-grid")
   val TwoColumnGrid: Css   = Grid |+| Css("explore-two-columns")
@@ -75,10 +81,13 @@ object ExploreStyles {
   val ErrorLabel: Css      = Css("explore-error-label")
 
   val FlexContainer: Css = Css("explore-flex-container")
-  def Grow(i: Int Refined Interval.Closed[1, 4]): Css = Css(s"explore-grow-$i")
+  val FlexWrap: Css      = Css("explore-flex-wrap")
+
+  def FlexGrow(i:   Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-grow-$i")
+  def FlexShrink(i: Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-shrink-$i")
 
   // Move an element to the end of the flex container
-  val ToEnd: Css = Css("explore-flex-end")
+  val FlexEnd: Css = Css("explore-flex-end")
 
   // Hide a label while keeping it accessible to screen readers
   val HideLabel: Css = Css("hide-label")

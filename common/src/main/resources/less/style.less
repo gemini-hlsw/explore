@@ -410,3 +410,43 @@ body {
   .error-label-mixin();
 }
 
+
+.partner-split-data {
+  width: 6.5em;
+}
+
+img.partner-split-flag {
+  height: 13px;
+  width: 26px;
+  margin-right: 0.5em;
+}
+
+.partner-splits-editor-error {
+  text-align: left;
+  font-size: larger;
+  color: red
+}
+
+.partner-splits-editor-table {
+  margin: auto;
+  padding-bottom: 1em;
+  
+  td + td,
+  th + th {
+    padding-left: 1em;
+  }
+
+  tfoot td {
+    // width: 100%;
+    text-align: right;
+  }
+
+  td {
+    padding-top: 0.3em;
+  }
+
+  .ui.form & input {
+    width: 4em;
+    text-align: right;
+  }
+}

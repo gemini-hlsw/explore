@@ -15,7 +15,7 @@
     color: @inputBackground;
     border-radius: @defaultBorderRadius;
     border: @borderWidth solid @gray;
-    padding: calc(@inputVerticalPadding - @borderWidth) @inputHorizontalPadding;
+    padding: @inputPadding;
     line-height: @inputLineHeight;
 
 }
