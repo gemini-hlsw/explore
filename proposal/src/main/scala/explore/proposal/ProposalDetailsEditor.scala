@@ -43,27 +43,27 @@ object ProposalDetailsEditor {
   private def partnerSplits(splits: List[PartnerSplit]): TagMod = {
     val ps = splits
       .sortBy(_.percent)(Ordering[Int].reverse)
-      .toTagMod(ps => partnerSplit(ps.partner, ps.percent))
+      .toTagMod(ps => partnerSplit(ps))
     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def partnerSplit(partner: Partner, split: Int): TagMod = {
-    val id   = s"${partner.tag}-split"
-    val text = f"${split}%%"
-    partnerSplitData(partner, id, text)
+  private def partnerSplit(ps: PartnerSplit): TagMod = {
+    val id   = s"${ps.partner.tag}-split"
+    val text = f"${ps.percent}%%"
+    partnerSplitData(ps.partner, id, text)
   }
 
   private def bandSplits(splits: List[PartnerSplit], total: Double, idTag: String) = {
     val ps = splits
       .sortBy(_.percent)(Ordering[Int].reverse)
-      .toTagMod(ps => bandSplit(ps.partner, ps.percent, total, idTag))
+      .toTagMod(ps => bandSplit(ps, total, idTag))
     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def bandSplit(partner: Partner, split: Int, total: Double, idTag: String) = {
-    val id   = s"${partner.tag}-$idTag-time"
-    val text = formatTime(total * split / 100)
-    partnerSplitData(partner, id, text)
+  private def bandSplit(ps: PartnerSplit, total: Double, idTag: String) = {
+    val id   = s"${ps.partner.tag}-$idTag-time"
+    val text = formatTime(total * ps.percent / 100)
+    partnerSplitData(ps.partner, id, text)
   }
 
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
@@ -145,6 +145,7 @@ object ProposalDetailsEditor {
                                  label = "Band 1 & 2",
                                  id = "band1-2"
                   )(
+                    ExploreStyles.FlexShrink(0),
                     ExploreStyles.PartnerSplitData
                   ),
                   bandSplits(details.zoom(ProposalDetails.partnerSplits).get,
@@ -161,6 +162,7 @@ object ProposalDetailsEditor {
                 <.div(
                   ExploreStyles.FlexContainer,
                   FormStaticData(value = formatTime(band3Hours), label = "Band 3", id = "band3")(
+                    ExploreStyles.FlexShrink(0),
                     ExploreStyles.PartnerSplitData
                   ),
                   bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours, "band3")
