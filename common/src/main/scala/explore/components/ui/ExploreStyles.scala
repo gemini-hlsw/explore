@@ -80,6 +80,8 @@ object ExploreStyles {
   val Compact: Css         = Css("explore-compact")
   val ErrorLabel: Css      = Css("explore-error-label")
 
+  val TextInForm: Css = Css("explore-text-in-form")
+
   val FlexContainer: Css = Css("explore-flex-container")
   val FlexWrap: Css      = Css("explore-flex-wrap")
 

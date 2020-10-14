@@ -53,19 +53,7 @@ object ProposalDetailsEditor {
     partnerSplitData(ps.partner, id, text)
   }
 
-  private def bandSplits(splits: List[PartnerSplit], total: Double, idTag: String) = {
-    val ps = splits
-      .sortBy(_.percent)(Ordering[Int].reverse)
-      .toTagMod(ps => bandSplit(ps, total, idTag))
-    <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-  }
-
-  private def bandSplit(ps: PartnerSplit, total: Double, idTag: String) = {
-    val id   = s"${ps.partner.tag}-$idTag-time"
-    val text = formatTime(total * ps.percent / 100)
-    partnerSplitData(ps.partner, id, text)
-  }
-
+  // switch to use partner.shortName after next lucuma-core release
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
       <.img(^.src := PartnerFlags.smallFlag(partner),
@@ -75,11 +63,31 @@ object ProposalDetailsEditor {
     val span: TagMod = <.span(data)
 
     FormStaticData(id = id, value = TagMod(img, span), label = partner.name)(
-      ExploreStyles.FlexShrink(0),
-      ExploreStyles.PartnerSplitData
+      ExploreStyles.FlexShrink(0)
     )
   }
 
+  private def bandSplits(splits: List[PartnerSplit], total: Double): TagMod =
+    splits match {
+      case Nil => TagMod.empty
+      case _   =>
+        <.span(
+          splits
+            .sortBy(_.percent)(Ordering[Int].reverse)
+            .map(bandSplit(_, total))
+            .mkString("(", ", ", ")"),
+          ExploreStyles.TextInForm
+        )
+    }
+
+  private def bandSplit(ps: PartnerSplit, total: Double) = {
+    // switch to ps.abbreviation when available in next lucuma-core release
+    val partnerText = ps.partner.tag.toUpperCase
+    val timeText    = formatTime(total * ps.percent / 100)
+    s"$partnerText $timeText"
+  }
+
+  // temporary until abbreviation is in Partner
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) = {
@@ -148,10 +156,7 @@ object ProposalDetailsEditor {
                     ExploreStyles.FlexShrink(0),
                     ExploreStyles.PartnerSplitData
                   ),
-                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get,
-                             band1And2Hours,
-                             "band1-2"
-                  )
+                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band1And2Hours)
                 ),
                 EnumViewMultipleSelect(
                   id = "keywords",
@@ -165,7 +170,7 @@ object ProposalDetailsEditor {
                     ExploreStyles.FlexShrink(0),
                     ExploreStyles.PartnerSplitData
                   ),
-                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours, "band3")
+                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
                 ),
                 EnumViewSelect(id = "too-activation",
                                value = details.zoom(ProposalDetails.toOActivation),
