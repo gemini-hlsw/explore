@@ -15,6 +15,7 @@ import explore.components.ui.PartnerFlags
 import explore.model._
 import explore.model.display._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
@@ -62,29 +63,24 @@ object ProposalDetailsEditor {
       )
     val span: TagMod = <.span(data)
 
-    FormStaticData(id = id, value = TagMod(img, span), label = partner.name)(
-      ExploreStyles.FlexShrink(0)
+    FormStaticData(id = id, value = <.div(img, span), label = partner.name)(
+      ExploreStyles.FlexShrink(0),
+      ExploreStyles.PartnerSplitData
     )
   }
 
-  private def bandSplits(splits: List[PartnerSplit], total: Double): TagMod =
-    splits match {
-      case Nil => TagMod.empty
-      case _   =>
-        <.span(
-          splits
-            .sortBy(_.percent)(Ordering[Int].reverse)
-            .map(bandSplit(_, total))
-            .mkString("(", ", ", ")"),
-          ExploreStyles.TextInForm
-        )
-    }
+  private def bandSplits(splits: List[PartnerSplit], total: Double) = {
+    val ps = splits
+      .sortBy(_.percent)(Ordering[Int].reverse)
+      .toTagMod(ps => bandSplit(ps, total))
+    <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  }
 
   private def bandSplit(ps: PartnerSplit, total: Double) = {
     // switch to ps.abbreviation when available in next lucuma-core release
     val partnerText = ps.partner.tag.toUpperCase
     val timeText    = formatTime(total * ps.percent / 100)
-    s"$partnerText $timeText"
+    <.span(s"$partnerText $timeText", ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
   }
 
   // temporary until abbreviation is in Partner
@@ -96,7 +92,7 @@ object ProposalDetailsEditor {
       val band3Hours     = details.zoom(ProposalDetails.band3Hours).get
 
       def updateStateSplits(splits: List[PartnerSplit]): Callback =
-        $.modState(State.splits.set(splits))
+        $.setStateL(State.splits)(splits)
 
       def closePartnerSplitsEditor: Callback =
         $.modState(State.showPartnerSplitsModal.set(false))
@@ -138,7 +134,7 @@ object ProposalDetailsEditor {
                   FormButton(
                     icon = Icons.Edit,
                     label = "Partners",
-                    clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitData,
+                    clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
                     onClick = openPartnerSplitsEditor
                   ),
                   partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
@@ -154,7 +150,7 @@ object ProposalDetailsEditor {
                                  id = "band1-2"
                   )(
                     ExploreStyles.FlexShrink(0),
-                    ExploreStyles.PartnerSplitData
+                    ExploreStyles.PartnerSplitTotal
                   ),
                   bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band1And2Hours)
                 ),
@@ -168,7 +164,7 @@ object ProposalDetailsEditor {
                   ExploreStyles.FlexContainer,
                   FormStaticData(value = formatTime(band3Hours), label = "Band 3", id = "band3")(
                     ExploreStyles.FlexShrink(0),
-                    ExploreStyles.PartnerSplitData
+                    ExploreStyles.PartnerSplitTotal
                   ),
                   bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
                 ),

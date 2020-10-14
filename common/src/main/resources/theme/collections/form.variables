@@ -4,7 +4,8 @@
 @inputFocusColor: @gray-darker;
 
 // Use a reduced padding
-@inputPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2)) @tightHorizontalPadding;
+@tightInputVerticalPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2));
+@inputPadding: @tightInputVerticalPadding @tightHorizontalPadding;
 
 @selectPadding: 0.62em @tightHorizontalPadding;
 

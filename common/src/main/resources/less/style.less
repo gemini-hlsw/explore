@@ -410,19 +410,45 @@ body {
   .error-label-mixin();
 }
 
-
-.partner-split-data {
-  width: 6.5em;
+// The split edit button and the band totals
+div.partner-split-total {
+  &,
+  & > div > data {
+    width: 5em;
+  }
+  
+  & > div > data {
+    text-align: end;
+  }
 }
 
-.explore-text-in-form {
-  margin-top: auto;
-  margin-bottom: 3px;
+.partner-split-data {
+  &,
+  div& data {
+    width: 6em;
+  }
+
+  // the text only "hours".
+  span& {
+    text-align: end;
+    padding-right: 6px; // determined empirically from dev tools
+  }
+
+  // The div containing the flag and percent text.
+  data > div {
+    display: flex;
+
+    // The percent text
+    span {
+      flex: 1;
+      text-align: end;
+    }
+  }
 }
 
 img.partner-split-flag {
-  height: 13px;
-  width: 26px;
+  height: 16px;
+  width: 32px;
   margin-right: 0.5em;
 }
 

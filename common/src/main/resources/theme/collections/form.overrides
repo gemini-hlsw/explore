@@ -25,6 +25,14 @@
     outline: 0;
 }
 
+/* 
+  For instances where you want plain text properly aligned in a form.
+*/
+.explore-text-in-form {
+  margin-top: auto;
+  padding-bottom: @tightInputVerticalPadding;
+}
+
 /*
   Hide the label by moving it offscreen - it will still be available
   to screen readers.

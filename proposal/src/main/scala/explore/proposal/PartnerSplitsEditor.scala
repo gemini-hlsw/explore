@@ -128,7 +128,6 @@ object PartnerSplitsEditor {
 
   val component = ScalaComponent
     .builder[Props]
-    // .renderBackend[Backend]
     .render_P(render)
     .configure(Reusability.shouldComponentUpdate)
     .build

@@ -67,8 +67,9 @@ object ExploreStyles {
 
   val MoonPhase: Css = Css("moon-phase")
 
-  val PartnerSplitData: Css = Css("partner-split-data")
-  val PartnerSplitFlag: Css = Css("partner-split-flag")
+  val PartnerSplitTotal: Css = Css("partner-split-total")
+  val PartnerSplitData: Css  = Css("partner-split-data")
+  val PartnerSplitFlag: Css  = Css("partner-split-flag")
 
   val PartnerSplitsEditorError: Css = Css("partner-splits-editor-error")
   val PartnerSplitsEditorTable: Css = Css("partner-splits-editor-table")
