@@ -12,6 +12,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum._
 import explore.model.reusability._
+import java.net.URI
 import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -22,7 +23,7 @@ object ProposalTabContents {
 
   // Most of the below will be replaced by a GraphQL subscription
   class Backend() {
-    val profileId = OrcidId.fromString("https://orcid.org/0000-0001-5148-9668").toOption.get
+    val profileId = OrcidId.fromUri(new URI("https://orcid.org/0000-0001-5148-9668")).toOption.get
     val roleId    = StandardRole.Id(23L)
     val profile   = OrcidProfile(profileId, Some("Edmund"), Some("Stargazer"), None, None)
     val pi        = StandardUser(User.Id(666L), StandardRole.Pi(roleId), Nil, profile)
