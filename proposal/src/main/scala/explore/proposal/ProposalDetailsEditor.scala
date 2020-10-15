@@ -13,8 +13,7 @@ import explore._
 import explore.model.reusability._
 import explore.components.FormStaticData
 import explore.components.Tile
-import explore.components.ui.ExploreStyles
-import explore.components.ui.PartnerFlags
+import explore.components.ui._
 import explore.model._
 import explore.model.display._
 import explore.model.PartnerSplit._
@@ -50,10 +49,18 @@ object ProposalDetailsEditor {
   private def sortedSplits(splits: List[PartnerSplit]) =
     splits.sortBy(_.percent.value.value)(Ordering[Int].reverse)
 
-  private def partnerSplits(splits: List[PartnerSplit]): TagMod = {
-    val ps = sortedSplits(splits)
-      .toTagMod(ps => partnerSplit(ps))
-    <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  private def partnerSplits(splits: List[PartnerSplit]): TagMod = splits match {
+    case Nil =>
+      <.span(
+        Icons.ExclamationTriangle,
+        "Partner time allocations are required.",
+        ExploreStyles.TextInForm,
+        FomanticStyles.WarningText
+      )
+    case _   =>
+      val ps = sortedSplits(splits)
+        .toTagMod(ps => partnerSplit(ps))
+      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
   private def partnerSplit(ps: PartnerSplit): TagMod = {
@@ -77,18 +84,18 @@ object ProposalDetailsEditor {
     )
   }
 
-  private def bandSplits(splits: List[PartnerSplit], total: NonNegHour) = {
-    val ps = sortedSplits(splits)
-      .toTagMod(ps => bandSplit(ps, total))
-    <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  private def bandSplits(splits: List[PartnerSplit], total: NonNegHour): TagMod = splits match {
+    case Nil => TagMod.empty
+    case _   =>
+      val ps = sortedSplits(splits)
+        .toTagMod(ps => bandSplit(ps, total))
+      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
   private def bandSplit(ps: PartnerSplit, total: NonNegHour) = {
-    // TODO: switch to ps.abbreviation when available in next lucuma-core release
-    val partnerText = ps.partner.tag.toUpperCase
-    val splitTime   = ps.percent.to[Double, Unitless] * total
-    val timeText    = formatTime(splitTime.value)
-    <.span(s"$partnerText $timeText", ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
+    val splitTime = ps.percent.to[Double, Unitless] * total
+    val timeText  = formatTime(splitTime.value)
+    <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
   }
 
   class Backend($ : BackendScope[Props, State]) {

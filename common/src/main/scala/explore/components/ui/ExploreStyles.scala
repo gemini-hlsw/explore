@@ -71,7 +71,8 @@ object ExploreStyles {
   val PartnerSplitData: Css  = Css("partner-split-data")
   val PartnerSplitFlag: Css  = Css("partner-split-flag")
 
-  val PartnerSplitsEditorError: Css = Css("partner-splits-editor-error")
+  val PartnerSplitsEditorError: Css =
+    Css("partner-splits-editor-error") |+| FomanticStyles.ErrorText
   val PartnerSplitsEditorTable: Css = Css("partner-splits-editor-table")
 
   // Semantic UI form overrides and extensions
