@@ -4,10 +4,14 @@
 package explore.proposal
 
 import cats.syntax.all._
+import coulomb._
+import coulomb.accepted._
+import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model._
+import explore.model.PartnerSplit._
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -50,18 +54,15 @@ object PartnerSplitsEditor {
     val newValue =
       if (e.target.value === "") "0"
       else e.target.value
-    newValue.parseIntOption
-      .flatMap(_ match {
-        case i if i >= 0 && i <= 100 => Some(i)
-        case _                       => None
-      })
+    newValue.parseInt
+      .flatMap(i => refineV[ZeroTo100](i))
       .map { pct =>
         p.splits.map { s =>
-          if (s.partner === partner) s.copy(percent = pct)
+          if (s.partner === partner) s.copy(percent = pct.withUnit[Percent])
           else s
         }
       }
-      .fold(Callback.empty)(p.updateSplits)
+      .fold(_ => Callback.empty, p.updateSplits)
   }
 
   private def makeTableRows(p: Props): TagMod =
@@ -82,7 +83,7 @@ object PartnerSplitsEditor {
           <.td(
             <.input(
               ^.id := id,
-              ^.value := ps.percent,
+              ^.value := ps.percent.value.value,
               ^.onChange ==> updatePercent(p, ps.partner),
               ^.autoFocus := idx === 0
             )
@@ -91,7 +92,7 @@ object PartnerSplitsEditor {
       )
     }
 
-  private def total(p:       Props) = p.splits.map(_.percent).sum
+  private def total(p:       Props) = p.splits.map(_.percent.value.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
   def render(p: Props): VdomNode = {

@@ -6,9 +6,12 @@ package explore.proposal
 import java.net.URI
 
 import cats.effect._
+import coulomb.refined._
+import coulomb.time._
 import crystal.Ready
 import crystal.react.StreamRendererMod
 import eu.timepit.refined.auto._
+import eu.timepit.refined.numeric._
 import explore.AppCtx
 import explore.implicits._
 import explore.model._
@@ -38,8 +41,8 @@ object ProposalTabContents {
       Set.empty,
       "",
       List.empty,
-      24.2,
-      7.5
+      24.2.withRefinedUnit[NonNegative, Hour],
+      7.5.withRefinedUnit[NonNegative, Hour]
     )
 
     def render() =

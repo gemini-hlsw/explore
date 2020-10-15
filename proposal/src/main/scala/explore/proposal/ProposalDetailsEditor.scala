@@ -4,6 +4,9 @@
 package explore.proposal
 
 import cats.syntax.all._
+import coulomb._
+import coulomb.accepted._
+import coulomb.refined._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore._
@@ -14,6 +17,8 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model._
 import explore.model.display._
+import explore.model.PartnerSplit._
+import explore.model.ProposalDetails._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.Reusability._
@@ -26,6 +31,7 @@ import react.common.implicits._
 import react.common.ReactProps
 import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
+import spire.std.any._
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
     extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)
@@ -41,20 +47,22 @@ object ProposalDetailsEditor {
 
   private def formatTime(time: Double) = f"$time%.2fh"
 
+  private def sortedSplits(splits: List[PartnerSplit]) =
+    splits.sortBy(_.percent.value.value)(Ordering[Int].reverse)
+
   private def partnerSplits(splits: List[PartnerSplit]): TagMod = {
-    val ps = splits
-      .sortBy(_.percent)(Ordering[Int].reverse)
+    val ps = sortedSplits(splits)
       .toTagMod(ps => partnerSplit(ps))
     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
   private def partnerSplit(ps: PartnerSplit): TagMod = {
     val id   = s"${ps.partner.tag}-split"
-    val text = f"${ps.percent}%%"
+    val text = f"${ps.percent.value.value}%%"
     partnerSplitData(ps.partner, id, text)
   }
 
-  // switch to use partner.shortName after next lucuma-core release
+  // TODO: switch to use partner.shortName after next lucuma-core release
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
       <.img(^.src := PartnerFlags.smallFlag(partner),
@@ -69,21 +77,20 @@ object ProposalDetailsEditor {
     )
   }
 
-  private def bandSplits(splits: List[PartnerSplit], total: Double) = {
-    val ps = splits
-      .sortBy(_.percent)(Ordering[Int].reverse)
+  private def bandSplits(splits: List[PartnerSplit], total: NonNegHour) = {
+    val ps = sortedSplits(splits)
       .toTagMod(ps => bandSplit(ps, total))
     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def bandSplit(ps: PartnerSplit, total: Double) = {
-    // switch to ps.abbreviation when available in next lucuma-core release
+  private def bandSplit(ps: PartnerSplit, total: NonNegHour) = {
+    // TODO: switch to ps.abbreviation when available in next lucuma-core release
     val partnerText = ps.partner.tag.toUpperCase
-    val timeText    = formatTime(total * ps.percent / 100)
+    val splitTime   = ps.percent.to[Double, Unitless] * total
+    val timeText    = formatTime(splitTime.value)
     <.span(s"$partnerText $timeText", ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
   }
 
-  // temporary until abbreviation is in Partner
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) = {
@@ -100,13 +107,15 @@ object ProposalDetailsEditor {
       def saveStateSplits(splits: List[PartnerSplit]): Callback =
         details
           .zoom(ProposalDetails.partnerSplits)
-          .set(splits.filter(_.percent > 0))
+          .set(splits.filter(_.percent.value.value > 0))
           .runInCB *> closePartnerSplitsEditor
 
       def openPartnerSplitsEditor: Callback = {
         val splits      = details.get.partnerSplits
         val allPartners = Partner.EnumeratedPartner.all.map(p =>
-          splits.find(_.partner === p).getOrElse(PartnerSplit(p, 0))
+          splits
+            .find(_.partner === p)
+            .getOrElse(PartnerSplit(p, 0.withRefinedUnit[ZeroTo100, Percent]))
         )
         $.setState(State(true, allPartners))
       }
@@ -145,7 +154,7 @@ object ProposalDetailsEditor {
                 ),
                 <.div(
                   ExploreStyles.FlexContainer,
-                  FormStaticData(value = formatTime(band1And2Hours),
+                  FormStaticData(value = formatTime(band1And2Hours.value.value),
                                  label = "Band 1 & 2",
                                  id = "band1-2"
                   )(
@@ -162,7 +171,10 @@ object ProposalDetailsEditor {
                 ),
                 <.div(
                   ExploreStyles.FlexContainer,
-                  FormStaticData(value = formatTime(band3Hours), label = "Band 3", id = "band3")(
+                  FormStaticData(value = formatTime(band3Hours.value.value),
+                                 label = "Band 3",
+                                 id = "band3"
+                  )(
                     ExploreStyles.FlexShrink(0),
                     ExploreStyles.PartnerSplitTotal
                   ),
