@@ -134,72 +134,68 @@ object ProposalDetailsEditor {
             ExploreStyles.ProposalTile,
             Tile("Details", movable = false)(
               Form(
-                ExploreStyles.TwoColumnGrid,
-                FormInputEV(
-                  id = "title",
-                  className = "inverse",
-                  value = details.zoom(ProposalDetails.title),
-                  label = "Title"
-                ).withMods(^.autoFocus := true),
-                EnumViewSelect(id = "proposal-class",
-                               value = details.zoom(ProposalDetails.proposalClass).asOpt,
-                               label = "Class"
-                ),
                 <.div(
-                  ExploreStyles.FlexContainer,
-                  FormButton(
-                    icon = Icons.Edit,
-                    label = "Partners",
-                    clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
-                    onClick = openPartnerSplitsEditor
+                  ExploreStyles.TwoColumnGrid,
+                  FormInputEV(
+                    id = "title",
+                    className = "inverse",
+                    value = details.zoom(ProposalDetails.title),
+                    label = "Title"
+                  ).withMods(^.autoFocus := true),
+                  EnumViewSelect(id = "proposal-class",
+                                 value = details.zoom(ProposalDetails.proposalClass).asOpt,
+                                 label = "Class"
                   ),
-                  partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
-                ),
-                EnumViewSelect(id = "category",
-                               value = details.zoom(ProposalDetails.category),
-                               label = "Category"
-                ),
-                <.div(
-                  ExploreStyles.FlexContainer,
-                  FormStaticData(value = formatTime(band1And2Hours.value.value),
-                                 label = "Band 1 & 2",
-                                 id = "band1-2"
-                  )(
-                    ExploreStyles.FlexShrink(0),
-                    ExploreStyles.PartnerSplitTotal
+                  <.div(
+                    ExploreStyles.FlexContainer,
+                    FormButton(
+                      icon = Icons.Edit,
+                      label = "Partners",
+                      clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
+                      onClick = openPartnerSplitsEditor
+                    ),
+                    partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
                   ),
-                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band1And2Hours)
-                ),
-                EnumViewMultipleSelect(
-                  id = "keywords",
-                  value = details.zoom(ProposalDetails.keywords),
-                  label = "Keywords",
-                  search = true
-                ),
-                <.div(
-                  ExploreStyles.FlexContainer,
-                  FormStaticData(value = formatTime(band3Hours.value.value),
-                                 label = "Band 3",
-                                 id = "band3"
-                  )(
-                    ExploreStyles.FlexShrink(0),
-                    ExploreStyles.PartnerSplitTotal
+                  EnumViewSelect(id = "category",
+                                 value = details.zoom(ProposalDetails.category).asOpt,
+                                 label = "Category"
                   ),
-                  bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
+                  <.div(
+                    ExploreStyles.FlexContainer,
+                    FormStaticData(value = formatTime(band1And2Hours.value.value),
+                                   label = "Band 1 & 2",
+                                   id = "band1-2"
+                    )(
+                      ExploreStyles.FlexShrink(0),
+                      ExploreStyles.PartnerSplitTotal
+                    ),
+                    bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band1And2Hours)
+                  ),
+                  EnumViewMultipleSelect(
+                    id = "keywords",
+                    value = details.zoom(ProposalDetails.keywords),
+                    label = "Keywords",
+                    search = true
+                  ),
+                  <.div(
+                    ExploreStyles.FlexContainer,
+                    FormStaticData(value = formatTime(band3Hours.value.value),
+                                   label = "Band 3",
+                                   id = "band3"
+                    )(
+                      ExploreStyles.FlexShrink(0),
+                      ExploreStyles.PartnerSplitTotal
+                    ),
+                    bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
+                  ),
+                  EnumViewSelect(id = "too-activation",
+                                 value = details.zoom(ProposalDetails.toOActivation).asOpt,
+                                 label = "ToO Activation"
+                  )
                 ),
-                EnumViewSelect(id = "too-activation",
-                               value = details.zoom(ProposalDetails.toOActivation),
-                               label = "ToO Activation"
-                )
-              )
-            )
-          ),
-          <.div(
-            ^.key := "abstract",
-            ExploreStyles.ProposalTile,
-            Tile("Abstract", movable = false)(
-              Form(
-                TextArea(
+                <.div(FomanticStyles.Divider),
+                FormTextArea(
+                  label = "Abstract",
                   rows = 10,
                   value = details.zoom(ProposalDetails.abstrakt).get,
                   onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
@@ -208,23 +204,23 @@ object ProposalDetailsEditor {
                       .set(tap.value.asInstanceOf[String])
                       .runInCB
                   }
-                )
+                ).addModifiers(Seq(^.id := "abstract"))
               )
+            ),
+            <.div(
+              ^.key := "preview",
+              ExploreStyles.ProposalTile,
+              Tile("Preview", movable = false)(
+                <.span("Placeholder for PDF preview.")
+              )
+            ),
+            PartnerSplitsEditor(state.showPartnerSplitsModal,
+                                state.splits,
+                                closePartnerSplitsEditor,
+                                updateStateSplits,
+                                saveStateSplits
             )
           )
-        ),
-        <.div(
-          ^.key := "preview",
-          ExploreStyles.ProposalTile,
-          Tile("Preview", movable = false)(
-            <.span("Placeholder for PDF preview.")
-          )
-        ),
-        PartnerSplitsEditor(state.showPartnerSplitsModal,
-                            state.splits,
-                            closePartnerSplitsEditor,
-                            updateStateSplits,
-                            saveStateSplits
         )
       )
     }

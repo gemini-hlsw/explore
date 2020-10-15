@@ -16,4 +16,6 @@ object FomanticStyles {
 
   val ErrorText: Css   = Text |+| Error
   val WarningText: Css = Text |+| Warning
+
+  val Divider: Css = Css("ui divider")
 }
