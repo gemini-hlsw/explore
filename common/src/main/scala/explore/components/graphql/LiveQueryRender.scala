@@ -66,8 +66,6 @@ object LiveQueryRender {
       .builder[Props[F, D, A]]
       .initialState[Option[State[F, D, A]]](none)
       .render { $ =>
-        println(s"RENDERING WITH STATE: [${$.state}]")
-
         React.Fragment(
           $.state.fold[VdomNode](EmptyVdom)(
             _.renderer(_.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender))
@@ -86,22 +84,32 @@ object LiveQueryRender {
             _      <- $.props.onNewData
           } yield ()
 
+        def trackChanges(
+          subscriptions: NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
+          queue:         Queue[F, A]
+        ): F[Unit] =
+          subscriptions
+            .map(_.stream)
+            .reduceLeft(_ merge _)
+            .evalMap(_ => queryAndEnqueue(queue))
+            .compile
+            .drain // TODO Should we cancel this effect on unmount or does it end when the stream ends?
+
         val init =
           for {
             queue         <- Queue.unbounded[F, A]
             subscriptions <- $.props.changeSubscriptions.sequence
             _             <- queryAndEnqueue(queue)
-            _             <- subscriptions
-                               .map(_.stream)
-                               .reduceLeft(_ merge _)
-                               .evalMap(_ => queryAndEnqueue(queue))
-                               .compile
-                               .drain // TODO We should cleanup this stream?
-            renderer       = StreamRenderer.build(queue.dequeue)
-            _             <- $.setStateIn[F](State(queue, subscriptions, renderer).some)
-          } yield ()
 
-        init.handleErrorWith(t => logger.error(t)("Error initializing LiveQueryRender")).runInCB
+            renderer = StreamRenderer.build(queue.dequeue)
+            _       <- $.setStateIn[F](State(queue, subscriptions, renderer).some)
+          } yield trackChanges(subscriptions, queue)
+
+        init
+          .handleError(t => logger.error(t)("Error initializing LiveQueryRender"))
+          .runInCBAndThen(tracking =>
+            tracking.handleErrorWith(t => logger.error(t)("Error updating LiveQueryRender")).runInCB
+          )
       }
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce

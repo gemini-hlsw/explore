@@ -32,7 +32,7 @@ object UnderConstruction {
   object LucumaTestSubscription extends GraphQLOperation[ObservationDB] {
     val document =
       """subscription {
-        targetEdited(id: "t-2") {
+        targetEdited(id: "p-2") {
           id
         }
       }"""

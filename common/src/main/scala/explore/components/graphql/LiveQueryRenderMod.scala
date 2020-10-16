@@ -102,22 +102,33 @@ object LiveQueryRenderMod {
             _      <- $.props.onNewData
           } yield ()
 
+        def trackChanges(
+          subscriptions: NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
+          queue:         Queue[F, A]
+        ): F[Unit] =
+          subscriptions
+            .map(_.stream)
+            .reduceLeft(_ merge _)
+            .evalMap(_ => queryAndEnqueue(queue))
+            .compile
+            .drain // TODO Should we cancel this effect on unmount or does it end when the stream ends?
+
         val init =
           for {
             queue         <- Queue.unbounded[F, A]
             subscriptions <- $.props.changeSubscriptions.sequence
             _             <- queryAndEnqueue(queue)
-            _             <- subscriptions
-                               .map(_.stream)
-                               .reduceLeft(_ merge _)
-                               .evalMap(_ => queryAndEnqueue(queue))
-                               .compile
-                               .drain
             renderer       = StreamRendererMod.build(queue.dequeue, holdAfterMod = (2 seconds).some)
             _             <- $.setStateIn[F](State(queue, subscriptions, renderer).some)
-          } yield ()
+          } yield trackChanges(subscriptions, queue)
 
-        init.handleErrorWith(t => logger.error(t)("Error initializing LiveQueryRenderMod")).runInCB
+        init
+          .handleError(t => logger.error(t)("Error initializing LiveQueryRenderMod"))
+          .runInCBAndThen(tracking =>
+            tracking
+              .handleErrorWith(t => logger.error(t)("Error updating LiveQueryRenderMod"))
+              .runInCB
+          )
       }
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce
