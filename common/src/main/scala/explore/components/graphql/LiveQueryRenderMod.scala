@@ -108,8 +108,11 @@ object LiveQueryRenderMod {
             subscriptions <- $.props.changeSubscriptions.sequence
             _             <- queryAndEnqueue(queue)
             _             <- subscriptions
-                               .map(_.stream.evalMap(_ => queryAndEnqueue(queue)).compile.drain)
-                               .sequence
+                               .map(_.stream)
+                               .reduceLeft(_ merge _)
+                               .evalMap(_ => queryAndEnqueue(queue))
+                               .compile
+                               .drain
             renderer       = StreamRendererMod.build(queue.dequeue, holdAfterMod = (2 seconds).some)
             _             <- $.setStateIn[F](State(queue, subscriptions, renderer).some)
           } yield ()

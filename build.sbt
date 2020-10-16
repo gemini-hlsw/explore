@@ -376,6 +376,7 @@ lazy val commonWDS = Seq(
     "fomantic-ui-less"  -> FUILess,
     "prop-types"        -> "15.7.2",
     "react-moon"        -> "2.0.1",
-    "styled-components" -> "5.1.1"
+    "styled-components" -> "5.1.1",
+    "react-popper"      -> "2.2.3"
   )
 )
