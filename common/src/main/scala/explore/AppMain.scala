@@ -21,7 +21,6 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-// import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -33,7 +32,7 @@ import js.annotation._
 object AppCtx extends AppRootContext[AppContextIO]
 
 trait AppMain extends IOApp {
-  LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
+  LogLevelLogger.setLevel(LogLevelLogger.Level.DEBUG)
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
@@ -56,7 +55,7 @@ trait AppMain extends IOApp {
     )
 
     for {
-      _            <- logger.info(s"GIT Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+      _            <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       exploreDBURI <-
         IO.fromEither(Uri.parse(BuildInfo.ExploreDBEndpoint).leftMap(new Exception(_)))
       odbURI       <-

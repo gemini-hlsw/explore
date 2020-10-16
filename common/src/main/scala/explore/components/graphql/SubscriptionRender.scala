@@ -36,10 +36,12 @@ object SubscriptionRender {
   trait Props[F[_], D, A] {
     val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
+
     val valueRender: A => VdomNode
     val pendingRender: Long => VdomNode
     val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
+
     implicit val ce: ConcurrentEffect[F]
     implicit val logger: Logger[F]
     implicit val reuse: Reusability[A]
@@ -63,7 +65,9 @@ object SubscriptionRender {
       .render { $ =>
         React.Fragment(
           $.state.renderer.fold[VdomNode](EmptyVdom)(
-            _(_.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender))
+            _ {
+              _.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender)
+            }
           )
         )
       }
@@ -72,20 +76,23 @@ object SubscriptionRender {
         implicit val logger = $.props.logger
         implicit val reuse  = $.props.reuse
 
-        $.props.subscribe.flatMap { subscription =>
-          $.setStateIn[F](
-            State(
-              subscription.some,
-              StreamRenderer
-                .build(
-                  $.props
-                    .streamModifier(subscription.stream)
-                    .flatTap(_ => fs2.Stream.eval($.props.onNewData))
-                )
-                .some
+        $.props.subscribe
+          .flatMap { subscription =>
+            $.setStateIn[F](
+              State(
+                subscription.some,
+                StreamRenderer
+                  .build(
+                    $.props
+                      .streamModifier(subscription.stream)
+                      .flatTap(_ => fs2.Stream.eval($.props.onNewData))
+                  )
+                  .some
+              )
             )
-          )
-        }.runInCB
+          }
+          .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRender"))
+          .runInCB
       }
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce

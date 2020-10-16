@@ -303,7 +303,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Clue.value ++
-      List("edu.gemini" %% "clue-macro" % "0.2.3") ++
+      List("edu.gemini" %% "clue-macro" % "0.2.6") ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++

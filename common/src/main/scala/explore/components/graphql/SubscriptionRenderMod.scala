@@ -46,10 +46,12 @@ object SubscriptionRenderMod {
   trait Props[F[_], D, A] {
     val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
     val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
+
     val valueRender: ViewF[F, A] => VdomNode
     val pendingRender: Long => VdomNode
     val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
+
     implicit val ce: ConcurrentEffect[F]
     implicit val timer: Timer[F]
     implicit val cs: ContextShift[F]
@@ -92,21 +94,24 @@ object SubscriptionRenderMod {
         implicit val logger = $.props.logger
         implicit val reuse  = $.props.reuse
 
-        $.props.subscribe.flatMap { subscription =>
-          $.setStateIn[F](
-            State(
-              subscription.some,
-              StreamRendererMod
-                .build(
-                  $.props
-                    .streamModifier(subscription.stream)
-                    .flatTap(_ => fs2.Stream.eval($.props.onNewData)),
-                  holdAfterMod = (2 seconds).some
-                )
-                .some
+        $.props.subscribe
+          .flatMap { subscription =>
+            $.setStateIn[F](
+              State(
+                subscription.some,
+                StreamRendererMod
+                  .build(
+                    $.props
+                      .streamModifier(subscription.stream)
+                      .flatTap(_ => fs2.Stream.eval($.props.onNewData)),
+                    holdAfterMod = (2 seconds).some
+                  )
+                  .some
+              )
             )
-          )
-        }.runInCB
+          }
+          .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRenderMod"))
+          .runInCB
       }
       .componentWillUnmount { $ =>
         implicit val ce = $.props.ce

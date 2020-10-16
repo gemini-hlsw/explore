@@ -3,18 +3,30 @@
 
 package explore
 
+import cats.data.NonEmptyList
+import clue.GraphQLOperation
+import clue.macros.GraphQL
+import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
+import explore.components.graphql.LiveQueryRender
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.sizes.Huge
-import clue.GraphQLOperation
-import explore.GraphQLSchemas.ObservationDB
-import clue.macros.GraphQL
-import explore.components.graphql.SubscriptionRender
-import explore.implicits._
 
 object UnderConstruction {
+
+  @GraphQL(debug = false)
+  object LucumaTestQuery extends GraphQLOperation[ObservationDB] {
+    val document =
+      """query {
+          target(id: "t-2") {
+            id
+            name
+          }
+        }"""
+  }
 
   @GraphQL(debug = false)
   object LucumaTestSubscription extends GraphQLOperation[ObservationDB] {
@@ -22,12 +34,6 @@ object UnderConstruction {
       """subscription {
         targetEdited(id: "t-2") {
           id
-          oldValue {
-            name
-          }
-          newValue {
-            name
-          }
         }
       }"""
   }
@@ -42,16 +48,17 @@ object UnderConstruction {
           <.div(
             <.div("Under Construction"),
             <.div(ExploreStyles.HVCenter, Icons.Cogs.copy(size = Huge)),
-            AppCtx.withCtx(implicit ctx =>
-              SubscriptionRender[LucumaTestSubscription.Data,
-                                 LucumaTestSubscription.Data.TargetEdited
-              ](
-                LucumaTestSubscription.subscribe(),
-                _.map(
-                  LucumaTestSubscription.Data.targetEdited.get _
+            AppCtx.withCtx { implicit ctx =>
+              LucumaTestSubscription.subscribe[cats.effect.IO]().unsafeRunAsync(println)
+
+              LiveQueryRender[LucumaTestQuery.Data, LucumaTestQuery.Data.Target](
+                LucumaTestQuery.query(),
+                _.target.get,
+                NonEmptyList.of(
+                  LucumaTestSubscription.subscribe()
                 )
               )(data => <.div(data.toString))
-            )
+            }
           )
         )
       }

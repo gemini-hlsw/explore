@@ -3,9 +3,11 @@
 
 package explore.components
 
+import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
 import crystal.Error
 import crystal.Pending
+import crystal.Pot
 import crystal.Ready
 import explore.AppCtx
 import explore.components.ui.ExploreStyles._
@@ -14,8 +16,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
-import crystal.Pot
-import clue.StreamingClientStatus
 
 final case class ConnectionsStatus()
     extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
@@ -35,8 +35,6 @@ object ConnectionsStatus {
           case Closed     => ("Closed", ConnectionError)
         }
     }
-
-    println(s"$name Connection Status: $message")
 
     Popup(
       header = s"$name Connection Status",
