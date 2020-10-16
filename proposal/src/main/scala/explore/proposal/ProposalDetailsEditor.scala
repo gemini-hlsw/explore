@@ -136,6 +136,7 @@ object ProposalDetailsEditor {
               Form(
                 <.div(
                   ExploreStyles.TwoColumnGrid,
+                  ExploreStyles.ProposalDetailsGrid,
                   FormInputEV(
                     id = "title",
                     className = "inverse",

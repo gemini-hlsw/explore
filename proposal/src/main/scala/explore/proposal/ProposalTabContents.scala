@@ -35,7 +35,7 @@ object ProposalTabContents {
     val proposalDetails = ProposalDetails(
       "",
       pi,
-      ProposalClass.Exchange,
+      ProposalClass.Queue,
       TacCategory.StarAndPlanetFormation,
       ToOActivation.None,
       Set.empty,

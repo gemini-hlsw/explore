@@ -29,8 +29,10 @@
      when less than @two-column-breakpoint width.
      */
     &.explore-two-columns {
-        @media (min-width: @two-column-break) {
-            grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+
+        @media (max-width: @two-column-break) {
+            grid-template-columns: unset;
         }
     }
 
@@ -39,8 +41,10 @@
      when less than @three-column-breakpoint width.
      */
     &.explore-three-columns {
-        @media (min-width: @three-column-break) {
-            grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
+
+        @media (max-width: @three-column-break) {
+            grid-template-columns: unset;
         }
     }
 }

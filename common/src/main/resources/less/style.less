@@ -3,6 +3,7 @@
 
 // vertical buttons
 @import "verticalbuttons.less";
+@import "explore-grid.less";
 @import "vendor/react-resizable.less";
 @import "vendor/react-grid-layout.less";
 
@@ -410,6 +411,26 @@ body {
   .error-label-mixin();
 }
 
+.proposal-details-grid {
+  /*
+  When we go to one column, instead of interleaving 
+  items, we want to put the second column below the first.
+  */
+  @proposal-details-grid-items: 8;
+
+  each(range(1, @proposal-details-grid-items), {
+    @is-odd: boolean(mod(@value, 2) > 0);
+    @odd-value: (@value + 1) / 2;
+    @even-value: ceil((@value + @proposal-details-grid-items) / 2);
+    @row-start: if(@is-odd, @odd-value, @even-value);
+
+    & > *:nth-child(@{value}) {
+      @media (max-width: @two-column-break) {
+        grid-row-start: @row-start;
+      }
+    }
+  });
+}
 // The split edit button and the band totals
 div.partner-split-total {
   &,
