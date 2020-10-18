@@ -362,7 +362,7 @@ lazy val commonWDS = Seq(
     "cssnano"                            -> "4.1.10",
     "terser-webpack-plugin"              -> "4.2.2",
     "html-webpack-plugin"                -> "4.3.0",
-    "optimize-css-assets-webpack-plugin" -> "5.0.3",
+    "css-minimizer-webpack-plugin"       -> "1.1.5",
     "favicons-webpack-plugin"            -> "4.2.0",
     "@packtracker/webpack-plugin"        -> "2.3.0"
   ),
