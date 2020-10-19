@@ -52,6 +52,9 @@ const Web = Merge(
         persistentCache: false,
       }),
     ],
+    node: {
+      fs: "empty"
+    }
   }
 );
 
