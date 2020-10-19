@@ -11,7 +11,7 @@ const ci = process.env.CI === 'true'; // When on CI don't add hashes
 
 const Web = Merge(
   ScalaJSConfig,
-  // parts.noNode, // We will have to use this in Scala 1.x, but doesn't work with 0.6
+  parts.noNode, // We will have to use this in Scala 1.x, but doesn't work with 0.6
   parts.resolve,
   parts.resolveSemanticUI,
   parts.resourceModules,
@@ -52,7 +52,10 @@ const Web = Merge(
         persistentCache: false,
       }),
     ],
-  }
+    node: {
+      fs: "empty"
+    }
+  },
 );
 
 module.exports = Web;

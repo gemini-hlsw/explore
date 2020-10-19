@@ -1,2 +1,9 @@
+@gray-base: #000;
+@gray-darker: #272B30;
+@gray-dark: #3A3F44;
+@gray: #52575C;
+@gray-light: #7A8288;
+@gray-lighter: #999;
+
 @tightVerticalPadding   : @relative5px;
 @tightHorizontalPadding : @relative6px;

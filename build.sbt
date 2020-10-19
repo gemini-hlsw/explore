@@ -57,6 +57,9 @@ val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
 // For simplicity, the build's stage only deals with the explore app.
 stage := {
+  import scala.collection.JavaConverters._
+  println(System.getProperties().asScala.mkString("\n"))
+
   val jsFiles = (explore / Compile / fullOptJS / webpack).value
   IO.copy(
     List(
@@ -331,6 +334,7 @@ lazy val commonWDS = Seq(
   fullOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
+  fullOptJS / webpackNodeArgs += "--max_old_space_size=2560",
   version in installJsdom := "16.4.0",
   webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
   webpackMonitoredDirectories += ((common / Compile / sourceDirectory).value / "webpack"),
@@ -351,7 +355,7 @@ lazy val commonWDS = Seq(
     "file-loader"                        -> "6.0.0",
     "css-loader"                         -> "3.5.3",
     "style-loader"                       -> "1.2.1",
-    "less"                               -> "3.12.2",
+    "less"                               -> "3.9.0",
     "less-loader"                        -> "7.0.1",
     "sass"                               -> "1.26.11",
     "sass-loader"                        -> "9.0.2",
@@ -360,8 +364,8 @@ lazy val commonWDS = Seq(
     "webpack-dev-server-status-bar"      -> "1.1.2",
     "cssnano"                            -> "4.1.10",
     "terser-webpack-plugin"              -> "4.2.2",
+    "css-minimizer-webpack-plugin"       -> "1.1.5",
     "html-webpack-plugin"                -> "4.3.0",
-    "optimize-css-assets-webpack-plugin" -> "5.0.3",
     "favicons-webpack-plugin"            -> "4.2.0",
     "@packtracker/webpack-plugin"        -> "2.3.0"
   ),
