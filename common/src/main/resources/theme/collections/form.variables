@@ -1,3 +1,8 @@
+@selectColor: @gray-lighter;
+@inputColor: @gray-darker;
+@textAreaFocusColor: @gray-darker;
+@inputFocusColor: @gray-darker;
+
 // Use a reduced padding
 @inputPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2)) @tightHorizontalPadding;
 

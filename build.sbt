@@ -331,7 +331,8 @@ lazy val commonWDS = Seq(
   fullOptJS / webpackConfigFile := Some(
     (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
-  version in installJsdom := "16.4.0",
+  installJsdom / version := "16.4.0",
+  fullOptJS / webpackNodeArgs += "--max_old_space_size=2560",
   webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
   webpackMonitoredDirectories += ((common / Compile / sourceDirectory).value / "webpack"),
   webpackResources := ((common / Compile / sourceDirectory).value / "webpack") * "*.js",
@@ -351,7 +352,8 @@ lazy val commonWDS = Seq(
     "file-loader"                        -> "6.0.0",
     "css-loader"                         -> "3.5.3",
     "style-loader"                       -> "1.2.1",
-    "less"                               -> "3.12.2",
+    // Don't upgrade less until https://github.com/less/less.js/issues/3434 is fixed
+    "less"                               -> "3.9.0",
     "less-loader"                        -> "7.0.1",
     "sass"                               -> "1.26.11",
     "sass-loader"                        -> "9.0.2",
@@ -361,7 +363,7 @@ lazy val commonWDS = Seq(
     "cssnano"                            -> "4.1.10",
     "terser-webpack-plugin"              -> "4.2.2",
     "html-webpack-plugin"                -> "4.3.0",
-    "optimize-css-assets-webpack-plugin" -> "5.0.3",
+    "css-minimizer-webpack-plugin"       -> "1.1.5",
     "favicons-webpack-plugin"            -> "4.2.0",
     "@packtracker/webpack-plugin"        -> "2.3.0"
   ),
