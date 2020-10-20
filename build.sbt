@@ -352,7 +352,8 @@ lazy val commonWDS = Seq(
     "file-loader"                        -> "6.0.0",
     "css-loader"                         -> "3.5.3",
     "style-loader"                       -> "1.2.1",
-    "less"                               -> "3.12.2",
+    // Don't upgrade less until https://github.com/less/less.js/issues/3434 is fixed
+    "less"                               -> "3.9.0",
     "less-loader"                        -> "7.0.1",
     "sass"                               -> "1.26.11",
     "sass-loader"                        -> "9.0.2",
