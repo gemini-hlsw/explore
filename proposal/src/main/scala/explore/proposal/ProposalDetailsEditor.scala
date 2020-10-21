@@ -158,7 +158,7 @@ object ProposalDetailsEditor {
                     partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
                   ),
                   EnumViewSelect(id = "category",
-                                 value = details.zoom(ProposalDetails.category).asOpt,
+                                 value = details.zoom(ProposalDetails.optionalCategory),
                                  label = "Category"
                   ),
                   <.div(

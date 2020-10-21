@@ -14,13 +14,14 @@ import explore.model.enum._
 import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser
 import monocle.macros.Lenses
+import monocle.Optional
 
 @Lenses
 final case class ProposalDetails(
   title:          String,
   pi:             StandardUser,
   proposalClass:  ProposalClass,
-  category:       TacCategory,
+  category:       Option[TacCategory],
   toOActivation:  ToOActivation,
   keywords:       Set[Keyword],
   abstrakt:       String,
@@ -32,6 +33,9 @@ final case class ProposalDetails(
 object ProposalDetails {
   type NonNegHour = Quantity[NonNegDouble, Hour]
   implicit val equalProposalDetails: Eq[ProposalDetails] = Eq.fromUniversalEquals
+
+  val optionalCategory: Optional[ProposalDetails, TacCategory] =
+    Optional(category.get)(c => category.set(Some(c)))
 }
 
 @Lenses

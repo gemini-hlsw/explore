@@ -36,7 +36,7 @@ object ProposalTabContents {
       "",
       pi,
       ProposalClass.Queue,
-      TacCategory.StarAndPlanetFormation,
+      None,
       ToOActivation.None,
       Set.empty,
       "",
