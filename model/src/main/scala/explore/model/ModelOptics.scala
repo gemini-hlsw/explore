@@ -3,7 +3,6 @@
 
 package explore.model
 
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
@@ -39,13 +38,6 @@ trait ModelOptics {
   val targetDec: Lens[SiderealTarget, Declination] =
     SiderealTarget.track ^|-> properMotionDec
 
-  /**
-   * Lens used to change name and coordinates of a target
-   */
-  val targetPropsL =
-    Lens[SiderealTarget, (NonEmptyString, RightAscension, Declination)](t =>
-      (t.name, targetRA.get(t), targetDec.get(t))
-    )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
 }
 
 object ModelOptics extends ModelOptics

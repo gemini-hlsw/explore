@@ -7,9 +7,6 @@ import explore.model.arb.all._
 import lucuma.core.math.arb.ArbDeclination
 import lucuma.core.math.arb.ArbRightAscension
 import lucuma.core.model.arb.ArbSiderealTracking
-import eu.timepit.refined.scalacheck._
-import eu.timepit.refined.scalacheck.string._
-import eu.timepit.refined.cats._
 import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
 
@@ -23,5 +20,4 @@ class ModelOpticsSuite
   checkAll("properMotionDec", LensTests(ModelOptics.properMotionDec))
   checkAll("targetRA", LensTests(ModelOptics.targetRA))
   checkAll("targetDec", LensTests(ModelOptics.targetDec))
-  checkAll("targetPropsL", LensTests(ModelOptics.targetPropsL))
 }

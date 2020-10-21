@@ -6,6 +6,9 @@ package explore.target
 import cats.effect.IO
 import clue.GraphQLOperation
 import clue.macros.GraphQL
+import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.refineV
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
@@ -72,6 +75,14 @@ object TargetQueries {
    */
   val targetRA: Lens[TargetResult, RightAscension] =
     TargetResult.tracking ^|-> properMotionRA
+
+  /**
+   * Lens to the name of a sidereal target
+   */
+  val unsafeTargetName: Lens[TargetResult, NonEmptyString] =
+    Lens[TargetResult, NonEmptyString](x =>
+      refineV[NonEmpty](x.name).getOrElse(sys.error("Attempt to set an empty name"))
+    )(s => n => n.copy(name = s.value))
 
   /**
    * Lens to the Declination of a sidereal target
