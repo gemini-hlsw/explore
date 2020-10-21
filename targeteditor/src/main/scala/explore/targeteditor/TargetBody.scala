@@ -46,19 +46,24 @@ final case class TargetBody(
 
 object TargetBody extends ModelOptics {
   type Props = TargetBody
-  val AladinRef = AladinContainer.component
+  val AladinRef = AladinCell.component
 
   implicit val propsReuse = Reusability.derive[Props]
 
-  class Backend(bs: BackendScope[Props, Unit]) {
+  class Backend($ : BackendScope[Props, Unit]) {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
     def setName(name: NonEmptyString): Callback =
-      bs.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
+      $.props >>= (_.target.zoom(SiderealTarget.name).set(name).runInCB)
 
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name.value}#${target.track.baseCoordinates.show}"
+
+    val centerOnTarget =
+      aladinRef.get
+        .flatMapCB(_.backend.centerOnTarget)
+        .toCallback
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -107,12 +112,13 @@ object TargetBody extends ModelOptics {
                   .withKey(coordinatesKey(target)),
                 UndoButtons(target, undoCtx)
               ),
-              <.div(
-                ExploreStyles.TargetAladinCell,
-                AladinRef.withRef(aladinRef) {
-                  AladinContainer(props.target, props.options.get)
-                }
-              ),
+              AladinRef
+                .withRef(aladinRef) {
+                  AladinCell(
+                    props.target.zoom(SiderealTarget.baseCoordinates),
+                    props.options
+                  )
+                },
               CataloguesForm(props.options)
             ),
             <.div(
