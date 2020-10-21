@@ -22,6 +22,7 @@ import react.common.ReactProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
+import explore.components.ui.FomanticStyles
 
 final case class PartnerSplitsEditor(
   show:         Boolean,
@@ -110,6 +111,7 @@ object PartnerSplitsEditor {
         )(
           <.table(
             ExploreStyles.PartnerSplitsEditorTable,
+            FomanticStyles.CompactTable,
             <.thead(
               <.tr(
                 <.th("Partner"),
@@ -118,7 +120,7 @@ object PartnerSplitsEditor {
             ),
             <.tbody(makeTableRows(p)),
             <.tfoot(
-              <.tr(<.td("Total"), <.td(s"${total(p)}%"))
+              <.tr(<.td("Total"), <.td(s"${total(p)}%"), FomanticStyles.RightAligned)
             )
           ),
           toolbar(p)

@@ -477,25 +477,12 @@ img.partner-split-flag {
   font-size: larger;
 }
 
-.partner-splits-editor-table {
-  margin: auto;
-  padding-bottom: 1em;
+.ui.table.partner-splits-editor-table {
+  td:last-child {
+    width: 5em;
+  }
   
-  td + td,
-  th + th {
-    padding-left: 1em;
-  }
-
-  tfoot td {
-    text-align: right;
-  }
-
-  td {
-    padding-top: 0.3em;
-  }
-
   .ui.form & input {
-    width: 4em;
     text-align: right;
   }
 }

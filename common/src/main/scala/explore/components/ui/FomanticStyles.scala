@@ -18,4 +18,11 @@ object FomanticStyles {
   val WarningText: Css = Text |+| Warning
 
   val Divider: Css = Css("ui divider")
+
+  val Table: Css        = Css("ui table")
+  val Compact: Css      = Css("compact")
+  val CompactTable: Css = Table |+| Compact
+
+  val Aligned: Css      = Css("aligned")
+  val RightAligned: Css = Css("right") |+| Aligned
 }
