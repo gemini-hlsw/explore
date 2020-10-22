@@ -60,11 +60,6 @@ object TargetBody extends ModelOptics {
     private def coordinatesKey(target: SiderealTarget): String =
       s"${target.name.value}#${target.track.baseCoordinates.show}"
 
-    val centerOnTarget =
-      aladinRef.get
-        .flatMapCB(_.backend.centerOnTarget)
-        .toCallback
-
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
