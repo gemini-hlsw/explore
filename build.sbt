@@ -332,7 +332,6 @@ lazy val commonWDS = Seq(
     (common / Compile / sourceDirectory).value / "webpack" / "prod.webpack.config.js"
   ),
   installJsdom / version := "16.4.0",
-  fullOptJS / webpackNodeArgs += "--max_old_space_size=2560",
   webpackMonitoredDirectories += (common / Compile / resourceDirectory).value,
   webpackMonitoredDirectories += ((common / Compile / sourceDirectory).value / "webpack"),
   webpackResources := ((common / Compile / sourceDirectory).value / "webpack") * "*.js",

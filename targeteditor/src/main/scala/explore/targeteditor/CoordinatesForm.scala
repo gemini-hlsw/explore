@@ -11,9 +11,9 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection._
 import explore.AppCtx
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.Icons
 import explore.model.ModelOptics._
 import explore.model.SiderealTarget
 import explore.model.reusability._
