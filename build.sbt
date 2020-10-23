@@ -299,7 +299,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Clue.value ++
-      List("edu.gemini" %% "clue-macro" % "0.2.6") ++
+      List("edu.gemini" %% "clue-macro" % "0.3.0") ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++
@@ -344,27 +344,27 @@ lazy val commonWDS = Seq(
   Compile / fullOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   // NPM libs for development, mostly to let webpack do its magic
   Compile / npmDevDependencies ++= Seq(
-    "postcss"                            -> "8.1.1",
-    "postcss-loader"                     -> "4.0.3",
-    "autoprefixer"                       -> "10.0.1",
-    "url-loader"                         -> "4.1.0",
-    "file-loader"                        -> "6.0.0",
-    "css-loader"                         -> "3.5.3",
-    "style-loader"                       -> "1.2.1",
+    "postcss"                       -> "8.1.1",
+    "postcss-loader"                -> "4.0.3",
+    "autoprefixer"                  -> "10.0.1",
+    "url-loader"                    -> "4.1.0",
+    "file-loader"                   -> "6.0.0",
+    "css-loader"                    -> "3.5.3",
+    "style-loader"                  -> "1.2.1",
     // Don't upgrade less until https://github.com/less/less.js/issues/3434 is fixed
-    "less"                               -> "3.9.0",
-    "less-loader"                        -> "7.0.1",
-    "sass"                               -> "1.26.11",
-    "sass-loader"                        -> "9.0.2",
-    "webpack-merge"                      -> "4.2.2",
-    "mini-css-extract-plugin"            -> "0.9.0",
-    "webpack-dev-server-status-bar"      -> "1.1.2",
-    "cssnano"                            -> "4.1.10",
-    "terser-webpack-plugin"              -> "4.2.2",
-    "html-webpack-plugin"                -> "4.3.0",
-    "css-minimizer-webpack-plugin"       -> "1.1.5",
-    "favicons-webpack-plugin"            -> "4.2.0",
-    "@packtracker/webpack-plugin"        -> "2.3.0"
+    "less"                          -> "3.9.0",
+    "less-loader"                   -> "7.0.1",
+    "sass"                          -> "1.26.11",
+    "sass-loader"                   -> "9.0.2",
+    "webpack-merge"                 -> "4.2.2",
+    "mini-css-extract-plugin"       -> "0.9.0",
+    "webpack-dev-server-status-bar" -> "1.1.2",
+    "cssnano"                       -> "4.1.10",
+    "terser-webpack-plugin"         -> "4.2.2",
+    "html-webpack-plugin"           -> "4.3.0",
+    "css-minimizer-webpack-plugin"  -> "1.1.5",
+    "favicons-webpack-plugin"       -> "4.2.0",
+    "@packtracker/webpack-plugin"   -> "2.3.0"
   ),
   Compile / npmDependencies ++= Seq(
     "react"             -> reactJS,
