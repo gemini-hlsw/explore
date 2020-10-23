@@ -11,7 +11,6 @@ import java.time.ZonedDateTime
 import cats.Eq
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
-import explore.model.reusability._
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._

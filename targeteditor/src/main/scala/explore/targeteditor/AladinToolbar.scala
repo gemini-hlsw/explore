@@ -6,7 +6,6 @@ package explore.targeteditor
 import scala.math.rint
 
 import explore.components.ui.ExploreStyles
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle.DMS
