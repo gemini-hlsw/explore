@@ -20,6 +20,7 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._

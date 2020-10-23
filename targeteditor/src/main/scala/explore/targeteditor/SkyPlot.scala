@@ -17,7 +17,6 @@ import scala.scalajs.js
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.reusability._
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._

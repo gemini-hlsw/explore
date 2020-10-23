@@ -11,7 +11,6 @@ import io.circe.Json
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
-import lucuma.core.math._
 import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
@@ -29,9 +28,6 @@ object reusability {
   implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
   implicit val jsNumberReuse: Reusability[JsNumber]                                               = Reusability.byEq
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
-  implicit def raReuse: Reusability[RightAscension]                                               = Reusability.byEq
-  implicit def decReuse: Reusability[Declination]                                                 = Reusability.byEq
-  implicit def coordinatesReuse: Reusability[Coordinates]                                         = Reusability.byEq
   implicit def sizeReuse: Reusability[Size]                                                       = Reusability.by(x => (x.height, x.width))
   implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive
   implicit def idListReuse[Id: Reusability, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
