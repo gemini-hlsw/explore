@@ -45,7 +45,7 @@ object ProposalDetailsEditor {
                   label = "Title"
                 ).withMods(^.autoFocus := true),
                 EnumViewSelect(id = "category",
-                               value = details.zoom(ProposalDetails.category).asOpt,
+                               value = details.zoom(ProposalDetails.category),
                                label = "Category"
                 ),
                 <.div(
@@ -82,11 +82,11 @@ object ProposalDetailsEditor {
                   )
                 ),
                 EnumViewSelect(id = "too-activation",
-                               value = details.zoom(ProposalDetails.toOActivation).asOpt,
+                               value = details.zoom(ProposalDetails.toOActivation),
                                label = "ToO Activation"
                 ),
                 EnumViewSelect(id = "proposal-class",
-                               value = details.zoom(ProposalDetails.proposalClass).asOpt,
+                               value = details.zoom(ProposalDetails.proposalClass),
                                label = "Class"
                 ),
                 FormStaticData(value = "<Determined by observations>",

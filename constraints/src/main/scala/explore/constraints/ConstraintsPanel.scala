@@ -52,7 +52,7 @@ object ConstraintsPanel {
               fields: A => ConstraintsSetInput
             ) = {
               val id = label.toLowerCase().replaceAll(" ", "-")
-              EnumViewSelect(id = id, value = undoViewZoom(lens, fields).asOpt, label = label)
+              EnumViewSelect(id = id, value = undoViewZoom(lens, fields), label = label)
             }
 
             Grid(columns = One, stretched = true, padded = GridPadded.Horizontally)(
