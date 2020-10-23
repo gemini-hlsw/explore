@@ -6,6 +6,10 @@ jobs:
   clubhouse:
     runs-on: ubuntu-latest
     steps:
+      - name: debug
+        env: 
+          GITHUB_EVENT: ${{ toJson(github.event) }}
+        run: echo "$GITHUB_EVENT"
       - uses: singingwolfboy/create-linked-clubhouse-story@v1.5
         if: ${{ contains(github.event.body, '[ch-new]') || contains(github.event.labels.*.name, 'new clubhouse story')}}
         with:
