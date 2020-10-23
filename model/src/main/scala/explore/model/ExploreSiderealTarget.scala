@@ -43,6 +43,9 @@ object SiderealTarget {
       )
 
   implicit val siderealTargetEq: Eq[SiderealTarget] = Eq.by(x => (x.name, x.track))
+
+  val baseCoordinates = SiderealTarget.track ^|-> SiderealTracking.baseCoordinates
+
 }
 
 /**

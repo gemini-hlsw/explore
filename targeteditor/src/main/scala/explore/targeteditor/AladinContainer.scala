@@ -3,14 +3,12 @@
 
 package explore.targeteditor
 
-import scala.math.rint
+import scala.concurrent.duration._
 
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.Icons
 import explore.View
 import explore.components.ui.ExploreStyles
-import explore.model.SiderealTarget
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
@@ -19,33 +17,24 @@ import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
-import lucuma.core.math.Angle
-import lucuma.core.math.Angle.DMS
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.RightAscension
-import lucuma.core.model.SiderealTracking
-import lucuma.ui.reusability._
-import monocle.Lens
 import monocle.macros.Lenses
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
-import react.semanticui.elements.button.Button
-import react.semanticui.elements.label.Label
-import react.semanticui.elements.label.LabelDetail
-import react.semanticui.modules.popup.Popup
-import react.semanticui.sizes._
 
 @Lenses
 final case class AladinContainer(
-  target:  View[SiderealTarget],
-  options: TargetVisualOptions
+  target:                 View[Coordinates],
+  options:                TargetVisualOptions,
+  updateMouseCoordinates: Coordinates => Callback,
+  updateFov:              Fov => Callback
 ) extends ReactProps[AladinContainer](AladinContainer.component) {
-  val aladinCoords: Coordinates = target.get.track.baseCoordinates
+  val aladinCoords: Coordinates = target.get
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
 }
 
@@ -56,46 +45,15 @@ object AladinContainer {
    * On the state we keep the svg to avoid recalculations during panning
    */
   @Lenses
-  final case class State(svg: Option[Svg], fov: Fov, current: Coordinates)
+  final case class State(svg: Option[Svg])
 
   object State {
-    val Zero: State = State(None, Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
+    val Zero: State = State(None)
   }
 
-  // TODO: We may want to move these to gsp-math
-  def formatHMS(hms: HMS): String =
-    f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d"
-
-  def formatDMS(dms: DMS): String = {
-    val prefix = if (dms.toAngle.toMicroarcseconds < 0) "-" else "+"
-    f"$prefix${dms.degrees}%02d:${dms.arcminutes}%02d:${dms.arcseconds}%02d"
-  }
-
-  def formatCoordinates(coords: Coordinates): String = {
-    val ra  = HMS(coords.ra.toHourAngle)
-    val dec = DMS(coords.dec.toAngle)
-    s"${formatHMS(ra)} ${formatDMS(dec)}"
-  }
-
-  def formatFov(angle: Angle): String = {
-    val dms        = Angle.DMS(angle)
-    val degrees    = dms.degrees
-    val arcminutes = dms.arcminutes
-    val arcseconds = dms.arcseconds
-    val mas        = rint(dms.milliarcseconds.toDouble / 10).toInt
-    if (degrees >= 45)
-      f"$degrees%02d°"
-    else if (degrees >= 1)
-      f"$degrees%02d°$arcminutes%02d′"
-    else if (arcminutes >= 10)
-      f"$arcminutes%02d′$arcseconds%01d″"
-    else
-      f"$arcseconds%01d.$mas%02d″"
-  }
-
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] =
-    Reusability.by(s => (formatFov(s.fov.x), formatCoordinates(s.current)))
+  protected implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.target, x.options))
+  // Reuse always becasue the svg is renderd only once
+  protected implicit val stateReuse: Reusability[State] = Reusability.always
 
   val AladinComp = Aladin.component
 
@@ -103,17 +61,11 @@ object AladinContainer {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
-    private val raLens: Lens[SiderealTarget, RightAscension] =
-      SiderealTarget.track ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
-
-    private val decLens: Lens[SiderealTarget, Declination] =
-      SiderealTarget.track ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.declination
-
     def setRa(ra: RightAscension): Callback =
-      $.props >>= (_.target.zoom(raLens).set(ra).runInCB)
+      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runInCB)
 
     def setDec(dec: Declination): Callback =
-      $.props >>= (_.target.zoom(decLens).set(dec).runInCB)
+      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runInCB)
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -174,7 +126,7 @@ object AladinContainer {
                            GmosGeometry.ScaleFactor
               )
           )
-          .flatTap(svg => $.modState((s: State) => s.copy(svg = svg.some, fov = v.fov)))
+          .flatTap(svg => $.setStateL(State.svg)(svg.some) *> $.props.flatMap(_.updateFov(v.fov)))
       }
 
     def renderVisualization(
@@ -217,7 +169,13 @@ object AladinContainer {
       v.onFullScreenToggle(recalculateView) *> // re render on screen toggle
         v.onZoom(onZoom(v)) *>                 // re render on zoom
         v.onPositionChanged(onPositionChanged(v)) *>
-        v.onMouseMove(s => $.setStateL(State.current)(Coordinates(s.ra, s.dec)))
+        v.onMouseMove(s =>
+          $.props.flatMap(
+            _.updateMouseCoordinates(Coordinates(s.ra, s.dec))
+              .debounce(100.millis)
+              .void
+          )
+        )
 
     def updateVisualization(s: Svg)(v: JsAladin): Callback = {
       val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
@@ -284,40 +242,16 @@ object AladinContainer {
 
     def render(props: Props, state: State) =
       <.div(
-        ExploreStyles.AladinContainerColumn,
-        <.div(
-          ExploreStyles.AladinContainerBody,
-          AladinComp.withRef(aladinRef) {
-            Aladin(showReticle = false,
-                   showLayersControl = false,
-                   target = props.aladinCoordsStr,
-                   fov = 0.25,
-                   showGotoControl = false,
-                   customize = includeSvg _
-            )
-          }
-        ),
-        Label(
-          content = "Fov:",
-          clazz = ExploreStyles.AladinFOV,
-          size = Small,
-          detail =
-            LabelDetail(clazz = ExploreStyles.AladinDetailText, content = formatFov(state.fov.x))
-        ),
-        Label(
-          content = "Cur:",
-          clazz = ExploreStyles.AladinCurrentCoords,
-          size = Small,
-          detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
-                               content = formatCoordinates(state.current)
+        ExploreStyles.AladinContainerBody,
+        AladinComp.withRef(aladinRef) {
+          Aladin(showReticle = false,
+                 showLayersControl = false,
+                 target = props.aladinCoordsStr,
+                 fov = 0.25,
+                 showGotoControl = false,
+                 customize = includeSvg _
           )
-        ),
-        <.div(
-          ExploreStyles.AladinCenterButton,
-          Popup(content = "Center on target",
-                trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(Icons.Bullseye)
-          )
-        )
+        }
       )
 
     def recalculateView =
@@ -335,11 +269,7 @@ object AladinContainer {
       .builder[Props]
       .initialState(State.Zero)
       .renderBackend[Backend]
-      .componentDidMount($ =>
-        $.backend.initialSvgState *> $.setStateL(State.current)($.props.aladinCoords)
-      )
       .componentDidUpdate(_.backend.recalculateView)
       .configure(Reusability.shouldComponentUpdate)
       .build
-
 }
