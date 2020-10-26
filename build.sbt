@@ -115,10 +115,14 @@ lazy val common = project
       ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoKeys ++= Seq[BuildInfoKey](
-      "ODBEndpoint" -> sys.env
+      "ExploreDBEndpoint" -> sys.env
+        .get("EXPLOREDB_ENDPOINT")
+        .filter(_.trim.nonEmpty)
+        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql"),
+      "ODBEndpoint"       -> sys.env
         .get("ODB_ENDPOINT")
         .filter(_.trim.nonEmpty)
-        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql")
+        .getOrElse("wss://lucuma-odb-staging.herokuapp.com/ws")
     ),
     buildInfoPackage := "explore"
   )
@@ -299,7 +303,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Clue.value ++
-      List("edu.gemini" %% "clue-macro" % "0.3.0") ++
+      List("edu.gemini" %% "clue-macro" % Settings.LibraryVersions.clue) ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++
@@ -313,6 +317,7 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
+      Chimney.value ++
       ClueScalaJS.value ++
       LucumaUI.value ++
       Log4Cats.value ++
@@ -373,6 +378,7 @@ lazy val commonWDS = Seq(
     "fomantic-ui-less"  -> FUILess,
     "prop-types"        -> "15.7.2",
     "react-moon"        -> "2.0.1",
-    "styled-components" -> "5.1.1"
+    "styled-components" -> "5.1.1",
+    "react-popper"      -> "2.2.3"
   )
 )

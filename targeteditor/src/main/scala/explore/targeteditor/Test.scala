@@ -3,21 +3,21 @@
 
 package explore.targeteditor
 
-import java.util.UUID
-
 import scala.scalajs.js.annotation._
 
+import eu.timepit.refined.auto._
 import explore.AppMain
 import explore._
 import explore.components.Tile
 import explore.model._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Target
 
 @JSExportTopLevel("TargetTest")
 object Test extends AppMain {
 
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
-    val id = UUID.fromString("b9acf8b4-79e9-4c69-9a96-904746e127ab")
+    val id = Target.Id(2L)
 
     <.div(^.height := "100vh",
           ^.width := "100%",

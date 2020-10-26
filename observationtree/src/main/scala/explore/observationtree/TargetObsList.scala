@@ -3,35 +3,32 @@
 
 package explore.observationtree
 
-import java.util.UUID
-
+import scala.annotation.unused
 import scala.collection.immutable.HashSet
+import scala.util.Random
 
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.GraphQLSchemas.ObservationDB.Types._
+import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
-import explore.model.ExploreObservation
 import explore.model.Focused
-import explore.model.Focused.FocusedObs
-import explore.model.Focused.FocusedTarget
+import explore.model.Focused._
 import explore.model.ObsSummary
-import explore.model.SiderealTarget
-import explore.model.TargetSummary
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.effects.CallbackToEffects._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
@@ -54,24 +51,24 @@ object TargetObsList {
   type Props = TargetObsList
 
   @Lenses
-  case class State(collapsedTargetIds: Set[SiderealTarget.Id] = HashSet.empty)
+  case class State(collapsedTargetIds: Set[Target.Id] = HashSet.empty)
 
   val obsListMod    =
-    new KIListMod[IO, ObsSummary, ExploreObservation.Id](ObsSummary.id)
-  val targetListMod = new KIListMod[IO, SiderealTarget, SiderealTarget.Id](SiderealTarget.id)
+    new KIListMod[IO, ObsIdNameTarget, Observation.Id](ObsIdNameTarget.id)
+  val targetListMod = new KIListMod[IO, TargetIdName, Target.Id](TargetIdName.id)
 
   class Backend($ : BackendScope[Props, State]) {
 
     private def getTargetForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
-    ): Getter[TargetsWithObs, Option[SiderealTarget]] =
+    ): Getter[TargetsWithObs, Option[TargetIdName]] =
       Getter { two =>
         val targetSummary =
           TargetsWithObs.obs
             .composeGetter(
               obsWithIndexGetter
                 .composeOptionLens(first)
-                .composeOptionLens(ObsSummary.target)
+                .composeOptionLens(ObsIdNameTarget.target)
             )
             .get(two)
         targetSummary.flatMap(ts => two.targets.getElement(ts.id))
@@ -79,9 +76,9 @@ object TargetObsList {
 
     private def setTargetForObsWithId(
       targetsWithObs:     View[TargetsWithObs],
-      obsId:              ExploreObservation.Id,
+      @unused obsId:      Observation.Id,
       obsWithIndexSetter: Adjuster[ObsList, obsListMod.ElemWithIndex]
-    ): Option[SiderealTarget] => IO[Unit] =
+    ): Option[TargetIdName] => IO[Unit] =
       targetOpt =>
         // 1) Update internal model
         targetsWithObs
@@ -89,11 +86,11 @@ object TargetObsList {
           .mod(
             obsWithIndexSetter
               .composeOptionLens(first)
-              .composeOptionLens(ObsSummary.target)
-              .set(targetOpt.map(TargetSummary.fromTarget))
-          ) >>
-          // 2) Send mutation
-          mutateObs(obsId, ObservationsSetInput(target_id = targetOpt.map(_.id)))
+              .composeOptionLens(ObsIdNameTarget.target)
+              .set(targetOpt) //.map(TargetSummary.fromTarget))
+          ) //>>
+    // 2) Send mutation
+    // updateObs(EditObservationInput(obsId, targets = targetOpt.map(_.id)).some)
 
     protected def onDragEnd(
       setter: Undoer.Setter[IO, TargetsWithObs]
@@ -102,17 +99,16 @@ object TargetObsList {
         $.props >>= { props =>
           (for {
             newTargetIdStr <- result.destination.toOption.map(_.droppableId)
-            newTargetId     = UUID.fromString(newTargetIdStr)
+            newTargetId    <- Target.Id.parse(newTargetIdStr)
             target         <- props.targetsWithObs.get.targets.getElement(newTargetId)
+            obsId          <- Observation.Id.parse(result.draggableId)
           } yield {
-            val obsId: UUID = UUID.fromString(result.draggableId)
-
             val obsWithId: GetAdjust[ObsList, obsListMod.ElemWithIndex] =
               obsListMod.withKey(obsId)
 
-            val set: Option[SiderealTarget] => IO[Unit] =
+            val set: Option[TargetIdName] => IO[Unit] =
               setter
-                .set[Option[SiderealTarget]](
+                .set[Option[TargetIdName]](
                   props.targetsWithObs.get,
                   getTargetForObsWithId(obsWithId.getter).get,
                   setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId.adjuster)
@@ -125,7 +121,7 @@ object TargetObsList {
     private def setTargetWithIndex(
       targetsWithObs:        View[TargetsWithObs],
       focused:               View[Option[Focused]],
-      targetId:              SiderealTarget.Id,
+      targetId:              Target.Id,
       targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
     ): targetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
@@ -142,7 +138,7 @@ object TargetObsList {
       setter:         Undoer.Setter[IO, TargetsWithObs],
       targetsWithObs: View[TargetsWithObs],
       focused:        View[Option[Focused]],
-      targetId:       SiderealTarget.Id
+      targetId:       Target.Id
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -159,19 +155,23 @@ object TargetObsList {
 
     protected def newTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
       $.props >>= { props =>
-        SiderealTarget.createNew[CallbackTo] >>= { newTarget =>
-          val upsert =
-            targetListMod
-              .upsert(newTarget, props.targetsWithObs.get.targets.length)
+        // Temporary measure until we have id pools.
+        val newTarget =
+          TargetIdName(Target.Id(PosLong.unsafeFrom(Random.nextLong().abs.toLong + 1)),
+                       "<New Target>"
+          )
 
-          targetMod(setter, props.targetsWithObs, props.focused, newTarget.id)(upsert).runInCB
-        }
+        val upsert =
+          targetListMod
+            .upsert(newTarget, props.targetsWithObs.get.targets.length)
+
+        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id)(upsert).runInCB
       }
 
     protected def deleteTargetEnabled(
       focused:        Option[Focused],
       targetsWithObs: TargetsWithObs
-    ): Option[SiderealTarget.Id] =
+    ): Option[Target.Id] =
       focused.collect {
         case FocusedTarget(targetId) if !targetsWithObs.obs.exists(_.target.id === targetId) =>
           targetId
@@ -188,7 +188,7 @@ object TargetObsList {
           .getOrEmpty
       }
 
-    def toggleCollapsed(targetId: SiderealTarget.Id): Callback =
+    def toggleCollapsed(targetId: Target.Id): Callback =
       $.modStateL(State.collapsedTargetIds) { collapsed =>
         collapsed
           .exists(_ === targetId)
@@ -262,7 +262,7 @@ object TargetObsList {
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
-                          target.name.value
+                          target.name
                         ),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),
@@ -288,10 +288,10 @@ object TargetObsList {
                                 }
                               )(
                                 decorateTopRight(
-                                  ObsBadge(obs,
+                                  ObsBadge(ObsSummary(obs.id, obs.target.name),
                                            ObsBadge.Layout.ConfAndConstraints,
-                                           selected = props.focused.get
-                                             .exists(_ === FocusedObs(obs.id))
+                                           selected =
+                                             props.focused.get.exists(_ === FocusedObs(obs.id))
                                   ),
                                   dragIcon
                                 )
@@ -309,7 +309,9 @@ object TargetObsList {
             ),
             <.div(ExploreStyles.ObsTreeButtons)(
               <.div(
-                Button(size = Small, onClick = newTarget(undoCtx.setter))(Icons.New),
+                Button(size = Small, onClick = newTarget(undoCtx.setter))(
+                  Icons.New
+                ),
                 Button(size = Small,
                        onClick = deleteTarget(undoCtx.setter),
                        disabled =

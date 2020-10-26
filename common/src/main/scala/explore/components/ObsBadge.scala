@@ -3,6 +3,7 @@
 
 package explore.components
 
+import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.reusability._
@@ -24,10 +25,11 @@ object ObsBadge {
   object Layout {
     final case object NameAndConf        extends Layout
     final case object ConfAndConstraints extends Layout
+
+    implicit val layoutReuse: Reusability[Layout] = Reusability.derive
   }
 
-  protected implicit val layoutReuse: Reusability[Layout] = Reusability.derive
-  protected implicit val propsReuse: Reusability[Props]   = Reusability.derive
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   // TODO Make this a component similar to the one in the docs.
   def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
@@ -48,7 +50,7 @@ object ObsBadge {
             CardContent(
               CardHeader(
                 props.layout match {
-                  case NameAndConf        => obs.target.name.value
+                  case NameAndConf        => obs.name.orEmpty
                   case ConfAndConstraints => obs.conf
                 }
               ),
@@ -58,7 +60,7 @@ object ObsBadge {
               CardDescription(
                 props.layout match {
                   case NameAndConf        => obs.conf
-                  case ConfAndConstraints => obs.constraints.name
+                  case ConfAndConstraints => obs.constraints
                 }
               ),
               CardExtra(

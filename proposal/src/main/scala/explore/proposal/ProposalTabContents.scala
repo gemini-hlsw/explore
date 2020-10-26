@@ -3,6 +3,8 @@
 
 package explore.proposal
 
+import java.net.URI
+
 import cats.effect._
 import crystal.Ready
 import crystal.react.StreamRendererMod
@@ -12,7 +14,6 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum._
 import explore.model.reusability._
-import java.net.URI
 import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

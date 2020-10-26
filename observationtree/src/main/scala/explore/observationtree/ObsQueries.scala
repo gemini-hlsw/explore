@@ -3,58 +3,71 @@
 
 package explore.observationtree
 
+import cats.data.NonEmptyList
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import explore.AppCtx
 import explore.GraphQLSchemas._
-import explore.components.graphql.SubscriptionRenderMod
+import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.macros.Lenses
+import lucuma.ui.reusability._
 
 object ObsQueries {
 
-  // We will eventually need a structure to store the whole Observation info but only summaries of target/constraints/configuration.
-
   @GraphQL
-  object Subscription extends GraphQLOperation[ObservationDB] {
+  object ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      subscription {
-        observations {
+      query {
+        observations(programId: "p-2") {
           id
-          status
-          target {
-            id
-            name
-          }
-          configuration
-          constraint {
-            id
-            name
-          }
-          duration_seconds
+          name
         }
-      }
+      }    
     """
 
-    @Lenses
-    case class Data(observations: List[ObsSummary])
+    object Data {
+      trait Observations extends ObsSummary
+    }
   }
 
-  type SubscriptionRenderer =
+  @GraphQL
+  object ProgramObservationsUpdatedSubscription extends GraphQLOperation[ObservationDB] {
+    val document = """
+      subscription {
+        observationEdited(programId:"p-2") {
+          id
+        }
+      }   
+    """
+  }
+
+  @GraphQL
+  object ProgramObservationsCreatedSubscription extends GraphQLOperation[ObservationDB] {
+    val document = """
+      subscription {
+        observationCreated(programId:"p-2") {
+          id
+        }
+      }   
+    """
+  }
+
+  type LiveQueryRenderer =
     (
       View[List[ObsSummary]] => VdomNode
-    ) => SubscriptionRenderMod[Subscription.Data, List[ObsSummary]]
+    ) => LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]]
 
-  val ObsSubscription: SubscriptionRenderer =
+  val ObsLiveQuery: LiveQueryRenderer =
     render =>
       AppCtx.withCtx { implicit appCtx =>
-        SubscriptionRenderMod[Subscription.Data, List[ObsSummary]](
-          Subscription.subscribe(),
-          _.map(
-            Subscription.Data.observations.get
+        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]](
+          ProgramObservationsQuery.query(),
+          _.observations,
+          NonEmptyList.of(ProgramObservationsUpdatedSubscription.subscribe(),
+                          ProgramObservationsCreatedSubscription.subscribe()
           )
         )(render)
       }

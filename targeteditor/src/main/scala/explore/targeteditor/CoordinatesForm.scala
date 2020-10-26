@@ -14,9 +14,7 @@ import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ModelOptics._
-import explore.model.SiderealTarget
-import explore.model.reusability._
+import explore.target.TargetQueries._
 import explore.utils.abbreviate
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -37,7 +35,7 @@ import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 
 final case class CoordinatesForm(
-  target:           SiderealTarget,
+  target:           TargetResult,
   searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
@@ -66,7 +64,7 @@ object CoordinatesForm {
 
   def initialState(p: Props): State = {
     val r = targetPropsL.get(p.target)
-    Function.tupled(State.apply _)((r._1.value, r._2, r._3, false, none))
+    Function.tupled(State.apply _)((r._1, r._2, r._3, false, none))
   }
 
   implicit val stateReuse                     = Reusability.derive[State]

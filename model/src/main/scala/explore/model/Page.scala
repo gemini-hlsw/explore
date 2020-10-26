@@ -5,6 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.syntax.all._
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 
 sealed trait Page extends Product with Serializable
 
@@ -12,10 +14,10 @@ object Page {
   case object HomePage                   extends Page
   final case object ProposalPage         extends Page
   final case object ObservationsBasePage extends Page
-  final case class ObsPage(obsId: ExploreObservation.Id) extends Page
+  final case class ObsPage(obsId: Observation.Id) extends Page
   final case object TargetsBasePage      extends Page
-  final case class TargetPage(targetId: SiderealTarget.Id) extends Page
-  final case class TargetsObsPage(obsId: ExploreObservation.Id) extends Page
+  final case class TargetPage(targetId: Target.Id) extends Page
+  final case class TargetsObsPage(obsId: Observation.Id) extends Page
   case object ConfigurationsPage         extends Page
   case object ConstraintsPage            extends Page
 

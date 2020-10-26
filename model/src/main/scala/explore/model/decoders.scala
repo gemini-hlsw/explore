@@ -3,54 +3,41 @@
 
 package explore.model
 
-import java.time.Duration
-
-import cats.syntax.all._
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.enum.ObsStatus
 import explore.model.enum._
 import io.circe.Decoder
-import io.circe.DecodingFailure
 import io.circe.HCursor
-import io.circe.refined._
+import io.circe.generic.semiauto
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.Epoch
 import lucuma.core.math.RightAscension
-import lucuma.core.model.SiderealTracking
 
 object decoders {
+  val raµasDecoder: Decoder[RightAscension] =
+    Decoder.decodeLong
+      .map(
+        (RightAscension.fromAngleExact.getOption _).compose(Angle.fromMicroarcseconds _)
+      )
+      .map(_.getOrElse(RightAscension.Zero))
 
-  implicit val raDecoder = new Decoder[RightAscension] {
+  implicit val raDecoder: Decoder[RightAscension] = new Decoder[RightAscension] {
     final def apply(c: HCursor): Decoder.Result[RightAscension] =
-      for {
-        raStr <- c.as[String]
-        ra    <- RightAscension.fromStringHMS
-                   .getOption(raStr)
-                   .toRight(DecodingFailure(s"Invalid RightAscension [$raStr]", List.empty))
-      } yield ra
+      c.downField("microarcseconds").as[RightAscension](raµasDecoder)
   }
 
-  implicit val decDecoder = new Decoder[Declination] {
+  val decµasDecoder: Decoder[Declination] =
+    Decoder.decodeLong
+      .map(
+        (Declination.fromAngle.getOption _).compose(Angle.fromMicroarcseconds _)
+      )
+      .emap(_.toRight("Invalid µarcsec value for declination"))
+
+  implicit val decDecoder: Decoder[Declination] = new Decoder[Declination] {
     final def apply(c: HCursor): Decoder.Result[Declination] =
-      for {
-        decStr <- c.as[String]
-        dec    <- Declination.fromStringSignedDMS
-                    .getOption(decStr)
-                    .toRight(DecodingFailure(s"Invalid Declination [$decStr]", List.empty))
-      } yield dec
+      c.downField("microarcseconds").as[Declination](decµasDecoder)
   }
 
-  implicit val siderealTargetDecoder = new Decoder[SiderealTarget] {
-    final def apply(c: HCursor): Decoder.Result[SiderealTarget] =
-      for {
-        id    <- c.downField("id").as[SiderealTarget.Id]
-        name  <- c.downField("name").as[NonEmptyString]
-        ra    <- c.downField("ra").as[RightAscension]
-        dec   <- c.downField("dec").as[Declination]
-        coords = SiderealTracking(none, Coordinates(ra, dec), Epoch.J2000, none, none, none)
-      } yield SiderealTarget(id, name, coords)
-  }
+  implicit val coordDecoder: Decoder[Coordinates] = semiauto.deriveDecoder[Coordinates]
 
   implicit val constraintsDecoder = new Decoder[Constraints] {
     final def apply(c: HCursor): Decoder.Result[Constraints] =
@@ -63,23 +50,4 @@ object decoders {
         wv   <- c.downField("water_vapor").as[WaterVapor]
       } yield Constraints(id, name, cc, iq, sb, wv)
   }
-
-  def obsDecoderForTarget(target: SiderealTarget) =
-    new Decoder[ExploreObservation] {
-      final def apply(c: HCursor): Decoder.Result[ExploreObservation] =
-        for {
-          id          <- c.downField("id").as[ExploreObservation.Id]
-          status      <- c.downField("status").as[ObsStatus]
-          conf        <- c.downField("configuration").as[String]
-          constraints <- c.downField("constraint").as[Constraints]
-          duration    <- c.downField("duration_seconds").as[Long].map(Duration.ofSeconds)
-        } yield ExploreObservation(
-          id,
-          target,
-          status,
-          conf,
-          constraints,
-          duration
-        )
-    }
 }
