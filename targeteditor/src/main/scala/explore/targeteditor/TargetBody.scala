@@ -75,7 +75,7 @@ object TargetBody {
           val undoSet =
             UndoSet(props.id, props.target, undoCtx.setter)
 
-          val modify = undoSet[
+          val modify     = undoSet[
             (String, RightAscension, Declination)
           ](
             targetPropsL,
@@ -87,6 +87,10 @@ object TargetBody {
                   dec = DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some).some
                 )
             }
+          ) _
+          val modifyName = undoSet[NonEmptyString](
+            unsafeTargetName,
+            n => input => input.copy(name = n.value.some)
           ) _
 
           @unused
@@ -107,7 +111,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, searchAndSet, gotoRaDec)
+                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName(_).runInCB)
                   .withKey(coordinatesKey(target)),
                 UndoButtons(target, undoCtx)
               ),

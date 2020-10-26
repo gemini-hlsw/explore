@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -31,13 +32,13 @@ import react.common.implicits._
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.label._
-import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
 
 final case class CoordinatesForm(
   target:           TargetResult,
   searchAndGo:      SearchCallback => Callback,
-  goToRaDec:        Coordinates => Callback
+  goToRaDec:        Coordinates => Callback,
+  onNameChange:     NonEmptyString => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(
@@ -96,28 +97,25 @@ object CoordinatesForm {
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
           search *> e.stopPropagationCB *> e.preventDefaultCB
 
-        val nameLabel = state.searchError match {
-          case Some(m) => Label(clazz = ExploreStyles.ErrorLabel)(m)
-          case _       => Label("Name")
+        val nameLabel = (state.searchTerm.isEmpty, state.searchError) match {
+          case (_, Some(m)) => Label(clazz = ExploreStyles.ErrorLabel)(m)
+          case (true, _)    => Label(clazz = ExploreStyles.ErrorLabel)("Cannot be empty")
+          case _            => Label("Name")
         }
 
-        Form(size = Small)(
+        Form(size = Small, onSubmit = search)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.CoordinatesForm,
-          FormSelect(
-            label = "Type",
-            value = 0,
-            options = List(DropdownItem(value = 0, text = "Sidereal"),
-                           DropdownItem(value = 1, text = "Non-sidereal")
-            )
-          ),
           FormInputEV(
             id = "search",
             value = stateView.zoom(State.searchTerm),
             label = nameLabel,
             focus = true,
             loading = state.searching,
+            error = state.searchTerm.isEmpty,
+            onBlur =
+              (u: String) => refineV[NonEmpty](u).toOption.map(props.onNameChange(_)).getOrEmpty,
             onChange = (_: String) => $.setStateL(State.searchError)(none),
             icon = Icons.Search
               .link(true)
@@ -126,7 +124,7 @@ object CoordinatesForm {
                 ^.onKeyPress ==> iconKeyPress,
                 ^.onClick --> search
               )
-          ),
+          ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
           <.div(
             ExploreStyles.FlexContainer,
             ExploreStyles.TargetRaDecMinWidth,
