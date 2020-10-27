@@ -76,10 +76,10 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object TargetUpdatedSubscription extends GraphQLOperation[ObservationDB] {
+  object TargetEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {
-        targetEdited(programId: "p-2") {
+        targetEdit(programId: "p-2") {
           id
         }
       }    
@@ -87,40 +87,17 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object TargetCreatedSubscription extends GraphQLOperation[ObservationDB] {
+  object ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {
-        targetCreated(programId: "p-2") {
+        observationEdit(programId: "p-2") {
           id
         }
       }    
     """
   }
-
   @GraphQL
-  object ObservationUpdatedSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationEdited(programId: "p-2") {
-          id
-        }
-      }    
-    """
-  }
-
-  @GraphQL
-  object ObservationCreatedSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationCreated(programId: "p-2") {
-          id
-        }
-      }    
-    """
-  }
-
-  @GraphQL
-  object UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
+  object UpdateObservationMutation   extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: EditObservationInput!) {
         updateObservation(input: $input) {
@@ -202,10 +179,8 @@ object TargetObsQueries {
           TargetsObsQuery.query(),
           TargetsObsQuery.Data.asTargetsWithObs.get,
           NonEmptyList.of(
-            TargetUpdatedSubscription.subscribe(),
-            TargetCreatedSubscription.subscribe(),
-            ObservationUpdatedSubscription.subscribe(),
-            ObservationCreatedSubscription.subscribe()
+            TargetEditSubscription.subscribe(),
+            ObservationEditSubscription.subscribe()
           )
         )(render)
       }

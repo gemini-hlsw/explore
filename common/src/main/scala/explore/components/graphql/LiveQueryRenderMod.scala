@@ -7,9 +7,11 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 import cats.data.NonEmptyList
+import cats.effect.CancelToken
 import cats.effect.ConcurrentEffect
 import cats.effect.ContextShift
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.effect.Timer
 import cats.syntax.all._
 import clue.GraphQLStreamingClient
@@ -38,7 +40,7 @@ final case class LiveQueryRenderMod[S, D, A](
   val errorRender:     Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
-  val ce:              ConcurrentEffect[IO],
+  val F:               ConcurrentEffect[IO],
   val timer:           Timer[IO],
   val cs:              ContextShift[IO],
   val logger:          Logger[IO],
@@ -58,7 +60,7 @@ object LiveQueryRenderMod {
     val errorRender: Throwable => VdomNode
     val onNewData: F[Unit]
 
-    implicit val ce: ConcurrentEffect[F]
+    implicit val F: ConcurrentEffect[F]
     implicit val timer: Timer[F]
     implicit val cs: ContextShift[F]
     implicit val logger: Logger[F]
@@ -67,9 +69,10 @@ object LiveQueryRenderMod {
   }
 
   final case class State[F[_], S, D, A](
-    queue:         Queue[F, A],
-    subscriptions: NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
-    renderer:      StreamRendererMod.Component[F, A]
+    queue:                   Queue[F, A],
+    subscriptions:           NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
+    cancelConnectionTracker: CancelToken[F],
+    renderer:                StreamRendererMod.Component[F, A]
   )
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
@@ -90,7 +93,7 @@ object LiveQueryRenderMod {
         )
       }
       .componentDidMount { $ =>
-        implicit val ce     = $.props.ce
+        implicit val F      = $.props.F
         implicit val timer  = $.props.timer
         implicit val cs     = $.props.cs
         implicit val logger = $.props.logger
@@ -103,6 +106,7 @@ object LiveQueryRenderMod {
             _      <- $.props.onNewData
           } yield ()
 
+        // Once run, this effect will end when all subscriptions end.
         def trackChanges(
           subscriptions: NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]],
           queue:         Queue[F, A]
@@ -110,28 +114,40 @@ object LiveQueryRenderMod {
           subscriptions
             .map(_.stream)
             .reduceLeft(_ merge _)
-            .evalMap(_ => queryAndEnqueue(queue))
+            .evalTap(_ => queryAndEnqueue(queue))
             .compile
             .drain
 
+        // Once run, this effect has to be cancelled manually.
         def trackConnection(queue: Queue[F, A]): F[Unit] =
-          $.props.client.statusStream
-            .filter(_ == StreamingClientStatus.Open)
-            .evalMap(_ => queryAndEnqueue(queue))
+          $.props.client.statusStream.tail // Skip current status. We only want future updates here.
+            .filter(_ === StreamingClientStatus.Open)
+            .evalTap(_ => queryAndEnqueue(queue))
             .compile
             .drain
+
+        def deferRun[B, C](unhandledRun: (Either[Throwable, C] => IO[Unit]) => SyncIO[B]): F[B] =
+          F.liftIO(unhandledRun {
+            case Left(t) => F.toIO(logger.error(t)("Error in deferRun of LiveQueryRenderMod"))
+            case _       => IO.unit
+          }.toIO)
 
         val init =
           for {
-            queue         <- Queue.unbounded[F, A]
-            subscriptions <- $.props.changeSubscriptions.sequence
-            renderer       = StreamRendererMod.build(queue.dequeue, holdAfterMod = (2 seconds).some)
-            _             <- $.setStateIn[F](State(queue, subscriptions, renderer).some)
-            _             <- queryAndEnqueue(queue)
-            _             <- trackChanges(subscriptions, queue).handleErrorWith(t =>
-                               logger.error(t)("Error updating LiveQueryRenderMod")
-                             )
-            _             <- trackConnection(queue)
+            queue                   <- Queue.unbounded[F, A]
+            subscriptions           <- $.props.changeSubscriptions.sequence
+            cancelConnectionTracker <- deferRun(F.runCancelable(trackConnection(queue)))
+            renderer                 = StreamRendererMod.build(queue.dequeue, holdAfterMod = (2 seconds).some)
+            _                       <-
+              $.setStateIn[F](State(queue, subscriptions, cancelConnectionTracker, renderer).some)
+            _                       <- queryAndEnqueue(queue)
+            _                       <-
+              deferRun(
+                F.runAsync(
+                  trackChanges(subscriptions, queue)
+                    .handleErrorWith(t => logger.error(t)("Error updating LiveQueryRenderMod"))
+                )
+              )
           } yield ()
 
         init
@@ -139,9 +155,14 @@ object LiveQueryRenderMod {
           .runInCB
       }
       .componentWillUnmount { $ =>
-        implicit val ce = $.props.ce
+        implicit val F = $.props.F
 
-        $.state.map(_.subscriptions.map(_.stop()).sequence.void.runInCB).getOrEmpty
+        $.state
+          .map(state =>
+            (state.cancelConnectionTracker >>
+              state.subscriptions.map(_.stop()).sequence.void).runInCB
+          )
+          .getOrEmpty
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
