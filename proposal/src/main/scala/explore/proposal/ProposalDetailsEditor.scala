@@ -69,7 +69,6 @@ object ProposalDetailsEditor {
     partnerSplitData(ps.partner, id, text)
   }
 
-  // TODO: switch to use partner.shortName after next lucuma-core release
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
       <.img(^.src := PartnerFlags.smallFlag(partner),
@@ -78,7 +77,7 @@ object ProposalDetailsEditor {
       )
     val span: TagMod = <.span(data)
 
-    FormStaticData(id = id, value = <.div(img, span), label = partner.name)(
+    FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
       ExploreStyles.FlexShrink(0),
       ExploreStyles.PartnerSplitData
     )
@@ -144,7 +143,7 @@ object ProposalDetailsEditor {
                     label = "Title"
                   ).withMods(^.autoFocus := true),
                   EnumViewSelect(id = "proposal-class",
-                                 value = details.zoom(ProposalDetails.proposalClass).asOpt,
+                                 value = details.zoom(ProposalDetails.proposalClass),
                                  label = "Class"
                   ),
                   <.div(
@@ -157,9 +156,9 @@ object ProposalDetailsEditor {
                     ),
                     partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
                   ),
-                  EnumViewSelect(id = "category",
-                                 value = details.zoom(ProposalDetails.optionalCategory),
-                                 label = "Category"
+                  EnumViewOptionalSelect(id = "category",
+                                         value = details.zoom(ProposalDetails.category),
+                                         label = "Category"
                   ),
                   <.div(
                     ExploreStyles.FlexContainer,
@@ -190,7 +189,7 @@ object ProposalDetailsEditor {
                     bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
                   ),
                   EnumViewSelect(id = "too-activation",
-                                 value = details.zoom(ProposalDetails.toOActivation).asOpt,
+                                 value = details.zoom(ProposalDetails.toOActivation),
                                  label = "ToO Activation"
                   )
                 ),
