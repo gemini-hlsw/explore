@@ -23,6 +23,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.reusability._
@@ -57,15 +58,25 @@ object CoordinatesForm {
   @Lenses
   final case class State(
     searchTerm:  String,
-    raValue:     RightAscension,
-    decValue:    Declination,
+    tracking:    SiderealTracking,
     searching:   Boolean,
     searchError: Option[String]
   )
 
+  object State {
+    val baseCoordinates =
+      State.tracking ^|-> SiderealTracking.baseCoordinates
+
+    val raValue =
+      baseCoordinates ^|-> Coordinates.rightAscension
+
+    val decValue =
+      baseCoordinates ^|-> Coordinates.declination
+  }
+
   def initialState(p: Props): State = {
     val r = targetPropsL.get(p.target)
-    Function.tupled(State.apply _)((r._1, r._2, r._3, false, none))
+    Function.tupled(State.apply _)((r._1, r._2, false, none))
   }
 
   implicit val stateReuse                     = Reusability.derive[State]
@@ -146,7 +157,7 @@ object CoordinatesForm {
               size = Small,
               icon = true,
               label = "Go To",
-              onClick = props.goToRaDec(Coordinates(state.raValue, state.decValue))
+              onClick = props.goToRaDec(State.baseCoordinates.get(state))
             )(
               Icon("angle right"),
               ExploreStyles.HideLabel

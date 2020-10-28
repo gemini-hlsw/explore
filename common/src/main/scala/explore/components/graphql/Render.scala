@@ -3,24 +3,24 @@
 
 package explore.components.graphql
 
-import cats.syntax.all._
+import cats.data.NonEmptyList
+import cats.effect.CancelToken
 import cats.effect.ConcurrentEffect
+import cats.effect.IO
+import cats.effect.SyncIO
+import cats.syntax.all._
 import clue.GraphQLStreamingClient
+import clue.StreamingClientStatus
 import crystal.Pot
 import crystal.react.implicits._
+import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Generic.UnmountedWithRoot
+import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentWillUnmount
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.vdom.html_<^._
-import cats.data.NonEmptyList
-import fs2.concurrent.Queue
-import cats.effect.CancelToken
-import clue.StreamingClientStatus
-import cats.effect.IO
-import cats.effect.SyncIO
-import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 
 object Render {
   trait Props[F[_], G[_], A] {

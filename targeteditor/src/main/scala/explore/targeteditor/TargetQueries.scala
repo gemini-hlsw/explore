@@ -3,7 +3,10 @@
 
 package explore.target
 
+import cats.Eval
+import cats.data.IndexedStateT
 import cats.effect.IO
+import cats.implicits._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.collection.NonEmpty
@@ -14,9 +17,10 @@ import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.decoders._
 import explore.undo.Undoer
+import explore.utils._
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
+import lucuma.core.math.Epoch
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Lens
@@ -40,6 +44,21 @@ object TargetQueries {
                   microarcseconds
                 }
               }
+              epoch
+              properVelocity {
+                ra {
+                  microarcsecondsPerYear
+                }
+              	dec {
+                  microarcsecondsPerYear
+                }
+							}
+              radialVelocity {
+                centimetersPerSecond
+              }
+              parallax {
+                microarcseconds
+              }
             }
           }
         }
@@ -48,9 +67,7 @@ object TargetQueries {
 
     object Data {
       object Target {
-        object Tracking {
-          type Coordinates = lucuma.core.math.Coordinates
-        }
+        type Tracking = lucuma.core.model.SiderealTracking
       }
     }
   }
@@ -59,22 +76,10 @@ object TargetQueries {
   val TargetResult = TargetEditQuery.Data.Target
 
   /**
-   * Lens for right ascension of a TargetResult.Tracking
+   * Lens for the base coordinates of TargetResult.Tracking
    */
-  val properMotionRA: Lens[TargetResult.Tracking, RightAscension] =
-    TargetResult.Tracking.coordinates ^|-> Coordinates.rightAscension
-
-  /**
-   * Lens for declination of a TargetResult.Tracking
-   */
-  val properMotionDec: Lens[TargetResult.Tracking, Declination] =
-    TargetResult.Tracking.coordinates ^|-> Coordinates.declination
-
-  /**
-   * Lens to the RightAscension of a sidereal target
-   */
-  val targetRA: Lens[TargetResult, RightAscension] =
-    TargetResult.tracking ^|-> properMotionRA
+  val baseCoordinates: Lens[TargetResult, Coordinates] =
+    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
 
   /**
    * Lens to the name of a sidereal target
@@ -85,18 +90,12 @@ object TargetQueries {
     )(s => n => n.copy(name = s.value))
 
   /**
-   * Lens to the Declination of a sidereal target
-   */
-  val targetDec: Lens[TargetResult, Declination] =
-    TargetResult.tracking ^|-> properMotionDec
-
-  /**
    * Lens used to change name and coordinates of a target
    */
   val targetPropsL =
-    Lens[TargetResult, (String, RightAscension, Declination)](t =>
-      (t.name, targetRA.get(t), targetDec.get(t))
-    )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
+    Lens[TargetResult, (String, SiderealTracking)](t => (t.name, TargetResult.tracking.get(t)))(s =>
+      t => TargetResult.tracking.set(s._2)(t.copy(name = s._1))
+    )
 
   @GraphQL
   object TargetEditSubscription extends GraphQLOperation[ObservationDB] {
@@ -143,6 +142,37 @@ object TargetQueries {
           } yield ()
         }
       )(value)
+  }
+
+  /**
+   * Updates all the fields of sideral tracking
+   */
+  def updateSiderealTracking(
+    t: SiderealTracking
+  ): IndexedStateT[Eval, EditSiderealInput, EditSiderealInput, Unit] = {
+    val coords = t.baseCoordinates
+
+    val rai = RightAscensionInput(microarcseconds = coords.ra.toAngle.toMicroarcseconds.some).some
+
+    val deci = DeclinationInput(microarcseconds = coords.dec.toAngle.toMicroarcseconds.some).some
+
+    val pvi = ProperVelocityInput(
+      ra = ProperVelocityRaInput(microarcsecondsPerYear = t.properVelocity.map(_.ra.μasy.value)),
+      dec = ProperVelocityDecInput(microarcsecondsPerYear = t.properVelocity.map(_.dec.μasy.value))
+    ).some
+
+    val rvi = RadialVelocityInput(metersPerSecond = t.radialVelocity.map(_.rv.value)).some
+
+    val pxi = ParallaxModelInput(microarcseconds = t.parallax.map(_.μas.value)).some
+
+    for {
+      _ <- EditSiderealInput.ra := rai
+      _ <- EditSiderealInput.dec := deci
+      _ <- EditSiderealInput.epoch := Epoch.fromString.reverseGet(t.epoch).some
+      _ <- EditSiderealInput.properVelocity := pvi
+      _ <- EditSiderealInput.radialVelocity := rvi
+      _ <- EditSiderealInput.parallax := pxi
+    } yield ()
   }
 
 }
