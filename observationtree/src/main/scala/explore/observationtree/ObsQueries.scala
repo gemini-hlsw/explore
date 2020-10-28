@@ -34,21 +34,10 @@ object ObsQueries {
   }
 
   @GraphQL
-  object ProgramObservationsUpdatedSubscription extends GraphQLOperation[ObservationDB] {
+  object ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {
-        observationEdited(programId:"p-2") {
-          id
-        }
-      }   
-    """
-  }
-
-  @GraphQL
-  object ProgramObservationsCreatedSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationCreated(programId:"p-2") {
+        observationEdit(programId:"p-2") {
           id
         }
       }   
@@ -66,9 +55,7 @@ object ObsQueries {
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]](
           ProgramObservationsQuery.query(),
           _.observations,
-          NonEmptyList.of(ProgramObservationsUpdatedSubscription.subscribe(),
-                          ProgramObservationsCreatedSubscription.subscribe()
-          )
+          NonEmptyList.of(ProgramObservationsEditSubscription.subscribe())
         )(render)
       }
 }

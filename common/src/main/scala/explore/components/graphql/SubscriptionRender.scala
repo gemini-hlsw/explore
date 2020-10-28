@@ -3,6 +3,7 @@
 
 package explore.components.graphql
 
+import cats.Id
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.syntax.all._
@@ -26,33 +27,19 @@ final case class SubscriptionRender[D, A](
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val ce:            ConcurrentEffect[IO],
+  val F:             ConcurrentEffect[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
 ) extends ReactProps(SubscriptionRender.component)
     with SubscriptionRender.Props[IO, D, A]
 
 object SubscriptionRender {
-  trait Props[F[_], D, A] {
-    val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
-    val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-
-    val valueRender: A => VdomNode
-    val pendingRender: Long => VdomNode
-    val errorRender: Throwable => VdomNode
-    val onNewData: F[Unit]
-
-    implicit val ce: ConcurrentEffect[F]
-    implicit val logger: Logger[F]
-    implicit val reuse: Reusability[A]
-  }
+  trait Props[F[_], D, A] extends Render.Subscription.Props[F, Id, D, A]
 
   final case class State[F[_], D, A](
-    subscription: Option[
-      GraphQLStreamingClient[F, _]#Subscription[D]
-    ] = None,
-    renderer:     Option[StreamRenderer.Component[A]] = None
-  )
+    subscription: GraphQLStreamingClient[F, _]#Subscription[D],
+    renderer:     StreamRenderer.Component[A]
+  ) extends Render.Subscription.State[F, Id, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.never
@@ -61,18 +48,10 @@ object SubscriptionRender {
   protected def componentBuilder[F[_], D, A] =
     ScalaComponent
       .builder[Props[F, D, A]]
-      .initialState(State[F, D, A]())
-      .render { $ =>
-        React.Fragment(
-          $.state.renderer.fold[VdomNode](EmptyVdom)(
-            _ {
-              _.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender)
-            }
-          )
-        )
-      }
+      .initialState[Option[State[F, D, A]]](none)
+      .render(Render.renderFn[F, Id, D, A](_))
       .componentDidMount { $ =>
-        implicit val ce     = $.props.ce
+        implicit val F      = $.props.F
         implicit val logger = $.props.logger
         implicit val reuse  = $.props.reuse
 
@@ -80,25 +59,20 @@ object SubscriptionRender {
           .flatMap { subscription =>
             $.setStateIn[F](
               State(
-                subscription.some,
+                subscription,
                 StreamRenderer
                   .build(
                     $.props
                       .streamModifier(subscription.stream)
                       .flatTap(_ => fs2.Stream.eval($.props.onNewData))
                   )
-                  .some
-              )
+              ).some
             )
           }
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRender"))
           .runInCB
       }
-      .componentWillUnmount { $ =>
-        implicit val ce = $.props.ce
-
-        $.state.subscription.map(_.stop().runInCB).getOrEmpty
-      }
+      .componentWillUnmount(Render.Subscription.willUnmountFn[F, Id, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

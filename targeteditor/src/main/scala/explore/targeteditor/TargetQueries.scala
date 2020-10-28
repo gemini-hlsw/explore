@@ -99,10 +99,10 @@ object TargetQueries {
     )(s => t => targetRA.set(s._2)(targetDec.set(s._3)(t.copy(name = s._1))))
 
   @GraphQL
-  object TargetUpdatedSubscription extends GraphQLOperation[ObservationDB] {
+  object TargetEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription($id: TargetId!) {
-        targetEdited(targetId: $id) {
+        targetEdit(targetId: $id) {
           id
         }
       }

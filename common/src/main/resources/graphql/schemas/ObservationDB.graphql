@@ -31,20 +31,13 @@ interface Asterism {
   ): [Program!]!
 }
 
-# Event sent when a new object is created
-type AsterismCreated implements Event {
-  # Newly created object
+# Event sent when a new object is created or updated
+type AsterismEdit implements Event {
+  # Type of edit
+  editType: EditType!
+
+  # Edited object
   value: Asterism!
-  id: Long!
-}
-
-# Event sent when an object is edited
-type AsterismEdited implements Event {
-  # Previous value of the edited object
-  oldValue: Asterism!
-
-  # Updated value of the edited object
-  newValue: Asterism!
   id: Long!
 }
 
@@ -76,6 +69,7 @@ input CoordinatesInput {
 
 # Default asterism parameters
 input CreateDefaultAsterismInput {
+  asterismId: AsterismId
   programIds: [ProgramId!]!
   explicitBase: CoordinatesInput
 
@@ -85,6 +79,7 @@ input CreateDefaultAsterismInput {
 
 # Nonsidereal target parameters
 input CreateNonsiderealInput {
+  targetId: TargetId
   programIds: [ProgramId!]!
   name: String!
   key: EphemerisKeyType!
@@ -93,13 +88,16 @@ input CreateNonsiderealInput {
 
 # Observation creation parameters
 input CreateObservationInput {
+  observationId: ObservationId
   programId: ProgramId!
   name: String
   asterismId: AsterismId
+  status: ObsStatus
 }
 
 # Sidereal target parameters
 input CreateSiderealInput {
+  targetId: TargetId
   programIds: [ProgramId!]!
   name: String!
   ra: RightAscensionInput!
@@ -193,6 +191,23 @@ type DefaultAsterism implements Asterism {
 # Target declination coordinate in format '[+/-]DD:MM:SS.sss'
 scalar DmsString
 
+type Duration {
+  # Duration in µs
+  microseconds: Long!
+
+  # Duration in ms
+  milliseconds: BigDecimal!
+
+  # Duration in seconds
+  seconds: BigDecimal!
+
+  # Duration in minutes
+  minutes: BigDecimal!
+
+  # Duration in hours
+  hours: BigDecimal!
+}
+
 # Default asterism edit
 input EditDefaultAsterismInput {
   asterismId: AsterismId!
@@ -208,6 +223,7 @@ input EditObservationInput {
   observationId: ObservationId!
   existence: Existence
   name: String
+  status: ObsStatus
   asterismId: AsterismId
 }
 
@@ -222,6 +238,15 @@ input EditSiderealInput {
   properVelocity: ProperVelocityInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
+}
+
+# Type of edit that triggered an event
+enum EditType {
+  # EditType Created
+  CREATED
+
+  # EditType Updated
+  UPDATED
 }
 
 # Ephemeris key type options
@@ -355,6 +380,12 @@ type Observation {
   # Observation name
   name: String
 
+  # Observation status
+  status: ObsStatus!
+
+  # Observation planned time calculation.
+  plannedTime: PlannedTimeSummary!
+
   # The program that contains this observation
   program(
     # Set to true to include deleted values
@@ -374,25 +405,45 @@ type Observation {
   ): [Target!]!
 }
 
-# Event sent when a new object is created
-type ObservationCreated implements Event {
-  # Newly created object
+# Event sent when a new object is created or updated
+type ObservationEdit implements Event {
+  # Type of edit
+  editType: EditType!
+
+  # Edited object
   value: Observation!
-  id: Long!
-}
-
-# Event sent when an object is edited
-type ObservationEdited implements Event {
-  # Previous value of the edited object
-  oldValue: Observation!
-
-  # Updated value of the edited object
-  newValue: Observation!
   id: Long!
 }
 
 # ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
 scalar ObservationId
+
+# Observation status options
+enum ObsStatus {
+  # ObsStatus New
+  NEW
+
+  # ObsStatus Included
+  INCLUDED
+
+  # ObsStatus Proposed
+  PROPOSED
+
+  # ObsStatus Approved
+  APPROVED
+
+  # ObsStatus ForReview
+  FOR_REVIEW
+
+  # ObsStatus Ready
+  READY
+
+  # ObsStatus Ongoing
+  ONGOING
+
+  # ObsStatus Observed
+  OBSERVED
+}
 
 type Parallax {
   # Parallax in microarcseconds
@@ -437,14 +488,15 @@ enum ParallaxUnits {
   MILLIARCSECONDS
 }
 
-# Event sent when an object is edited
-type program implements Event {
-  # Previous value of the edited object
-  oldValue: Program!
+type PlannedTimeSummary {
+  # The portion of planned time that will be charged
+  pi: Duration!
 
-  # Updated value of the edited object
-  newValue: Program!
-  id: Long!
+  # The portion of planned time that will not be charged
+  uncharged: Duration!
+
+  # The total estimated execution time
+  execution: Duration!
 }
 
 type Program {
@@ -474,11 +526,20 @@ type Program {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): [Target!]!
+
+  # Program planned time calculation.
+  plannedTime(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): PlannedTimeSummary!
 }
 
-# Event sent when a new object is created
-type ProgramCreated implements Event {
-  # Newly created object
+# Event sent when a new object is created or updated
+type ProgramEdit implements Event {
+  # Type of edit
+  editType: EditType!
+
+  # Edited object
   value: Program!
   id: Long!
 }
@@ -752,80 +813,60 @@ type Sidereal {
 }
 
 type Subscription {
-  # Subscribes to an event that is generated whenever a(n) asterism associated with the provided program id is created
-  asterismCreated(
-    # Program ID
-    programId: ProgramId
-  ): AsterismCreated!
-
-  # Subscribes to an event that is generated whenever a(n) observation associated with the provided program id is created
-  observationCreated(
-    # Program ID
-    programId: ProgramId
-  ): ObservationCreated!
-
-  # Subscribes to an event that is generated whenever a program is created
-  programCreated: ProgramCreated!
-
-  # Subscribes to an event that is generated whenever a(n) target associated with the provided program id is created
-  targetCreated(
-    # Program ID
-    programId: ProgramId
-  ): TargetCreated!
-
   #
   # Subscribes to an event that is generated whenever a(n) asterism is
-  # edited.  If a(n) asterism id is provided, the even is only generated
-  # for edits to that particular asterism.  If a program id is provided
-  # then the event must correspond to a(n) asterism referenced by that
-  # program.
+  # created or updated.  If a(n) asterism id is provided, the event is only
+  # generated for edits to that particular asterism.  If a program id is
+  # provided then the event must correspond to a(n) asterism referenced by
+  # that program.
   #
-  asterismEdited(
+  asterismEdit(
     # Asterism ID
     asterismId: AsterismId
 
     # Program ID
     programId: ProgramId
-  ): AsterismEdited!
+  ): AsterismEdit!
 
   #
   # Subscribes to an event that is generated whenever a(n) observation is
-  # edited.  If a(n) observation id is provided, the even is only generated
-  # for edits to that particular observation.  If a program id is provided
-  # then the event must correspond to a(n) observation referenced by that
-  # program.
+  # created or updated.  If a(n) observation id is provided, the event is only
+  # generated for edits to that particular observation.  If a program id is
+  # provided then the event must correspond to a(n) observation referenced by
+  # that program.
   #
-  observationEdited(
+  observationEdit(
     # Observation ID
     observationId: ObservationId
 
     # Program ID
     programId: ProgramId
-  ): ObservationEdited!
+  ): ObservationEdit!
 
   #
-  # Subscribes to an event that is generated whenever a program |is edited.
-  # A particular program id may be provided to limit events to that program.
+  # Subscribes to an event that is generated whenever a program is created
+  # or edited. A particular program id may be provided to limit events to
+  # that program.
   #
-  programEdited(
+  programEdit(
     # Program ID
     programId: ProgramId
-  ): program!
+  ): ProgramEdit!
 
   #
   # Subscribes to an event that is generated whenever a(n) target is
-  # edited.  If a(n) target id is provided, the even is only generated
-  # for edits to that particular target.  If a program id is provided
-  # then the event must correspond to a(n) target referenced by that
-  # program.
+  # created or updated.  If a(n) target id is provided, the event is only
+  # generated for edits to that particular target.  If a program id is
+  # provided then the event must correspond to a(n) target referenced by
+  # that program.
   #
-  targetEdited(
+  targetEdit(
     # Target ID
     targetId: TargetId
 
     # Program ID
     programId: ProgramId
-  ): TargetEdited!
+  ): TargetEdit!
 }
 
 type Target {
@@ -866,20 +907,13 @@ type Target {
   tracking: Tracking!
 }
 
-# Event sent when a new object is created
-type TargetCreated implements Event {
-  # Newly created object
+# Event sent when a new object is created or updated
+type TargetEdit implements Event {
+  # Type of edit
+  editType: EditType!
+
+  # Edited object
   value: Target!
-  id: Long!
-}
-
-# Event sent when an object is edited
-type TargetEdited implements Event {
-  # Previous value of the edited object
-  oldValue: Target!
-
-  # Updated value of the edited object
-  newValue: Target!
   id: Long!
 }
 
