@@ -50,30 +50,17 @@ final case class LiveQueryRenderMod[S, D, A](
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
 object LiveQueryRenderMod {
-  trait Props[F[_], S, D, A] {
-    val query: F[D]
-    val extract: D => A
-    val changeSubscriptions: NonEmptyList[F[GraphQLStreamingClient[F, S]#Subscription[_]]]
-
-    val valueRender: ViewF[F, A] => VdomNode
-    val pendingRender: Long => VdomNode
-    val errorRender: Throwable => VdomNode
-    val onNewData: F[Unit]
-
-    implicit val F: ConcurrentEffect[F]
+  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ViewF[F, *], S, D, A] {
     implicit val timer: Timer[F]
     implicit val cs: ContextShift[F]
-    implicit val logger: Logger[F]
-    implicit val reuse: Reusability[A]
-    implicit val client: GraphQLStreamingClient[F, S]
   }
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
-    subscriptions:           NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
+    subscriptions:           NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]],
     cancelConnectionTracker: CancelToken[F],
     renderer:                StreamRendererMod.Component[F, A]
-  )
+  ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]]                 = Reusability.never
@@ -85,13 +72,23 @@ object LiveQueryRenderMod {
     ScalaComponent
       .builder[Props[F, S, D, A]]
       .initialState[Option[State[F, S, D, A]]](none)
-      .render { $ =>
-        React.Fragment(
-          $.state.fold[VdomNode](EmptyVdom)(
-            _.renderer(_.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender))
+      .render(Render.renderFn[F, ViewF[F, *], D, A](_))
+      .componentDidMount(
+        Render.LiveQuery
+          .didMountFn[F, ViewF[F, *], S, D, A][Props[F, S, D, A], State[F, S, D, A]](
+            "LiveQueryRenderMod",
+            (stream, props) => {
+              implicit val F      = props.F
+              implicit val logger = props.logger
+              implicit val reuse  = props.reuse
+              implicit val timer  = props.timer
+              implicit val cs     = props.cs
+
+              StreamRendererMod.build(stream, holdAfterMod = (2 seconds).some)
+            },
+            State.apply
           )
-        )
-      }
+      )
       .componentDidMount { $ =>
         implicit val F      = $.props.F
         implicit val timer  = $.props.timer
@@ -141,29 +138,19 @@ object LiveQueryRenderMod {
             _                       <-
               $.setStateIn[F](State(queue, subscriptions, cancelConnectionTracker, renderer).some)
             _                       <- queryAndEnqueue(queue)
-            _                       <-
-              deferRun(
-                F.runAsync(
-                  trackChanges(subscriptions, queue)
-                    .handleErrorWith(t => logger.error(t)("Error updating LiveQueryRenderMod"))
-                )
-              )
+            _                       <- deferRun(
+                                         F.runAsync(
+                                           trackChanges(subscriptions, queue)
+                                             .handleErrorWith(t => logger.error(t)("Error updating LiveQueryRenderMod"))
+                                         )
+                                       )
           } yield ()
 
         init
           .handleErrorWith(t => logger.error(t)("Error initializing LiveQueryRenderMod"))
           .runInCB
       }
-      .componentWillUnmount { $ =>
-        implicit val F = $.props.F
-
-        $.state
-          .map(state =>
-            (state.cancelConnectionTracker >>
-              state.subscriptions.map(_.stop()).sequence.void).runInCB
-          )
-          .getOrEmpty
-      }
+      .componentWillUnmount(Render.LiveQuery.willUnmountFn[F, ViewF[F, *], S, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

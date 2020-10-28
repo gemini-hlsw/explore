@@ -34,7 +34,7 @@ final case class SubscriptionRenderMod[D, A](
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val ce:            ConcurrentEffect[IO],
+  val F:             ConcurrentEffect[IO],
   val timer:         Timer[IO],
   val cs:            ContextShift[IO],
   val logger:        Logger[IO],
@@ -43,28 +43,15 @@ final case class SubscriptionRenderMod[D, A](
     with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
-  trait Props[F[_], D, A] {
-    val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
-    val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
-
-    val valueRender: ViewF[F, A] => VdomNode
-    val pendingRender: Long => VdomNode
-    val errorRender: Throwable => VdomNode
-    val onNewData: F[Unit]
-
-    implicit val ce: ConcurrentEffect[F]
+  trait Props[F[_], D, A] extends Render.Subscription.Props[F, ViewF[F, *], D, A] {
     implicit val timer: Timer[F]
     implicit val cs: ContextShift[F]
-    implicit val logger: Logger[F]
-    implicit val reuse: Reusability[A]
   }
 
   protected final case class State[F[_], D, A](
-    subscription: Option[
-      GraphQLStreamingClient[F, _]#Subscription[D]
-    ] = None,
-    renderer:     Option[StreamRendererMod.Component[F, A]] = None
-  )
+    subscription: GraphQLStreamingClient[F, _]#Subscription[D],
+    renderer:     StreamRendererMod.Component[F, A]
+  ) extends Render.Subscription.State[F, ViewF[F, *], D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =
@@ -77,18 +64,10 @@ object SubscriptionRenderMod {
   protected def componentBuilder[F[_], D, A] =
     ScalaComponent
       .builder[Props[F, D, A]]
-      .initialState(State[F, D, A]())
-      .render { $ =>
-        React.Fragment(
-          $.state.renderer.fold[VdomNode](EmptyVdom)(
-            _ {
-              _.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender)
-            }
-          )
-        )
-      }
+      .initialState[Option[State[F, D, A]]](none)
+      .render(Render.renderFn[F, ViewF[F, *], D, A](_))
       .componentDidMount { $ =>
-        implicit val ce     = $.props.ce
+        implicit val F      = $.props.F
         implicit val timer  = $.props.timer
         implicit val cs     = $.props.cs
         implicit val logger = $.props.logger
@@ -98,7 +77,7 @@ object SubscriptionRenderMod {
           .flatMap { subscription =>
             $.setStateIn[F](
               State(
-                subscription.some,
+                subscription,
                 StreamRendererMod
                   .build(
                     $.props
@@ -106,18 +85,13 @@ object SubscriptionRenderMod {
                       .flatTap(_ => fs2.Stream.eval($.props.onNewData)),
                     holdAfterMod = (2 seconds).some
                   )
-                  .some
-              )
+              ).some
             )
           }
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRenderMod"))
           .runInCB
       }
-      .componentWillUnmount { $ =>
-        implicit val ce = $.props.ce
-
-        $.state.subscription.map(_.stop().runInCB).getOrEmpty
-      }
+      .componentWillUnmount(Render.Subscription.willUnmountFn[F, ViewF[F, *], D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 
