@@ -8,7 +8,7 @@ import scala.collection.immutable.HashSet
 import scala.util.Random
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.implicits._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
@@ -35,6 +35,7 @@ import monocle.macros.Lenses
 import mouse.boolean._
 import react.beautifuldnd._
 import react.common._
+import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
@@ -87,8 +88,8 @@ object TargetObsList {
             obsWithIndexSetter
               .composeOptionLens(first)
               .composeOptionLens(ObsIdNameTarget.target)
-              .set(targetOpt) //.map(TargetSummary.fromTarget))
-          ) //>>
+              .set(targetOpt)
+          )
     // 2) Send mutation
     // updateObs(EditObservationInput(obsId, targets = targetOpt.map(_.id)).some)
 
@@ -246,17 +247,25 @@ object TargetObsList {
                     Icons.ChevronRight
                   )
 
+                val memberObsSelected = props.focused.get.exists(f =>
+                  targetObs.map(obs => FocusedObs(obs.id)).exists(f === _)
+                )
                 Droppable(target.id.toString) { case (provided, snapshot) =>
                   <.div(
                     provided.innerRef,
                     provided.droppableProps,
                     getListStyle(snapshot.isDraggingOver)
                   )(
-                    Segment(vertical = true,
-                            raised = props.focused.get
-                              .exists(_ === FocusedTarget(target.id)),
-                            clazz = ExploreStyles.ObsTreeGroup
+                    Segment(
+                      vertical = true,
+                      clazz = ExploreStyles.ObsTreeGroup |+| Option
+                        .when(
+                          memberObsSelected || props.focused.get
+                            .exists(_ === FocusedTarget(target.id))
+                        )(ExploreStyles.SelectedObsTreeGroup)
+                        .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
                     )(
+                      ^.cursor.pointer,
                       ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
                     )(
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
@@ -301,7 +310,6 @@ object TargetObsList {
                         }
                       ),
                       provided.placeholder
-                      //<.span(^.display.none.when(targetObs.nonEmpty), provided.placeholder) // Doesn't really work.
                     )
                   )
                 }

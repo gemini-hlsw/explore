@@ -67,7 +67,8 @@ object TargetTabContents {
                 maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,
                 resizeHandles = List(ResizeHandleAxis.East),
-                content = tree(targetsWithObs)
+                content = tree(targetsWithObs),
+                clazz = ExploreStyles.ResizableSeparator
               ),
               <.div(
                 ExploreStyles.SinglePanelTile,

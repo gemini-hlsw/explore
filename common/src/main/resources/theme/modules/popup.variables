@@ -1,4 +1,7 @@
-@background: lighten(@pageBackground, 3%);
-@headerBorder: darken(@gray-darker, 5%);
-@arrowBackground: lighten(@pageBackground, 3%);
+@background: var(--popup-background);
+@headerBorder: var(--popup-header-border);
+@arrowColor: var(--popup-arrow-border);
+
+@arrowBackground: var(--popup-arrow-background);
 @borderColor: @gray;
+

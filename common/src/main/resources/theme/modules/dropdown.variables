@@ -8,12 +8,10 @@
 @menuHeaderColor: @gray-light;
 @pointingArrowBackground: @gray-dark;
 @pointingArrowBoxShadow: none;
-@selectionTextColor: @gray-darker;
-@selectionVisibleTextColor: @gray-darker;
-
-@selectionBackground: @gray-light;
 @selectionTextColor: @lightTextColor;
+@selectionVisibleTextColor: var(--dropdown-selection-visible-color);
 
+@selectionBackground: var(--dropdown-selection-background);
 @selectionVerticalPadding: @tightVerticalPadding;
 @selectionHorizontalPadding: @tightHorizontalPadding;
 @menuInputHorizontalPadding: @tightHorizontalPadding;

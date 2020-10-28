@@ -14,6 +14,7 @@ import explore.model.ObsSummary
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
+import react.common.implicits._
 
 final case class ObsList(
   observations: View[List[ObsSummary]],
@@ -28,8 +29,9 @@ object ObsList {
       <.div(ExploreStyles.ObsTree)(
         <.div(
           props.observations.get.toTagMod { obs =>
+            val selected = props.focused.get.exists(_ === FocusedObs(obs.id))
             <.div(
-              ExploreStyles.ObsItem,
+              ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
               ^.cursor.pointer,
               ^.onClick ==> { e: ReactEvent =>
                 e.stopPropagationCB >>
@@ -38,11 +40,7 @@ object ObsList {
                     .runInCB
               }
             )(
-              ObsBadge(obs,
-                       ObsBadge.Layout.NameAndConf,
-                       selected = props.focused.get
-                         .exists(_ === FocusedObs(obs.id))
-              )
+              ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
             )
           }
         )

@@ -1,5 +1,6 @@
 @import "suithemes/default/globals/site.variables";
 @import "~theme/modules/sidebar.variables";
+@import "~theme/globals/site.variables";
 
 // vertical buttons
 @import "verticalbuttons.less";
@@ -11,12 +12,372 @@
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 @resizeHandleWidth: 5px; // Width of the tree resize handle
-@tileBackground: black;
 
 :root {
-  --focus-inner-color: hsla(210, 52%, 42%, 1);
+  color-scheme: dark;
+}
+
+//=================
+// DARK THEME VARS
+//=================
+.colors-dark() {
+  // Split color in HSL to easily do variations
+  // https://blog.jim-nielsen.com/2020/sass-color-functions-in-css/
+  --color-background-base-h: 0;
+  --color-background-base-s: 0%;
+  --color-background-base-l: 7.06%;
+  --color-background-base-hsl: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-background-base-l);
+  --color-background: hsl(var(--color-background-base-hsl));
+  // Variations of the background color
+  // Light shades
+  --color-background-light-3: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 3%)
+  );
+  --color-background-light-5: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 5%)
+  );
+  --color-background-light-6: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 6%)
+  );
+  --color-background-light-8: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 8%)
+  );
+  --color-background-light-10: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 10%)
+  );
+  --color-background-light-12: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 12%)
+  );
+  --color-background-light-15: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 15%)
+  );
+  --color-background-light-20: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 20%)
+  );
+  // Dark shades
+  --color-background-dark-5: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) - 5%)
+  );
+  --color-background-dark-10: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) - 10%)
+  );
+
+  // text color
+  --color-text-base-h: 0;
+  --color-text-base-s: 0%;
+  --color-text-base-l: 100%;
+  --color-text-base-a: 0.87;
+  --color-text-base-hsla: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), var(--color-text-base-a);
+  --color-text-base: hsla(var(--color-text-base-hsla));
+  // Light shades
+  --color-text-light-45: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 45%)
+  );
+  --color-text-light-75: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 75%)
+  );
+  --color-text-full: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    var(--color-text-base-l),
+    1
+  );
+  // dark shades
+  --color-text-dark-10-hsla: var(--color-text-base-h), var(--color-text-base-s), calc(var(--color-text-base-l) - 8%), calc(var(--color-text-base-a) - 0.3);
+  --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
+
+  --gray-h: 210;
+  --gray-s: 5.7%;
+  --gray-l: 34.1%;
+  --gray-a: 1;
+  --gray-hsla: var(--gray-h), var(--gray-s), var(--gray-l), var(--gray-a);
+  --gray: hsla(var(--gray-hsla));
+  // dark grays
+  --gray-dark-5: hsl(
+    var(--gray-h),
+    var(--gray-se-s),
+    calc(var(--gray-l) - 5%),
+    var(--gray-a)
+  );
+  --gray-dark-10: hsl(
+    var(--gray-h),
+    var(--gray-s-s),
+    calc(var(--gray-l) - 10%),
+    var(--gray-a)
+  );
+
+  --focus-inner-color: hsla(230, 52%, 42%, 1);
+  --focus-outer-color: hsla(220, 72%, 73%, 0.85);
+  --hover-background-color: hsla(260, 72%, 10%, 0.85);
+  --highlight-color: hsla(200, 72%, 83%, 0.35);
+  --error-label-color: @red;
+
+  --text-color: var(--color-text-base);
+  --control-background-color: var(--color-background-light-20);
+}
+
+.site-dark() {
+  --site-page-background: var(--color-background);
+  --site-text-color: var(--color-text-base);
+  --site-input-color: var(--input-color);
+  --site-border-color: var(--gray);
+  --site-input-placeholder-focus-color: var(--color-text-light-45);
+  --site-input-placeholder-color: var(--color-text-light-75);
+  --site-input-highlight-background: var(--highlight-color);
+  --site-input-highlight-color: var(--color-text-full);
+}
+
+.form-dark() {
+
+  // ============
+  // Light shades
+  // ============
+  --input-color: var(--color-text-full);
+
+  --form-input-color: var(--color-text-dark-10);
+  --form-input-focus-color: var(--color-text-base);
+  --form-input-background: var(--control-background-color);
+  --form-input-focus-border-color: transparent;
+  --form-input-focus-box-shadow: 0 0 0 0.1rem var(--focus-inner-color), 0 0 0 0.2rem var(--focus-outer-color);
+}
+
+.tile-dark() {
+  --tile-background: var(--color-background-light-8);
+  --tile-title-background: var(--color-background-light-12);
+  --tile-title-color: var(--color-text-full);
+}
+
+.menu-dark() {
+  --menu-hover-item-background: var(--color-background-light-10);
+  --menu-tabular-active-background: var(--color-background-light-10);
+}
+
+.segment-dark() {
+  --segment-background: var(--color-background-light-5);
+  --segment-stacked-page-background: var(--color-background-light-10);
+}
+
+.progress-dark() {
+  --progress-background: var(--color-background-dark-5);
+}
+
+.popup-dark() {
+  --popup-background: var(--color-background-light-3);
+  --popup-arrow-background: var(--color-background-light-3);
+  --popup-header-border: var(--gray-dark-5);
+  --popup-arrow-border: var(--gray-dark-10);
+}
+
+.dropdown-dark() {
+  --dropdown-selection-background: var(--control-background-color);
+  --dropdown-selection-visible-color: @gray-darker;
+}
+
+.checkbox-dark() {
+  --checkbox-background: var(--control-background-color);
+  --checkbox-focus-background: @gray-dark;
+  --checkbox-active-background: var(--control-background-color);
+  --checkbox-active-focus-background: var(--control-background-color);
+  --checkbox-border-color: var(--site-border-color);
+  --checkbox-active-color: var(--form-input-color);
+  --checkbox-hover-color: var(--input-color);
+}
+
+.table-dark() {
+  --table-background: var(--color-background-light-3);
+  --table-striped-background: var(--color-background-light-6);
+  --table-active-background-hover: var(--color-background-light-15);
+  --table-header-background: var(--color-background-dark-5);
+  --table-footer-background: var(--color-background-dark-5);
+}
+
+.dark-theme() {
+  // COLORS
+  .colors-dark();
+
+  // SUI VARIABLES
+  .site-dark();
+  .tile-dark();
+  .form-dark();
+  .menu-dark();
+  .segment-dark();
+  .progress-dark();
+  .popup-dark();
+  .dropdown-dark();
+  .checkbox-dark();
+  .table-dark();
+
+  // EXPLORE VARIABLES
+  --sidetab-background: var(--color-background-light-5);
+  --explore-group-hover: var(--hover-background-color);
+}
+
+//=================
+// LIGHT THEME VARS
+//=================
+.colors-light() {
+  --focus-inner-color: hsla(240, 72%, 42%, 1);
   --focus-outer-color: hsla(200, 72%, 83%, 0.75);
   --error-label-color: @red;
+
+  --color-text-base-h: 0;
+  --color-text-base-s: 0%;
+  --color-text-base-l: 0%;
+  --color-text-base-a: 0.86;
+  --color-text-base-hsla: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), var(--color-text-base-a);
+  --color-text-base: hsla(var(--color-text-base-hsla));
+  // Light shades
+  --color-text-light-45: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 45%)
+  );
+  --color-text-light-75: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 75%)
+  );
+  --control-background-color: var(--color-background-light-20);
+  --gray: gray;
+}
+
+.site-light() {
+  --site-page-background: #FFFFFF;
+  --site-text-color: rgba(0, 0, 0, 0.87);
+  --site-input-color: var(--color-text-base);
+  --site-border-color: rgba(34, 36, 38, 0.15);
+  --site-input-placeholder-focus-color: var(--color-text-light-45);
+  --site-input-placeholder-color: var(--color-text-light-75);
+  // site @inputHighlightBackground
+  --site-input-highlight-background: rgba(100, 100, 100, 0.4);
+  --site-input-highlight-color: var(--site-text-color);
+}
+
+.form-light() {
+  --input-color: var(--color-text-base);
+
+  --form-input-color: @textColor;
+  --form-input-focus-color: @selectedTextColor;
+  --form-input-background: @white;
+  --form-input-focus-border-color: @white;
+  --form-input-focus-box-shadow: @inputInfoFocusBoxShadow;
+}
+
+.tile-light() {
+  --tile-background: #FFFFFF; // @pageBackground on site.variables
+  --tile-title-background: var(--color-background-light-12);
+  --tile-title-color: var(--color-text-base);
+}
+
+.menu-light() {
+  --menu-hover-item-background: @subtleTransparentBlack;
+  --menu-tabular-active-background: none @white;
+}
+
+.segment-light() {
+  // FIXME it isn't clear which is a segment default background
+  --segment-background: @white;
+  --segment-stacked-page-background: @subtleTransparentBlack;
+}
+
+.progress-light() {
+  --progress-background: @strongTransparentBlack;
+}
+
+.popup-light() {
+  --popup-background: @white;
+  --popup-arrow-background: var(--popup-background);
+  --popup-header-border: var(--gray-dark-5);
+  // FIXME @arrowColor: darken(@borderColor, 10);
+  --popup-arrow-border: var(--gray-dark-10);
+}
+
+.dropdown-light() {
+  --dropdown-selection-background: var(--input-background-color);
+  --dropdown-selection-visible-color: @hoveredTextColor;
+}
+
+.checkbox-light() {
+  --checkbox-background: @white;
+  --checkbox-focus-background: @white;
+  --checkbox-active-background: @white;
+  --checkbox-active-focus-background: @white;
+  --checkbox-hover-color: gray;
+  --checkbox-active-color: @selectedTextColor;
+  --checkbox-border-color: @solidBorderColor;
+}
+
+.table-light() {
+  --table-background: @white;
+  --table-striped-background: rgba(0, 0, 50, 0.02);
+  --table-active-background-hover: #EFEFEF;
+  --table-header-background: @offWhite;
+  --table-footer-background: @offWhite;
+}
+
+.light-theme() {
+  // Values here come from the default SUI theme
+  .colors-light();
+  .site-light();
+  .tile-light();
+  .form-light();
+  .menu-light();
+  .segment-light();
+  .progress-light();
+  .popup-light();
+  .dropdown-light();
+  .checkbox-light();
+  .table-light();
+
+  // EXPLORE VARIABLES
+  --sidetab-background: @gray;
+  --explore-group-hover: @lightGrey;
+}
+
+body.dark-theme {
+  .dark-theme();
+}
+
+body.light-theme {
+  .light-theme();
+}
+
+@media (prefers-color-scheme: dark) {
+  /* defaults to dark theme */
+  body {
+    .dark-theme();
+  }
+  /* Override dark mode with light mode styles if the user decides to swap */
+  body.light-theme {
+    .light-theme();
+  }
 }
 
 // https://zellwk.com/blog/creating-focus-style/
@@ -70,11 +431,15 @@ body {
 
 .main-header {
   grid-area: header;
+
+  & > .ui.tabular.menu {
+    border-bottom: none;
+  }
 }
 
 .sidetabs {
   grid-area: sidebar;
-  background: darkgrey;
+  background: var(--sidetab-background);
 }
 
 // Taken from the definitíon of ui.button transition but removed background-color and background
@@ -86,19 +451,23 @@ body {
 }
 
 .explore-tile-title {
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
-  border-bottom-color: fade(@borderColor, 100%);
+  background-color: var(--tile-title-background);
+
+  & .tabular.menu .item {
+    color: var(--tile-title-color);
+    letter-spacing: 0.1em;
+  }
 }
 
 .explore-tile-body {
   height: ~"calc(100% - @{minHeight})";
   overflow-y: auto;
+  background-color: var(--tile-background);
 }
 
 .explore-tile {
   .full-height-width();
-  background: @tileBackground;
+  background-color: var(--tile-background);
 }
 
 .proposal-tile {
@@ -152,11 +521,11 @@ body {
 
 // Section on the left to place the tree
 .tree {
-  margin-right: @resizeHandleWidth;
   height: 100%;
   left: 0px;
   top: 0px;
   position: absolute;
+  box-shadow: inset -5px 0px 0px 0px var(--tile-background);
 
   // Special css to decorate the resize handle. It needs to be very specific
   .react-resizable-handle.react-resizable-handle-e {
@@ -171,12 +540,13 @@ body {
   width: ~"calc(100% - @{resizeHandleWidth})";
   height: 100%;
   // Add scroll on Y
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 // Inner area of the tree
 .tree-body-inner {
   height: 100%;
+  width: 100%;
 }
 
 .rgl-body {
@@ -184,6 +554,13 @@ body {
   position: absolute;
   top: 0px;
   overflow-y: scroll;
+}
+
+.rgl-placeholder {
+  background-color: var(--tile-background);
+  height: 100%;
+  top: 0px;
+  position: absolute;
 }
 
 .single-panel-tile {
@@ -198,15 +575,16 @@ body {
 
 .obs-tree {
   .full-height-width();
-  padding-top: 5px;
   padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background-color: var(--obs-tree-background);
 }
 
 .obs-item {
-  margin: 10px;
+  margin: 0px;
+  padding: 5px;
 }
 
 .obs-tree-item {
@@ -218,9 +596,27 @@ body {
   width: 100%;
 }
 
+.selected-obs-item {
+  background-color: var(--tile-background);
+}
+
+.vertical.segment.selected-obs-tree-group {
+  background-color: var(--tile-background);
+}
+
+.vertical.segment.unselected-obs-tree-group:hover {
+  background-color: var(--explore-group-hover);
+
+  & .obs-tree-group-header {
+    text-decoration: underline;
+  }
+}
+
 .vertical.segment.obs-tree-group {
   padding-top: 5px;
   padding-bottom: 5px;
+  padding-right: 5px;
+  user-select: none;
 }
 
 .obs-tree-group-header {
@@ -279,6 +675,7 @@ body {
 }
 
 .aladin-container-column {
+  min-height: 500px;
   height: 100%;
   display: grid;
   grid-template-rows: 1fr min-content;
@@ -367,7 +764,7 @@ body {
 
   grid-gap: 1em;
   padding: 1em;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 2fr;
 
   @media (max-width: @target-grid-responsive-cutoff) {
     grid-template-columns: 1fr;

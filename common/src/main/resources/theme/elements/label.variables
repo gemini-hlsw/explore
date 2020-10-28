@@ -1,3 +1,4 @@
 @backgroundColor: @gray-dark;
 @labelActiveBackgroundColor: @gray-light;
+@labelHoverBackgroundColor: @gray-darker;
 @ribbonShadowColor: @gray-dark;

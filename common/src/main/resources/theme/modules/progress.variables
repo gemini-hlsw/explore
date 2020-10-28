@@ -1,1 +1,2 @@
-@background: darken(@pageBackground, 5%);
+@background: var(--progress-background);
+

@@ -1,19 +1,18 @@
 @gray-base: #000;
 @gray-darker: #272B30;
 @gray-dark: #3A3F44;
-@gray: #52575C;
+@gray: var(--gray);
 @gray-light: #7A8288;
 @gray-lighter: #999;
 @primaryColor: @gray-light;
 @positiveColor: #62c462;
 @warningColor: #f89406;
 @negativeColor: #ee5f5b;
-@pageBackground: @gray-darker;
+@pageBackground: var(--site-page-background);
 @linkColor: #fff;
 @linkHoverColor: #fff;
 @padding-base-vertical: 8px;
 @padding-large-vertical: 14px;
-@inputColor: @gray-darker;
 @invertedDisabledTextColor: #ccc;
 @disabledBorderColor: rgba(0, 0, 0, 0.6);
 @positiveTextColor: #fff;
@@ -38,7 +37,7 @@
 @invertedSelectedTextColor           : rgba(0, 0, 0, 0.95);
 @invertedDisabledTextColor           : rgba(0, 0, 0, 0.2);
 
-@textColor           : rgba(255, 255, 255, 0.9);
+@textColor           : var(--site-text-color);
 @mutedTextColor      : rgba(255, 255, 255, 0.8);
 @lightTextColor      : rgba(255, 255, 255, 0.7);
 @unselectedTextColor : rgba(255, 255, 255, 0.5);
@@ -47,12 +46,19 @@
 @selectedTextColor   : rgba(255, 255, 255, 1);
 @disabledTextColor   : rgba(255, 255, 255, 0.2);
 
-@borderColor: @gray;
-
-@inputPlaceholderColor: @gray-lighter;
+@borderColor: var(--site-border-color);
 
 @floatingShadow:
   0px 0px 1px 2px rgba(221, 219, 217, .8)
 ;
+
 @tightVerticalPadding   : @relative5px;
 @tightHorizontalPadding : @relative6px;
+
+// References to css color variables
+@inputColor: var(--site-input-color);
+@inputPlaceholderFocusColor: var(--site-input-placeholder-focus-color);
+@inputPlaceholderColor: var(--site-input-placeholder-color);
+
+@inputHighlightBackground: var(--site-input-highlight-background);
+@inputHighlightColor: var(--site-input-highlight-color);

@@ -1,8 +1,10 @@
-@background: lighten(@pageBackground, 3%);
-@stripedBackground: lighten(@background, 3%);
-@activeBackgroundHover: lighten(@background, 12%);
+@background: var(--table-background);
+@stripedBackground: var(--table-striped-background);
+@activeBackgroundHover: var(--table-active-background-hover);
 @border: darken(@gray-darker, 5%);
-@headerBackground: darken(@pageBackground, 5%);
+@headerBackground: var(--table-header-background);
 @definitionPageBackground: transparent;
-@footerBackground: darken(@pageBackground, 5%);
+@footerBackground: var(--table-footer-background);
+@border: darken(@gray-darker, 5%);
+@definitionPageBackground: transparent;
 @activeBackgroundColor: @gray;

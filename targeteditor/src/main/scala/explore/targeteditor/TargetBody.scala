@@ -122,13 +122,13 @@ object TargetBody {
                     props.options
                   )
                 },
-              CataloguesForm(props.options)
+              CataloguesForm(props.options).when(false)
             ),
             <.div(
               ExploreStyles.TargetSkyplotCell,
               WIP(
                 SkyPlotSection(target.tracking.coordinates)
-              )
+              ).when(false)
             )
           )
         }

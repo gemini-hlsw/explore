@@ -28,6 +28,14 @@
   content: '\e801';
 }
 
+/* Hover */
+.ui.checkbox input:checked ~ label:hover::before,
+.ui.checked.checkbox label:hover::before {
+  // background-color: blue;
+  color: blue;
+  border-color: var(--checkbox-hover-color);
+}
+
 
 /*  UTF Reference
 .check:before { content: '\e800'; }
