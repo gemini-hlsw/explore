@@ -133,14 +133,14 @@ object CoordinatesForm {
               value = stateView.zoom(State.raValue),
               format = RightAscension.fromStringHMS,
               label = "RA",
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormInputEV(
               id = "dec",
               value = stateView.zoom(State.decValue),
               format = Declination.fromStringSignedDMS,
               label = "Dec",
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormButton(
               size = Small,

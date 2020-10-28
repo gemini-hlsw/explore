@@ -15,7 +15,7 @@
     color: @inputBackground;
     border-radius: @defaultBorderRadius;
     border: @borderWidth solid @gray;
-    padding: calc(@inputVerticalPadding - @borderWidth) @inputHorizontalPadding;
+    padding: @inputPadding;
     line-height: @inputLineHeight;
 
 }
@@ -23,6 +23,14 @@
 .ui.form data.static-data:focus {
     border: @borderWidth solid @focusedFormBorderColor;
     outline: 0;
+}
+
+/* 
+  For instances where you want plain text properly aligned in a form.
+*/
+.explore-text-in-form {
+  margin-top: auto;
+  padding-bottom: @tightInputVerticalPadding;
 }
 
 /*

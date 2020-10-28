@@ -16,7 +16,7 @@ import react.common._
 
 final case class FormStaticData(
   id:        String,
-  value:     String,
+  value:     TagMod,
   label:     String,
   hideLabel: Boolean = false,
   modifiers: Seq[TagMod] = Seq.empty

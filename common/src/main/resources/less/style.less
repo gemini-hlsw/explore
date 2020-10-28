@@ -410,3 +410,79 @@ body {
   .error-label-mixin();
 }
 
+.proposal-details-grid {
+  /*
+  When we go to one column, instead of interleaving 
+  items, we want to put the second column below the first.
+  */
+  @proposal-details-grid-items: 8;
+
+  each(range(1, @proposal-details-grid-items), {
+    @is-odd: boolean(mod(@value, 2) > 0);
+    @odd-value: (@value + 1) / 2;
+    @even-value: ceil((@value + @proposal-details-grid-items) / 2);
+    @row-start: if(@is-odd, @odd-value, @even-value);
+
+    & > *:nth-child(@{value}) {
+      @media (max-width: @two-column-break) {
+        grid-row-start: @row-start;
+      }
+    }
+  });
+}
+// The split edit button and the band totals
+div.partner-split-total {
+  &,
+  & > div > data {
+    width: 5em;
+  }
+  
+  & > div > data {
+    text-align: end;
+  }
+}
+
+.partner-split-data {
+  &,
+  div& data {
+    width: 6em;
+  }
+
+  // the text only "hours".
+  span& {
+    text-align: end;
+    padding-right: 6px; // determined empirically from dev tools
+  }
+
+  // The div containing the flag and percent text.
+  data > div {
+    display: flex;
+
+    // The percent text
+    span {
+      flex: 1;
+      text-align: end;
+    }
+  }
+}
+
+img.partner-split-flag {
+  height: 16px;
+  width: 32px;
+  margin-right: 0.5em;
+}
+
+.partner-splits-editor-error {
+  text-align: left;
+  font-size: larger;
+}
+
+.ui.table.partner-splits-editor-table {
+  td:last-child {
+    width: 5em;
+  }
+  
+  .ui.form & input {
+    text-align: right;
+  }
+}

@@ -6,6 +6,7 @@ package explore.model
 import java.time.Duration
 
 import clue.StreamingClientStatus
+import coulomb.Quantity
 import explore.data.KeyedIndexedList
 import io.circe.Json
 import japgolly.scalajs.react.CatsReact._
@@ -19,6 +20,12 @@ import react.common.implicits._
  * Reusability instances for model classes
  */
 object reusability {
+
+  // Reusability for coulomb quantities.
+  // TODO: Move to lucuma-ui.
+  implicit def quantityReuse[N: Reusability, U]: Reusability[Quantity[N, U]] =
+    Reusability.by(_.value)
+
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                   = Reusability.byEq
@@ -35,6 +42,7 @@ object reusability {
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]                           = Reusability.derive
   implicit def ObsSummaryReuse: Reusability[ObsSummary]                                           =
     Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration))
-  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.derive
+  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.byEq
+  implicit def partnerSplitReuse: Reusability[PartnerSplit]                                       = Reusability.derive
   implicit val jsonReuse: Reusability[Json]                                                       = Reusability.by_==
 }

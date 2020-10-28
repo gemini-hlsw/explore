@@ -5,7 +5,8 @@
  Overrides the default values of fields inside an SUI form.
  These values interfere with the explore-grid layout.
  */
-.ui.form.explore-grid .field {
+.ui.form.explore-grid .field,
+.ui.form .explore-grid .field {
     margin: 0;
     padding: 0;
 }
@@ -29,8 +30,10 @@
      when less than @two-column-breakpoint width.
      */
     &.explore-two-columns {
-        @media (min-width: @two-column-break) {
-            grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+
+        @media (max-width: @two-column-break) {
+            grid-template-columns: unset;
         }
     }
 
@@ -39,8 +42,10 @@
      when less than @three-column-breakpoint width.
      */
     &.explore-three-columns {
-        @media (min-width: @three-column-break) {
-            grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
+
+        @media (max-width: @three-column-break) {
+            grid-template-columns: unset;
         }
     }
 }
@@ -56,19 +61,34 @@
 .explore-flex-container {
     display: flex;
 
+    &.explore-flex-wrap {
+        flex-wrap: wrap;
+    }
+
     .ui.form & > * + *, // override SUI 
     .ui.form.explore-grid & > * + *,
+    .ui.form .explore-grid & > * + *,
     > * + * {
         margin-left: 0.5em;
     }
 
     /*
      The explore-grow-* classes can be used to control the width of 
-     elements in a cell wrapper via the flex grow attribute.
+     elements in a flex container via the flex grow attribute.
      */
-    each(range(4), {
+    each(range(0, 4), {
         .explore-grow-@{value} {
             flex: @value;
+        }
+    });
+
+    /*
+     The explore-shrink-* classes can be used to control the width of 
+     elements in a flex container via the flex shrink attribute.
+     */
+    each(range(0, 4), {
+        .explore-shrink-@{value} {
+            flex-shrink: @value;
         }
     });
 
