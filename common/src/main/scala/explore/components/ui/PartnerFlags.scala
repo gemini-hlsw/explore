@@ -3,9 +3,10 @@
 
 package explore.components.ui
 
-import lucuma.core.model.Partner
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
+
+import lucuma.core.model.Partner
 
 object PartnerFlags {
   @js.native

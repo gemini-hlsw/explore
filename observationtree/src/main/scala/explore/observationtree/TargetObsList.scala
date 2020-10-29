@@ -3,7 +3,6 @@
 
 package explore.observationtree
 
-import scala.annotation.unused
 import scala.collection.immutable.HashSet
 import scala.util.Random
 
@@ -76,22 +75,29 @@ object TargetObsList {
       }
 
     private def setTargetForObsWithId(
-      targetsWithObs:     View[TargetsWithObs],
-      @unused obsId:      Observation.Id,
-      obsWithIndexSetter: Adjuster[ObsList, obsListMod.ElemWithIndex]
+      targetsWithObs:        View[TargetsWithObs],
+      obsId:                 Observation.Id,
+      obsWithIndexGetAdjust: GetAdjust[ObsList, obsListMod.ElemWithIndex]
     ): Option[TargetIdName] => IO[Unit] =
-      targetOpt =>
-        // 1) Update internal model
-        targetsWithObs
+      targetOpt => {
+        val obsTargetAdjuster = obsWithIndexGetAdjust
+          .composeOptionLens(first) // Focus on Observation within ElemWithIndex
+          .composeOptionLens(ObsIdNameTarget.target)
+
+        val observationsView = targetsWithObs
           .zoom(TargetsWithObs.obs)
-          .mod(
-            obsWithIndexSetter
-              .composeOptionLens(first)
-              .composeOptionLens(ObsIdNameTarget.target)
-              .set(targetOpt)
-          )
-    // 2) Send mutation
-    // updateObs(EditObservationInput(obsId, targets = targetOpt.map(_.id)).some)
+
+        val oldTarget = obsTargetAdjuster.get(observationsView.get)
+
+        // 1) Update internal model
+        observationsView.mod(obsTargetAdjuster.set(targetOpt)) >>
+          // 2) Send mutation
+          oldTarget
+            .flatMap(oldTarget =>
+              targetOpt.map(newTarget => moveObs(obsId, oldTarget.id, newTarget.id))
+            )
+            .orEmpty
+      }
 
     protected def onDragEnd(
       setter: Undoer.Setter[IO, TargetsWithObs]
@@ -112,7 +118,7 @@ object TargetObsList {
                 .set[Option[TargetIdName]](
                   props.targetsWithObs.get,
                   getTargetForObsWithId(obsWithId.getter).get,
-                  setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId.adjuster)
+                  setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId)
                 )
 
             set(target.some).runInCB
