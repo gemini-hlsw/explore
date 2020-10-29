@@ -3,8 +3,7 @@
 
 package explore.target
 
-import cats.Eval
-import cats.data.IndexedStateT
+import cats.data.State
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLOperation
@@ -147,9 +146,7 @@ object TargetQueries {
   /**
    * Updates all the fields of sideral tracking
    */
-  def updateSiderealTracking(
-    t: SiderealTracking
-  ): IndexedStateT[Eval, EditSiderealInput, EditSiderealInput, Unit] = {
+  def updateSiderealTracking(t: SiderealTracking): State[EditSiderealInput, Unit] = {
     val coords = t.baseCoordinates
 
     val rai = RightAscensionInput(microarcseconds = coords.ra.toAngle.toMicroarcseconds.some).some
