@@ -137,6 +137,7 @@ object Settings {
     val Monocle = Def.setting(
       deps(
         "com.github.julien-truffaut" %%% "monocle-core",
+        "com.github.julien-truffaut" %%% "monocle-state",
         "com.github.julien-truffaut" %%% "monocle-macro"
       )(monocle)
     )

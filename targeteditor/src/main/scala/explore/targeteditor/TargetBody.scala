@@ -19,12 +19,13 @@ import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
+import explore.target.TargetQueries
 import explore.target.TargetQueries._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import react.common._
@@ -42,10 +43,12 @@ final case class TargetBody(
   target:  View[TargetResult],
   options: View[TargetVisualOptions]
 ) extends ReactProps[TargetBody](TargetBody.component) {
-  val aladinCoords: Coordinates = target.get.tracking.coordinates
+  val baseCoordinates: Coordinates =
+    target.zoom(TargetQueries.baseCoordinates).get
 }
 
 object TargetBody {
+
   type Props = TargetBody
   val AladinRef = AladinCell.component
 
@@ -60,7 +63,7 @@ object TargetBody {
 
     @unused
     private def coordinatesKey(target: TargetResult): String =
-      s"${target.name}#${target.tracking.coordinates.show}"
+      s"${target.name}#${target.tracking.baseCoordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -76,21 +79,22 @@ object TargetBody {
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify     = undoSet[
-            (String, RightAscension, Declination)
+            (String, SiderealTracking)
           ](
             targetPropsL,
-            { case (n, r, d) =>
+            { case (n, t) =>
               input =>
-                input.copy(
-                  name = n.some,
-                  ra = RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some).some,
-                  dec = DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some).some
-                )
+                val update =
+                  for {
+                    _ <- EditSiderealInput.name := n.some
+                    _ <- TargetQueries.updateSiderealTracking(t)
+                  } yield ()
+                update.runS(input).value
             }
           ) _
           val modifyName = undoSet[NonEmptyString](
             unsafeTargetName,
-            n => input => input.copy(name = n.value.some)
+            n => EditSiderealInput.name.set(n.value.some)
           ) _
 
           @unused
@@ -100,7 +104,7 @@ object TargetBody {
               .attempt
               .runInCBAndThen {
                 case Right(r @ Some(Target(n, Right(st), _))) =>
-                  modify((n, st.baseCoordinates.ra, st.baseCoordinates.dec)).runInCB *>
+                  modify((n, st)).runInCB *>
                     gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
                 case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
                 case Right(None)                              => s.onComplete(none)
@@ -118,7 +122,7 @@ object TargetBody {
               AladinRef
                 .withRef(aladinRef) {
                   AladinCell(
-                    props.target.zoom(TargetResult.tracking ^|-> TargetResult.Tracking.coordinates),
+                    props.target.zoom(TargetQueries.baseCoordinates),
                     props.options
                   )
                 },
@@ -127,7 +131,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetSkyplotCell,
               WIP(
-                SkyPlotSection(target.tracking.coordinates)
+                SkyPlotSection(props.baseCoordinates)
               ).when(false)
             )
           )
@@ -135,8 +139,8 @@ object TargetBody {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      gotoRaDec(nextProps.aladinCoords)
-        .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
+      gotoRaDec(nextProps.baseCoordinates)
+        .when(nextProps.baseCoordinates =!= currentProps.baseCoordinates)
         .void
   }
 
