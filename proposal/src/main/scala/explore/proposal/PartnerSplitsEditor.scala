@@ -9,20 +9,20 @@ import coulomb.accepted._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
+import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
-import explore.model._
 import explore.model.PartnerSplit._
+import explore.model._
 import explore.model.reusability._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
 import mouse.all._
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
-import explore.components.ui.FomanticStyles
 
 final case class PartnerSplitsEditor(
   show:         Boolean,

@@ -71,6 +71,13 @@ package object optics {
       }
   }
 
+  implicit class GetAdjustOptionOps[S, A](val getAdjust: GetAdjust[S, Option[A]]) extends AnyVal {
+    def composeOptionLens[B](other: Lens[A, B]): GetAdjust[S, Option[B]] =
+      GetAdjust(getAdjust.getter.composeOptionLens(other),
+                getAdjust.adjuster.composeOptionLens(other)
+      )
+  }
+
   implicit class GetterOptionOps[S, A](val getter: Getter[S, Option[A]]) extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): Getter[S, Option[B]] =
       Getter(

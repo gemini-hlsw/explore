@@ -5,6 +5,7 @@ package explore.observationtree
 
 import cats.data.NonEmptyList
 import cats.effect.IO
+import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import explore.AppCtx
@@ -145,6 +146,38 @@ object TargetObsQueries {
       }    
     """
   }
+
+  @GraphQL
+  object ShareTargetWithObs extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($targetId: TargetId!, $obsId: ObservationId!) {
+        shareTargetsWithObservations(
+          input: { targetIds: [$targetId], observationIds: [$obsId] }
+        ) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  object UnshareTargetWithObs extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($targetId: TargetId!, $obsId: ObservationId!) {
+        unshareTargetsWithObservations(
+          input: { targetIds: [$targetId], observationIds: [$obsId] }
+        ) {
+          id
+        }
+      }
+    """
+  }
+
+  def moveObs(obsId: Observation.Id, fromTarget: Target.Id, toTarget: Target.Id): IO[Unit] =
+    AppCtx.withCtx { implicit appCtx =>
+      UnshareTargetWithObs
+        .execute(fromTarget, obsId) >> ShareTargetWithObs.execute(toTarget, obsId).void
+    }
 
   def updateObs(input: EditObservationInput): IO[Unit] =
     AppCtx.withCtx(implicit appCtx => UpdateObservationMutation.execute(input).void)
