@@ -113,7 +113,6 @@ object TargetQueries {
       mutation($input: EditSiderealInput!) {
         updateSiderealTarget(input: $input) {
           id
-          name
         }
       }
     """
@@ -147,6 +146,8 @@ object TargetQueries {
    * Updates all the fields of sideral tracking
    */
   def updateSiderealTracking(t: SiderealTracking): State[EditSiderealInput, Unit] = {
+    val cati = t.catalogId.map(cid => CatalogIdInput(cid.catalog, cid.id.value))
+
     val coords = t.baseCoordinates
 
     val rai = RightAscensionInput(microarcseconds = coords.ra.toAngle.toMicroarcseconds.some).some
@@ -163,6 +164,7 @@ object TargetQueries {
     val pxi = ParallaxModelInput(microarcseconds = t.parallax.map(_.μas.value)).some
 
     for {
+      _ <- EditSiderealInput.catalogId := cati
       _ <- EditSiderealInput.ra := rai
       _ <- EditSiderealInput.dec := deci
       _ <- EditSiderealInput.epoch := Epoch.fromString.reverseGet(t.epoch).some

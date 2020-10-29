@@ -53,6 +53,32 @@ input AsterismProgramLinks {
 # The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
 scalar BigDecimal
 
+type CatalogId {
+  # Catalog name option
+  name: CatalogName!
+
+  # Catalog id string
+  id: String!
+}
+
+# Catalog id consisting of catalog name and string identifier
+input CatalogIdInput {
+  name: CatalogName!
+  id: String!
+}
+
+# Catalog name values
+enum CatalogName {
+  # CatalogName Simbad
+  SIMBAD
+
+  # CatalogName Horizon
+  HORIZON
+
+  # CatalogName Gaia
+  GAIA
+}
+
 type Coordinates {
   # Right Ascension
   ra: RightAscension!
@@ -100,6 +126,7 @@ input CreateSiderealInput {
   targetId: TargetId
   programIds: [ProgramId!]!
   name: String!
+  catalogId: CatalogIdInput
   ra: RightAscensionInput!
   dec: DeclinationInput!
   epoch: EpochString
@@ -232,6 +259,7 @@ input EditSiderealInput {
   targetId: TargetId!
   existence: Existence
   name: String
+  catalogId: CatalogIdInput
   ra: RightAscensionInput
   dec: DeclinationInput
   epoch: EpochString
@@ -360,6 +388,14 @@ type Mutation {
     # Target/program links
     input: TargetProgramLinks!
   ): Target
+  shareTargetsWithObservations(
+    # Target/observation links
+    input: TargetObservationLinks!
+  ): [Asterism!]!
+  unshareTargetsWithObservations(
+    # Target/observation links
+    input: TargetObservationLinks!
+  ): [Asterism!]!
 }
 
 type Nonsidereal {
@@ -796,6 +832,9 @@ enum RightAscensionUnits {
 }
 
 type Sidereal {
+  # Catalog id, if any, describing from where the information in this target was obtained
+  catalogId: CatalogId
+
   # Coordinates at epoch
   coordinates: Coordinates!
 
@@ -919,6 +958,12 @@ type TargetEdit implements Event {
 
 # TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
 scalar TargetId
+
+# Target and the observations with which they are associated
+input TargetObservationLinks {
+  targetIds: [TargetId!]!
+  observationIds: [ObservationId!]!
+}
 
 # Target and the programs with which they are associated
 input TargetProgramLinks {
