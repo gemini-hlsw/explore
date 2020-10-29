@@ -24,6 +24,10 @@ object GraphQLSchemas {
       type ProgramId     = String
       type TargetId      = Target.Id
     }
+
+    object Enums {
+      type CatalogName = lucuma.core.enum.CatalogName
+    }
   }
 
   @GraphQLSchema(debug = false)
