@@ -10,9 +10,11 @@ import react.common.implicits._
 import react.common.style._
 
 object ExploreStyles {
-  val Tile: Css      = Css("explore-tile")
-  val TileTitle: Css = Css("explore-tile-title")
-  val TileBody: Css  = Css("explore-tile-body")
+  val Tile: Css          = Css("explore-tile")
+  val TileTitle: Css     = Css("explore-tile-title")
+  val TileTitleMenu: Css = Css("explore-tile-title-menu")
+  val TileBody: Css      = Css("explore-tile-body")
+  val TileButton: Css    = Css("explore-tile-button")
 
   val TextInForm: Css = Css("explore-text-in-form")
   val Accented: Css   = Css("explore-accented")
@@ -49,6 +51,7 @@ object ExploreStyles {
   val MainMenuDropdown: Css = Css("main-menu-dropdown")
   val SideTabs: Css         = Css("sidetabs")
   val SideButton: Css       = Css("side-button")
+  val TabSelector: Css      = Css("bottom-tab-selector")
   val BlendedButton: Css    = Css("blended-button")
   val JustifyRight: Css     = Css("justify-right")
   val TargetLabelTitle: Css = Css("target-label-title")
@@ -57,16 +60,16 @@ object ExploreStyles {
   val ResizeHandle: Css       = Css("resize-handle")
   val ResizableSeparator: Css = Css("resize-separator")
   val Tree: Css               = Css("tree")
-  val TreeBodyOuter: Css      = Css("tree-body-outer")
-  val TreeBodyInner: Css      = Css("tree-body-inner")
+  val TreeBody: Css           = Css("tree-body")
   val TreeRGL: Css            = Css("tree-rgl")
   val RGLBody: Css            = Css("rgl-body")
   val RGLArea: Css            = Css("rgl-area")
   val RGLPlaceholder: Css     = Css("rgl-placeholder")
-  val SinglePanelArea: Css    = Css("single-panel-area")
   val SinglePanelTile: Css    = Css("single-panel-tile")
 
-  val SideTabsBody: Css         = Css("sidetabs-body")
+  val SideTabsVertical: Css     = Css("sidetabs-body-vertical")
+  val SideTabsHorizontal: Css   = Css("sidetabs-body-horizontal")
+  val SideTabsDivider: Css      = Css("sidetabs-divider")
   val VerticalButton: Css       = Css("vertical-button")
   val RotationWrapperOuter: Css = Css("rotation-wrapper-outer")
   val RotationWrapperInner: Css = Css("rotation-wrapper-inner")
@@ -83,7 +86,7 @@ object ExploreStyles {
   val UnselectedObsTreeGroup: Css = Css("unselected-obs-tree-group")
   val ObsTreeGroupHeader: Css     = Css("obs-tree-group-header")
   val ObsTreeItem: Css            = Css("obs-tree-item")
-  val ObsTreeButtons: Css         = Css("obs-tree-buttons")
+  val TreeToolbar: Css            = Css("tree-toolbar")
   val ObsBadge: Css               = Css("obs-badge")
   val SelectedObsItem: Css        = Css("selected-obs-item")
   val ObsItem: Css                = Css("obs-item")
@@ -137,6 +140,7 @@ object ExploreStyles {
 
   // The Target tab contents
   val TargetGrid: Css           = Css("target-grid")
+  val TargetBackButton: Css     = Css("target-back-button")
   val TargetAladinCell: Css     = Css("target-aladin-cell")
   val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")

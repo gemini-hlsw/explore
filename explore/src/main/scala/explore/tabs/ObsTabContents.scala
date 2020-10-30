@@ -61,12 +61,10 @@ object ObsTabContents {
       // Tree area
       def tree(observations: View[List[ObsSummary]]) =
         <.div(^.width := treeWidth.px, ExploreStyles.Tree)(
-          <.div(ExploreStyles.TreeBodyOuter)(
-            <.div(ExploreStyles.TreeBodyInner)(
-              ObsList(
-                observations,
-                props
-              )
+          <.div(ExploreStyles.TreeBody)(
+            ObsList(
+              observations,
+              props
             )
           )
         )
@@ -106,7 +104,7 @@ object ObsTabContents {
                   <.div(
                     ^.key := "target",
                     ^.cls := "tile",
-                    Tile("Target Position", movable = true)(
+                    Tile("Target Position", movable = true, None)(
                       <.span(
                         // obsSummaryOpt.whenDefined(obs =>
                         //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
@@ -117,7 +115,7 @@ object ObsTabContents {
                   <.div(
                     ^.key := "constraints",
                     ^.cls := "tile",
-                    Tile("Constraints", movable = true)(
+                    Tile("Constraints", movable = true, None)(
                       <.span(
                         // obsSummaryOpt.whenDefined(obs =>
                         //   ConstraintsSubscription(obs.constraints.id) { constraints =>

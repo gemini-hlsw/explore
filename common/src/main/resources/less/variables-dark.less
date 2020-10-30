@@ -1,0 +1,295 @@
+
+//=================
+// DARK THEME VARS
+//=================
+.colors-dark() {
+  // Split color in HSL to easily do variations
+  // https://blog.jim-nielsen.com/2020/sass-color-functions-in-css/
+  --color-background-base-h: 0;
+  --color-background-base-s: 0%;
+  --color-background-base-l: 7.06%;
+  --color-background-base-hsl: var(--color-background-base-h),
+    var(--color-background-base-s), var(--color-background-base-l);
+  --color-background: hsl(var(--color-background-base-hsl));
+  // Variations of the background color
+  // Light shades
+  --color-background-light-3: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 3%)
+  );
+  --color-background-light-5: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 5%)
+  );
+  --color-background-light-6: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 6%)
+  );
+  --color-background-light-8: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 8%)
+  );
+  --color-background-light-10: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 10%)
+  );
+  --color-background-light-12: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 12%)
+  );
+  --color-background-light-15: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 15%)
+  );
+  --color-background-light-20: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) + 20%)
+  );
+  // Dark shades
+  --color-background-dark-5: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) - 5%)
+  );
+  --color-background-dark-10: hsl(
+    var(--color-background-base-h),
+    var(--color-background-base-s),
+    calc(var(--color-background-base-l) - 10%)
+  );
+
+  // text color
+  --color-text-base-h: 0;
+  --color-text-base-s: 0%;
+  --color-text-base-l: 100%;
+  --color-text-base-a: 0.87;
+  --color-text-base-hsla: var(--color-background-base-h),
+    var(--color-background-base-s), var(--color-text-base-l),
+    var(--color-text-base-a);
+  --color-text-base: hsla(var(--color-text-base-hsla));
+  // Light shades
+  --color-text-light-45: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 45%)
+  );
+  --color-text-light-75: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) + 75%)
+  );
+  --color-text-full: hsl(
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    var(--color-text-base-l),
+    1
+  );
+  --color-text-alt-hlsa: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), 1;
+  --color-text-alt: hsla(var(--color-text-alt-hsla));
+  // dark shades
+  --color-text-dark-10-hsla: var(--color-text-base-h), var(--color-text-base-s),
+    calc(var(--color-text-base-l) - 8%), calc(var(--color-text-base-a) - 0.3);
+  --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
+
+  --gray-h: 210;
+  --gray-s: 5.7%;
+  --gray-l: 34.1%;
+  --gray-a: 1;
+  --gray-hsla: var(--gray-h), var(--gray-s), var(--gray-l), var(--gray-a);
+  --gray: hsla(var(--gray-hsla));
+  // dark grays
+  --gray-dark-5: hsla(
+    var(--gray-h),
+    var(--gray-s),
+    calc(var(--gray-l) - 5%),
+    var(--gray-a)
+  );
+  --gray-dark-10: hsla(
+    var(--gray-h),
+    var(--gray-s),
+    calc(var(--gray-l) - 10%),
+    var(--gray-a)
+  );
+  --gray-dark: @color-gray-dark;
+
+  --focus-inner-color: hsla(230, 52%, 42%, 1);
+  --focus-outer-color: hsla(220, 72%, 73%, 0.85);
+  --hover-color: hsla(220, 72%, 73%, 0.55);
+  --hover-background-color: hsla(260, 72%, 10%, 0.85);
+  --dragging-background-color: hsla(259, 39%, 24%, 0.85);
+  --highlight-color: hsla(200, 72%, 83%, 0.35);
+
+  --text-color: var(--color-text-base);
+  --text-alt: var(--color-text-alt);
+  --control-background-color: var(--color-background-light-20);
+  --negative-text-color: var(--color-text-full);
+  --negative-background-color: hsl(349, 100.0%, 34.5%);
+  --negative-icon-color: var(--color-text-base);
+  --warning-text-color: #fff;
+  --warning-background-color: hsl(35, 75.3%, 49.8%);
+
+  --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
+  --under-tab-background-color: var(--color-background-light-10);
+  --under-tab-background-focus-color: var(--color-background-light-6);
+  --under-tab-border-color: var(--gray-dark-10);
+  --under-tab-background-active-color: var(--color-background-light-20);
+  --under-tab-background-focus-active-color: var(--color-background-light-15);
+}
+
+.site-dark() {
+  --site-page-background: var(--color-background);
+  --site-text-color: var(--color-text-base);
+  --site-hovered-text-color: var(--color-text-alt);
+  --site-input-color: var(--input-color);
+  --site-border-color: var(--gray);
+  --site-input-placeholder-focus-color: var(--color-text-light-45);
+  --site-input-placeholder-color: var(--color-text-light-75);
+  --site-input-highlight-background: var(--highlight-color);
+  --site-input-highlight-color: var(--color-text-full);
+  --site-disabled-opacity: 0.65;
+}
+
+.form-dark() {
+  // ============
+  // Light shades
+  // ============
+  --input-color: var(--color-text-full);
+
+  --form-input-color: var(--color-text-dark-10);
+  --form-input-focus-color: var(--color-text-base);
+  --form-input-background: var(--control-background-color);
+  --form-input-focus-border-color: transparent;
+  --form-input-focus-box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
+    0 0 0 0.2rem var(--focus-outer-color);
+  --form-input-hover-border-color: var(--hover-color);
+  --form-prompt-text-color: var(--negative-text-color);
+  --form-prompt-background: var(--negative-background-color);
+}
+
+.button-dark() {
+  --button-hover-background-color: lighten(@color-gray-dark, 5%);
+  --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
+  --button-background-color: @color-gray-dark;
+  --button-text-color: var(--color-text-base);
+  --button-tertiary-text-color: var(--button-text-color);
+  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
+  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  --button-tertiary-hover-color: @tertiaryHoverColor;
+  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-focus-color: @tertiaryHoverColor;
+  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-active-color: @tertiaryActiveColor;
+  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
+}
+
+.label-dark() {
+  --label-background-color: var(--gray-dark);
+  --label-inverted-background-color: darken(@color-gray-dark, 20%);
+  --label-ribbon-shadow-color: var(--gray-dark);
+}
+
+.tile-dark() {
+  --tile-background: var(--color-background-light-8);
+  --tile-title-background: var(--color-background-light-12);
+  --tile-title-color: var(--color-text-full);
+}
+
+.obs-badge-dark() {
+  --obs-badge-color: var(--text-color);
+  --obs-badge-background: var(--tile-background);
+}
+
+.menu-dark() {
+  --menu-background: var(--gray-dark);
+  --menu-pressed-item-background: darken(@color-gray-dark, 8%);
+  --menu-pagination-active-background: darken(@color-gray-dark, 10%);
+  --menu-hover-item-background: var(--color-background-light-10);
+  --menu-secondary-hover-item-background:  darken(@color-gray-darker, 5%);
+  --menu-secondary-hover-item-color: darken(@color-gray-darker, 5%);
+  --menu-tabular-active-background: var(--color-background-light-10);
+}
+
+.segment-dark() {
+  --segment-background: var(--color-background-light-5);
+  --segment-stacked-page-background: var(--color-background-light-10);
+}
+
+.progress-dark() {
+  --progress-background: var(--color-background-dark-5);
+}
+
+.popup-dark() {
+  --popup-background: var(--color-background-light-3);
+  --popup-arrow-background: var(--color-background-light-3);
+  --popup-header-border: var(--gray-dark-5);
+  --popup-arrow-border: var(--gray-dark-10);
+}
+
+.dropdown-dark() {
+  --dropdown-selection-background: var(--control-background-color);
+  --dropdown-selection-visible-color: @gray-darker;
+}
+
+.checkbox-dark() {
+  --checkbox-background: var(--control-background-color);
+  --checkbox-focus-background: @gray-dark;
+  --checkbox-active-background: var(--control-background-color);
+  --checkbox-active-focus-background: var(--control-background-color);
+  --checkbox-border-color: var(--site-border-color);
+  --checkbox-active-color: var(--form-input-color);
+  --checkbox-hover-color: var(--input-color);
+}
+
+.table-dark() {
+  --table-background: var(--color-background-light-3);
+  --table-striped-background: var(--color-background-light-6);
+  --table-active-background-hover: var(--color-background-light-15);
+  --table-header-background: var(--color-background-dark-5);
+  --table-footer-background: var(--color-background-dark-5);
+}
+
+.modal-dark() {
+  --modal-background: var(--color-background-light-8);
+}
+
+.dimmer-dark() {
+  --dimmer-background-color: rgba(0, 0, 0, 0.85);
+}
+
+.dark-theme() {
+  // COLORS
+  .colors-dark();
+
+  // SUI VARIABLES
+  .site-dark();
+  .button-dark();
+  .label-dark();
+  .tile-dark();
+  .obs-badge-dark();
+  .form-dark();
+  .menu-dark();
+  .segment-dark();
+  .progress-dark();
+  .popup-dark();
+  .dropdown-dark();
+  .checkbox-dark();
+  .table-dark();
+  .modal-dark();
+  .dimmer-dark();
+
+  // EXPLORE VARIABLES
+  --sidetab-background: var(--color-background-light-5);
+  --explore-group-hover: var(--hover-background-color);
+  --explore-group-dragging: var(--dragging-background-color);
+}
+

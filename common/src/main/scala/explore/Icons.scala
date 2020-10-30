@@ -21,6 +21,7 @@ object Icons {
   val Edit                = Icon("edit")
   val Search              = Icon("search")
   val ChevronRight        = Icon("chevron right")
+  val ChevronLeft         = Icon("chevron left")
   val Sort                = Icon("sort")
   val ExclamationTriangle = Icon("exclamation triangle")
   val Ban                 = Icon("ban")

@@ -23,7 +23,7 @@ object Test extends AppMain {
     IfLogged(view)((_, _) =>
       <.div(^.height := "100vh",
             ^.width := "100%",
-            Tile("Target", false)(
+            Tile("Target", false, None)(
               TargetEditor(id)
             )
       )

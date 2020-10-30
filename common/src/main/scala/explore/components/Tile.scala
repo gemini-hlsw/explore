@@ -10,7 +10,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.semanticui.collections.menu._
 
-final case class Tile(title: String, movable: Boolean)
+final case class TileButton(body: VdomNode)
+
+final case class Tile(title: String, movable: Boolean, back: Option[TileButton])
     extends ReactPropsWithChildren[Tile](Tile.component)
 
 object Tile {
@@ -33,8 +35,10 @@ object Tile {
               compact = true,
               borderless = true,
               secondary = true,
+              clazz = ExploreStyles.TileTitleMenu,
               tabular = MenuTabular.Right
             )(
+              p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
               MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
             )
           ),
