@@ -22,7 +22,7 @@ object Settings {
     val lucumaUI          = "0.5.2"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
-    val mUnit             = "0.7.14"
+    val mUnit             = "0.7.15"
     val reactAladin       = "0.2.2"
     val reactAtlasKitTree = "0.3.0"
     val reactCommon       = "0.11.0"
