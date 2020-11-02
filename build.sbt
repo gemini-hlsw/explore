@@ -2,8 +2,9 @@ import sbtcrossproject.crossProject
 import sbtcrossproject.CrossType
 import Settings.Libraries._
 
-val reactJS = "16.13.1"
-val FUILess = "2.8.7"
+val reactJS                   = "16.13.1"
+val FUILess                   = "2.8.7"
+lazy val kindProjectorVersion = "0.11.0"
 
 parallelExecution in (ThisBuild, Test) := false
 
@@ -25,7 +26,7 @@ addCommandAlias(
 
 addCommandAlias(
   "targeteditorWDS",
-  "; targeteditor/fastOptJS::stopWebpackDevServer; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
+  "; stopWDS; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
 )
 
 addCommandAlias(
@@ -54,6 +55,14 @@ addCommandAlias(
 )
 
 val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
+
+inThisBuild(
+  Seq(
+    addCompilerPlugin(
+      ("org.typelevel" % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
+    )
+  )
+)
 
 // For simplicity, the build's stage only deals with the explore app.
 stage := {

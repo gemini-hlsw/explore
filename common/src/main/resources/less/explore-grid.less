@@ -20,13 +20,13 @@
     }
 
     /*
-     You do not not to specify the row and column of each cell 
-     for most simple layouts, such as most forms. It will fill 
+     You do not not to specify the row and column of each cell
+     for most simple layouts, such as most forms. It will fill
      in each cell in a row and then go to the next column.
     */
 
     /*
-     A two column grid that devolves to a single column 
+     A two column grid that devolves to a single column
      when less than @two-column-breakpoint width.
      */
     &.explore-two-columns {
@@ -38,7 +38,7 @@
     }
 
     /*
-     A three column grid that devolves to a single column 
+     A three column grid that devolves to a single column
      when less than @three-column-breakpoint width.
      */
     &.explore-three-columns {
@@ -48,10 +48,20 @@
             grid-template-columns: unset;
         }
     }
+
+    /*
+     The explore-column-span-* classes can be used to control how many
+     columns an item spans in a css grid
+     */
+    each(range(16), {
+        .explore-column-span-@{value} {
+            grid-column: span @value;
+        }
+    });
 }
 
 /*
- Makes a flex layout container. 
+ Makes a flex layout container.
  This will usually be used on a <div>.
 
  Note that flex containers don't participate in the responsive
@@ -100,4 +110,5 @@
     .explore-flex-end {
         margin-left: auto;
     }
+
 }

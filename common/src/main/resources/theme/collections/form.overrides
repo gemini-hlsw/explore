@@ -49,3 +49,12 @@
   padding: @tightVerticalPadding @tightHorizontalPadding;
   line-height: @inputLineHeight;
 }
+
+.ui.form .field label:hover {
+  pointer-events: none;
+}
+
+.ui.form .field .ui.input:hover:not(:focus),
+.ui.form .field .ui.input > input:hover:not(:focus) {
+  border-color: var(--form-input-hover-border-color);
+}

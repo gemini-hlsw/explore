@@ -58,7 +58,10 @@ trait AppMain extends IOApp {
 
     def setupScheme: IO[Unit] =
       IO.delay {
-        dom.document.getElementsByTagName("body").foreach(_.classList.add("dark-theme"))
+        dom.document.getElementsByTagName("body").foreach{ body =>
+          body.classList.remove("light-theme")
+          body.classList.add("dark-theme")
+        }
       }
 
     for {

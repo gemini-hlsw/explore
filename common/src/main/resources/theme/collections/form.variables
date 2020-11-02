@@ -15,3 +15,5 @@
 @inputFocusBorderColor: var(--form-input-focus-border-color);
 @inputFocusBoxShadow: var(--form-input-focus-box-shadow);
 
+@promptTextColor: var(--form-prompt-text-color);
+@promptBackground: var(--form-prompt-background);

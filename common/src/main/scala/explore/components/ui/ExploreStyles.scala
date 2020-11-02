@@ -83,11 +83,12 @@ object ExploreStyles {
   val PartnerSplitsEditorTable: Css = Css("partner-splits-editor-table")
 
   // Semantic UI form overrides and extensions
-  val Grid: Css            = Css("explore-grid")
-  val TwoColumnGrid: Css   = Grid |+| Css("explore-two-columns")
-  val ThreeColumnGrid: Css = Grid |+| Css("explore-three-columns")
-  val Compact: Css         = Css("explore-compact")
-  val ErrorLabel: Css      = Css("explore-error-label")
+  val Grid: Css              = Css("explore-grid")
+  val TwoColumnGrid: Css     = Grid |+| Css("explore-two-columns")
+  val ThreeColumnGrid: Css   = Grid |+| Css("explore-three-columns")
+  val Compact: Css           = Css("explore-compact")
+  val ErrorLabel: Css        = Css("explore-error-label")
+  val InputErrorTooltip: Css = Css("explore-input-error-tooltip")
 
   val TextInForm: Css = Css("explore-text-in-form")
 
@@ -99,6 +100,9 @@ object ExploreStyles {
 
   // Move an element to the end of the flex container
   val FlexEnd: Css = Css("explore-flex-end")
+
+  def Grow(i:       Int Refined Interval.Closed[1, 4]): Css  = Css(s"explore-grow-$i")
+  def ColumnSpan(i: Int Refined Interval.Closed[1, 16]): Css = Css(s"explore-column-span-$i")
 
   // Hide a label while keeping it accessible to screen readers
   val HideLabel: Css = Css("hide-label")
@@ -116,13 +120,16 @@ object ExploreStyles {
   val WIPWarning: Css = Css("wip-warning")
 
   // The Target tab contents
-  val TargetGrid: Css          = Css("target-grid")
-  val TargetAladinCell: Css    = Css("target-aladin-cell")
-  val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
-  val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
-  val CoordinatesForm: Css     = Css("coordinates-form")
-  val CatalogueForm: Css       = Css("catalogue-form")
+  val TargetGrid: Css           = Css("target-grid")
+  val TargetAladinCell: Css     = Css("target-aladin-cell")
+  val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
+  val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")
+  val CoordinatesForm: Css      = Css("target-coordinates-form")
+  val TargetPropertiesForm: Css = Css("target-properties-form")
+  val CatalogueForm: Css        = Css("catalogue-form")
 
   // styles for icons that acts as buttons
-  val ButtonIcon: Css = Css("explore-button-icon")
+  val ButtonIcon: Css       = Css("explore-button-icon")
+  val FormSectionLabel: Css = Css("explore-section-label")
+  val UnitsLabel: Css       = Css("explore-units-label")
 }
