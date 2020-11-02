@@ -25,7 +25,7 @@ object Settings {
     val mUnit             = "0.7.15"
     val reactAladin       = "0.2.2"
     val reactAtlasKitTree = "0.3.0"
-    val reactCommon       = "0.11.0"
+    val reactCommon       = "0.11.1"
     val reactDatepicker   = "0.1.0"
     val reactGridLayout   = "0.9.0"
     val reactHighcharts   = "0.2.0"
