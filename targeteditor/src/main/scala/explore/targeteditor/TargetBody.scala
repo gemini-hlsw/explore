@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.annotation.unused
-
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -54,14 +52,10 @@ object TargetBody {
 
   implicit val propsReuse = Reusability.derive[Props]
 
-  class Backend($ : BackendScope[Props, Unit]) {
+  class Backend {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
-    def setName(name: String): Callback =
-      $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
-
-    @unused
     private def coordinatesKey(target: TargetResult): String =
       s"${target.name}#${target.tracking.baseCoordinates.show}"
 
@@ -97,7 +91,6 @@ object TargetBody {
             n => EditSiderealInput.name.set(n.value.some)
           ) _
 
-          @unused
           val searchAndSet: SearchCallback => Callback = s =>
             SimbadSearch
               .search(s.searchTerm)
@@ -147,7 +140,8 @@ object TargetBody {
   val component =
     ScalaComponent
       .builder[Props]
-      .renderBackend[Backend]
+      .backend(_ => new Backend())
+      .renderBackend
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .configure(Reusability.shouldComponentUpdate)
       .build
