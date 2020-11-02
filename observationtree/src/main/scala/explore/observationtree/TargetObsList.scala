@@ -164,7 +164,7 @@ object TargetObsList {
       $.props >>= { props =>
         // Temporary measure until we have id pools.
         val newTarget =
-          TargetIdName(Target.Id(PosLong.unsafeFrom(Random.nextLong().abs.toLong + 1)),
+          TargetIdName(Target.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
                        "<New Target>"
           )
 
