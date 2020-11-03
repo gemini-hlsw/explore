@@ -9,11 +9,13 @@ import crystal.Error
 import crystal.Pending
 import crystal.Pot
 import crystal.Ready
+import crystal.react.implicits._
 import explore.AppCtx
 import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 
@@ -50,7 +52,8 @@ object ConnectionsStatus {
       AppCtx.withCtx { ctx =>
         <.span(
           ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")),
-          ctx.clients.ODBConnectionStatus(renderStatus("ODB"))
+          ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
+          Button(^.onClick --> ctx.clients.odb.close().runInCB)("Close ODB").when(true)
         )
       }
     )
