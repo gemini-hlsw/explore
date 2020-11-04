@@ -12,6 +12,8 @@ import io.circe.Json
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.raw.JsNumber
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.model.Magnitude
 import lucuma.ui.reusability._
 import react.common.Size
 import react.common.implicits._
@@ -25,6 +27,8 @@ object reusability {
   // TODO: Move to lucuma-ui.
   implicit def quantityReuse[N: Reusability, U]: Reusability[Quantity[N, U]] =
     Reusability.by(_.value)
+  implicit val magnitudeValueReuse: Reusability[MagnitudeValue]              = Reusability.byEq
+  implicit val magnitudeReuse: Reusability[Magnitude]                        = Reusability.derive
 
   implicit val statusReuse: Reusability[StreamingClientStatus]                                    = Reusability.derive
   implicit val durationReuse: Reusability[Duration]                                               = Reusability.by(_.getSeconds)

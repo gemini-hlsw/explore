@@ -46,7 +46,7 @@ scalar AsterismId
 
 # Asterism and the programs with which they are associated
 input AsterismProgramLinks {
-  asterismId: AsterismId!
+  asterismIds: [AsterismId!]!
   programIds: [ProgramId!]!
 }
 
@@ -106,10 +106,11 @@ input CreateDefaultAsterismInput {
 # Nonsidereal target parameters
 input CreateNonsiderealInput {
   targetId: TargetId
-  programIds: [ProgramId!]!
+  programIds: [ProgramId!]
   name: String!
   key: EphemerisKeyType!
   des: String!
+  magnitudes: [MagnitudeInput!]
 }
 
 # Observation creation parameters
@@ -124,7 +125,7 @@ input CreateObservationInput {
 # Sidereal target parameters
 input CreateSiderealInput {
   targetId: TargetId
-  programIds: [ProgramId!]!
+  programIds: [ProgramId!]
   name: String!
   catalogId: CatalogIdInput
   ra: RightAscensionInput!
@@ -133,6 +134,7 @@ input CreateSiderealInput {
   properVelocity: ProperVelocityInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
+  magnitudes: [MagnitudeInput!]
 }
 
 type Declination {
@@ -319,6 +321,100 @@ scalar HmsString
 # Long can represent values between -(2^63) and 2^63 - 1.
 scalar Long
 
+type Magnitude {
+  # Magnitude value (unitless)
+  value: BigDecimal!
+
+  # Magnitude band
+  band: MagnitudeBand!
+
+  # Magnitude System
+  system: MagnitudeSystem!
+}
+
+# Magnitude band
+enum MagnitudeBand {
+  # MagnitudeBand SloanU
+  SLOAN_U
+
+  # MagnitudeBand SloanG
+  SLOAN_G
+
+  # MagnitudeBand SloanR
+  SLOAN_R
+
+  # MagnitudeBand SloanI
+  SLOAN_I
+
+  # MagnitudeBand SloanZ
+  SLOAN_Z
+
+  # MagnitudeBand U
+  U
+
+  # MagnitudeBand B
+  B
+
+  # MagnitudeBand V
+  V
+
+  # MagnitudeBand Uc
+  UC
+
+  # MagnitudeBand R
+  R
+
+  # MagnitudeBand I
+  I
+
+  # MagnitudeBand Y
+  Y
+
+  # MagnitudeBand J
+  J
+
+  # MagnitudeBand H
+  H
+
+  # MagnitudeBand K
+  K
+
+  # MagnitudeBand L
+  L
+
+  # MagnitudeBand M
+  M
+
+  # MagnitudeBand N
+  N
+
+  # MagnitudeBand Q
+  Q
+
+  # MagnitudeBand Ap
+  AP
+}
+
+# Magnitude description
+input MagnitudeInput {
+  value: BigDecimal!
+  band: MagnitudeBand!
+  error: BigDecimal
+  system: MagnitudeSystem = VEGA
+}
+
+# Magnitude system
+enum MagnitudeSystem {
+  # MagnitudeSystem Vega
+  VEGA
+
+  # MagnitudeSystem AB
+  AB
+
+  # MagnitudeSystem Jy
+  JY
+}
+
 type Mutation {
   createDefaultAsterism(
     # Default Asterism description
@@ -336,14 +432,6 @@ type Mutation {
     # Asterism ID
     asterismId: AsterismId!
   ): Asterism!
-  shareAsterismWithPrograms(
-    # Asterism/program links
-    input: AsterismProgramLinks!
-  ): Asterism
-  unshareAsterismWithPrograms(
-    # Asterism/program links
-    input: AsterismProgramLinks!
-  ): Asterism
   createObservation(
     # Observation description
     input: CreateObservationInput!
@@ -380,14 +468,14 @@ type Mutation {
     # Target ID
     targetId: TargetId!
   ): Target!
-  shareTargetWithPrograms(
-    # Target/program links
-    input: TargetProgramLinks!
-  ): Target
-  unshareTargetWithPrograms(
-    # Target/program links
-    input: TargetProgramLinks!
-  ): Target
+  shareAsterismsWithPrograms(
+    # Asterism/program links
+    input: AsterismProgramLinks!
+  ): [Asterism!]!
+  unshareAsterismsWithPrograms(
+    # Asterism/program links
+    input: AsterismProgramLinks!
+  ): [Asterism!]!
   shareTargetsWithObservations(
     # Target/observation links
     input: TargetObservationLinks!
@@ -396,6 +484,14 @@ type Mutation {
     # Target/observation links
     input: TargetObservationLinks!
   ): [Asterism!]!
+  shareTargetsWithPrograms(
+    # Target/program links
+    input: TargetProgramLinks!
+  ): [Target!]!
+  unshareTargetsWithPrograms(
+    # Target/program links
+    input: TargetProgramLinks!
+  ): [Target!]!
 }
 
 type Nonsidereal {
@@ -944,6 +1040,9 @@ type Target {
 
   # Information required to find a target in the sky.
   tracking: Tracking!
+
+  # Target magnitudes
+  magnitudes: [Magnitude!]!
 }
 
 # Event sent when a new object is created or updated
@@ -959,15 +1058,15 @@ type TargetEdit implements Event {
 # TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
 scalar TargetId
 
-# Target and the observations with which they are associated
+# Targets and the observations with which they are associated
 input TargetObservationLinks {
   targetIds: [TargetId!]!
   observationIds: [ObservationId!]!
 }
 
-# Target and the programs with which they are associated
+# Targets and the programs with which they are associated
 input TargetProgramLinks {
-  targetId: TargetId!
+  targetIds: [TargetId!]!
   programIds: [ProgramId!]!
 }
 

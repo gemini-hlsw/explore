@@ -26,7 +26,8 @@ object GraphQLSchemas {
     }
 
     object Enums {
-      type CatalogName = lucuma.core.enum.CatalogName
+      type CatalogName     = lucuma.core.enum.CatalogName
+      type MagnitudeSystem = lucuma.core.enum.MagnitudeSystem
     }
   }
 

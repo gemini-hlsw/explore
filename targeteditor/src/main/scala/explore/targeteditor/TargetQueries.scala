@@ -16,6 +16,7 @@ import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.decoders._
 import explore.optics._
+import explore.model.reusability._
 import explore.undo.Undoer
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
@@ -65,13 +66,19 @@ object TargetQueries {
               }
             }
           }
+          magnitudes {
+            value
+            band
+            system
+          }
         }
       }
       """
 
     object Data {
       object Target {
-        type Tracking = lucuma.core.model.SiderealTracking
+        type Tracking   = lucuma.core.model.SiderealTracking
+        type Magnitudes = lucuma.core.model.Magnitude
       }
     }
   }
@@ -96,9 +103,13 @@ object TargetQueries {
   /**
    * Lens used to change name and coordinates of a target
    */
-  val targetPropsL: Lens[TargetResult, (String, SiderealTracking)] =
-    Lens[TargetResult, (String, SiderealTracking)](t => (t.name, TargetResult.tracking.get(t)))(s =>
-      t => TargetResult.tracking.set(s._2)(t.copy(name = s._1))
+  val targetPropsL =
+    Lens[TargetResult, (String, SiderealTracking, List[Magnitude])](t =>
+      (t.name, TargetResult.tracking.get(t), t.magnitudes)
+    )(s =>
+      TargetResult.name.set(s._1) >>>
+        TargetResult.tracking.set(s._2) >>>
+        TargetResult.magnitudes.set(s._3)
     )
 
   val pvRALens: Lens[TargetResult, Option[ProperVelocity.RA]] =
