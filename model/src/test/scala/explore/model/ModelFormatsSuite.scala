@@ -3,20 +3,28 @@
 
 package explore.model
 
-import lucuma.core.math.arb._
 import explore.model.formats._
-import munit.DisciplineSuite
+import lucuma.core.arb._
+import lucuma.core.math.arb._
+import lucuma.core.math.Parallax
 import lucuma.core.optics.laws.discipline.FormatTests
+import munit.DisciplineSuite
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary._
-import lucuma.core.math.Parallax
 
 class ModelFormatsSuite extends DisciplineSuite {
   import ArbParallax._
 
-  val parallaxMilliArcSeconds: Gen[String] =
-    arbitrary[Parallax]
-      .map(_.mas.value.toDouble.toString)
+  private val perturbations: List[String => Gen[String]] =
+    List(
+      _ => arbitrary[String],             // swap for a random string
+      s => Gen.const(s.replace("2", "0")) // create a leading zero, maybe (ok)
+    )
 
-  checkAll("pxFormat", FormatTests(pxFormat).formatWith(parallaxMilliArcSeconds))
+  val parallaxMilliArcSecondsGen: Gen[String] =
+    arbitrary[Parallax]
+      .map(_.mas.toValue[BigDecimal].value.toString)
+      .flatMapOneOf(Gen.const, perturbations: _*)
+
+  checkAll("pxFormat", FormatTests(pxFormat).formatWith(parallaxMilliArcSecondsGen))
 }
