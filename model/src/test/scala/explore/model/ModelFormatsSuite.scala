@@ -5,7 +5,6 @@ package explore.model
 
 import lucuma.core.math.arb._
 import explore.model.formats._
-// import lucuma.core.util.arb.ArbEnumerated._
 import munit.DisciplineSuite
 import lucuma.core.optics.laws.discipline.FormatTests
 import org.scalacheck.Gen

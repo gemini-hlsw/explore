@@ -79,7 +79,6 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      println(s"Render $props $state")
       val rvView = ViewF.fromState[IO]($)(Async[IO], props.cs).zoom(State.rvView)
       val input  = state.rvView match {
         case RVView.Z  =>
