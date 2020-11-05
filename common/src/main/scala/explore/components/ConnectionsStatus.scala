@@ -52,7 +52,7 @@ object ConnectionsStatus {
     .render(_ =>
       AppCtx.withCtx { ctx =>
         <.span(
-          ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")),
+          ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")).when(false),
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
           Button(size = Tiny)(^.onClick --> ctx.clients.odb.close().runInCB)("Close ODB")
             .when(false)

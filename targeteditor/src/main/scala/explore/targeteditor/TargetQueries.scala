@@ -185,16 +185,18 @@ object TargetQueries {
 
     val deci = DeclinationInput(microarcseconds = coords.dec.toAngle.toMicroarcseconds.some).some
 
-    val pvi = ProperVelocityInput(
-      ra = ProperVelocityRaInput(microarcsecondsPerYear = t.properVelocity.map(_.ra.μasy.value)),
-      dec = ProperVelocityDecInput(microarcsecondsPerYear = t.properVelocity.map(_.dec.μasy.value))
-    ).some
+    val pvi = t.properVelocity.map(pv =>
+      ProperVelocityInput(
+        ra = ProperVelocityRaInput(microarcsecondsPerYear = pv.ra.μasy.value.some),
+        dec = ProperVelocityDecInput(microarcsecondsPerYear = pv.dec.μasy.value.some)
+      )
+    )
 
-    val rvi = RadialVelocityInput(metersPerSecond =
-      t.radialVelocity.map(_.rv.withUnit[CentimetersPerSecond].value.value)
-    ).some
+    val rvi = t.radialVelocity.map(rv =>
+      RadialVelocityInput(metersPerSecond = rv.rv.withUnit[CentimetersPerSecond].value.value.some)
+    )
 
-    val pxi = ParallaxModelInput(microarcseconds = t.parallax.map(_.μas.value)).some
+    val pxi = t.parallax.map(p => ParallaxModelInput(microarcseconds = p.μas.value.some))
 
     for {
       _ <- EditSiderealInput.catalogId := cati
