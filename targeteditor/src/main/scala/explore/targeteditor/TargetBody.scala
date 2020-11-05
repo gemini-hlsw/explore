@@ -223,7 +223,7 @@ object TargetBody {
                   ),
                   RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
                 ),
-                MagnitudeForm(target.magnitudes),
+                MagnitudeForm(target.magnitudes).when(false),
                 UndoButtons(target, undoCtx)
               ),
               AladinRef
