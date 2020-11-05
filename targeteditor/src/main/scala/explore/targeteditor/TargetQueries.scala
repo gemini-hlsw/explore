@@ -23,6 +23,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.optics.syntax.all._
@@ -65,13 +66,19 @@ object TargetQueries {
               }
             }
           }
+          magnitudes {
+            value
+            band
+            system
+          }
         }
       }
       """
 
     object Data {
       object Target {
-        type Tracking = lucuma.core.model.SiderealTracking
+        type Tracking   = lucuma.core.model.SiderealTracking
+        type Magnitudes = lucuma.core.model.Magnitude
       }
     }
   }
@@ -96,9 +103,13 @@ object TargetQueries {
   /**
    * Lens used to change name and coordinates of a target
    */
-  val targetPropsL: Lens[TargetResult, (String, SiderealTracking)] =
-    Lens[TargetResult, (String, SiderealTracking)](t => (t.name, TargetResult.tracking.get(t)))(s =>
-      t => TargetResult.tracking.set(s._2)(t.copy(name = s._1))
+  val targetPropsL =
+    Lens[TargetResult, (String, SiderealTracking, List[Magnitude])](t =>
+      (t.name, TargetResult.tracking.get(t), t.magnitudes)
+    )(s =>
+      TargetResult.name.set(s._1) >>>
+        TargetResult.tracking.set(s._2) >>>
+        TargetResult.magnitudes.set(s._3)
     )
 
   val pvRALens: Lens[TargetResult, Option[ProperVelocity.RA]] =
@@ -174,16 +185,18 @@ object TargetQueries {
 
     val deci = DeclinationInput(microarcseconds = coords.dec.toAngle.toMicroarcseconds.some).some
 
-    val pvi = ProperVelocityInput(
-      ra = ProperVelocityRaInput(microarcsecondsPerYear = t.properVelocity.map(_.ra.μasy.value)),
-      dec = ProperVelocityDecInput(microarcsecondsPerYear = t.properVelocity.map(_.dec.μasy.value))
-    ).some
+    val pvi = t.properVelocity.map(pv =>
+      ProperVelocityInput(
+        ra = ProperVelocityRaInput(microarcsecondsPerYear = pv.ra.μasy.value.some),
+        dec = ProperVelocityDecInput(microarcsecondsPerYear = pv.dec.μasy.value.some)
+      )
+    )
 
-    val rvi = RadialVelocityInput(metersPerSecond =
-      t.radialVelocity.map(_.rv.withUnit[CentimetersPerSecond].value.value)
-    ).some
+    val rvi = t.radialVelocity.map(rv =>
+      RadialVelocityInput(metersPerSecond = rv.rv.withUnit[CentimetersPerSecond].value.value.some)
+    )
 
-    val pxi = ParallaxModelInput(microarcseconds = t.parallax.map(_.μas.value)).some
+    val pxi = t.parallax.map(p => ParallaxModelInput(microarcseconds = p.μas.value.some))
 
     for {
       _ <- EditSiderealInput.catalogId := cati

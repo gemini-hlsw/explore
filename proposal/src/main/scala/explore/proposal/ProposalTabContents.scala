@@ -13,6 +13,7 @@ import crystal.react.StreamRendererMod
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
 import explore.AppCtx
+import explore.components.WIP
 import explore.implicits._
 import explore.model._
 import explore.model.enum._
@@ -53,7 +54,7 @@ object ProposalTabContents {
         val component = StreamRendererMod.build(ref.discrete)
 
         component(_ match {
-          case Ready(view) => ProposalDetailsEditor(view)
+          case Ready(view) => WIP(ProposalDetailsEditor(view))
           case _           => <.div("Ruh-Roh")
         })
       }

@@ -30,6 +30,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.units._
+import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.optics.syntax.all._
@@ -90,15 +91,18 @@ object TargetBody {
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify = undoSet[
-            (String, SiderealTracking)
+            (String, SiderealTracking, List[Magnitude])
           ](
             targetPropsL,
-            { case (n, t) =>
+            { case (n, t, _ /*ms*/ ) =>
               input =>
                 val update =
                   for {
                     _ <- EditSiderealInput.name := n.some
                     _ <- TargetQueries.updateSiderealTracking(t)
+                    // _ <- EditSiderealInput.magnitudes := ms.map(m =>
+                    //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
+                    //      )
                   } yield ()
                 update.runS(input).value
             }
@@ -163,8 +167,8 @@ object TargetBody {
               .search(s.searchTerm)
               .attempt
               .runInCBAndThen {
-                case Right(r @ Some(Target(n, Right(st), _))) =>
-                  modify((n, st)).runInCB *>
+                case Right(r @ Some(Target(n, Right(st), m))) =>
+                  modify((n, st, m.values.toList)).runInCB *>
                     gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
                 case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
                 case Right(None)                              => s.onComplete(none)
@@ -219,6 +223,7 @@ object TargetBody {
                   ),
                   RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
                 ),
+                MagnitudeForm(target.magnitudes).when(false),
                 UndoButtons(target, undoCtx)
               ),
               AladinRef

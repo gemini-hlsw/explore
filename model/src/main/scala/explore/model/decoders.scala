@@ -7,17 +7,22 @@ import cats.implicits._
 import coulomb._
 import explore.model.enum._
 import io.circe.Decoder
+import io.circe.DecodingFailure
 import io.circe.HCursor
 import io.circe.generic.semiauto
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
+import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 
 object decoders {
@@ -111,5 +116,21 @@ object decoders {
         rv  <- c.downField("radialVelocity").as[Option[RadialVelocity]]
         par <- c.downField("parallax").as[Option[Parallax]]
       } yield SiderealTracking(none, bc, ep, pv, rv, par)
+  }
+
+  implicit val magnitudeValueDecoder: Decoder[MagnitudeValue] = new Decoder[MagnitudeValue] {
+    final def apply(c: HCursor): Decoder.Result[MagnitudeValue] =
+      c.as[BigDecimal]
+        .map(MagnitudeValue.fromBigDecimal.getOption)
+        .flatMap(_.toRight(DecodingFailure("Invalid MagnitudeValue", c.history)))
+  }
+
+  implicit val magnitudeDecoder: Decoder[Magnitude] = new Decoder[Magnitude] {
+    final def apply(c: HCursor): Decoder.Result[Magnitude] =
+      for {
+        v <- c.downField("value").as[MagnitudeValue]
+        b <- c.downField("band").as[MagnitudeBand]
+        s <- c.downField("system").as[MagnitudeSystem]
+      } yield Magnitude(v, b, s)
   }
 }
