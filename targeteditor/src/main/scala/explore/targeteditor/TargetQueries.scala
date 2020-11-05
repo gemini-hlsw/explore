@@ -16,7 +16,6 @@ import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.decoders._
 import explore.optics._
-import explore.model.reusability._
 import explore.undo.Undoer
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
@@ -24,6 +23,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.optics.syntax.all._

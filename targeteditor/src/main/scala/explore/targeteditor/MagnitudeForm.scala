@@ -3,10 +3,10 @@
 
 package explore.targeteditor
 
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Magnitude
+import lucuma.ui.reusability._
 import react.common.ReactProps
 import react.semanticui.collections.grid.Grid
 import react.semanticui.collections.grid.GridColumn

@@ -4,16 +4,16 @@
 package explore.targeteditor
 
 import cats.data.ValidatedNec
-import cats.implicits._
 import cats.effect.IO
+import cats.implicits._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.formats._
 import explore.optics._
-import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.ApparentRadialVelocity
