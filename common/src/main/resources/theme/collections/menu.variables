@@ -23,7 +23,8 @@
 @verticalBackground: @gray;
 @secondaryPointingActiveBorderColor: @gray-lighter;
 @secondaryActiveItemBackground: darken(@gray-darker, 5%);
-@secondaryHoverItemBackground: darken(@gray-darker, 5%);
+@secondaryHoverItemBackground: var(--menu-secondary-hover-item-background);
+@secondaryHoverItemColor: var(--menu-secondary-hover-item-color);
 @secondaryActiveHoverItemBackground: darken(@gray-darker, 5%);
 
 @border: 1px solid rgba(0, 0, 0, 0.5);

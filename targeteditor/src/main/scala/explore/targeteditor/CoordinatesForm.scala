@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.data._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
@@ -26,6 +27,7 @@ import lucuma.core.math.RightAscension
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.forms._
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
@@ -99,10 +101,7 @@ object CoordinatesForm {
                 searchComplete *> ($.setStateL(State.searchError)(
                   s"'${abbreviate(state.searchTerm, 10)}' not found".some
                 )).when_(t.isEmpty),
-              t =>
-                searchComplete *> $.setStateL(State.searchError)(
-                  s"Search error ${abbreviate(t.getMessage, 10)}".some
-                )
+              _ => searchComplete *> $.setStateL(State.searchError)(s"Search error...".some)
             )
 
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
@@ -125,9 +124,14 @@ object CoordinatesForm {
             focus = true,
             loading = state.searching,
             error = state.searchTerm.isEmpty,
-            onBlur =
-              (u: String) => refineV[NonEmpty](u).toOption.map(props.onNameChange(_)).getOrEmpty,
-            onChange = (_: String) => $.setStateL(State.searchError)(none),
+            onBlur = (u: ValidatedNec[String, String]) =>
+              u.toOption
+                .flatMap(
+                  refineV[NonEmpty](_).toOption
+                    .map(props.onNameChange(_))
+                )
+                .getOrEmpty,
+            onValidChange = (_: Boolean) => $.setStateL(State.searchError)(none),
             icon = Icons.Search
               .link(true)
               .clazz(ExploreStyles.ButtonIcon)(
@@ -142,14 +146,14 @@ object CoordinatesForm {
             FormInputEV(
               id = "ra",
               value = stateView.zoom(State.raValue),
-              format = RightAscension.fromStringHMS,
+              validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
               label = "RA",
               clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormInputEV(
               id = "dec",
               value = stateView.zoom(State.decValue),
-              format = Declination.fromStringSignedDMS,
+              validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
               label = "Dec",
               clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),

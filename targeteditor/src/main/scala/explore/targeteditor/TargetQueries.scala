@@ -15,12 +15,17 @@ import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.decoders._
+import explore.optics._
 import explore.undo.Undoer
-import explore.utils._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperVelocity
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.units.CentimetersPerSecond
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.optics.syntax.all._
 import lucuma.ui.reusability._
 import monocle.Lens
 
@@ -91,10 +96,25 @@ object TargetQueries {
   /**
    * Lens used to change name and coordinates of a target
    */
-  val targetPropsL =
+  val targetPropsL: Lens[TargetResult, (String, SiderealTracking)] =
     Lens[TargetResult, (String, SiderealTracking)](t => (t.name, TargetResult.tracking.get(t)))(s =>
       t => TargetResult.tracking.set(s._2)(t.copy(name = s._1))
     )
+
+  val pvRALens: Lens[TargetResult, Option[ProperVelocity.RA]] =
+    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVRALensO
+
+  val pvDecLens: Lens[TargetResult, Option[ProperVelocity.Dec]] =
+    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVDecLensO
+
+  val epoch: Lens[TargetResult, Epoch] =
+    TargetResult.tracking ^|-> SiderealTracking.epoch
+
+  val pxLens: Lens[TargetResult, Option[Parallax]] =
+    TargetResult.tracking ^|-> SiderealTracking.parallax
+
+  val rvLens: Lens[TargetResult, Option[RadialVelocity]] =
+    TargetResult.tracking ^|-> SiderealTracking.radialVelocity
 
   @GraphQL
   object TargetEditSubscription extends GraphQLOperation[ObservationDB] {
@@ -159,7 +179,9 @@ object TargetQueries {
       dec = ProperVelocityDecInput(microarcsecondsPerYear = t.properVelocity.map(_.dec.μasy.value))
     ).some
 
-    val rvi = RadialVelocityInput(metersPerSecond = t.radialVelocity.map(_.rv.value)).some
+    val rvi = RadialVelocityInput(metersPerSecond =
+      t.radialVelocity.map(_.rv.withUnit[CentimetersPerSecond].value.value)
+    ).some
 
     val pxi = ParallaxModelInput(microarcseconds = t.parallax.map(_.μas.value)).some
 

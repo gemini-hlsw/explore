@@ -4,6 +4,13 @@
 package explore
 
 import cats.syntax.all._
+import coulomb._
+import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.Constants._
+import lucuma.core.math.ProperVelocity
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
+import lucuma.core.math.units._
 import monocle._
 import monocle.std.option.some
 
@@ -107,4 +114,36 @@ package object optics {
     Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s)))((abc: (A, B, C)) =>
       (s: S) => l3.set(abc._3)(l2.set(abc._2)(l1.set(abc._1)(s)))
     )
+
+  val unsafePVDecLensO: Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]] =
+    Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]](_.map(ProperVelocity.dec.get))(s =>
+      a => (s, a).mapN(ProperVelocity.dec.set(_)(_))
+    )
+
+  val unsafePVRALensO: Lens[Option[ProperVelocity], Option[ProperVelocity.RA]] =
+    Lens[Option[ProperVelocity], Option[ProperVelocity.RA]](_.map(ProperVelocity.ra.get))(s =>
+      a => (s, a).mapN(ProperVelocity.ra.set(_)(_))
+    )
+
+  val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
+    Iso[BigDecimal, ApparentRadialVelocity](b =>
+      ApparentRadialVelocity(b.withUnit[KilometersPerSecond])
+    )(cz => cz.cz.toUnit[KilometersPerSecond].value)
+
+  val redshiftBigDecimalISO: Iso[BigDecimal, Redshift] = Iso(Redshift.apply)(_.z)
+
+  val unsafeRVtoCZLens: Lens[Option[RadialVelocity], Option[ApparentRadialVelocity]] =
+    Lens[Option[RadialVelocity], Option[ApparentRadialVelocity]](
+      _.flatMap(_.toRedshift.map(_.toApparentRadialVelocity))
+    )(_ => rv => rv)
+
+  val unsafeRVtoZLens: Lens[Option[RadialVelocity], Option[Redshift]] =
+    Lens[Option[RadialVelocity], Option[Redshift]](_.flatMap(_.toRedshift))(_ => rv => rv)
+
+  val fromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
+    Prism[BigDecimal, RadialVelocity](b =>
+      Some(b)
+        .filter(_.abs <= SpeedOfLight.to[BigDecimal, KilometersPerSecond].value)
+        .flatMap(v => RadialVelocity(v.withUnit[KilometersPerSecond]))
+    )(rv => rv.rv.toUnit[KilometersPerSecond].value)
 }

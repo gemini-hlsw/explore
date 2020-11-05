@@ -3,6 +3,8 @@
 
 package explore.targeteditor
 
+import scala.annotation.unused
+
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -16,17 +18,28 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.TargetVisualOptions
+import explore.model.formats._
 import explore.model.reusability._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperVelocity
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.units._
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.optics.syntax.all._
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
+import react.common.implicits._
+import react.semanticui.collections.form.Form
+import react.semanticui.elements.label.Label
+import react.semanticui.sizes.Small
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -52,10 +65,14 @@ object TargetBody {
 
   implicit val propsReuse = Reusability.derive[Props]
 
-  class Backend {
+  class Backend($ : BackendScope[Props, Unit]) {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
+    def setName(name: String): Callback =
+      $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
+
+    @unused
     private def coordinatesKey(target: TargetResult): String =
       s"${target.name}#${target.tracking.baseCoordinates.show}"
 
@@ -72,7 +89,7 @@ object TargetBody {
           val undoSet =
             UndoSet(props.id, props.target, undoCtx.setter)
 
-          val modify     = undoSet[
+          val modify = undoSet[
             (String, SiderealTracking)
           ](
             targetPropsL,
@@ -86,9 +103,59 @@ object TargetBody {
                 update.runS(input).value
             }
           ) _
+
           val modifyName = undoSet[NonEmptyString](
             unsafeTargetName,
             n => EditSiderealInput.name.set(n.value.some)
+          ) _
+
+          val modifyEpoch = undoSet[Epoch](
+            TargetQueries.epoch,
+            e => EditSiderealInput.epoch.set(Epoch.fromString.reverseGet(e).some)
+          ) _
+
+          val modifyProperVelocitRA = undoSet[Option[ProperVelocity.RA]](
+            TargetQueries.pvRALens,
+            p => {
+              val pvi = ProperVelocityInput(
+                ra = ProperVelocityRaInput(microarcsecondsPerYear = p.map(_.μasy.value)),
+                dec = ProperVelocityDecInput(microarcsecondsPerYear =
+                  TargetQueries.pvDecLens.get(target).map(_.μasy.value)
+                )
+              ).some
+              EditSiderealInput.properVelocity.set(pvi)
+            }
+          ) _
+
+          val modifyProperVelocityDec = undoSet[Option[ProperVelocity.Dec]](
+            TargetQueries.pvDecLens,
+            p => {
+              val pvi = ProperVelocityInput(
+                ra = ProperVelocityRaInput(microarcsecondsPerYear =
+                  TargetQueries.pvRALens.get(target).map(_.μasy.value)
+                ),
+                dec = ProperVelocityDecInput(microarcsecondsPerYear = p.map(_.μasy.value))
+              ).some
+              EditSiderealInput.properVelocity.set(pvi)
+            }
+          ) _
+
+          val modifyParallax = undoSet[Option[Parallax]](
+            TargetQueries.pxLens,
+            p => {
+              val pxi = ParallaxModelInput(microarcseconds = p.map(_.μas.value)).some
+              EditSiderealInput.parallax.set(pxi)
+            }
+          ) _
+
+          val modifyRadialVelocity = undoSet[Option[RadialVelocity]](
+            TargetQueries.rvLens,
+            p => {
+              val rvi = RadialVelocityInput(metersPerSecond =
+                p.map(_.rv.withUnit[CentimetersPerSecond].value.value)
+              ).some
+              EditSiderealInput.radialVelocity.set(rvi)
+            }
           ) _
 
           val searchAndSet: SearchCallback => Callback = s =>
@@ -110,6 +177,48 @@ object TargetBody {
               <.div(
                 CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName(_).runInCB)
                   .withKey(coordinatesKey(target)),
+                Form(size = Small)(
+                  ExploreStyles.Grid,
+                  ExploreStyles.Compact,
+                  ExploreStyles.TargetPropertiesForm,
+                  Label(content = s"Proper Motion",
+                        basic = true,
+                        clazz = ExploreStyles.FormSectionLabel |+| ExploreStyles.ColumnSpan(2)
+                  ),
+                  InputWithUnits(
+                    props.target.zoom(TargetQueries.pvRALens),
+                    ValidFormatInput.fromFormatOptional(pvRAFormat, "Must be a number"),
+                    id = "raPM",
+                    label = "µ RA",
+                    units = "mas/y",
+                    onBlur = (p: Option[ProperVelocity.RA]) => modifyProperVelocitRA(p).runInCB
+                  ),
+                  InputWithUnits(
+                    props.target.zoom(TargetQueries.pvDecLens),
+                    ValidFormatInput.fromFormatOptional(pvDecFormat, "Must be a number"),
+                    id = "raDec",
+                    label = "µ Dec",
+                    units = "mas/y",
+                    onBlur = (p: Option[ProperVelocity.Dec]) => modifyProperVelocityDec(p).runInCB
+                  ),
+                  InputWithUnits(
+                    props.target.zoom(TargetQueries.epoch),
+                    ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
+                    id = "epoch",
+                    label = "Epoch",
+                    units = "years",
+                    onBlur = (e: Epoch) => modifyEpoch(e).runInCB
+                  ),
+                  InputWithUnits[cats.effect.IO, Option[Parallax]](
+                    props.target.zoom(TargetQueries.pxLens),
+                    ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                    id = "parallax",
+                    label = "Parallax",
+                    units = "mas",
+                    onBlur = (px: Option[Parallax]) => modifyParallax(px).runInCB
+                  ),
+                  RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
+                ),
                 UndoButtons(target, undoCtx)
               ),
               AladinRef
@@ -140,8 +249,7 @@ object TargetBody {
   val component =
     ScalaComponent
       .builder[Props]
-      .backend(_ => new Backend())
-      .renderBackend
+      .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .configure(Reusability.shouldComponentUpdate)
       .build

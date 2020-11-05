@@ -134,12 +134,15 @@
 
   --focus-inner-color: hsla(230, 52%, 42%, 1);
   --focus-outer-color: hsla(220, 72%, 73%, 0.85);
+  --hover-color: hsla(220, 72%, 73%, 0.55);
   --hover-background-color: hsla(260, 72%, 10%, 0.85);
   --highlight-color: hsla(200, 72%, 83%, 0.35);
   --error-label-color: @red;
 
   --text-color: var(--color-text-base);
   --control-background-color: var(--color-background-light-20);
+  --negative-text-color: var(--color-text-full);
+  --negative-background-color: #B00020;
 }
 
 .site-dark() {
@@ -165,6 +168,9 @@
   --form-input-background: var(--control-background-color);
   --form-input-focus-border-color: transparent;
   --form-input-focus-box-shadow: 0 0 0 0.1rem var(--focus-inner-color), 0 0 0 0.2rem var(--focus-outer-color);
+  --form-input-hover-border-color: var(--hover-color);
+  --form-prompt-text-color: var(--negative-text-color);
+  --form-prompt-background: var(--negative-background-color);
 }
 
 .tile-dark() {
@@ -264,8 +270,10 @@
     var(--color-text-base-s),
     calc(var(--color-text-base-l) + 75%)
   );
-  --control-background-color: var(--color-background-light-20);
+  --control-background-color: gray;
   --gray: gray;
+  --negative-text-color: @negativeTextColor;
+  --negative-background-color: @negativeBackgroundColor;
 }
 
 .site-light() {
@@ -283,21 +291,25 @@
 .form-light() {
   --input-color: var(--color-text-base);
 
-  --form-input-color: @textColor;
-  --form-input-focus-color: @selectedTextColor;
+  --form-input-color: var(--input-color);
+  --form-input-focus-color: var(--input-color);
   --form-input-background: @white;
-  --form-input-focus-border-color: @white;
-  --form-input-focus-box-shadow: @inputInfoFocusBoxShadow;
+  --form-input-focus-border-color: #85B7D9;
+  --form-input-focus-box-shadow: none;
+  --form-input-hover-border-color: var(--form-input-focus-border-color);
+  --form-prompt-text-color: var(--negative-text-color);
 }
 
 .tile-light() {
   --tile-background: #FFFFFF; // @pageBackground on site.variables
-  --tile-title-background: var(--color-background-light-12);
+  --tile-title-background: @lightGrey;
   --tile-title-color: var(--color-text-base);
 }
 
 .menu-light() {
   --menu-hover-item-background: @subtleTransparentBlack;
+  --menu-secondary-hover-item-background:  var(--tile-title-background);
+  --menu-secondary-hover-item-color: var(-input-color);
   --menu-tabular-active-background: none @white;
 }
 
@@ -784,8 +796,18 @@ body {
   }
 }
 
-.coordinates-form {
+.target-coordinates-form,
+.target-properties-form {
   margin-bottom: 1em;
+}
+
+.target-properties-form {
+  grid-template-columns: [field] 6fr [units] auto;
+  justify-items: stretch;
+
+  @media (max-width: @target-grid-responsive-cutoff) {
+    display: none;
+  }
 }
 
 .catalogue-form {
@@ -807,9 +829,24 @@ body {
   .error-label-mixin();
 }
 
+.ui.basic.label.explore-section-label {
+  background-color: transparent;
+  border: none;
+  letter-spacing: 0.15em;
+  border-radius: 0;
+  border-bottom: 1px solid var(--input-color);
+}
+
+.explore-units-label {
+  margin-left: 0.25em;
+  margin-bottom: 0.2em;
+  justify-self: end;
+  align-self: end;
+}
+
 .proposal-details-grid {
   /*
-  When we go to one column, instead of interleaving 
+  When we go to one column, instead of interleaving
   items, we want to put the second column below the first.
   */
   @proposal-details-grid-items: 8;
@@ -833,7 +870,7 @@ div.partner-split-total {
   & > div > data {
     width: 5em;
   }
-  
+
   & > div > data {
     text-align: end;
   }
@@ -878,8 +915,15 @@ img.partner-split-flag {
   td:last-child {
     width: 5em;
   }
-  
+
   .ui.form & input {
     text-align: right;
   }
+}
+
+.explore-input-error-tooltip {
+  position: relative;
+  transform: translate(0px, -33px);
+  left: 50%;
+  z-index:3;
 }

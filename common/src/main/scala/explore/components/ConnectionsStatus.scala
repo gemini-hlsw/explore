@@ -18,6 +18,7 @@ import react.common.ReactProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
+import react.semanticui.sizes._
 
 final case class ConnectionsStatus()
     extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
@@ -53,7 +54,8 @@ object ConnectionsStatus {
         <.span(
           ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")),
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
-          Button(^.onClick --> ctx.clients.odb.close().runInCB)("Close ODB").when(true)
+          Button(size = Tiny)(^.onClick --> ctx.clients.odb.close().runInCB)("Close ODB")
+            .when(false)
         )
       }
     )
