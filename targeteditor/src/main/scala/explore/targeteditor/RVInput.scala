@@ -4,16 +4,16 @@
 package explore.targeteditor
 
 import cats.data.ValidatedNec
-import cats.effect.Async
-import cats.effect.ContextShift
-import cats.effect.IO
 import cats.implicits._
+import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.model.formats._
 import explore.optics._
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.ApparentRadialVelocity
@@ -31,10 +31,9 @@ import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
-  value:           ViewF[IO, Option[RadialVelocity]],
-  modify:          Option[RadialVelocity] => IO[Unit]
-)(implicit val cs: ContextShift[IO])
-    extends ReactProps[RVInput](RVInput.component)
+  value:  ViewF[IO, Option[RadialVelocity]],
+  modify: Option[RadialVelocity] => IO[Unit]
+) extends ReactProps[RVInput](RVInput.component)
 
 object RVInput {
   type Props = RVInput
@@ -78,59 +77,60 @@ object RVInput {
   implicit def stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props, state: State) = {
-      val rvView = ViewF.fromState[IO]($)(Async[IO], props.cs).zoom(State.rvView)
-      val input  = state.rvView match {
-        case RVView.Z  =>
-          FormInputEV(
-            id = state.rvView.tag,
-            label = state.rvView.tag,
-            value = props.value.zoom(unsafeRVtoZLens),
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
-            onBlur = (z: ValidatedNec[String, Option[Redshift]]) =>
-              z.toOption
-                .map(z => props.modify(z.flatMap(_.toRadialVelocity)).runInCB)
-                .getOrEmpty,
-            clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
-          )
-        case RVView.CZ =>
-          FormInputEV(
-            id = state.rvView.tag,
-            label = state.rvView.tag,
-            value = props.value.zoom(unsafeRVtoCZLens),
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
-            onBlur = (z: ValidatedNec[String, Option[ApparentRadialVelocity]]) =>
-              z.toOption
-                .map(cz => props.modify(cz.map(_.toRedshift).flatMap(_.toRadialVelocity)).runInCB)
-                .getOrEmpty,
-            clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
-          )
-        case RVView.RV =>
-          FormInputEV(
-            id = state.rvView.tag,
-            label = state.rvView.tag,
-            value = props.value,
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
-            onBlur = (rv: ValidatedNec[String, Option[RadialVelocity]]) =>
-              rv.toOption.map(v => props.modify(v).runInCB).getOrEmpty,
-            clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
-          )
+    def render(props: Props, state: State) =
+      AppCtx.withCtx { implicit ctx =>
+        val rvView = ViewF.fromState[IO]($).zoom(State.rvView)
+        val input  = state.rvView match {
+          case RVView.Z  =>
+            FormInputEV(
+              id = state.rvView.tag,
+              label = state.rvView.tag,
+              value = props.value.zoom(unsafeRVtoZLens),
+              errorClazz = ExploreStyles.InputErrorTooltip,
+              errorPointing = LabelPointing.Below,
+              validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
+              onBlur = (z: ValidatedNec[String, Option[Redshift]]) =>
+                z.toOption
+                  .map(z => props.modify(z.flatMap(_.toRadialVelocity)).runInCB)
+                  .getOrEmpty,
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+            )
+          case RVView.CZ =>
+            FormInputEV(
+              id = state.rvView.tag,
+              label = state.rvView.tag,
+              value = props.value.zoom(unsafeRVtoCZLens),
+              errorClazz = ExploreStyles.InputErrorTooltip,
+              errorPointing = LabelPointing.Below,
+              validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
+              onBlur = (z: ValidatedNec[String, Option[ApparentRadialVelocity]]) =>
+                z.toOption
+                  .map(cz => props.modify(cz.map(_.toRedshift).flatMap(_.toRadialVelocity)).runInCB)
+                  .getOrEmpty,
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+            )
+          case RVView.RV =>
+            FormInputEV(
+              id = state.rvView.tag,
+              label = state.rvView.tag,
+              value = props.value,
+              errorClazz = ExploreStyles.InputErrorTooltip,
+              errorPointing = LabelPointing.Below,
+              validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
+              onBlur = (rv: ValidatedNec[String, Option[RadialVelocity]]) =>
+                rv.toOption.map(v => props.modify(v).runInCB).getOrEmpty,
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+            )
+        }
+        React.Fragment(
+          <.div(
+            ExploreStyles.FlexContainer |+| ExploreStyles.Grow(1),
+            EnumViewSelect[IO, RVView](id = "view", value = rvView, label = state.rvView.tag),
+            input
+          ),
+          state.units
+        )
       }
-      React.Fragment(
-        <.div(
-          ExploreStyles.FlexContainer |+| ExploreStyles.Grow(1),
-          EnumViewSelect[IO, RVView](id = "view", value = rvView, label = state.rvView.tag),
-          input
-        ),
-        state.units
-      )
-    }
   }
 
   val component =
