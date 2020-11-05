@@ -62,3 +62,6 @@
 
 @inputHighlightBackground: var(--site-input-highlight-background);
 @inputHighlightColor: var(--site-input-highlight-color);
+
+@disabledOpacity: var(--site-disabled-opacity);
+
