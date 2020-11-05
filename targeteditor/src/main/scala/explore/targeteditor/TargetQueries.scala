@@ -18,11 +18,14 @@ import explore.model.decoders._
 import explore.optics._
 import explore.undo.Undoer
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.CatalogId
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
@@ -167,46 +170,71 @@ object TargetQueries {
           for {
             _        <- (view.mod).compose(lens.set)(value)
             editInput = setFields(value)(EditSiderealInput(id))
+            _        <- IO.pure(println(s"SETTING [$editInput]"))
             _        <- TargetMutation.execute(editInput)
           } yield ()
         }
       )(value)
   }
 
-  /**
-   * Updates all the fields of sideral tracking
-   */
-  def updateSiderealTracking(t: SiderealTracking): State[EditSiderealInput, Unit] = {
-    val cati = t.catalogId.map(cid => CatalogIdInput(cid.catalog, cid.id.value))
+  object UpdateSiderealTracking {
+    def catalogId(cid: Option[CatalogId]): State[EditSiderealInput, Option[CatalogIdInput]] =
+      EditSiderealInput.catalogId := cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value))
 
-    val coords = t.baseCoordinates
+    def epoch(epoch: Option[Epoch]): State[EditSiderealInput, Option[String]] =
+      EditSiderealInput.epoch := epoch.map(e => Epoch.fromString.reverseGet(e))
 
-    val rai = RightAscensionInput(microarcseconds = coords.ra.toAngle.toMicroarcseconds.some).some
-
-    val deci = DeclinationInput(microarcseconds = coords.dec.toAngle.toMicroarcseconds.some).some
-
-    val pvi = t.properVelocity.map(pv =>
-      ProperVelocityInput(
-        ra = ProperVelocityRaInput(microarcsecondsPerYear = pv.ra.μasy.value.some),
-        dec = ProperVelocityDecInput(microarcsecondsPerYear = pv.dec.μasy.value.some)
+    def ra(ra: Option[RightAscension]): State[EditSiderealInput, Option[RightAscensionInput]] =
+      EditSiderealInput.ra := ra.map(r =>
+        RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some)
       )
-    )
 
-    val rvi = t.radialVelocity.map(rv =>
-      RadialVelocityInput(metersPerSecond = rv.rv.withUnit[CentimetersPerSecond].value.value.some)
-    )
+    def dec(dec: Option[Declination]): State[EditSiderealInput, Option[DeclinationInput]] =
+      EditSiderealInput.dec := dec.map(d =>
+        DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some)
+      )
 
-    val pxi = t.parallax.map(p => ParallaxModelInput(microarcseconds = p.μas.value.some))
+    def properVelocity(
+      pv: Option[ProperVelocity]
+    ): State[EditSiderealInput, Option[ProperVelocityInput]] =
+      EditSiderealInput.properVelocity := pv.map(p =>
+        ProperVelocityInput(
+          ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
+          dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
+        )
+      )
 
-    for {
-      _ <- EditSiderealInput.catalogId := cati
-      _ <- EditSiderealInput.ra := rai
-      _ <- EditSiderealInput.dec := deci
-      _ <- EditSiderealInput.epoch := Epoch.fromString.reverseGet(t.epoch).some
-      _ <- EditSiderealInput.properVelocity := pvi
-      _ <- EditSiderealInput.radialVelocity := rvi
-      _ <- EditSiderealInput.parallax := pxi
-    } yield ()
+    def radialVelocity(
+      rv: Option[RadialVelocity]
+    ): State[EditSiderealInput, Option[RadialVelocityInput]] =
+      EditSiderealInput.radialVelocity :=
+        rv.map(r =>
+          RadialVelocityInput(metersPerSecond =
+            r.rv.withUnit[CentimetersPerSecond].value.value.some
+          )
+        )
+
+    def parallax(p: Option[Parallax]): State[EditSiderealInput, Option[ParallaxModelInput]] =
+      EditSiderealInput.parallax := p.map(p =>
+        ParallaxModelInput(microarcseconds = p.μas.value.some)
+      )
+
+    /**
+     * Updates all the fields of sideral tracking
+     */
+    def apply(t: SiderealTracking): State[EditSiderealInput, Unit] = {
+      val coords = t.baseCoordinates
+
+      for {
+        _ <- catalogId(t.catalogId)
+        _ <- ra(coords.ra.some)
+        _ <- dec(coords.dec.some)
+        _ <- epoch(t.epoch.some)
+        _ <- properVelocity(t.properVelocity)
+        _ <- radialVelocity(t.radialVelocity)
+        _ <- parallax(t.parallax)
+      } yield ()
+    }
   }
 
 }
