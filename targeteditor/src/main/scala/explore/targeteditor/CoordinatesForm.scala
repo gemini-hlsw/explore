@@ -148,14 +148,16 @@ object CoordinatesForm {
               value = stateView.zoom(State.raValue),
               validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
               label = "RA",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+              disabled = true
             ),
             FormInputEV(
               id = "dec",
               value = stateView.zoom(State.decValue),
               validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
               label = "Dec",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+              disabled = true
             ),
             FormButton(
               size = Small,
@@ -165,7 +167,7 @@ object CoordinatesForm {
             )(
               Icon("angle right"),
               ExploreStyles.HideLabel
-            )
+            ).when(false)
           )
         )
       }
