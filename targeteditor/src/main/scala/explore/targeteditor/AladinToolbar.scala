@@ -8,7 +8,6 @@ import scala.math.rint
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Angle.DMS
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math._
 import lucuma.ui.reusability._
@@ -32,15 +31,20 @@ object AladinToolbar {
   def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d"
 
-  def formatDMS(dms: DMS): String = {
-    val prefix = if (dms.toAngle.toMicroarcseconds < 0) "-" else "+"
-    f"$prefix${dms.degrees}%02d:${dms.arcminutes}%02d:${dms.arcseconds}%02d"
-  }
+  val fromStringDMS: Angle => String =
+    dms => {
+      val r = Angle.dms.get(dms)
+      f"${r.degrees}%02d:${r.arcminutes}%02d:${r.arcseconds}%02d"
+    }
+
+  val fromStringSignedDMS: Angle => String =
+    a =>
+      if (Angle.signedMicroarcseconds.get(a) < 0) "-" + fromStringDMS(-a)
+      else "+" + fromStringDMS(a)
 
   def formatCoordinates(coords: Coordinates): String = {
-    val ra  = HMS(coords.ra.toHourAngle)
-    val dec = DMS(coords.dec.toAngle)
-    s"${formatHMS(ra)} ${formatDMS(dec)}"
+    val ra = HMS(coords.ra.toHourAngle)
+    s"${formatHMS(ra)} ${fromStringSignedDMS(coords.dec.toAngle)}"
   }
 
   def formatFov(angle: Angle): String = {
