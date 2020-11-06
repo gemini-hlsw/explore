@@ -63,12 +63,9 @@ object TargetBody {
 
   implicit val propsReuse = Reusability.derive[Props]
 
-  class Backend($ : BackendScope[Props, Unit]) {
+  class Backend {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
-
-    def setName(name: String): Callback =
-      $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
 
     private def coordinatesKey(target: TargetResult): String =
       s"${target.name}#${target.tracking.baseCoordinates.show}"
@@ -87,11 +84,11 @@ object TargetBody {
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify = undoSet[
-            (String, SiderealTracking, List[Magnitude])
+            (NonEmptyString, SiderealTracking, List[Magnitude])
           ](
             targetPropsL,
             { case (n, t, _ /*ms*/ ) =>
-              EditSiderealInput.name.set(n.some) >>> TargetQueries.UpdateSiderealTracking(t)
+              EditSiderealInput.name.set(n.value.some) >>> TargetQueries.UpdateSiderealTracking(t)
             // >>> EditSiderealInput.magnitudes.set( ms.map(m =>
             //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
             //      ))
@@ -151,7 +148,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName(_).runInCB)
+                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName)
                   .withKey(coordinatesKey(target)),
                 Form(size = Small)(
                   ExploreStyles.Grid,
@@ -162,36 +159,32 @@ object TargetBody {
                         clazz = ExploreStyles.FormSectionLabel |+| ExploreStyles.ColumnSpan(2)
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvRALens),
+                    props.target.zoom(TargetQueries.pvRALens).withOnMod(modifyProperVelocitRA),
                     ValidFormatInput.fromFormatOptional(pvRAFormat, "Must be a number"),
                     id = "raPM",
                     label = "µ RA",
-                    units = "mas/y",
-                    onBlur = (p: Option[ProperVelocity.RA]) => modifyProperVelocitRA(p).runInCB
+                    units = "mas/y"
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvDecLens),
+                    props.target.zoom(TargetQueries.pvDecLens).withOnMod(modifyProperVelocityDec),
                     ValidFormatInput.fromFormatOptional(pvDecFormat, "Must be a number"),
                     id = "raDec",
                     label = "µ Dec",
-                    units = "mas/y",
-                    onBlur = (p: Option[ProperVelocity.Dec]) => modifyProperVelocityDec(p).runInCB
+                    units = "mas/y"
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.epoch),
+                    props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
                     ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
                     id = "epoch",
                     label = "Epoch",
-                    units = "years",
-                    onBlur = (e: Epoch) => modifyEpoch(e).runInCB
+                    units = "years"
                   ),
                   InputWithUnits[cats.effect.IO, Option[Parallax]](
-                    props.target.zoom(TargetQueries.pxLens),
+                    props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
                     ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                     id = "parallax",
                     label = "Parallax",
-                    units = "mas",
-                    onBlur = (px: Option[Parallax]) => modifyParallax(px).runInCB
+                    units = "mas"
                   ),
                   RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
                 ),

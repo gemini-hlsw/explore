@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
@@ -106,10 +107,10 @@ object TargetQueries {
    * Lens used to change name and coordinates of a target
    */
   val targetPropsL =
-    Lens[TargetResult, (String, SiderealTracking, List[Magnitude])](t =>
-      (t.name, TargetResult.tracking.get(t), t.magnitudes)
+    Lens[TargetResult, (NonEmptyString, SiderealTracking, List[Magnitude])](t =>
+      (NonEmptyString.from(t.name).getOrElse("<EMPTY>"), TargetResult.tracking.get(t), t.magnitudes)
     )(s =>
-      TargetResult.name.set(s._1) >>>
+      TargetResult.name.set(s._1.value) >>>
         TargetResult.tracking.set(s._2) >>>
         TargetResult.magnitudes.set(s._3)
     )
@@ -169,7 +170,7 @@ object TargetQueries {
           for {
             _        <- (view.mod).compose(lens.set)(value)
             editInput = setFields(value)(EditSiderealInput(id))
-            // _        <- IO.pure(println(s"SETTING [$editInput]"))
+            _        <- IO.pure(println(s"SETTING [$editInput]"))
             _        <- TargetMutation.execute(editInput)
           } yield ()
         }

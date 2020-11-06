@@ -3,13 +3,13 @@
 
 package explore.targeteditor
 
-import cats.data._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -42,7 +42,7 @@ final case class CoordinatesForm(
   target:           TargetResult,
   searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback,
-  onNameChange:     NonEmptyString => Callback
+  onNameChange:     NonEmptyString => IO[Unit]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(
@@ -60,7 +60,7 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    searchTerm:  String,
+    searchTerm:  NonEmptyString,
     tracking:    SiderealTracking,
     searching:   Boolean,
     searchError: Option[String]
@@ -108,12 +108,6 @@ object CoordinatesForm {
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
           search *> e.stopPropagationCB *> e.preventDefaultCB
 
-        val nameLabel = (state.searchTerm.isEmpty, state.searchError) match {
-          case (_, Some(m)) => Label(clazz = ExploreStyles.ErrorLabel)(m)
-          case (true, _)    => Label(clazz = ExploreStyles.ErrorLabel)("Cannot be empty")
-          case _            => Label("Name")
-        }
-
         val submitForm: Form.OnSubmitE =
           (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
 
@@ -123,30 +117,16 @@ object CoordinatesForm {
           ExploreStyles.CoordinatesForm,
           FormInputEV(
             id = "search",
-            value = stateView.zoom(State.searchTerm),
-            label = nameLabel,
-            focus = true,
+            value = stateView.zoom(State.searchTerm).withOnMod(props.onNameChange),
+            validFormat = ValidFormatInput.nonEmptyValidFormat,
+            label = "Name",
+            error = state.searchError.map(m => Label(m)).orUndefined,
             loading = state.searching,
-            error = state.searchTerm.isEmpty,
-            onTextChange = (u: String) =>
-              $.setStateL(State.searchTerm)(u) *> $.setStateL(State.searchError)(none),
-            onBlur = (u: ValidatedNec[String, String]) =>
-              u.toOption
-                .flatMap(
-                  refineV[NonEmpty](_).toOption
-                    .map(props.onNameChange(_))
-                )
-                .getOrEmpty,
             disabled = state.searching,
-            icon = Icons.Search
-              .link(true)
-              .clazz(ExploreStyles.ButtonIcon)(
-                ^.tabIndex := 0,
-                ^.onKeyPress ==> iconKeyPress,
-                ^.onMouseUp --> search,
-                ^.onTouchEnd --> search
-              )
-          ).withMods(^.autoComplete := "off", ^.placeholder := "Name"),
+            onTextChange = _ => $.setStateL(State.searchError)(none),
+            onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
+            icon = searchIcon
+          ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
           // We need this hidden control to submit when pressing enter
           <.input(^.`type` := "submit", ^.hidden := true),
           <.div(
