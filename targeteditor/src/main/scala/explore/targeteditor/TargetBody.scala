@@ -22,18 +22,17 @@ import explore.model.formats._
 import explore.model.reusability._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperVelocity
-import lucuma.core.math.ProperVelocity.AngularVelocityComponent
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.core.optics.syntax.all._
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
@@ -95,16 +94,10 @@ object TargetBody {
           ](
             targetPropsL,
             { case (n, t, _ /*ms*/ ) =>
-              input =>
-                val update =
-                  for {
-                    _ <- EditSiderealInput.name := n.some
-                    _ <- TargetQueries.UpdateSiderealTracking(t)
-                    // _ <- EditSiderealInput.magnitudes := ms.map(m =>
-                    //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
-                    //      )
-                  } yield ()
-                update.runS(input).value
+              EditSiderealInput.name.set(n.some) >>> TargetQueries.UpdateSiderealTracking(t)
+            // >>> EditSiderealInput.magnitudes.set( ms.map(m =>
+            //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
+            //      ))
             }
           ) _
 
@@ -115,51 +108,35 @@ object TargetBody {
 
           val modifyEpoch = undoSet[Epoch](
             TargetQueries.epoch,
-            e => input => TargetQueries.UpdateSiderealTracking.epoch(e.some).runS(input).value
+            e => TargetQueries.UpdateSiderealTracking.epoch(e.some)
           ) _
 
           val modifyProperVelocitRA = undoSet[Option[ProperVelocity.RA]](
             TargetQueries.pvRALens,
             pvRA =>
-              input =>
-                TargetQueries.UpdateSiderealTracking
-                  .properVelocity(
-                    pvRA.map(ra =>
-                      ProperVelocity(
-                        ra,
-                        TargetQueries.pvDecLens.get(target).getOrElse(AngularVelocityComponent.Zero)
-                      )
-                    )
-                  )
-                  .runS(input)
-                  .value
+              TargetQueries.UpdateSiderealTracking.properVelocity(
+                attemptCombine(pvRA, TargetQueries.pvDecLens.get(target))
+                  .map((ProperVelocity.apply _).tupled)
+              )
           ) _
 
           val modifyProperVelocityDec = undoSet[Option[ProperVelocity.Dec]](
             TargetQueries.pvDecLens,
             pvDec =>
-              input =>
-                TargetQueries.UpdateSiderealTracking
-                  .properVelocity(
-                    pvDec.map(dec =>
-                      ProperVelocity(
-                        TargetQueries.pvRALens.get(target).getOrElse(AngularVelocityComponent.Zero),
-                        dec
-                      )
-                    )
-                  )
-                  .runS(input)
-                  .value
+              TargetQueries.UpdateSiderealTracking.properVelocity(
+                attemptCombine(TargetQueries.pvRALens.get(target), pvDec)
+                  .map((ProperVelocity.apply _).tupled)
+              )
           ) _
 
           val modifyParallax = undoSet[Option[Parallax]](
             TargetQueries.pxLens,
-            p => input => TargetQueries.UpdateSiderealTracking.parallax(p).runS(input).value
+            TargetQueries.UpdateSiderealTracking.parallax
           ) _
 
           val modifyRadialVelocity = undoSet[Option[RadialVelocity]](
             TargetQueries.rvLens,
-            rv => input => TargetQueries.UpdateSiderealTracking.radialVelocity(rv).runS(input).value
+            TargetQueries.UpdateSiderealTracking.radialVelocity
           ) _
 
           val searchAndSet: SearchCallback => Callback = s =>
