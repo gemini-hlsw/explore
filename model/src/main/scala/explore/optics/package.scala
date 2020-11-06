@@ -5,6 +5,7 @@ package explore
 
 import cats.syntax.all._
 import coulomb._
+import explore.model.utils._
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
 import lucuma.core.math.ProperVelocity
@@ -117,12 +118,12 @@ package object optics {
 
   val unsafePVDecLensO: Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]] =
     Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]](_.map(ProperVelocity.dec.get))(s =>
-      a => (s, a).mapN(ProperVelocity.dec.set(_)(_))
+      a => buildProperVelocity(a.map(_.ra), s)
     )
 
   val unsafePVRALensO: Lens[Option[ProperVelocity], Option[ProperVelocity.RA]] =
     Lens[Option[ProperVelocity], Option[ProperVelocity.RA]](_.map(ProperVelocity.ra.get))(s =>
-      a => (s, a).mapN(ProperVelocity.ra.set(_)(_))
+      a => buildProperVelocity(s, a.map(_.dec))
     )
 
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =

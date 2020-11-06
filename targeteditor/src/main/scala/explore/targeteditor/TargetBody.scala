@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.annotation.unused
-
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -20,9 +18,9 @@ import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
+import explore.model.utils._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -72,7 +70,6 @@ object TargetBody {
     def setName(name: String): Callback =
       $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
 
-    @unused
     private def coordinatesKey(target: TargetResult): String =
       s"${target.name}#${target.tracking.baseCoordinates.show}"
 
@@ -115,8 +112,7 @@ object TargetBody {
             TargetQueries.pvRALens,
             pvRA =>
               TargetQueries.UpdateSiderealTracking.properVelocity(
-                attemptCombine(pvRA, TargetQueries.pvDecLens.get(target))
-                  .map((ProperVelocity.apply _).tupled)
+                buildProperVelocity(pvRA, TargetQueries.pvDecLens.get(target))
               )
           ) _
 
@@ -124,8 +120,7 @@ object TargetBody {
             TargetQueries.pvDecLens,
             pvDec =>
               TargetQueries.UpdateSiderealTracking.properVelocity(
-                attemptCombine(TargetQueries.pvRALens.get(target), pvDec)
-                  .map((ProperVelocity.apply _).tupled)
+                buildProperVelocity(TargetQueries.pvRALens.get(target), pvDec)
               )
           ) _
 
