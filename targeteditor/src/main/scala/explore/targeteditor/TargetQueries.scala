@@ -170,7 +170,6 @@ object TargetQueries {
           for {
             _        <- (view.mod).compose(lens.set)(value)
             editInput = setFields(value)(EditSiderealInput(id))
-            _        <- IO.pure(println(s"SETTING [$editInput]"))
             _        <- TargetMutation.execute(editInput)
           } yield ()
         }
