@@ -3,7 +3,7 @@
 
 package explore.target
 
-import cats.data.State
+import cats.Endo
 import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLOperation
@@ -29,7 +29,6 @@ import lucuma.core.model.CatalogId
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.core.optics.syntax.all._
 import lucuma.ui.reusability._
 import monocle.Lens
 
@@ -178,63 +177,61 @@ object TargetQueries {
   }
 
   object UpdateSiderealTracking {
-    def catalogId(cid: Option[CatalogId]): State[EditSiderealInput, Option[CatalogIdInput]] =
-      EditSiderealInput.catalogId := cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value))
+    def catalogId(cid: Option[CatalogId]): Endo[EditSiderealInput] =
+      EditSiderealInput.catalogId.set(cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value)))
 
-    def epoch(epoch: Option[Epoch]): State[EditSiderealInput, Option[String]] =
-      EditSiderealInput.epoch := epoch.map(e => Epoch.fromString.reverseGet(e))
+    def epoch(epoch: Option[Epoch]): Endo[EditSiderealInput] =
+      EditSiderealInput.epoch.set(epoch.map(Epoch.fromString.reverseGet))
 
-    def ra(ra: Option[RightAscension]): State[EditSiderealInput, Option[RightAscensionInput]] =
-      EditSiderealInput.ra := ra.map(r =>
-        RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some)
+    def ra(ra: Option[RightAscension]): Endo[EditSiderealInput] =
+      EditSiderealInput.ra.set(
+        ra.map(r => RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some))
       )
 
-    def dec(dec: Option[Declination]): State[EditSiderealInput, Option[DeclinationInput]] =
-      EditSiderealInput.dec := dec.map(d =>
-        DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some)
+    def dec(dec: Option[Declination]): Endo[EditSiderealInput] =
+      EditSiderealInput.dec.set(
+        dec.map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some))
       )
 
     def properVelocity(
       pv: Option[ProperVelocity]
-    ): State[EditSiderealInput, Option[ProperVelocityInput]] =
-      EditSiderealInput.properVelocity := pv.map(p =>
-        ProperVelocityInput(
-          ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
-          dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
+    ): Endo[EditSiderealInput] =
+      EditSiderealInput.properVelocity.set(
+        pv.map(p =>
+          ProperVelocityInput(
+            ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
+            dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
+          )
         )
       )
 
     def radialVelocity(
       rv: Option[RadialVelocity]
-    ): State[EditSiderealInput, Option[RadialVelocityInput]] =
-      EditSiderealInput.radialVelocity :=
+    ): Endo[EditSiderealInput] =
+      EditSiderealInput.radialVelocity.set(
         rv.map(r =>
-          RadialVelocityInput(metersPerSecond =
-            r.rv.withUnit[CentimetersPerSecond].value.value.some
+          RadialVelocityInput(
+            metersPerSecond = r.rv.withUnit[CentimetersPerSecond].value.value.some
           )
         )
+      )
 
-    def parallax(p: Option[Parallax]): State[EditSiderealInput, Option[ParallaxModelInput]] =
-      EditSiderealInput.parallax := p.map(p =>
-        ParallaxModelInput(microarcseconds = p.μas.value.some)
+    def parallax(p: Option[Parallax]): Endo[EditSiderealInput] =
+      EditSiderealInput.parallax.set(
+        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.some))
       )
 
     /**
      * Updates all the fields of sideral tracking
      */
-    def apply(t: SiderealTracking): State[EditSiderealInput, Unit] = {
-      val coords = t.baseCoordinates
-
-      for {
-        _ <- catalogId(t.catalogId)
-        _ <- ra(coords.ra.some)
-        _ <- dec(coords.dec.some)
-        _ <- epoch(t.epoch.some)
-        _ <- properVelocity(t.properVelocity)
-        _ <- radialVelocity(t.radialVelocity)
-        _ <- parallax(t.parallax)
-      } yield ()
-    }
+    def apply(t: SiderealTracking): Endo[EditSiderealInput] =
+      catalogId(t.catalogId) >>>
+        ra(t.baseCoordinates.ra.some) >>>
+        dec(t.baseCoordinates.dec.some) >>>
+        epoch(t.epoch.some) >>>
+        properVelocity(t.properVelocity) >>>
+        radialVelocity(t.radialVelocity) >>>
+        parallax(t.parallax)
   }
 
 }

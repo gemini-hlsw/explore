@@ -3,9 +3,19 @@
 
 package explore
 
+import cats.Monoid
+import cats.syntax.all._
+
 package object utils {
 
   def abbreviate(s: String, maxLength: Int): String =
     if (s.length > maxLength) s"${s.substring(0, maxLength)}\u2026" else s
 
+  def attemptCombine[A: Monoid, B: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =
+    (a, b) match {
+      case (None, None)               => none
+      case (Some(someA), None)        => (someA, Monoid[B].empty).some
+      case (None, Some(someB))        => (Monoid[A].empty, someB).some
+      case (Some(someA), Some(someB)) => (someA, someB).some
+    }
 }
