@@ -35,13 +35,14 @@ import react.common.implicits._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
+import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
 
 import scalajs.js.JSConverters._
-import react.semanticui.elements.label.LabelPointing
 
 final case class CoordinatesForm(
   target:           TargetResult,
+  searching:        View[Boolean],
   searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback,
   onNameChange:     NonEmptyString => IO[Unit]
@@ -64,7 +65,6 @@ object CoordinatesForm {
   final case class State(
     searchTerm:    NonEmptyString,
     tracking:      SiderealTracking,
-    searching:     Boolean,
     searchEnabled: Boolean,
     searchError:   Option[NonEmptyString]
   )
@@ -81,7 +81,7 @@ object CoordinatesForm {
   }
 
   implicit val stateReuse                     = Reusability.derive[State]
-  implicit val propsReuse: Reusability[Props] = Reusability.by(_.target)
+  implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.target, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -89,19 +89,19 @@ object CoordinatesForm {
       AppCtx.withCtx { implicit appCtx =>
         val stateView = ViewF.fromState[IO]($)
 
-        val searchComplete: Callback = $.setStateL(State.searching)(false)
+        val searchComplete: IO[Unit] = props.searching.set(false)
 
         val search: Callback =
           props
             .submit(
               state.searchTerm,
-              $.setStateL(State.searching)(true),
+              props.searching.set(true).runInCB,
               t =>
-                searchComplete *> ($.setStateL(State.searchError)(
+                searchComplete.runInCB *> ($.setStateL(State.searchError)(
                   NonEmptyString.unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found").some
                 )).when_(t.isEmpty),
               _ =>
-                searchComplete *> $.setStateL(State.searchError)(
+                searchComplete.runInCB *> $.setStateL(State.searchError)(
                   NonEmptyString("Search error...").some
                 )
             )
@@ -133,8 +133,8 @@ object CoordinatesForm {
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             label = "Name",
             error = state.searchError.orUndefined,
-            loading = state.searching,
-            disabled = state.searching,
+            loading = props.searching.get,
+            disabled = props.searching.get,
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,
             onTextChange = _ => $.setStateL(State.searchError)(none),
@@ -188,7 +188,6 @@ object CoordinatesForm {
             State(
               searchTerm = r._1,
               tracking = r._2,
-              searching = stateOpt.map(_.searching).getOrElse(false),
               searchEnabled = true,
               searchError = stateOpt.flatMap(_.searchError)
             )
