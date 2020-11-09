@@ -131,7 +131,7 @@ input CreateSiderealInput {
   ra: RightAscensionInput!
   dec: DeclinationInput!
   epoch: EpochString
-  properVelocity: ProperVelocityInput
+  properMotion: ProperMotionInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
   magnitudes: [MagnitudeInput!]
@@ -265,7 +265,7 @@ input EditSiderealInput {
   ra: RightAscensionInput
   dec: DeclinationInput
   epoch: EpochString
-  properVelocity: ProperVelocityInput
+  properMotion: ProperMotionInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
 }
@@ -679,50 +679,50 @@ type ProgramEdit implements Event {
 # ProgramId id formatted as `p-(0|[1-9a-f][0-9a-f]*)`
 scalar ProgramId
 
-type ProperVelocity {
+type ProperMotion {
   # Proper velocity in RA
-  ra: ProperVelocityRA!
+  ra: ProperMotionRA!
 
   # Proper velocity in declination
-  dec: ProperVelocitydeclination!
+  dec: ProperMotiondeclination!
 }
 
-# Decimal value in ProperVelocityComponent
-input ProperVelocityComponentDecimalInput {
+# Decimal value in ProperMotionComponent
+input ProperMotionComponentDecimalInput {
   # decimal value in associated units
   value: BigDecimal!
 
   # units for associated value
-  units: ProperVelocityComponentUnits!
+  units: ProperMotionComponentUnits!
 }
 
-# Integral value in ProperVelocityComponent
-input ProperVelocityComponentLongInput {
+# Integral value in ProperMotionComponent
+input ProperMotionComponentLongInput {
   # integral value in associated units
   value: Long!
 
   # units for associated value
-  units: ProperVelocityComponentUnits!
+  units: ProperMotionComponentUnits!
 }
 
 # Unit options for proper velocity components (RA and Dec)
-enum ProperVelocityComponentUnits {
-  # ProperVelocityComponentUnits MicroarcsecondsPerYear
+enum ProperMotionComponentUnits {
+  # ProperMotionComponentUnits MicroarcsecondsPerYear
   MICROARCSECONDS_PER_YEAR
 
-  # ProperVelocityComponentUnits MilliarcsecondsPerYear
+  # ProperMotionComponentUnits MilliarcsecondsPerYear
   MILLIARCSECONDS_PER_YEAR
 }
 
-# ProperVelocityDec, choose one of the available units
-input ProperVelocityDecInput {
+# ProperMotionDec, choose one of the available units
+input ProperMotionDecInput {
   microarcsecondsPerYear: Long
   milliarcsecondsPerYear: BigDecimal
-  fromLong: ProperVelocityComponentLongInput
-  fromDecimal: ProperVelocityComponentDecimalInput
+  fromLong: ProperMotionComponentLongInput
+  fromDecimal: ProperMotionComponentDecimalInput
 }
 
-type ProperVelocitydeclination {
+type ProperMotiondeclination {
   # Proper velocity in declination μas/year
   microarcsecondsPerYear: Long!
 
@@ -731,12 +731,12 @@ type ProperVelocitydeclination {
 }
 
 # Proper velocity, choose one of the available units
-input ProperVelocityInput {
-  ra: ProperVelocityRaInput!
-  dec: ProperVelocityDecInput!
+input ProperMotionInput {
+  ra: ProperMotionRaInput!
+  dec: ProperMotionDecInput!
 }
 
-type ProperVelocityRA {
+type ProperMotionRA {
   # Proper velocity in RA μas/year
   microarcsecondsPerYear: Long!
 
@@ -744,12 +744,12 @@ type ProperVelocityRA {
   milliarcsecondsPerYear: BigDecimal!
 }
 
-# ProperVelocityRa, choose one of the available units
-input ProperVelocityRaInput {
+# ProperMotionRa, choose one of the available units
+input ProperMotionRaInput {
   microarcsecondsPerYear: Long
   milliarcsecondsPerYear: BigDecimal
-  fromLong: ProperVelocityComponentLongInput
-  fromDecimal: ProperVelocityComponentDecimalInput
+  fromLong: ProperMotionComponentLongInput
+  fromDecimal: ProperMotionComponentDecimalInput
 }
 
 type Query {
@@ -938,7 +938,7 @@ type Sidereal {
   epoch: EpochString!
 
   # Proper velocity per year in right ascension and declination
-  properVelocity: ProperVelocity
+  properMotion: ProperMotion
 
   # Radial velocity
   radialVelocity: RadialVelocity
