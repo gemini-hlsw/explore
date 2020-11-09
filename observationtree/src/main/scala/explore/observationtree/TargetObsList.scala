@@ -15,6 +15,7 @@ import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
+import explore.model.Constants
 import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused._
@@ -165,7 +166,7 @@ object TargetObsList {
         // Temporary measure until we have id pools.
         val newTarget =
           TargetIdName(Target.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
-                       "<New Target>"
+                       Constants.UnnamedTarget
           )
 
         val upsert =
@@ -277,7 +278,7 @@ object TargetObsList {
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
-                          target.name
+                          target.name.value
                         ),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),
@@ -303,7 +304,7 @@ object TargetObsList {
                                 }
                               )(
                                 decorateTopRight(
-                                  ObsBadge(ObsSummary(obs.id, obs.target.name),
+                                  ObsBadge(ObsSummary(obs.id, obs.target.name.value),
                                            ObsBadge.Layout.ConfAndConstraints,
                                            selected =
                                              props.focused.get.exists(_ === FocusedObs(obs.id))

@@ -32,6 +32,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Lens
+import explore.model.Constants
 
 object TargetQueries {
 
@@ -108,7 +109,10 @@ object TargetQueries {
    */
   val targetPropsL =
     Lens[TargetResult, (NonEmptyString, SiderealTracking, List[Magnitude])](t =>
-      (NonEmptyString.from(t.name).getOrElse("<EMPTY>"), TargetResult.tracking.get(t), t.magnitudes)
+      (NonEmptyString.from(t.name).getOrElse(Constants.UnnamedTarget),
+       TargetResult.tracking.get(t),
+       t.magnitudes
+      )
     )(s =>
       TargetResult.name.set(s._1.value) >>>
         TargetResult.tracking.set(s._2) >>>

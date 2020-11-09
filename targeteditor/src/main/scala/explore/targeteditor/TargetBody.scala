@@ -67,9 +67,6 @@ object TargetBody {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
-    private def coordinatesKey(target: TargetResult): String =
-      s"${target.name}#${target.tracking.baseCoordinates.show}"
-
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
@@ -148,8 +145,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName)
-                  .withKey(coordinatesKey(target)),
+                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName),
                 Form(size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,

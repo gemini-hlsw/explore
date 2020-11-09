@@ -7,7 +7,7 @@ import cats.Monoid
 import cats.syntax.all._
 import lucuma.core.math.ProperVelocity
 
-object utils {
+trait utils {
   def attemptCombine[A: Monoid, B: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =
     (a, b) match {
       case (None, None)               => none
@@ -23,3 +23,5 @@ object utils {
     attemptCombine(ra, dec)
       .map((ProperVelocity.apply _).tupled)
 }
+
+object utils extends utils

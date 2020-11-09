@@ -23,11 +23,13 @@ import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.macros.Lenses
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.Constants
 
 object TargetObsQueries {
 
   @Lenses
-  case class TargetIdName(id: Target.Id, name: String)
+  case class TargetIdName(id: Target.Id, name: NonEmptyString)
 
   @Lenses
   case class ObsIdNameTarget(id: Observation.Id, name: Option[String], target: TargetIdName)
@@ -57,7 +59,14 @@ object TargetObsQueries {
       val asTargetsWithObs: Getter[Data, TargetsWithObs] = data => {
 
         val targetsObservations = data.targets.map { target =>
-          val targetIdName = target.transformInto[TargetIdName]
+          val targetIdName =
+            target
+              .into[TargetIdName]
+              .withFieldComputed(
+                _.name,
+                t => NonEmptyString.from(t.name).getOrElse(Constants.UnnamedTarget)
+              )
+              .transform
           (targetIdName,
            target.observations.map(
              _.into[ObsIdNameTarget].withFieldConst(_.target, targetIdName).transform
@@ -185,7 +194,7 @@ object TargetObsQueries {
   def insertTarget(target: TargetIdName): IO[Unit] =
     AppCtx.flatMap(implicit ctx =>
       AddTarget
-        .execute(target.id, target.name)
+        .execute(target.id, target.name.value)
         .void
         .handleErrorWith { _ =>
           UndeleteTarget.execute(target.id).void

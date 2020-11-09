@@ -37,6 +37,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.label._
 import react.semanticui.sizes._
 import react.semanticui.collections.form.Form.FormProps
+import scalajs.js.JSConverters._
 
 final case class CoordinatesForm(
   target:           TargetResult,
@@ -60,10 +61,11 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    searchTerm:  NonEmptyString,
-    tracking:    SiderealTracking,
-    searching:   Boolean,
-    searchError: Option[String]
+    searchTerm:    NonEmptyString,
+    tracking:      SiderealTracking,
+    searching:     Boolean,
+    searchEnabled: Boolean,
+    searchError:   Option[String]
   )
 
   object State {
@@ -75,11 +77,6 @@ object CoordinatesForm {
 
     val decValue =
       baseCoordinates ^|-> Coordinates.declination
-  }
-
-  def initialState(p: Props): State = {
-    val r = targetPropsL.get(p.target)
-    Function.tupled(State.apply _)((r._1, r._2, false, none))
   }
 
   implicit val stateReuse                     = Reusability.derive[State]
@@ -110,6 +107,17 @@ object CoordinatesForm {
 
         val submitForm: Form.OnSubmitE =
           (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
+
+        val searchIcon                 =
+          (if (state.searchEnabled)
+             Icons.Search
+               .link(true)(
+                 ^.onKeyPress ==> iconKeyPress,
+                 ^.onClick --> search
+               )
+           else
+             Icons.Ban)
+            .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
 
         Form(size = Small, onSubmitE = submitForm)(
           ExploreStyles.Grid,
@@ -165,7 +173,21 @@ object CoordinatesForm {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps(initialState)
+      .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
+        val r = targetPropsL.get(props.target)
+        // Force new value from props if the prop changes (or we are initializing).
+        stateOpt match {
+          case Some(state) if state.searchTerm === r._1 && state.tracking === r._2 => state
+          case _                                                                   =>
+            State(
+              searchTerm = r._1,
+              tracking = r._2,
+              searching = stateOpt.map(_.searching).getOrElse(false),
+              searchEnabled = true,
+              searchError = stateOpt.flatMap(_.searchError)
+            )
+        }
+      }
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
