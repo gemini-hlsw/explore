@@ -12,7 +12,7 @@ object Settings {
     val circe             = "0.13.0"
     val clue              = "0.3.4"
     val crystal           = "0.8.1"
-    val discipline        = "1.1.1"
+    val discipline        = "1.1.2"
     val disciplineMUnit   = "1.0.2"
     val geminiLocales     = "0.5.0"
     val log4Cats          = "1.1.1"
@@ -22,7 +22,7 @@ object Settings {
     val lucumaUI          = "0.9.0"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
-    val mUnit             = "0.7.16"
+    val mUnit             = "0.7.17"
     val reactAladin       = "0.3.0"
     val reactAtlasKitTree = "0.3.0"
     val reactCommon       = "0.11.1"
@@ -33,7 +33,7 @@ object Settings {
     val reactSemanticUI   = "0.9.1"
     val reactSizeMe       = "0.6.1"
     val scalaJsReact      = "1.7.6"
-    val sttp              = "3.0.0-RC8"
+    val sttp              = "3.0.0-RC9"
   }
 
   object Libraries {
