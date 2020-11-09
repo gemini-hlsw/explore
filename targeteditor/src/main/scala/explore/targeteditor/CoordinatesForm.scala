@@ -36,6 +36,7 @@ import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.label._
 import react.semanticui.sizes._
+import react.semanticui.collections.form.Form.FormProps
 
 final case class CoordinatesForm(
   target:           TargetResult,
@@ -113,7 +114,10 @@ object CoordinatesForm {
           case _            => Label("Name")
         }
 
-        Form(size = Small, onSubmit = search)(
+        val submitForm: Form.OnSubmitE =
+          (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
+
+        Form(size = Small, onSubmitE = submitForm)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.CoordinatesForm,
