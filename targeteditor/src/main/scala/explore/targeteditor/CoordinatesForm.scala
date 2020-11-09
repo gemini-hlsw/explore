@@ -36,6 +36,7 @@ import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.label._
 import react.semanticui.sizes._
+import react.semanticui.collections.form.Form.FormProps
 
 final case class CoordinatesForm(
   target:           TargetResult,
@@ -113,7 +114,10 @@ object CoordinatesForm {
           case _            => Label("Name")
         }
 
-        Form(size = Small, onSubmit = search)(
+        val submitForm: Form.OnSubmitE =
+          (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
+
+        Form(size = Small, onSubmitE = submitForm)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.CoordinatesForm,
@@ -124,6 +128,8 @@ object CoordinatesForm {
             focus = true,
             loading = state.searching,
             error = state.searchTerm.isEmpty,
+            onTextChange = (u: String) =>
+              $.setStateL(State.searchTerm)(u) *> $.setStateL(State.searchError)(none),
             onBlur = (u: ValidatedNec[String, String]) =>
               u.toOption
                 .flatMap(
@@ -131,15 +137,18 @@ object CoordinatesForm {
                     .map(props.onNameChange(_))
                 )
                 .getOrEmpty,
-            onValidChange = (_: Boolean) => $.setStateL(State.searchError)(none),
+            disabled = state.searching,
             icon = Icons.Search
               .link(true)
               .clazz(ExploreStyles.ButtonIcon)(
                 ^.tabIndex := 0,
                 ^.onKeyPress ==> iconKeyPress,
-                ^.onClick --> search
+                ^.onMouseUp --> search,
+                ^.onTouchEnd --> search
               )
-          ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
+          ).withMods(^.autoComplete := "off", ^.placeholder := "Name"),
+          // We need this hidden control to submit when pressing enter
+          <.input(^.`type` := "submit", ^.hidden := true),
           <.div(
             ExploreStyles.FlexContainer,
             ExploreStyles.TargetRaDecMinWidth,
