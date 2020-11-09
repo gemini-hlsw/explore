@@ -8,7 +8,7 @@ import java.util.Locale
 
 import explore.optics._
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity.AngularVelocityComponent
+import lucuma.core.math.ProperMotion.AngularVelocityComponent
 import lucuma.core.math._
 import lucuma.core.math.units._
 import lucuma.core.optics.Format
@@ -27,12 +27,12 @@ trait formats {
            _.masy.to[BigDecimal, MilliArcSecondPerYear].value.toString
     )
 
-  val pvRAFormat: Format[String, ProperVelocity.RA] = angularVelocityFormat(
-    ProperVelocity.RA.milliarcsecondsPerYear.reverseGet
+  val pmRAFormat: Format[String, ProperMotion.RA] = angularVelocityFormat(
+    ProperMotion.RA.milliarcsecondsPerYear.reverseGet
   )
 
-  val pvDecFormat: Format[String, ProperVelocity.Dec] = angularVelocityFormat(
-    ProperVelocity.Dec.milliarcsecondsPerYear.reverseGet
+  val pmDecFormat: Format[String, ProperMotion.Dec] = angularVelocityFormat(
+    ProperMotion.Dec.milliarcsecondsPerYear.reverseGet
   )
 
   def formatterZ(dig: Int) = {

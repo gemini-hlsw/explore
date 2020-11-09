@@ -15,6 +15,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
+import explore.model.Constants
 import explore.model.decoders._
 import explore.optics._
 import explore.undo.Undoer
@@ -22,7 +23,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
@@ -32,7 +33,6 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Lens
-import explore.model.Constants
 
 object TargetQueries {
 
@@ -119,11 +119,11 @@ object TargetQueries {
         TargetResult.magnitudes.set(s._3)
     )
 
-  val pvRALens: Lens[TargetResult, Option[ProperVelocity.RA]] =
-    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVRALensO
+  val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO
 
-  val pvDecLens: Lens[TargetResult, Option[ProperVelocity.Dec]] =
-    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVDecLensO
+  val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMDecLensO
 
   val epoch: Lens[TargetResult, Epoch] =
     TargetResult.tracking ^|-> SiderealTracking.epoch
@@ -197,11 +197,11 @@ object TargetQueries {
         dec.map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some))
       )
 
-    def properVelocity(
-      pv: Option[ProperVelocity]
+    def properMotion(
+      pm: Option[ProperMotion]
     ): Endo[EditSiderealInput] =
       EditSiderealInput.properVelocity.set(
-        pv.map(p =>
+        pm.map(p =>
           ProperVelocityInput(
             ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
             dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
@@ -233,7 +233,7 @@ object TargetQueries {
         ra(t.baseCoordinates.ra.some) >>>
         dec(t.baseCoordinates.dec.some) >>>
         epoch(t.epoch.some) >>>
-        properVelocity(t.properVelocity) >>>
+        properMotion(t.properMotion) >>>
         radialVelocity(t.radialVelocity) >>>
         parallax(t.parallax)
   }

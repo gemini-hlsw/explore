@@ -15,8 +15,8 @@ import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
-import explore.model.Constants
 import explore.implicits._
+import explore.model.Constants
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary

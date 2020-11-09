@@ -5,7 +5,7 @@ package explore.model
 
 import cats.Monoid
 import cats.syntax.all._
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 
 trait utils {
   def attemptCombine[A: Monoid, B: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =
@@ -16,12 +16,12 @@ trait utils {
       case (Some(someA), Some(someB)) => (someA, someB).some
     }
 
-  def buildProperVelocity(
-    ra:  Option[ProperVelocity.RA],
-    dec: Option[ProperVelocity.Dec]
-  ): Option[ProperVelocity] =
+  def buildProperMotion(
+    ra:  Option[ProperMotion.RA],
+    dec: Option[ProperMotion.Dec]
+  ): Option[ProperMotion] =
     attemptCombine(ra, dec)
-      .map((ProperVelocity.apply _).tupled)
+      .map((ProperMotion.apply _).tupled)
 }
 
 object utils extends utils

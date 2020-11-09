@@ -18,7 +18,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
@@ -75,25 +75,25 @@ object decoders {
 
   implicit val coordDecoder: Decoder[Coordinates] = semiauto.deriveDecoder[Coordinates]
 
-  val pvraµasDecoder: Decoder[ProperVelocity.RA] =
+  val pmraµasDecoder: Decoder[ProperMotion.RA] =
     Decoder.decodeLong
-      .map(ProperVelocity.RA.microarcsecondsPerYear.reverseGet)
+      .map(ProperMotion.RA.microarcsecondsPerYear.reverseGet)
 
-  implicit val pvraDecoder: Decoder[ProperVelocity.RA] = new Decoder[ProperVelocity.RA] {
-    final def apply(c: HCursor): Decoder.Result[ProperVelocity.RA] =
-      c.downField("microarcsecondsPerYear").as[ProperVelocity.RA](pvraµasDecoder)
+  implicit val pmraDecoder: Decoder[ProperMotion.RA] = new Decoder[ProperMotion.RA] {
+    final def apply(c: HCursor): Decoder.Result[ProperMotion.RA] =
+      c.downField("microarcsecondsPerYear").as[ProperMotion.RA](pmraµasDecoder)
   }
 
-  val pvdecµasDecoder: Decoder[ProperVelocity.Dec] =
+  val pmdecµasDecoder: Decoder[ProperMotion.Dec] =
     Decoder.decodeLong
-      .map(ProperVelocity.Dec.microarcsecondsPerYear.reverseGet)
+      .map(ProperMotion.Dec.microarcsecondsPerYear.reverseGet)
 
-  implicit val pvdecDecoder: Decoder[ProperVelocity.Dec] = new Decoder[ProperVelocity.Dec] {
-    final def apply(c: HCursor): Decoder.Result[ProperVelocity.Dec] =
-      c.downField("microarcsecondsPerYear").as[ProperVelocity.Dec](pvdecµasDecoder)
+  implicit val pmdecDecoder: Decoder[ProperMotion.Dec] = new Decoder[ProperMotion.Dec] {
+    final def apply(c: HCursor): Decoder.Result[ProperMotion.Dec] =
+      c.downField("microarcsecondsPerYear").as[ProperMotion.Dec](pmdecµasDecoder)
   }
 
-  implicit val pvDecoder: Decoder[ProperVelocity] = semiauto.deriveDecoder[ProperVelocity]
+  implicit val pmDecoder: Decoder[ProperMotion] = semiauto.deriveDecoder[ProperMotion]
 
   implicit val constraintsDecoder = new Decoder[Constraints] {
     final def apply(c: HCursor): Decoder.Result[Constraints] =
@@ -112,10 +112,10 @@ object decoders {
       for {
         bc  <- c.downField("coordinates").as[Coordinates]
         ep  <- c.downField("epoch").as[Epoch]
-        pv  <- c.downField("properVelocity").as[Option[ProperVelocity]]
+        pm  <- c.downField("properVelocity").as[Option[ProperMotion]]
         rv  <- c.downField("radialVelocity").as[Option[RadialVelocity]]
         par <- c.downField("parallax").as[Option[Parallax]]
-      } yield SiderealTracking(none, bc, ep, pv, rv, par)
+      } yield SiderealTracking(none, bc, ep, pm, rv, par)
   }
 
   implicit val magnitudeValueDecoder: Decoder[MagnitudeValue] = new Decoder[MagnitudeValue] {

@@ -9,6 +9,7 @@ import cats.implicits._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -89,7 +90,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
-              onBlur = (z: ValidatedNec[String, Option[Redshift]]) =>
+              onBlur = (z: ValidatedNec[NonEmptyString, Option[Redshift]]) =>
                 z.toOption
                   .map(z => props.modify(z.flatMap(_.toRadialVelocity)).runInCB)
                   .getOrEmpty,
@@ -103,7 +104,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
-              onBlur = (z: ValidatedNec[String, Option[ApparentRadialVelocity]]) =>
+              onBlur = (z: ValidatedNec[NonEmptyString, Option[ApparentRadialVelocity]]) =>
                 z.toOption
                   .map(cz => props.modify(cz.map(_.toRedshift).flatMap(_.toRadialVelocity)).runInCB)
                   .getOrEmpty,
@@ -117,7 +118,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
-              onBlur = (rv: ValidatedNec[String, Option[RadialVelocity]]) =>
+              onBlur = (rv: ValidatedNec[NonEmptyString, Option[RadialVelocity]]) =>
                 rv.toOption.map(v => props.modify(v).runInCB).getOrEmpty,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
             )

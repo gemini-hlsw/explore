@@ -26,7 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
@@ -102,19 +102,19 @@ object TargetBody {
             e => TargetQueries.UpdateSiderealTracking.epoch(e.some)
           ) _
 
-          val modifyProperVelocitRA = undoSet[Option[ProperVelocity.RA]](
-            TargetQueries.pvRALens,
-            pvRA =>
-              TargetQueries.UpdateSiderealTracking.properVelocity(
-                buildProperVelocity(pvRA, TargetQueries.pvDecLens.get(target))
+          val modifyProperMotionRA = undoSet[Option[ProperMotion.RA]](
+            TargetQueries.pmRALens,
+            pmRA =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(pmRA, TargetQueries.pmDecLens.get(target))
               )
           ) _
 
-          val modifyProperVelocityDec = undoSet[Option[ProperVelocity.Dec]](
-            TargetQueries.pvDecLens,
-            pvDec =>
-              TargetQueries.UpdateSiderealTracking.properVelocity(
-                buildProperVelocity(TargetQueries.pvRALens.get(target), pvDec)
+          val modifyProperMotionDec = undoSet[Option[ProperMotion.Dec]](
+            TargetQueries.pmDecLens,
+            pmDec =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(TargetQueries.pmRALens.get(target), pmDec)
               )
           ) _
 
@@ -155,15 +155,15 @@ object TargetBody {
                         clazz = ExploreStyles.FormSectionLabel |+| ExploreStyles.ColumnSpan(2)
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvRALens).withOnMod(modifyProperVelocitRA),
-                    ValidFormatInput.fromFormatOptional(pvRAFormat, "Must be a number"),
+                    props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
+                    ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
                     id = "raPM",
                     label = "µ RA",
                     units = "mas/y"
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvDecLens).withOnMod(modifyProperVelocityDec),
-                    ValidFormatInput.fromFormatOptional(pvDecFormat, "Must be a number"),
+                    props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
+                    ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
                     id = "raDec",
                     label = "µ Dec",
                     units = "mas/y"

@@ -8,12 +8,14 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
+import explore.model.Constants
 import explore.model.reusability._
 import io.scalaland.chimney.dsl._
 import japgolly.scalajs.react.Reusability
@@ -23,8 +25,6 @@ import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.macros.Lenses
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.Constants
 
 object TargetObsQueries {
 

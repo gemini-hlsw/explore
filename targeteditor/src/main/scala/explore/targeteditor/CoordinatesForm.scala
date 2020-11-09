@@ -32,11 +32,11 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
+import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
-import react.semanticui.elements.label._
 import react.semanticui.sizes._
-import react.semanticui.collections.form.Form.FormProps
+
 import scalajs.js.JSConverters._
 
 final case class CoordinatesForm(
@@ -65,7 +65,7 @@ object CoordinatesForm {
     tracking:      SiderealTracking,
     searching:     Boolean,
     searchEnabled: Boolean,
-    searchError:   Option[String]
+    searchError:   Option[NonEmptyString]
   )
 
   object State {
@@ -97,9 +97,12 @@ object CoordinatesForm {
               $.setStateL(State.searching)(true),
               t =>
                 searchComplete *> ($.setStateL(State.searchError)(
-                  s"'${abbreviate(state.searchTerm, 10)}' not found".some
+                  NonEmptyString.unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found").some
                 )).when_(t.isEmpty),
-              _ => searchComplete *> $.setStateL(State.searchError)(s"Search error...".some)
+              _ =>
+                searchComplete *> $.setStateL(State.searchError)(
+                  NonEmptyString("Search error...").some
+                )
             )
 
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
@@ -128,7 +131,7 @@ object CoordinatesForm {
             value = stateView.zoom(State.searchTerm).withOnMod(props.onNameChange),
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             label = "Name",
-            error = state.searchError.map(m => Label(m)).orUndefined,
+            error = state.searchError.orUndefined,
             loading = state.searching,
             disabled = state.searching,
             onTextChange = _ => $.setStateL(State.searchError)(none),

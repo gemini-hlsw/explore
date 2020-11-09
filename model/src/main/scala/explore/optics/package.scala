@@ -8,7 +8,7 @@ import coulomb._
 import explore.model.utils._
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.units._
@@ -116,14 +116,14 @@ package object optics {
       (s: S) => l3.set(abc._3)(l2.set(abc._2)(l1.set(abc._1)(s)))
     )
 
-  val unsafePVDecLensO: Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]] =
-    Lens[Option[ProperVelocity], Option[ProperVelocity.Dec]](_.map(ProperVelocity.dec.get))(s =>
-      a => buildProperVelocity(a.map(_.ra), s)
+  val unsafePMDecLensO: Lens[Option[ProperMotion], Option[ProperMotion.Dec]] =
+    Lens[Option[ProperMotion], Option[ProperMotion.Dec]](_.map(ProperMotion.dec.get))(s =>
+      a => buildProperMotion(a.map(_.ra), s)
     )
 
-  val unsafePVRALensO: Lens[Option[ProperVelocity], Option[ProperVelocity.RA]] =
-    Lens[Option[ProperVelocity], Option[ProperVelocity.RA]](_.map(ProperVelocity.ra.get))(s =>
-      a => buildProperVelocity(s, a.map(_.dec))
+  val unsafePMRALensO: Lens[Option[ProperMotion], Option[ProperMotion.RA]] =
+    Lens[Option[ProperMotion], Option[ProperMotion.RA]](_.map(ProperMotion.ra.get))(s =>
+      a => buildProperMotion(s, a.map(_.dec))
     )
 
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
