@@ -3,7 +3,7 @@
 
 package explore.targeteditor
 
-import cats.data.ValidatedNec
+import cats.Eq
 import cats.effect.Effect
 import crystal.ViewF
 import eu.timepit.refined.api.Refined
@@ -24,9 +24,8 @@ final case class InputWithUnits[F[_]: Effect, A](
   id:              String,
   label:           String,
   units:           String,
-  onBlur:          A => Callback = (_: A) => Callback.empty,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2
-)(implicit val ev: ExternalValue[ViewF[F, *]])
+)(implicit val ev: ExternalValue[ViewF[F, *]], val eq: Eq[A])
     extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
 
 object InputWithUnits {
@@ -46,9 +45,8 @@ object InputWithUnits {
             validFormat = p.validFormat,
             clazz = ExploreStyles.Grow(1),
             errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            onBlur = (a: ValidatedNec[String, A]) => a.toOption.map(p.onBlur(_)).getOrEmpty
-          )(p.ev),
+            errorPointing = LabelPointing.Below
+          )(p.ev, p.eq),
           <.div(
             ExploreStyles.UnitsLabel,
             p.units

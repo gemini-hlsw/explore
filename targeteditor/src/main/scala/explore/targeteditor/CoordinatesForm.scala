@@ -3,13 +3,13 @@
 
 package explore.targeteditor
 
-import cats.data._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -32,17 +32,18 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
+import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
-import react.semanticui.elements.label._
 import react.semanticui.sizes._
-import react.semanticui.collections.form.Form.FormProps
+
+import scalajs.js.JSConverters._
 
 final case class CoordinatesForm(
   target:           TargetResult,
   searchAndGo:      SearchCallback => Callback,
   goToRaDec:        Coordinates => Callback,
-  onNameChange:     NonEmptyString => Callback
+  onNameChange:     NonEmptyString => IO[Unit]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(
@@ -60,10 +61,11 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    searchTerm:  String,
-    tracking:    SiderealTracking,
-    searching:   Boolean,
-    searchError: Option[String]
+    searchTerm:    NonEmptyString,
+    tracking:      SiderealTracking,
+    searching:     Boolean,
+    searchEnabled: Boolean,
+    searchError:   Option[NonEmptyString]
   )
 
   object State {
@@ -75,11 +77,6 @@ object CoordinatesForm {
 
     val decValue =
       baseCoordinates ^|-> Coordinates.declination
-  }
-
-  def initialState(p: Props): State = {
-    val r = targetPropsL.get(p.target)
-    Function.tupled(State.apply _)((r._1, r._2, false, none))
   }
 
   implicit val stateReuse                     = Reusability.derive[State]
@@ -100,22 +97,30 @@ object CoordinatesForm {
               $.setStateL(State.searching)(true),
               t =>
                 searchComplete *> ($.setStateL(State.searchError)(
-                  s"'${abbreviate(state.searchTerm, 10)}' not found".some
+                  NonEmptyString.unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found").some
                 )).when_(t.isEmpty),
-              _ => searchComplete *> $.setStateL(State.searchError)(s"Search error...".some)
+              _ =>
+                searchComplete *> $.setStateL(State.searchError)(
+                  NonEmptyString("Search error...").some
+                )
             )
 
         def iconKeyPress(e: ReactKeyboardEvent): Callback =
           search *> e.stopPropagationCB *> e.preventDefaultCB
 
-        val nameLabel = (state.searchTerm.isEmpty, state.searchError) match {
-          case (_, Some(m)) => Label(clazz = ExploreStyles.ErrorLabel)(m)
-          case (true, _)    => Label(clazz = ExploreStyles.ErrorLabel)("Cannot be empty")
-          case _            => Label("Name")
-        }
-
         val submitForm: Form.OnSubmitE =
           (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
+
+        val searchIcon                 =
+          (if (state.searchEnabled)
+             Icons.Search
+               .link(true)(
+                 ^.onKeyPress ==> iconKeyPress,
+                 ^.onClick --> search
+               )
+           else
+             Icons.Ban)
+            .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
 
         Form(size = Small, onSubmitE = submitForm)(
           ExploreStyles.Grid,
@@ -123,30 +128,16 @@ object CoordinatesForm {
           ExploreStyles.CoordinatesForm,
           FormInputEV(
             id = "search",
-            value = stateView.zoom(State.searchTerm),
-            label = nameLabel,
-            focus = true,
+            value = stateView.zoom(State.searchTerm).withOnMod(props.onNameChange),
+            validFormat = ValidFormatInput.nonEmptyValidFormat,
+            label = "Name",
+            error = state.searchError.orUndefined,
             loading = state.searching,
-            error = state.searchTerm.isEmpty,
-            onTextChange = (u: String) =>
-              $.setStateL(State.searchTerm)(u) *> $.setStateL(State.searchError)(none),
-            onBlur = (u: ValidatedNec[String, String]) =>
-              u.toOption
-                .flatMap(
-                  refineV[NonEmpty](_).toOption
-                    .map(props.onNameChange(_))
-                )
-                .getOrEmpty,
             disabled = state.searching,
-            icon = Icons.Search
-              .link(true)
-              .clazz(ExploreStyles.ButtonIcon)(
-                ^.tabIndex := 0,
-                ^.onKeyPress ==> iconKeyPress,
-                ^.onMouseUp --> search,
-                ^.onTouchEnd --> search
-              )
-          ).withMods(^.autoComplete := "off", ^.placeholder := "Name"),
+            onTextChange = _ => $.setStateL(State.searchError)(none),
+            onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
+            icon = searchIcon
+          ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
           // We need this hidden control to submit when pressing enter
           <.input(^.`type` := "submit", ^.hidden := true),
           <.div(
@@ -185,7 +176,21 @@ object CoordinatesForm {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps(initialState)
+      .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
+        val r = targetPropsL.get(props.target)
+        // Force new value from props if the prop changes (or we are initializing).
+        stateOpt match {
+          case Some(state) if state.searchTerm === r._1 && state.tracking === r._2 => state
+          case _                                                                   =>
+            State(
+              searchTerm = r._1,
+              tracking = r._2,
+              searching = stateOpt.map(_.searching).getOrElse(false),
+              searchEnabled = true,
+              searchError = stateOpt.flatMap(_.searchError)
+            )
+        }
+      }
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build

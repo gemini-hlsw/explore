@@ -8,12 +8,14 @@ import cats.effect.IO
 import cats.implicits._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
+import explore.model.Constants
 import explore.model.decoders._
 import explore.optics._
 import explore.undo.Undoer
@@ -21,7 +23,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
@@ -106,19 +108,22 @@ object TargetQueries {
    * Lens used to change name and coordinates of a target
    */
   val targetPropsL =
-    Lens[TargetResult, (String, SiderealTracking, List[Magnitude])](t =>
-      (t.name, TargetResult.tracking.get(t), t.magnitudes)
+    Lens[TargetResult, (NonEmptyString, SiderealTracking, List[Magnitude])](t =>
+      (NonEmptyString.from(t.name).getOrElse(Constants.UnnamedTarget),
+       TargetResult.tracking.get(t),
+       t.magnitudes
+      )
     )(s =>
-      TargetResult.name.set(s._1) >>>
+      TargetResult.name.set(s._1.value) >>>
         TargetResult.tracking.set(s._2) >>>
         TargetResult.magnitudes.set(s._3)
     )
 
-  val pvRALens: Lens[TargetResult, Option[ProperVelocity.RA]] =
-    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVRALensO
+  val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO
 
-  val pvDecLens: Lens[TargetResult, Option[ProperVelocity.Dec]] =
-    TargetResult.tracking ^|-> SiderealTracking.properVelocity ^|-> unsafePVDecLensO
+  val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMDecLensO
 
   val epoch: Lens[TargetResult, Epoch] =
     TargetResult.tracking ^|-> SiderealTracking.epoch
@@ -169,7 +174,6 @@ object TargetQueries {
           for {
             _        <- (view.mod).compose(lens.set)(value)
             editInput = setFields(value)(EditSiderealInput(id))
-            // _        <- IO.pure(println(s"SETTING [$editInput]"))
             _        <- TargetMutation.execute(editInput)
           } yield ()
         }
@@ -193,11 +197,11 @@ object TargetQueries {
         dec.map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some))
       )
 
-    def properVelocity(
-      pv: Option[ProperVelocity]
+    def properMotion(
+      pm: Option[ProperMotion]
     ): Endo[EditSiderealInput] =
       EditSiderealInput.properVelocity.set(
-        pv.map(p =>
+        pm.map(p =>
           ProperVelocityInput(
             ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
             dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
@@ -229,7 +233,7 @@ object TargetQueries {
         ra(t.baseCoordinates.ra.some) >>>
         dec(t.baseCoordinates.dec.some) >>>
         epoch(t.epoch.some) >>>
-        properVelocity(t.properVelocity) >>>
+        properMotion(t.properMotion) >>>
         radialVelocity(t.radialVelocity) >>>
         parallax(t.parallax)
   }

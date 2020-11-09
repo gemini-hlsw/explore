@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.annotation.unused
-
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -20,15 +18,15 @@ import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
+import explore.model.utils._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
-import lucuma.core.math.ProperVelocity
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
@@ -65,16 +63,9 @@ object TargetBody {
 
   implicit val propsReuse = Reusability.derive[Props]
 
-  class Backend($ : BackendScope[Props, Unit]) {
+  class Backend {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
-
-    def setName(name: String): Callback =
-      $.props >>= (_.target.zoom(TargetResult.name).set(name).runInCB)
-
-    @unused
-    private def coordinatesKey(target: TargetResult): String =
-      s"${target.name}#${target.tracking.baseCoordinates.show}"
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -90,11 +81,11 @@ object TargetBody {
             UndoSet(props.id, props.target, undoCtx.setter)
 
           val modify = undoSet[
-            (String, SiderealTracking, List[Magnitude])
+            (NonEmptyString, SiderealTracking, List[Magnitude])
           ](
             targetPropsL,
             { case (n, t, _ /*ms*/ ) =>
-              EditSiderealInput.name.set(n.some) >>> TargetQueries.UpdateSiderealTracking(t)
+              EditSiderealInput.name.set(n.value.some) >>> TargetQueries.UpdateSiderealTracking(t)
             // >>> EditSiderealInput.magnitudes.set( ms.map(m =>
             //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
             //      ))
@@ -111,21 +102,19 @@ object TargetBody {
             e => TargetQueries.UpdateSiderealTracking.epoch(e.some)
           ) _
 
-          val modifyProperVelocitRA = undoSet[Option[ProperVelocity.RA]](
-            TargetQueries.pvRALens,
-            pvRA =>
-              TargetQueries.UpdateSiderealTracking.properVelocity(
-                attemptCombine(pvRA, TargetQueries.pvDecLens.get(target))
-                  .map((ProperVelocity.apply _).tupled)
+          val modifyProperMotionRA = undoSet[Option[ProperMotion.RA]](
+            TargetQueries.pmRALens,
+            pmRA =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(pmRA, TargetQueries.pmDecLens.get(target))
               )
           ) _
 
-          val modifyProperVelocityDec = undoSet[Option[ProperVelocity.Dec]](
-            TargetQueries.pvDecLens,
-            pvDec =>
-              TargetQueries.UpdateSiderealTracking.properVelocity(
-                attemptCombine(TargetQueries.pvRALens.get(target), pvDec)
-                  .map((ProperVelocity.apply _).tupled)
+          val modifyProperMotionDec = undoSet[Option[ProperMotion.Dec]](
+            TargetQueries.pmDecLens,
+            pmDec =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(TargetQueries.pmRALens.get(target), pmDec)
               )
           ) _
 
@@ -156,8 +145,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName(_).runInCB)
-                  .withKey(coordinatesKey(target)),
+                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName),
                 Form(size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
@@ -167,36 +155,32 @@ object TargetBody {
                         clazz = ExploreStyles.FormSectionLabel |+| ExploreStyles.ColumnSpan(2)
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvRALens),
-                    ValidFormatInput.fromFormatOptional(pvRAFormat, "Must be a number"),
+                    props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
+                    ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
                     id = "raPM",
                     label = "µ RA",
-                    units = "mas/y",
-                    onBlur = (p: Option[ProperVelocity.RA]) => modifyProperVelocitRA(p).runInCB
+                    units = "mas/y"
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.pvDecLens),
-                    ValidFormatInput.fromFormatOptional(pvDecFormat, "Must be a number"),
+                    props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
+                    ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
                     id = "raDec",
                     label = "µ Dec",
-                    units = "mas/y",
-                    onBlur = (p: Option[ProperVelocity.Dec]) => modifyProperVelocityDec(p).runInCB
+                    units = "mas/y"
                   ),
                   InputWithUnits(
-                    props.target.zoom(TargetQueries.epoch),
+                    props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
                     ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
                     id = "epoch",
                     label = "Epoch",
-                    units = "years",
-                    onBlur = (e: Epoch) => modifyEpoch(e).runInCB
+                    units = "years"
                   ),
                   InputWithUnits[cats.effect.IO, Option[Parallax]](
-                    props.target.zoom(TargetQueries.pxLens),
+                    props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
                     ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                     id = "parallax",
                     label = "Parallax",
-                    units = "mas",
-                    onBlur = (px: Option[Parallax]) => modifyParallax(px).runInCB
+                    units = "mas"
                   ),
                   RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
                 ),
