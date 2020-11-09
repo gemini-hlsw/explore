@@ -38,6 +38,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 import scalajs.js.JSConverters._
+import react.semanticui.elements.label.LabelPointing
 
 final case class CoordinatesForm(
   target:           TargetResult,
@@ -134,6 +135,8 @@ object CoordinatesForm {
             error = state.searchError.orUndefined,
             loading = state.searching,
             disabled = state.searching,
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below,
             onTextChange = _ => $.setStateL(State.searchError)(none),
             onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
             icon = searchIcon
