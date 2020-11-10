@@ -94,6 +94,9 @@ object TargetBody {
             targetPropsL,
             { case (n, t, _ /*ms*/ ) =>
               EditSiderealInput.name.set(n.value.some) >>> TargetQueries.UpdateSiderealTracking(t)
+            // >>> EditSiderealInput.magnitudes.set( ms.map(m =>
+            //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
+            //      ))
             }
           ) _
 
