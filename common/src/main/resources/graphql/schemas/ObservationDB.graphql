@@ -131,7 +131,10 @@ input CreateSiderealInput {
   ra: RightAscensionInput!
   dec: DeclinationInput!
   epoch: EpochString
-  properVelocity: ProperVelocityInput
+  properMotion: ProperMotionInput
+
+  # Deprecated, use properMotion instead.
+  properVelocity: ProperMotionInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
   magnitudes: [MagnitudeInput!]
@@ -265,7 +268,10 @@ input EditSiderealInput {
   ra: RightAscensionInput
   dec: DeclinationInput
   epoch: EpochString
-  properVelocity: ProperVelocityInput
+  properMotion: ProperMotionInput
+
+  # Deprecated, use properMotion instead.
+  properVelocity: ProperMotionInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
 }
@@ -679,12 +685,58 @@ type ProgramEdit implements Event {
 # ProgramId id formatted as `p-(0|[1-9a-f][0-9a-f]*)`
 scalar ProgramId
 
+type ProperMotion {
+  # Proper motion in RA
+  ra: ProperMotionRA!
+
+  # Proper motion in declination
+  dec: ProperMotionDeclination!
+}
+
+# ProperMotionDec, choose one of the available units
+input ProperMotionDecInput {
+  microarcsecondsPerYear: Long
+  milliarcsecondsPerYear: BigDecimal
+  fromLong: ProperVelocityComponentLongInput
+  fromDecimal: ProperVelocityComponentDecimalInput
+}
+
+type ProperMotionDeclination {
+  # Proper motion in properMotion μas/year
+  microarcsecondsPerYear: Long!
+
+  # Proper motion in properMotion mas/year
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+# Proper motion, choose one of the available units
+input ProperMotionInput {
+  ra: ProperMotionRaInput!
+  dec: ProperMotionDecInput!
+}
+
+type ProperMotionRA {
+  # Proper motion in properMotion μas/year
+  microarcsecondsPerYear: Long!
+
+  # Proper motion in properMotion mas/year
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+# ProperMotionRa, choose one of the available units
+input ProperMotionRaInput {
+  microarcsecondsPerYear: Long
+  milliarcsecondsPerYear: BigDecimal
+  fromLong: ProperVelocityComponentLongInput
+  fromDecimal: ProperVelocityComponentDecimalInput
+}
+
 type ProperVelocity {
-  # Proper velocity in RA
+  # Proper motion in RA
   ra: ProperVelocityRA!
 
-  # Proper velocity in declination
-  dec: ProperVelocitydeclination!
+  # Proper motion in declination
+  dec: ProperVelocityDeclination!
 }
 
 # Decimal value in ProperVelocityComponent
@@ -714,42 +766,20 @@ enum ProperVelocityComponentUnits {
   MILLIARCSECONDS_PER_YEAR
 }
 
-# ProperVelocityDec, choose one of the available units
-input ProperVelocityDecInput {
-  microarcsecondsPerYear: Long
-  milliarcsecondsPerYear: BigDecimal
-  fromLong: ProperVelocityComponentLongInput
-  fromDecimal: ProperVelocityComponentDecimalInput
-}
-
-type ProperVelocitydeclination {
-  # Proper velocity in declination μas/year
+type ProperVelocityDeclination {
+  # Proper motion in properVelocity μas/year
   microarcsecondsPerYear: Long!
 
-  # Proper velocity in declination mas/year
+  # Proper motion in properVelocity mas/year
   milliarcsecondsPerYear: BigDecimal!
-}
-
-# Proper velocity, choose one of the available units
-input ProperVelocityInput {
-  ra: ProperVelocityRaInput!
-  dec: ProperVelocityDecInput!
 }
 
 type ProperVelocityRA {
-  # Proper velocity in RA μas/year
+  # Proper motion in properVelocity μas/year
   microarcsecondsPerYear: Long!
 
-  # Proper velocity in RA mas/year
+  # Proper motion in properVelocity mas/year
   milliarcsecondsPerYear: BigDecimal!
-}
-
-# ProperVelocityRa, choose one of the available units
-input ProperVelocityRaInput {
-  microarcsecondsPerYear: Long
-  milliarcsecondsPerYear: BigDecimal
-  fromLong: ProperVelocityComponentLongInput
-  fromDecimal: ProperVelocityComponentDecimalInput
 }
 
 type Query {
@@ -938,7 +968,10 @@ type Sidereal {
   epoch: EpochString!
 
   # Proper velocity per year in right ascension and declination
-  properVelocity: ProperVelocity
+  properVelocity: ProperVelocity @deprecated(reason: "Renamed properMotion")
+
+  # Proper motion per year in right ascension and declination
+  properMotion: ProperMotion
 
   # Radial velocity
   radialVelocity: RadialVelocity

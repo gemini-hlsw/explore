@@ -112,7 +112,7 @@ object decoders {
       for {
         bc  <- c.downField("coordinates").as[Coordinates]
         ep  <- c.downField("epoch").as[Epoch]
-        pm  <- c.downField("properVelocity").as[Option[ProperMotion]]
+        pm  <- c.downField("properMotion").as[Option[ProperMotion]]
         rv  <- c.downField("radialVelocity").as[Option[RadialVelocity]]
         par <- c.downField("parallax").as[Option[Parallax]]
       } yield SiderealTracking(none, bc, ep, pm, rv, par)

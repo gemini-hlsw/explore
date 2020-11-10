@@ -32,8 +32,9 @@ import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
-  value:  ViewF[IO, Option[RadialVelocity]],
-  modify: Option[RadialVelocity] => IO[Unit]
+  value:    ViewF[IO, Option[RadialVelocity]],
+  disabled: ViewF[IO, Boolean],
+  modify:   Option[RadialVelocity] => IO[Unit]
 ) extends ReactProps[RVInput](RVInput.component)
 
 object RVInput {
@@ -74,7 +75,7 @@ object RVInput {
     }
   }
 
-  implicit def propsReuse: Reusability[Props] = Reusability.by(_.value)
+  implicit def propsReuse: Reusability[Props] = Reusability.by(x => (x.value, x.disabled))
   implicit def stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
@@ -94,7 +95,8 @@ object RVInput {
                 z.toOption
                   .map(z => props.modify(z.flatMap(_.toRadialVelocity)).runInCB)
                   .getOrEmpty,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              disabled = props.disabled.get
             )
           case RVView.CZ =>
             FormInputEV(
@@ -108,7 +110,8 @@ object RVInput {
                 z.toOption
                   .map(cz => props.modify(cz.map(_.toRedshift).flatMap(_.toRadialVelocity)).runInCB)
                   .getOrEmpty,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              disabled = props.disabled.get
             )
           case RVView.RV =>
             FormInputEV(
@@ -120,13 +123,18 @@ object RVInput {
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
               onBlur = (rv: ValidatedNec[NonEmptyString, Option[RadialVelocity]]) =>
                 rv.toOption.map(v => props.modify(v).runInCB).getOrEmpty,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel
+              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              disabled = props.disabled.get
             )
         }
         React.Fragment(
           <.div(
             ExploreStyles.FlexContainer |+| ExploreStyles.Grow(1),
-            EnumViewSelect[IO, RVView](id = "view", value = rvView, label = state.rvView.tag),
+            EnumViewSelect[IO, RVView](id = "view",
+                                       value = rvView,
+                                       label = state.rvView.tag,
+                                       disabled = props.disabled.get
+            ),
             input
           ),
           state.units

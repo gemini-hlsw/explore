@@ -54,7 +54,7 @@ object TargetQueries {
                 }
               }
               epoch
-              properVelocity {
+              properMotion {
                 ra {
                   microarcsecondsPerYear
                 }
@@ -200,11 +200,11 @@ object TargetQueries {
     def properMotion(
       pm: Option[ProperMotion]
     ): Endo[EditSiderealInput] =
-      EditSiderealInput.properVelocity.set(
+      EditSiderealInput.properMotion.set(
         pm.map(p =>
-          ProperVelocityInput(
-            ra = ProperVelocityRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
-            dec = ProperVelocityDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
+          ProperMotionInput(
+            ra = ProperMotionRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
+            dec = ProperMotionDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
           )
         )
       )

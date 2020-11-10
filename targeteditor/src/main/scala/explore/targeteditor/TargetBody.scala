@@ -3,7 +3,9 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
@@ -33,6 +35,7 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
+import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.Form
@@ -61,9 +64,13 @@ object TargetBody {
   type Props = TargetBody
   val AladinRef = AladinCell.component
 
-  implicit val propsReuse = Reusability.derive[Props]
+  @Lenses
+  final case class State(searching: Boolean)
 
-  class Backend {
+  implicit val propsReuse = Reusability.derive[Props]
+  implicit val stateReuse = Reusability.derive[State]
+
+  class Backend($ : BackendScope[Props, State]) {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
@@ -74,7 +81,8 @@ object TargetBody {
 
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
-        val target = props.target.get
+        val target    = props.target.get
+        val stateView = ViewF.fromState[IO]($).zoom(State.searching)
 
         UndoRegion[TargetResult] { undoCtx =>
           val undoSet =
@@ -145,7 +153,7 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, searchAndSet, gotoRaDec, modifyName),
+                CoordinatesForm(target, stateView, searchAndSet, gotoRaDec, modifyName),
                 Form(size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
@@ -159,30 +167,34 @@ object TargetBody {
                     ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
                     id = "raPM",
                     label = "µ RA",
-                    units = "mas/y"
+                    units = "mas/y",
+                    disabled = stateView
                   ),
                   InputWithUnits(
                     props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
                     ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
                     id = "raDec",
                     label = "µ Dec",
-                    units = "mas/y"
+                    units = "mas/y",
+                    disabled = stateView
                   ),
                   InputWithUnits(
                     props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
                     ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
                     id = "epoch",
                     label = "Epoch",
-                    units = "years"
+                    units = "years",
+                    disabled = stateView
                   ),
                   InputWithUnits[cats.effect.IO, Option[Parallax]](
                     props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
                     ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                     id = "parallax",
                     label = "Parallax",
-                    units = "mas"
+                    units = "mas",
+                    disabled = stateView
                   ),
-                  RVInput(props.target.zoom(TargetQueries.rvLens), modifyRadialVelocity)
+                  RVInput(props.target.zoom(TargetQueries.rvLens), stateView, modifyRadialVelocity)
                 ),
                 MagnitudeForm(target.magnitudes).when(false),
                 UndoButtons(target, undoCtx)
@@ -215,6 +227,7 @@ object TargetBody {
   val component =
     ScalaComponent
       .builder[Props]
+      .initialState(State(false))
       .renderBackend[Backend]
       .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .configure(Reusability.shouldComponentUpdate)
