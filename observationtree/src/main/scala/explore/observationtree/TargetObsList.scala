@@ -234,6 +234,20 @@ object TargetObsList {
         UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
+              <.div(ExploreStyles.ObsTreeButtons)(
+                <.div(
+                  Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
+                    Icons.New.size(Small).fitted(true)
+                  ),
+                  Button(size = Mini,
+                         compact = true,
+                         onClick = deleteTarget(undoCtx.setter),
+                         disabled =
+                           deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
+                  )(Icons.Delete.size(Small).fitted(true))
+                ),
+                UndoButtons(props.targetsWithObs.get, undoCtx, size = Mini)
+              ),
               props.targetsWithObs.get.targets.elements.toTagMod { target =>
                 val targetId = target.id
 
@@ -321,19 +335,6 @@ object TargetObsList {
                   )
                 }
               }
-            ),
-            <.div(ExploreStyles.ObsTreeButtons)(
-              <.div(
-                Button(size = Small, onClick = newTarget(undoCtx.setter))(
-                  Icons.New
-                ),
-                Button(size = Small,
-                       onClick = deleteTarget(undoCtx.setter),
-                       disabled =
-                         deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
-                )(Icons.Delete)
-              ),
-              UndoButtons(props.targetsWithObs.get, undoCtx)
             )
           )
         }

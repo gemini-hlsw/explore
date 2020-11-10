@@ -589,7 +589,6 @@ body {
 
 .obs-tree {
   .full-height-width();
-  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -641,8 +640,8 @@ body {
 .obs-tree-buttons {
   display: flex;
   justify-content: space-between;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding: 5px;
+  background-color: var(--tile-title-background);
 }
 
 .dragging-over {
@@ -761,8 +760,8 @@ body {
 
   /* Position the tooltip */
   position: absolute;
-  z-index: 1;
-  top: -50px;
+  z-index: 3;
+  top: 30px;
   left: calc(50% - 60px);
 }
 

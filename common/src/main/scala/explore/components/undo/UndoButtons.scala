@@ -17,7 +17,8 @@ import react.semanticui.sizes._
 final case class UndoButtons[F[_], A](
   value:      A,
   undoCtx:    Undoer.Context[F, A],
-  size:       SemanticSize = Small
+  size:       SemanticSize = Small,
+  iconSize:   SemanticSize = Small
 )(implicit
   val effect: Effect[F]
 ) extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
@@ -35,15 +36,17 @@ object UndoButtons {
           <.div(
             Button(onClick = p.undoCtx.undo(p.value).runInCB,
                    size = p.size,
+                   compact = true,
                    disabled = p.undoCtx.undoEmpty
             )(
-              Icons.Undo
+              Icons.Undo.size(p.iconSize).fitted(true)
             ),
             Button(onClick = p.undoCtx.redo(p.value).runInCB,
                    size = p.size,
+                   compact = true,
                    disabled = p.undoCtx.redoEmpty
             )(
-              Icons.Redo
+              Icons.Redo.size(p.iconSize).fitted(true)
             )
           )
         )
