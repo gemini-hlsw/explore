@@ -238,13 +238,7 @@ object TargetObsList {
                 <.div(
                   Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
                     Icons.New.size(Small).fitted(true)
-                  ),
-                  Button(size = Mini,
-                         compact = true,
-                         onClick = deleteTarget(undoCtx.setter),
-                         disabled =
-                           deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
-                  )(Icons.Delete.size(Small).fitted(true))
+                  )
                 ),
                 UndoButtons(props.targetsWithObs.get, undoCtx, size = Mini)
               ),
@@ -292,8 +286,17 @@ object TargetObsList {
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
-                          target.name.value
+                          target.name.value,
+                          ExploreStyles.TargetLabelTitle
                         ),
+                        Button(
+                          size = Mini,
+                          compact = true,
+                          clazz = ExploreStyles.BlendedButton |+| ExploreStyles.JustifyRight,
+                          onClick = deleteTarget(undoCtx.setter),
+                          disabled =
+                            deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
+                        )(Icons.Delete.size(Small)), //.fitted(true)),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),
                       TagMod.when(!state.collapsedTargetIds.contains(targetId))(

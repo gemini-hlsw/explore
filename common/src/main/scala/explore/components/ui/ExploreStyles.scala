@@ -18,12 +18,15 @@ object ExploreStyles {
   // styling and layout
   val ProposalTile: Css = Css("proposal-tile")
 
-  val MainGrid: Css   = Css("main-grid")
-  val MainHeader: Css = Css("main-header")
-  val MainBody: Css   = Css("main-body")
-  val MainTitle: Css  = Css("main-title")
-  val SideTabs: Css   = Css("sidetabs")
-  val SideButton: Css = Css("side-button")
+  val MainGrid: Css      = Css("main-grid")
+  val MainHeader: Css    = Css("main-header")
+  val MainBody: Css      = Css("main-body")
+  val MainTitle: Css     = Css("main-title")
+  val SideTabs: Css      = Css("sidetabs")
+  val SideButton: Css    = Css("side-button")
+  val BlendedButton: Css = Css("blended-button")
+  val JustifyRight: Css  = Css("justify-right")
+  val TargetLabelTitle: Css  = Css("target-label-title")
 
   val ResizeHandle: Css       = Css("resize-handle")
   val ResizableSeparator: Css = Css("resize-separator")

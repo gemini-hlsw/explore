@@ -459,6 +459,7 @@ body {
 // Taken from the definitíon of ui.button transition but removed background-color and background
 // When animating those two properties you see some flickering in FF
 .ui.button.side-button {
+  border: none;
   transition: opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
@@ -634,13 +635,24 @@ body {
 
 .obs-tree-group-header {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+  // justify-content: space-between;
+}
+
+.target-label-title {
+  flex-grow: 2;
+}
+
+.justify-right {
+  align-self: center;
+  justify-self: end;
 }
 
 .obs-tree-buttons {
   display: flex;
   justify-content: space-between;
-  padding: 5px;
+  padding: 5px 0px 5px 5px;
   background-color: var(--tile-title-background);
 }
 
@@ -927,4 +939,9 @@ img.partner-split-flag {
   transform: translate(0px, -33px);
   left: 50%;
   z-index:3;
+}
+
+.ui.button.blended-button {
+  border: none;
+  background-color: transparent;
 }
