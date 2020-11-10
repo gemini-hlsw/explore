@@ -3,18 +3,15 @@
 
 package explore.targeteditor
 
-import cats.data.ValidatedNec
 import cats.effect.IO
 import cats.implicits._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.formats._
-import explore.optics._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.ApparentRadialVelocity
@@ -33,8 +30,7 @@ import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
   value:    ViewF[IO, Option[RadialVelocity]],
-  disabled: ViewF[IO, Boolean],
-  modify:   Option[RadialVelocity] => IO[Unit]
+  disabled: ViewF[IO, Boolean]
 ) extends ReactProps[RVInput](RVInput.component)
 
 object RVInput {
@@ -78,6 +74,21 @@ object RVInput {
   implicit def propsReuse: Reusability[Props] = Reusability.by(x => (x.value, x.disabled))
   implicit def stateReuse: Reusability[State] = Reusability.derive
 
+  private val rvToRedshiftGet: Option[RadialVelocity] => Option[Redshift] =
+    _.flatMap(_.toRedshift)
+
+  private val rvToRedshiftMod
+    : (Option[Redshift] => Option[Redshift]) => Option[RadialVelocity] => Option[RadialVelocity] =
+    modZ => rv => modZ(rv.flatMap(_.toRedshift)).flatMap(_.toRadialVelocity)
+
+  private val rvToARVGet: Option[RadialVelocity] => Option[ApparentRadialVelocity] =
+    rvToRedshiftGet.andThen(_.map(_.toApparentRadialVelocity))
+
+  private val rvToARVMod: (
+    Option[ApparentRadialVelocity] => Option[ApparentRadialVelocity]
+  ) => Option[RadialVelocity] => Option[RadialVelocity] =
+    modZ => rvToRedshiftMod(rsOpt => modZ(rsOpt.map(_.toApparentRadialVelocity)).map(_.toRedshift))
+
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) =
       AppCtx.withCtx { implicit ctx =>
@@ -87,14 +98,10 @@ object RVInput {
             FormInputEV(
               id = state.rvView.tag,
               label = state.rvView.tag,
-              value = props.value.zoom(unsafeRVtoZLens),
+              value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
-              onBlur = (z: ValidatedNec[NonEmptyString, Option[Redshift]]) =>
-                z.toOption
-                  .map(z => props.modify(z.flatMap(_.toRadialVelocity)).runInCB)
-                  .getOrEmpty,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )
@@ -102,14 +109,10 @@ object RVInput {
             FormInputEV(
               id = state.rvView.tag,
               label = state.rvView.tag,
-              value = props.value.zoom(unsafeRVtoCZLens),
+              value = props.value.zoom(rvToARVGet)(rvToARVMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
-              onBlur = (z: ValidatedNec[NonEmptyString, Option[ApparentRadialVelocity]]) =>
-                z.toOption
-                  .map(cz => props.modify(cz.map(_.toRedshift).flatMap(_.toRadialVelocity)).runInCB)
-                  .getOrEmpty,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )
@@ -121,8 +124,6 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
-              onBlur = (rv: ValidatedNec[NonEmptyString, Option[RadialVelocity]]) =>
-                rv.toOption.map(v => props.modify(v).runInCB).getOrEmpty,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )

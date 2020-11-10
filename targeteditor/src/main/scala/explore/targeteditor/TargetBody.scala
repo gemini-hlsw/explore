@@ -194,7 +194,10 @@ object TargetBody {
                     units = "mas",
                     disabled = stateView
                   ),
-                  RVInput(props.target.zoom(TargetQueries.rvLens), stateView, modifyRadialVelocity)
+                  RVInput(
+                    props.target.zoom(TargetQueries.rvLens).withOnMod(modifyRadialVelocity),
+                    stateView
+                  )
                 ),
                 MagnitudeForm(target.magnitudes).when(false),
                 UndoButtons(target, undoCtx)

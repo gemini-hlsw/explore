@@ -133,14 +133,6 @@ package object optics {
 
   val redshiftBigDecimalISO: Iso[BigDecimal, Redshift] = Iso(Redshift.apply)(_.z)
 
-  val unsafeRVtoCZLens: Lens[Option[RadialVelocity], Option[ApparentRadialVelocity]] =
-    Lens[Option[RadialVelocity], Option[ApparentRadialVelocity]](
-      _.flatMap(_.toRedshift.map(_.toApparentRadialVelocity))
-    )(_ => rv => rv)
-
-  val unsafeRVtoZLens: Lens[Option[RadialVelocity], Option[Redshift]] =
-    Lens[Option[RadialVelocity], Option[Redshift]](_.flatMap(_.toRedshift))(_ => rv => rv)
-
   val fromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
     Prism[BigDecimal, RadialVelocity](b =>
       Some(b)
