@@ -16,6 +16,6 @@ object GetAdjust {
   def apply[T, A](lens: Lens[T, A]): GetAdjust[T, A] =
     GetAdjust(lens.asGetter, lens.asAdjuster)
 
-  def apply[T, A](get: T => A, set: (A => A) => T => T): GetAdjust[T, A] =
-    GetAdjust(Getter(get), Adjuster(set))
+  def apply[T, A](get: T => A, mod: (A => A) => T => T): GetAdjust[T, A] =
+    GetAdjust(Getter(get), Adjuster(mod))
 }
