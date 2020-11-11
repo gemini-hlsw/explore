@@ -593,6 +593,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: stretch;
   background-color: var(--obs-tree-background);
 }
 
@@ -637,7 +638,8 @@ body {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
-  // justify-content: space-between;
+  padding-bottom: 1px;
+  align-content: center;
 }
 
 .target-label-title {
@@ -944,4 +946,24 @@ img.partner-split-flag {
 .ui.button.blended-button {
   border: none;
   background-color: transparent;
+  box-shadow: none;
+
+  &:hover {
+    outline: 1px var(--site-border-color) solid;
+  }
+}
+
+.ui.button.delete-target-button {
+  padding: 0.4em 0.4em 0.4em 0.4em;
+  margin: 0;
+  margin-right: 0.4em;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+
+  &:hover {
+    outline: 1px var(--site-border-color) solid;
+  }
 }
