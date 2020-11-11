@@ -151,7 +151,7 @@ object TargetObsList {
       targetsWithObs: View[TargetsWithObs],
       focused:        View[Option[Focused]],
       targetId:       Target.Id,
-      nextToFocus:    Option[TargetIdName]
+      focusOnDelete:  Option[TargetIdName]
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -162,7 +162,12 @@ object TargetObsList {
           TargetsWithObs.targets
             .composeGetter(targetWithId.getter)
             .get,
-          setTargetWithIndex(targetsWithObs, focused, targetId, targetWithId.adjuster, nextToFocus)
+          setTargetWithIndex(targetsWithObs,
+                             focused,
+                             targetId,
+                             targetWithId.adjuster,
+                             focusOnDelete
+          )
         )
     }
 
@@ -182,12 +187,12 @@ object TargetObsList {
       }
 
     protected def deleteTarget(
-      targetId:    Target.Id,
-      setter:      Undoer.Setter[IO, TargetsWithObs],
-      nextToFocus: Option[TargetIdName]
+      targetId:      Target.Id,
+      setter:        Undoer.Setter[IO, TargetsWithObs],
+      focusOnDelete: Option[TargetIdName]
     ): Callback =
       $.props.flatMap { props =>
-        targetMod(setter, props.targetsWithObs, props.focused, targetId, nextToFocus)(
+        targetMod(setter, props.targetsWithObs, props.focused, targetId, focusOnDelete)(
           targetListMod.delete
         ).runInCB
       }
@@ -226,8 +231,9 @@ object TargetObsList {
     def render(props: Props, state: State): VdomElement = {
       val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target.id)
 
-      val targets   = props.targetsWithObs.get.targets.toList
-      val targetIds = targets.map(_.id)
+      val targets    = props.targetsWithObs.get.targets.toList
+      val targetIds  = targets.map(_.id)
+      val targetIdxs = targets.zipWithIndex
 
       <.div(ExploreStyles.ObsTree)(
         UndoRegion[TargetsWithObs] { undoCtx =>
@@ -242,11 +248,11 @@ object TargetObsList {
                 UndoButtons(props.targetsWithObs.get, undoCtx, size = Mini)
               ),
               targets.toTagMod { target =>
-                val targetId     = target.id
-                val currIdx      = targetIds.indexOf(targetId)
-                val targetIdxs   = targets.zipWithIndex
-                val nextToSelect = targetIdxs.find(_._2 === currIdx + 1).map(_._1)
-                val prevToSelect = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
+                val targetId      = target.id
+                val currIdx       = targetIds.indexOf(targetId)
+                val nextToSelect  = targetIdxs.find(_._2 === currIdx + 1).map(_._1)
+                val prevToSelect  = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
+                val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
                 val targetObs = obsByTarget.get(targetId).orEmpty
                 val obsCount  = targetObs.length
@@ -297,10 +303,8 @@ object TargetObsList {
                           compact = true,
                           clazz = ExploreStyles.DeleteTargetButton |+| ExploreStyles.JustifyRight,
                           onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                            e.stopPropagationCB *> deleteTarget(targetId,
-                                                                undoCtx.setter,
-                                                                nextToSelect.orElse(prevToSelect)
-                            )
+                            e.stopPropagationCB *>
+                              deleteTarget(targetId, undoCtx.setter, focusOnDelete)
                         )(Icons.Delete.size(Small).fitted(true)),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),
