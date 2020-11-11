@@ -153,7 +153,13 @@ object TargetBody {
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(target, stateView, searchAndSet, gotoRaDec, modifyName),
+                CoordinatesForm(
+                  props.target.zoom(TargetQueries.unsafeTargetName).withOnMod(modifyName),
+                  props.target.zoom(TargetResult.tracking),
+                  stateView,
+                  searchAndSet,
+                  gotoRaDec
+                ),
                 Form(size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
