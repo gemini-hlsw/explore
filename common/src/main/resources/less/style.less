@@ -459,6 +459,7 @@ body {
 // Taken from the definitíon of ui.button transition but removed background-color and background
 // When animating those two properties you see some flickering in FF
 .ui.button.side-button {
+  border: none;
   transition: opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
@@ -589,10 +590,10 @@ body {
 
 .obs-tree {
   .full-height-width();
-  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: stretch;
   background-color: var(--obs-tree-background);
 }
 
@@ -635,14 +636,26 @@ body {
 
 .obs-tree-group-header {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding-bottom: 1px;
+  align-content: center;
+}
+
+.target-label-title {
+  flex-grow: 2;
+}
+
+.justify-right {
+  align-self: center;
+  justify-self: end;
 }
 
 .obs-tree-buttons {
   display: flex;
   justify-content: space-between;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding: 5px 0px 5px 5px;
+  background-color: var(--tile-title-background);
 }
 
 .dragging-over {
@@ -761,8 +774,8 @@ body {
 
   /* Position the tooltip */
   position: absolute;
-  z-index: 1;
-  top: -50px;
+  z-index: 3;
+  top: 30px;
   left: calc(50% - 60px);
 }
 
@@ -928,4 +941,29 @@ img.partner-split-flag {
   transform: translate(0px, -33px);
   left: 50%;
   z-index:3;
+}
+
+.ui.button.blended-button {
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+
+  &:hover {
+    outline: 1px var(--site-border-color) solid;
+  }
+}
+
+.ui.button.delete-target-button {
+  padding: 0.4em 0.4em 0.4em 0.4em;
+  margin: 0;
+  margin-right: 0.4em;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+
+  &:hover {
+    outline: 1px var(--site-border-color) solid;
+  }
 }

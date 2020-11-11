@@ -42,6 +42,7 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import TargetObsQueries._
+import react.semanticui.elements.button.Button.ButtonProps
 
 final case class TargetObsList(
   targetsWithObs: View[TargetsWithObs],
@@ -130,7 +131,8 @@ object TargetObsList {
       targetsWithObs:        View[TargetsWithObs],
       focused:               View[Option[Focused]],
       targetId:              Target.Id,
-      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
+      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex],
+      nextToFoucs:           Option[TargetIdName]
     ): targetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
         // 1) Update internal model
@@ -138,15 +140,18 @@ object TargetObsList {
           .zoom(TargetsWithObs.targets)
           .mod(targetWithIndexSetter.set(targetWithIndex)) >>
           // 2) Send mutation & adjust focus
-          targetWithIndex.fold(focused.set(none) >> removeTarget(targetId)) { case (target, _) =>
-            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+          targetWithIndex.fold(
+            focused.set(nextToFoucs.map(f => Focused.FocusedTarget(f.id))) *> removeTarget(targetId)
+          ) { case (target, _) =>
+            insertTarget(target) *> focused.set(FocusedTarget(targetId).some)
           }
 
     private def targetMod(
       setter:         Undoer.Setter[IO, TargetsWithObs],
       targetsWithObs: View[TargetsWithObs],
       focused:        View[Option[Focused]],
-      targetId:       Target.Id
+      targetId:       Target.Id,
+      focusOnDelete:  Option[TargetIdName]
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -157,7 +162,12 @@ object TargetObsList {
           TargetsWithObs.targets
             .composeGetter(targetWithId.getter)
             .get,
-          setTargetWithIndex(targetsWithObs, focused, targetId, targetWithId.adjuster)
+          setTargetWithIndex(targetsWithObs,
+                             focused,
+                             targetId,
+                             targetWithId.adjuster,
+                             focusOnDelete
+          )
         )
     }
 
@@ -173,27 +183,18 @@ object TargetObsList {
           targetListMod
             .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id)(upsert).runInCB
+        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id, none)(upsert).runInCB
       }
 
-    protected def deleteTargetEnabled(
-      focused:        Option[Focused],
-      targetsWithObs: TargetsWithObs
-    ): Option[Target.Id] =
-      focused.collect {
-        case FocusedTarget(targetId) if !targetsWithObs.obs.exists(_.target.id === targetId) =>
-          targetId
-      }
-
-    protected def deleteTarget(setter: Undoer.Setter[IO, TargetsWithObs]): Callback =
-      $.props >>= { props =>
-        deleteTargetEnabled(props.focused.get, props.targetsWithObs.get)
-          .map(targetId =>
-            targetMod(setter, props.targetsWithObs, props.focused, targetId)(
-              targetListMod.delete
-            ).runInCB
-          )
-          .getOrEmpty
+    protected def deleteTarget(
+      targetId:      Target.Id,
+      setter:        Undoer.Setter[IO, TargetsWithObs],
+      focusOnDelete: Option[TargetIdName]
+    ): Callback =
+      $.props.flatMap { props =>
+        targetMod(setter, props.targetsWithObs, props.focused, targetId, focusOnDelete)(
+          targetListMod.delete
+        ).runInCB
       }
 
     def toggleCollapsed(targetId: Target.Id): Callback =
@@ -230,12 +231,28 @@ object TargetObsList {
     def render(props: Props, state: State): VdomElement = {
       val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target.id)
 
+      val targets    = props.targetsWithObs.get.targets.toList
+      val targetIds  = targets.map(_.id)
+      val targetIdxs = targets.zipWithIndex
+
       <.div(ExploreStyles.ObsTree)(
         UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
             <.div(
-              props.targetsWithObs.get.targets.elements.toTagMod { target =>
-                val targetId = target.id
+              <.div(ExploreStyles.ObsTreeButtons)(
+                <.div(
+                  Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
+                    Icons.New.size(Small).fitted(true)
+                  )
+                ),
+                UndoButtons(props.targetsWithObs.get, undoCtx, size = Mini)
+              ),
+              targets.toTagMod { target =>
+                val targetId      = target.id
+                val currIdx       = targetIds.indexOf(targetId)
+                val nextToSelect  = targetIdxs.find(_._2 === currIdx + 1).map(_._1)
+                val prevToSelect  = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
+                val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
                 val targetObs = obsByTarget.get(targetId).orEmpty
                 val obsCount  = targetObs.length
@@ -278,8 +295,17 @@ object TargetObsList {
                       <.span(ExploreStyles.ObsTreeGroupHeader)(
                         <.span(
                           opIcon,
-                          target.name.value
+                          target.name.value,
+                          ExploreStyles.TargetLabelTitle
                         ),
+                        Button(
+                          size = Small,
+                          compact = true,
+                          clazz = ExploreStyles.DeleteTargetButton |+| ExploreStyles.JustifyRight,
+                          onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                            e.stopPropagationCB *>
+                              deleteTarget(targetId, undoCtx.setter, focusOnDelete)
+                        )(Icons.Delete.size(Small).fitted(true)),
                         <.span(^.float.right, s"$obsCount Obs")
                       ),
                       TagMod.when(!state.collapsedTargetIds.contains(targetId))(
@@ -321,19 +347,6 @@ object TargetObsList {
                   )
                 }
               }
-            ),
-            <.div(ExploreStyles.ObsTreeButtons)(
-              <.div(
-                Button(size = Small, onClick = newTarget(undoCtx.setter))(
-                  Icons.New
-                ),
-                Button(size = Small,
-                       onClick = deleteTarget(undoCtx.setter),
-                       disabled =
-                         deleteTargetEnabled(props.focused.get, props.targetsWithObs.get).isEmpty
-                )(Icons.Delete)
-              ),
-              UndoButtons(props.targetsWithObs.get, undoCtx)
             )
           )
         }

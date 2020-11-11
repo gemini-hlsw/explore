@@ -24,6 +24,7 @@ import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
 import react.semanticui.sizes._
+import react.semanticui.modules.popup.PopupPosition
 
 final case class AladinCell(
   target:  View[Coordinates],
@@ -79,6 +80,7 @@ object AladinCell extends ModelOptics {
               ExploreStyles.AladinCenterButton,
               Popup(
                 content = "Center on target",
+                position = PopupPosition.BottomLeft,
                 trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(Icons.Bullseye)
               )
             )

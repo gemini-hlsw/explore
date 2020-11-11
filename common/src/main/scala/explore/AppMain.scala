@@ -53,7 +53,8 @@ trait AppMain extends IOApp {
     ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
-      tabs = EnumZipper.of[AppTab]
+      tabs = EnumZipper.of[AppTab],
+      focused = none
     )
 
     def setupScheme: IO[Unit] =
