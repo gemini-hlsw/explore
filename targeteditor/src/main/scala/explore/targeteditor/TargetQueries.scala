@@ -9,8 +9,6 @@ import cats.implicits._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
@@ -100,9 +98,9 @@ object TargetQueries {
    * Lens to the name of a sidereal target
    */
   val unsafeTargetName: Lens[TargetResult, NonEmptyString] =
-    Lens[TargetResult, NonEmptyString](x =>
-      refineV[NonEmpty](x.name).getOrElse(sys.error("Attempt to set an empty name"))
-    )(s => n => n.copy(name = s.value))
+    TargetResult.name ^|-> Lens[String, NonEmptyString](x =>
+      NonEmptyString.from(x).getOrElse(Constants.UnnamedTarget)
+    )(s => _ => s.value)
 
   /**
    * Lens used to change name and coordinates of a target

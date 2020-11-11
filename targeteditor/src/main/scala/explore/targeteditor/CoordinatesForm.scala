@@ -5,18 +5,15 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.implicits._
-import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.collection._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.target.TargetQueries._
+import explore.model.ModelOptics._
 import explore.utils.abbreviate
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -41,11 +38,11 @@ import react.semanticui.sizes._
 import scalajs.js.JSConverters._
 
 final case class CoordinatesForm(
-  target:           TargetResult,
+  name:             View[NonEmptyString],
+  tracking:         View[SiderealTracking],
   searching:        View[Boolean],
   searchAndGo:      SearchCallback => Callback,
-  goToRaDec:        Coordinates => Callback,
-  onNameChange:     NonEmptyString => IO[Unit]
+  goToRaDec:        Coordinates => Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
   def submit(
@@ -54,8 +51,11 @@ final case class CoordinatesForm(
     onComplete: Option[Target] => Callback,
     onError:    Throwable => Callback
   ): Callback =
-    refineV[NonEmpty](searchTerm)
-      .fold(_ => Callback.empty, s => before *> searchAndGo(SearchCallback(s, onComplete, onError)))
+    NonEmptyString
+      .from(searchTerm)
+      .toOption
+      .map(s => before >> searchAndGo(SearchCallback(s, onComplete, onError)))
+      .getOrEmpty
 }
 
 object CoordinatesForm {
@@ -63,32 +63,20 @@ object CoordinatesForm {
 
   @Lenses
   final case class State(
-    searchTerm:    NonEmptyString,
-    tracking:      SiderealTracking,
+    initialName:   NonEmptyString,
+    searchTerm:    String, // Shadow tracking of name input for the case of submit without blur (enter key)
     searchEnabled: Boolean,
     searchError:   Option[NonEmptyString]
   )
 
-  object State {
-    val baseCoordinates =
-      State.tracking ^|-> SiderealTracking.baseCoordinates
-
-    val raValue =
-      baseCoordinates ^|-> Coordinates.rightAscension
-
-    val decValue =
-      baseCoordinates ^|-> Coordinates.declination
-  }
-
   implicit val stateReuse                     = Reusability.derive[State]
-  implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.target, x.searching))
+  implicit val propsReuse: Reusability[Props] =
+    Reusability.by(x => (x.name, x.tracking, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) =
       AppCtx.withCtx { implicit appCtx =>
-        val stateView = ViewF.fromState[IO]($)
-
         val searchComplete: IO[Unit] = props.searching.set(false)
 
         val search: Callback =
@@ -110,9 +98,10 @@ object CoordinatesForm {
           search *> e.stopPropagationCB *> e.preventDefaultCB
 
         val submitForm: Form.OnSubmitE =
-          (e: Form.ReactFormEvent, _: FormProps) => e.preventDefaultCB *> search
+          (e: Form.ReactFormEvent, _: FormProps) =>
+            e.preventDefaultCB *> search.when(state.searchEnabled).void
 
-        val searchIcon                 =
+        val searchIcon =
           (if (state.searchEnabled)
              Icons.Search
                .link(true)(
@@ -129,7 +118,7 @@ object CoordinatesForm {
           ExploreStyles.CoordinatesForm,
           FormInputEV(
             id = "search",
-            value = stateView.zoom(State.searchTerm).withOnMod(props.onNameChange),
+            value = props.name,
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             label = "Name",
             error = state.searchError.orUndefined,
@@ -137,7 +126,8 @@ object CoordinatesForm {
             disabled = props.searching.get,
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,
-            onTextChange = _ => $.setStateL(State.searchError)(none),
+            onTextChange =
+              v => $.setStateL(State.searchTerm)(v) >> $.setStateL(State.searchError)(none),
             onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
             icon = searchIcon
           ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
@@ -148,7 +138,7 @@ object CoordinatesForm {
             ExploreStyles.TargetRaDecMinWidth,
             FormInputEV(
               id = "ra",
-              value = stateView.zoom(State.raValue),
+              value = props.tracking.zoom(properMotionRA),
               validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
               label = "RA",
               clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
@@ -156,7 +146,7 @@ object CoordinatesForm {
             ),
             FormInputEV(
               id = "dec",
-              value = stateView.zoom(State.decValue),
+              value = props.tracking.zoom(properMotionDec),
               validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
               label = "Dec",
               clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
@@ -165,8 +155,8 @@ object CoordinatesForm {
             FormButton(
               size = Small,
               icon = true,
-              label = "Go To",
-              onClick = props.goToRaDec(State.baseCoordinates.get(state))
+              label = "Go To"
+              // onClick = props.goToRaDec(State.baseCoordinates.get(state))
             )(
               Icon("angle right"),
               ExploreStyles.HideLabel
@@ -180,14 +170,14 @@ object CoordinatesForm {
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
-        val r = targetPropsL.get(props.target)
-        // Force new value from props if the prop changes (or we are initializing).
+        val propsName = props.name.get
         stateOpt match {
-          case Some(state) if state.searchTerm === r._1 && state.tracking === r._2 => state
-          case _                                                                   =>
+          case Some(state) if state.initialName === propsName =>
+            state
+          case _                                              => // Initialize or reset.
             State(
-              searchTerm = r._1,
-              tracking = r._2,
+              initialName = propsName,
+              searchTerm = propsName.value,
               searchEnabled = true,
               searchError = stateOpt.flatMap(_.searchError)
             )
