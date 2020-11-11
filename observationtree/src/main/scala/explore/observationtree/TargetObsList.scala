@@ -131,7 +131,8 @@ object TargetObsList {
       targetsWithObs:        View[TargetsWithObs],
       focused:               View[Option[Focused]],
       targetId:              Target.Id,
-      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
+      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex],
+      nextToFoucs:           Option[TargetIdName]
     ): targetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
         // 1) Update internal model
@@ -139,15 +140,18 @@ object TargetObsList {
           .zoom(TargetsWithObs.targets)
           .mod(targetWithIndexSetter.set(targetWithIndex)) >>
           // 2) Send mutation & adjust focus
-          targetWithIndex.fold(focused.set(none) >> removeTarget(targetId)) { case (target, _) =>
-            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+          targetWithIndex.fold(
+            focused.set(nextToFoucs.map(f => Focused.FocusedTarget(f.id))) *> removeTarget(targetId)
+          ) { case (target, _) =>
+            insertTarget(target) *> focused.set(FocusedTarget(targetId).some)
           }
 
     private def targetMod(
       setter:         Undoer.Setter[IO, TargetsWithObs],
       targetsWithObs: View[TargetsWithObs],
       focused:        View[Option[Focused]],
-      targetId:       Target.Id
+      targetId:       Target.Id,
+      nextToFocus:    Option[TargetIdName]
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -158,7 +162,7 @@ object TargetObsList {
           TargetsWithObs.targets
             .composeGetter(targetWithId.getter)
             .get,
-          setTargetWithIndex(targetsWithObs, focused, targetId, targetWithId.adjuster)
+          setTargetWithIndex(targetsWithObs, focused, targetId, targetWithId.adjuster, nextToFocus)
         )
     }
 
@@ -174,7 +178,7 @@ object TargetObsList {
           targetListMod
             .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id)(upsert).runInCB
+        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id, none)(upsert).runInCB
       }
 
     protected def deleteTarget(
@@ -183,20 +187,9 @@ object TargetObsList {
       nextToFocus: Option[TargetIdName]
     ): Callback =
       $.props.flatMap { props =>
-        val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
-          targetListMod.withKey(targetId)
-
-        setter
-          .mod[targetListMod.ElemWithIndex](
-            props.targetsWithObs.get,
-            TargetsWithObs.targets
-              .composeGetter(targetWithId.getter)
-              .get,
-            (_: targetListMod.ElemWithIndex) =>
-              removeTarget(targetId) *> props.focused
-                .set(nextToFocus.map(t => Focused.FocusedTarget(t.id)))
-          )(targetListMod.delete)
-          .runInCB
+        targetMod(setter, props.targetsWithObs, props.focused, targetId, nextToFocus)(
+          targetListMod.delete
+        ).runInCB
       }
 
     def toggleCollapsed(targetId: Target.Id): Callback =
