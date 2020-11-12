@@ -56,13 +56,14 @@ object TargetTabContents {
         <.div(
           ExploreStyles.SinglePanelArea,
           SizeMe() { s =>
-            val coreWidth = s.width.toDouble - treeWidth
+            val coreWidth            = s.width.toDouble - treeWidth
+            val coreHeight: JsNumber = Option(s.height).getOrElse(0)
             <.div(
               ExploreStyles.TreeRGL,
               Resizable(
                 axis = Axis.X,
                 width = treeWidth,
-                height = Option(s.height).getOrElse(0),
+                height = coreHeight,
                 minConstraints = (270, 0),
                 maxConstraints = (s.width.toInt / 2, 0),
                 onResize = treeResize,

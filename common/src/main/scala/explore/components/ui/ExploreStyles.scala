@@ -50,7 +50,10 @@ object ExploreStyles {
   val FullHeightWidth: Css = Css("full-height-width")
 
   val ObsTree: Css                = Css("obs-tree")
+  val ObsTreeWrapper: Css         = Css("obs-tree-wrapper")
+  val ObsScrollTree: Css          = Css("obs-scroll-tree")
   val ObsTreeGroup: Css           = Css("obs-tree-group")
+  val ObsCount: Css               = Css("obs-count")
   val SelectedObsTreeGroup: Css   = Css("selected-obs-tree-group")
   val UnselectedObsTreeGroup: Css = Css("unselected-obs-tree-group")
   val ObsTreeGroupHeader: Css     = Css("obs-tree-group-header")
@@ -59,6 +62,7 @@ object ExploreStyles {
   val ObsBadge: Css               = Css("obs-badge")
   val SelectedObsItem: Css        = Css("selected-obs-item")
   val ObsItem: Css                = Css("obs-item")
+  val TargetTrashIcon: Css        = Css("target-trash-icon")
 
   val DraggingOver: Css = Css("dragging-over")
 

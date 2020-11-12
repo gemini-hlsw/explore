@@ -17,6 +17,16 @@
   color-scheme: dark;
 }
 
+// Scrollbars
+* {
+  scrollbar-width: thin;
+}
+
+/* Works on Chrome/Edge/Safari */
+*::-webkit-scrollbar {
+  width: 12px;
+}
+
 //=================
 // DARK THEME VARS
 //=================
@@ -143,6 +153,7 @@
   --control-background-color: var(--color-background-light-20);
   --negative-text-color: var(--color-text-full);
   --negative-background-color: #B00020;
+  --negative-icon-color: var(--color-text-base);
 }
 
 .site-dark() {
@@ -178,6 +189,11 @@
   --tile-background: var(--color-background-light-8);
   --tile-title-background: var(--color-background-light-12);
   --tile-title-color: var(--color-text-full);
+}
+
+.obs-badge-dark() {
+  --obs-badge-color: var(--text-color);
+  --obs-badge-background: var(--tile-background);
 }
 
 .menu-dark() {
@@ -231,6 +247,7 @@
   // SUI VARIABLES
   .site-dark();
   .tile-dark();
+  .obs-badge-dark();
   .form-dark();
   .menu-dark();
   .segment-dark();
@@ -275,6 +292,7 @@
   --gray: gray;
   --negative-text-color: @negativeTextColor;
   --negative-background-color: @negativeBackgroundColor;
+  --negative-icon-color: @negativeBackgroundColor;
 }
 
 .site-light() {
@@ -303,9 +321,14 @@
 }
 
 .tile-light() {
-  --tile-background: #FFFFFF; // @pageBackground on site.variables
-  --tile-title-background: @lightGrey;
+  --tile-background: @lightGrey;
+  --tile-title-background: darken(@lightGrey, 10%);
   --tile-title-color: var(--color-text-base);
+}
+
+.obs-badge-light() {
+  --obs-badge-color: var(--site-text-color);
+  --obs-badge-background: darken(@lightGrey, 10%);
 }
 
 .menu-light() {
@@ -361,6 +384,7 @@
   .colors-light();
   .site-light();
   .tile-light();
+  .obs-badge-light();
   .form-light();
   .menu-light();
   .segment-light();
@@ -371,7 +395,7 @@
   .table-light();
 
   // EXPLORE VARIABLES
-  --sidetab-background: @gray;
+  --sidetab-background: @lightGrey;
   --explore-group-hover: @lightGrey;
 }
 
@@ -549,21 +573,6 @@ body {
   }
 }
 
-// Outor area of the body.
-.tree-body-outer {
-  // A bit narrower to fit the resize handle
-  width: ~"calc(100% - @{resizeHandleWidth})";
-  height: 100%;
-  // Add scroll on Y
-  overflow-y: auto;
-}
-
-// Inner area of the tree
-.tree-body-inner {
-  height: 100%;
-  width: 100%;
-}
-
 .rgl-body {
   height: 100%;
   position: absolute;
@@ -579,7 +588,6 @@ body {
 }
 
 .single-panel-tile {
-  margin-top: 1px;
   .full-height-width();
   position: absolute;
 }
@@ -588,18 +596,47 @@ body {
   .full-height-width();
 }
 
-.obs-tree {
-  .full-height-width();
+// Outer area of the body.
+.tree-body-outer {
+  // A bit narrower to fit the resize handle
+  width: ~"calc(100% - @{resizeHandleWidth})";
+  height: 100%;
+}
+
+// Inner area of the tree
+.tree-body-inner {
+  height: 100%;
+  width: 100%;
+}
+
+.obs-tree-wrapper {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
+  min-height: 0;
+}
+
+.obs-tree {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  justify-content: center;
   background-color: var(--obs-tree-background);
+}
+
+.obs-scroll-tree {
+  height: calc(100vh - 75px);
+  align-self: stretch;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .obs-item {
   margin: 0px;
   padding: 5px;
+}
+
+.obs-count {
+  white-space: nowrap;
 }
 
 .obs-tree-item {
@@ -609,6 +646,13 @@ body {
 
 .card.obs-badge {
   width: 100%;
+  background-color: var(--obs-badge-background);
+}
+
+.card.obs-badge .content .meta,
+.card.obs-badge .content .description,
+.card.obs-badge .content .header {
+  color: var(--obs-badge-color);
 }
 
 .selected-obs-item {
@@ -642,8 +686,16 @@ body {
   align-content: center;
 }
 
+.target-trash-icon {
+  color: var(--negative-icon-color);
+}
+
 .target-label-title {
   flex-grow: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-right: 5px;
+  text-overflow: ellipsis;
 }
 
 .justify-right {
