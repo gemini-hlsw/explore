@@ -24,6 +24,7 @@ import lucuma.core.math.RightAscension
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.forms._
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -140,27 +141,27 @@ object CoordinatesForm {
               id = "ra",
               value = props.tracking.zoom(properMotionRA),
               validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
+              changeAuditor = ChangeAuditor.rightAscension,
               label = "RA",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-              disabled = true
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormInputEV(
               id = "dec",
               value = props.tracking.zoom(properMotionDec),
               validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
+              changeAuditor = ChangeAuditor.declination,
               label = "Dec",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-              disabled = true
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
             ),
             FormButton(
               size = Small,
               icon = true,
-              label = "Go To"
-              // onClick = props.goToRaDec(State.baseCoordinates.get(state))
+              label = "Go To",
+              onClick = props.goToRaDec(props.tracking.get.baseCoordinates)
             )(
               Icon("angle right"),
               ExploreStyles.HideLabel
-            ).when(false)
+            )
           )
         )
       }

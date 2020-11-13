@@ -33,6 +33,7 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -165,6 +166,7 @@ object TargetBody {
                   InputWithUnits(
                     props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
                     ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
+                    ChangeAuditor.fromFormat(Epoch.fromStringNoScheme).decimal(3),
                     id = "epoch",
                     label = "Epoch",
                     units = "years",
@@ -173,6 +175,7 @@ object TargetBody {
                   InputWithUnits(
                     props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
                     ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                    ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                     id = "raPM",
                     label = "µ RA",
                     units = "mas/y",
@@ -181,6 +184,7 @@ object TargetBody {
                   InputWithUnits(
                     props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
                     ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                    ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                     id = "raDec",
                     label = "µ Dec",
                     units = "mas/y",
@@ -189,6 +193,7 @@ object TargetBody {
                   InputWithUnits[cats.effect.IO, Option[Parallax]](
                     props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
                     ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                    ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                     id = "parallax",
                     label = "Parallax",
                     units = "mas",
