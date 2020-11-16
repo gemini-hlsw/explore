@@ -114,7 +114,7 @@ object ProposalDetailsEditor {
         details
           .zoom(ProposalDetails.partnerSplits)
           .set(splits.filter(_.percent.value.value > 0))
-          .runInCB *> closePartnerSplitsEditor
+          .runAsyncCB *> closePartnerSplitsEditor
 
       def openPartnerSplitsEditor: Callback = {
         val splits      = details.get.partnerSplits
@@ -202,7 +202,7 @@ object ProposalDetailsEditor {
                     details
                       .zoom(ProposalDetails.abstrakt)
                       .set(tap.value.asInstanceOf[String])
-                      .runInCB
+                      .runAsyncCB
                   }
                 ).addModifiers(Seq(^.id := "abstract"))
               )

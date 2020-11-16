@@ -83,13 +83,13 @@ object CoordinatesForm {
           props
             .submit(
               state.searchTerm,
-              props.searching.set(true).runInCB,
+              props.searching.set(true).runAsyncCB,
               t =>
-                searchComplete.runInCB *> ($.setStateL(State.searchError)(
+                searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
                   NonEmptyString.unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found").some
                 )).when_(t.isEmpty),
               _ =>
-                searchComplete.runInCB *> $.setStateL(State.searchError)(
+                searchComplete.runAsyncCB *> $.setStateL(State.searchError)(
                   NonEmptyString("Search error...").some
                 )
             )

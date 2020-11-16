@@ -75,9 +75,10 @@ trait AppMain extends IOApp {
       _            <- AppCtx.initIn[IO](ctx)
       _            <- setupScheme
     } yield {
-      val RootComponent = AppRoot[IO](initialModel)(rootComponent, ctx.cleanup().some)
+      val RootComponent =
+        AppRoot[IO](initialModel)(rootComponent, onUnmount = (_: RootModel) => ctx.cleanup())
 
-      val container = Option(dom.document.getElementById("root")).getOrElse {
+      val container     = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)

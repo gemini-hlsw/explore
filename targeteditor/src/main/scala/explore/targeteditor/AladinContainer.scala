@@ -63,10 +63,10 @@ object AladinContainer {
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     def setRa(ra: RightAscension): Callback =
-      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runInCB)
+      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
 
     def setDec(dec: Declination): Callback =
-      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runInCB)
+      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get

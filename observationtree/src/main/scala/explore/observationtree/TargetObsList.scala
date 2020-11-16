@@ -123,7 +123,7 @@ object TargetObsList {
                   setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId)
                 )
 
-            set(target.some).runInCB
+            set(target.some).runAsyncCB
           }).getOrEmpty
         }
 
@@ -183,7 +183,9 @@ object TargetObsList {
           targetListMod
             .upsert(newTarget, props.targetsWithObs.get.targets.length)
 
-        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id, none)(upsert).runInCB
+        targetMod(setter, props.targetsWithObs, props.focused, newTarget.id, none)(
+          upsert
+        ).runAsyncCB
       }
 
     protected def deleteTarget(
@@ -194,7 +196,7 @@ object TargetObsList {
       $.props.flatMap { props =>
         targetMod(setter, props.targetsWithObs, props.focused, targetId, focusOnDelete)(
           targetListMod.delete
-        ).runInCB
+        ).runAsyncCB
       }
 
     def toggleCollapsed(targetId: Target.Id): Callback =
@@ -292,7 +294,7 @@ object TargetObsList {
                             .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
                         )(
                           ^.cursor.pointer,
-                          ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runInCB
+                          ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runAsyncCB
                         )(
                           <.span(ExploreStyles.ObsTreeGroupHeader)(
                             <.span(
@@ -334,7 +336,7 @@ object TargetObsList {
                                       e.stopPropagationCB >>
                                         props.focused
                                           .set(FocusedObs(obs.id).some)
-                                          .runInCB
+                                          .runAsyncCB
                                     }
                                   )(
                                     decorateTopRight(

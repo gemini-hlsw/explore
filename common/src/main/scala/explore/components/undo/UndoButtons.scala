@@ -34,14 +34,14 @@ object UndoButtons {
 
         WIP(
           <.div(
-            Button(onClick = p.undoCtx.undo(p.value).runInCB,
+            Button(onClick = p.undoCtx.undo(p.value).runAsyncCB,
                    size = p.size,
                    compact = true,
                    disabled = p.undoCtx.undoEmpty
             )(
               Icons.Undo.size(p.iconSize).fitted(true)
             ),
-            Button(onClick = p.undoCtx.redo(p.value).runInCB,
+            Button(onClick = p.undoCtx.redo(p.value).runAsyncCB,
                    size = p.size,
                    compact = true,
                    disabled = p.undoCtx.redoEmpty

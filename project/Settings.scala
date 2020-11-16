@@ -11,7 +11,7 @@ object Settings {
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
     val clue              = "0.3.4"
-    val crystal           = "0.8.1"
+    val crystal           = "0.9.0"
     val discipline        = "1.1.2"
     val disciplineMUnit   = "1.0.2"
     val geminiLocales     = "0.5.0"

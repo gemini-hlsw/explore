@@ -73,22 +73,22 @@ object CataloguesForm {
           FormCheckbox(
             label = "CCD",
             checked = options.fov.visible,
-            onChange = (b: Boolean) => optionsV.zoom(fovL).set(b).runInCB
+            onChange = (b: Boolean) => optionsV.zoom(fovL).set(b).runAsyncCB
           ),
           FormCheckbox(
             label = "Patrol field",
             checked = options.guiding.visible,
-            onChange = (b: Boolean) => optionsV.zoom(guidingL).set(b).runInCB
+            onChange = (b: Boolean) => optionsV.zoom(guidingL).set(b).runAsyncCB
           ),
           FormCheckbox(
             label = "Probe",
             checked = options.probe.visible,
-            onChange = (b: Boolean) => optionsV.zoom(probeL).set(b).runInCB
+            onChange = (b: Boolean) => optionsV.zoom(probeL).set(b).runAsyncCB
           ),
           FormCheckbox(
             label = "Offsets",
             checked = options.offsets.visible,
-            onChange = (b: Boolean) => optionsV.zoom(offsetsL).set(b).runInCB
+            onChange = (b: Boolean) => optionsV.zoom(offsetsL).set(b).runAsyncCB
           ),
           FormSelect(
             label = "Position Angle",
@@ -100,7 +100,7 @@ object CataloguesForm {
                   case (a, i) if i.value == p.value => a
                 }
                 .map { a =>
-                  optionsV.zoom(TargetVisualOptions.posAngle).set(a).runInCB
+                  optionsV.zoom(TargetVisualOptions.posAngle).set(a).runAsyncCB
                 }
                 .getOrEmpty
 

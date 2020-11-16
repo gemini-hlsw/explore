@@ -89,10 +89,10 @@ object Routing {
               if prev.exists(_ =!= next) &&
                 // Short circuit if we get here because of a change in the model.
                 next =!= view.zoom(RootModelRouting.lens).get =>
-            view.zoom(RootModelRouting.lens).set(next).runInCB
+            view.zoom(RootModelRouting.lens).set(next).runAsyncCB
           case (None, next, view) =>
             // Set the model if none was previously set
-            view.zoom(RootModelRouting.lens).set(next).runInCB
+            view.zoom(RootModelRouting.lens).set(next).runAsyncCB
           case _                  => Callback.empty
         }
         .renderWithP(layout)

@@ -36,7 +36,7 @@ object SideTabs {
         def tabButton(tab: AppTab): Button =
           Button(active = tab === focus,
                  clazz = ExploreStyles.SideButton,
-                 onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runInCB
+                 onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
           )(tab.title)
 
         def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
