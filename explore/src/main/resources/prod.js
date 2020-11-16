@@ -5,6 +5,9 @@ import "resources/less/vendor/aladin.less";
 import "resources/css/charts.scss";
 import "resources/css/datepicker.scss";
 
+import "resources/conf/staging.conf.json";
+import "resources/conf/production.conf.json";
+
 var App = require("sjs/explore-opt.js");
 
 App.Explore.runIOApp();

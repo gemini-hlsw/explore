@@ -215,6 +215,16 @@ exports.extraAssets = {
           name: "[name].[hash].[ext]",
         },
       },
+      {
+        test: /\.conf.json$/,
+        loader: 'file-loader',
+        type: 'javascript/auto',
+        options: {
+          name() {
+            return 'conf/[name].[ext]';
+          },
+        },
+      }
     ],
   },
 };
