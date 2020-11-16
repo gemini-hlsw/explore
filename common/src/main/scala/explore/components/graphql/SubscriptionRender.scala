@@ -70,7 +70,7 @@ object SubscriptionRender {
             )
           }
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRender"))
-          .runInCB
+          .runAsyncCB
       }
       .componentWillUnmount(Render.Subscription.willUnmountFn[F, Id, D, A](_))
       .configure(Reusability.shouldComponentUpdate)

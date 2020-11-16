@@ -140,9 +140,9 @@ object TargetBody {
             SimbadSearch
               .search(s.searchTerm)
               .attempt
-              .runInCBAndThen {
+              .runAsyncAndThenCB {
                 case Right(r @ Some(Target(n, Right(st), m))) =>
-                  modify((n, st, m.values.toList)).runInCB *>
+                  modify((n, st, m.values.toList)).runAsyncCB *>
                     gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
                 case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
                 case Right(None)                              => s.onComplete(none)

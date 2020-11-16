@@ -116,7 +116,7 @@ object TreeComp {
                      (modState.apply _).compose(getSet.adjuster.set)(value)
                    }
               ) _
-          modify(newValue.some).runInCB
+          modify(newValue.some).runAsyncCB
         }).getOrEmpty
       }
 
@@ -145,10 +145,10 @@ object TreeComp {
             )
           ),
           <.div(
-            Button(onClick = undoCtx.undo(state.tree).runInCB, disabled = undoCtx.undoEmpty)(
+            Button(onClick = undoCtx.undo(state.tree).runAsyncCB, disabled = undoCtx.undoEmpty)(
               "Undo"
             ),
-            Button(onClick = undoCtx.redo(state.tree).runInCB, disabled = undoCtx.redoEmpty)(
+            Button(onClick = undoCtx.redo(state.tree).runAsyncCB, disabled = undoCtx.redoEmpty)(
               "Redo"
             )
           )

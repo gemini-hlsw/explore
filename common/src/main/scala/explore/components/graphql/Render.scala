@@ -76,7 +76,7 @@ object Render {
       ): Callback = {
         implicit val F = $.props.F
 
-        $.state.map(_.subscription.stop().runInCB).getOrEmpty
+        $.state.map(_.subscription.stop().runAsyncCB).getOrEmpty
       }
     }
 
@@ -167,7 +167,7 @@ object Render {
 
         init
           .handleErrorWith(t => logger.error(t)(s"Error initializing $componentName"))
-          .runInCB
+          .runAsyncCB
       }
     }
 
@@ -183,7 +183,7 @@ object Render {
         $.state
           .map(state =>
             (state.cancelConnectionTracker >>
-              state.subscriptions.map(_.stop()).sequence.void).runInCB
+              state.subscriptions.map(_.stop()).sequence.void).runAsyncCB
           )
           .getOrEmpty
       }

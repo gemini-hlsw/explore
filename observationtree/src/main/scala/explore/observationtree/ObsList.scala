@@ -37,7 +37,7 @@ object ObsList {
                 e.stopPropagationCB >>
                   props.focused
                     .set(FocusedObs(obs.id).some)
-                    .runInCB
+                    .runAsyncCB
               }
             )(
               ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
