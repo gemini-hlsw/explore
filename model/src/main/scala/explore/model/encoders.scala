@@ -10,10 +10,12 @@ import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import sttp.model.Uri
 
 import ModelOptics._
 
 object encoders {
+  implicit val uriEncoder: Encoder[Uri] = Encoder.encodeString.contramap[Uri](_.toString)
 
   implicit val raEncoder: Encoder[RightAscension] =
     Encoder.encodeString

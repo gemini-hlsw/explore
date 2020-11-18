@@ -42,24 +42,10 @@ const Web = Merge(
       host: "0.0.0.0",
       hot: true,
       contentBase: [__dirname, parts.rootDir],
-      historyApiFallback: true,
-      proxy: {
-        /*"/api/conditions": {
-          target: "wss://explore-hasura.herokuapp.com",
-          pathRewrite: { "^/api/conditions": "" },
-          changeOrigin: true,
-          ws: true
-        },
-        "/api/tasks": {
-          target: "https://todo-mongo-graphql-server.herokuapp.com",
-          pathRewrite: { "^/api/tasks": "" },
-          changeOrigin: true
-        },
-        "/api/grackle-demo": {
-          target: "https://grackle-demo-staging.herokuapp.com",
-          pathRewrite: { "^/api/grackle-demo": "" },
-          changeOrigin: true
-        }*/
+      historyApiFallback: {
+        rewrites: [
+          { from: /^\/conf.json$/, to: '/conf/development.conf.json' },
+        ]
       },
     },
     plugins: [

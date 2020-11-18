@@ -1,0 +1,5 @@
+{
+  "environment": "STAGING",
+  "odbURI": "wss://odb.gpp.lucuma.xyz/ws",
+  "exploreDBURI": "wss://explore-hasura.herokuapp.com/v1/graphql"
+}
