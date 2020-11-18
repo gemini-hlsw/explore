@@ -20,10 +20,10 @@
 
 .ui.menu {
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-  .button-shadow(@gray-dark);
+  # .button-shadow(@gray-dark);
 
   .item:hover {
-    .button-shadow-inverse(@gray-dark);
+    # .button-shadow-inverse(@gray-dark);
   }
 
   &.inverted {

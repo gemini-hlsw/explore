@@ -17,11 +17,9 @@
 }
 
 .ui.button {
-  .button-shadow(@gray-dark);
   border: 1px var(--site-border-color) solid;
 
   &:hover {
-    .button-shadow-inverse(@gray-dark);
     border-color: var(--form-input-focus-border-color);
   }
 }

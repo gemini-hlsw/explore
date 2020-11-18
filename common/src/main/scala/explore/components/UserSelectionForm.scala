@@ -3,8 +3,6 @@
 
 package explore.components
 
-// import explore.Icons
-// import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -54,7 +52,8 @@ object UserSelectionForm {
       .stateless
       .render_P { p =>
         Modal(
-          size = ModalSize.Fullscreen,
+          size = ModalSize.Large,
+          clazz = ExploreStyles.LoginBox,
           content = ModalContent(
             <.div(
               ExploreStyles.LoginBoxLayout,

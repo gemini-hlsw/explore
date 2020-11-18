@@ -78,7 +78,7 @@ object SSOClient {
           .post(
             uri"$baseSSO/api/v1/auth-as-guest"
           )
-          .readTimeout(5.seconds)
+          .readTimeout(2.seconds)
           .send(backend)
       )
 

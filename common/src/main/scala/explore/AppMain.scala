@@ -37,6 +37,7 @@ import sttp.model.Uri
 
 import js.annotation._
 import java.time.Instant
+import scala.concurrent.duration._
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -108,13 +109,13 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
     for {
+      _         <- setupScheme
       vault     <- SSOClient.vault[IO](IO.fromFuture)
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig)
       _         <- AppCtx.initIn[IO](ctx)
-      _         <- setupScheme
     } yield {
       val RootComponent =
         AppRoot[IO](initialModel(vault))(

@@ -1,5 +1,5 @@
 @contentBackground: @pageBackground;
 @headerBorder: #e5e5e5;
-@background: @gray-dark;
+@background: var(--modal-background);
 @headerBackground: @gray-dark;
 @actionBackground: @gray-dark;

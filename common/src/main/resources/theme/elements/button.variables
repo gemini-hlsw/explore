@@ -1,10 +1,10 @@
-@textColor: @white;
-@backgroundColor: @gray-dark;
+@textColor: var(--button-text-color);
+@backgroundColor: var(--button-background-color);
 @primaryTextColor: #fff;
 @positiveTextColor: #fff;
 @negativeTextColor: #fff;
-@hoverBackgroundColor: lighten(@gray-dark, 5%);
-@basicHoverBackground: lighten(@gray-dark, 10%);
+@hoverBackgroundColor: var(--button-hover-background-color);
+@basicHoverBackground: var(--button-basic-hover-background-color);
 @activeBackgroundColor: @blue;
 @textShadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 @borderColor: var(--form-input-color);
@@ -13,3 +13,11 @@
 @compactVerticalPadding: (@verticalPadding * 0.5);
 @compactHorizontalPadding: (@horizontalPadding * 0.5);
 
+@tertiaryTextColor: var(--button-tertiary-text-color);
+@tertiaryLineColor: var(--button-tertiary-line-color);
+@tertiaryHoverColor: var(--button-tertiary-hover-color);
+@tertiaryHoverLineColor: var(--button-tertiary-hover-line-color);
+@tertiaryFocusColor: var(--button-tertiary-focus-color);
+@tertiaryFocusLineColor: var(--button-tertiary-focus-line-color);
+@tertiaryActiveColor: var(--button-tertiary-active-color);
+@tertiaryActiveLineColor: var(--button-tertiary-active-line-color);

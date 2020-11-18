@@ -1,4 +1,6 @@
-@backgroundColor: @gray-dark;
+@backgroundColor: var(--label-background-color);
 @labelActiveBackgroundColor: @gray-light;
 @labelHoverBackgroundColor: @gray-darker;
-@ribbonShadowColor: @gray-dark;
+@ribbonShadowColor: var(--label-ribbon-shadow-color);
+
+@invertedBackgroundColor: var(--label-inverted-background-color);

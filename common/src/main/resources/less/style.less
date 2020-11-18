@@ -141,6 +141,7 @@
     calc(var(--gray-l) - 10%),
     var(--gray-a)
   );
+  --gray-dark: @color-gray-dark;
 
   --focus-inner-color: hsla(230, 52%, 42%, 1);
   --focus-outer-color: hsla(220, 72%, 73%, 0.85);
@@ -186,6 +187,30 @@
   --form-prompt-background: var(--negative-background-color);
 }
 
+.button-dark() {
+  --button-hover-background-color: lighten(@color-gray-dark, 5%);
+  --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
+  --button-background-color: @color-gray-dark;
+  --button-text-color: var(--color-text-base);
+  --button-tertiary-text-color: var(--button-text-color);
+  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
+  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  --button-tertiary-hover-color: @tertiaryHoverColor;
+  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-focus-color: @tertiaryHoverColor;
+  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-active-color: @tertiaryActiveColor;
+  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
+}
+
+.label-dark() {
+  --label-background-color: var(--gray-dark);
+  --label-inverted-background-color: darken(@color-gray-dark, 20%);
+  --label-ribbon-shadow-color: var(--gray-dark);
+}
+
 .tile-dark() {
   --tile-background: var(--color-background-light-8);
   --tile-title-background: var(--color-background-light-12);
@@ -198,7 +223,12 @@
 }
 
 .menu-dark() {
+  --menu-background: var(--gray-dark);
+  --menu-pressed-item-background: darken(@color-gray-dark, 8%);
+  --menu-pagination-active-background: darken(@color-gray-dark, 10%);
   --menu-hover-item-background: var(--color-background-light-10);
+  --menu-secondary-hover-item-background:  darken(@color-gray-darker, 5%);
+  --menu-secondary-hover-item-color: darken(@color-gray-darker, 5%);
   --menu-tabular-active-background: var(--color-background-light-10);
 }
 
@@ -241,12 +271,22 @@
   --table-footer-background: var(--color-background-dark-5);
 }
 
+.modal-dark() {
+  --modal-background: var(--color-background-light-8);
+}
+
+.dimmer-dark() {
+  --dimmer-background-color: rgba(0, 0, 0, 0.85);
+}
+
 .dark-theme() {
   // COLORS
   .colors-dark();
 
   // SUI VARIABLES
   .site-dark();
+  .button-dark();
+  .label-dark();
   .tile-dark();
   .obs-badge-dark();
   .form-dark();
@@ -257,6 +297,8 @@
   .dropdown-dark();
   .checkbox-dark();
   .table-dark();
+  .modal-dark();
+  .dimmer-dark();
 
   // EXPLORE VARIABLES
   --sidetab-background: var(--color-background-light-5);
@@ -322,6 +364,31 @@
   --form-prompt-text-color: var(--negative-text-color);
 }
 
+.button-light() {
+  @textColor: rgba(0, 0, 0, 0.6);
+  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
+  --button-hover-background-color: #CACBCD;
+  --button-basic-hover-background-color: #FFFFFF;
+  --button-background-color: #E0E1E2;
+  --button-text-color: @textColor;
+  --button-tertiary-text-color: @textColor;
+  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  --button-tertiary-hover-color: @tertiaryHoverColor;
+  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-focus-color: @tertiaryHoverColor;
+  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-active-color: @tertiaryActiveColor;
+  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
+}
+
+.label-light() {
+  --label-background-color: #E8E8E8;
+  --label-inverted-background-color: darken(#E8E8E8, 20%);
+  --label-ribbon-shadow-color: rgba(0, 0, 0, 0.15);
+}
+
 .tile-light() {
   --tile-background: @lightGrey;
   --tile-title-background: darken(@lightGrey, 10%);
@@ -334,9 +401,12 @@
 }
 
 .menu-light() {
+  --menu-background: #FFFFFF;
+  --menu-pressed-item-background: @subtleTransparentBlack;
+  --menu-pagination-active-background: @transparentBlack;
   --menu-hover-item-background: @subtleTransparentBlack;
   --menu-secondary-hover-item-background:  var(--tile-title-background);
-  --menu-secondary-hover-item-color: var(-input-color);
+  --menu-secondary-hover-item-color: var(--input-color);
   --menu-tabular-active-background: none @white;
 }
 
@@ -381,10 +451,20 @@
   --table-footer-background: @offWhite;
 }
 
+.modal-light() {
+  --modal-background: @white;
+}
+
+.dimmer-light() {
+  --dimmer-background-color: rgba(0, 0, 0 , 0.15);
+}
+
 .light-theme() {
   // Values here come from the default SUI theme
   .colors-light();
   .site-light();
+  .button-light();
+  .label-light();
   .tile-light();
   .obs-badge-light();
   .form-light();
@@ -395,6 +475,8 @@
   .dropdown-light();
   .checkbox-light();
   .table-light();
+  .modal-light();
+  .dimmer-light();
 
   // EXPLORE VARIABLES
   --sidetab-background: @lightGrey;
