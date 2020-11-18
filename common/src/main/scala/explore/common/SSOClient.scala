@@ -3,6 +3,8 @@
 
 package explore.common
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 
 import scala.concurrent.Future
@@ -21,7 +23,6 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import sttp.client3._
-import java.time.Instant
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
@@ -77,4 +78,18 @@ object SSOClient {
           Sync[F].raiseError(new RuntimeException(e))
       }
   }
+
+  def refreshToken[F[_]: ConcurrentEffect: Timer](
+    fromFuture: FromFuture[F, Response[Either[String, String]]],
+    expiration: Instant,
+    mod:        UserVault => F[Unit]
+  ): F[UserVault] =
+    Sync[F].delay(Instant.now).flatMap { n =>
+      val sleepTime = refreshTimoutDelta.max(
+        (n.until(expiration, ChronoUnit.SECONDS).seconds - refreshTimoutDelta)
+      )
+      Timer[F].sleep(sleepTime)
+    } *> SSOClient
+      .whoami[F](fromFuture)
+      .flatTap(mod)
 }

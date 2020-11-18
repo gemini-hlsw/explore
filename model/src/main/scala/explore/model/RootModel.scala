@@ -3,12 +3,13 @@
 
 package explore.model
 
+import java.time.Instant
+
 import cats.kernel.Eq
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
-import monocle.macros.Lenses
 import monocle.Lens
-import java.time.Instant
+import monocle.macros.Lenses
 
 @Lenses
 case class RootModel(

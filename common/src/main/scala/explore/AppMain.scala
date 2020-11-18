@@ -3,7 +3,6 @@
 
 package explore
 
-import scala.concurrent.duration._
 import scala.scalajs.js
 
 import cats.effect.ExitCode
@@ -33,7 +32,6 @@ import sttp.model.Uri
 
 import js.annotation._
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -69,18 +67,10 @@ trait AppMain extends IOApp {
         }
       }
 
-    def refreshToken(expiration:       Instant, v: View[RootModel]): IO[UserVault] =
-      IO(Instant.now).flatMap { n =>
-        val sleepTime = SSOClient.refreshTimoutDelta.max(
-          (n.until(expiration, ChronoUnit.SECONDS).seconds - SSOClient.refreshTimoutDelta)
-        )
-        IO.timer.sleep(sleepTime)
-      } *> SSOClient
-        .whoami[IO](IO.fromFuture)
-        .flatTap((u: UserVault) => v.zoom(RootModel.vault).set(u))
-
-    def repeatTokenRefresh(expiration: Instant, v: View[RootModel]): IO[Unit]      =
-      refreshToken(expiration, v).flatMap(u => repeatTokenRefresh(u.expiration, v))
+    def repeatTokenRefresh(expiration: Instant, v: View[UserVault]): IO[Unit] =
+      SSOClient
+        .refreshToken[IO](IO.fromFuture, expiration, v.set)
+        .flatMap(u => repeatTokenRefresh(u.expiration, v))
 
     for {
       vault        <- SSOClient.whoami[IO](IO.fromFuture)
@@ -96,7 +86,8 @@ trait AppMain extends IOApp {
       val RootComponent =
         AppRoot[IO](initialModel(vault))(
           rootComponent,
-          onMount = repeatTokenRefresh(vault.expiration, _),
+          onMount =
+            (v: View[RootModel]) => repeatTokenRefresh(vault.expiration, v.zoom(RootModel.vault)),
           onUnmount = (_: RootModel) => ctx.cleanup()
         )
 
