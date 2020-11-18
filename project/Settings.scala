@@ -20,6 +20,7 @@ object Settings {
     val lucumaCore        = "0.7.0"
     val lucumaCatalog     = "0.3.0"
     val lucumaUI          = "0.10.0"
+    val lucumaSSO         = "0.0.5"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
     val mUnit             = "0.7.18"
@@ -134,6 +135,12 @@ object Settings {
       )(lucumaUI)
     )
 
+    val LucumaSSO = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-sso-frontend-client"
+      )(lucumaSSO)
+    )
+
     val Monocle = Def.setting(
       deps(
         "com.github.julien-truffaut" %%% "monocle-core",
@@ -236,7 +243,8 @@ object Settings {
 
     val Sttp = Def.setting(
       deps(
-        "com.softwaremill.sttp.client3" %%% "core"
+        "com.softwaremill.sttp.client3" %%% "core",
+        "com.softwaremill.sttp.client3" %%% "circe"
       )(sttp)
     )
   }

@@ -23,8 +23,8 @@ import react.aladin.Fov
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
-import react.semanticui.sizes._
 import react.semanticui.modules.popup.PopupPosition
+import react.semanticui.sizes._
 
 final case class AladinCell(
   target:  View[Coordinates],

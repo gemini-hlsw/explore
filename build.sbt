@@ -121,7 +121,9 @@ lazy val common = project
       "loglevel" -> "1.6.8"
     ),
     libraryDependencies ++=
-      ReactCommon.value,
+      Sttp.value ++
+        LucumaSSO.value ++
+        ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoKeys ++= Seq[BuildInfoKey](
       "ExploreDBEndpoint" -> sys.env
@@ -149,7 +151,6 @@ lazy val targeteditor = project
     libraryDependencies ++=
       GeminiLocales.value ++
         LucumaCatalog.value ++
-        Sttp.value ++
         ReactAladin.value ++
         ReactDatepicker.value ++
         ReactHighcharts.value ++
@@ -202,7 +203,8 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value ++
-        ReactSizeMe.value
+        ReactSizeMe.value ++
+        Sttp.value
   )
   .dependsOn(constraints, targeteditor, observationtree, proposal)
 

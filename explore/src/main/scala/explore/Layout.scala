@@ -3,14 +3,12 @@
 
 package explore
 
-import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import react.semanticui.collections.menu._
 
 final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
   val view:                  View[RootModel]
@@ -24,23 +22,8 @@ object OTLayout {
       .stateless
       .render_P { p =>
         <.div(
-          ^.cls := "theme dimmable",
           ExploreStyles.MainGrid,
-          <.div(
-            ExploreStyles.MainHeader,
-            Menu(
-              attached = MenuAttached.Top,
-              compact = true,
-              borderless = true,
-              tabular = MenuTabular.Right
-            )(
-              MenuItem(as = <.a)(
-                // Icons.BarsIcon,
-                <.span(ExploreStyles.MainTitle, "Explore")
-              ),
-              MenuItem(as = "span", position = MenuItemPosition.Right)(ConnectionsStatus())
-            )
-          ),
+          TopBar(p.view.zoom(RootModel.vault)),
           <.div(
             ExploreStyles.SideTabs,
             SideTabs(p.view.zoom(RootModel.tabs))
