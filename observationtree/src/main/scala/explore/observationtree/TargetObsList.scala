@@ -53,7 +53,7 @@ object TargetObsList {
   type Props = TargetObsList
 
   @Lenses
-  case class State(collapsedTargetIds: Set[Target.Id] = HashSet.empty)
+  case class State(expandedTargetIds: Set[Target.Id] = HashSet.empty)
 
   val obsListMod    =
     new KIListMod[IO, ObsIdNameTarget, Observation.Id](ObsIdNameTarget.id)
@@ -199,11 +199,11 @@ object TargetObsList {
         ).runAsyncCB
       }
 
-    def toggleCollapsed(targetId: Target.Id): Callback =
-      $.modStateL(State.collapsedTargetIds) { collapsed =>
-        collapsed
+    def toggleExpanded(targetId: Target.Id): Callback =
+      $.modStateL(State.expandedTargetIds) { expanded =>
+        expanded
           .exists(_ === targetId)
-          .fold(collapsed - targetId, collapsed + targetId)
+          .fold(expanded - targetId, expanded + targetId)
       }
 
     // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
@@ -264,12 +264,13 @@ object TargetObsList {
                     val opIcon =
                       targetObs.nonEmpty.fold(
                         Icon(
-                          "chevron " + state.collapsedTargetIds
+                          "chevron " + state.expandedTargetIds
                             .exists(_ === targetId)
-                            .fold("right", "down")
+                            .fold("down", "right")
                         )(^.cursor.pointer,
                           ^.onClick ==> { e: ReactEvent =>
-                            toggleCollapsed(targetId).asEventDefault(e).void
+                            e.stopPropagationCB >>
+                              toggleExpanded(targetId).asEventDefault(e).void
                           }
                         ),
                         Icons.ChevronRight
@@ -318,7 +319,7 @@ object TargetObsList {
                             ),
                             <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
                           ),
-                          TagMod.when(!state.collapsedTargetIds.contains(targetId))(
+                          TagMod.when(state.expandedTargetIds.contains(targetId))(
                             targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
                               <.div(ExploreStyles.ObsTreeItem)(
                                 Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
