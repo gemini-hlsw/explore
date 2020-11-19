@@ -98,7 +98,8 @@ object TargetObsList {
       }
 
     protected def onDragEnd(
-      setter: Undoer.Setter[IO, TargetsWithObs]
+      setter:            Undoer.Setter[IO, TargetsWithObs],
+      expandedTargetIds: View[SortedSet[Target.Id]]
     ): (DropResult, ResponderProvided) => Callback =
       (result, _) =>
         $.props >>= { props =>
@@ -119,7 +120,7 @@ object TargetObsList {
                   setTargetForObsWithId(props.targetsWithObs, obsId, obsWithId)
                 )
 
-            set(target.some).runAsyncCB
+            (expandedTargetIds.mod(_ + newTargetId) >> set(target.some)).runAsyncCB
           }).getOrEmpty
         }
 
@@ -238,7 +239,7 @@ object TargetObsList {
 
       <.div(
         UndoRegion[TargetsWithObs] { undoCtx =>
-          DragDropContext(onDragEnd = onDragEnd(undoCtx.setter))(
+          DragDropContext(onDragEnd = onDragEnd(undoCtx.setter, props.expandedTargetIds))(
             <.div(ExploreStyles.ObsTreeWrapper)(
               <.div(ExploreStyles.ObsTreeButtons)(
                 <.div(
