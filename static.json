@@ -1,8 +1,13 @@
 {
-    "root": "explore/target/scala-2.13/stage/static/",
-    "clean_urls": false,
-    "routes": {
-      "/**": "index.html"
-    },
-    "https_only": true
+  "https_only": true,
+  "root": "static/",
+  "clean_urls": false,
+  "redirects": {
+    "/conf.json": {
+      "url": "\" /conf/${ENVIRONMENT}.conf.json\""
+    }
+  },
+  "routes": {
+    "/**": "index.html"
   }
+}  

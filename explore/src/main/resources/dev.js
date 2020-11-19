@@ -5,6 +5,8 @@ import "resources/less/vendor/aladin.less";
 import "resources/css/charts.scss";
 import "resources/css/datepicker.scss";
 
+import "resources/conf/development.conf.json";
+
 import App from "sjs/explore-fastopt.js";
 
 if (module.hot) {

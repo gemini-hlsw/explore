@@ -10,9 +10,6 @@ import crystal.react.StreamRenderer
 import explore.GraphQLSchemas._
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-import sttp.model.Uri
-
-case class AppConfig(exploreDBURI: Uri, odbURI: Uri)
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
   exploreDB: GraphQLStreamingClient[F, ExploreDB],

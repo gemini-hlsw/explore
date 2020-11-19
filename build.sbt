@@ -69,7 +69,8 @@ stage := {
   val jsFiles = (explore / Compile / fullOptJS / webpack).value
   IO.copy(
     List(
-      ((explore / Compile / resourceDirectory).value / "static" / "static.json",
+      // Copy to stage directory for cases where we build remotely and deploy only static assets to Heroku.
+      ((root / baseDirectory).value / "static.json",
        (explore / crossTarget).value / "stage" / "static.json"
       )
     )
@@ -125,16 +126,6 @@ lazy val common = project
         LucumaSSO.value ++
         ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
-    buildInfoKeys ++= Seq[BuildInfoKey](
-      "ExploreDBEndpoint" -> sys.env
-        .get("EXPLOREDB_ENDPOINT")
-        .filter(_.trim.nonEmpty)
-        .getOrElse("wss://explore-hasura.herokuapp.com/v1/graphql"),
-      "ODBEndpoint"       -> sys.env
-        .get("ODB_ENDPOINT")
-        .filter(_.trim.nonEmpty)
-        .getOrElse("wss://lucuma-odb-staging.herokuapp.com/ws")
-    ),
     buildInfoPackage := "explore"
   )
   .enablePlugins(ScalaJSBundlerPlugin, BuildInfoPlugin)
@@ -199,7 +190,6 @@ lazy val explore: Project = project
   .settings(
     libraryDependencies ++=
       ReactCommon.value ++
-        Sttp.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value ++
