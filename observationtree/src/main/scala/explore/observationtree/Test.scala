@@ -22,7 +22,8 @@ object Test extends AppMain {
       <.div(^.width := "295px")(
         TargetObsList(
           targetsWithObs,
-          view.zoom(RootModel.focused)
+          view.zoom(RootModel.focused),
+          view.zoom(RootModel.expandedTargetIds)
         )
       )
     )

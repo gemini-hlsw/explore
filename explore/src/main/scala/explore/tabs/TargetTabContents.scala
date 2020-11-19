@@ -3,6 +3,8 @@
 
 package explore.tabs
 
+import scala.collection.immutable.SortedSet
+
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
@@ -17,16 +19,23 @@ import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Target
 import react.common._
 import react.draggable.Axis
 import react.resizable._
 import react.sizeme._
 
+final case class TargetTabContents(
+  focused:           View[Option[Focused]],
+  expandedTargetIds: View[SortedSet[Target.Id]]
+) extends ReactProps[TargetTabContents](TargetTabContents.component)
+
 object TargetTabContents {
-  type Props = View[Option[Focused]]
+  type Props = TargetTabContents
 
   final case class State(treeWidth: JsNumber)
 
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
@@ -41,14 +50,15 @@ object TargetTabContents {
             <.div(ExploreStyles.TreeBodyInner)(
               TargetObsList(
                 targetsWithObs,
-                props
+                props.focused,
+                props.expandedTargetIds
               )
             )
           )
         )
 
       TargetObsLiveQuery { targetsWithObs =>
-        val targetIdOpt = props.get.collect {
+        val targetIdOpt = props.focused.get.collect {
           case FocusedTarget(targetId) => targetId.some
           case FocusedObs(obsId)       => targetsWithObs.get.obs.getElement(obsId).map(_.target.id)
         }.flatten

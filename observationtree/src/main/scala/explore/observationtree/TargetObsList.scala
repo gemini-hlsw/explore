@@ -3,11 +3,11 @@
 
 package explore.observationtree
 
-import scala.collection.immutable.HashSet
+import scala.collection.immutable.SortedSet
 import scala.util.Random
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
@@ -24,14 +24,12 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Getter
 import monocle.function.Field1.first
-import monocle.macros.Lenses
 import mouse.boolean._
 import react.beautifuldnd._
 import react.common._
@@ -45,21 +43,19 @@ import react.semanticui.sizes._
 import TargetObsQueries._
 
 final case class TargetObsList(
-  targetsWithObs: View[TargetsWithObs],
-  focused:        View[Option[Focused]]
+  targetsWithObs:    View[TargetsWithObs],
+  focused:           View[Option[Focused]],
+  expandedTargetIds: View[SortedSet[Target.Id]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
   type Props = TargetObsList
 
-  @Lenses
-  case class State(expandedTargetIds: Set[Target.Id] = HashSet.empty)
-
   val obsListMod    =
     new KIListMod[IO, ObsIdNameTarget, Observation.Id](ObsIdNameTarget.id)
   val targetListMod = new KIListMod[IO, TargetIdName, Target.Id](TargetIdName.id)
 
-  class Backend($ : BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, Unit]) {
 
     private def getTargetForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
@@ -199,12 +195,15 @@ object TargetObsList {
         ).runAsyncCB
       }
 
-    def toggleExpanded(targetId: Target.Id): Callback =
-      $.modStateL(State.expandedTargetIds) { expanded =>
+    def toggleExpanded(
+      targetId:          Target.Id,
+      expandedTargetIds: View[SortedSet[Target.Id]]
+    ): Callback =
+      expandedTargetIds.mod { expanded =>
         expanded
           .exists(_ === targetId)
           .fold(expanded - targetId, expanded + targetId)
-      }
+      }.runAsyncCB
 
     // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
     def getObsStyle(style:          TagMod, snapshot:    Draggable.StateSnapshot): TagMod =
@@ -230,7 +229,7 @@ object TargetObsList {
     def getListStyle(isDragging: Boolean): TagMod =
       ExploreStyles.DraggingOver.when(isDragging)
 
-    def render(props: Props, state: State): VdomElement = {
+    def render(props: Props): VdomElement = {
       val obsByTarget = props.targetsWithObs.get.obs.toList.groupBy(_.target.id)
 
       val targets    = props.targetsWithObs.get.targets.toList
@@ -264,13 +263,15 @@ object TargetObsList {
                     val opIcon =
                       targetObs.nonEmpty.fold(
                         Icon(
-                          "chevron " + state.expandedTargetIds
+                          "chevron " + props.expandedTargetIds.get
                             .exists(_ === targetId)
                             .fold("down", "right")
                         )(^.cursor.pointer,
                           ^.onClick ==> { e: ReactEvent =>
                             e.stopPropagationCB >>
-                              toggleExpanded(targetId).asEventDefault(e).void
+                              toggleExpanded(targetId, props.expandedTargetIds)
+                                .asEventDefault(e)
+                                .void
                           }
                         ),
                         Icons.ChevronRight
@@ -319,7 +320,7 @@ object TargetObsList {
                             ),
                             <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
                           ),
-                          TagMod.when(state.expandedTargetIds.contains(targetId))(
+                          TagMod.when(props.expandedTargetIds.get.contains(targetId))(
                             targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
                               <.div(ExploreStyles.ObsTreeItem)(
                                 Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
@@ -370,7 +371,15 @@ object TargetObsList {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State())
       .renderBackend[Backend]
+      .componentDidMount { $ =>
+        // Remove targets from expanded set which are no longer present.
+        ($.props.expandedTargetIds.get -- $.props.targetsWithObs.get.targets.toList
+          .map(_.id)).toNes
+          .map(removedTargetIds =>
+            $.props.expandedTargetIds.mod(_ -- removedTargetIds.toSortedSet).runAsyncCB
+          )
+          .getOrEmpty
+      }
       .build
 }
