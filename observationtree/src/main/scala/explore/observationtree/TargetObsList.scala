@@ -207,25 +207,13 @@ object TargetObsList {
       }.runAsyncCB
 
     // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
-    def getObsStyle(style:          TagMod, snapshot:    Draggable.StateSnapshot): TagMod =
+    def getObsStyle(style:       TagMod, snapshot: Draggable.StateSnapshot): TagMod =
       if (!snapshot.isDragging)
         TagMod.empty
       else if (!snapshot.isDropAnimating)
         style
       else
         TagMod(style, ^.transitionDuration := "0.001s")
-
-    def decorateTopRight(decorated: VdomNode, decorator: VdomNode): VdomNode              =
-      <.div(^.position.relative)(
-        <.div(^.position.absolute,
-              ^.top := "0",
-              ^.right := "0",
-              ^.zIndex := "10",
-              ^.marginTop := "5px",
-              decorator
-        ),
-        decorated
-      )
 
     def getListStyle(isDragging: Boolean): TagMod =
       ExploreStyles.DraggingOver.when(isDragging)
@@ -325,12 +313,6 @@ object TargetObsList {
                             targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
                               <.div(ExploreStyles.ObsTreeItem)(
                                 Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
-                                  def dragIcon =
-                                    <.span(
-                                      provided.dragHandleProps,
-                                      Icons.Sort
-                                    )
-
                                   <.div(
                                     provided.innerRef,
                                     provided.draggableProps,
@@ -342,13 +324,12 @@ object TargetObsList {
                                           .runAsyncCB
                                     }
                                   )(
-                                    decorateTopRight(
+                                    <.span(provided.dragHandleProps)(
                                       ObsBadge(ObsSummary(obs.id, obs.target.name.value),
                                                ObsBadge.Layout.ConfAndConstraints,
                                                selected =
                                                  props.focused.get.exists(_ === FocusedObs(obs.id))
-                                      ),
-                                      dragIcon
+                                      )
                                     )
                                   )
                                 }
