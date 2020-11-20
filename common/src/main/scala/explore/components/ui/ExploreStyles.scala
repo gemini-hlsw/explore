@@ -38,16 +38,16 @@ object ExploreStyles {
   // styling and layout
   val ProposalTile: Css = Css("proposal-tile")
 
-  val MainGrid: Css           = Css("main-grid")
-  val MainHeader: Css         = Css("main-header")
-  val MainBody: Css           = Css("main-body")
-  val MainTitle: Css          = Css("main-title")
-  val SideTabs: Css           = Css("sidetabs")
-  val SideButton: Css         = Css("side-button")
-  val BlendedButton: Css      = Css("blended-button")
-  val JustifyRight: Css       = Css("justify-right")
-  val TargetLabelTitle: Css   = Css("target-label-title")
-  val DeleteTargetButton: Css = Css("delete-target-button")
+  val MainGrid: Css         = Css("main-grid")
+  val MainHeader: Css       = Css("main-header")
+  val MainBody: Css         = Css("main-body")
+  val MainTitle: Css        = Css("main-title")
+  val SideTabs: Css         = Css("sidetabs")
+  val SideButton: Css       = Css("side-button")
+  val BlendedButton: Css    = Css("blended-button")
+  val JustifyRight: Css     = Css("justify-right")
+  val TargetLabelTitle: Css = Css("target-label-title")
+  val DeleteButton: Css     = Css("delete-button")
 
   val ResizeHandle: Css       = Css("resize-handle")
   val ResizableSeparator: Css = Css("resize-separator")
@@ -82,7 +82,7 @@ object ExploreStyles {
   val ObsBadge: Css               = Css("obs-badge")
   val SelectedObsItem: Css        = Css("selected-obs-item")
   val ObsItem: Css                = Css("obs-item")
-  val TargetTrashIcon: Css        = Css("target-trash-icon")
+  val TrashIcon: Css              = Css("trash-icon")
 
   val DraggingOver: Css = Css("dragging-over")
 
@@ -119,6 +119,7 @@ object ExploreStyles {
   val Compact: Css           = Css("explore-compact")
   val ErrorLabel: Css        = Css("explore-error-label")
   val InputErrorTooltip: Css = Css("explore-input-error-tooltip")
+  val FlatFormField: Css     = Css("flat-form-field")
 
   // Clue websocket connection status
   val ConnectionOK: Css      = Css("connection-ok")

@@ -296,8 +296,7 @@ object TargetObsList {
                             Button(
                               size = Small,
                               compact = true,
-                              clazz =
-                                ExploreStyles.DeleteTargetButton |+| ExploreStyles.JustifyRight,
+                              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
                               onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
                                 e.stopPropagationCB *>
                                   deleteTarget(targetId, undoCtx.setter, focusOnDelete)
@@ -305,7 +304,7 @@ object TargetObsList {
                               Icons.Delete
                                 .size(Small)
                                 .fitted(true)
-                                .clazz(ExploreStyles.TargetTrashIcon)
+                                .clazz(ExploreStyles.TrashIcon)
                             ),
                             <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
                           ),
