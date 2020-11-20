@@ -9,6 +9,7 @@ import crystal.ViewF
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Interval
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -21,7 +22,7 @@ import react.semanticui.elements.label.LabelPointing
 final case class InputWithUnits[F[_]: Effect, A](
   value:           ViewF[F, A],
   validFormat:     ValidFormatInput[A],
-  id:              String,
+  id:              NonEmptyString,
   label:           String,
   units:           String,
   disabled:        ViewF[F, Boolean],
