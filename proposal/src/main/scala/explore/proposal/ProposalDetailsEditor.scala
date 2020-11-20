@@ -9,22 +9,26 @@ import coulomb.accepted._
 import coulomb.refined._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import explore._
 import explore.components.FormStaticData
 import explore.components.Tile
 import explore.components.ui._
-import explore.model.PartnerSplit._
-import explore.model.ProposalDetails._
+import explore.model.enum.ProposalClass._
+import explore.model.refined._
 import explore.model._
 import explore.model.display._
 import explore.model.reusability._
+import explore.implicits.CoulombViewOps
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
 import lucuma.ui.forms._
+import lucuma.ui.optics._
 import lucuma.ui.reusability._
+import monocle.Lens
 import monocle.macros.Lenses
 import react.common.ReactProps
 import react.common.implicits._
@@ -83,26 +87,40 @@ object ProposalDetailsEditor {
     )
   }
 
-  private def bandSplits(splits: List[PartnerSplit], total: NonNegHour): TagMod = splits match {
+  private def timeSplits(splits: List[PartnerSplit], total: NonNegHour): TagMod = splits match {
     case Nil => TagMod.empty
     case _   =>
       val ps = sortedSplits(splits)
-        .toTagMod(ps => bandSplit(ps, total))
+        .toTagMod(ps => timeSplit(ps, total))
       <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def bandSplit(ps: PartnerSplit, total: NonNegHour) = {
+  private def timeSplit(ps: PartnerSplit, total: NonNegHour) = {
     val splitTime = ps.percent.to[Double, Unitless] * total
     val timeText  = formatTime(splitTime.value)
     <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
   }
 
+  private def minimumTime(pct: IntPercent, total: NonNegHour) = {
+    val time     = pct.to[Double, Unitless] * total
+    val timeText = formatTime(time.value)
+    <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.MinimumPercent)
+  }
+
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) = {
-      val details        = props.proposalDetails
-      val band1And2Hours = details.zoom(ProposalDetails.band1And2Hours).get
-      val band3Hours     = details.zoom(ProposalDetails.band3Hours).get
+      val details      = props.proposalDetails
+      val requestTime1 = details.zoom(ProposalDetails.requestTime1).get
+      val requestTime2 = details.zoom(ProposalDetails.requestTime2).get
+      val minimumPct1  = details.zoom(ProposalDetails.minimumPct1).get
+      val minimumPct2  = details.zoom(ProposalDetails.minimumPct1).get
+
+      val (time1Label, time2Label, hasSecondTime, has2Minimums) = details.get.proposalClass match {
+        case Queue                    => ("Band 1 & 2", "Band 3", true, false)
+        case LargeProgram | Intensive => ("1st Semester", "Total", true, true)
+        case _                        => ("Time", "", false, false)
+      }
 
       def updateStateSplits(splits: List[PartnerSplit]): Callback =
         $.setStateL(State.splits)(splits)
@@ -125,6 +143,18 @@ object ProposalDetailsEditor {
         )
         $.setState(State(true, allPartners))
       }
+
+      def makeMinimumPctInput[A](lens: Lens[ProposalDetails, IntPercent]) =
+        FormInputEV(
+          value = details.zoom(lens).stripQuantity,
+          validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
+          changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100](),
+          label = "Minimum %",
+          id = "minimum-pct"
+        ).withMods(
+          ExploreStyles.FlexShrink(0),
+          ExploreStyles.MinimumPercent
+        )
 
       <.div(
         <.div(
@@ -154,7 +184,8 @@ object ProposalDetailsEditor {
                       clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
                       onClick = openPartnerSplitsEditor
                     ),
-                    partnerSplits(details.zoom(ProposalDetails.partnerSplits).get)
+                    partnerSplits(details.zoom(ProposalDetails.partnerSplits).get),
+                    makeMinimumPctInput(ProposalDetails.minimumPct1).unless(has2Minimums)
                   ),
                   EnumViewOptionalSelect(id = "category",
                                          value = details.zoom(ProposalDetails.category),
@@ -162,14 +193,16 @@ object ProposalDetailsEditor {
                   ),
                   <.div(
                     ExploreStyles.FlexContainer,
-                    FormStaticData(value = formatTime(band1And2Hours.value.value),
-                                   label = "Band 1 & 2",
-                                   id = "band1-2"
+                    FormStaticData(value = formatTime(requestTime1.value.value),
+                                   label = time1Label,
+                                   id = "time1"
                     )(
                       ExploreStyles.FlexShrink(0),
                       ExploreStyles.PartnerSplitTotal
                     ),
-                    bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band1And2Hours)
+                    timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime1),
+                    minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
+                    makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
                   ),
                   EnumViewMultipleSelect(
                     id = "keywords",
@@ -179,15 +212,18 @@ object ProposalDetailsEditor {
                   ),
                   <.div(
                     ExploreStyles.FlexContainer,
-                    FormStaticData(value = formatTime(band3Hours.value.value),
-                                   label = "Band 3",
-                                   id = "band3"
+                    FormStaticData(value = formatTime(requestTime2.value.value),
+                                   label = time2Label,
+                                   id = "time2"
                     )(
                       ExploreStyles.FlexShrink(0),
                       ExploreStyles.PartnerSplitTotal
                     ),
-                    bandSplits(details.zoom(ProposalDetails.partnerSplits).get, band3Hours)
-                  ),
+                    timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime2),
+                    minimumTime(minimumPct2, requestTime2).unless(has2Minimums),
+                    makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
+                  ).when(hasSecondTime),
+                  <.span().unless(hasSecondTime),
                   EnumViewSelect(id = "too-activation",
                                  value = details.zoom(ProposalDetails.toOActivation),
                                  label = "ToO Activation"

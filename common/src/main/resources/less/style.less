@@ -936,11 +936,25 @@ body {
     }
   });
 }
+
+.minimum-percent {
+  width: 5.5em;
+  padding-left: 0.5em !important;
+
+  div& .ui.input input {
+    text-align: right;
+  }
+
+  span& {
+    text-align: end;
+  }
+}
+
 // The split edit button and the band totals
 div.partner-split-total {
   &,
   & > div > data {
-    width: 5em;
+    width: 5.5em;
   }
 
   & > div > data {
