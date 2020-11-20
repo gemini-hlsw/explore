@@ -37,9 +37,7 @@ import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
-import react.common.implicits._
 import react.semanticui.collections.form.Form
-import react.semanticui.elements.label.Label
 import react.semanticui.sizes.Small
 
 final case class SearchCallback(
@@ -164,9 +162,13 @@ object TargetBody {
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
                   ExploreStyles.TargetPropertiesForm,
-                  Label(content = s"Proper Motion",
-                        basic = true,
-                        clazz = ExploreStyles.FormSectionLabel |+| ExploreStyles.ColumnSpan(2)
+                  InputWithUnits(
+                    props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
+                    ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
+                    id = "epoch",
+                    label = "Epoch",
+                    units = "years",
+                    disabled = stateView
                   ),
                   InputWithUnits(
                     props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
@@ -182,14 +184,6 @@ object TargetBody {
                     id = "raDec",
                     label = "µ Dec",
                     units = "mas/y",
-                    disabled = stateView
-                  ),
-                  InputWithUnits(
-                    props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
-                    ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
-                    id = "epoch",
-                    label = "Epoch",
-                    units = "years",
                     disabled = stateView
                   ),
                   InputWithUnits[cats.effect.IO, Option[Parallax]](
