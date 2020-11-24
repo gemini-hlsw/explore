@@ -17,7 +17,7 @@ object Settings {
     val geminiLocales     = "0.5.0"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.1"
-    val lucumaCore        = "0.7.0"
+    val lucumaCore        = "0.7.1"
     val lucumaCatalog     = "0.3.0"
     val lucumaUI          = "0.10.1"
     val lucumaSSO         = "0.0.5"
@@ -34,7 +34,7 @@ object Settings {
     val reactSemanticUI   = "0.10.0"
     val reactSizeMe       = "0.6.1"
     val scalaJsReact      = "1.7.6"
-    val sttp              = "3.0.0-RC9"
+    val sttp              = "3.0.0-RC10"
   }
 
   object Libraries {
