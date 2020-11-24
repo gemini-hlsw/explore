@@ -73,7 +73,7 @@ object TargetBody {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
-    val gotoRaDec = (coords: Coordinates) =>
+    val goToRaDec = (coords: Coordinates) =>
       aladinRef.get
         .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
@@ -97,6 +97,13 @@ object TargetBody {
             //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
             //      ))
             }
+          ) _
+
+          val modifyBaseCoordinates = undoSet[Coordinates](
+            TargetQueries.baseCoordinates,
+            c =>
+              TargetQueries.UpdateSiderealTracking.ra(c.ra.some) >>>
+                TargetQueries.UpdateSiderealTracking.dec(c.dec.some)
           ) _
 
           val modifyName = undoSet[NonEmptyString](
@@ -135,29 +142,37 @@ object TargetBody {
             TargetQueries.UpdateSiderealTracking.radialVelocity
           ) _
 
-          val searchAndSet: SearchCallback => Callback = s =>
-            SimbadSearch
-              .search(s.searchTerm)
-              .attempt
-              .runAsyncAndThenCB {
-                case Right(r @ Some(Target(n, Right(st), m))) =>
-                  modify((n, st, m.values.toList)).runAsyncCB *>
-                    gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
-                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
-                case Right(None)                              => s.onComplete(none)
-                case Left(t)                                  => s.onError(t)
-              }
+          val searchAndSet: SearchCallback => Callback =
+            s =>
+              SimbadSearch
+                .search(s.searchTerm)
+                .attempt
+                .runAsyncAndThenCB {
+                  case Right(r @ Some(Target(n, Right(st), m))) =>
+                    modify((n, st, m.values.toList)).runAsyncCB *>
+                      goToRaDec(st.baseCoordinates) *> s.onComplete(r)
+                  case Right(Some(r))                           =>
+                    Callback.log(s"Unknown target type $r") *> s.onComplete(none)
+                  case Right(None)                              => s.onComplete(none)
+                  case Left(t)                                  => s.onError(t)
+                }
+
+          val goToAndSetRaDec: Coordinates => Callback =
+            coords => modifyBaseCoordinates(coords).runAsyncCB *> goToRaDec(coords)
 
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(
+                SearchForm(
                   props.target.zoom(TargetQueries.unsafeTargetName).withOnMod(modifyName),
-                  props.target.zoom(TargetResult.tracking),
                   stateView,
-                  searchAndSet,
-                  gotoRaDec
+                  searchAndSet
+                ),
+                CoordinatesForm(
+                  props.target.zoom(TargetResult.tracking),
+                  stateView.get,
+                  goToAndSetRaDec
                 ),
                 Form(size = Small)(
                   ExploreStyles.Grid,
@@ -227,7 +242,7 @@ object TargetBody {
       }
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
-      gotoRaDec(nextProps.baseCoordinates)
+      goToRaDec(nextProps.baseCoordinates)
         .when(nextProps.baseCoordinates =!= currentProps.baseCoordinates)
         .void
   }

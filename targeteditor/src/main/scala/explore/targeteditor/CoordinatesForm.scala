@@ -5,16 +5,12 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.cats._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ModelOptics._
-import explore.utils.abbreviate
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -22,7 +18,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.core.model.SiderealTracking
-import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
@@ -33,131 +28,86 @@ import react.common.implicits._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.icon.Icon
-import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
 
-import scalajs.js.JSConverters._
-
 final case class CoordinatesForm(
-  name:             View[NonEmptyString],
-  tracking:         View[SiderealTracking],
-  searching:        View[Boolean],
-  searchAndGo:      SearchCallback => Callback,
-  goToRaDec:        Coordinates => Callback
-)(implicit val ctx: AppContextIO)
-    extends ReactProps[CoordinatesForm](CoordinatesForm.component) {
-  def submit(
-    searchTerm: String,
-    before:     Callback,
-    onComplete: Option[Target] => Callback,
-    onError:    Throwable => Callback
-  ): Callback =
-    NonEmptyString
-      .from(searchTerm)
-      .toOption
-      .map(s => before >> searchAndGo(SearchCallback(s, onComplete, onError)))
-      .getOrEmpty
-}
+  tracking:        View[SiderealTracking],
+  searching:       Boolean,
+  goToAndSetRaDec: Coordinates => Callback
+) extends ReactProps[CoordinatesForm](CoordinatesForm.component)
 
 object CoordinatesForm {
   type Props = CoordinatesForm
 
   @Lenses
   final case class State(
-    initialName:   NonEmptyString,
-    searchTerm:    String, // Shadow tracking of name input for the case of submit without blur (enter key)
-    searchEnabled: Boolean,
-    searchError:   Option[NonEmptyString]
+    ra:         RightAscension,
+    dec:        Declination,
+    raStr:      String, // Shadow tracking of input for the case of submit without blur (enter key)
+    decStr:     String, // another shadow
+    raValid:    Boolean,
+    decValid:   Boolean,
+    raInitial:  RightAscension,
+    decInitial: Declination
   )
 
   implicit val stateReuse                     = Reusability.derive[State]
   implicit val propsReuse: Reusability[Props] =
-    Reusability.by(x => (x.name, x.tracking, x.searching))
+    Reusability.by(x => (x.tracking, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) =
       AppCtx.withCtx { implicit appCtx =>
-        val searchComplete: IO[Unit] = props.searching.set(false)
+        val stateView = ViewF.fromState[IO]($)
 
-        val search: Callback =
-          props
-            .submit(
-              state.searchTerm,
-              props.searching.set(true).runAsyncCB,
-              t =>
-                searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
-                  NonEmptyString.unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found").some
-                )).when_(t.isEmpty),
-              _ =>
-                searchComplete.runAsyncCB *> $.setStateL(State.searchError)(
-                  NonEmptyString("Search error...").some
-                )
-            )
+        def submitRaDecForm: Form.OnSubmitE =
+          (
+            e: Form.ReactFormEvent,
+            _: FormProps
+          ) => {
+            val cbo = for {
+              ra  <- RightAscension.fromStringHMS.getOption(state.raStr)
+              dec <- Declination.fromStringSignedDMS.getOption(state.decStr)
+            } yield props.goToAndSetRaDec(Coordinates(ra, dec))
 
-        def iconKeyPress(e: ReactKeyboardEvent): Callback =
-          search *> e.stopPropagationCB *> e.preventDefaultCB
+            e.preventDefaultCB *> cbo.getOrElse(Callback.empty)
+          }
 
-        val submitForm: Form.OnSubmitE =
-          (e: Form.ReactFormEvent, _: FormProps) =>
-            e.preventDefaultCB *> search.when(state.searchEnabled).void
-
-        val searchIcon =
-          (if (state.searchEnabled)
-             Icons.Search
-               .link(true)(
-                 ^.onKeyPress ==> iconKeyPress,
-                 ^.onClick --> search
-               )
-           else
-             Icons.Ban)
-            .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
-
-        Form(size = Small, onSubmitE = submitForm)(
+        Form(size = Small, onSubmitE = submitRaDecForm)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.CoordinatesForm,
-          FormInputEV(
-            id = "search",
-            value = props.name,
-            validFormat = ValidFormatInput.nonEmptyValidFormat,
-            label = "Name",
-            error = state.searchError.orUndefined,
-            loading = props.searching.get,
-            disabled = props.searching.get,
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            onTextChange =
-              v => $.setStateL(State.searchTerm)(v) >> $.setStateL(State.searchError)(none),
-            onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
-            icon = searchIcon
-          ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
-          // We need this hidden control to submit when pressing enter
-          <.input(^.`type` := "submit", ^.hidden := true),
           <.div(
             ExploreStyles.FlexContainer,
             ExploreStyles.TargetRaDecMinWidth,
             FormInputEV(
               id = "ra",
-              value = props.tracking.zoom(properMotionRA),
+              value = stateView.zoom(State.ra),
               validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
               changeAuditor = ChangeAuditor.rightAscension,
               label = "RA",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              onTextChange = v => $.setStateL(State.raStr)(v),
+              onValidChange = valid => $.setStateL(State.raValid)(valid),
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+              disabled = props.searching
             ),
             FormInputEV(
               id = "dec",
-              value = props.tracking.zoom(properMotionDec),
+              value = stateView.zoom(State.dec),
               validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
               changeAuditor = ChangeAuditor.declination,
               label = "Dec",
-              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth
+              onTextChange = v => $.setStateL(State.decStr)(v),
+              onValidChange = valid => $.setStateL(State.decValid)(valid),
+              clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+              disabled = props.searching
             ),
-            FormButton(
-              size = Small,
-              icon = true,
-              label = "Go To",
-              onClick = props.goToRaDec(props.tracking.get.baseCoordinates)
+            FormButton( // does a form submission, so don't need a click handler
+                        size = Small,
+                        icon = true,
+                        label = "Go To",
+                        disabled = !state.raValid || !state.decValid || props.searching
             )(
               Icon("angle right"),
               ExploreStyles.HideLabel
@@ -171,16 +121,21 @@ object CoordinatesForm {
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
-        val propsName = props.name.get
+        val ra  = props.tracking.get.baseCoordinates.ra
+        val dec = props.tracking.get.baseCoordinates.dec
         stateOpt match {
-          case Some(state) if state.initialName === propsName =>
-            state
-          case _                                              => // Initialize or reset.
+          // need to update the state if we get new values for ra and dec.
+          case Some(state) if ra === state.raInitial && dec === state.decInitial => state
+          case _                                                                 =>
             State(
-              initialName = propsName,
-              searchTerm = propsName.value,
-              searchEnabled = true,
-              searchError = stateOpt.flatMap(_.searchError)
+              ra = ra,
+              dec = dec,
+              raStr = RightAscension.fromStringHMS.reverseGet(ra),
+              decStr = Declination.fromStringSignedDMS.reverseGet(dec),
+              raValid = true,
+              decValid = true,
+              raInitial = ra,
+              decInitial = dec
             )
         }
       }
