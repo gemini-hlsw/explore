@@ -146,6 +146,7 @@
   --focus-outer-color: hsla(220, 72%, 73%, 0.85);
   --hover-color: hsla(220, 72%, 73%, 0.55);
   --hover-background-color: hsla(260, 72%, 10%, 0.85);
+  --dragging-background-color: hsla(259, 39%, 24%, 0.85);
   --highlight-color: hsla(200, 72%, 83%, 0.35);
   --error-label-color: @red;
 
@@ -260,6 +261,7 @@
   // EXPLORE VARIABLES
   --sidetab-background: var(--color-background-light-5);
   --explore-group-hover: var(--hover-background-color);
+  --explore-group-dragging: var(--dragging-background-color);
 }
 
 //=================
@@ -397,6 +399,7 @@
   // EXPLORE VARIABLES
   --sidetab-background: @lightGrey;
   --explore-group-hover: @lightGrey;
+  --explore-group-dragging: @grey;
 }
 
 body.dark-theme {
@@ -716,7 +719,9 @@ body {
 }
 
 .dragging-over {
-  background-color: gray;
+  .vertical.segment {
+    background-color: var(--explore-group-dragging) !important;
+  }
 }
 
 .sky-plot {

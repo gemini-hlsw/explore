@@ -92,7 +92,7 @@ trait AppMain extends IOApp {
       // No relative URIs yet in STTP: https://github.com/softwaremill/sttp/issues/285
       // val uri = uri"/conf.json"
       val baseURI = Uri.unsafeParse(dom.window.location.href)
-      val path    = baseURI.pathSegments.init.map(_.v) :+ "conf.json"
+      val path    = List("conf.json")
       val uri     = baseURI.port.fold(
         Uri.unsafeApply(baseURI.scheme, baseURI.host, path)
       )(port => Uri.unsafeApply(baseURI.scheme, baseURI.host, port, path))

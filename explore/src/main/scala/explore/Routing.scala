@@ -46,6 +46,9 @@ object Routing {
   private def randomId[Id](fromLong: Long => Either[String, Id]): Id =
     fromLong(Random.nextLong().abs.toLong).toOption.get
 
+  private def targetTab(model: View[RootModel]): TargetTabContents =
+    TargetTabContents(model.zoom(RootModel.focused), model.zoom(RootModel.expandedTargetIds))
+
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
@@ -61,15 +64,9 @@ object Routing {
         | dynamicRouteCT(("/obs" / long).pmapL(obsPage)) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
-        | staticRoute("/targets", TargetsBasePage) ~> renderP(view =>
-          TargetTabContents(view.zoom(RootModel.focused))
-        )
-        | dynamicRouteCT(("/target" / long).pmapL(targetPage)) ~> renderP(view =>
-          TargetTabContents(view.zoom(RootModel.focused))
-        )
-        | dynamicRouteCT(("/target/obs" / long).pmapL(targetObsPage)) ~> renderP(view =>
-          TargetTabContents(view.zoom(RootModel.focused))
-        )
+        | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
+        | dynamicRouteCT(("/target" / long).pmapL(targetPage)) ~> renderP(targetTab)
+        | dynamicRouteCT(("/target/obs" / long).pmapL(targetObsPage)) ~> renderP(targetTab)
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))

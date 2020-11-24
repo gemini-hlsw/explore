@@ -5,6 +5,8 @@ package explore.model
 
 import java.time.Duration
 
+import scala.collection.immutable.SortedSet
+
 import clue.StreamingClientStatus
 import explore.data.KeyedIndexedList
 import io.circe.Json
@@ -31,6 +33,7 @@ object reusability {
   implicit val userReuse: Reusability[User]                                                       = Reusability.byEq
   // NOTE This needs to be changed to ignore the token as we don't redraw when the token or exp date changes
   implicit val userVaultReuse: Reusability[UserVault]                                             = Reusability.by(v => (v.token)) //_.user)
+  implicit def sortedSetReuse[A]: Reusability[SortedSet[A]]                                       = Reusability.by_==
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
   implicit def sizeReuse: Reusability[Size]                                                       = Reusability.by(x => (x.height, x.width))
   implicit def focusedReuse: Reusability[Focused]                                                 = Reusability.derive

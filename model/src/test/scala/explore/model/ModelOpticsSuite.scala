@@ -15,6 +15,9 @@ import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbApparentRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import org.scalacheck.Arbitrary._
+import coulomb.accepted.Percent
+import coulomb.cats.implicits._
+import coulomb.scalacheck.ArbQuantity._
 
 class ModelOpticsSuite
     extends DisciplineSuite
@@ -30,4 +33,6 @@ class ModelOpticsSuite
   checkAll("targetRA", LensTests(ModelOptics.targetRA))
   checkAll("targetDec", LensTests(ModelOptics.targetDec))
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalISO))
+
+  checkAll("coulombIso", IsoTests(coulombIso[Int, Percent]))
 }

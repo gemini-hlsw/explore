@@ -10,8 +10,11 @@ import cats.effect.ContextShift
 import cats.effect.Timer
 import cats.syntax.all._
 import clue._
+import crystal.ViewF
+import coulomb.Quantity
 import explore.GraphQLSchemas._
 import explore.model.AppContext
+import explore.optics._
 import io.chrisdavenport.log4cats.Logger
 import shapeless._
 
@@ -52,4 +55,8 @@ object implicits extends ShorthandTypes with ListImplicits {
     ctx: AppContext[F]
   ): GraphQLStreamingClient[F, ObservationDB] =
     ctx.clients.odb
+
+  implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
+    def stripQuantity: ViewF[F, N] = self.as(coulombIso[N, U])
+  }
 }

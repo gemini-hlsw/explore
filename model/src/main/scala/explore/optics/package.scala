@@ -139,4 +139,8 @@ package object optics {
         .filter(_.abs <= SpeedOfLight.to[BigDecimal, KilometersPerSecond].value)
         .flatMap(v => RadialVelocity(v.withUnit[KilometersPerSecond]))
     )(rv => rv.rv.toUnit[KilometersPerSecond].value)
+
+  // Iso for coulumb quantities
+  def coulombIso[N, U] = Iso[Quantity[N, U], N](_.value)(_.withUnit[U])
+
 }

@@ -8,6 +8,7 @@ import cats.implicits._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -37,7 +38,7 @@ object RVInput {
   type Props = RVInput
 
   sealed trait RVView extends Product with Serializable {
-    def tag: String
+    def tag: NonEmptyString
   }
 
   object RVView {
@@ -54,7 +55,7 @@ object RVInput {
     implicit val rvViewEnumeration: Enumerated[RVView] =
       Enumerated.of(RV, Z, CZ)
 
-    implicit val rvDisplay: Display[RVView] = Display.by(_.tag, _.tag)
+    implicit val rvDisplay: Display[RVView] = Display.by(_.tag.value, _.tag.value)
 
   }
 
@@ -97,7 +98,7 @@ object RVInput {
           case RVView.Z  =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag,
+              label = state.rvView.tag.value,
               value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
@@ -108,7 +109,7 @@ object RVInput {
           case RVView.CZ =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag,
+              label = state.rvView.tag.value,
               value = props.value.zoom(rvToARVGet)(rvToARVMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
@@ -119,7 +120,7 @@ object RVInput {
           case RVView.RV =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag,
+              label = state.rvView.tag.value,
               value = props.value,
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
@@ -133,7 +134,7 @@ object RVInput {
             ExploreStyles.FlexContainer |+| ExploreStyles.Grow(1),
             EnumViewSelect[IO, RVView](id = "view",
                                        value = rvView,
-                                       label = state.rvView.tag,
+                                       label = state.rvView.tag.value,
                                        disabled = props.disabled.get
             ),
             input
