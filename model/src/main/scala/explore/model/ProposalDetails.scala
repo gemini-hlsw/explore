@@ -4,41 +4,42 @@
 package explore.model
 
 import cats._
-import coulomb._
-import coulomb.accepted.Percent
-import coulomb.time.Hour
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Interval
-import eu.timepit.refined.types.numeric.NonNegDouble
 import explore.model.enum._
+import explore.model.refined._
 import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser
 import monocle.macros.Lenses
 
 @Lenses
 final case class ProposalDetails(
-  title:          String,
-  pi:             StandardUser,
-  proposalClass:  ProposalClass,
-  category:       Option[TacCategory],
-  toOActivation:  ToOActivation,
-  keywords:       Set[Keyword],
-  abstrakt:       String,
-  partnerSplits:  List[PartnerSplit],
-  band1And2Hours: ProposalDetails.NonNegHour,
-  band3Hours:     ProposalDetails.NonNegHour
+  title:         String,
+  pi:            StandardUser,
+  proposalClass: ProposalClass,
+  category:      Option[TacCategory],
+  toOActivation: ToOActivation,
+  keywords:      Set[Keyword],
+  abstrakt:      String,
+  partnerSplits: List[PartnerSplit],
+  // The 2 times represent "Band 1&2" and "Band 3" for queue
+  // proposals and "First Semester" and "Total" for Large
+  // proposals and Subaru Intensive proposals. Other proposal
+  // classes only have one time. For now I am reusing the fields
+  // as needed. This could shake out differently in the final model
+  // depending things such as how the times are calculated from
+  // the observations.
+  requestTime1:  NonNegHour,
+  requestTime2:  NonNegHour,
+  minimumPct1:   IntPercent,
+  minimumPct2:   IntPercent
 )
 
 object ProposalDetails {
-  type NonNegHour = Quantity[NonNegDouble, Hour]
   implicit val equalProposalDetails: Eq[ProposalDetails] = Eq.fromUniversalEquals
 }
 
 @Lenses
-final case class PartnerSplit(partner: Partner, percent: PartnerSplit.IntPercent)
+final case class PartnerSplit(partner: Partner, percent: IntPercent)
 
 object PartnerSplit {
-  type ZeroTo100  = Interval.Closed[0, 100]
-  type IntPercent = Quantity[Int Refined ZeroTo100, Percent]
   implicit val equalPartnerSplit: Eq[PartnerSplit] = Eq.fromUniversalEquals
 }
