@@ -94,6 +94,12 @@ object TargetQueries {
   val baseCoordinates: Lens[TargetResult, Coordinates] =
     TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
 
+  val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
+    baseCoordinates ^|-> Coordinates.rightAscension
+
+  val baseCoordinatesDec: Lens[TargetResult, Declination] =
+    baseCoordinates ^|-> Coordinates.declination
+
   /**
    * Lens to the name of a sidereal target
    */

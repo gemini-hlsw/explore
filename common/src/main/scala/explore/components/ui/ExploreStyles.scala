@@ -133,7 +133,6 @@ object ExploreStyles {
   val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")
   val SearchForm: Css           = Css("target-search-form")
-  val CoordinatesForm: Css      = Css("target-coordinates-form")
   val TargetPropertiesForm: Css = Css("target-properties-form")
   val CatalogueForm: Css        = Css("catalogue-form")
 
