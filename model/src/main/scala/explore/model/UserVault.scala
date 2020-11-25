@@ -11,12 +11,14 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.model.User
 import monocle.macros.Lenses
+import sttp.model.Uri
 
 import io.chrisdavenport.cats.time.instances.instant._
 
 @Lenses
-final case class UserVault(user: User, expiration: Instant, token: NonEmptyString)
+final case class UserVault(user: User, ssoURI: Uri, expiration: Instant, token: NonEmptyString)
 
 object UserVault {
-  implicit val eqUserVault: Eq[UserVault] = Eq.by(x => (x.user, x.expiration, x.token))
+  implicit val eqUserVault: Eq[UserVault] =
+    Eq.by(x => (x.user, x.ssoURI.toString, x.expiration, x.token))
 }
