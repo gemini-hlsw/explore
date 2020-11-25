@@ -37,8 +37,10 @@ object JwtOrcidProfile {
 object SSOClient {
   type FromFuture[F[_], A] = F[Future[A]] => F[A]
 
+  val ReadTimeout: FiniteDuration = 2.seconds
+
   // time before expiration to renew
-  val refreshTimoutDelta: FiniteDuration = 10.seconds
+  val RefreshTimoutDelta: FiniteDuration = 10.seconds
 
   // Does a client side redirect to the sso site
   def redirectToLogin[F[_]: Sync](ssoURI: Uri): F[Unit] =
@@ -84,7 +86,7 @@ object SSOClient {
           .post(
             uri"$ssoURI/api/v1/auth-as-guest"
           )
-          .readTimeout(2.seconds)
+          .readTimeout(ReadTimeout)
           .send(backend)
       )
 
@@ -119,7 +121,7 @@ object SSOClient {
           .post(
             uri"$ssoURI/api/v1/refresh-token"
           )
-          .readTimeout(5.seconds)
+          .readTimeout(ReadTimeout)
           .send(backend)
       )
 
@@ -150,12 +152,32 @@ object SSOClient {
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[UserVault] =
     Sync[F].delay(Instant.now).flatMap { n =>
-      val sleepTime = refreshTimoutDelta.max(
-        (n.until(expiration, ChronoUnit.SECONDS).seconds - refreshTimoutDelta)
+      val sleepTime = RefreshTimoutDelta.max(
+        (n.until(expiration, ChronoUnit.SECONDS).seconds - RefreshTimoutDelta)
       )
       Timer[F].sleep(sleepTime / 10)
-    } *> SSOClient
+    } *> Logger[F].info("refresh") *> SSOClient
       .vault[F](ssoURI, fromFuture)
       .flatTap(mod)
 
+  def logout[F[_]: ConcurrentEffect: Logger](
+    ssoURI:     Uri,
+    fromFuture: FromFuture[F, Response[Either[String, String]]]
+  ): F[Unit] = {
+    val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
+    val httpCall =
+      Sync[F].delay(
+        basicRequest
+          .post(
+            uri"$ssoURI/api/v1/logout"
+          )
+          .readTimeout(ReadTimeout)
+          .send(backend)
+      )
+
+    fromFuture(httpCall) *>
+      Sync[F].delay(
+        window.location.reload()
+      ) // Let's just reload rather than trying to reset the state
+  }
 }
