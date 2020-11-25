@@ -28,7 +28,7 @@ import scalajs.js
 import scalajs.js.annotation._
 import react.semanticui.sizes.Big
 
-final case class UserSelectionForm[F[_]: FlatMap: Effect](
+final case class UserSelectionForm[F[_]: Effect](
   complete:   Deferred[F, UserVault],
   fromFuture: FromFuture[F, Response[Either[String, String]]]
 ) extends ReactProps[UserSelectionForm[Any]](UserSelectionForm.component) {

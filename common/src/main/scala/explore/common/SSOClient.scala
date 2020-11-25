@@ -63,7 +63,7 @@ object SSOClient {
       v <- d.get
     } yield v
 
-  def guestUI[F[_]: Sync: Effect](
+  def guestUI[F[_]: Effect](
     result:     Deferred[F, UserVault],
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[Unit] = UserSelectionForm.launch[F](result, fromFuture).void
