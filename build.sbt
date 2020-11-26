@@ -122,8 +122,7 @@ lazy val common = project
       "loglevel" -> "1.6.8"
     ),
     libraryDependencies ++=
-      Sttp.value ++
-        LucumaSSO.value ++
+      LucumaSSO.value ++
         ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoPackage := "explore"
@@ -193,8 +192,7 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value ++
-        ReactSizeMe.value ++
-        Sttp.value
+        ReactSizeMe.value
   )
   .dependsOn(constraints, targeteditor, observationtree, proposal)
 
@@ -304,6 +302,7 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
+      Sttp.value ++
       Clue.value ++
       List("edu.gemini" %% "clue-macro" % Settings.LibraryVersions.clue) ++
       In(Test)(

@@ -12,7 +12,7 @@ import io.circe._
 import io.circe.generic.semiauto._
 import sttp.model.Uri
 
-case class AppConfig(environment: ExecutionEnvironment, exploreDBURI: Uri, odbURI: Uri)
+case class AppConfig(environment: ExecutionEnvironment, exploreDBURI: Uri, odbURI: Uri, ssoURI: Uri)
 
 object AppConfig {
   implicit val eqAppConfig: Eq[AppConfig]     = Eq.fromUniversalEquals

@@ -27,13 +27,15 @@ import react.semanticui.elements.image.Image
 import scalajs.js
 import scalajs.js.annotation._
 import react.semanticui.sizes.Big
+import sttp.model.Uri
 
 final case class UserSelectionForm[F[_]: Effect](
+  ssoURI:     Uri,
   complete:   Deferred[F, UserVault],
   fromFuture: FromFuture[F, Response[Either[String, String]]]
 ) extends ReactProps[UserSelectionForm[Any]](UserSelectionForm.component) {
-  def guest: Callback = SSOClient.guest(fromFuture).flatMap(complete.complete(_)).runAsyncCB
-  def login: Callback = SSOClient.redirectToLogin[F].runAsyncCB
+  def guest: Callback = SSOClient.guest(ssoURI, fromFuture).flatMap(complete.complete(_)).runAsyncCB
+  def login: Callback = SSOClient.redirectToLogin[F](ssoURI).runAsyncCB
 }
 
 object UserSelectionForm {
@@ -84,6 +86,7 @@ object UserSelectionForm {
       .build
 
   def launch[F[_]: Sync: Effect: FlatMap](
+    ssoURI:     Uri,
     d:          Deferred[F, UserVault],
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[Unit] = Sync[F].delay {
@@ -94,7 +97,7 @@ object UserSelectionForm {
       elem
     }
 
-    UserSelectionForm(d, fromFuture).renderIntoDOM(container)
+    UserSelectionForm(ssoURI, d, fromFuture).renderIntoDOM(container)
     ()
 
   }

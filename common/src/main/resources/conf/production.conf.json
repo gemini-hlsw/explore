@@ -1,5 +1,6 @@
 {
   "environment": "PRODUCTION",
   "odbURI": "wss://lucuma-odb.herokuapp.com/ws",
-  "exploreDBURI": "wss://explore-hasura.herokuapp.com/v1/graphql"
+  "exploreDBURI": "wss://explore-hasura.herokuapp.com/v1/graphql",
+  "ssoURI": "https://sso.gpp.gemini.edu"
 }

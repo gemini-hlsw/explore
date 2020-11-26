@@ -55,7 +55,8 @@ object TopBar {
               Dropdown(item = true, simple = true, icon = Icons.UserCircle)(
                 DropdownMenu(
                   DropdownItem(text = "Login/Register",
-                               onClick = SSOClient.redirectToLogin[IO].runAsyncCB
+                               onClick =
+                                 SSOClient.redirectToLogin[IO](p.vault.get.ssoURI).runAsyncCB
                   )
                 )
               )

@@ -47,7 +47,7 @@ const Web = Merge(
         rewrites: [
           { from: /^\/conf.json$/, to: '/conf/development.conf.json' },
         ]
-      },
+      }
     },
     plugins: [
       // Needed to enable HMR

@@ -14,17 +14,21 @@ import org.scalacheck.Cogen._
 import eu.timepit.refined.types.string.NonEmptyString
 import java.time.Instant
 import lucuma.core.model.User
+import sttp.model._
+import sttp.client3._
 
 trait ArbUserVault {
   import ArbUser._
   import ArbTime._
+  // let's use a fixed value it doesn't matter for the test and there are no arbitrary instances for Uri
+  val host: Uri = uri"https://localhost"
 
   implicit val userVaultArb = Arbitrary[UserVault] {
     for {
       user  <- arbitrary[User]
       exp   <- arbitrary[Instant]
       token <- arbitrary[NonEmptyString]
-    } yield UserVault(user, exp, token)
+    } yield UserVault(user, host, exp, token)
   }
 
   implicit def userVaultCogen: Cogen[UserVault] =

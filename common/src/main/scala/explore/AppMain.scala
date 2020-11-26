@@ -73,10 +73,10 @@ trait AppMain extends IOApp {
         }
       }
 
-    def repeatTokenRefresh(expiration: Instant, v: View[UserVault]): IO[Unit] =
+    def repeatTokenRefresh(ssoURI: Uri, expiration: Instant, v: View[UserVault]): IO[Unit] =
       SSOClient
-        .refreshToken[IO](IO.fromFuture, expiration, v.set)
-        .flatMap(u => repeatTokenRefresh(u.expiration, v))
+        .refreshToken[IO](ssoURI, expiration, v.set, IO.fromFuture)
+        .flatMap(u => repeatTokenRefresh(ssoURI, u.expiration, v))
 
     val fetchConfig: IO[AppConfig] = {
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
@@ -110,9 +110,9 @@ trait AppMain extends IOApp {
     }
     for {
       _         <- setupScheme
-      vault     <- SSOClient.vault[IO](IO.fromFuture)
-      _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
+      vault     <- SSOClient.vault[IO](appConfig.ssoURI, IO.fromFuture)
+      _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig)
       _         <- AppCtx.initIn[IO](ctx)
@@ -120,8 +120,8 @@ trait AppMain extends IOApp {
       val RootComponent =
         AppRoot[IO](initialModel(vault))(
           rootComponent,
-          onMount =
-            (v: View[RootModel]) => repeatTokenRefresh(vault.expiration, v.zoom(RootModel.vault)),
+          onMount = (v: View[RootModel]) =>
+            repeatTokenRefresh(appConfig.ssoURI, vault.expiration, v.zoom(RootModel.vault)),
           onUnmount = (_: RootModel) => ctx.cleanup()
         )
 
