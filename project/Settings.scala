@@ -6,14 +6,14 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats              = "2.2.0"
+    val cats              = "2.3.0"
     val catsEffect        = "2.2.0"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
     val clue              = "0.3.4"
     val crystal           = "0.9.0"
     val discipline        = "1.1.2"
-    val disciplineMUnit   = "1.0.2"
+    val disciplineMUnit   = "1.0.3"
     val geminiLocales     = "0.5.0"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.1"
@@ -23,7 +23,7 @@ object Settings {
     val lucumaSSO         = "0.0.8"
     val monocle           = "2.1.0"
     val mouse             = "0.25"
-    val mUnit             = "0.7.18"
+    val mUnit             = "0.7.19"
     val reactAladin       = "0.3.0"
     val reactAtlasKitTree = "0.3.0"
     val reactCommon       = "0.11.1"
@@ -33,7 +33,7 @@ object Settings {
     val reactResizable    = "0.4.1"
     val reactSemanticUI   = "0.10.0"
     val reactSizeMe       = "0.6.1"
-    val scalaJsReact      = "1.7.6"
+    val scalaJsReact      = "1.7.7"
     val sttp              = "3.0.0-RC10"
   }
 

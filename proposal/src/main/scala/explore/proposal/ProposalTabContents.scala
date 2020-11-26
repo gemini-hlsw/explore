@@ -6,6 +6,7 @@ package explore.proposal
 import java.net.URI
 
 import cats.effect._
+import coulomb.accepted.Percent
 import coulomb.refined._
 import coulomb.time._
 import crystal.Ready
@@ -17,6 +18,7 @@ import explore.components.WIP
 import explore.implicits._
 import explore.model._
 import explore.model.enum._
+import explore.model.refined._
 import explore.model.reusability._
 import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react._
@@ -42,8 +44,10 @@ object ProposalTabContents {
       Set.empty,
       "",
       List.empty,
+      7.5.withRefinedUnit[NonNegative, Hour],
       24.2.withRefinedUnit[NonNegative, Hour],
-      7.5.withRefinedUnit[NonNegative, Hour]
+      80.withRefinedUnit[ZeroTo100, Percent],
+      80.withRefinedUnit[ZeroTo100, Percent]
     )
 
     def render() =

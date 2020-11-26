@@ -14,6 +14,26 @@ object ExploreStyles {
   val TileTitle: Css = Css("explore-tile-title")
   val TileBody: Css  = Css("explore-tile-body")
 
+  val TextInForm: Css = Css("explore-text-in-form")
+
+  val FlexContainer: Css = Css("explore-flex-container")
+  val FlexWrap: Css      = Css("explore-flex-wrap")
+
+  def FlexGrow(i:   Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-grow-$i")
+  def FlexShrink(i: Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-shrink-$i")
+
+  // Move an element to the end of the flex container
+  val FlexEnd: Css = Css("explore-flex-end")
+
+  def Grow(i:       Int Refined Interval.Closed[1, 4]): Css  = Css(s"explore-grow-$i")
+  def ColumnSpan(i: Int Refined Interval.Closed[1, 16]): Css = Css(s"explore-column-span-$i")
+
+  // Hide a label while keeping it accessible to screen readers
+  val HideLabel: Css = Css("hide-label")
+
+  // Change styles for a readonly input
+  val StaticData: Css = Css("static-data")
+
   // re-evaluate the need/use of this as part of overall
   // styling and layout
   val ProposalTile: Css = Css("proposal-tile")
@@ -84,6 +104,8 @@ object ExploreStyles {
 
   val ProposalDetailsGrid: Css = Css("proposal-details-grid")
 
+  val MinimumPercent: Css = Css("minimum-percent") |+| FlexEnd
+
   val PartnerSplitTotal: Css = Css("partner-split-total")
   val PartnerSplitData: Css  = Css("partner-split-data")
   val PartnerSplitFlag: Css  = Css("partner-split-flag")
@@ -99,26 +121,6 @@ object ExploreStyles {
   val Compact: Css           = Css("explore-compact")
   val ErrorLabel: Css        = Css("explore-error-label")
   val InputErrorTooltip: Css = Css("explore-input-error-tooltip")
-
-  val TextInForm: Css = Css("explore-text-in-form")
-
-  val FlexContainer: Css = Css("explore-flex-container")
-  val FlexWrap: Css      = Css("explore-flex-wrap")
-
-  def FlexGrow(i:   Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-grow-$i")
-  def FlexShrink(i: Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-shrink-$i")
-
-  // Move an element to the end of the flex container
-  val FlexEnd: Css = Css("explore-flex-end")
-
-  def Grow(i:       Int Refined Interval.Closed[1, 4]): Css  = Css(s"explore-grow-$i")
-  def ColumnSpan(i: Int Refined Interval.Closed[1, 16]): Css = Css(s"explore-column-span-$i")
-
-  // Hide a label while keeping it accessible to screen readers
-  val HideLabel: Css = Css("hide-label")
-
-  // Change styles for a readonly input
-  val StaticData: Css = Css("static-data")
 
   // Clue websocket connection status
   val ConnectionOK: Css      = Css("connection-ok")
