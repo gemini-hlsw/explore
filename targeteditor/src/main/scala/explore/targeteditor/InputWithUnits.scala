@@ -15,6 +15,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.ExternalValue
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.semanticui.elements.label.LabelPointing
@@ -22,6 +23,7 @@ import react.semanticui.elements.label.LabelPointing
 final case class InputWithUnits[F[_]: Effect, A](
   value:           ViewF[F, A],
   validFormat:     ValidFormatInput[A],
+  changeAuditor:   ChangeAuditor[A],
   id:              NonEmptyString,
   label:           String,
   units:           String,
@@ -45,6 +47,7 @@ object InputWithUnits {
             label = p.label,
             value = p.value,
             validFormat = p.validFormat,
+            changeAuditor = p.changeAuditor,
             clazz = ExploreStyles.Grow(1),
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,

@@ -134,7 +134,7 @@ object ExploreStyles {
   val TargetAladinCell: Css     = Css("target-aladin-cell")
   val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")
-  val CoordinatesForm: Css      = Css("target-coordinates-form")
+  val SearchForm: Css           = Css("target-search-form")
   val TargetPropertiesForm: Css = Css("target-properties-form")
   val CatalogueForm: Css        = Css("catalogue-form")
 
