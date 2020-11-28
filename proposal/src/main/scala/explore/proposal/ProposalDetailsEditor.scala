@@ -14,12 +14,12 @@ import explore._
 import explore.components.FormStaticData
 import explore.components.Tile
 import explore.components.ui._
-import explore.model.enum.ProposalClass._
-import explore.model.refined._
+import explore.implicits.CoulombViewOps
 import explore.model._
 import explore.model.display._
+import explore.model.enum.ProposalClass._
+import explore.model.refined._
 import explore.model.reusability._
-import explore.implicits.CoulombViewOps
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._

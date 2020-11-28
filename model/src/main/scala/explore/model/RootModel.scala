@@ -3,6 +3,8 @@
 
 package explore.model
 
+import java.time.Instant
+
 import scala.collection.immutable.SortedSet
 
 import cats.Order._
@@ -13,7 +15,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.Target.Id._
 import monocle.Lens
 import monocle.macros.Lenses
-import java.time.Instant
 
 @Lenses
 case class RootModel(

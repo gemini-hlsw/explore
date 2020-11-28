@@ -123,6 +123,7 @@ lazy val common = project
     ),
     libraryDependencies ++=
       LucumaSSO.value ++
+        LucumaBC.value ++
         ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoPackage := "explore"

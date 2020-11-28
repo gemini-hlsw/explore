@@ -3,6 +3,8 @@
 
 package explore.common
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 
 import scala.concurrent.Future
@@ -13,7 +15,9 @@ import cats.effect.concurrent.Deferred
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
+import explore.components.UserSelectionForm
 import explore.model.UserVault
+import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.parser._
@@ -22,10 +26,6 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import sttp.client3._
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import explore.components.UserSelectionForm
-import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
@@ -156,7 +156,7 @@ object SSOClient {
         (n.until(expiration, ChronoUnit.SECONDS).seconds - RefreshTimoutDelta)
       )
       Timer[F].sleep(sleepTime / 10)
-    } *> Logger[F].info("refresh") *> SSOClient
+    } *> SSOClient
       .vault[F](ssoURI, fromFuture)
       .flatTap(mod)
 
@@ -175,9 +175,6 @@ object SSOClient {
           .send(backend)
       )
 
-    fromFuture(httpCall) *>
-      Sync[F].delay(
-        window.location.reload()
-      ) // Let's just reload rather than trying to reset the state
+    fromFuture(httpCall).void
   }
 }

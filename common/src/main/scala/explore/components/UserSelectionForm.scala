@@ -3,31 +3,32 @@
 
 package explore.components
 
+import cats.FlatMap
+import cats.effect.Effect
+import cats.effect.Sync
+import cats.effect.concurrent.Deferred
+import cats.implicits._
+import crystal.react.implicits._
+import explore.Icons
+import explore.common.SSOClient
+import explore.common.SSOClient.FromFuture
+import explore.components.ui.ExploreStyles
+import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import cats.implicits._
-import cats.effect.concurrent.Deferred
-import explore.model.UserVault
-import react.semanticui.elements.button.Button
 import org.scalajs.dom
-import cats.effect.Sync
-import explore.common.SSOClient.FromFuture
-import explore.common.SSOClient
-import crystal.react.implicits._
-import cats.effect.Effect
-import sttp.client3.Response
-import cats.FlatMap
-import react.semanticui.modules.modal.Modal
-import react.semanticui.modules.modal.ModalSize
-import react.semanticui.modules.modal.ModalContent
-import explore.components.ui.ExploreStyles
-import explore.Icons
+import react.common._
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.image.Image
+import react.semanticui.modules.modal.Modal
+import react.semanticui.modules.modal.ModalContent
+import react.semanticui.modules.modal.ModalSize
+import react.semanticui.sizes.Big
+import sttp.client3.Response
+import sttp.model.Uri
+
 import scalajs.js
 import scalajs.js.annotation._
-import react.semanticui.sizes.Big
-import sttp.model.Uri
 
 final case class UserSelectionForm[F[_]: Effect](
   ssoURI:     Uri,
