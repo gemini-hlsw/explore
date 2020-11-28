@@ -43,7 +43,9 @@ object TopBar {
               IO(
                 appCtx.bc.postMessage(ExploreEvent.Logout)
               ).attempt *>
-              IO( window.location.reload()) // Let's just reload rather than trying to reset the state
+              IO(
+                window.location.reload()
+              ) // Let's just reload rather than trying to reset the state
 
           <.div(
             ExploreStyles.MainHeader,

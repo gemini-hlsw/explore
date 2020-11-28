@@ -47,7 +47,7 @@ case class AppContext[F[_]](
   val logger: Logger[F]
 ) {
   val bc: BroadcastChannel[ExploreEvent] = bcc.bc
-  def cleanup(): F[Unit]                     =
+  def cleanup(): F[Unit]                 =
     clients.close() *> bcc.close()
 }
 
