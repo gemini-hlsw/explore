@@ -3,7 +3,7 @@
 
 package explore.model
 
-import cats.implicits._
+import cats.syntax.all._
 import coulomb._
 import explore.model.enum._
 import io.circe.Decoder
