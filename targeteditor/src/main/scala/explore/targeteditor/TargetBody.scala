@@ -25,18 +25,17 @@ import explore.target.TargetQueries
 import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Epoch
-import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion
-import lucuma.core.math.RadialVelocity
+import lucuma.core.math._
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
+import react.common.implicits._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes.Small
 
@@ -69,14 +68,6 @@ object TargetBody {
   implicit val stateReuse = Reusability.derive[State]
 
   class Backend($ : BackendScope[Props, State]) {
-    // Create a mutable reference
-    private val aladinRef = Ref.toScalaComponent(AladinRef)
-
-    val gotoRaDec = (coords: Coordinates) =>
-      aladinRef.get
-        .flatMapCB(_.backend.gotoRaDec(coords))
-        .toCallback
-
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
         val target    = props.target.get
@@ -96,6 +87,16 @@ object TargetBody {
             //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
             //      ))
             }
+          ) _
+
+          val modifyCoordsRa = undoSet[RightAscension](
+            TargetQueries.baseCoordinatesRa,
+            r => TargetQueries.UpdateSiderealTracking.ra(r.some)
+          ) _
+
+          val modifyCoordsDec = undoSet[Declination](
+            TargetQueries.baseCoordinatesDec,
+            d => TargetQueries.UpdateSiderealTracking.dec(d.some)
           ) _
 
           val modifyName = undoSet[NonEmptyString](
@@ -134,81 +135,111 @@ object TargetBody {
             TargetQueries.UpdateSiderealTracking.radialVelocity
           ) _
 
-          val searchAndSet: SearchCallback => Callback = s =>
-            SimbadSearch
-              .search(s.searchTerm)
-              .attempt
-              .runAsyncAndThenCB {
-                case Right(r @ Some(Target(n, Right(st), m))) =>
-                  modify((n, st, m.values.toList)).runAsyncCB *>
-                    gotoRaDec(st.baseCoordinates) *> s.onComplete(r)
-                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
-                case Right(None)                              => s.onComplete(none)
-                case Left(t)                                  => s.onError(t)
-              }
+          val searchAndSet: SearchCallback => Callback =
+            s =>
+              SimbadSearch
+                .search(s.searchTerm)
+                .attempt
+                .runAsyncAndThenCB {
+                  case Right(r @ Some(Target(n, Right(st), m))) =>
+                    modify((n, st, m.values.toList)).runAsyncCB *> s.onComplete(r)
+                  case Right(Some(r))                           =>
+                    Callback.log(s"Unknown target type $r") *> s.onComplete(none)
+                  case Right(None)                              => s.onComplete(none)
+                  case Left(t)                                  => s.onError(t)
+                }
 
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
-                CoordinatesForm(
+                SearchForm(
                   props.target.zoom(TargetQueries.unsafeTargetName).withOnMod(modifyName),
-                  props.target.zoom(TargetResult.tracking),
                   stateView,
-                  searchAndSet,
-                  gotoRaDec
+                  searchAndSet
                 ),
                 Form(size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
-                  ExploreStyles.TargetPropertiesForm,
-                  InputWithUnits(
-                    props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
-                    ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
-                    id = "epoch",
-                    label = "Epoch",
-                    units = "years",
-                    disabled = stateView
+                  <.div(
+                    ExploreStyles.FlexContainer,
+                    ExploreStyles.TargetRaDecMinWidth,
+                    FormInputEV(
+                      id = "ra",
+                      value = props.target
+                        .zoom(TargetQueries.baseCoordinatesRa)
+                        .withOnMod(modifyCoordsRa),
+                      validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
+                      changeAuditor = ChangeAuditor.rightAscension,
+                      label = "RA",
+                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                      disabled = stateView.get
+                    ),
+                    FormInputEV(
+                      id = "dec",
+                      value = props.target
+                        .zoom(TargetQueries.baseCoordinatesDec)
+                        .withOnMod(modifyCoordsDec),
+                      validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
+                      changeAuditor = ChangeAuditor.declination,
+                      label = "Dec",
+                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                      disabled = stateView.get
+                    )
                   ),
-                  InputWithUnits(
-                    props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
-                    ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
-                    id = "raPM",
-                    label = "µ RA",
-                    units = "mas/y",
-                    disabled = stateView
-                  ),
-                  InputWithUnits(
-                    props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
-                    ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
-                    id = "raDec",
-                    label = "µ Dec",
-                    units = "mas/y",
-                    disabled = stateView
-                  ),
-                  InputWithUnits[cats.effect.IO, Option[Parallax]](
-                    props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
-                    ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
-                    id = "parallax",
-                    label = "Parallax",
-                    units = "mas",
-                    disabled = stateView
-                  ),
-                  RVInput(
-                    props.target.zoom(TargetQueries.rvLens).withOnMod(modifyRadialVelocity),
-                    stateView
+                  <.div(
+                    ExploreStyles.Grid,
+                    ExploreStyles.Compact,
+                    ExploreStyles.TargetPropertiesForm,
+                    InputWithUnits(
+                      props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
+                      ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
+                      ChangeAuditor.fromFormat(Epoch.fromStringNoScheme).decimal(3),
+                      id = "epoch",
+                      label = "Epoch",
+                      units = "years",
+                      disabled = stateView
+                    ),
+                    InputWithUnits(
+                      props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
+                      ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                      ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                      id = "raPM",
+                      label = "µ RA",
+                      units = "mas/y",
+                      disabled = stateView
+                    ),
+                    InputWithUnits(
+                      props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
+                      ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                      ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                      id = "raDec",
+                      label = "µ Dec",
+                      units = "mas/y",
+                      disabled = stateView
+                    ),
+                    InputWithUnits[cats.effect.IO, Option[Parallax]](
+                      props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
+                      ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                      ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                      id = "parallax",
+                      label = "Parallax",
+                      units = "mas",
+                      disabled = stateView
+                    ),
+                    RVInput(
+                      props.target.zoom(TargetQueries.rvLens).withOnMod(modifyRadialVelocity),
+                      stateView
+                    )
                   )
                 ),
                 MagnitudeForm(target.magnitudes).when(false),
                 UndoButtons(target, undoCtx)
               ),
-              AladinRef
-                .withRef(aladinRef) {
-                  AladinCell(
-                    props.target.zoom(TargetQueries.baseCoordinates),
-                    props.options
-                  )
-                },
+              AladinCell(
+                props.target.zoom(TargetQueries.baseCoordinates),
+                props.options
+              ),
               CataloguesForm(props.options).when(false)
             ),
             <.div(
@@ -220,11 +251,6 @@ object TargetBody {
           )
         }
       }
-
-    def newProps(currentProps: Props, nextProps: Props): Callback =
-      gotoRaDec(nextProps.baseCoordinates)
-        .when(nextProps.baseCoordinates =!= currentProps.baseCoordinates)
-        .void
   }
 
   val component =
@@ -232,7 +258,6 @@ object TargetBody {
       .builder[Props]
       .initialState(State(false))
       .renderBackend[Backend]
-      .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

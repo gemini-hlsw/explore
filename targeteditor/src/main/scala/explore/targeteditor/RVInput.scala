@@ -4,7 +4,7 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -22,6 +22,7 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -103,6 +104,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
+              changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )
@@ -114,6 +116,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
+              changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )
@@ -125,6 +128,7 @@ object RVInput {
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
+              changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
               disabled = props.disabled.get
             )

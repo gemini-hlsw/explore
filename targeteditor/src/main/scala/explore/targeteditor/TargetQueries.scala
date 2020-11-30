@@ -5,7 +5,7 @@ package explore.target
 
 import cats.Endo
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
@@ -93,6 +93,12 @@ object TargetQueries {
    */
   val baseCoordinates: Lens[TargetResult, Coordinates] =
     TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
+
+  val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
+    baseCoordinates ^|-> Coordinates.rightAscension
+
+  val baseCoordinatesDec: Lens[TargetResult, Declination] =
+    baseCoordinates ^|-> Coordinates.declination
 
   /**
    * Lens to the name of a sidereal target

@@ -7,7 +7,7 @@ import scala.concurrent.duration._
 
 import cats.data.Validated
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2._
 import lucuma.catalog.VoTableParser
