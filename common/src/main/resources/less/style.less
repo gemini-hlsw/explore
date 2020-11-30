@@ -1007,10 +1007,15 @@ img.partner-split-flag {
   }
 }
 
-.explore-input-error-tooltip {
+// position all fields relative so that error labels position properly.
+.ui .field {
   position: relative;
+}
+
+.explore-input-error-tooltip {
+  position: absolute;
   transform: translate(0px, -33px);
-  left: 50%;
+  left: 30%;
   z-index:3;
 }
 

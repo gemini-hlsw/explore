@@ -37,6 +37,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
 final case class SearchCallback(
@@ -173,6 +174,8 @@ object TargetBody {
                       changeAuditor = ChangeAuditor.rightAscension,
                       label = "RA",
                       clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                      errorPointing = LabelPointing.Below,
+                      errorClazz = ExploreStyles.InputErrorTooltip,
                       disabled = stateView.get
                     ),
                     FormInputEV(
@@ -184,6 +187,8 @@ object TargetBody {
                       changeAuditor = ChangeAuditor.declination,
                       label = "Dec",
                       clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                      errorPointing = LabelPointing.Below,
+                      errorClazz = ExploreStyles.InputErrorTooltip,
                       disabled = stateView.get
                     )
                   ),
