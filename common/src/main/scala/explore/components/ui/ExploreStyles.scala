@@ -153,5 +153,7 @@ object ExploreStyles {
   val LoginBoxButton: Css    = Css("explore-login-button")
   val OrcidIcon: Css         = Css("explore-login-orcid-icon")
   val LoginOrcidButton: Css  = Css("explore-login-orcid-button")
+  val OrcidIconMenu: Css     = Css("explore-orcid-icon-menu")
+  val OrcidMenu: Css         = Css("explore-orcid-menu")
 
 }

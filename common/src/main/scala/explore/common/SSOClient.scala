@@ -37,7 +37,7 @@ object JwtOrcidProfile {
 object SSOClient {
   type FromFuture[F[_], A] = F[Future[A]] => F[A]
 
-  val ReadTimeout: FiniteDuration = 2.seconds
+  val ReadTimeout: FiniteDuration = 5.seconds
 
   // time before expiration to renew
   val RefreshTimoutDelta: FiniteDuration = 10.seconds
@@ -46,9 +46,14 @@ object SSOClient {
   def redirectToLogin[F[_]: Sync](ssoURI: Uri): F[Unit] =
     Sync[F].delay {
       val returnUrl = window.location
-      println(ssoURI)
       window.location.href = uri"$ssoURI/auth/v1/stage1?state=$returnUrl".toString
     }
+
+  def switchToORCID[F[_]: ConcurrentEffect: Logger](
+    ssoURI:     Uri,
+    fromFuture: FromFuture[F, Response[Either[String, String]]]
+  ): F[Unit] =
+    logout(ssoURI, fromFuture).attempt *> redirectToLogin(ssoURI)
 
   def vault[F[_]: ConcurrentEffect: Logger](
     ssoURI:     Uri,

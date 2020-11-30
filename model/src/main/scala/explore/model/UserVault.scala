@@ -20,4 +20,5 @@ final case class UserVault(user: User, ssoURI: Uri, expiration: Instant, token: 
 object UserVault {
   implicit val eqUserVault: Eq[UserVault] =
     Eq.by(x => (x.user, x.ssoURI.toString, x.expiration, x.token))
+
 }

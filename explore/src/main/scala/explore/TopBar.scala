@@ -4,6 +4,7 @@
 package explore
 
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.common.SSOClient
 import explore.Icons
@@ -12,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.UserVault
 import explore.model.reusability._
 import explore.utils.ExploreEvent
+import explore.WebpackResources
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
@@ -21,6 +23,8 @@ import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown.DropdownMenu
 import org.scalajs.dom.window
+import lucuma.core.model.GuestRole
+import react.semanticui.elements.image.Image
 
 final case class TopBar(vault: View[UserVault]) extends ReactProps[TopBar](TopBar.component)
 
@@ -37,15 +41,16 @@ object TopBar {
         AppCtx.withCtx { implicit appCtx =>
           implicit val cs     = appCtx.cs
           implicit val logger = appCtx.logger
+          val user            = p.vault.zoom(UserVault.user).get
+          val role            = user.role
 
           def logout: IO[Unit] =
             SSOClient.logout[IO](ssoURI, IO.fromFuture) *>
               IO(
                 appCtx.bc.postMessage(ExploreEvent.Logout)
               ).attempt *>
-              IO(
-                window.location.reload()
-              ) // Let's just reload rather than trying to reset the state
+              // Let's just reload rather than trying to reset the state
+              IO(window.location.reload())
 
           <.div(
             ExploreStyles.MainHeader,
@@ -65,16 +70,23 @@ object TopBar {
                 MenuItem(as = "a", header = true)(
                   <.span(
                     ExploreStyles.LoginMenu,
-                    p.vault.zoom(UserVault.user).get.displayName
+                    user.displayName
                   ),
                   ConnectionsStatus()
                 ),
                 Dropdown(item = true, simple = true, icon = Icons.UserCircle)(
                   DropdownMenu(
-                    DropdownItem(text = "Logout", icon = Icons.Logout, onClick = logout.runAsyncCB),
-                    DropdownItem(text = "Login",
-                                 onClick = SSOClient.redirectToLogin[IO](ssoURI).runAsyncCB
-                    )
+                    DropdownItem(
+                      onClick = SSOClient.switchToORCID[IO](ssoURI, IO.fromFuture).runAsyncCB
+                    )(
+                      <.div(ExploreStyles.OrcidMenu)(
+                        Image(clazz = ExploreStyles.OrcidIconMenu,
+                              src = WebpackResources.OrcidLogo
+                        ),
+                        <.span(^.cls := "text", "Switch to ORCID")
+                      )
+                    ).when(role === GuestRole),
+                    DropdownItem(text = "Logout", icon = Icons.Logout, onClick = logout.runAsyncCB)
                   )
                 )
               )
