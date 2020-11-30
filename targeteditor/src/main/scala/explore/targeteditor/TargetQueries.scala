@@ -5,7 +5,7 @@ package explore.target
 
 import cats.Endo
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
