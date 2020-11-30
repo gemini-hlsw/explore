@@ -3,6 +3,9 @@
 
 package explore
 
+import java.time.Instant
+
+import scala.concurrent.duration._
 import scala.scalajs.js
 
 import cats.effect.ExitCode
@@ -22,9 +25,11 @@ import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.utils.ExploreEvent
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
+import lucuma.broadcastchannel._
 import lucuma.core.data.EnumZipper
 import org.scalajs.dom
 import org.scalajs.dom.experimental.RequestCache
@@ -36,8 +41,6 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
-import java.time.Instant
-import scala.concurrent.duration._
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -108,6 +111,20 @@ trait AppMain extends IOApp {
 
       IO.fromFuture(httpCall).map(_.body)
     }
+
+    def setupLogoutListener(bc: BroadcastChannel[ExploreEvent]): IO[Unit] =
+      IO(bc.onmessage =
+        (x: ExploreEvent) =>
+          // This is coming from the js world, we can't match the type
+          (x.event match {
+            case ExploreEvent.Logout.event =>
+              IO(
+                dom.window.location.reload()
+              ).attempt.void
+            case _                         => IO.unit
+          })
+      )
+
     for {
       _         <- setupScheme
       appConfig <- fetchConfig
@@ -116,6 +133,7 @@ trait AppMain extends IOApp {
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig)
       _         <- AppCtx.initIn[IO](ctx)
+      _         <- setupLogoutListener(ctx.bc)
     } yield {
       val RootComponent =
         AppRoot[IO](initialModel(vault))(

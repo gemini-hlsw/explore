@@ -10,8 +10,8 @@ import cats.effect.ContextShift
 import cats.effect.Timer
 import cats.syntax.all._
 import clue._
-import crystal.ViewF
 import coulomb.Quantity
+import crystal.ViewF
 import explore.GraphQLSchemas._
 import explore.model.AppContext
 import explore.optics._

@@ -3,6 +3,8 @@
 
 package explore.common
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 
 import scala.concurrent.Future
@@ -13,7 +15,9 @@ import cats.effect.concurrent.Deferred
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
+import explore.components.UserSelectionForm
 import explore.model.UserVault
+import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.parser._
@@ -22,10 +26,6 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import sttp.client3._
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import explore.components.UserSelectionForm
-import io.chrisdavenport.log4cats.Logger
 import sttp.model.Uri
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
@@ -37,8 +37,10 @@ object JwtOrcidProfile {
 object SSOClient {
   type FromFuture[F[_], A] = F[Future[A]] => F[A]
 
+  val ReadTimeout: FiniteDuration = 2.seconds
+
   // time before expiration to renew
-  val refreshTimoutDelta: FiniteDuration = 10.seconds
+  val RefreshTimoutDelta: FiniteDuration = 10.seconds
 
   // Does a client side redirect to the sso site
   def redirectToLogin[F[_]: Sync](ssoURI: Uri): F[Unit] =
@@ -84,7 +86,7 @@ object SSOClient {
           .post(
             uri"$ssoURI/api/v1/auth-as-guest"
           )
-          .readTimeout(2.seconds)
+          .readTimeout(ReadTimeout)
           .send(backend)
       )
 
@@ -119,7 +121,7 @@ object SSOClient {
           .post(
             uri"$ssoURI/api/v1/refresh-token"
           )
-          .readTimeout(5.seconds)
+          .readTimeout(ReadTimeout)
           .send(backend)
       )
 
@@ -150,12 +152,29 @@ object SSOClient {
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[UserVault] =
     Sync[F].delay(Instant.now).flatMap { n =>
-      val sleepTime = refreshTimoutDelta.max(
-        (n.until(expiration, ChronoUnit.SECONDS).seconds - refreshTimoutDelta)
+      val sleepTime = RefreshTimoutDelta.max(
+        (n.until(expiration, ChronoUnit.SECONDS).seconds - RefreshTimoutDelta)
       )
       Timer[F].sleep(sleepTime / 10)
     } *> SSOClient
       .vault[F](ssoURI, fromFuture)
       .flatTap(mod)
 
+  def logout[F[_]: ConcurrentEffect: Logger](
+    ssoURI:     Uri,
+    fromFuture: FromFuture[F, Response[Either[String, String]]]
+  ): F[Unit] = {
+    val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
+    val httpCall =
+      Sync[F].delay(
+        basicRequest
+          .post(
+            uri"$ssoURI/api/v1/logout"
+          )
+          .readTimeout(ReadTimeout)
+          .send(backend)
+      )
+
+    fromFuture(httpCall).void
+  }
 }
