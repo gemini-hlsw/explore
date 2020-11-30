@@ -14,6 +14,7 @@ import explore.common.SSOClient
 import explore.common.SSOClient.FromFuture
 import explore.components.ui.ExploreStyles
 import explore.model.UserVault
+import explore.WebpackResources
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
@@ -26,9 +27,6 @@ import react.semanticui.modules.modal.ModalSize
 import react.semanticui.sizes.Big
 import sttp.client3.Response
 import sttp.model.Uri
-
-import scalajs.js
-import scalajs.js.annotation._
 
 final case class UserSelectionForm[F[_]: Effect](
   ssoURI:     Uri,
@@ -45,10 +43,6 @@ object UserSelectionForm {
   // Explicitly never reuse as we don't much care about flushing this one
   implicit def propsReuse[F[_]]: Reusability[UserSelectionForm[F]] = Reusability.never
 
-  @js.native
-  @JSImport("resources/images/ORCID-iD_icon-vector.svg", JSImport.Default)
-  val orcidLogo: String = js.native
-
   val component =
     ScalaComponent
       .builder[Props[Any]]("UserSelectionForm")
@@ -64,10 +58,11 @@ object UserSelectionForm {
                 <.div(ExploreStyles.LoginTitle, "Explore")
               ),
               Button(
-                content = <.div(ExploreStyles.LoginOrcidButton,
-                                Image(clazz = ExploreStyles.OrcidIcon, src = orcidLogo),
-                                "Login with ORCID"
-                ),
+                content =
+                  <.div(ExploreStyles.LoginOrcidButton,
+                        Image(clazz = ExploreStyles.OrcidIcon, src = WebpackResources.OrcidLogo),
+                        "Login with ORCID"
+                  ),
                 clazz = ExploreStyles.LoginBoxButton,
                 size = Big,
                 onClick = p.login
