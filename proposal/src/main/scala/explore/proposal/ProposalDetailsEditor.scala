@@ -181,6 +181,7 @@ object ProposalDetailsEditor {
                     FormButton(
                       icon = Icons.Edit,
                       label = "Partners",
+                      tpe = "button",
                       clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
                       onClick = openPartnerSplitsEditor
                     ),
