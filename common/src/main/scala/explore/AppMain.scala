@@ -119,10 +119,8 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
 
-    val fetchToken: IO[String] = IO("...")
-
-    val connectParameters: IO[Map[String, Json]]            =
-      fetchToken.map(token => Map("Authorization" -> s"Bearer $token".asJson))
+    def connectParameters(vault: UserVault): IO[Map[String, Json]] =
+      Map("Authorization" -> s"Bearer ${vault.token.value}".asJson).pure[IO]
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, event) =>
@@ -153,7 +151,7 @@ trait AppMain extends IOApp {
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy)
-      _         <- ctx.clients.odb.connect(connectParameters)
+      _         <- ctx.clients.odb.connect(connectParameters(vault))
       _         <- AppCtx.initIn[IO](ctx)
       _         <- setupLogoutListener(ctx.bc)
     } yield {
