@@ -4,7 +4,7 @@ import Settings.Libraries._
 
 val reactJS                   = "16.13.1"
 val FUILess                   = "2.8.7"
-lazy val kindProjectorVersion = "0.11.0"
+lazy val kindProjectorVersion = "0.11.2"
 
 parallelExecution in (ThisBuild, Test) := false
 

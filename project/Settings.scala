@@ -23,7 +23,7 @@ object Settings {
     val lucumaSSO         = "0.0.8"
     val lucumaBC          = "0.0.2"
     val monocle           = "2.1.0"
-    val mouse             = "0.25"
+    val mouse             = "0.26"
     val mUnit             = "0.7.19"
     val reactAladin       = "0.3.0"
     val reactAtlasKitTree = "0.3.0"
@@ -35,7 +35,7 @@ object Settings {
     val reactSemanticUI   = "0.10.1"
     val reactSizeMe       = "0.6.2"
     val scalaJsReact      = "1.7.7"
-    val sttp              = "3.0.0-RC10"
+    val sttp              = "3.0.0-RC11"
   }
 
   object Libraries {
