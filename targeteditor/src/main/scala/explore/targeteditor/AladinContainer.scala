@@ -12,7 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
-import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
+import lucuma.svgdotjs.Svg
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
