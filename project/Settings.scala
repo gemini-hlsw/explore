@@ -10,7 +10,7 @@ object Settings {
     val catsEffect        = "2.3.0"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
-    val clue              = "0.4.0"
+    val clue              = "0.4.0+5-e5a4b304+20201203-1853-SNAPSHOT"
     val crystal           = "0.9.1"
     val discipline        = "1.1.2"
     val disciplineMUnit   = "1.0.3"

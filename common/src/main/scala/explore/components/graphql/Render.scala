@@ -9,7 +9,8 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
-import clue.GraphQLStreamingClient
+import clue.GraphQLPersistentStreamingClient
+import clue.GraphQLSubscription
 import clue.StreamingClientStatus
 import crystal.Pot
 import crystal.react.implicits._
@@ -62,12 +63,12 @@ object Render {
   object Subscription {
 
     trait Props[F[_], G[_], D, A] extends Render.Props[F, G, A] {
-      val subscribe: F[GraphQLStreamingClient[F, _]#Subscription[D]]
+      val subscribe: F[GraphQLSubscription[F, D]]
       val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
     }
 
     trait State[F[_], G[_], D, A] extends Render.State[G, A] {
-      val subscription: GraphQLStreamingClient[F, _]#Subscription[D]
+      val subscription: GraphQLSubscription[F, D]
     }
 
     class WillUnmountApplied[F[_], G[_], D, A] {
@@ -88,14 +89,14 @@ object Render {
     trait Props[F[_], G[_], S, D, A] extends Render.Props[F, G, A] {
       val query: F[D]
       val extract: D => A
-      val changeSubscriptions: NonEmptyList[F[GraphQLStreamingClient[F, S]#Subscription[_]]]
+      val changeSubscriptions: NonEmptyList[F[GraphQLSubscription[F, _]]]
 
-      implicit val client: GraphQLStreamingClient[F, S]
+      implicit val client: GraphQLPersistentStreamingClient[F, S]
     }
 
     trait State[F[_], G[_], S, D, A] extends Render.State[G, A] {
       val queue: Queue[F, A]
-      val subscriptions: NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]]
+      val subscriptions: NonEmptyList[GraphQLSubscription[F, _]]
       val cancelConnectionTracker: CancelToken[F]
     }
 
@@ -105,7 +106,7 @@ object Render {
         buildRenderer: (fs2.Stream[F, A], P) => StreamRendererComponent[G, A],
         buildState:    (
           Queue[F, A],
-          NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]],
+          NonEmptyList[GraphQLSubscription[F, _]],
           CancelToken[F],
           StreamRendererComponent[G, A]
         ) => ST
@@ -122,7 +123,7 @@ object Render {
 
         // Once run, this effect will end when all subscriptions end.
         def trackChanges(
-          subscriptions: NonEmptyList[GraphQLStreamingClient[F, _]#Subscription[_]],
+          subscriptions: NonEmptyList[GraphQLSubscription[F, _]],
           queue:         Queue[F, A]
         ): F[Unit] =
           subscriptions
@@ -135,7 +136,7 @@ object Render {
         // Once run, this effect has to be cancelled manually.
         def trackConnection(queue: Queue[F, A]): F[Unit] =
           $.props.client.statusStream.tail // Skip current status. We only want future updates here.
-            .filter(_ === StreamingClientStatus.Open)
+            .filter(_ === StreamingClientStatus.Connected)
             .evalTap(_ => queryAndEnqueue(queue))
             .compile
             .drain

@@ -12,8 +12,8 @@ import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  exploreDB: GraphQLStreamingClient[F, ExploreDB],
-  odb:       GraphQLStreamingClient[F, ObservationDB]
+  exploreDB: GraphQLPersistentStreamingClient[F, ExploreDB],
+  odb:       GraphQLPersistentStreamingClient[F, ObservationDB]
 ) {
   lazy val ExploreDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(exploreDB.statusStream)
@@ -21,8 +21,8 @@ case class Clients[F[_]: ConcurrentEffect: Logger](
   lazy val ODBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
-  def close(): F[Unit] =
-    List(exploreDB.close(), odb.close()).sequence.void
+  def disconnect(): F[Unit] =
+    List(exploreDB.disconnect(), odb.disconnect()).sequence.void
 }
 
 case class Actions[F[_]](
@@ -38,7 +38,7 @@ case class AppContext[F[_]](
   val logger: Logger[F]
 ) {
   def cleanup(): F[Unit] =
-    clients.close()
+    clients.disconnect()
 }
 
 object AppContext {

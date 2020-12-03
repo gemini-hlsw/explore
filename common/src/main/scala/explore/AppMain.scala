@@ -22,6 +22,8 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
+import io.circe.JsonObject
+import io.circe.syntax._
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -106,6 +108,7 @@ trait AppMain extends IOApp {
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig)
+      _         <- ctx.clients.odb.connect(JsonObject("Authorization" -> "Bearer ...".asJson))
       _         <- AppCtx.initIn[IO](ctx)
       _         <- setupScheme
     } yield {

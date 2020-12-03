@@ -11,7 +11,7 @@ import cats.effect.ContextShift
 import cats.effect.IO
 import cats.effect.Timer
 import cats.syntax.all._
-import clue.GraphQLStreamingClient
+import clue.GraphQLSubscription
 import crystal.Pot
 import crystal.ViewF
 import crystal.react._
@@ -26,7 +26,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 final case class SubscriptionRenderMod[D, A](
-  subscribe:         IO[GraphQLStreamingClient[IO, _]#Subscription[D]],
+  subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
   val valueRender:   View[A] => VdomNode,
@@ -49,7 +49,7 @@ object SubscriptionRenderMod {
   }
 
   protected final case class State[F[_], D, A](
-    subscription: GraphQLStreamingClient[F, _]#Subscription[D],
+    subscription: GraphQLSubscription[F, D],
     renderer:     StreamRendererMod.Component[F, A]
   ) extends Render.Subscription.State[F, ViewF[F, *], D, A]
 
