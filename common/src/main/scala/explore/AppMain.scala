@@ -22,7 +22,6 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-import japgolly.scalajs.react.extra.ReusabilityOverlay
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -56,7 +55,7 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
-    ReusabilityOverlay.overrideGloballyInDev()
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
       tabs = EnumZipper.of[AppTab],

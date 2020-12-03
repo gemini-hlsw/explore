@@ -5,11 +5,10 @@ package explore.constraints
 
 import cats.effect.ContextShift
 import cats.effect.IO
-import cats.syntax.all._
 import clue.GraphQLOperation
+import clue.data.syntax._
 import clue.macros.GraphQL
 import crystal.ViewF
-import explore.AppCtx
 import explore.GraphQLSchemas.ExploreDB.Types._
 import explore.GraphQLSchemas._
 import explore.components.graphql.SubscriptionRenderMod
@@ -24,7 +23,6 @@ import explore.model.reusability._
 import explore.undo.Undoer
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Lens
-import monocle.function.Cons.headOption
 import monocle.macros.Lenses
 
 object ConstraintsQueries {
@@ -83,31 +81,32 @@ object ConstraintsQueries {
   }
 
   def iqFields(iq: ImageQuality): ConstraintsSetInput =
-    ConstraintsSetInput(image_quality = iq.some)
+    ConstraintsSetInput(image_quality = iq.assign)
 
   def ccFields(cc: CloudCover): ConstraintsSetInput =
-    ConstraintsSetInput(cloud_cover = cc.some)
+    ConstraintsSetInput(cloud_cover = cc.assign)
 
   def wvFields(wv: WaterVapor): ConstraintsSetInput =
-    ConstraintsSetInput(water_vapor = wv.some)
+    ConstraintsSetInput(water_vapor = wv.assign)
 
   def sbFields(sb: SkyBackground): ConstraintsSetInput =
-    ConstraintsSetInput(sky_background = sb.some)
+    ConstraintsSetInput(sky_background = sb.assign)
 
-  private def mutate(id: Constraints.Id, fields: ConstraintsSetInput): IO[Unit] =
-    AppCtx.flatMap { implicit ctx =>
-      Mutation.execute(id, fields).void
-    }
+  private def mutate(id: Constraints.Id, fields: ConstraintsSetInput): IO[Unit] = ???
+  // AppCtx.flatMap { implicit ctx =>
+  //   Mutation.execute(id, fields).void
+  // }
 
   def ConstraintsSubscription(
     id:     Constraints.Id
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
-    AppCtx.withCtx { implicit appCtx =>
-      SubscriptionRenderMod[Subscription.Data, Constraints](
-        Subscription.subscribe(id),
-        _.map(
-          Subscription.Data.constraints.composeOptional(headOption).getOption _
-        ).unNone
-      )(render)
-    }
+    ???
+  // AppCtx.withCtx { implicit appCtx =>
+  //   SubscriptionRenderMod[Subscription.Data, Constraints](
+  //     Subscription.subscribe(id),
+  //     _.map(
+  //       Subscription.Data.constraints.composeOptional(headOption).getOption _
+  //     ).unNone
+  //   )(render)
+  // }
 }

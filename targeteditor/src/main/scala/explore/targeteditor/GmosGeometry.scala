@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.data.NonEmptyMap
-import lucuma.svgdotjs._
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
@@ -16,6 +15,7 @@ import lucuma.core.geom.syntax.shapeexpression._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
+import lucuma.svgdotjs._
 
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only

@@ -3,9 +3,13 @@
 
 package explore
 
+import java.math.MathContext
+
+import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.SiderealTarget
 import explore.model.enum._
+import lucuma.core.model.Magnitude
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 
@@ -28,6 +32,20 @@ object GraphQLSchemas {
     object Enums {
       type CatalogName     = lucuma.core.enum.CatalogName
       type MagnitudeSystem = lucuma.core.enum.MagnitudeSystem
+      type MagnitudeBand   = lucuma.core.enum.MagnitudeBand
+    }
+
+    object Implicits {
+      import Types._
+
+      implicit class MagnitudeOps(m: Magnitude) {
+        def toInput: MagnitudeInput =
+          MagnitudeInput(m.value.toDoubleValue,
+                         m.band,
+                         m.error.map(_.toRational.toBigDecimal(MathContext.UNLIMITED)).orIgnore,
+                         m.system.assign
+          )
+      }
     }
   }
 

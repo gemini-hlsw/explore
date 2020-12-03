@@ -4,6 +4,8 @@
 package explore.model
 
 import explore.model.enum._
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.util.Display
 
 object display {
@@ -30,4 +32,10 @@ object display {
 
   implicit val displayToOActivation: Display[ToOActivation] =
     Display.byShortName(_.label)
+
+  implicit val displayMagnitudeBand: Display[MagnitudeBand] =
+    Display.by(_.shortName, _.longName)
+
+  implicit val displayMagnitudeSystem: Display[MagnitudeSystem] =
+    Display.byShortName(_.tag)
 }

@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -75,87 +76,86 @@ object TargetBody {
         val stateView = ViewF.fromState[IO]($).zoom(State.searching)
 
         UndoRegion[TargetResult] { undoCtx =>
-          val undoSet =
-            UndoSet(props.id, props.target, undoCtx.setter)
+          val undoViewSet =
+            UndoView(props.id, props.target, undoCtx.setter)
 
-          val modify = undoSet[
-            (NonEmptyString, SiderealTracking, List[Magnitude])
-          ](
+          val allView = undoViewSet(
             targetPropsL,
-            { case (n, t, _ /*ms*/ ) =>
-              EditSiderealInput.name.set(n.value.some) >>> TargetQueries.UpdateSiderealTracking(t)
-            // >>> EditSiderealInput.magnitudes.set( ms.map(m =>
-            //        MagnitudeInput(m.value.toBigDecimal, m.band, none, m.system.some)
-            //      ))
+            { args: (NonEmptyString, SiderealTracking, List[Magnitude]) =>
+              EditSiderealInput.name.set(args._1.value.assign) >>>
+                TargetQueries.UpdateSiderealTracking(args._2) >>>
+                TargetQueries.updateMagnitudes(args._3)
             }
-          ) _
+          )
 
-          val modifyCoordsRa = undoSet[RightAscension](
+          val coordsRAView = undoViewSet(
             TargetQueries.baseCoordinatesRa,
-            r => TargetQueries.UpdateSiderealTracking.ra(r.some)
-          ) _
+            (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
+          )
 
-          val modifyCoordsDec = undoSet[Declination](
+          val coordsDecView = undoViewSet(
             TargetQueries.baseCoordinatesDec,
-            d => TargetQueries.UpdateSiderealTracking.dec(d.some)
-          ) _
+            (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
+          )
 
-          val modifyName = undoSet[NonEmptyString](
+          val epochView =
+            undoViewSet(
+              TargetQueries.epoch,
+              (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
+            )
+
+          val magnitudesView =
+            undoViewSet(TargetResult.magnitudes, TargetQueries.updateMagnitudes)
+
+          val nameView = undoViewSet(
             unsafeTargetName,
-            n => EditSiderealInput.name.set(n.value.some)
-          ) _
+            (EditSiderealInput.name.set _).compose((_: NonEmptyString).value.assign)
+          )
 
-          val modifyEpoch = undoSet[Epoch](
-            TargetQueries.epoch,
-            e => TargetQueries.UpdateSiderealTracking.epoch(e.some)
-          ) _
-
-          val modifyProperMotionRA = undoSet[Option[ProperMotion.RA]](
+          val properMotionRAView = undoViewSet(
             TargetQueries.pmRALens,
-            pmRA =>
+            (pmRA: Option[ProperMotion.RA]) =>
               TargetQueries.UpdateSiderealTracking.properMotion(
                 buildProperMotion(pmRA, TargetQueries.pmDecLens.get(target))
               )
-          ) _
+          )
 
-          val modifyProperMotionDec = undoSet[Option[ProperMotion.Dec]](
+          val properMotionDecView = undoViewSet(
             TargetQueries.pmDecLens,
-            pmDec =>
+            (pmDec: Option[ProperMotion.Dec]) =>
               TargetQueries.UpdateSiderealTracking.properMotion(
                 buildProperMotion(TargetQueries.pmRALens.get(target), pmDec)
               )
-          ) _
+          )
 
-          val modifyParallax = undoSet[Option[Parallax]](
+          val parallaxView = undoViewSet(
             TargetQueries.pxLens,
             TargetQueries.UpdateSiderealTracking.parallax
-          ) _
+          )
 
-          val modifyRadialVelocity = undoSet[Option[RadialVelocity]](
+          val radialVelocityView = undoViewSet(
             TargetQueries.rvLens,
             TargetQueries.UpdateSiderealTracking.radialVelocity
-          ) _
+          )
 
-          val searchAndSet: SearchCallback => Callback =
-            s =>
-              SimbadSearch
-                .search(s.searchTerm)
-                .attempt
-                .runAsyncAndThenCB {
-                  case Right(r @ Some(Target(n, Right(st), m))) =>
-                    modify((n, st, m.values.toList)).runAsyncCB *> s.onComplete(r)
-                  case Right(Some(r))                           =>
-                    Callback.log(s"Unknown target type $r") *> s.onComplete(none)
-                  case Right(None)                              => s.onComplete(none)
-                  case Left(t)                                  => s.onError(t)
-                }
+          val searchAndSet: SearchCallback => Callback = s =>
+            SimbadSearch
+              .search(s.searchTerm)
+              .attempt
+              .runAsyncAndThenCB {
+                case Right(r @ Some(Target(n, Right(st), m))) =>
+                  allView.set((n, st, m.values.toList)).runAsyncCB *> s.onComplete(r)
+                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
+                case Right(None)                              => s.onComplete(none)
+                case Left(t)                                  => s.onError(t)
+              }
 
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
               <.div(
                 SearchForm(
-                  props.target.zoom(TargetQueries.unsafeTargetName).withOnMod(modifyName),
+                  nameView,
                   stateView,
                   searchAndSet
                 ),
@@ -167,9 +167,7 @@ object TargetBody {
                     ExploreStyles.TargetRaDecMinWidth,
                     FormInputEV(
                       id = "ra",
-                      value = props.target
-                        .zoom(TargetQueries.baseCoordinatesRa)
-                        .withOnMod(modifyCoordsRa),
+                      value = coordsRAView,
                       validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
                       changeAuditor = ChangeAuditor.rightAscension,
                       label = "RA",
@@ -180,9 +178,7 @@ object TargetBody {
                     ),
                     FormInputEV(
                       id = "dec",
-                      value = props.target
-                        .zoom(TargetQueries.baseCoordinatesDec)
-                        .withOnMod(modifyCoordsDec),
+                      value = coordsDecView,
                       validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
                       changeAuditor = ChangeAuditor.declination,
                       label = "Dec",
@@ -197,16 +193,16 @@ object TargetBody {
                     ExploreStyles.Compact,
                     ExploreStyles.TargetPropertiesForm,
                     InputWithUnits(
-                      props.target.zoom(TargetQueries.epoch).withOnMod(modifyEpoch),
+                      epochView,
                       ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
-                      ChangeAuditor.fromFormat(Epoch.fromStringNoScheme).decimal(3),
+                      ChangeAuditor.fromFormat(Epoch.fromStringNoScheme).decimal(3).allowEmpty,
                       id = "epoch",
                       label = "Epoch",
                       units = "years",
                       disabled = stateView
                     ),
                     InputWithUnits(
-                      props.target.zoom(TargetQueries.pmRALens).withOnMod(modifyProperMotionRA),
+                      properMotionRAView,
                       ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
                       ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                       id = "raPM",
@@ -215,7 +211,7 @@ object TargetBody {
                       disabled = stateView
                     ),
                     InputWithUnits(
-                      props.target.zoom(TargetQueries.pmDecLens).withOnMod(modifyProperMotionDec),
+                      properMotionDecView,
                       ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
                       ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                       id = "raDec",
@@ -224,7 +220,7 @@ object TargetBody {
                       disabled = stateView
                     ),
                     InputWithUnits[cats.effect.IO, Option[Parallax]](
-                      props.target.zoom(TargetQueries.pxLens).withOnMod(modifyParallax),
+                      parallaxView,
                       ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                       ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                       id = "parallax",
@@ -232,25 +228,24 @@ object TargetBody {
                       units = "mas",
                       disabled = stateView
                     ),
-                    RVInput(
-                      props.target.zoom(TargetQueries.rvLens).withOnMod(modifyRadialVelocity),
-                      stateView
-                    )
-                  )
+                    RVInput(radialVelocityView, stateView)
+                  ),
+                  MagnitudeForm(target.id, magnitudesView),
+                  UndoButtons(target, undoCtx)
+                )
+              ),
+              <.div(
+                AladinCell(
+                  props.target.zoom(TargetQueries.baseCoordinates),
+                  props.options
                 ),
-                MagnitudeForm(target.magnitudes).when(false),
-                UndoButtons(target, undoCtx)
+                CataloguesForm(props.options).when(false)
               ),
-              AladinCell(
-                props.target.zoom(TargetQueries.baseCoordinates),
-                props.options
-              ),
-              CataloguesForm(props.options).when(false)
-            ),
-            <.div(
-              ExploreStyles.TargetSkyplotCell,
-              WIP(
-                SkyPlotSection(props.baseCoordinates)
+              <.div(
+                ExploreStyles.TargetSkyplotCell,
+                WIP(
+                  SkyPlotSection(props.baseCoordinates)
+                )
               ).when(false)
             )
           )
