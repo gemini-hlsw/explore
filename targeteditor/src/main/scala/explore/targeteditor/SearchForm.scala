@@ -70,7 +70,7 @@ object SearchForm {
         props
           .submit(
             state.searchTerm,
-            props.searching.set(true).runAsyncCB,
+            $.setStateL(State.searchError)(none) >> props.searching.set(true).runAsyncCB,
             t =>
               searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
                 NonEmptyString

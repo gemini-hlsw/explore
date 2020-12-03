@@ -7,15 +7,18 @@ import cats.Endo
 import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLOperation
+import clue.data.syntax._
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.GraphQLSchemas.ObservationDB.Implicits._
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
 import explore.model.Constants
 import explore.model.decoders._
 import explore.optics._
+import explore.undo.UndoableView
 import explore.undo.Undoer
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
@@ -160,45 +163,50 @@ object TargetQueries {
     """
   }
 
-  case class UndoSet(
+  case class UndoView(
     id:           Target.Id,
     view:         View[TargetResult],
     setter:       Undoer.Setter[IO, TargetResult]
   )(implicit ctx: AppContextIO) {
+    private val undoableView = UndoableView(view, setter)
+
     def apply[A](
-      lens:      Lens[TargetResult, A],
-      setFields: A => EditSiderealInput => EditSiderealInput
-    )(
-      value:     A
-    ): IO[Unit] =
-      setter.set(
-        view.get,
-        lens.get,
-        { value: A =>
-          for {
-            _        <- (view.mod).compose(lens.set)(value)
-            editInput = setFields(value)(EditSiderealInput(id))
-            _        <- TargetMutation.execute(editInput)
-          } yield ()
-        }
-      )(value)
+      modelGet:  TargetResult => A,
+      modelMod:  (A => A) => TargetResult => TargetResult,
+      remoteSet: A => EditSiderealInput => EditSiderealInput
+    ): View[A] =
+      undoableView.apply(
+        modelGet,
+        modelMod,
+        value => TargetMutation.execute(remoteSet(value)(EditSiderealInput(id))).void
+      )
+
+    def apply[A](
+      modelLens: Lens[TargetResult, A],
+      remoteSet: A => EditSiderealInput => EditSiderealInput
+    ): View[A] = apply(modelLens.get, modelLens.modify, remoteSet)
   }
 
   object UpdateSiderealTracking {
     def catalogId(cid: Option[CatalogId]): Endo[EditSiderealInput] =
-      EditSiderealInput.catalogId.set(cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value)))
+      EditSiderealInput.catalogId.set(
+        cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value)).orUnassign
+      )
 
     def epoch(epoch: Option[Epoch]): Endo[EditSiderealInput] =
-      EditSiderealInput.epoch.set(epoch.map(Epoch.fromString.reverseGet))
+      EditSiderealInput.epoch.set(epoch.map(Epoch.fromString.reverseGet).orUnassign)
 
     def ra(ra: Option[RightAscension]): Endo[EditSiderealInput] =
       EditSiderealInput.ra.set(
-        ra.map(r => RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.some))
+        ra.map(r => RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.assign))
+          .orUnassign
       )
 
     def dec(dec: Option[Declination]): Endo[EditSiderealInput] =
       EditSiderealInput.dec.set(
-        dec.map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.some))
+        dec
+          .map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.assign))
+          .orUnassign
       )
 
     def properMotion(
@@ -207,10 +215,10 @@ object TargetQueries {
       EditSiderealInput.properMotion.set(
         pm.map(p =>
           ProperMotionInput(
-            ra = ProperMotionRaInput(microarcsecondsPerYear = p.ra.μasy.value.some),
-            dec = ProperMotionDecInput(microarcsecondsPerYear = p.dec.μasy.value.some)
+            ra = ProperMotionComponentInput(microarcsecondsPerYear = p.ra.μasy.value.assign),
+            dec = ProperMotionComponentInput(microarcsecondsPerYear = p.dec.μasy.value.assign)
           )
-        )
+        ).orUnassign
       )
 
     def radialVelocity(
@@ -219,14 +227,14 @@ object TargetQueries {
       EditSiderealInput.radialVelocity.set(
         rv.map(r =>
           RadialVelocityInput(
-            metersPerSecond = r.rv.withUnit[CentimetersPerSecond].value.value.some
+            metersPerSecond = r.rv.withUnit[CentimetersPerSecond].value.value.assign
           )
-        )
+        ).orUnassign
       )
 
     def parallax(p: Option[Parallax]): Endo[EditSiderealInput] =
       EditSiderealInput.parallax.set(
-        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.some))
+        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.assign)).orUnassign
       )
 
     /**
@@ -242,4 +250,6 @@ object TargetQueries {
         parallax(t.parallax)
   }
 
+  def updateMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
+    EditSiderealInput.magnitudes.set(mags.map(_.toInput).assign)
 }

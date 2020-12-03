@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.data.NonEmptyMap
-import gpp.svgdotjs.svgdotjsSvgJs.mod._
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
@@ -16,6 +15,7 @@ import lucuma.core.geom.syntax.shapeexpression._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
+import lucuma.svgdotjs._
 
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only
@@ -51,7 +51,7 @@ object GmosGeometry {
 
   val pp: SvgPostProcessor = {
     case p: Polygon   => p.addClass("jts-polygon").addClass("jts")
-    case g: G         => g.addClass("jts-group").addClass("jts")
+    case g: Group     => g.addClass("jts-group").addClass("jts")
     case c: Container => c.addClass("jts")
     case a            => a
   }

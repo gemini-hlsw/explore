@@ -12,7 +12,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
-import gpp.svgdotjs.svgdotjsSvgJs.mod.Svg
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,6 +19,7 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
+import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import org.scalajs.dom.document
