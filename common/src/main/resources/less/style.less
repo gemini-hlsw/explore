@@ -536,7 +536,7 @@ body {
 .main-grid {
   display: grid;
   height: 100vh;
-  grid-template-columns: 50px auto;
+  grid-template-columns: 50px minmax(0, 1fr);
   grid-template-rows: 42px auto;
   grid-template-areas:
     "header header"
@@ -552,13 +552,31 @@ body {
   letter-spacing: 0.4em;
 }
 
-.login-menu {
-  text-transform: capitalize;
+.main-user-name {
+  margin-left: auto;
   letter-spacing: 0.1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ui.menu .item.main-user-name {
+  flex-shrink: 1;
+  display: inline-block;
+}
+
+.ui.tabular.menu .item.main-menu-dropdown {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+.ui.menu:not(.vertical) .right.menu.main-menu {
+  margin-left: 0px !important; //SUI has !imporant
 }
 
 .main-header {
   grid-area: header;
+  min-width: 0;
 
   & > .ui.tabular.menu {
     border-bottom: none;
