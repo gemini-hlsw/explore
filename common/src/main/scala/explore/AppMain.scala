@@ -11,7 +11,6 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.syntax.all._
 import clue.Backend
-import clue.StreamingBackend
 import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
@@ -37,6 +36,9 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
+import clue.ReconnectionStrategy
+import org.scalajs.dom.raw.CloseEvent
+import java.util.concurrent.TimeUnit
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -47,7 +49,7 @@ trait AppMain extends IOApp {
 
   implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
 
-  implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
+  implicit val gqlStreamingBackend: WebSocketJSBackend[IO] = WebSocketJSBackend[IO]
 
   protected def rootComponent(
     view: View[RootModel]
@@ -57,7 +59,7 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
-    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+    // japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
       tabs = EnumZipper.of[AppTab],
@@ -103,12 +105,30 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
 
+    val fetchToken: IO[String] = IO("...")
+
+    val connectParameters: IO[JsonObject]                          =
+      fetchToken.map(token => JsonObject("Authorization" -> s"Bearer $token".asJson))
+
+    val reconnectionStrategy: ReconnectionStrategy[IO, CloseEvent] =
+      ReconnectionStrategy(maxAttempts = 100,
+                           (attempt, event) =>
+                             if (event.code === 1000)
+                               none
+                             else
+                               FiniteDuration(5L * attempt, TimeUnit.SECONDS).some
+      )
+
     for {
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig)
-      _         <- ctx.clients.odb.connect(JsonObject("Authorization" -> "Bearer ...".asJson))
+      _         <- ctx.clients.odb
+                     .connect(
+                       connectParameters,
+                       reconnectionStrategy.asInstanceOf[ReconnectionStrategy[IO, ctx.clients.odb.CE]].some
+                     )
       _         <- AppCtx.initIn[IO](ctx)
       _         <- setupScheme
     } yield {

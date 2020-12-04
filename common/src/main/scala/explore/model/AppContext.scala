@@ -42,7 +42,7 @@ case class AppContext[F[_]](
 }
 
 object AppContext {
-  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: StreamingBackend](
+  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: PersistentBackend](
     config: AppConfig
   ): F[AppContext[F]] =
     for {

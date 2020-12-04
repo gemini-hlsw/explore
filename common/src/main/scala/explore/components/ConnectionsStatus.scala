@@ -19,6 +19,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.sizes._
+import clue.js.WSJSCloseParams
 
 final case class ConnectionsStatus()
     extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
@@ -54,8 +55,12 @@ object ConnectionsStatus {
         <.span(
           ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")).when(false),
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
-          Button(size = Tiny)(^.onClick --> ctx.clients.odb.disconnect().runAsyncCB)("Close ODB")
-            .when(false)
+          Button(size = Tiny)(
+            ^.onClick --> ctx.clients.odb
+              .disconnect(WSJSCloseParams(code = 4000).asInstanceOf[ctx.clients.odb.CP])
+              .runAsyncCB
+          )("Close ODB")
+          // .when(false)
         )
       }
     )
