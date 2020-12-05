@@ -45,7 +45,7 @@
 @mutedTextColor      : rgba(255, 255, 255, 0.8);
 @lightTextColor      : rgba(255, 255, 255, 0.7);
 @unselectedTextColor : rgba(255, 255, 255, 0.5);
-@hoveredTextColor    : rgba(255, 255, 255, 1);
+@hoveredTextColor    : var(--site-hovered-text-color);
 @pressedTextColor    : rgba(255, 255, 255, 1);
 @selectedTextColor   : rgba(255, 255, 255, 1);
 @disabledTextColor   : rgba(255, 255, 255, 0.2);

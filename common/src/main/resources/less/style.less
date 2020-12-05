@@ -118,6 +118,9 @@
     var(--color-text-base-l),
     1
   );
+  --color-text-alt-hlsa: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), 1;
+  --color-text-alt: hsla(var(--color-text-alt-hsla));
   // dark shades
   --color-text-dark-10-hsla: var(--color-text-base-h), var(--color-text-base-s), calc(var(--color-text-base-l) - 8%), calc(var(--color-text-base-a) - 0.3);
   --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
@@ -152,15 +155,19 @@
   --error-label-color: @red;
 
   --text-color: var(--color-text-base);
+  --text-alt: var(--color-text-alt);
   --control-background-color: var(--color-background-light-20);
   --negative-text-color: var(--color-text-full);
   --negative-background-color: #B00020;
   --negative-icon-color: var(--color-text-base);
+
+  --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
 }
 
 .site-dark() {
   --site-page-background: var(--color-background);
   --site-text-color: var(--color-text-base);
+  --site-hovered-text-color: var(--color-text-alt);
   --site-input-color: var(--input-color);
   --site-border-color: var(--gray);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
@@ -337,11 +344,14 @@
   --negative-text-color: @negativeTextColor;
   --negative-background-color: @negativeBackgroundColor;
   --negative-icon-color: @negativeBackgroundColor;
+
+  --explore-accent-color: hsl(41, 89.5%, 51.4%);
 }
 
 .site-light() {
   --site-page-background: #FFFFFF;
   --site-text-color: rgba(0, 0, 0, 0.87);
+  --site-hovered-text-color: rgba(0, 0, 0, 0.8);
   --site-input-color: var(--color-text-base);
   --site-border-color: rgba(34, 36, 38, 0.15);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
@@ -1181,11 +1191,12 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
   animation: showTopText 0.8s;
   animation-delay: 0.2s;
   animation-fill-mode: forwards;
+  border-bottom: var(--explore-accent-color) solid 4px;
 }
 
 @keyframes showTopText {
-  0% { transform: translate3d(0, 100%, 0); }
-  100% { transform: translate3d(0, 0, 0); }
+  0% { transform: translate3d(0, 100%, 0); opacity: 0; }
+  100% { transform: translate3d(0, 0, 0); opacity: 1;}
 }
 
 .explore-login-orcid-button {
