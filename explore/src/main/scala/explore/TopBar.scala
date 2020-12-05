@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import explore.Icons
 import explore.WebpackResources
 import explore.common.SSOClient
+import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model.UserVault
 import explore.model.reusability._
@@ -70,7 +71,7 @@ object TopBar {
                 ExploreStyles.MainUserName,
                 user.displayName
               ),
-              // ConnectionsStatus(),
+              ConnectionsStatus(),
               MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
                 Dropdown(item = true,
                          simple = true,

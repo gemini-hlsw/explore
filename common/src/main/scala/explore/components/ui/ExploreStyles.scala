@@ -42,7 +42,7 @@ object ExploreStyles {
   val MainHeader: Css       = Css("main-header")
   val MainBody: Css         = Css("main-body")
   val MainTitle: Css        = Css("main-title")
-  val MainUserIcon: Css     = Css("main-user-icon")
+  val ConnectionIcon: Css   = Css("connection-icon")
   val MainUserName: Css     = Css("main-user-name")
   val MainMenu: Css         = Css("main-menu")
   val MainMenuDropdown: Css = Css("main-menu-dropdown")
