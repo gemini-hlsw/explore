@@ -60,7 +60,7 @@ object ConnectionsStatus {
               .disconnect(WSJSCloseParams(code = 4000).asInstanceOf[ctx.clients.odb.CP])
               .runAsyncCB
           )("Close ODB")
-          // .when(false)
+            .when(false)
         )
       }
     )
