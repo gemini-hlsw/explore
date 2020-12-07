@@ -7,7 +7,7 @@ import cats.Id
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.syntax.all._
-import clue.GraphQLStreamingClient
+import clue.GraphQLSubscription
 import crystal.react._
 import crystal.react.implicits._
 import io.chrisdavenport.log4cats.Logger
@@ -19,7 +19,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 final case class SubscriptionRender[D, A](
-  subscribe:         IO[GraphQLStreamingClient[IO, _]#Subscription[D]],
+  subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
   val valueRender:   A => VdomNode,
@@ -37,7 +37,7 @@ object SubscriptionRender {
   trait Props[F[_], D, A] extends Render.Subscription.Props[F, Id, D, A]
 
   final case class State[F[_], D, A](
-    subscription: GraphQLStreamingClient[F, _]#Subscription[D],
+    subscription: GraphQLSubscription[F, D],
     renderer:     StreamRenderer.Component[A]
   ) extends Render.Subscription.State[F, Id, D, A]
 

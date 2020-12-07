@@ -31,10 +31,10 @@ object ConnectionsStatus {
       case Pending(_)   => ("Mounting...", ConnectionWarning, true)
       case Ready(value) =>
         value match {
-          case Connecting => ("Connecting...", ConnectionWarning, true)
-          case Open       => ("Connected", ConnectionOK, false)
-          case Closing    => ("Closing...", ConnectionWarning, true)
-          case Closed     => ("Closed", ConnectionError, true)
+          case Connecting    => ("Connecting...", ConnectionWarning, true)
+          case Connected     => ("Connected", ConnectionOK, false)
+          case Disconnecting => ("Disconnecting...", ConnectionWarning, true)
+          case Disconnected  => ("Disconnected", ConnectionError, true)
         }
     }
 

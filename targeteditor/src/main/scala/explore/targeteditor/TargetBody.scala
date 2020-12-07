@@ -219,7 +219,7 @@ object TargetBody {
                       units = "mas/y",
                       disabled = stateView
                     ),
-                    InputWithUnits[cats.effect.IO, Option[Parallax]](
+                    InputWithUnits[IO, Option[Parallax]](
                       parallaxView,
                       ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                       ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,

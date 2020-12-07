@@ -221,8 +221,8 @@ object TargetObsQueries {
           TargetsObsQuery.query(),
           TargetsObsQuery.Data.asTargetsWithObs.get,
           NonEmptyList.of(
-            TargetEditSubscription.subscribe(),
-            ObservationEditSubscription.subscribe()
+            TargetEditSubscription.subscribe[IO](),
+            ObservationEditSubscription.subscribe[IO]()
           )
         )(render)
       }

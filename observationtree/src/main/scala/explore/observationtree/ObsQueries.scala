@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.data.NonEmptyList
+import cats.effect.IO
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import explore.AppCtx
@@ -55,7 +56,7 @@ object ObsQueries {
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]](
           ProgramObservationsQuery.query(),
           _.observations,
-          NonEmptyList.of(ProgramObservationsEditSubscription.subscribe())
+          NonEmptyList.of(ProgramObservationsEditSubscription.subscribe[IO]())
         )(render)
       }
 }

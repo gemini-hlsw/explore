@@ -9,7 +9,8 @@ import cats.effect.CancelToken
 import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.syntax.all._
-import clue.GraphQLStreamingClient
+import clue.GraphQLSubscription
+import clue.GraphQLWebSocketClient
 import crystal.react._
 import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger
@@ -23,7 +24,7 @@ import react.semanticui.sizes._
 final case class LiveQueryRender[S, D, A](
   query:               IO[D],
   extract:             D => A,
-  changeSubscriptions: NonEmptyList[IO[GraphQLStreamingClient[IO, S]#Subscription[_]]]
+  changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
 )(
   val valueRender:     A => VdomNode,
   val pendingRender:   Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
@@ -33,7 +34,7 @@ final case class LiveQueryRender[S, D, A](
   val F:               ConcurrentEffect[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
-  val client:          GraphQLStreamingClient[IO, S]
+  val client:          GraphQLWebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRender.component)
     with LiveQueryRender.Props[IO, S, D, A]
 
@@ -42,7 +43,7 @@ object LiveQueryRender {
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
-    subscriptions:           NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]],
+    subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
     cancelConnectionTracker: CancelToken[F],
     renderer:                StreamRenderer.Component[A]
   ) extends Render.LiveQuery.State[F, Id, S, D, A]

@@ -43,7 +43,7 @@ object TargetEditor {
         ](
           TargetEditQuery.query(props.id),
           _.target,
-          NonEmptyList.of(TargetEditSubscription.subscribe(props.id))
+          NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.id))
         ) { targetOpt =>
           <.div(
             targetOpt.get.whenDefined { _ =>
