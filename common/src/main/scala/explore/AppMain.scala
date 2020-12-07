@@ -59,7 +59,7 @@ trait AppMain extends IOApp {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run(args: List[String]): IO[ExitCode] = {
-    // japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     val initialModel = RootModel(
       tabs = EnumZipper.of[AppTab],
