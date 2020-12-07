@@ -5,6 +5,7 @@ package explore.components
 
 import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
+import clue.WebSocketCloseParams
 import crystal.Error
 import crystal.Pending
 import crystal.Pot
@@ -32,10 +33,10 @@ object ConnectionsStatus {
       case Pending(_)   => ("Mounting...", ConnectionWarning)
       case Ready(value) =>
         value match {
-          case Connecting => ("Connecting...", ConnectionWarning)
-          case Open       => ("Connected", ConnectionOK)
-          case Closing    => ("Closing...", ConnectionWarning)
-          case Closed     => ("Closed", ConnectionError)
+          case Connecting    => ("Connecting...", ConnectionWarning)
+          case Connected     => ("Connected", ConnectionOK)
+          case Disconnecting => ("Disconnecting...", ConnectionWarning)
+          case Disconnected  => ("Disconnected", ConnectionError)
         }
     }
 
@@ -54,8 +55,12 @@ object ConnectionsStatus {
         <.span(
           ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")).when(false),
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
-          Button(size = Tiny)(^.onClick --> ctx.clients.odb.close().runAsyncCB)("Close ODB")
-            .when(false)
+          Button(size = Tiny)(
+            ^.onClick --> ctx.clients.odb
+              .disconnect(WebSocketCloseParams(code = 4000))
+              .runAsyncCB
+          )("Close ODB")
+          // .when(false)
         )
       }
     )

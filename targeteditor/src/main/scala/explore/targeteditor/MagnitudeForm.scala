@@ -31,7 +31,6 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import monocle.std.option.some
 import react.common.ReactProps
-import react.semanticui.collections.form.Form
 import react.semanticui.collections.table.Table
 import react.semanticui.collections.table.TableBody
 import react.semanticui.collections.table.TableCell
@@ -82,7 +81,7 @@ object MagnitudeForm {
               )
             )
 
-          Form(size = Small)(
+          React.Fragment(
             <.div(<.label("Magnitudes")),
             Segment(
               Table(compact = TableCompact.Very)(

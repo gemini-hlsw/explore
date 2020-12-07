@@ -12,8 +12,8 @@ import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  exploreDB: GraphQLStreamingClient[F, ExploreDB],
-  odb:       GraphQLStreamingClient[F, ObservationDB]
+  exploreDB: GraphQLWebSocketClient[F, ExploreDB],
+  odb:       GraphQLWebSocketClient[F, ObservationDB]
 ) {
   lazy val ExploreDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(exploreDB.statusStream)
@@ -21,8 +21,8 @@ case class Clients[F[_]: ConcurrentEffect: Logger](
   lazy val ODBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
-  def close(): F[Unit] =
-    List(exploreDB.close(), odb.close()).sequence.void
+  def disconnect(): F[Unit] =
+    List(exploreDB.disconnect(), odb.disconnect()).sequence.void
 }
 
 case class Actions[F[_]](
@@ -38,16 +38,18 @@ case class AppContext[F[_]](
   val logger: Logger[F]
 ) {
   def cleanup(): F[Unit] =
-    clients.close()
+    clients.disconnect()
 }
 
 object AppContext {
-  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: StreamingBackend](
-    config: AppConfig
+  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: WebSocketBackend](
+    config:               AppConfig,
+    reconnectionStrategy: WebSocketReconnectionStrategy
   ): F[AppContext[F]] =
     for {
-      exploreDBClient <- ApolloStreamingClient.of[F, ExploreDB](config.exploreDBURI)
-      odbClient       <- ApolloStreamingClient.of[F, ObservationDB](config.odbURI)
+      exploreDBClient <-
+        ApolloWebSocketClient.of[F, ExploreDB](config.exploreDBURI, reconnectionStrategy)
+      odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
     } yield AppContext[F](clients, actions)

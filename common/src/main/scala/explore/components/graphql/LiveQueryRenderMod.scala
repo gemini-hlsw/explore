@@ -13,7 +13,8 @@ import cats.effect.ContextShift
 import cats.effect.IO
 import cats.effect.Timer
 import cats.syntax.all._
-import clue.GraphQLStreamingClient
+import clue.GraphQLSubscription
+import clue.GraphQLWebSocketClient
 import crystal.Pot
 import crystal.ViewF
 import crystal.react._
@@ -30,7 +31,7 @@ import react.semanticui.sizes._
 final case class LiveQueryRenderMod[S, D, A](
   query:               IO[D],
   extract:             D => A,
-  changeSubscriptions: NonEmptyList[IO[GraphQLStreamingClient[IO, S]#Subscription[_]]]
+  changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
 )(
   val valueRender:     View[A] => VdomNode,
   val pendingRender:   Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
@@ -42,7 +43,7 @@ final case class LiveQueryRenderMod[S, D, A](
   val cs:              ContextShift[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
-  val client:          GraphQLStreamingClient[IO, S]
+  val client:          GraphQLWebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRenderMod.component)
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
@@ -54,7 +55,7 @@ object LiveQueryRenderMod {
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
-    subscriptions:           NonEmptyList[GraphQLStreamingClient[F, S]#Subscription[_]],
+    subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
     cancelConnectionTracker: CancelToken[F],
     renderer:                StreamRendererMod.Component[F, A]
   ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]

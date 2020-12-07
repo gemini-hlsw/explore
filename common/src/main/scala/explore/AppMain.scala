@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.concurrent.TimeUnit
+
 import scala.concurrent.duration._
 import scala.scalajs.js
 
@@ -11,7 +13,7 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.syntax.all._
 import clue.Backend
-import clue.StreamingBackend
+import clue.WebSocketReconnectionStrategy
 import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
@@ -22,6 +24,8 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
+import io.circe.Json
+import io.circe.syntax._
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -45,7 +49,7 @@ trait AppMain extends IOApp {
 
   implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
 
-  implicit val gqlStreamingBackend: StreamingBackend[IO] = WebSocketJSBackend[IO]
+  implicit val gqlStreamingBackend: WebSocketJSBackend[IO] = WebSocketJSBackend[IO]
 
   protected def rootComponent(
     view: View[RootModel]
@@ -101,11 +105,26 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
 
+    val fetchToken: IO[String] = IO("...")
+
+    val connectParameters: IO[Map[String, Json]]            =
+      fetchToken.map(token => Map("Authorization" -> s"Bearer $token".asJson))
+
+    val reconnectionStrategy: WebSocketReconnectionStrategy =
+      (attempt, event) =>
+        if (event.code === 1000)
+          none
+        else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
+          FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
+                         TimeUnit.SECONDS
+          ).some
+
     for {
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig)
+      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy)
+      _         <- ctx.clients.odb.connect(connectParameters)
       _         <- AppCtx.initIn[IO](ctx)
       _         <- setupScheme
     } yield {
