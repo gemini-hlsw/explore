@@ -10,6 +10,7 @@ import java.{ util => ju }
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
+import cats.Applicative
 import cats.effect._
 import cats.effect.concurrent.Deferred
 import cats.implicits._
@@ -64,12 +65,11 @@ object SSOClient {
       _ <- whoami[F](ssoURI, fromFuture).attempt.flatMap {
              case Right(Some(u)) => d.complete(u)
              case Right(None)    =>
-               Logger[F].debug("Unauthenticated go to login form") *> guestUI[F](ssoURI,
-                                                                                 d,
-                                                                                 fromFuture
-               )
+               Logger[F].debug("Unauthenticated go to login form") *>
+                 guestUI[F](ssoURI, d, fromFuture)
              case Left(e)        =>
-               Logger[F].error(e)("Error attempting to login") *> guestUI[F](ssoURI, d, fromFuture)
+               Logger[F].error(e)("Error attempting to login") *>
+                 guestUI[F](ssoURI, d, fromFuture)
            }
       v <- d.get
     } yield v
@@ -155,15 +155,16 @@ object SSOClient {
     expiration: Instant,
     mod:        UserVault => F[Unit],
     fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[UserVault] =
+  ): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>
       val sleepTime = RefreshTimoutDelta.max(
         (n.until(expiration, ChronoUnit.SECONDS).seconds - RefreshTimoutDelta)
       )
       Timer[F].sleep(sleepTime / 10)
-    } *> SSOClient
-      .vault[F](ssoURI, fromFuture)
-      .flatTap(mod)
+    } *> whoami[F](ssoURI, fromFuture)
+      .flatTap(u => u.fold(Applicative[F].unit)(mod))
+      .flatTap(_ => Logger[F].info("User token refreshed"))
+      .ensure(new RuntimeException("Token refresh failure"))(_.isDefined)
 
   def logout[F[_]: ConcurrentEffect: Logger](
     ssoURI:     Uri,

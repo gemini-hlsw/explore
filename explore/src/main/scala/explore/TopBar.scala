@@ -6,25 +6,26 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.common.SSOClient
 import explore.Icons
+import explore.WebpackResources
+import explore.common.SSOClient
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model.UserVault
 import explore.model.reusability._
 import explore.utils.ExploreEvent
-import explore.WebpackResources
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.GuestRole
 import lucuma.ui.reusability._
+import org.scalajs.dom.window
 import react.common._
 import react.semanticui.collections.menu._
+import react.semanticui.elements.image.Image
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown.DropdownMenu
-import org.scalajs.dom.window
-import lucuma.core.model.GuestRole
-import react.semanticui.elements.image.Image
+import react.semanticui.views.item.Item
 
 final case class TopBar(vault: View[UserVault]) extends ReactProps[TopBar](TopBar.component)
 
@@ -56,25 +57,28 @@ object TopBar {
             ExploreStyles.MainHeader,
             Menu(
               attached = MenuAttached.Top,
-              compact = true,
+              // compact = true,
               borderless = true,
               tabular = MenuTabular.Right
             )(
-              MenuItem(as = "a")(
+              MenuItem(
                 <.span(
                   ExploreStyles.MainTitle,
                   "Explore"
                 )
               ),
-              MenuMenu(position = MenuMenuPosition.Right)(
-                MenuItem(as = "a", header = true)(
-                  <.span(
-                    ExploreStyles.LoginMenu,
-                    user.displayName
-                  ),
-                  ConnectionsStatus()
-                ),
-                Dropdown(item = true, simple = true, icon = Icons.UserCircle)(
+              Item(
+                ExploreStyles.MainUserName,
+                user.displayName
+              ),
+              ConnectionsStatus(),
+              MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
+                Dropdown(item = true,
+                         simple = true,
+                         compact = true,
+                         icon = Icons.Bars,
+                         clazz = ExploreStyles.MainMenuDropdown
+                )(
                   DropdownMenu(
                     DropdownItem(
                       onClick = SSOClient.switchToORCID[IO](ssoURI, IO.fromFuture).runAsyncCB

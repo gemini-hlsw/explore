@@ -79,7 +79,11 @@ trait AppMain extends IOApp {
     def repeatTokenRefresh(ssoURI: Uri, expiration: Instant, v: View[UserVault]): IO[Unit] =
       SSOClient
         .refreshToken[IO](ssoURI, expiration, v.set, IO.fromFuture)
-        .flatMap(u => repeatTokenRefresh(ssoURI, u.expiration, v))
+        .attempt
+        .flatMap {
+          case Right(u) => repeatTokenRefresh(ssoURI, u.map(_.expiration).getOrElse(expiration), v)
+          case Left(_)  => repeatTokenRefresh(ssoURI, expiration, v)
+        }
 
     val fetchConfig: IO[AppConfig] = {
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).

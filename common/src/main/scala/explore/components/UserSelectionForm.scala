@@ -10,11 +10,11 @@ import cats.effect.concurrent.Deferred
 import cats.implicits._
 import crystal.react.implicits._
 import explore.Icons
+import explore.WebpackResources
 import explore.common.SSOClient
 import explore.common.SSOClient.FromFuture
 import explore.components.ui.ExploreStyles
 import explore.model.UserVault
-import explore.WebpackResources
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
