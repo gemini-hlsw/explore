@@ -5,6 +5,7 @@ package explore.components
 
 import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
+import clue.WebSocketCloseParams
 import crystal.Error
 import crystal.Pending
 import crystal.Pot
@@ -19,7 +20,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.sizes._
-import clue.js.WSJSCloseParams
 
 final case class ConnectionsStatus()
     extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
@@ -57,10 +57,10 @@ object ConnectionsStatus {
           ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
           Button(size = Tiny)(
             ^.onClick --> ctx.clients.odb
-              .disconnect(WSJSCloseParams(code = 4000).asInstanceOf[ctx.clients.odb.CP])
+              .disconnect(WebSocketCloseParams(code = 4000))
               .runAsyncCB
           )("Close ODB")
-            .when(false)
+          // .when(false)
         )
       }
     )

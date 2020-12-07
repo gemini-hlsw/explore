@@ -9,8 +9,8 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
-import clue.GraphQLPersistentStreamingClient
 import clue.GraphQLSubscription
+import clue.GraphQLWebSocketClient
 import clue.StreamingClientStatus
 import crystal.Pot
 import crystal.react.implicits._
@@ -91,7 +91,7 @@ object Render {
       val extract: D => A
       val changeSubscriptions: NonEmptyList[F[GraphQLSubscription[F, _]]]
 
-      implicit val client: GraphQLPersistentStreamingClient[F, S]
+      implicit val client: GraphQLWebSocketClient[F, S]
     }
 
     trait State[F[_], G[_], S, D, A] extends Render.State[G, A] {

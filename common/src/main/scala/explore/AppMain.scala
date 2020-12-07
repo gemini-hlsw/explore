@@ -3,6 +3,8 @@
 
 package explore
 
+import java.util.concurrent.TimeUnit
+
 import scala.concurrent.duration._
 import scala.scalajs.js
 
@@ -11,6 +13,7 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.syntax.all._
 import clue.Backend
+import clue.WebSocketReconnectionStrategy
 import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
@@ -21,7 +24,7 @@ import explore.model.RootModel
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
-import io.circe.JsonObject
+import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
@@ -36,9 +39,6 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
-import clue.ReconnectionStrategy
-import org.scalajs.dom.raw.CloseEvent
-import java.util.concurrent.TimeUnit
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -107,28 +107,24 @@ trait AppMain extends IOApp {
 
     val fetchToken: IO[String] = IO("...")
 
-    val connectParameters: IO[JsonObject]                          =
-      fetchToken.map(token => JsonObject("Authorization" -> s"Bearer $token".asJson))
+    val connectParameters: IO[Map[String, Json]]            =
+      fetchToken.map(token => Map("Authorization" -> s"Bearer $token".asJson))
 
-    val reconnectionStrategy: ReconnectionStrategy[IO, CloseEvent] =
-      ReconnectionStrategy(maxAttempts = 100,
-                           (attempt, event) =>
-                             if (event.code === 1000)
-                               none
-                             else
-                               FiniteDuration(5L * attempt, TimeUnit.SECONDS).some
-      )
+    val reconnectionStrategy: WebSocketReconnectionStrategy =
+      (attempt, event) =>
+        if (event.code === 1000)
+          none
+        else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
+          FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
+                         TimeUnit.SECONDS
+          ).some
 
     for {
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       appConfig <- fetchConfig
       _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig)
-      _         <- ctx.clients.odb
-                     .connect(
-                       connectParameters,
-                       reconnectionStrategy.asInstanceOf[ReconnectionStrategy[IO, ctx.clients.odb.CE]].some
-                     )
+      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy)
+      _         <- ctx.clients.odb.connect(connectParameters)
       _         <- AppCtx.initIn[IO](ctx)
       _         <- setupScheme
     } yield {

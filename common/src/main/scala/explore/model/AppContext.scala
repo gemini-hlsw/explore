@@ -12,8 +12,8 @@ import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  exploreDB: GraphQLPersistentStreamingClient[F, ExploreDB],
-  odb:       GraphQLPersistentStreamingClient[F, ObservationDB]
+  exploreDB: GraphQLWebSocketClient[F, ExploreDB],
+  odb:       GraphQLWebSocketClient[F, ObservationDB]
 ) {
   lazy val ExploreDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(exploreDB.statusStream)
@@ -42,12 +42,14 @@ case class AppContext[F[_]](
 }
 
 object AppContext {
-  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: PersistentBackend](
-    config: AppConfig
+  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: WebSocketBackend](
+    config:               AppConfig,
+    reconnectionStrategy: WebSocketReconnectionStrategy
   ): F[AppContext[F]] =
     for {
-      exploreDBClient <- ApolloStreamingClient.of[F, ExploreDB](config.exploreDBURI)
-      odbClient       <- ApolloStreamingClient.of[F, ObservationDB](config.odbURI)
+      exploreDBClient <-
+        ApolloWebSocketClient.of[F, ExploreDB](config.exploreDBURI, reconnectionStrategy)
+      odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
     } yield AppContext[F](clients, actions)
