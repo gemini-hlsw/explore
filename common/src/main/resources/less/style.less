@@ -118,6 +118,9 @@
     var(--color-text-base-l),
     1
   );
+  --color-text-alt-hlsa: var(--color-background-base-h), var(--color-background-base-s),
+    var(--color-text-base-l), 1;
+  --color-text-alt: hsla(var(--color-text-alt-hsla));
   // dark shades
   --color-text-dark-10-hsla: var(--color-text-base-h), var(--color-text-base-s), calc(var(--color-text-base-l) - 8%), calc(var(--color-text-base-a) - 0.3);
   --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
@@ -141,6 +144,7 @@
     calc(var(--gray-l) - 10%),
     var(--gray-a)
   );
+  --gray-dark: @color-gray-dark;
 
   --focus-inner-color: hsla(230, 52%, 42%, 1);
   --focus-outer-color: hsla(220, 72%, 73%, 0.85);
@@ -151,15 +155,19 @@
   --error-label-color: @red;
 
   --text-color: var(--color-text-base);
+  --text-alt: var(--color-text-alt);
   --control-background-color: var(--color-background-light-20);
   --negative-text-color: var(--color-text-full);
   --negative-background-color: #B00020;
   --negative-icon-color: var(--color-text-base);
+
+  --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
 }
 
 .site-dark() {
   --site-page-background: var(--color-background);
   --site-text-color: var(--color-text-base);
+  --site-hovered-text-color: var(--color-text-alt);
   --site-input-color: var(--input-color);
   --site-border-color: var(--gray);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
@@ -186,6 +194,30 @@
   --form-prompt-background: var(--negative-background-color);
 }
 
+.button-dark() {
+  --button-hover-background-color: lighten(@color-gray-dark, 5%);
+  --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
+  --button-background-color: @color-gray-dark;
+  --button-text-color: var(--color-text-base);
+  --button-tertiary-text-color: var(--button-text-color);
+  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
+  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  --button-tertiary-hover-color: @tertiaryHoverColor;
+  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-focus-color: @tertiaryHoverColor;
+  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-active-color: @tertiaryActiveColor;
+  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
+}
+
+.label-dark() {
+  --label-background-color: var(--gray-dark);
+  --label-inverted-background-color: darken(@color-gray-dark, 20%);
+  --label-ribbon-shadow-color: var(--gray-dark);
+}
+
 .tile-dark() {
   --tile-background: var(--color-background-light-8);
   --tile-title-background: var(--color-background-light-12);
@@ -198,7 +230,12 @@
 }
 
 .menu-dark() {
+  --menu-background: var(--gray-dark);
+  --menu-pressed-item-background: darken(@color-gray-dark, 8%);
+  --menu-pagination-active-background: darken(@color-gray-dark, 10%);
   --menu-hover-item-background: var(--color-background-light-10);
+  --menu-secondary-hover-item-background:  darken(@color-gray-darker, 5%);
+  --menu-secondary-hover-item-color: darken(@color-gray-darker, 5%);
   --menu-tabular-active-background: var(--color-background-light-10);
 }
 
@@ -241,12 +278,22 @@
   --table-footer-background: var(--color-background-dark-5);
 }
 
+.modal-dark() {
+  --modal-background: var(--color-background-light-8);
+}
+
+.dimmer-dark() {
+  --dimmer-background-color: rgba(0, 0, 0, 0.85);
+}
+
 .dark-theme() {
   // COLORS
   .colors-dark();
 
   // SUI VARIABLES
   .site-dark();
+  .button-dark();
+  .label-dark();
   .tile-dark();
   .obs-badge-dark();
   .form-dark();
@@ -257,6 +304,8 @@
   .dropdown-dark();
   .checkbox-dark();
   .table-dark();
+  .modal-dark();
+  .dimmer-dark();
 
   // EXPLORE VARIABLES
   --sidetab-background: var(--color-background-light-5);
@@ -295,11 +344,14 @@
   --negative-text-color: @negativeTextColor;
   --negative-background-color: @negativeBackgroundColor;
   --negative-icon-color: @negativeBackgroundColor;
+
+  --explore-accent-color: hsl(41, 89.5%, 51.4%);
 }
 
 .site-light() {
   --site-page-background: #FFFFFF;
   --site-text-color: rgba(0, 0, 0, 0.87);
+  --site-hovered-text-color: rgba(0, 0, 0, 0.8);
   --site-input-color: var(--color-text-base);
   --site-border-color: rgba(34, 36, 38, 0.15);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
@@ -322,6 +374,31 @@
   --form-prompt-text-color: var(--negative-text-color);
 }
 
+.button-light() {
+  @textColor: rgba(0, 0, 0, 0.6);
+  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
+  --button-hover-background-color: #CACBCD;
+  --button-basic-hover-background-color: #FFFFFF;
+  --button-background-color: #E0E1E2;
+  --button-text-color: @textColor;
+  --button-tertiary-text-color: @textColor;
+  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  --button-tertiary-hover-color: @tertiaryHoverColor;
+  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-focus-color: @tertiaryHoverColor;
+  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+  --button-tertiary-active-color: @tertiaryActiveColor;
+  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
+}
+
+.label-light() {
+  --label-background-color: #E8E8E8;
+  --label-inverted-background-color: darken(#E8E8E8, 20%);
+  --label-ribbon-shadow-color: rgba(0, 0, 0, 0.15);
+}
+
 .tile-light() {
   --tile-background: @lightGrey;
   --tile-title-background: darken(@lightGrey, 10%);
@@ -334,9 +411,12 @@
 }
 
 .menu-light() {
+  --menu-background: #FFFFFF;
+  --menu-pressed-item-background: @subtleTransparentBlack;
+  --menu-pagination-active-background: @transparentBlack;
   --menu-hover-item-background: @subtleTransparentBlack;
   --menu-secondary-hover-item-background:  var(--tile-title-background);
-  --menu-secondary-hover-item-color: var(-input-color);
+  --menu-secondary-hover-item-color: var(--input-color);
   --menu-tabular-active-background: none @white;
 }
 
@@ -381,10 +461,20 @@
   --table-footer-background: @offWhite;
 }
 
+.modal-light() {
+  --modal-background: @white;
+}
+
+.dimmer-light() {
+  --dimmer-background-color: rgba(0, 0, 0 , 0.15);
+}
+
 .light-theme() {
   // Values here come from the default SUI theme
   .colors-light();
   .site-light();
+  .button-light();
+  .label-light();
   .tile-light();
   .obs-badge-light();
   .form-light();
@@ -395,6 +485,8 @@
   .dropdown-light();
   .checkbox-light();
   .table-light();
+  .modal-light();
+  .dimmer-light();
 
   // EXPLORE VARIABLES
   --sidetab-background: @lightGrey;
@@ -454,7 +546,7 @@ body {
 .main-grid {
   display: grid;
   height: 100vh;
-  grid-template-columns: 50px auto;
+  grid-template-columns: 50px minmax(0, 1fr);
   grid-template-rows: 42px auto;
   grid-template-areas:
     "header header"
@@ -470,8 +562,36 @@ body {
   letter-spacing: 0.4em;
 }
 
+.main-user-name {
+  margin-left: auto;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ui.menu .item.main-user-name {
+  flex-shrink: 1;
+  display: inline-block;
+}
+
+.ui.tabular.menu .item.connection-icon {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+.ui.tabular.menu .item.main-menu-dropdown {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+.ui.menu:not(.vertical) .right.menu.main-menu {
+  margin-left: 0px !important; //SUI has !imporant
+}
+
 .main-header {
   grid-area: header;
+  min-width: 0;
 
   & > .ui.tabular.menu {
     border-bottom: none;
@@ -1046,4 +1166,69 @@ img.partner-split-flag {
 
 .ui.form .field.flat-form-field {
   margin-bottom: 0;
+}
+
+i.icon.user-astronaut:before { content: "\f4fb"; }
+
+.ui.modal.explore-login-box > .content {
+  background-color: var(--modal-background);
+}
+
+.explore-login-box-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.explore-login-title-wrapper {
+  overflow: hidden;
+  margin-bottom: 4em;
+}
+
+.explore-login-title {
+  @spacing: 20px;
+  transform: translate(-100%, 0%);
+  font-weight: 300;
+  font-size: 3em;
+  text-transform: uppercase;
+  letter-spacing: @spacing;
+  text-indent: @spacing;
+  animation: showTopText 0.8s;
+  animation-delay: 0.2s;
+  animation-fill-mode: forwards;
+  border-bottom: var(--explore-accent-color) solid 4px;
+}
+
+@keyframes showTopText {
+  0% { transform: translate3d(0, 100%, 0); opacity: 0; }
+  100% { transform: translate3d(0, 0, 0); opacity: 1;}
+}
+
+.explore-login-orcid-button {
+  display: flex;
+  align-items: center;
+}
+
+.ui.button.explore-login-button {
+  margin-bottom: 1em;
+}
+
+.explore-orcid-icon-menu,
+.explore-login-orcid-icon {
+  @logosize: 1.18em;
+  margin-right: 0.42em;
+  vertical-align: baseline;
+  width: @logosize;
+  height: @logosize;
+}
+
+.explore-orcid-menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: baseline;
+  padding-right: 1em;
+}
+
+.explore-orcid-icon-menu {
+  margin-right: 0.8em;
 }

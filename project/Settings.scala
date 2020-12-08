@@ -20,6 +20,8 @@ object Settings {
     val lucumaCore        = "0.7.2"
     val lucumaCatalog     = "0.3.1"
     val lucumaUI          = "0.10.2"
+    val lucumaSSO         = "0.0.8"
+    val lucumaBC          = "0.0.2"
     val monocle           = "2.1.0"
     val mouse             = "0.26.2"
     val mUnit             = "0.7.19"
@@ -132,6 +134,18 @@ object Settings {
       deps(
         "edu.gemini" %%% "lucuma-ui"
       )(lucumaUI)
+    )
+
+    val LucumaSSO = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-sso-frontend-client"
+      )(lucumaSSO)
+    )
+
+    val LucumaBC = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-broadcast-channel"
+      )(lucumaBC)
     )
 
     val Monocle = Def.setting(

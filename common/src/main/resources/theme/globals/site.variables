@@ -1,6 +1,10 @@
+
+@color-gray-dark: #3A3F44;
+@color-gray-darker:  #272b30;
+
 @gray-base: #000;
 @gray-darker: #272B30;
-@gray-dark: #3A3F44;
+@gray-dark: var(--gray-dark);
 @gray: var(--gray);
 @gray-light: #7A8288;
 @gray-lighter: #999;
@@ -41,7 +45,7 @@
 @mutedTextColor      : rgba(255, 255, 255, 0.8);
 @lightTextColor      : rgba(255, 255, 255, 0.7);
 @unselectedTextColor : rgba(255, 255, 255, 0.5);
-@hoveredTextColor    : rgba(255, 255, 255, 1);
+@hoveredTextColor    : var(--site-hovered-text-color);
 @pressedTextColor    : rgba(255, 255, 255, 1);
 @selectedTextColor   : rgba(255, 255, 255, 1);
 @disabledTextColor   : rgba(255, 255, 255, 0.2);

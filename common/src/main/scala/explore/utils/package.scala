@@ -3,6 +3,8 @@
 
 package explore
 
+import scala.scalajs.js
+
 package object utils {
 
   def abbreviate(s: String, maxLength: Int): String =
@@ -15,4 +17,20 @@ package object utils {
         case n  => (list.take(n) :+ mod(list(n))) ++ list.drop(n + 1)
       }
   }
+}
+
+package utils {
+
+  // These are messages sent across tabs thus they need to be JS compatible
+  // We don't need yet more than just an index to  differentiate
+  sealed trait ExploreEvent extends js.Object {
+    def event: Int
+  }
+
+  object ExploreEvent {
+    object Logout extends ExploreEvent {
+      val event = 1
+    }
+  }
+
 }

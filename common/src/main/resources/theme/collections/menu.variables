@@ -4,7 +4,7 @@
 @activeItemTextColor: #fff;
 @activeItemBackground: darken(@gray-darker, 8%);
 @labelBackground: #fff;
-@pressedItemBackground: darken(@gray-dark, 8%);
+@pressedItemBackground: val(--menu-pressed-item-background);
 @invertedBackground: @primaryColor;
 @invertedItemTextColor: white;
 @invertedHoverBackground: darken(@primaryColor, 12%);
@@ -14,7 +14,7 @@
 @tabularBorderColor: @gray;
 @tabularActiveBackground: var(--menu-tabular-active-background);
 @tabularActiveColor: #fff;
-@paginationActiveBackground: darken(@gray-dark, 10%);
+@paginationActiveBackground: var(--menu-pagination-active-background);
 @dropdownBackground: @gray-dark;
 @dropdownHoveredItemBackground: @gray-darker;
 @subMenuTextColor: @gray-light;

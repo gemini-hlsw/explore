@@ -42,6 +42,10 @@ object ExploreStyles {
   val MainHeader: Css       = Css("main-header")
   val MainBody: Css         = Css("main-body")
   val MainTitle: Css        = Css("main-title")
+  val ConnectionIcon: Css   = Css("connection-icon")
+  val MainUserName: Css     = Css("main-user-name")
+  val MainMenu: Css         = Css("main-menu")
+  val MainMenuDropdown: Css = Css("main-menu-dropdown")
   val SideTabs: Css         = Css("sidetabs")
   val SideButton: Css       = Css("side-button")
   val BlendedButton: Css    = Css("blended-button")
@@ -143,4 +147,16 @@ object ExploreStyles {
   val ButtonIcon: Css       = Css("explore-button-icon")
   val FormSectionLabel: Css = Css("explore-section-label")
   val UnitsLabel: Css       = Css("explore-units-label")
+
+  // Login box
+  val LoginBox: Css          = Css("explore-login-box")
+  val LoginBoxLayout: Css    = Css("explore-login-box-layout")
+  val LoginTitle: Css        = Css("explore-login-title")
+  val LoginTitleWrapper: Css = Css("explore-login-title-wrapper")
+  val LoginBoxButton: Css    = Css("explore-login-button")
+  val OrcidIcon: Css         = Css("explore-login-orcid-icon")
+  val LoginOrcidButton: Css  = Css("explore-login-orcid-button")
+  val OrcidIconMenu: Css     = Css("explore-orcid-icon-menu")
+  val OrcidMenu: Css         = Css("explore-orcid-menu")
+
 }

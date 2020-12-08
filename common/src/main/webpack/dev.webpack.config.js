@@ -42,11 +42,12 @@ const Web = Merge(
       host: "0.0.0.0",
       hot: true,
       contentBase: [__dirname, parts.rootDir],
+      disableHostCheck: true,
       historyApiFallback: {
         rewrites: [
           { from: /^\/conf.json$/, to: '/conf/development.conf.json' },
         ]
-      },
+      }
     },
     plugins: [
       // Needed to enable HMR

@@ -3,13 +3,16 @@
 
 package explore.model
 
+import cats._
 import cats.effect._
 import cats.syntax.all._
 import clue._
 import crystal.react.StreamRenderer
 import explore.GraphQLSchemas._
 import explore.model.reusability._
+import explore.utils.ExploreEvent
 import io.chrisdavenport.log4cats.Logger
+import lucuma.broadcastchannel.BroadcastChannel
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
   exploreDB: GraphQLWebSocketClient[F, ExploreDB],
@@ -29,16 +32,23 @@ case class Actions[F[_]](
   // interpreters go here
 )
 
+final case class BroadcastChannelCtx[F[_]: Sync](bc: BroadcastChannel[ExploreEvent]) {
+  def close(): F[Unit] = Sync[F].delay(bc.close()).attempt.void
+}
+
 case class AppContext[F[_]](
   clients:    Clients[F],
-  actions:    Actions[F]
+  actions:    Actions[F],
+  bcc:        BroadcastChannelCtx[F]
 )(implicit
+  val F:      Applicative[F],
   val cs:     ContextShift[F],
   val timer:  Timer[F],
   val logger: Logger[F]
 ) {
-  def cleanup(): F[Unit] =
-    clients.disconnect()
+  val bc: BroadcastChannel[ExploreEvent] = bcc.bc
+  def cleanup(): F[Unit]                 =
+    clients.disconnect() *> bcc.close()
 }
 
 object AppContext {
@@ -52,5 +62,8 @@ object AppContext {
       odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
-    } yield AppContext[F](clients, actions)
+      bc              <-
+        Sync[F].delay(new BroadcastChannel[ExploreEvent]("explore")).map(BroadcastChannelCtx(_))
+
+    } yield AppContext[F](clients, actions, bc)
 }

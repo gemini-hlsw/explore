@@ -14,3 +14,4 @@ object all
     with ArbKeyedIndexedList
     with ArbTree
     with ArbKeyedIndexedTree
+    with ArbUserVault

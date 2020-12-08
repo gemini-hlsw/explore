@@ -1,5 +1,5 @@
 .ui.breadcrumb {
-  .button-shadow(@gray-dark);
+  // .button-shadow(@gray-dark);
 
   color: @gray-light;
   border: 1px solid rgba(0, 0, 0, 0.6);

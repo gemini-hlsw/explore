@@ -5,21 +5,19 @@ package explore.components
 
 import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
-import clue.WebSocketCloseParams
 import crystal.Error
 import crystal.Pending
 import crystal.Pot
 import crystal.Ready
-import crystal.react.implicits._
 import explore.AppCtx
+import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
-import react.semanticui.elements.button.Button
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
-import react.semanticui.sizes._
+import react.semanticui.views.item.Item
 
 final case class ConnectionsStatus()
     extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
@@ -27,41 +25,36 @@ final case class ConnectionsStatus()
 object ConnectionsStatus {
   type Props = ConnectionsStatus
 
-  private def renderStatus(name: String)(status: Pot[StreamingClientStatus]): VdomNode = {
-    val (message, clazz) = status match {
-      case Error(t)     => (t.getMessage, ConnectionError)
-      case Pending(_)   => ("Mounting...", ConnectionWarning)
+  private def renderStatus(name: String)(status: Pot[StreamingClientStatus]): VdomElement = {
+    val (message, clazz, show) = status match {
+      case Error(t)     => (t.getMessage, ConnectionError, true)
+      case Pending(_)   => ("Mounting...", ConnectionWarning, true)
       case Ready(value) =>
         value match {
-          case Connecting    => ("Connecting...", ConnectionWarning)
-          case Connected     => ("Connected", ConnectionOK)
-          case Disconnecting => ("Disconnecting...", ConnectionWarning)
-          case Disconnected  => ("Disconnected", ConnectionError)
+          case Connecting    => ("Connecting...", ConnectionWarning, true)
+          case Connected     => ("Connected", ConnectionOK, false)
+          case Disconnecting => ("Disconnecting...", ConnectionWarning, true)
+          case Disconnected  => ("Disconnected", ConnectionError, true)
         }
     }
 
-    Popup(
-      header = s"$name Connection Status",
-      content = message,
-      position = PopupPosition.BottomRight,
-      trigger = Icon(name = "circle", clazz = clazz)
-    )
+    if (show) {
+      Item(clazz = ExploreStyles.ConnectionIcon)(
+        Popup(
+          header = s"$name Connection Status",
+          content = message,
+          position = PopupPosition.BottomRight,
+          trigger = Icon(name = "circle", fitted = true, clazz = clazz)
+        )
+      ).vdomElement
+    } else <.span()
   }
 
   val component = ScalaComponent
     .builder[Props]
     .render(_ =>
       AppCtx.withCtx { ctx =>
-        <.span(
-          ctx.clients.ExploreDBConnectionStatus(renderStatus("Hasura DB")).when(false),
-          ctx.clients.ODBConnectionStatus(renderStatus("ODB")),
-          Button(size = Tiny)(
-            ^.onClick --> ctx.clients.odb
-              .disconnect(WebSocketCloseParams(code = 4000))
-              .runAsyncCB
-          )("Close ODB")
-          // .when(false)
-        )
+        ctx.clients.ODBConnectionStatus(renderStatus("ODB"))
       }
     )
     .build

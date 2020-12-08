@@ -4,14 +4,10 @@
 package explore
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSImport
 
 object WebpackResources {
-
-  // marker trait
-  trait WebpackResource extends js.Object
-
-  implicit class WebpackResourceOps(val r: WebpackResource) extends AnyVal {
-    def resource: String = r.toString
-  }
-
+  @js.native
+  @JSImport("resources/images/ORCID-iD_icon-vector.svg", JSImport.Default)
+  val OrcidLogo: String = js.native
 }

@@ -122,8 +122,9 @@ lazy val common = project
       "loglevel" -> "1.6.8"
     ),
     libraryDependencies ++=
-      ReactCommon.value ++
-        Sttp.value,
+      LucumaSSO.value ++
+        LucumaBC.value ++
+        ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit),
     buildInfoPackage := "explore"
   )
@@ -302,6 +303,7 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
+      Sttp.value ++
       Clue.value ++
       List("edu.gemini" %% "clue-macro" % Settings.LibraryVersions.clue) ++
       In(Test)(
