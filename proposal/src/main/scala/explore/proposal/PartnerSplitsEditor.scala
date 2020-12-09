@@ -4,38 +4,39 @@
 package explore.proposal
 
 import cats.syntax.all._
-import coulomb._
-import coulomb.accepted._
-import eu.timepit.refined._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
 import explore.model._
 import explore.model.refined._
 import explore.model.reusability._
+import explore.implicits._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Partner
-import mouse.all._
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics._
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
+import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 
 final case class PartnerSplitsEditor(
-  show:         Boolean,
-  splits:       List[PartnerSplit],
-  closeMe:      Callback,
-  updateSplits: List[PartnerSplit] => Callback,
-  onSave:       List[PartnerSplit] => Callback
+  show:    Boolean,
+  splits:  View[List[PartnerSplit]],
+  closeMe: Callback,
+  onSave:  List[PartnerSplit] => Callback
 ) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
   type Props = PartnerSplitsEditor
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(p => (p.show, p.splits))
+  implicit val propsReuse: Reusability[Props] = Reusability.by(p => (p.show, p.splits.get))
 
   private def toolbar(p: Props): ModalActions =
     ModalActions(
@@ -51,27 +52,20 @@ object PartnerSplitsEditor {
       )
     )
 
-  private def updatePercent(p: Props, partner: Partner)(e: ReactEventFromInput): Callback = {
-    val newValue =
-      if (e.target.value === "") "0"
-      else e.target.value
-    newValue.parseInt
-      .flatMap(i => refineV[ZeroTo100](i))
-      .map { pct =>
-        p.splits.map { s =>
-          if (s.partner === partner) s.copy(percent = pct.withUnit[Percent])
-          else s
-        }
-      }
-      .fold(_ => Callback.empty, p.updateSplits)
-  }
-
   private def makeTableRows(p: Props): TagMod =
-    p.splits.zipWithIndex.toTagMod { case (ps, idx) =>
+    p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
+      // we're already looking at the one we want
+      val getSplit: List[PartnerSplit] => PartnerSplit = _ => ps
+
+      def modSplit(mod: PartnerSplit => PartnerSplit): List[PartnerSplit] => List[PartnerSplit] =
+        list => list.modFirstWhere(_.partner === ps.partner, mod)
+
+      def splitView: View[PartnerSplit] = p.splits.zoom[PartnerSplit](getSplit)(modSplit)
+
       val id = s"${ps.partner.tag}-percent"
       React.Fragment(
-        <.tr(
-          <.td(
+        TableRow(
+          TableCell(
             <.label(
               <.img(^.src := PartnerFlags.smallFlag(ps.partner),
                     ^.alt := s"${ps.partner.name} Flag",
@@ -81,23 +75,27 @@ object PartnerSplitsEditor {
               ^.htmlFor := id
             )
           ),
-          <.td(
-            <.input(
-              ^.id := id,
-              ^.value := ps.percent.value.value,
-              ^.onChange ==> updatePercent(p, ps.partner),
-              ^.autoFocus := idx === 0
+          TableCell(
+            <.span(
+              FormInputEV(
+                id = NonEmptyString.from(id).getOrElse("SPLIT_ID"),
+                value = splitView.zoom(PartnerSplit.percent).stripQuantity,
+                validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
+                changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100]()
+              ).withMods(
+                ^.autoFocus := idx === 0
+              )
             )
           )
         )
       )
     }
 
-  private def total(p:       Props) = p.splits.map(_.percent.value.value).sum
+  private def total(p:       Props) = p.splits.get.map(_.percent.value.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
   def render(p: Props): VdomNode = {
-    def save = if (addsUpTo100(p)) p.onSave(p.splits) else Callback.empty
+    def save = if (addsUpTo100(p)) p.onSave(p.splits.get) else Callback.empty
 
     Modal(
       size = ModalSize.Mini,
@@ -109,18 +107,17 @@ object PartnerSplitsEditor {
           action = "#",
           onSubmitE = (e: ReactEvent, _: Form.FormProps) => e.preventDefaultCB *> save
         )(
-          <.table(
+          Table(compact = TableCompact.Very)(
             ExploreStyles.PartnerSplitsEditorTable,
-            FomanticStyles.CompactTable,
-            <.thead(
-              <.tr(
-                <.th("Partner"),
-                <.th("Percent")
+            TableHeader(
+              TableRow(
+                TableHeaderCell("Partner"),
+                TableHeaderCell("Percent")
               )
             ),
-            <.tbody(makeTableRows(p)),
-            <.tfoot(
-              <.tr(<.td("Total"), <.td(s"${total(p)}%"), FomanticStyles.RightAligned)
+            TableBody(makeTableRows(p)),
+            TableFooter(
+              TableRow(TableCell("Total"), TableCell(s"${total(p)}%"), FomanticStyles.RightAligned)
             )
           ),
           toolbar(p)
