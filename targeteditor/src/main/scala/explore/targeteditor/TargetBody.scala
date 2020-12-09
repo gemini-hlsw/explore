@@ -31,7 +31,10 @@ import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -167,9 +170,9 @@ object TargetBody {
                     ExploreStyles.TargetRaDecMinWidth,
                     FormInputEV(
                       id = "ra",
-                      value = coordsRAView,
-                      validFormat = ValidFormatInput.fromFormat(RightAscension.fromStringHMS),
-                      changeAuditor = ChangeAuditor.rightAscension,
+                      value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                      validFormat = ValidFormatInput.truncatedRA,
+                      changeAuditor = ChangeAuditor.truncatedRA,
                       label = "RA",
                       clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                       errorPointing = LabelPointing.Below,
@@ -178,9 +181,9 @@ object TargetBody {
                     ),
                     FormInputEV(
                       id = "dec",
-                      value = coordsDecView,
-                      validFormat = ValidFormatInput.fromFormat(Declination.fromStringSignedDMS),
-                      changeAuditor = ChangeAuditor.declination,
+                      value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                      validFormat = ValidFormatInput.truncatedDec,
+                      changeAuditor = ChangeAuditor.truncatedDec,
                       label = "Dec",
                       clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                       errorPointing = LabelPointing.Below,
