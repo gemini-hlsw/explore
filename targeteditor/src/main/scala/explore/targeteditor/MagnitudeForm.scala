@@ -44,7 +44,8 @@ import react.semanticui.sizes._
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
-  magnitudes: View[List[Magnitude]]
+  magnitudes: View[List[Magnitude]],
+  disabled:   Boolean
 ) extends ReactProps[MagnitudeForm](MagnitudeForm.component)
 
 object MagnitudeForm {
@@ -115,7 +116,8 @@ object MagnitudeForm {
                             changeAuditor = ChangeAuditor
                               .fromFormat(MagnitudeValue.fromString)
                               .decimal(3)
-                              .allowEmpty
+                              .allowEmpty,
+                            disabled = props.disabled
                           ).withMods(^.width := "80px")
                         )
                       ),
@@ -124,7 +126,8 @@ object MagnitudeForm {
                           EnumViewSelect(
                             id = magnitude.band.toString + "_BAND",
                             value = magnitudeView.zoom(Magnitude.band),
-                            exclude = state.usedBands - magnitude.band
+                            exclude = state.usedBands - magnitude.band,
+                            disabled = props.disabled
                           )
                         )
                       ),
@@ -132,7 +135,8 @@ object MagnitudeForm {
                         <.span(
                           EnumViewSelect(
                             id = magnitude.band.toString + "_SYSTEM",
-                            value = magnitudeView.zoom(Magnitude.system)
+                            value = magnitudeView.zoom(Magnitude.system),
+                            disabled = props.disabled
                           )
                         )
                       ),

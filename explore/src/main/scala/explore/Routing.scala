@@ -18,8 +18,7 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import lucuma.core.model.WithId
-import monocle.Prism
+import lucuma.core.util.Gid
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -27,24 +26,8 @@ case object LabelsElement extends ElementItem
 
 object Routing {
 
-  private def idPrism[Id <: WithId#Id, P <: Page](
-    idFromLong: Long => Either[String, Id],
-    pageFromId: Id => P,
-    idFromPage: P => Id
-  ): Prism[Long, P] =
-    Prism[Long, P](l => idFromLong(l).toOption.map(pageFromId))(idFromPage(_).value.value)
-
-  private val obsPage: Prism[Long, ObsPage] =
-    idPrism(Observation.Id.fromLong, ObsPage.apply, _.obsId)
-
-  private val targetPage: Prism[Long, TargetPage] =
-    idPrism(Target.Id.fromLong, TargetPage.apply, _.targetId)
-
-  private val targetObsPage: Prism[Long, TargetsObsPage] =
-    idPrism(Observation.Id.fromLong, TargetsObsPage.apply, _.obsId)
-
-  private def randomId[Id](fromLong: Long => Either[String, Id]): Id =
-    fromLong(Random.nextLong().abs.toLong).toOption.get
+  private def randomId[Id](fromLong: Long => Option[Id]): Id =
+    fromLong(Random.nextLong().abs).get
 
   private def targetTab(model: View[RootModel]): TargetTabContents =
     TargetTabContents(model.zoom(RootModel.focused), model.zoom(RootModel.expandedTargetIds))
@@ -52,6 +35,9 @@ object Routing {
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
+
+      def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
+        string(gid.regexPattern).pmapL(gid.fromString)
 
       (emptyRule
         | staticRoute(root, HomePage) ~> render(UnderConstruction())
@@ -61,12 +47,18 @@ object Routing {
         | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
-        | dynamicRouteCT(("/obs" / long).pmapL(obsPage)) ~> renderP(view =>
+        | dynamicRouteCT(("/obs" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(view =>
           ObsTabContents(view.zoom(RootModel.focused))
         )
         | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
-        | dynamicRouteCT(("/target" / long).pmapL(targetPage)) ~> renderP(targetTab)
-        | dynamicRouteCT(("/target/obs" / long).pmapL(targetObsPage)) ~> renderP(targetTab)
+        | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
+          targetTab
+        )
+        | dynamicRouteCT(
+          ("/target/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
+        ) ~> renderP(
+          targetTab
+        )
         | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
         | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
         .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))

@@ -27,7 +27,7 @@ final case class InputWithUnits[F[_]: Effect, A](
   id:              NonEmptyString,
   label:           String,
   units:           String,
-  disabled:        ViewF[F, Boolean],
+  disabled:        Boolean,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2
 )(implicit val ev: ExternalValue[ViewF[F, *]], val eq: Eq[A])
     extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
@@ -51,7 +51,7 @@ object InputWithUnits {
             clazz = ExploreStyles.Grow(1),
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,
-            disabled = p.disabled.get
+            disabled = p.disabled
           )(p.ev, p.eq),
           <.div(
             ExploreStyles.UnitsLabel,
