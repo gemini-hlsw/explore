@@ -3,7 +3,6 @@
 
 package explore
 
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 import scala.concurrent.duration._
@@ -26,13 +25,9 @@ import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.utils.ExploreEvent
 import io.chrisdavenport.log4cats.Logger
-import io.circe.Json
-import io.circe.syntax._
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
-import lucuma.broadcastchannel._
 import lucuma.core.data.EnumZipper
 import org.scalajs.dom
 import org.scalajs.dom.experimental.RequestCache
@@ -66,7 +61,7 @@ trait AppMain extends IOApp {
   override final def run(args: List[String]): IO[ExitCode] = {
     japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
-    def initialModel(vault: UserVault) = RootModel(
+    def initialModel(vault: Option[UserVault]) = RootModel(
       vault = vault,
       tabs = EnumZipper.of[AppTab]
     )
@@ -78,15 +73,6 @@ trait AppMain extends IOApp {
           body.classList.add("dark-theme")
         }
       }
-
-    def repeatTokenRefresh(ssoURI: Uri, expiration: Instant, v: View[UserVault]): IO[Unit] =
-      SSOClient
-        .refreshToken[IO](ssoURI, expiration, v.set, IO.fromFuture)
-        .attempt
-        .flatMap {
-          case Right(u) => repeatTokenRefresh(ssoURI, u.map(_.expiration).getOrElse(expiration), v)
-          case Left(_)  => repeatTokenRefresh(ssoURI, expiration, v)
-        }
 
     val fetchConfig: IO[AppConfig] = {
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
@@ -119,49 +105,25 @@ trait AppMain extends IOApp {
       IO.fromFuture(httpCall).map(_.body)
     }
 
-    def connectParameters(vault: UserVault): IO[Map[String, Json]] =
-      Map("Authorization" -> s"Bearer ${vault.token.value}".asJson).pure[IO]
-
     val reconnectionStrategy: WebSocketReconnectionStrategy =
-      (attempt, event) =>
-        if (event.code === 1000)
+      (attempt, reason) =>
+        if (reason.exists(_.code === 1000))
           none
         else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
           FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
                          TimeUnit.SECONDS
           ).some
 
-    def setupLogoutListener(bc: BroadcastChannel[ExploreEvent]): IO[Unit] =
-      IO(bc.onmessage =
-        (x: ExploreEvent) =>
-          // This is coming from the js world, we can't match the type
-          (x.event match {
-            case ExploreEvent.Logout.event =>
-              IO(
-                dom.window.location.reload()
-              ).attempt.void
-            case _                         => IO.unit
-          })
-      )
-
     for {
       _         <- setupScheme
       appConfig <- fetchConfig
-      vault     <- SSOClient.vault[IO](appConfig.ssoURI, IO.fromFuture)
+      vault     <- SSOClient.whoami[IO](appConfig.ssoURI, IO.fromFuture)
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _         <- logger.info(s"Config: ${appConfig.show}")
       ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy)
-      _         <- ctx.clients.odb.connect(connectParameters(vault))
       _         <- AppCtx.initIn[IO](ctx)
-      _         <- setupLogoutListener(ctx.bc)
     } yield {
-      val RootComponent =
-        AppRoot[IO](initialModel(vault))(
-          rootComponent,
-          onMount = (v: View[RootModel]) =>
-            repeatTokenRefresh(appConfig.ssoURI, vault.expiration, v.zoom(RootModel.vault)),
-          onUnmount = (_: RootModel) => ctx.cleanup()
-        )
+      val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
 
       val container = Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")

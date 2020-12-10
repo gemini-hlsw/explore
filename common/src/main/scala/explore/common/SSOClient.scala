@@ -10,13 +10,10 @@ import java.{ util => ju }
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-import cats.Applicative
 import cats.effect._
-import cats.effect.concurrent.Deferred
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
-import explore.components.UserSelectionForm
 import explore.model.UserVault
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
@@ -38,7 +35,7 @@ object JwtOrcidProfile {
 object SSOClient {
   type FromFuture[F[_], A] = F[Future[A]] => F[A]
 
-  val ReadTimeout: FiniteDuration = 5.seconds
+  val ReadTimeout: FiniteDuration = 10.seconds
 
   // time before expiration to renew
   val RefreshTimoutDelta: FiniteDuration = 10.seconds
@@ -55,30 +52,6 @@ object SSOClient {
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[Unit] =
     logout(ssoURI, fromFuture).attempt *> redirectToLogin(ssoURI)
-
-  def vault[F[_]: ConcurrentEffect: Logger](
-    ssoURI:     Uri,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[UserVault] =
-    for {
-      d <- Deferred[F, UserVault]
-      _ <- whoami[F](ssoURI, fromFuture).attempt.flatMap {
-             case Right(Some(u)) => d.complete(u)
-             case Right(None)    =>
-               Logger[F].debug("Unauthenticated go to login form") *>
-                 guestUI[F](ssoURI, d, fromFuture)
-             case Left(e)        =>
-               Logger[F].error(e)("Error attempting to login") *>
-                 guestUI[F](ssoURI, d, fromFuture)
-           }
-      v <- d.get
-    } yield v
-
-  def guestUI[F[_]: Effect](
-    ssoURI:     Uri,
-    result:     Deferred[F, UserVault],
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[Unit] = UserSelectionForm.launch[F](ssoURI, result, fromFuture).void
 
   def guest[F[_]: Sync](
     ssoURI:     Uri,
@@ -107,7 +80,7 @@ object SSOClient {
               p <- parse(j)
               u <- p.as[JwtOrcidProfile]
               t <- refineV[NonEmpty](body)
-            } yield UserVault(u.`lucuma-user`, ssoURI, Instant.ofEpochSecond(u.exp), t))
+            } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
               .getOrElse(throw new RuntimeException("Error decoding the token"))
           }
         case Response(Left(e), _, _, _, _, _)     =>
@@ -115,7 +88,7 @@ object SSOClient {
       }
   }
 
-  private def whoami[F[_]: Sync](
+  def whoami[F[_]: Sync](
     ssoURI:     Uri,
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[Option[UserVault]] = {
@@ -142,7 +115,7 @@ object SSOClient {
               p <- parse(j)
               u <- p.as[JwtOrcidProfile]
               t <- refineV[NonEmpty](body)
-            } yield UserVault(u.`lucuma-user`, ssoURI, Instant.ofEpochSecond(u.exp), t).some)
+            } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t).some)
               .getOrElse(throw new RuntimeException("Error decoding the token"))
           }
         case Response(Left(_), _, _, _, _, _)     =>
@@ -153,7 +126,6 @@ object SSOClient {
   def refreshToken[F[_]: ConcurrentEffect: Timer: Logger](
     ssoURI:     Uri,
     expiration: Instant,
-    mod:        UserVault => F[Unit],
     fromFuture: FromFuture[F, Response[Either[String, String]]]
   ): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>
@@ -162,9 +134,7 @@ object SSOClient {
       )
       Timer[F].sleep(sleepTime / 10)
     } *> whoami[F](ssoURI, fromFuture)
-      .flatTap(u => u.fold(Applicative[F].unit)(mod))
       .flatTap(_ => Logger[F].info("User token refreshed"))
-      .ensure(new RuntimeException("Token refresh failure"))(_.isDefined)
 
   def logout[F[_]: ConcurrentEffect: Logger](
     ssoURI:     Uri,

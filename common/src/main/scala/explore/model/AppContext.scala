@@ -10,9 +10,9 @@ import clue._
 import crystal.react.StreamRenderer
 import explore.GraphQLSchemas._
 import explore.model.reusability._
-import explore.utils.ExploreEvent
 import io.chrisdavenport.log4cats.Logger
-import lucuma.broadcastchannel.BroadcastChannel
+import io.circe.Json
+import sttp.model.Uri
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
   exploreDB: GraphQLWebSocketClient[F, ExploreDB],
@@ -24,32 +24,30 @@ case class Clients[F[_]: ConcurrentEffect: Logger](
   lazy val ODBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
+  def init(payload: F[Map[String, Json]]): F[Unit] =
+    exploreDB.init() >> odb.init(payload)
+
   def disconnect(): F[Unit] =
-    List(exploreDB.disconnect(), odb.disconnect()).sequence.void
+    List(
+      exploreDB.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000))),
+      odb.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
+    ).sequence.void
 }
 
 case class Actions[F[_]](
   // interpreters go here
 )
 
-final case class BroadcastChannelCtx[F[_]: Sync](bc: BroadcastChannel[ExploreEvent]) {
-  def close(): F[Unit] = Sync[F].delay(bc.close()).attempt.void
-}
-
 case class AppContext[F[_]](
   clients:    Clients[F],
   actions:    Actions[F],
-  bcc:        BroadcastChannelCtx[F]
+  ssoURI:     Uri
 )(implicit
   val F:      Applicative[F],
   val cs:     ContextShift[F],
   val timer:  Timer[F],
   val logger: Logger[F]
-) {
-  val bc: BroadcastChannel[ExploreEvent] = bcc.bc
-  def cleanup(): F[Unit]                 =
-    clients.disconnect() *> bcc.close()
-}
+)
 
 object AppContext {
   def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: WebSocketBackend](
@@ -62,8 +60,5 @@ object AppContext {
       odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
-      bc              <-
-        Sync[F].delay(new BroadcastChannel[ExploreEvent]("explore")).map(BroadcastChannelCtx(_))
-
-    } yield AppContext[F](clients, actions, bc)
+    } yield AppContext[F](clients, actions, config.ssoURI)
 }

@@ -7,6 +7,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 import explore.AppMain
 import explore._
+import explore.components.state.IfLogged
 import explore.model.RootModel
 import japgolly.scalajs.react.vdom.html_<^._
 
@@ -16,14 +17,16 @@ import TargetObsQueries._
 object Test extends AppMain {
 
   override def rootComponent(view: View[RootModel]): VdomElement =
-    // AndOrTest.render
-    // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
-    TargetObsLiveQuery(targetsWithObs =>
-      <.div(^.width := "295px")(
-        TargetObsList(
-          targetsWithObs,
-          view.zoom(RootModel.focused),
-          view.zoom(RootModel.expandedTargetIds)
+    IfLogged(view)((_, _) =>
+      // AndOrTest.render
+      // TargetTree(TargetTreeTest.targets, TargetTreeTest.observations)
+      TargetObsLiveQuery(targetsWithObs =>
+        <.div(^.width := "295px")(
+          TargetObsList(
+            targetsWithObs,
+            view.zoom(RootModel.focused),
+            view.zoom(RootModel.expandedTargetIds)
+          )
         )
       )
     )

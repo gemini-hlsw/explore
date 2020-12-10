@@ -26,16 +26,19 @@ object ConnectionsStatus {
   type Props = ConnectionsStatus
 
   private def renderStatus(name: String)(status: Pot[StreamingClientStatus]): VdomElement = {
-    val (message, clazz, show) = status match {
-      case Error(t)     => (t.getMessage, ConnectionError, true)
-      case Pending(_)   => ("Mounting...", ConnectionWarning, true)
+    val (message, (clazz, show)) = status match {
+      case Error(t)     => (t.getMessage, (ConnectionError, true))
+      case Pending(_)   => ("Mounting...", (ConnectionWarning, true))
       case Ready(value) =>
-        value match {
-          case Connecting    => ("Connecting...", ConnectionWarning, true)
-          case Connected     => ("Connected", ConnectionOK, false)
-          case Disconnecting => ("Disconnecting...", ConnectionWarning, true)
-          case Disconnected  => ("Disconnected", ConnectionError, true)
-        }
+        (value.toString,
+         value match {
+           case Connecting                                                        => (ConnectionWarning, true)
+           case Connected | Initializing | Initialized | Terminating | Terminated =>
+             (ConnectionOK, false)
+           case Disconnecting                                                     => (ConnectionWarning, true)
+           case Disconnected                                                      => (ConnectionError, true)
+         }
+        )
     }
 
     if (show) {

@@ -37,7 +37,7 @@ object Routing {
       def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
         string(gid.regexPattern).pmapL(gid.fromString)
 
-      val configuration =
+      val rules =
         (emptyRule
           | staticRoute(root, HomePage) ~> render(UnderConstruction())
           | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
@@ -60,6 +60,9 @@ object Routing {
           )
           | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
           | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
+
+      val configuration =
+        rules
           .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
           .onPostRenderP {
             case (prev, next, view)
