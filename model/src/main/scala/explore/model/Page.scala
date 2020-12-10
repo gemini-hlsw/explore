@@ -7,6 +7,7 @@ import cats.Eq
 import cats.syntax.all._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import monocle.Iso
 
 sealed trait Page extends Product with Serializable
 
@@ -32,5 +33,20 @@ object Page {
     case (ConfigurationsPage, ConfigurationsPage)     => true
     case (ConstraintsPage, ConstraintsPage)           => true
     case _                                            => false
+  }
+
+  object ObsPage {
+    final val obsId: Iso[Observation.Id, ObsPage] =
+      Iso[Observation.Id, ObsPage](ObsPage.apply)(_.obsId)
+  }
+
+  object TargetPage {
+    final val targetId: Iso[Target.Id, TargetPage] =
+      Iso[Target.Id, TargetPage](TargetPage.apply)(_.targetId)
+  }
+
+  object TargetsObsPage {
+    final val obsId: Iso[Observation.Id, TargetsObsPage] =
+      Iso[Observation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
   }
 }

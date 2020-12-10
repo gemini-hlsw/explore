@@ -18,7 +18,8 @@ final case class UndoButtons[F[_], A](
   value:      A,
   undoCtx:    Undoer.Context[F, A],
   size:       SemanticSize = Small,
-  iconSize:   SemanticSize = Small
+  iconSize:   SemanticSize = Small,
+  disabled:   Boolean = false
 )(implicit
   val effect: Effect[F]
 ) extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
@@ -37,14 +38,14 @@ object UndoButtons {
             Button(onClick = p.undoCtx.undo(p.value).runAsyncCB,
                    size = p.size,
                    compact = true,
-                   disabled = p.undoCtx.undoEmpty
+                   disabled = p.undoCtx.undoEmpty || p.disabled
             )(
               Icons.Undo.size(p.iconSize).fitted(true)
             ),
             Button(onClick = p.undoCtx.redo(p.value).runAsyncCB,
                    size = p.size,
                    compact = true,
-                   disabled = p.undoCtx.redoEmpty
+                   disabled = p.undoCtx.redoEmpty || p.disabled
             )(
               Icons.Redo.size(p.iconSize).fitted(true)
             )

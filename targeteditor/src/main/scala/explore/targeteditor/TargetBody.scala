@@ -202,7 +202,7 @@ object TargetBody {
                       id = "epoch",
                       label = "Epoch",
                       units = "years",
-                      disabled = stateView
+                      disabled = stateView.get
                     ),
                     InputWithUnits(
                       properMotionRAView,
@@ -211,7 +211,7 @@ object TargetBody {
                       id = "raPM",
                       label = "µ RA",
                       units = "mas/y",
-                      disabled = stateView
+                      disabled = stateView.get
                     ),
                     InputWithUnits(
                       properMotionDecView,
@@ -220,7 +220,7 @@ object TargetBody {
                       id = "raDec",
                       label = "µ Dec",
                       units = "mas/y",
-                      disabled = stateView
+                      disabled = stateView.get
                     ),
                     InputWithUnits[IO, Option[Parallax]](
                       parallaxView,
@@ -229,12 +229,12 @@ object TargetBody {
                       id = "parallax",
                       label = "Parallax",
                       units = "mas",
-                      disabled = stateView
+                      disabled = stateView.get
                     ),
                     RVInput(radialVelocityView, stateView)
                   ),
-                  MagnitudeForm(target.id, magnitudesView),
-                  UndoButtons(target, undoCtx)
+                  MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
+                  UndoButtons(target, undoCtx, disabled = stateView.get)
                 )
               ),
               <.div(
