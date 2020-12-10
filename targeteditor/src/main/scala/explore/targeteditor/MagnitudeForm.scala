@@ -148,7 +148,8 @@ object MagnitudeForm {
                             clazz = ExploreStyles.DeleteButton,
                             onClick = props.magnitudes
                               .mod(_.filterNot(_.band === magnitude.band))
-                              .runAsyncCB
+                              .runAsyncCB,
+                            disabled = props.disabled
                           )(
                             Icons.Delete
                               .size(Small)
@@ -164,30 +165,31 @@ object MagnitudeForm {
                   TableRow(
                     TableHeaderCell()(^.colSpan := 4)(
                       <.span(^.display.flex, ^.justifyContent.flexEnd)(
-                        newBandView.whenDefined {
-                          view =>
-                            val addMagnitude =
-                              props.magnitudes.mod(list =>
-                                (list :+ Magnitude(MagnitudeValue(0),
-                                                   view.get,
-                                                   view.get.magnitudeSystem
-                                )).sortBy(_.band)
-                              )
-
-                            React.Fragment(
-                              EnumViewSelect(
-                                id = "NEW_BAND",
-                                value = view,
-                                exclude = state.usedBands,
-                                clazz = ExploreStyles.FlatFormField
-                              ),
-                              Button(size = Mini,
-                                     compact = true,
-                                     onClick = addMagnitude.runAsyncCB
-                              )(^.marginLeft := "5px")(
-                                Icons.New.size(Small).fitted(true)
-                              )
+                        newBandView.whenDefined { view =>
+                          val addMagnitude =
+                            props.magnitudes.mod(list =>
+                              (list :+ Magnitude(MagnitudeValue(0),
+                                                 view.get,
+                                                 view.get.magnitudeSystem
+                              )).sortBy(_.band)
                             )
+
+                          React.Fragment(
+                            EnumViewSelect(
+                              id = "NEW_BAND",
+                              value = view,
+                              exclude = state.usedBands,
+                              clazz = ExploreStyles.FlatFormField,
+                              disabled = props.disabled
+                            ),
+                            Button(size = Mini,
+                                   compact = true,
+                                   onClick = addMagnitude.runAsyncCB,
+                                   disabled = props.disabled
+                            )(^.marginLeft := "5px")(
+                              Icons.New.size(Small).fitted(true)
+                            )
+                          )
                         }
                       )
                     )

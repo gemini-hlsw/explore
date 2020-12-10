@@ -234,7 +234,7 @@ object TargetBody {
                     RVInput(radialVelocityView, stateView)
                   ),
                   MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
-                  UndoButtons(target, undoCtx)
+                  UndoButtons(target, undoCtx, disabled = stateView.get)
                 )
               ),
               <.div(
