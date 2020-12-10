@@ -3,6 +3,7 @@
 
 package explore
 
+import scala.scalajs.LinkingInfo
 import scala.util.Random
 
 import cats.syntax.all._
@@ -26,9 +27,6 @@ case object LabelsElement extends ElementItem
 
 object Routing {
 
-  private def randomId[Id](fromLong: Long => Option[Id]): Id =
-    fromLong(Random.nextLong().abs).get
-
   private def targetTab(model: View[RootModel]): TargetTabContents =
     TargetTabContents(model.zoom(RootModel.focused), model.zoom(RootModel.expandedTargetIds))
 
@@ -39,53 +37,64 @@ object Routing {
       def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
         string(gid.regexPattern).pmapL(gid.fromString)
 
-      (emptyRule
-        | staticRoute(root, HomePage) ~> render(UnderConstruction())
-        | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
-          ProposalTabContents(view.zoom(RootModel.focused))
-        )
-        | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
-          ObsTabContents(view.zoom(RootModel.focused))
-        )
-        | dynamicRouteCT(("/obs" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(view =>
-          ObsTabContents(view.zoom(RootModel.focused))
-        )
-        | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
-        | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
-          targetTab
-        )
-        | dynamicRouteCT(
-          ("/target/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
-        ) ~> renderP(
-          targetTab
-        )
-        | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
-        | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
-        .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
-        .verify(
-          HomePage,
-          ProposalPage,
-          ObservationsBasePage,
-          ObsPage(randomId(Observation.Id.fromLong)),
-          TargetsBasePage,
-          TargetPage(randomId(Target.Id.fromLong)),
-          TargetsObsPage(randomId(Observation.Id.fromLong)),
-          ConfigurationsPage,
-          ConstraintsPage
-        )
-        .onPostRenderP {
-          case (prev, next, view)
-              if prev.exists(_ =!= next) &&
-                // Short circuit if we get here because of a change in the model.
-                next =!= view.zoom(RootModelRouting.lens).get =>
-            view.zoom(RootModelRouting.lens).set(next).runAsyncCB
-          case (None, next, view) =>
-            // Set the model if none was previously set
-            view.zoom(RootModelRouting.lens).set(next).runAsyncCB
-          case _                  => Callback.empty
-        }
-        .renderWithP(layout)
-        .logToConsole
+      val configuration =
+        (emptyRule
+          | staticRoute(root, HomePage) ~> render(UnderConstruction())
+          | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
+            ProposalTabContents(view.zoom(RootModel.focused))
+          )
+          | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
+            ObsTabContents(view.zoom(RootModel.focused))
+          )
+          | dynamicRouteCT(("/obs" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(view =>
+            ObsTabContents(view.zoom(RootModel.focused))
+          )
+          | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
+          | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
+            targetTab
+          )
+          | dynamicRouteCT(
+            ("/target/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
+          ) ~> renderP(
+            targetTab
+          )
+          | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
+          | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
+          .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
+          .onPostRenderP {
+            case (prev, next, view)
+                if prev.exists(_ =!= next) &&
+                  // Short circuit if we get here because of a change in the model.
+                  next =!= view.zoom(RootModelRouting.lens).get =>
+              view.zoom(RootModelRouting.lens).set(next).runAsyncCB
+            case (None, next, view) =>
+              // Set the model if none was previously set
+              view.zoom(RootModelRouting.lens).set(next).runAsyncCB
+            case _                  => Callback.empty
+          }
+          .renderWithP(layout)
+          .logToConsole
+
+      // Only link and run this in dev mode. Works since calling `verify` trigger verification immediately.
+      if (LinkingInfo.developmentMode) {
+        def randomId[Id](fromLong: Long => Option[Id]): Id =
+          fromLong(Random.nextLong().abs).get
+
+        configuration
+          .verify(
+            HomePage,
+            ProposalPage,
+            ObservationsBasePage,
+            ObsPage(randomId(Observation.Id.fromLong)),
+            TargetsBasePage,
+            TargetPage(randomId(Target.Id.fromLong)),
+            TargetsObsPage(randomId(Observation.Id.fromLong)),
+            ConfigurationsPage,
+            ConstraintsPage
+          )
+      }
+
+      configuration
     }
 
   private def layout(
