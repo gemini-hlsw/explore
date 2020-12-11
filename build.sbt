@@ -119,7 +119,7 @@ lazy val common = project
   .settings(commonJsLibSettings: _*)
   .settings(
     npmDependencies in Compile ++= Seq(
-      "loglevel" -> "1.6.8"
+      "loglevel"     -> "1.6.8"
     ),
     libraryDependencies ++=
       LucumaSSO.value ++
@@ -381,6 +381,7 @@ lazy val commonWDS = Seq(
     "prop-types"        -> "15.7.2",
     "react-moon"        -> "2.0.1",
     "styled-components" -> "5.1.1",
-    "react-popper"      -> "2.2.3"
+    "react-popper"      -> "2.2.3",
+    "ua-parser-js"      -> "0.7.23",
   )
 )
