@@ -26,5 +26,5 @@ object Icons {
   val Ban                 = Icon("ban")
   val UserAstronaut       = Icon(className = "user-astronaut")
   val Logout              = Icon("sign out alternate")
-  val SadTear             = Icon("skull crossbones")
+  val SkullCrossBones     = Icon("skull crossbones")
 }

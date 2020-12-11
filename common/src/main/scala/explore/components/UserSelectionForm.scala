@@ -82,8 +82,8 @@ object UserSelectionForm {
                 onClick = p.login
               ).when(s),
               Label(size = Large, clazz = ExploreStyles.LoginBoxButton)(
-                Icons.SadTear.size(Big),
-                "This browser isn't supported, recent versions of Chrome or Firefox are recommended"
+                Icons.SkullCrossBones.size(Big),
+                "This browser isn't supported. Recent versions of Chrome or Firefox are recommended"
               ).unless(s),
               Button(content = "Continue as Guest",
                      size = Big,
