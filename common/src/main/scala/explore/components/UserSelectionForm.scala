@@ -83,7 +83,7 @@ object UserSelectionForm {
               ).when(s),
               Label(size = Large, clazz = ExploreStyles.LoginBoxButton)(
                 Icons.SkullCrossBones.size(Big),
-                "This browser isn't supported. Recent versions of Chrome or Firefox are recommended"
+                "This version of Safari isn't supported. Try a newer version (>13.1) or a recent version of Chrome or Firefox."
               ).unless(s),
               Button(content = "Continue as Guest",
                      size = Big,
