@@ -15,6 +15,7 @@ import explore.common.SSOClient
 import explore.common.SSOClient.FromFuture
 import explore.components.ui.ExploreStyles
 import explore.model.UserVault
+import explore.utils.UAParser
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
@@ -24,9 +25,10 @@ import react.semanticui.elements.image.Image
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 import react.semanticui.modules.modal.ModalSize
-import react.semanticui.sizes.Big
+import react.semanticui.sizes._
 import sttp.client3.Response
 import sttp.model.Uri
+import react.semanticui.elements.label.Label
 
 final case class UserSelectionForm[F[_]: Effect](
   ssoURI:     Uri,
@@ -35,6 +37,16 @@ final case class UserSelectionForm[F[_]: Effect](
 ) extends ReactProps[UserSelectionForm[Any]](UserSelectionForm.component) {
   def guest: Callback = SSOClient.guest(ssoURI, fromFuture).flatMap(complete.complete(_)).runAsyncCB
   def login: Callback = SSOClient.redirectToLogin[F](ssoURI).runAsyncCB
+
+  def supportedOrcidBrowser: CallbackTo[Boolean] = CallbackTo[Boolean] {
+    val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
+    val verRegex = raw"(\d{0,3}).(\d{0,3}).*".r
+    (browser.name, browser.version) match {
+      case ("Safari", verRegex(major, minor)) if major.toInt <= 13 && minor.toInt < 1 => false
+      case _                                                                          => true
+    }
+  }.handleError(_ => CallbackTo.pure(true))
+
 }
 
 object UserSelectionForm {
@@ -46,8 +58,10 @@ object UserSelectionForm {
   val component =
     ScalaComponent
       .builder[Props[Any]]("UserSelectionForm")
-      .stateless
-      .render_P { p =>
+      .initialStateCallbackFromProps { p =>
+        p.supportedOrcidBrowser
+      }
+      .render_PS { (p, s) =>
         Modal(
           size = ModalSize.Large,
           clazz = ExploreStyles.LoginBox,
@@ -66,13 +80,17 @@ object UserSelectionForm {
                 clazz = ExploreStyles.LoginBoxButton,
                 size = Big,
                 onClick = p.login
-              ),
+              ).when(s),
+              Label(size = Large, clazz = ExploreStyles.LoginBoxButton)(
+                Icons.SadTear.size(Big),
+                "This browser isn't supported, recent versions of Chrome or Firefox are recommended"
+              ).unless(s),
               Button(content = "Continue as Guest",
                      size = Big,
                      clazz = ExploreStyles.LoginBoxButton,
                      onClick = p.guest,
                      icon = Icons.UserAstronaut
-              )
+              ).when(s)
             )
           ),
           open = true
