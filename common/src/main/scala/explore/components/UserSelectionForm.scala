@@ -40,10 +40,12 @@ final case class UserSelectionForm[F[_]: Effect](
 
   def supportedOrcidBrowser: CallbackTo[Boolean] = CallbackTo[Boolean] {
     val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
-    val verRegex = raw"(\d{0,3}).(\d{0,3}).*".r
+    val verRegex = raw"(\d{0,3}).(\d{0,3}).(.*)".r
     (browser.name, browser.version) match {
-      case ("Safari", verRegex(major, minor)) if major.toInt <= 13 && minor.toInt < 1 => false
-      case _                                                                          => true
+      case ("Safari", verRegex(major, minor, last))
+          if major.toInt <= 14 && minor.toInt == 0 && last.toInt < 1 =>
+        false
+      case _ => true
     }
   }.handleError(_ => CallbackTo.pure(true))
 
@@ -83,7 +85,7 @@ object UserSelectionForm {
               ).when(s),
               Label(size = Large, clazz = ExploreStyles.LoginBoxButton)(
                 Icons.SkullCrossBones.size(Big),
-                "This version of Safari isn't supported. Try a newer version (>13.1) or a recent version of Chrome or Firefox."
+                "This version of Safari isn't supported. Try a newer version (>14.0.1) or a recent version of Chrome or Firefox."
               ).unless(s),
               Button(content = "Continue as Guest",
                      size = Big,
