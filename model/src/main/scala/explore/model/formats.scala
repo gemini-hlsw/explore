@@ -6,6 +6,9 @@ package explore.model
 import java.text.NumberFormat
 import java.util.Locale
 
+import cats.syntax.all._
+import coulomb._
+import eu.timepit.refined.refineV
 import explore.optics._
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
@@ -16,8 +19,16 @@ import lucuma.core.syntax.string._
 
 trait formats {
   val pxFormat: Format[String, Parallax] =
-    Format(_.parseBigDecimalOption.map(l => Parallax.fromMicroarcseconds((l * 1000L).toLong)),
-           _.mas.to[BigDecimal, MilliArcSecond].value.toString
+    Format(
+      _.parseRationalOption
+        .flatMap { r =>
+          val micro = r * 1000L
+          // isValidLong will also make sure there aren't too many decimals
+          if (micro.isValidLong) micro.toLong.some else none
+        }
+        .flatMap(l => refineV[Parallax.Parallaxμas](l).toOption)
+        .map(μas => Parallax(μas.withUnit[MicroArcSecond])),
+      _.mas.to[BigDecimal, MilliArcSecond].value.toString
     )
 
   private def angularVelocityFormat[A](

@@ -234,7 +234,7 @@ object TargetQueries {
 
     def parallax(p: Option[Parallax]): Endo[EditSiderealInput] =
       EditSiderealInput.parallax.set(
-        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.assign)).orUnassign
+        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.value.assign)).orUnassign
       )
 
     /**

@@ -197,8 +197,8 @@ object TargetBody {
                     ExploreStyles.TargetPropertiesForm,
                     InputWithUnits(
                       epochView,
-                      ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Must be a number"),
-                      ChangeAuditor.fromFormat(Epoch.fromStringNoScheme).decimal(3).allowEmpty,
+                      ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
+                      ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
                       id = "epoch",
                       label = "Epoch",
                       units = "years",
