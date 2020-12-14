@@ -10,10 +10,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
+import explore.implicits._
 import explore.model._
 import explore.model.refined._
 import explore.model.reusability._
-import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode

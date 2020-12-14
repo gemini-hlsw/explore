@@ -152,14 +152,15 @@
   --hover-background-color: hsla(260, 72%, 10%, 0.85);
   --dragging-background-color: hsla(259, 39%, 24%, 0.85);
   --highlight-color: hsla(200, 72%, 83%, 0.35);
-  --error-label-color: @red;
 
   --text-color: var(--color-text-base);
   --text-alt: var(--color-text-alt);
   --control-background-color: var(--color-background-light-20);
   --negative-text-color: var(--color-text-full);
-  --negative-background-color: #B00020;
+  --negative-background-color: hsl(349, 100.0%, 34.5%);
   --negative-icon-color: var(--color-text-base);
+  --warning-text-color: #fff;
+  --warning-background-color: hsl(35, 75.3%, 49.8%);
 
   --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
 }
@@ -1013,7 +1014,8 @@ body {
 }
 
 .error-label-mixin() {
-  color: var(--error-label-color);
+  color: var(--negative-text-color);
+  background-color: var(--negative-background-color);
 }
 
 .ui.ui.form .field.error > .explore-error-label,
@@ -1211,10 +1213,23 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
   align-items: center;
 }
 
+.warning-label-mixin() {
+  color: var(--warning-text-color);
+  background-color: var(--warning-background-color);
+}
+
+.ui.label.explore-error-label {
+  .error-label-mixin();
+}
+
+.ui.label.explore-warning-label {
+  .warning-label-mixin();
+}
+
 .ui.label.explore-login-button {
   margin-bottom: 1em;
-  color: var(--negative-text-color);
-  background-color: var(--negative-background-color);
+  // color: var(--negative-text-color);
+  // background-color: var(--negative-background-color);
   white-space: wrap;
   max-width: 60%;
   text-align: center;

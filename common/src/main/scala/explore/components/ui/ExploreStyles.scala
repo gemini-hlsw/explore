@@ -159,4 +159,7 @@ object ExploreStyles {
   val OrcidIconMenu: Css     = Css("explore-orcid-icon-menu")
   val OrcidMenu: Css         = Css("explore-orcid-menu")
 
+  // Labels
+  val WarningLabel: Css = Css("explore-warning-label")
+  val ErrrorLabel: Css  = Css("explore-error-label")
 }
