@@ -101,5 +101,5 @@ object Routing {
     c: RouterCtl[Page],
     r: ResolutionWithProps[Page, View[RootModel]]
   ): View[RootModel] => VdomElement =
-    OTLayout(c, r)
+    ExploreLayout(c, r)
 }

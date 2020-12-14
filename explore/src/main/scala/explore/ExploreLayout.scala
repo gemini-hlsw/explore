@@ -10,15 +10,15 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
-final case class OTLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
-  val view:                  View[RootModel]
-) extends ReactProps[OTLayout](OTLayout.component)
+final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
+  val view:                       View[RootModel]
+) extends ReactProps[ExploreLayout](ExploreLayout.component)
 
-object OTLayout {
+object ExploreLayout {
 
   private val component =
     ScalaComponent
-      .builder[OTLayout]
+      .builder[ExploreLayout]
       .stateless
       .render_P { p =>
         <.div(
