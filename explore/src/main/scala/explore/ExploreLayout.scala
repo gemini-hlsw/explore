@@ -3,6 +3,8 @@
 
 package explore
 
+import cats.syntax.all._
+import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.model._
 import japgolly.scalajs.react._
@@ -15,24 +17,27 @@ final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, 
 ) extends ReactProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
+  type Props = ExploreLayout
 
   private val component =
     ScalaComponent
-      .builder[ExploreLayout]
+      .builder[Props]
       .stateless
       .render_P { p =>
-        <.div(
-          ExploreStyles.MainGrid,
-          TopBar(p.view.zoom(RootModel.vault)),
+        IfLogged(p.view) { (vault, onLogout) =>
           <.div(
-            ExploreStyles.SideTabs,
-            SideTabs(p.view.zoom(RootModel.tabs))
-          ),
-          <.div(
-            ExploreStyles.MainBody,
-            p.r.renderP(p.view)
+            ExploreStyles.MainGrid,
+            TopBar(vault.user, onLogout >> p.view.zoom(RootModel.vault).set(none)),
+            <.div(
+              ExploreStyles.SideTabs,
+              SideTabs(p.view.zoom(RootModel.tabs))
+            ),
+            <.div(
+              ExploreStyles.MainBody,
+              p.r.renderP(p.view)
+            )
           )
-        )
+        }
       }
       .build
 

@@ -4,6 +4,7 @@
 package explore.model
 
 import java.time.Duration
+import java.time.Instant
 
 import scala.collection.immutable.SortedSet
 
@@ -31,7 +32,7 @@ object reusability {
   implicit val expObsReuse: Reusability[ExploreObservation]                                       = Reusability.derive
   implicit val jsNumberReuse: Reusability[JsNumber]                                               = Reusability.byEq
   implicit val userReuse: Reusability[User]                                                       = Reusability.byEq
-  implicit val userVaultReuse: Reusability[UserVault]                                             = Reusability.by(_.user)
+  implicit val userVaultReuse: Reusability[UserVault]                                             = Reusability.byEq
   implicit def sortedSetReuse[A]: Reusability[SortedSet[A]]                                       = Reusability.by_==
   implicit val rootModelReuse: Reusability[RootModel]                                             = Reusability.derive
   implicit def sizeReuse: Reusability[Size]                                                       = Reusability.by(x => (x.height, x.width))
@@ -44,4 +45,7 @@ object reusability {
   implicit def proposalDetailsReuse: Reusability[ProposalDetails]                                 = Reusability.byEq
   implicit def partnerSplitReuse: Reusability[PartnerSplit]                                       = Reusability.derive
   implicit val jsonReuse: Reusability[Json]                                                       = Reusability.by_==
+  // TODO Move to lucuma-ui
+  implicit val instantReuse: Reusability[Instant]                                                 =
+    Reusability.by(i => (i.getEpochSecond, i.getNano))
 }

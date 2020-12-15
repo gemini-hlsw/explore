@@ -8,6 +8,7 @@ import scala.scalajs.js
 import eu.timepit.refined.auto._
 import explore.AppMain
 import explore.View
+import explore.components.state.IfLogged
 import explore.model.RootModel
 import japgolly.scalajs.react.vdom.VdomElement
 
@@ -17,5 +18,5 @@ import js.annotation._
 object Test extends AppMain {
 
   override protected def rootComponent(rootView: View[RootModel]): VdomElement =
-    ProposalTabContents(rootView.zoom(RootModel.focused))
+    IfLogged(rootView)((_, _) => ProposalTabContents(rootView.zoom(RootModel.focused)))
 }
