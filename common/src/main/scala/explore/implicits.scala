@@ -12,6 +12,7 @@ import cats.syntax.all._
 import clue._
 import coulomb.Quantity
 import crystal.ViewF
+import crystal.ViewOptF
 import explore.GraphQLSchemas._
 import explore.model.AppContext
 import explore.optics._
@@ -58,5 +59,10 @@ object implicits extends ShorthandTypes with ListImplicits {
 
   implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
     def stripQuantity: ViewF[F, N] = self.as(coulombIso[N, U])
+  }
+
+  implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
+      extends AnyVal {
+    def stripQuantity: ViewOptF[F, N] = self.as(coulombIso[N, U])
   }
 }
