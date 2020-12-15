@@ -21,7 +21,7 @@ object Settings {
     val lucumaCatalog     = "0.3.3"
     val lucumaUI          = "0.11.1"
     val lucumaSSO         = "0.0.9"
-    val lucumaBC          = "0.0.2"
+    val lucumaBC          = "0.1.0"
     val monocle           = "2.1.0"
     val mouse             = "0.26.2"
     val mUnit             = "0.7.19"
