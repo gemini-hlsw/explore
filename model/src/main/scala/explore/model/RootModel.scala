@@ -10,6 +10,7 @@ import scala.collection.immutable.SortedSet
 import cats.Order._
 import cats.kernel.Eq
 import cats.syntax.all._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
@@ -27,5 +28,6 @@ case class RootModel(
 )
 
 object RootModel {
-  implicit val eqRootModel: Eq[RootModel] = Eq.by(m => (m.vault, m.tabs, m.focused))
+  implicit val eqRootModel: Eq[RootModel] =
+    Eq.by(m => (m.vault, m.tabs, m.focused, m.expandedTargetIds, m.userSelectionMessage))
 }

@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
 import explore.WebpackResources
-import explore.common.SSOClient
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.model.reusability._
@@ -40,12 +39,11 @@ object TopBar {
       .builder[TopBar]
       .render_P { p =>
         AppCtx.withCtx { implicit appCtx =>
-          implicit val cs     = appCtx.cs
-          implicit val logger = appCtx.logger
-          val role            = p.user.role
+          implicit val cs = appCtx.cs
+          val role        = p.user.role
 
           def logout: IO[Unit] =
-            SSOClient.logout[IO](appCtx.ssoURI, IO.fromFuture) >> p.logout
+            appCtx.sso.logout >> p.logout
 
           <.div(
             ExploreStyles.MainHeader,
@@ -75,7 +73,7 @@ object TopBar {
                 )(
                   DropdownMenu(
                     DropdownItem(
-                      onClick = SSOClient.switchToORCID[IO](appCtx.ssoURI, IO.fromFuture).runAsyncCB
+                      onClick = appCtx.sso.switchToORCID.runAsyncCB
                     )(
                       <.div(ExploreStyles.OrcidMenu)(
                         Image(clazz = ExploreStyles.OrcidIconMenu,

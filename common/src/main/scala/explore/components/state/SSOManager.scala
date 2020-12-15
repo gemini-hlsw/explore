@@ -11,7 +11,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.common.SSOClient
 import explore.implicits._
 import explore.model.UserVault
 import explore.model.reusability._
@@ -45,7 +44,7 @@ object SSOManager {
     ): IO[Unit] =
       AppCtx.flatMap(implicit ctx =>
         for {
-          vaultOpt <- SSOClient.refreshToken[IO](ctx.ssoURI, expiration, IO.fromFuture)
+          vaultOpt <- ctx.sso.refreshToken(expiration)
           _        <- setVault(vaultOpt)
           _        <- vaultOpt.fold(setMessage("Your session has expired"))(vault =>
                         tokenRefresher(vault.expiration, setVault, setMessage)

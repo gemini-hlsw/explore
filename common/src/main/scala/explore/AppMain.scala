@@ -18,7 +18,6 @@ import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
 import crystal.react.AppRoot
-import explore.common.SSOClient
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.RootModel
@@ -107,6 +106,7 @@ trait AppMain extends IOApp {
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, reason) =>
+        // Web Socket close codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
         if (reason.exists(_.code === 1000))
           none
         else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
@@ -117,10 +117,10 @@ trait AppMain extends IOApp {
     for {
       _         <- setupScheme
       appConfig <- fetchConfig
-      vault     <- SSOClient.whoami[IO](appConfig.ssoURI, IO.fromFuture)
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy)
+      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, IO.fromFuture)
+      vault     <- ctx.sso.whoami
       _         <- AppCtx.initIn[IO](ctx)
     } yield {
       val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))

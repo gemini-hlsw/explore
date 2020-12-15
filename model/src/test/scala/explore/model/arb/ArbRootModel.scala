@@ -14,20 +14,21 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import explore.model.UserVault
+import org.scalacheck.Gen
 
 trait ArbRootModel {
   import explore.model.arb.ArbFocused._
 
   implicit val rootModelArb = Arbitrary[RootModel] {
     for {
-      vault   <- arbitrary[UserVault]
+      vault   <- Gen.option(arbitrary[UserVault])
       tabs    <- arbitrary[EnumZipper[AppTab]]
       focused <- arbitrary[Option[Focused]]
     } yield RootModel(vault, tabs, focused)
   }
 
   implicit def rootModelCogen: Cogen[RootModel] =
-    Cogen[(UserVault, EnumZipper[AppTab], Option[Focused])].contramap(m =>
+    Cogen[(Option[UserVault], EnumZipper[AppTab], Option[Focused])].contramap(m =>
       (m.vault, m.tabs, m.focused)
     )
 }

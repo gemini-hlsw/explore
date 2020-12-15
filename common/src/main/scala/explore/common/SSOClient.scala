@@ -14,6 +14,7 @@ import cats.effect._
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
+import explore.model.SSOConfig
 import explore.model.UserVault
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
@@ -24,7 +25,6 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import sttp.client3._
-import sttp.model.Uri
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
@@ -34,37 +34,28 @@ object JwtOrcidProfile {
 
 object SSOClient {
   type FromFuture[F[_], A] = F[Future[A]] => F[A]
+}
 
-  val ReadTimeout: FiniteDuration = 10.seconds
-
-  // time before expiration to renew
-  val RefreshTimoutDelta: FiniteDuration = 10.seconds
-
+case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
+  config:     SSOConfig,
+  fromFuture: SSOClient.FromFuture[F, Response[Either[String, String]]]
+) {
   // Does a client side redirect to the sso site
-  def redirectToLogin[F[_]: Sync](ssoURI: Uri): F[Unit] =
+  val redirectToLogin: F[Unit] =
     Sync[F].delay {
       val returnUrl = window.location
-      window.location.href = uri"$ssoURI/auth/v1/stage1?state=$returnUrl".toString
+      window.location.href = uri"${config.uri}/auth/v1/stage1?state=$returnUrl".toString
     }
 
-  def switchToORCID[F[_]: ConcurrentEffect: Logger](
-    ssoURI:     Uri,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[Unit] =
-    logout(ssoURI, fromFuture).attempt *> redirectToLogin(ssoURI)
-
-  def guest[F[_]: Sync](
-    ssoURI:     Uri,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[UserVault] = {
+  val guest: F[UserVault] = {
     val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
     def httpCall =
       Sync[F].delay(
         basicRequest
           .post(
-            uri"$ssoURI/api/v1/auth-as-guest"
+            uri"${config.uri}/api/v1/auth-as-guest"
           )
-          .readTimeout(ReadTimeout)
+          .readTimeout(config.readTimeout)
           .send(backend)
       )
 
@@ -88,18 +79,15 @@ object SSOClient {
       }
   }
 
-  def whoami[F[_]: Sync](
-    ssoURI:     Uri,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[Option[UserVault]] = {
+  val whoami: F[Option[UserVault]] = {
     val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
     val httpCall =
       Sync[F].delay(
         basicRequest
           .post(
-            uri"$ssoURI/api/v1/refresh-token"
+            uri"${config.uri}/api/v1/refresh-token"
           )
-          .readTimeout(ReadTimeout)
+          .readTimeout(config.readTimeout)
           .send(backend)
       )
 
@@ -123,34 +111,29 @@ object SSOClient {
       }
   }
 
-  def refreshToken[F[_]: ConcurrentEffect: Timer: Logger](
-    ssoURI:     Uri,
-    expiration: Instant,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[Option[UserVault]] =
+  def refreshToken(expiration: Instant): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>
-      val sleepTime = RefreshTimoutDelta.max(
-        (n.until(expiration, ChronoUnit.SECONDS).seconds - RefreshTimoutDelta)
+      val sleepTime = config.refreshTimeoutDelta.max(
+        (n.until(expiration, ChronoUnit.SECONDS).seconds - config.refreshTimeoutDelta)
       )
-      Timer[F].sleep(sleepTime / 10)
-    } *> whoami[F](ssoURI, fromFuture)
-      .flatTap(_ => Logger[F].info("User token refreshed"))
+      Timer[F].sleep(sleepTime / config.refreshIntervalFactor)
+    } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
-  def logout[F[_]: ConcurrentEffect: Logger](
-    ssoURI:     Uri,
-    fromFuture: FromFuture[F, Response[Either[String, String]]]
-  ): F[Unit] = {
+  val logout: F[Unit] = {
     val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
     val httpCall =
       Sync[F].delay(
         basicRequest
           .post(
-            uri"$ssoURI/api/v1/logout"
+            uri"${config.uri}/api/v1/logout"
           )
-          .readTimeout(ReadTimeout)
+          .readTimeout(config.readTimeout)
           .send(backend)
       )
 
     fromFuture(httpCall).void
   }
+
+  val switchToORCID: F[Unit] =
+    logout.attempt >> redirectToLogin
 }

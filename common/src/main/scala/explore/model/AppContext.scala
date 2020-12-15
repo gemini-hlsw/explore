@@ -9,10 +9,11 @@ import cats.syntax.all._
 import clue._
 import crystal.react.StreamRenderer
 import explore.GraphQLSchemas._
+import explore.common.SSOClient
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Json
-import sttp.model.Uri
+import sttp.client3.Response
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
   exploreDB: GraphQLWebSocketClient[F, ExploreDB],
@@ -41,7 +42,7 @@ case class Actions[F[_]](
 case class AppContext[F[_]](
   clients:    Clients[F],
   actions:    Actions[F],
-  ssoURI:     Uri
+  sso:        SSOClient[F]
 )(implicit
   val F:      Applicative[F],
   val cs:     ContextShift[F],
@@ -52,7 +53,8 @@ case class AppContext[F[_]](
 object AppContext {
   def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: WebSocketBackend](
     config:               AppConfig,
-    reconnectionStrategy: WebSocketReconnectionStrategy
+    reconnectionStrategy: WebSocketReconnectionStrategy,
+    fromFuture:           SSOClient.FromFuture[F, Response[Either[String, String]]]
   ): F[AppContext[F]] =
     for {
       exploreDBClient <-
@@ -60,5 +62,5 @@ object AppContext {
       odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
-    } yield AppContext[F](clients, actions, config.ssoURI)
+    } yield AppContext[F](clients, actions, SSOClient(config.sso, fromFuture))
 }

@@ -3,6 +3,10 @@
 
 package explore.model
 
+import java.util.concurrent.TimeUnit
+
+import scala.concurrent.duration.FiniteDuration
+
 import cats.Eq
 import cats.Show
 import explore.model.decoders._
@@ -12,7 +16,31 @@ import io.circe._
 import io.circe.generic.semiauto._
 import sttp.model.Uri
 
-case class AppConfig(environment: ExecutionEnvironment, exploreDBURI: Uri, odbURI: Uri, ssoURI: Uri)
+case class SSOConfig(
+  uri:                        Uri,
+  readTimeoutSeconds:         Long = 10,
+  refreshTimeoutDeltaSeconds: Long = 10, // time before expiration to renew
+  refreshIntervalFactor:      Long = 1
+) {
+  val readTimeout: FiniteDuration         = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
+  val refreshTimeoutDelta: FiniteDuration =
+    FiniteDuration(refreshTimeoutDeltaSeconds, TimeUnit.SECONDS)
+}
+
+object SSOConfig {
+  implicit val eqSSOConfig: Eq[SSOConfig]     = Eq.fromUniversalEquals
+  implicit val showSSOConfig: Show[SSOConfig] = Show.fromToString
+
+  implicit val encoderSSOConfig: Encoder[SSOConfig] = deriveEncoder[SSOConfig]
+  implicit val decoderSSOConfig: Decoder[SSOConfig] = deriveDecoder[SSOConfig]
+}
+
+case class AppConfig(
+  environment:  ExecutionEnvironment,
+  exploreDBURI: Uri,
+  odbURI:       Uri,
+  sso:          SSOConfig
+)
 
 object AppConfig {
   implicit val eqAppConfig: Eq[AppConfig]     = Eq.fromUniversalEquals

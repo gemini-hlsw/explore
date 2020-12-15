@@ -3,14 +3,12 @@
 
 package explore.components
 
-import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
 import explore.WebpackResources
-import explore.common.SSOClient
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.UserVault
@@ -32,10 +30,8 @@ final case class UserSelectionForm(
   vault:   View[Option[UserVault]],
   message: View[Option[NonEmptyString]]
 ) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
-  def guest: Callback = AppCtx.flatMap { implicit ctx =>
-    SSOClient.guest[IO](ctx.ssoURI, IO.fromFuture).flatMap(v => vault.set(v.some))
-  }.runAsyncCB
-  def login: Callback = AppCtx.flatMap(ctx => SSOClient.redirectToLogin[IO](ctx.ssoURI)).runAsyncCB
+  def guest: Callback = AppCtx.flatMap(_.sso.guest.flatMap(v => vault.set(v.some))).runAsyncCB
+  def login: Callback = AppCtx.flatMap(_.sso.redirectToLogin).runAsyncCB
 
   def supportedOrcidBrowser: CallbackTo[(Boolean, Boolean)] = CallbackTo[(Boolean, Boolean)] {
     val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
