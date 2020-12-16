@@ -14,12 +14,12 @@ import explore.implicits._
 import explore.model._
 import explore.model.refined._
 import explore.model.reusability._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics._
+import monocle.function.Index
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
@@ -54,13 +54,8 @@ object PartnerSplitsEditor {
 
   private def makeTableRows(p: Props): TagMod =
     p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
-      // we're already looking at the one we want
-      val getSplit: List[PartnerSplit] => PartnerSplit = _ => ps
-
-      def modSplit(mod: PartnerSplit => PartnerSplit): List[PartnerSplit] => List[PartnerSplit] =
-        list => list.modFirstWhere(_.partner === ps.partner, mod)
-
-      def splitView: View[PartnerSplit] = p.splits.zoom[PartnerSplit](getSplit)(modSplit)
+      val splitView: ViewOpt[PartnerSplit] =
+        p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))
 
       val id = s"${ps.partner.tag}-percent"
       React.Fragment(
