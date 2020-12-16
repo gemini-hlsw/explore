@@ -602,6 +602,7 @@ body {
 .sidetabs {
   grid-area: sidebar;
   background: var(--sidetab-background);
+  overflow: hidden;
 }
 
 // Taken from the definitíon of ui.button transition but removed background-color and background
@@ -1228,8 +1229,6 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 
 .ui.label.explore-login-button {
   margin-bottom: 1em;
-  // color: var(--negative-text-color);
-  // background-color: var(--negative-background-color);
   white-space: wrap;
   max-width: 60%;
   text-align: center;
@@ -1259,4 +1258,19 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 
 .explore-orcid-icon-menu {
   margin-right: 0.8em;
+}
+
+#staging-banner {
+  @spacing: 20px;
+  z-index: 2000;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  text-transform: uppercase;
+  text-indent: @spacing;;
+  letter-spacing: @spacing;
+  padding: 0.5em 1em;
+  font-weight: 900;
+  background-color: var(--explore-accent-color);
 }

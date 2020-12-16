@@ -38,6 +38,7 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
+import explore.model.enum.ExecutionEnvironment
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -129,6 +130,12 @@ trait AppMain extends IOApp {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)
+        if (appConfig.environment === ExecutionEnvironment.Staging) {
+          val stagingBanner = dom.document.createElement("div")
+          stagingBanner.id = "staging-banner"
+          stagingBanner.textContent = "Staging"
+          dom.document.body.appendChild(stagingBanner)
+        }
         elem
       }
 
