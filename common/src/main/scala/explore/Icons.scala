@@ -28,4 +28,7 @@ object Icons {
   val Logout              = Icon("sign out alternate")
   val SkullCrossBones     = Icon("skull crossbones")
   val WarningSign         = Icon("warning sign")
+  val Info                = Icon("info circle")
+  val Clipboard           = Icon("clipboard outline")
+  val ClipboardCheck      = Icon("clipboard check")
 }

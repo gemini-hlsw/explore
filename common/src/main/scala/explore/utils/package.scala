@@ -3,7 +3,17 @@
 
 package explore
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
 import scala.scalajs.js
+
+import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.ExecutionEnvironment.Development
 
 package object utils {
 
@@ -16,6 +26,27 @@ package object utils {
         case -1 => list
         case n  => (list.take(n) :+ mod(list(n))) ++ list.drop(n + 1)
       }
+  }
+
+  private val versionDateFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.from(ZoneOffset.UTC))
+
+  private val versionDateTimeFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneId.from(ZoneOffset.UTC))
+
+  def version(environment: ExecutionEnvironment): NonEmptyString = {
+    val instant = Instant.ofEpochMilli(BuildInfo.buildTime)
+    NonEmptyString.unsafeFrom(
+      (environment match {
+        case Development => versionDateTimeFormatter.format(instant)
+        case _           =>
+          versionDateFormatter.format(instant) +
+            "-" + BuildInfo.gitHeadCommit.map(_.takeRight(7)).getOrElse("NONE")
+      })
+        + environment.suffix
+          .map(suffix => s"-$suffix")
+          .orEmpty
+    )
   }
 }
 

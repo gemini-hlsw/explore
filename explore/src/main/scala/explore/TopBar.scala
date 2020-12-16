@@ -16,12 +16,20 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import react.clipboard.CopyToClipboard
 import react.common._
 import react.semanticui.collections.menu._
+import react.semanticui.elements.icon.IconCorner.TopRight
+import react.semanticui.elements.icon.IconGroup
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown.DropdownMenu
+import react.semanticui.modules.popup.Popup
+import react.semanticui.modules.popup.PopupContent
+import react.semanticui.modules.popup.PopupOn.Click
+import react.semanticui.modules.popup.PopupPosition.RightCenter
+import react.semanticui.sizes.Small
 import react.semanticui.views.item.Item
 
 final case class TopBar(
@@ -32,12 +40,18 @@ final case class TopBar(
 object TopBar {
   type Props = TopBar
 
+  protected case class State(copied: Boolean = false)
+
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   private val component =
     ScalaComponent
       .builder[TopBar]
-      .render_P { p =>
+      .initialState(State())
+      .render { $ =>
+        val p = $.props
+
         AppCtx.withCtx { implicit appCtx =>
           implicit val cs = appCtx.cs
           val role        = p.user.role
@@ -56,7 +70,34 @@ object TopBar {
               MenuItem(
                 <.span(
                   ExploreStyles.MainTitle,
-                  "Explore"
+                  "Explore",
+                  Popup(
+                    on = Click,
+                    basic = true,
+                    position = RightCenter,
+                    size = Small,
+                    clazz = ExploreStyles.DiscretePopup,
+                    trigger = IconGroup(clazz = ExploreStyles.Info)(
+                      Icons.Info.copy(corner = TopRight)
+                    )
+                  )(
+                    PopupContent(
+                      <.span(ExploreStyles.Version)(
+                        s"Version: ${appCtx.version}",
+                        CopyToClipboard(
+                          text = appCtx.version.value,
+                          onCopy = (_, copied) =>
+                            $.setState(State(copied)) >>
+                              $.setState(State(false)).delayMs(1500).toCallback
+                        )(
+                          <.span(
+                            Icons.Clipboard.when(! $.state.copied),
+                            Icons.ClipboardCheck.when($.state.copied)
+                          )
+                        )
+                      )
+                    )
+                  )
                 )
               ),
               Item(
