@@ -3,13 +3,18 @@
 
 package explore.model.enum
 
+import cats.syntax.all._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.Enumerated
 
-sealed trait ExecutionEnvironment extends Product with Serializable
+sealed abstract class ExecutionEnvironment(val suffix: Option[NonEmptyString])
+    extends Product
+    with Serializable
 object ExecutionEnvironment {
-  case object Development extends ExecutionEnvironment
-  case object Staging     extends ExecutionEnvironment
-  case object Production  extends ExecutionEnvironment
+  case object Development extends ExecutionEnvironment(NonEmptyString("DEV").some)
+  case object Staging     extends ExecutionEnvironment(NonEmptyString("STG").some)
+  case object Production  extends ExecutionEnvironment(none)
 
   /** @group Typeclass Instances */
   implicit val ExecutionEnvironmentEnumerated: Enumerated[ExecutionEnvironment] =

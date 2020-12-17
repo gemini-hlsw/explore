@@ -8,9 +8,11 @@ import cats.effect._
 import cats.syntax.all._
 import clue._
 import crystal.react.StreamRenderer
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas._
 import explore.common.SSOClient
 import explore.model.reusability._
+import explore.utils
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Json
 import sttp.client3.Response
@@ -40,6 +42,7 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
+  version:    NonEmptyString,
   clients:    Clients[F],
   actions:    Actions[F],
   sso:        SSOClient[F]
@@ -60,7 +63,8 @@ object AppContext {
       exploreDBClient <-
         ApolloWebSocketClient.of[F, ExploreDB](config.exploreDBURI, reconnectionStrategy)
       odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
+      version          = utils.version(config.environment)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
-    } yield AppContext[F](clients, actions, SSOClient(config.sso, fromFuture))
+    } yield AppContext[F](version, clients, actions, SSOClient(config.sso, fromFuture))
 }

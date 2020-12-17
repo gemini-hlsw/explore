@@ -1268,9 +1268,27 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
   left: 50%;
   transform: translate(-50%, 0);
   text-transform: uppercase;
-  text-indent: @spacing;;
+  text-indent: @spacing;
   letter-spacing: @spacing;
   padding: 0.5em 1em;
   font-weight: 900;
   background-color: var(--explore-accent-color);
+}
+
+.version {
+  font-size: smaller;
+  float: right;
+
+  // CopyToClipboard
+  div {
+    display: inline-block;
+    margin-left: 5px;
+  }
+}
+
+.version.uncopied {
+  // CopyToClipboard
+  div {
+    cursor: pointer;
+  }
 }

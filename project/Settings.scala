@@ -27,6 +27,7 @@ object Settings {
     val mUnit             = "0.7.19"
     val reactAladin       = "0.4.0"
     val reactAtlasKitTree = "0.3.0"
+    val reactClipboard    = "1.4.2"
     val reactCommon       = "0.11.2"
     val reactDatepicker   = "0.1.0"
     val reactGridLayout   = "0.9.2"
@@ -184,9 +185,13 @@ object Settings {
     val ReactAtlasKitTree = Def.setting(
       deps(
         "com.rpiaggio" %%% "scalajs-react-atlaskit-tree"
-      )(
-        reactAtlasKitTree
-      )
+      )(reactAtlasKitTree)
+    )
+
+    val ReactClipboard = Def.setting(
+      deps(
+        "io.github.cquiroz.react" %%% "react-clipboard"
+      )(reactClipboard)
     )
 
     val ReactCommon = Def.setting(

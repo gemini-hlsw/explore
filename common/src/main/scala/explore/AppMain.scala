@@ -23,6 +23,7 @@ import explore.model.AppContext
 import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.enum.AppTab
+import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
@@ -38,7 +39,6 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
-import explore.model.enum.ExecutionEnvironment
 
 object AppCtx extends AppRootContext[AppContextIO]
 
