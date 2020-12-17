@@ -163,10 +163,7 @@ object ExploreStyles {
   val WarningLabel: Css = Css("explore-warning-label")
   val ErrrorLabel: Css  = Css("explore-error-label")
 
-  // Clean corner icons
-  val Info: Css          = Css("info")
-  // Popup with less padding and lighter border
-  val DiscretePopup: Css = Css("discrete-popup")
   // Version with copy icon
-  val Version: Css       = Css("version")
+  val Version: Css         = Css("version")
+  val VersionUncopied: Css = Css("uncopied")
 }

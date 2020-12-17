@@ -31,4 +31,5 @@ object Icons {
   val Info                = Icon("info circle")
   val Clipboard           = Icon("clipboard outline")
   val ClipboardCheck      = Icon("clipboard check")
+  val Close               = Icon("close")
 }

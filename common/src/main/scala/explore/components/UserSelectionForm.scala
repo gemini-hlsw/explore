@@ -68,9 +68,7 @@ object UserSelectionForm {
           content = ModalContent(
             <.div(
               ExploreStyles.LoginBoxLayout,
-              <.div(ExploreStyles.LoginTitleWrapper)(
-                <.div(ExploreStyles.LoginTitle, "Explore")
-              ),
+              Logo(),
               Button(
                 content =
                   <.div(ExploreStyles.LoginOrcidButton,

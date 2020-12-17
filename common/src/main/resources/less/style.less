@@ -1275,22 +1275,20 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
   background-color: var(--explore-accent-color);
 }
 
-i.icons.info .corner.icon {
-  font-size: 0.65em;
-  text-shadow: none;
-}
-
-.ui.popup.discrete-popup {
-  padding: 5px 10px;
-  box-shadow: none;
-}
-
 .version {
   font-size: smaller;
+  float: right;
 
   // CopyToClipboard
   div {
     display: inline-block;
-    margin-left: 5px;    
+    margin-left: 5px;
+  }
+}
+
+.version.uncopied {
+  // CopyToClipboard
+  div {
+    cursor: pointer;
   }
 }
