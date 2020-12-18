@@ -6,8 +6,8 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats              = "2.3.0"
-    val catsEffect        = "2.3.0"
+    val cats              = "2.3.1"
+    val catsEffect        = "2.3.1"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
     val clue              = "0.8.1"
