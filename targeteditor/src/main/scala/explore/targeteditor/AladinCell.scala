@@ -60,33 +60,34 @@ object AladinCell extends ModelOptics {
         .flatMapCB(_.backend.gotoRaDec(coords))
         .toCallback
 
-    def render(props: Props, state: State) =
-      React.Fragment(
+    def render(props: Props, state: State) = React.Fragment(
+      <.div(
+        ExploreStyles.TargetAladinCell,
         <.div(
-          ExploreStyles.TargetAladinCell,
+          ExploreStyles.AladinContainerColumn,
+          AladinRef
+            .withRef(aladinRef) {
+              AladinContainer(
+                props.target,
+                props.options.get,
+                $.setStateL(State.current)(_),
+                $.setStateL(State.fov)(_)
+              )
+            },
+          AladinToolbar(state.fov, state.current),
           <.div(
-            ExploreStyles.AladinContainerColumn,
-            AladinRef
-              .withRef(aladinRef) {
-                AladinContainer(
-                  props.target,
-                  props.options.get,
-                  $.setStateL(State.current)(_),
-                  $.setStateL(State.fov)(_)
-                )
-              },
-            AladinToolbar(state.fov, state.current),
-            <.div(
-              ExploreStyles.AladinCenterButton,
-              Popup(
-                content = "Center on target",
-                position = PopupPosition.BottomLeft,
-                trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(Icons.Bullseye)
+            ExploreStyles.AladinCenterButton,
+            Popup(
+              content = "Center on target",
+              position = PopupPosition.BottomLeft,
+              trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
+                Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
               )
             )
           )
         )
       )
+    )
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
       gotoRaDec(nextProps.aladinCoords)

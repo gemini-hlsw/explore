@@ -15,6 +15,7 @@ object ExploreStyles {
   val TileBody: Css  = Css("explore-tile-body")
 
   val TextInForm: Css = Css("explore-text-in-form")
+  val Accented: Css   = Css("explore-accented")
 
   val FlexContainer: Css = Css("explore-flex-container")
   val FlexWrap: Css      = Css("explore-flex-wrap")

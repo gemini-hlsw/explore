@@ -26,10 +26,12 @@ object Icons {
   val Ban                 = Icon("ban")
   val UserAstronaut       = Icon(className = "user-astronaut")
   val Logout              = Icon("sign out alternate")
-  val SkullCrossBones     = Icon("skull crossbones")
+  val SkullCrossBones     = Icon(className = "skull crossbones")
   val WarningSign         = Icon("warning sign")
   val Info                = Icon("info circle")
   val Clipboard           = Icon("clipboard outline")
   val ClipboardCheck      = Icon("clipboard check")
   val Close               = Icon("close")
+  val MousePointer        = Icon("mouse pointer")
+  val Expand              = Icon("expand")
 }

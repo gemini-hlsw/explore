@@ -6,6 +6,7 @@ package explore.targeteditor
 import scala.math.rint
 
 import explore.components.ui.ExploreStyles
+import explore.Icons
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.HourAngle.HMS
@@ -57,7 +58,7 @@ object AladinToolbar {
       f"$degrees%02d°"
     else if (degrees >= 1)
       f"$degrees%02d°$arcminutes%02d′"
-    else if (arcminutes >= 10)
+    else if (arcminutes >= 1)
       f"$arcminutes%02d′$arcseconds%01d″"
     else
       f"$arcseconds%01d.$mas%02d″"
@@ -69,14 +70,16 @@ object AladinToolbar {
       .render_P((props: Props) =>
         React.Fragment(
           Label(
-            content = "Fov:",
+            icon = Icons.Expand.fitted(true).clazz(ExploreStyles.Accented),
             clazz = ExploreStyles.AladinFOV,
             size = Small,
-            detail =
-              LabelDetail(clazz = ExploreStyles.AladinDetailText, content = formatFov(props.fov.x))
+            detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
+                                 content =
+                                   s"${formatFov(props.fov.x)} \u00D7 ${formatFov(props.fov.y)}"
+            )
           ),
           Label(
-            content = "Cur:",
+            icon = Icons.MousePointer.fitted(true).clazz(ExploreStyles.Accented),
             clazz = ExploreStyles.AladinCurrentCoords,
             size = Small,
             detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
