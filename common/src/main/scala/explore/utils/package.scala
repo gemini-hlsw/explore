@@ -33,7 +33,7 @@ package object utils {
         case Development => versionDateTimeFormatter.format(instant)
         case _           =>
           versionDateFormatter.format(instant) +
-            "-" + BuildInfo.gitHeadCommit.map(_.takeRight(7)).getOrElse("NONE")
+            "-" + BuildInfo.gitHeadCommit.map(_.take(7)).getOrElse("NONE")
       })
         + environment.suffix
           .map(suffix => s"-$suffix")

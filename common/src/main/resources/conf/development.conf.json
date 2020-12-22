@@ -1,11 +1,11 @@
 {
   "environment": "DEVELOPMENT",
-  "odbURI": "wss://odb.gpp.lucuma.xyz/ws",
+  "odbURI": "wss://lucuma-odb-p-obs-target-1hnxxk.herokuapp.com/ws",
   "preferencesDBURI": "wss://userprefs-hasura-staging.herokuapp.com/v1/graphql",
   "sso": {
     "uri": "https://sso.gpp.lucuma.xyz",
     "readTimeoutSeconds": 10,
     "refreshTimeoutDeltaSeconds": 10,
-    "refreshIntervalFactor": 10
+    "refreshIntervalFactor": 1
   }
 }

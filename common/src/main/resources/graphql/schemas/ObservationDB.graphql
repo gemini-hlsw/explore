@@ -1,10 +1,13 @@
-# Common fields shared by all asterisms
-interface Asterism {
+# Collection of stars observed in a single observation
+type Asterism {
   # Asterism ID
   id: AsterismId!
 
   # Whether the asterism is deleted or present
   existence: Existence!
+
+  # Asterism name, if any.
+  name: String
 
   # When set, overrides the default base position of the asterism
   explicitBase: Coordinates
@@ -44,10 +47,28 @@ type AsterismEdit implements Event {
 # AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
 scalar AsterismId
 
+# Asterism and the observations with which they are associated
+input AsterismObservationLinks {
+  asterismId: AsterismId!
+  observationIds: [ObservationId!]!
+}
+
 # Asterism and the programs with which they are associated
 input AsterismProgramLinks {
-  asterismIds: [AsterismId!]!
+  asterismId: AsterismId!
   programIds: [ProgramId!]!
+}
+
+# Asterism and the targets with which they are associated
+input AsterismTargetLinks {
+  asterismId: AsterismId!
+  targetIds: [TargetId!]!
+}
+
+# Bias calibration step
+type Bias implements StepConfig {
+  # Step type
+  stepType: StepType!
 }
 
 # The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
@@ -79,6 +100,12 @@ enum CatalogName {
   GAIA
 }
 
+# Instrument configuration
+interface Config {
+  # Instrument type
+  instrument: InstrumentType!
+}
+
 type Coordinates {
   # Right Ascension
   ra: RightAscension!
@@ -96,11 +123,9 @@ input CoordinatesInput {
 # Default asterism parameters
 input CreateDefaultAsterismInput {
   asterismId: AsterismId
+  name: String
   programIds: [ProgramId!]!
   explicitBase: CoordinatesInput
-
-  # Targets to include in default asterism
-  targetIds: [TargetId!]!
 }
 
 # Nonsidereal target parameters
@@ -119,6 +144,7 @@ input CreateObservationInput {
   programId: ProgramId!
   name: String
   asterismId: AsterismId
+  targetId: TargetId
   status: ObsStatus
 }
 
@@ -135,6 +161,12 @@ input CreateSiderealInput {
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
   magnitudes: [MagnitudeInput!]
+}
+
+# Dark calibration step
+type Dark implements StepConfig {
+  # Step type
+  stepType: StepType!
 }
 
 type Declination {
@@ -184,39 +216,6 @@ enum DeclinationUnits {
   DEGREES
 }
 
-# Default asterism
-type DefaultAsterism implements Asterism {
-  # Asterism ID
-  id: AsterismId!
-
-  # Whether the asterism is deleted or present
-  existence: Existence!
-
-  # When set, overrides the default base position of the asterism
-  explicitBase: Coordinates
-
-  # All observations associated with the asterism.
-  observations(
-    # Program ID
-    programId: ProgramId
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # All asterism targets
-  targets(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # The programs associated with the asterism.
-  programs(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Program!]!
-}
-
 # Target declination coordinate in format '[+/-]DD:MM:SS.sss'
 scalar DmsString
 
@@ -240,34 +239,40 @@ type Duration {
 # Default asterism edit
 input EditDefaultAsterismInput {
   asterismId: AsterismId!
-  existence: Existence
-  explicitBase: CoordinatesInput
 
-  # Targets to include in the default asterism
-  targetIds: [TargetId!]
+  # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  existence: Existence
+
+  # The name field may be unset by assigning a null value, or ignored by skipping it altogether
+  name: String
+
+  # The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
+  explicitBase: CoordinatesInput
 }
 
 # Edit observation
 input EditObservationInput {
   observationId: ObservationId!
+
+  # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
   existence: Existence
+
+  # The name field may be unset by assigning a null value, or ignored by skipping it altogether
   name: String
+
+  # The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
   status: ObsStatus
+
+  # The asterismId field may be unset by assigning a null value, or ignored by skipping it altogether
   asterismId: AsterismId
+
+  # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
+  targetId: TargetId
 }
 
 # Sidereal target edit parameters
 input EditSiderealInput {
   targetId: TargetId!
-  existence: Existence
-  name: String
-  catalogId: CatalogIdInput
-  ra: RightAscensionInput
-  dec: DeclinationInput
-  epoch: EpochString
-  properMotion: ProperMotionInput
-  radialVelocity: RadialVelocityInput
-  parallax: ParallaxModelInput
 
   # Replace all magnitudes with the provided values
   magnitudes: [MagnitudeInput!]
@@ -277,6 +282,33 @@ input EditSiderealInput {
 
   # Removes any listed magnitude values
   deleteMagnitudes: [MagnitudeBand!]
+
+  # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  existence: Existence
+
+  # The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  name: String
+
+  # The catalogId field may be unset by assigning a null value, or ignored by skipping it altogether
+  catalogId: CatalogIdInput
+
+  # The ra field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  ra: RightAscensionInput
+
+  # The dec field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  dec: DeclinationInput
+
+  # The epoch field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  epoch: EpochString
+
+  # The properMotion field may be unset by assigning a null value, or ignored by skipping it altogether
+  properMotion: ProperMotionInput
+
+  # The radialVelocity field may be unset by assigning a null value, or ignored by skipping it altogether
+  radialVelocity: RadialVelocityInput
+
+  # The parallax field may be unset by assigning a null value, or ignored by skipping it altogether
+  parallax: ParallaxModelInput
 }
 
 # Type of edit that triggered an event
@@ -323,8 +355,850 @@ enum Existence {
   DELETED
 }
 
+# GCAL calibration step (flat / arc)
+type Gcal implements StepConfig {
+  # GCAL continuum, present if no arcs are used
+  continuum: GcalContinuum
+
+  # GCAL arcs, one or more present if no continuum is used
+  arcs: [GcalArc!]!
+
+  # GCAL filter
+  filter: GcalFilter!
+
+  # GCAL diffuser
+  diffuser: GcalDiffuser!
+
+  # GCAL shutter
+  shutter: GcalShutter!
+
+  # GCAL exposure time
+  exposure: Duration!
+
+  # GCAL coadds
+  coadds: Int!
+
+  # Step type
+  stepType: StepType!
+}
+
+# GCAL arc
+enum GcalArc {
+  # GcalArc ArArc
+  AR_ARC
+
+  # GcalArc ThArArc
+  TH_AR_ARC
+
+  # GcalArc CuArArc
+  CU_AR_ARC
+
+  # GcalArc XeArc
+  XE_ARC
+}
+
+# GCAL continuum
+enum GcalContinuum {
+  # GcalContinuum IrGreyBodyLow
+  IR_GREY_BODY_LOW
+
+  # GcalContinuum IrGreyBodyHigh
+  IR_GREY_BODY_HIGH
+
+  # GcalContinuum QuartzHalogen
+  QUARTZ_HALOGEN
+}
+
+# GCAL diffuser
+enum GcalDiffuser {
+  # GcalDiffuser Ir
+  IR
+
+  # GcalDiffuser Visible
+  VISIBLE
+}
+
+# GCAL filter
+enum GcalFilter {
+  # GcalFilter None
+  NONE
+
+  # GcalFilter Gmos
+  GMOS
+
+  # GcalFilter Hros
+  HROS
+
+  # GcalFilter Nir
+  NIR
+
+  # GcalFilter Nd10
+  ND10
+
+  # GcalFilter Nd16
+  ND16
+
+  # GcalFilter Nd20
+  ND20
+
+  # GcalFilter Nd30
+  ND30
+
+  # GcalFilter Nd40
+  ND40
+
+  # GcalFilter Nd45
+  ND45
+
+  # GcalFilter Nd50
+  ND50
+}
+
+# GCAL shutter
+enum GcalShutter {
+  # GcalShutter Open
+  OPEN
+
+  # GcalShutter Closed
+  CLOSED
+}
+
+# GMOS amp count
+enum GmosAmpCount {
+  # GmosAmpCount Three
+  THREE
+
+  # GmosAmpCount Six
+  SIX
+
+  # GmosAmpCount Twelve
+  TWELVE
+}
+
+# GMOS amp read mode
+enum GmosAmpReadMode {
+  # GmosAmpReadMode Slow
+  SLOW
+
+  # GmosAmpReadMode Fast
+  FAST
+}
+
+# CCD Readout Configuration
+type GmosCcdMode {
+  # GMOS X-binning
+  xBin: GmosXBinning!
+
+  # GMOS Y-binning
+  yBin: GmosYBinning!
+
+  # GMOS Amp Count
+  ampCount: GmosAmpCount!
+
+  # GMOS Amp Gain
+  ampGain: GmosAmpCount!
+
+  # GMOS Amp Read Mode
+  ampReadMode: GmosAmpReadMode!
+}
+
+# GMOS Custom Mask
+type GmosCustomMask {
+  # Custom Mask Filename
+  filename: String!
+
+  # Custom Slit Width
+  slitWidth: GmosCustomSlitWidth!
+}
+
+# GMOS Custom Slit Width
+enum GmosCustomSlitWidth {
+  # GmosCustomSlitWidth CustomWidth_0_25
+  CUSTOM_WIDTH_0_25
+
+  # GmosCustomSlitWidth CustomWidth_0_50
+  CUSTOM_WIDTH_0_50
+
+  # GmosCustomSlitWidth CustomWidth_0_75
+  CUSTOM_WIDTH_0_75
+
+  # GmosCustomSlitWidth CustomWidth_1_00
+  CUSTOM_WIDTH_1_00
+
+  # GmosCustomSlitWidth CustomWidth_1_50
+  CUSTOM_WIDTH_1_50
+
+  # GmosCustomSlitWidth CustomWidth_2_00
+  CUSTOM_WIDTH_2_00
+
+  # GmosCustomSlitWidth CustomWidth_5_00
+  CUSTOM_WIDTH_5_00
+}
+
+# Detector type
+enum GmosDetector {
+  # GmosDetector E2V
+  E2_V
+
+  # GmosDetector HAMAMATSU
+  HAMAMATSU
+}
+
+# GMOS disperser order
+enum GmosDisperserOrder {
+  # GmosDisperserOrder Zero
+  ZERO
+
+  # GmosDisperserOrder One
+  ONE
+
+  # GmosDisperserOrder Two
+  TWO
+}
+
+# GMOS Detector Translation X Offset
+enum GmosDtax {
+  # GmosDtax MinusSix
+  MINUS_SIX
+
+  # GmosDtax MinusFive
+  MINUS_FIVE
+
+  # GmosDtax MinusFour
+  MINUS_FOUR
+
+  # GmosDtax MinusThree
+  MINUS_THREE
+
+  # GmosDtax MinusTwo
+  MINUS_TWO
+
+  # GmosDtax MinusOne
+  MINUS_ONE
+
+  # GmosDtax Zero
+  ZERO
+
+  # GmosDtax One
+  ONE
+
+  # GmosDtax Two
+  TWO
+
+  # GmosDtax Three
+  THREE
+
+  # GmosDtax Four
+  FOUR
+
+  # GmosDtax Five
+  FIVE
+
+  # GmosDtax Six
+  SIX
+}
+
+# Electronic offsetting
+enum GmosEOffsetting {
+  # GmosEOffsetting On
+  ON
+
+  # GmosEOffsetting Off
+  OFF
+}
+
+# Either custom mask or builtin-FPU
+union GmosFpu = GmosCustomMask | GmosNorthBuiltinFpu
+
+type GmosNodAndShuffle {
+  # Offset position A
+  posA: Offset!
+
+  # Offset position B
+  posB: Offset!
+
+  # Whether to use electronic offsetting
+  eOffset: GmosEOffsetting!
+
+  # Shuffle offset
+  shuffleOffset: Int!
+
+  # Shuffle cycles
+  shuffleCycles: Int!
+}
+
+# GMOS North builtin-in FPU
+type GmosNorthBuiltinFpu {
+  # GMOS North builtin-fpu
+  builtin: GmosNorthFpu!
+}
+
+# GMOS North Configuration
+type GmosNorthConfig implements Config {
+  # GMOS North manual sequence configuration
+  manual: GmosNorthSequence!
+
+  # Instrument type
+  instrument: InstrumentType!
+}
+
+# GMOS North Disperser
+enum GmosNorthDisperser {
+  # GmosNorthDisperser B1200_G5301
+  B1200_G5301
+
+  # GmosNorthDisperser R831_G5302
+  R831_G5302
+
+  # GmosNorthDisperser B600_G5303
+  B600_G5303
+
+  # GmosNorthDisperser B600_G5307
+  B600_G5307
+
+  # GmosNorthDisperser R600_G5304
+  R600_G5304
+
+  # GmosNorthDisperser R400_G5305
+  R400_G5305
+
+  # GmosNorthDisperser R150_G5306
+  R150_G5306
+
+  # GmosNorthDisperser R150_G5308
+  R150_G5308
+}
+
+# GMOS North dynamic step configuration
+type GmosNorthDynamic {
+  # GMOS exposure time
+  exposure: Duration!
+
+  # GMOS CCD Readout
+  readout: GmosCcdMode!
+
+  # GMOS detector x offset
+  dtax: GmosDtax!
+
+  # GMOS region of interest
+  roi: GmosRoi!
+
+  # GMOS North grating
+  grating: GmosNorthGrating
+
+  # GMOS North filter
+  filter: GmosNorthFilter
+
+  # GMOS North FPU
+  fpu: GmosFpu
+}
+
+# GMOS North Filter
+enum GmosNorthFilter {
+  # GmosNorthFilter GPrime
+  G_PRIME
+
+  # GmosNorthFilter RPrime
+  R_PRIME
+
+  # GmosNorthFilter IPrime
+  I_PRIME
+
+  # GmosNorthFilter ZPrime
+  Z_PRIME
+
+  # GmosNorthFilter Z
+  Z
+
+  # GmosNorthFilter Y
+  Y
+
+  # GmosNorthFilter GG455
+  GG455
+
+  # GmosNorthFilter OG515
+  OG515
+
+  # GmosNorthFilter RG610
+  RG610
+
+  # GmosNorthFilter CaT
+  CA_T
+
+  # GmosNorthFilter Ha
+  HA
+
+  # GmosNorthFilter HaC
+  HA_C
+
+  # GmosNorthFilter DS920
+  DS920
+
+  # GmosNorthFilter SII
+  SII
+
+  # GmosNorthFilter OIII
+  OIII
+
+  # GmosNorthFilter OIIIC
+  OIIIC
+
+  # GmosNorthFilter HeII
+  HE_II
+
+  # GmosNorthFilter HeIIC
+  HE_IIC
+
+  # GmosNorthFilter HartmannA_RPrime
+  HARTMANN_A_R_PRIME
+
+  # GmosNorthFilter HartmannB_RPrime
+  HARTMANN_B_R_PRIME
+
+  # GmosNorthFilter GPrime_GG455
+  G_PRIME_GG455
+
+  # GmosNorthFilter GPrime_OG515
+  G_PRIME_OG515
+
+  # GmosNorthFilter RPrime_RG610
+  R_PRIME_RG610
+
+  # GmosNorthFilter IPrime_CaT
+  I_PRIME_CA_T
+
+  # GmosNorthFilter ZPrime_CaT
+  Z_PRIME_CA_T
+
+  # GmosNorthFilter UPrime
+  U_PRIME
+}
+
+# GMOS North FPU
+enum GmosNorthFpu {
+  # GmosNorthFpu Ns0
+  NS0
+
+  # GmosNorthFpu Ns1
+  NS1
+
+  # GmosNorthFpu Ns2
+  NS2
+
+  # GmosNorthFpu Ns3
+  NS3
+
+  # GmosNorthFpu Ns4
+  NS4
+
+  # GmosNorthFpu Ns5
+  NS5
+
+  # GmosNorthFpu LongSlit_0_25
+  LONG_SLIT_0_25
+
+  # GmosNorthFpu LongSlit_0_50
+  LONG_SLIT_0_50
+
+  # GmosNorthFpu LongSlit_0_75
+  LONG_SLIT_0_75
+
+  # GmosNorthFpu LongSlit_1_00
+  LONG_SLIT_1_00
+
+  # GmosNorthFpu LongSlit_1_50
+  LONG_SLIT_1_50
+
+  # GmosNorthFpu LongSlit_2_00
+  LONG_SLIT_2_00
+
+  # GmosNorthFpu LongSlit_5_00
+  LONG_SLIT_5_00
+
+  # GmosNorthFpu Ifu1
+  IFU1
+
+  # GmosNorthFpu Ifu2
+  IFU2
+
+  # GmosNorthFpu Ifu3
+  IFU3
+}
+
+# GMOS North Grating
+type GmosNorthGrating {
+  # GMOS North Disperser
+  disperser: GmosNorthDisperser!
+
+  # GMOS disperser order
+  order: GmosDisperserOrder!
+
+  # Grating wavelength
+  wavelength: Wavelength!
+}
+
+# Instrument sequence
+type GmosNorthSequence {
+  # Static/unchanging configuration
+  static: GmosNorthStaticConfig!
+
+  # Acquisition sequence
+  acquisition: [GmosNorthStep!]!
+
+  # Science sequence
+  science: [GmosNorthStep!]!
+}
+
+# GMOS North stage mode
+enum GmosNorthStageMode {
+  # GmosNorthStageMode NoFollow
+  NO_FOLLOW
+
+  # GmosNorthStageMode FollowXyz
+  FOLLOW_XYZ
+
+  # GmosNorthStageMode FollowXy
+  FOLLOW_XY
+
+  # GmosNorthStageMode FollowZ
+  FOLLOW_Z
+}
+
+# Unchanging (over the course of the sequence) configuration values
+type GmosNorthStaticConfig {
+  # Stage mode
+  stageMode: GmosNorthStageMode!
+
+  # Detector in use (always HAMAMATSU for recent and new observations)
+  detector: GmosDetector!
+
+  # Is MOS Pre-Imaging Observation
+  mosPreImaging: MosPreImaging!
+
+  # Nod-and-shuffle configuration
+  nodAndShuffle: GmosNodAndShuffle
+}
+
+# Step (bias, dark, science, etc.)
+type GmosNorthStep {
+  # Step type
+  stepType: StepType!
+
+  # Instrument configuration
+  instrumentConfig: GmosNorthDynamic!
+
+  # Step configuration
+  stepConfig: StepConfig!
+}
+
+# GMOS Region Of Interest
+enum GmosRoi {
+  # GmosRoi FullFrame
+  FULL_FRAME
+
+  # GmosRoi Ccd2
+  CCD2
+
+  # GmosRoi CentralSpectrum
+  CENTRAL_SPECTRUM
+
+  # GmosRoi CentralStamp
+  CENTRAL_STAMP
+
+  # GmosRoi TopSpectrum
+  TOP_SPECTRUM
+
+  # GmosRoi BottomSpectrum
+  BOTTOM_SPECTRUM
+
+  # GmosRoi Custom
+  CUSTOM
+}
+
+# GMOS South Configuration
+type GmosSouthConfig implements Config {
+  # GMOS South manual sequence configuration
+  manual: GmosSouthSequence!
+
+  # Instrument type
+  instrument: InstrumentType!
+}
+
+# GMOS South Disperser
+enum GmosSouthDisperser {
+  # GmosSouthDisperser B1200_G5321
+  B1200_G5321
+
+  # GmosSouthDisperser R831_G5322
+  R831_G5322
+
+  # GmosSouthDisperser B600_G5323
+  B600_G5323
+
+  # GmosSouthDisperser R600_G5324
+  R600_G5324
+
+  # GmosSouthDisperser R400_G5325
+  R400_G5325
+
+  # GmosSouthDisperser R150_G5326
+  R150_G5326
+}
+
+# GMOS South dynamic step configuration
+type GmosSouthDynamic {
+  # GMOS exposure time
+  exposure: Duration!
+
+  # GMOS CCD Readout
+  readout: GmosCcdMode!
+
+  # GMOS detector x offset
+  dtax: GmosDtax!
+
+  # GMOS region of interest
+  roi: GmosRoi!
+
+  # GMOS South grating
+  grating: GmosSouthGrating
+
+  # GMOS South filter
+  filter: GmosSouthFilter
+
+  # GMOS South FPU
+  fpu: GmosFpu
+}
+
+# GMOS South Filter
+enum GmosSouthFilter {
+  # GmosSouthFilter UPrime
+  U_PRIME
+
+  # GmosSouthFilter GPrime
+  G_PRIME
+
+  # GmosSouthFilter RPrime
+  R_PRIME
+
+  # GmosSouthFilter IPrime
+  I_PRIME
+
+  # GmosSouthFilter ZPrime
+  Z_PRIME
+
+  # GmosSouthFilter Z
+  Z
+
+  # GmosSouthFilter Y
+  Y
+
+  # GmosSouthFilter GG455
+  GG455
+
+  # GmosSouthFilter OG515
+  OG515
+
+  # GmosSouthFilter RG610
+  RG610
+
+  # GmosSouthFilter RG780
+  RG780
+
+  # GmosSouthFilter CaT
+  CA_T
+
+  # GmosSouthFilter HartmannA_RPrime
+  HARTMANN_A_R_PRIME
+
+  # GmosSouthFilter HartmannB_RPrime
+  HARTMANN_B_R_PRIME
+
+  # GmosSouthFilter GPrime_GG455
+  G_PRIME_GG455
+
+  # GmosSouthFilter GPrime_OG515
+  G_PRIME_OG515
+
+  # GmosSouthFilter RPrime_RG610
+  R_PRIME_RG610
+
+  # GmosSouthFilter IPrime_RG780
+  I_PRIME_RG780
+
+  # GmosSouthFilter IPrime_CaT
+  I_PRIME_CA_T
+
+  # GmosSouthFilter ZPrime_CaT
+  Z_PRIME_CA_T
+
+  # GmosSouthFilter Ha
+  HA
+
+  # GmosSouthFilter SII
+  SII
+
+  # GmosSouthFilter HaC
+  HA_C
+
+  # GmosSouthFilter OIII
+  OIII
+
+  # GmosSouthFilter OIIIC
+  OIIIC
+
+  # GmosSouthFilter HeII
+  HE_II
+
+  # GmosSouthFilter HeIIC
+  HE_IIC
+
+  # GmosSouthFilter Lya395
+  LYA395
+}
+
+# GMOS South Grating
+type GmosSouthGrating {
+  # GMOS South Disperser
+  disperser: GmosSouthDisperser!
+
+  # GMOS disperser order
+  order: GmosDisperserOrder!
+
+  # Grating wavelength
+  wavelength: Wavelength!
+}
+
+# Instrument sequence
+type GmosSouthSequence {
+  # Static/unchanging configuration
+  static: GmosSouthStaticConfig!
+
+  # Acquisition sequence
+  acquisition: [GmosSouthStep!]!
+
+  # Science sequence
+  science: [GmosSouthStep!]!
+}
+
+# GMOS South stage mode
+enum GmosSouthStageMode {
+  # GmosSouthStageMode NoFollow
+  NO_FOLLOW
+
+  # GmosSouthStageMode FollowXyz
+  FOLLOW_XYZ
+
+  # GmosSouthStageMode FollowXy
+  FOLLOW_XY
+
+  # GmosSouthStageMode FollowZ
+  FOLLOW_Z
+}
+
+# Unchanging (over the course of the sequence) configuration values
+type GmosSouthStaticConfig {
+  # Stage mode
+  stageMode: GmosSouthStageMode!
+
+  # Detector in use (always HAMAMATSU for recent and new observations)
+  detector: GmosDetector!
+
+  # Is MOS Pre-Imaging Observation
+  mosPreImaging: MosPreImaging!
+
+  # Nod-and-shuffle configuration
+  nodAndShuffle: GmosNodAndShuffle
+}
+
+# Step (bias, dark, science, etc.)
+type GmosSouthStep {
+  # Step type
+  stepType: StepType!
+
+  # Instrument configuration
+  instrumentConfig: GmosSouthDynamic!
+
+  # Step configuration
+  stepConfig: StepConfig!
+}
+
+# GMOS X Binning
+enum GmosXBinning {
+  # GmosXBinning One
+  ONE
+
+  # GmosXBinning Two
+  TWO
+
+  # GmosXBinning Four
+  FOUR
+}
+
+# GMOS Y Binning
+enum GmosYBinning {
+  # GmosYBinning One
+  ONE
+
+  # GmosYBinning Two
+  TWO
+
+  # GmosYBinning Four
+  FOUR
+}
+
 # Target right ascension coordinate in format 'HH:MM:SS.sss'
 scalar HmsString
+
+# Instrument
+enum InstrumentType {
+  # InstrumentType Phoenix
+  PHOENIX
+
+  # InstrumentType Michelle
+  MICHELLE
+
+  # InstrumentType Gnirs
+  GNIRS
+
+  # InstrumentType Niri
+  NIRI
+
+  # InstrumentType Trecs
+  TRECS
+
+  # InstrumentType Nici
+  NICI
+
+  # InstrumentType Nifs
+  NIFS
+
+  # InstrumentType Gpi
+  GPI
+
+  # InstrumentType Gsaoi
+  GSAOI
+
+  # InstrumentType GmosS
+  GMOS_S
+
+  # InstrumentType AcqCam
+  ACQ_CAM
+
+  # InstrumentType GmosN
+  GMOS_N
+
+  # InstrumentType Bhros
+  BHROS
+
+  # InstrumentType Visitor
+  VISITOR
+
+  # InstrumentType Flamingos2
+  FLAMINGOS2
+
+  # InstrumentType Ghost
+  GHOST
+}
 
 # The `Long` scalar type represents non-fractional signed whole numeric values.
 # Long can represent values between -(2^63) and 2^63 - 1.
@@ -424,15 +1298,24 @@ enum MagnitudeSystem {
   JY
 }
 
+# MOS pre-imaging observation
+enum MosPreImaging {
+  # MosPreImaging IsMosPreImaging
+  IS_MOS_PRE_IMAGING
+
+  # MosPreImaging IsNotMosPreImaging
+  IS_NOT_MOS_PRE_IMAGING
+}
+
 type Mutation {
-  createDefaultAsterism(
+  createAsterism(
     # Default Asterism description
     input: CreateDefaultAsterismInput!
-  ): DefaultAsterism
-  updateDefaultAsterism(
+  ): Asterism
+  updateAsterism(
     # Edit default asterism
     input: EditDefaultAsterismInput!
-  ): DefaultAsterism!
+  ): Asterism!
   deleteAsterism(
     # Asterism ID
     asterismId: AsterismId!
@@ -477,30 +1360,54 @@ type Mutation {
     # Target ID
     targetId: TargetId!
   ): Target!
-  shareAsterismsWithPrograms(
+  shareAsterismWithObservations(
+    # Asterism/observation links
+    input: AsterismObservationLinks!
+  ): Asterism!
+  unshareAsterismWithObservations(
+    # Asterism/observation links
+    input: AsterismObservationLinks!
+  ): Asterism!
+  shareAsterismWithPrograms(
     # Asterism/program links
     input: AsterismProgramLinks!
-  ): [Asterism!]!
-  unshareAsterismsWithPrograms(
+  ): Asterism!
+  unshareAsterismWithPrograms(
     # Asterism/program links
     input: AsterismProgramLinks!
-  ): [Asterism!]!
-  shareTargetsWithObservations(
+  ): Asterism!
+  shareAsterismWithTargets(
+    # Asterism/target links
+    input: AsterismTargetLinks!
+  ): Asterism!
+  unshareAsterismWithTargets(
+    # Asterism/target links
+    input: AsterismTargetLinks!
+  ): Asterism!
+  shareTargetWithAsterisms(
+    # Target/observation links
+    input: TargetAsterismLinks!
+  ): Target!
+  unshareTargetWithAsterisms(
+    # Target/observation links
+    input: TargetAsterismLinks!
+  ): Target!
+  shareTargetWithObservations(
     # Target/observation links
     input: TargetObservationLinks!
-  ): [Asterism!]!
-  unshareTargetsWithObservations(
+  ): Target!
+  unshareTargetWithObservations(
     # Target/observation links
     input: TargetObservationLinks!
-  ): [Asterism!]!
-  shareTargetsWithPrograms(
+  ): Target!
+  shareTargetWithPrograms(
     # Target/program links
     input: TargetProgramLinks!
-  ): [Target!]!
-  unshareTargetsWithPrograms(
+  ): Target!
+  unshareTargetWithPrograms(
     # Target/program links
     input: TargetProgramLinks!
-  ): [Target!]!
+  ): Target!
 }
 
 type Nonsidereal {
@@ -533,17 +1440,26 @@ type Observation {
     includeDeleted: Boolean! = false
   ): Program!
 
-  # The observation's asterism, if any
+  # The observation's asterism or target (see also `asterism` and `target` fields)
+  observationTarget(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationTarget
+
+  # The observation's asterism, if a multi-target observation
   asterism(
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): Asterism
 
-  # The observation's targets, if any
-  targets(
+  # The observation's target, if a single-target observation
+  target(
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
-  ): [Target!]!
+  ): Target
+
+  # Instrument configuration
+  config: Config
 }
 
 # Event sent when a new object is created or updated
@@ -558,6 +1474,9 @@ type ObservationEdit implements Event {
 
 # ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
 scalar ObservationId
+
+# Either asterism or target
+union ObservationTarget = Asterism | Target
 
 # Observation status options
 enum ObsStatus {
@@ -584,6 +1503,25 @@ enum ObsStatus {
 
   # ObsStatus Observed
   OBSERVED
+}
+
+type Offset {
+  # Offset in p
+  p: p!
+
+  # Offset in q
+  q: q!
+}
+
+type p {
+  # p offset in µas
+  microarcseconds: Long!
+
+  # p offset in mas
+  milliarcseconds: BigDecimal!
+
+  # p offset in arcsec
+  arcseconds: BigDecimal!
 }
 
 type Parallax {
@@ -751,6 +1689,17 @@ type ProperMotionRA {
 
   # Proper motion in properMotion mas/year
   milliarcsecondsPerYear: BigDecimal!
+}
+
+type q {
+  # q offset in µas
+  microarcseconds: Long!
+
+  # q offset in mas
+  milliarcseconds: BigDecimal!
+
+  # q offset in arcsec
+  arcseconds: BigDecimal!
 }
 
 type Query {
@@ -928,6 +1877,15 @@ enum RightAscensionUnits {
   HOURS
 }
 
+# Science step
+type Science implements StepConfig {
+  # Offset
+  offset: Offset!
+
+  # Step type
+  stepType: StepType!
+}
+
 type Sidereal {
   # Catalog id, if any, describing from where the information in this target was obtained
   catalogId: CatalogId
@@ -946,6 +1904,30 @@ type Sidereal {
 
   # Parallax
   parallax: Parallax
+}
+
+# Step (bias, dark, science, etc.)
+interface StepConfig {
+  # Step type
+  stepType: StepType!
+}
+
+# Step type
+enum StepType {
+  # StepType Bias
+  BIAS
+
+  # StepType Dark
+  DARK
+
+  # StepType Gcal
+  GCAL
+
+  # StepType Science
+  SCIENCE
+
+  # StepType SmartGcal
+  SMART_GCAL
 }
 
 type Subscription {
@@ -1046,6 +2028,12 @@ type Target {
   magnitudes: [Magnitude!]!
 }
 
+# Targets and the asterisms with which they are associated
+input TargetAsterismLinks {
+  targetId: TargetId!
+  asterismIds: [AsterismId!]!
+}
+
 # Event sent when a new object is created or updated
 type TargetEdit implements Event {
   # Type of edit
@@ -1061,16 +2049,30 @@ scalar TargetId
 
 # Targets and the observations with which they are associated
 input TargetObservationLinks {
-  targetIds: [TargetId!]!
+  targetId: TargetId!
   observationIds: [ObservationId!]!
 }
 
 # Targets and the programs with which they are associated
 input TargetProgramLinks {
-  targetIds: [TargetId!]!
+  targetId: TargetId!
   programIds: [ProgramId!]!
 }
 
 # Either Nonsidereal ephemeris lookup key or Sidereal proper motion.
 union Tracking = Nonsidereal | Sidereal
+
+type Wavelength {
+  # Wavelength in pm
+  picometers: Int!
+
+  # Wavelength in Å
+  angstroms: BigDecimal!
+
+  # Wavelength in nm
+  nanometers: BigDecimal!
+
+  # Wavelength in µm
+  micrometers: BigDecimal!
+}
 

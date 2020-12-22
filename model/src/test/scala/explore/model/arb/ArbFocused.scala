@@ -16,6 +16,7 @@ import org.scalacheck.Gen._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.arb.ArbGid._
+import lucuma.core.model.Asterism
 
 trait ArbFocused {
   implicit val focusedArb: Arbitrary[Focused] =
@@ -35,11 +36,16 @@ trait ArbFocused {
   implicit val focusedTargetCogen: Cogen[Focused.FocusedTarget] =
     Cogen[Target.Id].contramap(_.targetId)
 
+  implicit val focusedAsterismCogen: Cogen[Focused.FocusedAsterism] =
+    Cogen[Asterism.Id].contramap(_.asterismId)
+
   implicit val focusedCogen: Cogen[Focused] =
-    Cogen[Either[Focused.FocusedObs, Focused.FocusedTarget]].contramap {
-      case a: Focused.FocusedObs    => a.asLeft
-      case a: Focused.FocusedTarget => a.asRight
-    }
+    Cogen[Either[Either[Focused.FocusedObs, Focused.FocusedTarget], Focused.FocusedAsterism]]
+      .contramap {
+        case a: Focused.FocusedObs      => a.asLeft.asLeft
+        case a: Focused.FocusedTarget   => a.asRight.asLeft
+        case a: Focused.FocusedAsterism => a.asRight
+      }
 }
 
 object ArbFocused extends ArbFocused

@@ -28,7 +28,7 @@ object Routing {
   private def targetTab(model: View[RootModel]): TargetTabContents =
     TargetTabContents(model.zoom(RootModel.userId),
                       model.zoom(RootModel.focused),
-                      model.zoom(RootModel.expandedTargetIds)
+                      model.zoom(RootModel.targetViewExpandedIds)
     )
 
   private def obsTab(model: View[RootModel]): ObsTabContents =

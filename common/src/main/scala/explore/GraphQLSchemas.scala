@@ -8,7 +8,7 @@ import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.enum._
 import explore.model.{ ResizableSection, SiderealTarget }
-import lucuma.core.model.{ Magnitude, Observation, Target, User }
+import lucuma.core.model.{ Asterism, Magnitude, Observation, Target, User }
 
 import java.math.MathContext
 
@@ -17,7 +17,7 @@ object GraphQLSchemas {
   @GraphQLSchema(debug = false)
   object ObservationDB {
     object Scalars {
-      type AsterismId    = String
+      type AsterismId    = Asterism.Id
       type BigDecimal    = scala.BigDecimal
       type DmsString     = String
       type EpochString   = String
