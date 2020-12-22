@@ -13,17 +13,18 @@ import monocle.Lens
 object RootModelRouting {
 
   protected def getPage(model: RootModel): Page =
-    model.tabs.focus match {
+    getPage(model.tabs.focus, model.focused)
+
+  def getPage(tab: AppTab, focused: Option[Focused]): Page =
+    tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        RootModel.focused
-          .get(model)
+        focused
           .collect { case FocusedObs(obsId) => ObsPage(obsId) }
           .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
-        RootModel.focused
-          .get(model)
+        focused
           .collect {
             case FocusedObs(obsId)       => TargetsObsPage(obsId)
             case FocusedTarget(targetId) => TargetPage(targetId)

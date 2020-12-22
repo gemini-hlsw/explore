@@ -5,6 +5,7 @@ package explore
 
 import java.util.concurrent.TimeUnit
 
+import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.scalajs.js
 
@@ -20,6 +21,7 @@ import crystal.AppRootContext
 import crystal.react.AppRoot
 import explore.model.AppConfig
 import explore.model.AppContext
+import explore.model.Focused
 import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.enum.AppTab
@@ -39,6 +41,7 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
+import lucuma.core.model.Observation
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -54,6 +57,8 @@ trait AppMain extends IOApp {
   protected def rootComponent(
     view: View[RootModel]
   ): VdomElement
+
+  protected def pageUrl(@unused tab: AppTab, @unused focused: Option[Focused]): String = "#"
 
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
@@ -120,7 +125,7 @@ trait AppMain extends IOApp {
       appConfig <- fetchConfig
       _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, IO.fromFuture)
+      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
       vault     <- ctx.sso.whoami
       _         <- AppCtx.initIn[IO](ctx)
     } yield {

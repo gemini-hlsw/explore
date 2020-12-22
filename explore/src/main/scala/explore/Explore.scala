@@ -8,8 +8,10 @@ import scala.scalajs.js
 import cats.effect.IO
 import crystal.react.implicits._
 import explore.Routing
+import explore.model.Focused
 import explore.model.RootModel
 import explore.model.RootModelRouting
+import explore.model.enum.AppTab
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -32,4 +34,6 @@ object ExploreMain extends AppMain {
       router(routingView(view))
     )
 
+  override protected def pageUrl(tab: AppTab, focused: Option[Focused]): String =
+    routerCtl.urlFor(RootModelRouting.getPage(tab, focused)).value
 }
