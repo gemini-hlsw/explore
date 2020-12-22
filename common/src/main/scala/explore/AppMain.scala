@@ -41,7 +41,6 @@ import sttp.client3.circe._
 import sttp.model.Uri
 
 import js.annotation._
-import lucuma.core.model.Observation
 
 object AppCtx extends AppRootContext[AppContextIO]
 
