@@ -56,9 +56,10 @@ object AladinCell extends ModelOptics {
         .toCallback
 
     val gotoRaDec = (coords: Coordinates) =>
-      aladinRef.get
-        .flatMapCB(_.backend.gotoRaDec(coords))
-        .toCallback
+      $.setStateL(State.current)(coords) *>
+        aladinRef.get
+          .flatMapCB(_.backend.gotoRaDec(coords))
+          .toCallback
 
     def render(props: Props, state: State) =
       React.Fragment(
