@@ -15,6 +15,7 @@ import crystal.ViewF
 import crystal.ViewOptF
 import explore.GraphQLSchemas._
 import explore.model.AppContext
+import explore.model.RootModel
 import explore.optics._
 import io.chrisdavenport.log4cats.Logger
 import shapeless._
@@ -64,5 +65,10 @@ object implicits extends ShorthandTypes with ListImplicits {
   implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
       extends AnyVal {
     def stripQuantity: ViewOptF[F, N] = self.as(coulombIso[N, U])
+  }
+
+  implicit class RootModelOps(val rootModel: RootModel) extends AnyVal {
+    def url[F[_]](implicit ctx: AppContext[F]): String =
+      ctx.pageUrl(rootModel.tabs.focus, rootModel.focused)
   }
 }
