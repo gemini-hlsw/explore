@@ -6,6 +6,9 @@
 @import "verticalbuttons.less";
 @import "vendor/react-resizable.less";
 @import "vendor/react-grid-layout.less";
+// theming variables
+@import "variables-dark.less";
+@import "variables-light.less";
 
 @import "explore-grid.less";
 
@@ -27,493 +30,6 @@
   width: 12px;
 }
 
-//=================
-// DARK THEME VARS
-//=================
-.colors-dark() {
-  // Split color in HSL to easily do variations
-  // https://blog.jim-nielsen.com/2020/sass-color-functions-in-css/
-  --color-background-base-h: 0;
-  --color-background-base-s: 0%;
-  --color-background-base-l: 7.06%;
-  --color-background-base-hsl: var(--color-background-base-h), var(--color-background-base-s),
-    var(--color-background-base-l);
-  --color-background: hsl(var(--color-background-base-hsl));
-  // Variations of the background color
-  // Light shades
-  --color-background-light-3: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 3%)
-  );
-  --color-background-light-5: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 5%)
-  );
-  --color-background-light-6: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 6%)
-  );
-  --color-background-light-8: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 8%)
-  );
-  --color-background-light-10: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 10%)
-  );
-  --color-background-light-12: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 12%)
-  );
-  --color-background-light-15: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 15%)
-  );
-  --color-background-light-20: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) + 20%)
-  );
-  // Dark shades
-  --color-background-dark-5: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) - 5%)
-  );
-  --color-background-dark-10: hsl(
-    var(--color-background-base-h),
-    var(--color-background-base-s),
-    calc(var(--color-background-base-l) - 10%)
-  );
-
-  // text color
-  --color-text-base-h: 0;
-  --color-text-base-s: 0%;
-  --color-text-base-l: 100%;
-  --color-text-base-a: 0.87;
-  --color-text-base-hsla: var(--color-background-base-h), var(--color-background-base-s),
-    var(--color-text-base-l), var(--color-text-base-a);
-  --color-text-base: hsla(var(--color-text-base-hsla));
-  // Light shades
-  --color-text-light-45: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 45%)
-  );
-  --color-text-light-75: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 75%)
-  );
-  --color-text-full: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    var(--color-text-base-l),
-    1
-  );
-  --color-text-alt-hlsa: var(--color-background-base-h), var(--color-background-base-s),
-    var(--color-text-base-l), 1;
-  --color-text-alt: hsla(var(--color-text-alt-hsla));
-  // dark shades
-  --color-text-dark-10-hsla: var(--color-text-base-h), var(--color-text-base-s), calc(var(--color-text-base-l) - 8%), calc(var(--color-text-base-a) - 0.3);
-  --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
-
-  --gray-h: 210;
-  --gray-s: 5.7%;
-  --gray-l: 34.1%;
-  --gray-a: 1;
-  --gray-hsla: var(--gray-h), var(--gray-s), var(--gray-l), var(--gray-a);
-  --gray: hsla(var(--gray-hsla));
-  // dark grays
-  --gray-dark-5: hsl(
-    var(--gray-h),
-    var(--gray-se-s),
-    calc(var(--gray-l) - 5%),
-    var(--gray-a)
-  );
-  --gray-dark-10: hsl(
-    var(--gray-h),
-    var(--gray-s-s),
-    calc(var(--gray-l) - 10%),
-    var(--gray-a)
-  );
-  --gray-dark: @color-gray-dark;
-
-  --focus-inner-color: hsla(230, 52%, 42%, 1);
-  --focus-outer-color: hsla(220, 72%, 73%, 0.85);
-  --hover-color: hsla(220, 72%, 73%, 0.55);
-  --hover-background-color: hsla(260, 72%, 10%, 0.85);
-  --dragging-background-color: hsla(259, 39%, 24%, 0.85);
-  --highlight-color: hsla(200, 72%, 83%, 0.35);
-
-  --text-color: var(--color-text-base);
-  --text-alt: var(--color-text-alt);
-  --control-background-color: var(--color-background-light-20);
-  --negative-text-color: var(--color-text-full);
-  --negative-background-color: hsl(349, 100.0%, 34.5%);
-  --negative-icon-color: var(--color-text-base);
-  --warning-text-color: #fff;
-  --warning-background-color: hsl(35, 75.3%, 49.8%);
-
-  --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
-}
-
-.site-dark() {
-  --site-page-background: var(--color-background);
-  --site-text-color: var(--color-text-base);
-  --site-hovered-text-color: var(--color-text-alt);
-  --site-input-color: var(--input-color);
-  --site-border-color: var(--gray);
-  --site-input-placeholder-focus-color: var(--color-text-light-45);
-  --site-input-placeholder-color: var(--color-text-light-75);
-  --site-input-highlight-background: var(--highlight-color);
-  --site-input-highlight-color: var(--color-text-full);
-  --site-disabled-opacity: 0.65;
-}
-
-.form-dark() {
-
-  // ============
-  // Light shades
-  // ============
-  --input-color: var(--color-text-full);
-
-  --form-input-color: var(--color-text-dark-10);
-  --form-input-focus-color: var(--color-text-base);
-  --form-input-background: var(--control-background-color);
-  --form-input-focus-border-color: transparent;
-  --form-input-focus-box-shadow: 0 0 0 0.1rem var(--focus-inner-color), 0 0 0 0.2rem var(--focus-outer-color);
-  --form-input-hover-border-color: var(--hover-color);
-  --form-prompt-text-color: var(--negative-text-color);
-  --form-prompt-background: var(--negative-background-color);
-}
-
-.button-dark() {
-  --button-hover-background-color: lighten(@color-gray-dark, 5%);
-  --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
-  --button-background-color: @color-gray-dark;
-  --button-text-color: var(--color-text-base);
-  --button-tertiary-text-color: var(--button-text-color);
-  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
-  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
-  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
-  --button-tertiary-hover-color: @tertiaryHoverColor;
-  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
-  --button-tertiary-focus-color: @tertiaryHoverColor;
-  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
-  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
-  --button-tertiary-active-color: @tertiaryActiveColor;
-  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
-}
-
-.label-dark() {
-  --label-background-color: var(--gray-dark);
-  --label-inverted-background-color: darken(@color-gray-dark, 20%);
-  --label-ribbon-shadow-color: var(--gray-dark);
-}
-
-.tile-dark() {
-  --tile-background: var(--color-background-light-8);
-  --tile-title-background: var(--color-background-light-12);
-  --tile-title-color: var(--color-text-full);
-}
-
-.obs-badge-dark() {
-  --obs-badge-color: var(--text-color);
-  --obs-badge-background: var(--tile-background);
-}
-
-.menu-dark() {
-  --menu-background: var(--gray-dark);
-  --menu-pressed-item-background: darken(@color-gray-dark, 8%);
-  --menu-pagination-active-background: darken(@color-gray-dark, 10%);
-  --menu-hover-item-background: var(--color-background-light-10);
-  --menu-secondary-hover-item-background:  darken(@color-gray-darker, 5%);
-  --menu-secondary-hover-item-color: darken(@color-gray-darker, 5%);
-  --menu-tabular-active-background: var(--color-background-light-10);
-}
-
-.segment-dark() {
-  --segment-background: var(--color-background-light-5);
-  --segment-stacked-page-background: var(--color-background-light-10);
-}
-
-.progress-dark() {
-  --progress-background: var(--color-background-dark-5);
-}
-
-.popup-dark() {
-  --popup-background: var(--color-background-light-3);
-  --popup-arrow-background: var(--color-background-light-3);
-  --popup-header-border: var(--gray-dark-5);
-  --popup-arrow-border: var(--gray-dark-10);
-}
-
-.dropdown-dark() {
-  --dropdown-selection-background: var(--control-background-color);
-  --dropdown-selection-visible-color: @gray-darker;
-}
-
-.checkbox-dark() {
-  --checkbox-background: var(--control-background-color);
-  --checkbox-focus-background: @gray-dark;
-  --checkbox-active-background: var(--control-background-color);
-  --checkbox-active-focus-background: var(--control-background-color);
-  --checkbox-border-color: var(--site-border-color);
-  --checkbox-active-color: var(--form-input-color);
-  --checkbox-hover-color: var(--input-color);
-}
-
-.table-dark() {
-  --table-background: var(--color-background-light-3);
-  --table-striped-background: var(--color-background-light-6);
-  --table-active-background-hover: var(--color-background-light-15);
-  --table-header-background: var(--color-background-dark-5);
-  --table-footer-background: var(--color-background-dark-5);
-}
-
-.modal-dark() {
-  --modal-background: var(--color-background-light-8);
-}
-
-.dimmer-dark() {
-  --dimmer-background-color: rgba(0, 0, 0, 0.85);
-}
-
-.dark-theme() {
-  // COLORS
-  .colors-dark();
-
-  // SUI VARIABLES
-  .site-dark();
-  .button-dark();
-  .label-dark();
-  .tile-dark();
-  .obs-badge-dark();
-  .form-dark();
-  .menu-dark();
-  .segment-dark();
-  .progress-dark();
-  .popup-dark();
-  .dropdown-dark();
-  .checkbox-dark();
-  .table-dark();
-  .modal-dark();
-  .dimmer-dark();
-
-  // EXPLORE VARIABLES
-  --sidetab-background: var(--color-background-light-5);
-  --explore-group-hover: var(--hover-background-color);
-  --explore-group-dragging: var(--dragging-background-color);
-}
-
-//=================
-// LIGHT THEME VARS
-//=================
-.colors-light() {
-  --focus-inner-color: hsla(240, 72%, 42%, 1);
-  --focus-outer-color: hsla(200, 72%, 83%, 0.75);
-  --error-label-color: @red;
-
-  --color-text-base-h: 0;
-  --color-text-base-s: 0%;
-  --color-text-base-l: 0%;
-  --color-text-base-a: 0.86;
-  --color-text-base-hsla: var(--color-background-base-h), var(--color-background-base-s),
-    var(--color-text-base-l), var(--color-text-base-a);
-  --color-text-base: hsla(var(--color-text-base-hsla));
-  // Light shades
-  --color-text-light-45: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 45%)
-  );
-  --color-text-light-75: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 75%)
-  );
-  --control-background-color: gray;
-  --gray: gray;
-  --negative-text-color: @negativeTextColor;
-  --negative-background-color: @negativeBackgroundColor;
-  --negative-icon-color: @negativeBackgroundColor;
-
-  --explore-accent-color: hsl(41, 89.5%, 51.4%);
-}
-
-.site-light() {
-  --site-page-background: #FFFFFF;
-  --site-text-color: rgba(0, 0, 0, 0.87);
-  --site-hovered-text-color: rgba(0, 0, 0, 0.8);
-  --site-input-color: var(--color-text-base);
-  --site-border-color: rgba(34, 36, 38, 0.15);
-  --site-input-placeholder-focus-color: var(--color-text-light-45);
-  --site-input-placeholder-color: var(--color-text-light-75);
-  // site @inputHighlightBackground
-  --site-input-highlight-background: rgba(100, 100, 100, 0.4);
-  --site-input-highlight-color: var(--site-text-color);
-  --site-disabled-opacity: 0.45;
-}
-
-.form-light() {
-  --input-color: var(--color-text-base);
-
-  --form-input-color: var(--input-color);
-  --form-input-focus-color: var(--input-color);
-  --form-input-background: @white;
-  --form-input-focus-border-color: #85B7D9;
-  --form-input-focus-box-shadow: none;
-  --form-input-hover-border-color: var(--form-input-focus-border-color);
-  --form-prompt-text-color: var(--negative-text-color);
-}
-
-.button-light() {
-  @textColor: rgba(0, 0, 0, 0.6);
-  @tertiaryTextColor: rgba(0, 0, 0, 0.6);
-  --button-hover-background-color: #CACBCD;
-  --button-basic-hover-background-color: #FFFFFF;
-  --button-background-color: #E0E1E2;
-  --button-text-color: @textColor;
-  --button-tertiary-text-color: @textColor;
-  --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
-  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
-  --button-tertiary-hover-color: @tertiaryHoverColor;
-  --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
-  --button-tertiary-focus-color: @tertiaryHoverColor;
-  --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
-  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
-  --button-tertiary-active-color: @tertiaryActiveColor;
-  --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
-}
-
-.label-light() {
-  --label-background-color: #E8E8E8;
-  --label-inverted-background-color: darken(#E8E8E8, 20%);
-  --label-ribbon-shadow-color: rgba(0, 0, 0, 0.15);
-}
-
-.tile-light() {
-  --tile-background: @lightGrey;
-  --tile-title-background: darken(@lightGrey, 10%);
-  --tile-title-color: var(--color-text-base);
-}
-
-.obs-badge-light() {
-  --obs-badge-color: var(--site-text-color);
-  --obs-badge-background: darken(@lightGrey, 10%);
-}
-
-.menu-light() {
-  --menu-background: #FFFFFF;
-  --menu-pressed-item-background: @subtleTransparentBlack;
-  --menu-pagination-active-background: @transparentBlack;
-  --menu-hover-item-background: @subtleTransparentBlack;
-  --menu-secondary-hover-item-background:  var(--tile-title-background);
-  --menu-secondary-hover-item-color: var(--input-color);
-  --menu-tabular-active-background: none @white;
-}
-
-.segment-light() {
-  // FIXME it isn't clear which is a segment default background
-  --segment-background: @white;
-  --segment-stacked-page-background: @subtleTransparentBlack;
-}
-
-.progress-light() {
-  --progress-background: @strongTransparentBlack;
-}
-
-.popup-light() {
-  --popup-background: @white;
-  --popup-arrow-background: var(--popup-background);
-  --popup-header-border: var(--gray-dark-5);
-  // FIXME @arrowColor: darken(@borderColor, 10);
-  --popup-arrow-border: var(--gray-dark-10);
-}
-
-.dropdown-light() {
-  --dropdown-selection-background: var(--input-background-color);
-  --dropdown-selection-visible-color: @hoveredTextColor;
-}
-
-.checkbox-light() {
-  --checkbox-background: @white;
-  --checkbox-focus-background: @white;
-  --checkbox-active-background: @white;
-  --checkbox-active-focus-background: @white;
-  --checkbox-hover-color: gray;
-  --checkbox-active-color: @selectedTextColor;
-  --checkbox-border-color: @solidBorderColor;
-}
-
-.table-light() {
-  --table-background: @white;
-  --table-striped-background: rgba(0, 0, 50, 0.02);
-  --table-active-background-hover: #EFEFEF;
-  --table-header-background: @offWhite;
-  --table-footer-background: @offWhite;
-}
-
-.modal-light() {
-  --modal-background: @white;
-}
-
-.dimmer-light() {
-  --dimmer-background-color: rgba(0, 0, 0 , 0.15);
-}
-
-.light-theme() {
-  // Values here come from the default SUI theme
-  .colors-light();
-  .site-light();
-  .button-light();
-  .label-light();
-  .tile-light();
-  .obs-badge-light();
-  .form-light();
-  .menu-light();
-  .segment-light();
-  .progress-light();
-  .popup-light();
-  .dropdown-light();
-  .checkbox-light();
-  .table-light();
-  .modal-light();
-  .dimmer-light();
-
-  // EXPLORE VARIABLES
-  --sidetab-background: @lightGrey;
-  --explore-group-hover: @lightGrey;
-  --explore-group-dragging: @grey;
-}
-
-body.dark-theme {
-  .dark-theme();
-}
-
-body.light-theme {
-  .light-theme();
-}
-
-@media (prefers-color-scheme: dark) {
-  /* defaults to dark theme */
-  body {
-    .dark-theme();
-  }
-  /* Override dark mode with light mode styles if the user decides to swap */
-  body.light-theme {
-    .light-theme();
-  }
-}
-
 // https://zellwk.com/blog/creating-focus-style/
 i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
@@ -523,12 +39,15 @@ i.icon.explore-button-icon:focus {
     0 0 0 0.2rem var(--focus-outer-color);
 }
 
+html {
+  // Required for iOS to work with 100vh
+  // https://css-tricks.com/css-fix-for-100vh-in-mobile-webkit/
+  height: -webkit-fill-avilable;
+}
+
 html,
 body {
   box-sizing: border-box;
-  height: 100%;
-  padding: 0px;
-  margin: 0px;
 }
 
 // Mixins
@@ -547,19 +66,37 @@ body {
   color: var(--explore-accent-color);
 }
 
+//----------
 // Main grid
+//----------
 .main-grid {
+  @topBottom: 42px;
   display: grid;
-  height: 100vh;
-  grid-template-columns: 50px minmax(0, 1fr);
-  grid-template-rows: 42px auto;
+  min-height: 100vh;
+  // Required for iOS to work with 100vh
+  min-height: -webkit-fill-available;
+  width: 100%;
+  overflow: hidden;
+  grid-template-columns: 1fr;
+  grid-template-rows: @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
   grid-template-areas:
-    "header header"
-    "sidebar body";
+    "header"
+    "body"
+    "sidebar";
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    grid-template-columns: 50px auto;
+    grid-template-rows: @topBottom minmax(calc(100% - @topBottom ), 1fr);
+    grid-template-areas:
+      "header header"
+      "sidebar body";
+  }
 }
 
 .main-body {
   grid-area: body;
+  max-width: 100vw;
+  overflow: hidden;
 }
 
 .main-title {
@@ -573,6 +110,117 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.main-header {
+  grid-area: header;
+  min-width: 0;
+  width: 100vw;
+  min-width: 100vw;
+
+  & > .ui.tabular.menu {
+    border-bottom: none;
+  }
+}
+
+.sidetabs {
+  grid-area: sidebar;
+  background: var(--sidetab-background);
+  overflow: hidden;
+}
+
+.sidetabs-divider {
+  display: none;
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    display: block;
+  }
+}
+
+// Side tabs
+.sidetabs-body {
+  display: flex;
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+}
+
+.sidetabs-body-vertical {
+  height: 100%;
+  display: none;
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    display: inherit;
+  }
+}
+
+.sidetabs-body-horizontal {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  width: 100vw;
+  max-width: 100vw;
+  justify-content: space-between;
+  align-items: stretch;
+  border-top: 1px solid var(--under-tab-border-color);
+}
+
+.ui.label.bottom-tab-selector:hover,
+.ui.label.bottom-tab-selector:focus {
+  background-color: var(--under-tab-background-focus-color);
+}
+
+.ui.label.bottom-tab-selector {
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-weight: 300;
+  text-align: center;
+  padding-top: 0.4em;
+  padding-bottom: 0.2em;
+  margin-right: .2em;
+  margin-left: .2em;
+  border-radius: 0.2em;
+  border: 1px solid var(--under-tab-border-color);
+  background-color: var(--under-tab-background-color);
+}
+
+.ui.label.active.bottom-tab-selector:hover,
+.ui.label.active.bottom-tab-selector:focus {
+  background-color: var(--under-tab-background-focus-active-color);
+}
+
+.ui.label.active.bottom-tab-selector {
+  border-top: var(--explore-accent-color) solid 4px;
+  background-color: var(--under-tab-background-active-color);
+  font-weight: bold;
+}
+
+//----------
+// Main title
+//----------
+// Taken from the definitíon of ui.button transition but removed background-color and background
+// When animating those two properties you see some flickering in FF
+.ui.button.side-button {
+  border: 1px solid var(--under-tab-border-color);
+  border-bottom: transparent solid 4px;
+  border-bottom-left-radius: unset;
+  border-bottom-right-radius: unset;
+  background-color: var(--under-tab-background-color);
+  font-weight: 300;
+  transition: opacity @defaultDuration @defaultEasing,
+    color @defaultDuration @defaultEasing,
+    box-shadow @defaultDuration @defaultEasing;
+}
+
+.ui.button.active.side-button {
+  border-top: var(--explore-accent-color) solid 4px;
+  background-color: var(--under-tab-background-active-color);
+  font-weight: bold;
 }
 
 .ui.menu .item.main-user-name {
@@ -594,36 +242,24 @@ body {
   margin-left: 0px !important; //SUI has !imporant
 }
 
-.main-header {
-  grid-area: header;
-  min-width: 0;
-
-  & > .ui.tabular.menu {
-    border-bottom: none;
-  }
-}
-
-.sidetabs {
-  grid-area: sidebar;
-  background: var(--sidetab-background);
-  overflow: hidden;
-}
-
-// Taken from the definitíon of ui.button transition but removed background-color and background
-// When animating those two properties you see some flickering in FF
-.ui.button.side-button {
-  border: none;
-  transition: opacity @defaultDuration @defaultEasing,
-    color @defaultDuration @defaultEasing,
-    box-shadow @defaultDuration @defaultEasing;
-}
-
 .explore-tile-title {
   background-color: var(--tile-title-background);
 
   & .tabular.menu .item {
     color: var(--tile-title-color);
     letter-spacing: 0.1em;
+  }
+}
+
+.explore-tile-title-menu {
+  align-items: center;
+}
+
+.explore-tile-button {
+}
+.ui.button.target-back-button {
+  @media (min-width: @target-grid-responsive-cutoff) {
+    display: none;
   }
 }
 
@@ -648,11 +284,6 @@ body {
 
 .react-aladin {
   margin: 2px;
-}
-
-// Side tabs
-.sidetabs-body {
-  height: 100%;
 }
 
 .horizontal-vertical-center {
@@ -694,6 +325,7 @@ body {
   top: 0px;
   position: absolute;
   box-shadow: inset -5px 0px 0px 0px var(--tile-background);
+  width: 100%;
 
   // Special css to decorate the resize handle. It needs to be very specific
   .react-resizable-handle.react-resizable-handle-e {
@@ -721,27 +353,18 @@ body {
   position: absolute;
 }
 
-.single-panel-area {
-  .full-height-width();
-}
-
-// Outer area of the body.
-.tree-body-outer {
-  // A bit narrower to fit the resize handle
+// Inner area of the tree
+.tree-body {
   width: ~"calc(100% - @{resizeHandleWidth})";
   height: 100%;
-}
-
-// Inner area of the tree
-.tree-body-inner {
-  height: 100%;
-  width: 100%;
 }
 
 .obs-tree-wrapper {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   min-height: 0;
+  height: 100%;
 }
 
 .obs-tree {
@@ -749,13 +372,12 @@ body {
   flex-direction: column;
   min-height: 0;
   justify-content: center;
-  background-color: var(--obs-tree-background);
+  flex-grow: 1;
 }
 
 .obs-scroll-tree {
-  height: calc(100vh - 75px);
-  align-self: stretch;
-  min-height: 0;
+  height: 100%;
+  flex-grow: 1;
   overflow-y: auto;
 }
 
@@ -832,8 +454,9 @@ body {
   justify-self: end;
 }
 
-.obs-tree-buttons {
+.tree-toolbar {
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   padding: 5px 0px 5px 5px;
   background-color: var(--tile-title-background);
@@ -968,6 +591,7 @@ body {
 
 // The Target Position layout
 @target-grid-responsive-cutoff: 992px;
+@mobile-responsive-cutoff: 670px;
 
 .target-grid {
   display: grid;

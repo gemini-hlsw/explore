@@ -15,6 +15,8 @@ import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.divider.Divider
+import react.semanticui.elements.label.Label
+import react.semanticui.sizes._
 
 final case class SideTabs(
   tabs: View[EnumZipper[AppTab]]
@@ -39,6 +41,13 @@ object SideTabs {
                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
           )(tab.title)
 
+        def tab(tab: AppTab): Label =
+          Label(active = tab === focus,
+                clazz = ExploreStyles.TabSelector,
+                size = Tiny,
+                onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
+          )(tab.title)
+
         def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
           case justOne :: Nil => VerticalSection()(tabButton(justOne))
           case _              =>
@@ -47,16 +56,28 @@ object SideTabs {
             )
         }
 
-        val buttonSections: List[TagMod] =
+        val verticalButtonsSections: List[TagMod] =
           tabsL.toList
             .groupBy(_.buttonGroup)
             .toList
             .sortBy(_._1)
             .map(tup => makeButtonSection(tup._2))
 
-        <.div(
-          ExploreStyles.SideTabsBody,
-          buttonSections.mkTagMod(Divider(hidden = true))
+        val horizontalButtonsSections: List[TagMod] =
+          tabsL.toList.toList
+            .map(tup => tab(tup))
+
+        React.Fragment(
+          <.div(
+            ExploreStyles.SideTabsVertical,
+            verticalButtonsSections.mkTagMod(
+              Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
+            )
+          ),
+          <.div(
+            ExploreStyles.SideTabsHorizontal,
+            horizontalButtonsSections.toTagMod
+          )
         )
       }
       .configure(Reusability.shouldComponentUpdate)

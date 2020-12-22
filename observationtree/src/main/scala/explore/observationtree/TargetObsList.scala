@@ -225,11 +225,11 @@ object TargetObsList {
       val targetIds  = targets.map(_.id)
       val targetIdxs = targets.zipWithIndex
 
-      <.div(
+      React.Fragment(
         UndoRegion[TargetsWithObs] { undoCtx =>
           DragDropContext(onDragEnd = onDragEnd(undoCtx.setter, props.expandedTargetIds))(
             <.div(ExploreStyles.ObsTreeWrapper)(
-              <.div(ExploreStyles.ObsTreeButtons)(
+              <.div(ExploreStyles.TreeToolbar)(
                 <.div(
                   Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
                     Icons.New.size(Small).fitted(true)
@@ -239,107 +239,108 @@ object TargetObsList {
               ),
               <.div(ExploreStyles.ObsTree)(
                 <.div(ExploreStyles.ObsScrollTree)(
-                  targets.toTagMod { target =>
-                    val targetId      = target.id
-                    val currIdx       = targetIds.indexOf(targetId)
-                    val nextToSelect  = targetIdxs.find(_._2 === currIdx + 1).map(_._1)
-                    val prevToSelect  = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
-                    val focusOnDelete = nextToSelect.orElse(prevToSelect)
+                  targets
+                    .toTagMod { target =>
+                      val targetId      = target.id
+                      val currIdx       = targetIds.indexOf(targetId)
+                      val nextToSelect  = targetIdxs.find(_._2 === currIdx + 1).map(_._1)
+                      val prevToSelect  = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
+                      val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
-                    val targetObs = obsByTarget.get(targetId).orEmpty
-                    val obsCount  = targetObs.length
+                      val targetObs = obsByTarget.get(targetId).orEmpty
+                      val obsCount  = targetObs.length
 
-                    val opIcon =
-                      targetObs.nonEmpty.fold(
-                        Icon(
-                          "chevron " + props.expandedTargetIds.get
-                            .exists(_ === targetId)
-                            .fold("down", "right")
-                        )(^.cursor.pointer,
-                          ^.onClick ==> { e: ReactEvent =>
-                            e.stopPropagationCB >>
-                              toggleExpanded(targetId, props.expandedTargetIds)
-                                .asEventDefault(e)
-                                .void
-                          }
-                        ),
-                        Icons.ChevronRight
-                      )
-
-                    val memberObsSelected = props.focused.get.exists(f =>
-                      targetObs.map(obs => FocusedObs(obs.id)).exists(f === _)
-                    )
-                    Droppable(target.id.toString) { case (provided, snapshot) =>
-                      <.div(
-                        provided.innerRef,
-                        provided.droppableProps,
-                        getListStyle(snapshot.isDraggingOver)
-                      )(
-                        Segment(
-                          vertical = true,
-                          clazz = ExploreStyles.ObsTreeGroup |+| Option
-                            .when(
-                              memberObsSelected || props.focused.get
-                                .exists(_ === FocusedTarget(target.id))
-                            )(ExploreStyles.SelectedObsTreeGroup)
-                            .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
-                        )(
-                          ^.cursor.pointer,
-                          ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runAsyncCB
-                        )(
-                          <.span(ExploreStyles.ObsTreeGroupHeader)(
-                            <.span(
-                              opIcon,
-                              target.name.value,
-                              ExploreStyles.TargetLabelTitle
-                            ),
-                            Button(
-                              size = Small,
-                              compact = true,
-                              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                e.stopPropagationCB *>
-                                  deleteTarget(targetId, undoCtx.setter, focusOnDelete)
-                            )(
-                              Icons.Delete
-                                .size(Small)
-                                .fitted(true)
-                                .clazz(ExploreStyles.TrashIcon)
-                            ),
-                            <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
-                          ),
-                          TagMod.when(props.expandedTargetIds.get.contains(targetId))(
-                            targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                              <.div(ExploreStyles.ObsTreeItem)(
-                                Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
-                                  <.div(
-                                    provided.innerRef,
-                                    provided.draggableProps,
-                                    getObsStyle(provided.draggableStyle, snapshot),
-                                    ^.onClick ==> { e: ReactEvent =>
-                                      e.stopPropagationCB >>
-                                        props.focused
-                                          .set(FocusedObs(obs.id).some)
-                                          .runAsyncCB
-                                    }
-                                  )(
-                                    <.span(provided.dragHandleProps)(
-                                      ObsBadge(ObsSummary(obs.id, obs.target.name.value),
-                                               ObsBadge.Layout.ConfAndConstraints,
-                                               selected =
-                                                 props.focused.get.exists(_ === FocusedObs(obs.id))
-                                      )
-                                    )
-                                  )
-                                }
-                              )
+                      val opIcon =
+                        targetObs.nonEmpty.fold(
+                          Icon(
+                            "chevron " + props.expandedTargetIds.get
+                              .exists(_ === targetId)
+                              .fold("down", "right")
+                          )(^.cursor.pointer,
+                            ^.onClick ==> { e: ReactEvent =>
+                              e.stopPropagationCB >>
+                                toggleExpanded(targetId, props.expandedTargetIds)
+                                  .asEventDefault(e)
+                                  .void
                             }
                           ),
-                          provided.placeholder
+                          Icons.ChevronRight
                         )
-                      )
+
+                      val memberObsSelected = props.focused.get
+                        .exists(f => targetObs.map(obs => FocusedObs(obs.id)).exists(f === _))
+                      Droppable(target.id.toString) { case (provided, snapshot) =>
+                        <.div(
+                          provided.innerRef,
+                          provided.droppableProps,
+                          getListStyle(snapshot.isDraggingOver)
+                        )(
+                          Segment(
+                            vertical = true,
+                            clazz = ExploreStyles.ObsTreeGroup |+| Option
+                              .when(
+                                memberObsSelected || props.focused.get
+                                  .exists(_ === FocusedTarget(target.id))
+                              )(ExploreStyles.SelectedObsTreeGroup)
+                              .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
+                          )(
+                            ^.cursor.pointer,
+                            ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runAsyncCB
+                          )(
+                            <.span(ExploreStyles.ObsTreeGroupHeader)(
+                              <.span(
+                                opIcon,
+                                target.name.value,
+                                ExploreStyles.TargetLabelTitle
+                              ),
+                              Button(
+                                size = Small,
+                                compact = true,
+                                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                  e.stopPropagationCB *>
+                                    deleteTarget(targetId, undoCtx.setter, focusOnDelete)
+                              )(
+                                Icons.Delete
+                                  .size(Small)
+                                  .fitted(true)
+                                  .clazz(ExploreStyles.TrashIcon)
+                              ),
+                              <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
+                            ),
+                            TagMod.when(props.expandedTargetIds.get.contains(targetId))(
+                              targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                                <.div(ExploreStyles.ObsTreeItem)(
+                                  Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
+                                    <.div(
+                                      provided.innerRef,
+                                      provided.draggableProps,
+                                      getObsStyle(provided.draggableStyle, snapshot),
+                                      ^.onClick ==> { e: ReactEvent =>
+                                        e.stopPropagationCB >>
+                                          props.focused
+                                            .set(FocusedObs(obs.id).some)
+                                            .runAsyncCB
+                                      }
+                                    )(
+                                      <.span(provided.dragHandleProps)(
+                                        ObsBadge(
+                                          ObsSummary(obs.id, obs.target.name.value),
+                                          ObsBadge.Layout.ConfAndConstraints,
+                                          selected =
+                                            props.focused.get.exists(_ === FocusedObs(obs.id))
+                                        )
+                                      )
+                                    )
+                                  }
+                                )
+                              }
+                            ),
+                            provided.placeholder
+                          )
+                        )
+                      }
                     }
-                  }
                 )
               )
             )
