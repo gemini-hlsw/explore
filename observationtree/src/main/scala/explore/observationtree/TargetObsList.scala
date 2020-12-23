@@ -299,7 +299,11 @@ object TargetObsList {
                                   opIcon,
                                   target.name.value,
                                   ExploreStyles.TargetLabelTitle,
-                                  ^.onClick ==> {(e: ReactEvent) => e.preventDefaultCB}
+                                  ^.onClick ==> { (e: ReactMouseEvent) =>
+                                    (e.preventDefaultCB *> props.focused
+                                      .set(focusedTarget.some)
+                                      .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
+                                  }
                                 ),
                                 Button(
                                   size = Small,

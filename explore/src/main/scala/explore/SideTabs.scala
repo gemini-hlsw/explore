@@ -44,9 +44,9 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
               onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                e.preventDefaultCB *> p.tabs
+                (e.preventDefaultCB *> p.tabs
                   .mod(z => z.findFocus(_ === tab).getOrElse(z))
-                  .runAsyncCB
+                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def tab(tab:                AppTab): Label        =
@@ -56,9 +56,9 @@ object SideTabs {
               clazz = ExploreStyles.TabSelector,
               size = Tiny,
               onClickE = (e: ReactMouseEvent, _: LabelProps) =>
-                e.preventDefaultCB *> p.tabs
+                (e.preventDefaultCB *> p.tabs
                   .mod(z => z.findFocus(_ === tab).getOrElse(z))
-                  .runAsyncCB
+                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {

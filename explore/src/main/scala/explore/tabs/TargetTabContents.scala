@@ -13,6 +13,7 @@ import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.model.Focused._
 import explore.model._
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
@@ -29,6 +30,7 @@ import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 import react.sizeme._
 
@@ -101,12 +103,15 @@ object TargetTabContents {
             )
 
           val backButton = TileButton(
-            Button(size = Mini,
-                   clazz = ExploreStyles.TargetBackButton |+| ExploreStyles.BlendedButton,
-                   onClick = props.focused.set(none).runAsyncCB
-            )(
-              Icons.ChevronLeft.fitted(true)
-            )
+            Button(
+              as = <.a,
+              size = Mini,
+              clazz = ExploreStyles.TargetBackButton |+| ExploreStyles.BlendedButton,
+              onClickE = { (e: ReactMouseEvent, _: ButtonProps) =>
+                (e.preventDefaultCB *> props.focused.set(none).runAsyncCB)
+                  .unless_(e.ctrlKey || e.metaKey)
+              }
+            )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
           )
 
           TargetObsLiveQuery { targetsWithObs =>
@@ -121,7 +126,7 @@ object TargetTabContents {
                 val coreHeight: JsNumber = Option(s.height).getOrElse(0)
 
                 val rightSide =
-                  Tile(s"Target Position", movable = false, backButton.some)(
+                  Tile(s"Target", movable = false, backButton.some)(
                     <.span(
                       targetIdOpt.whenDefined(targetId =>
                         TargetEditor(targetId).withKey(targetId.toString)
