@@ -10,6 +10,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
+import explore.AppCtx
 import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
@@ -20,6 +21,7 @@ import explore.model.Constants
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
+import explore.model.enum.AppTab
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
@@ -247,8 +249,9 @@ object TargetObsList {
                       val prevToSelect  = targetIdxs.find(_._2 === currIdx - 1).map(_._1)
                       val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
-                      val targetObs = obsByTarget.get(targetId).orEmpty
-                      val obsCount  = targetObs.length
+                      val targetObs     = obsByTarget.get(targetId).orEmpty
+                      val obsCount      = targetObs.length
+                      val focusedTarget = FocusedTarget(targetId)
 
                       val opIcon =
                         targetObs.nonEmpty.fold(
@@ -269,76 +272,82 @@ object TargetObsList {
 
                       val memberObsSelected = props.focused.get
                         .exists(f => targetObs.map(obs => FocusedObs(obs.id)).exists(f === _))
-                      Droppable(target.id.toString) { case (provided, snapshot) =>
-                        <.div(
-                          provided.innerRef,
-                          provided.droppableProps,
-                          getListStyle(snapshot.isDraggingOver)
-                        )(
-                          Segment(
-                            vertical = true,
-                            clazz = ExploreStyles.ObsTreeGroup |+| Option
-                              .when(
-                                memberObsSelected || props.focused.get
-                                  .exists(_ === FocusedTarget(target.id))
-                              )(ExploreStyles.SelectedObsTreeGroup)
-                              .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
+                      AppCtx.withCtx { ctx =>
+                        Droppable(target.id.toString) { case (provided, snapshot) =>
+                          <.div(
+                            provided.innerRef,
+                            provided.droppableProps,
+                            getListStyle(snapshot.isDraggingOver)
                           )(
-                            ^.cursor.pointer,
-                            ^.onClick --> props.focused.set(FocusedTarget(targetId).some).runAsyncCB
-                          )(
-                            <.span(ExploreStyles.ObsTreeGroupHeader)(
-                              <.span(
-                                opIcon,
-                                target.name.value,
-                                ExploreStyles.TargetLabelTitle
+                            Segment(
+                              vertical = true,
+                              clazz = ExploreStyles.ObsTreeGroup |+| Option
+                                .when(
+                                  memberObsSelected || props.focused.get
+                                    .exists(_ === focusedTarget)
+                                )(ExploreStyles.SelectedObsTreeGroup)
+                                .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
+                            )(
+                              ^.cursor.pointer,
+                              ^.onClick --> props.focused
+                                .set(focusedTarget.some)
+                                .runAsyncCB
+                            )(
+                              <.span(ExploreStyles.ObsTreeGroupHeader)(
+                                <.a(
+                                  ^.href := ctx.pageUrl(AppTab.Targets, focusedTarget.some),
+                                  opIcon,
+                                  target.name.value,
+                                  ExploreStyles.TargetLabelTitle
+                                ),
+                                Button(
+                                  size = Small,
+                                  compact = true,
+                                  clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                  onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                    e.stopPropagationCB *>
+                                      deleteTarget(targetId, undoCtx.setter, focusOnDelete)
+                                )(
+                                  Icons.Delete
+                                    .size(Small)
+                                    .fitted(true)
+                                    .clazz(ExploreStyles.TrashIcon)
+                                ),
+                                <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
                               ),
-                              Button(
-                                size = Small,
-                                compact = true,
-                                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                                onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                  e.stopPropagationCB *>
-                                    deleteTarget(targetId, undoCtx.setter, focusOnDelete)
-                              )(
-                                Icons.Delete
-                                  .size(Small)
-                                  .fitted(true)
-                                  .clazz(ExploreStyles.TrashIcon)
-                              ),
-                              <.span(ExploreStyles.ObsCount, s"$obsCount Obs")
-                            ),
-                            TagMod.when(props.expandedTargetIds.get.contains(targetId))(
-                              targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                                <.div(ExploreStyles.ObsTreeItem)(
-                                  Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
-                                    <.div(
-                                      provided.innerRef,
-                                      provided.draggableProps,
-                                      getObsStyle(provided.draggableStyle, snapshot),
-                                      ^.onClick ==> { e: ReactEvent =>
-                                        e.stopPropagationCB >>
-                                          props.focused
-                                            .set(FocusedObs(obs.id).some)
-                                            .runAsyncCB
-                                      }
-                                    )(
-                                      <.span(provided.dragHandleProps)(
-                                        ObsBadge(
-                                          ObsSummary(obs.id, obs.target.name.value),
-                                          ObsBadge.Layout.ConfAndConstraints,
-                                          selected =
-                                            props.focused.get.exists(_ === FocusedObs(obs.id))
+                              TagMod.when(props.expandedTargetIds.get.contains(targetId))(
+                                targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                                  <.div(ExploreStyles.ObsTreeItem)(
+                                    Draggable(obs.id.toString, idx) {
+                                      case (provided, snapshot, _) =>
+                                        <.div(
+                                          provided.innerRef,
+                                          provided.draggableProps,
+                                          getObsStyle(provided.draggableStyle, snapshot),
+                                          ^.onClick ==> { e: ReactEvent =>
+                                            e.stopPropagationCB >>
+                                              props.focused
+                                                .set(FocusedObs(obs.id).some)
+                                                .runAsyncCB
+                                          }
+                                        )(
+                                          <.span(provided.dragHandleProps)(
+                                            ObsBadge(
+                                              ObsSummary(obs.id, obs.target.name.value),
+                                              ObsBadge.Layout.ConfAndConstraints,
+                                              selected =
+                                                props.focused.get.exists(_ === FocusedObs(obs.id))
+                                            )
+                                          )
                                         )
-                                      )
-                                    )
-                                  }
-                                )
-                              }
-                            ),
-                            provided.placeholder
+                                    }
+                                  )
+                                }
+                              ),
+                              provided.placeholder
+                            )
                           )
-                        )
+                        }
                       }
                     }
                 )
