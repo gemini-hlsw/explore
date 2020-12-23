@@ -13,9 +13,11 @@ import lucuma.core.data.EnumZipper
 import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.divider.Divider
 import react.semanticui.elements.label.Label
+import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
 
 final case class SideTabs(
@@ -32,53 +34,65 @@ object SideTabs {
       .builder[Props]
       .stateless
       .render_P { p =>
-        val tabsL = p.tabs.get.toNel
-        val focus = p.tabs.get.focus
+        AppCtx.withCtx { ctx =>
+          val tabsL = p.tabs.get.toNel
+          val focus = p.tabs.get.focus
 
-        def tabButton(tab: AppTab): Button =
-          Button(active = tab === focus,
-                 clazz = ExploreStyles.SideButton,
-                 onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
-          )(tab.title)
+          def tabButton(tab:          AppTab): Button       =
+            Button(
+              as = <.a,
+              active = tab === focus,
+              clazz = ExploreStyles.SideButton,
+              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                (e.preventDefaultCB *> p.tabs
+                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
+                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
+            )(^.href := ctx.pageUrl(tab, none), tab.title)
 
-        def tab(tab: AppTab): Label =
-          Label(active = tab === focus,
-                clazz = ExploreStyles.TabSelector,
-                size = Tiny,
-                onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
-          )(tab.title)
+          def tab(tab:                AppTab): Label        =
+            Label(
+              as = <.a,
+              active = tab === focus,
+              clazz = ExploreStyles.TabSelector,
+              size = Tiny,
+              onClickE = (e: ReactMouseEvent, _: LabelProps) =>
+                (e.preventDefaultCB *> p.tabs
+                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
+                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
+            )(^.href := ctx.pageUrl(tab, none), tab.title)
 
-        def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
-          case justOne :: Nil => VerticalSection()(tabButton(justOne))
-          case _              =>
-            VerticalSection()(
-              ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
+          def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
+            case justOne :: Nil => VerticalSection()(tabButton(justOne))
+            case _              =>
+              VerticalSection()(
+                ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
+              )
+          }
+
+          val verticalButtonsSections: List[TagMod] =
+            tabsL.toList
+              .groupBy(_.buttonGroup)
+              .toList
+              .sortBy(_._1)
+              .map(tup => makeButtonSection(tup._2))
+
+          val horizontalButtonsSections: List[TagMod] =
+            tabsL.toList.toList
+              .map(tup => tab(tup))
+
+          React.Fragment(
+            <.div(
+              ExploreStyles.SideTabsVertical,
+              verticalButtonsSections.mkTagMod(
+                Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
+              )
+            ),
+            <.div(
+              ExploreStyles.SideTabsHorizontal,
+              horizontalButtonsSections.toTagMod
             )
-        }
-
-        val verticalButtonsSections: List[TagMod] =
-          tabsL.toList
-            .groupBy(_.buttonGroup)
-            .toList
-            .sortBy(_._1)
-            .map(tup => makeButtonSection(tup._2))
-
-        val horizontalButtonsSections: List[TagMod] =
-          tabsL.toList.toList
-            .map(tup => tab(tup))
-
-        React.Fragment(
-          <.div(
-            ExploreStyles.SideTabsVertical,
-            verticalButtonsSections.mkTagMod(
-              Divider(hidden = true, clazz = ExploreStyles.SideTabsDivider)
-            )
-          ),
-          <.div(
-            ExploreStyles.SideTabsHorizontal,
-            horizontalButtonsSections.toTagMod
           )
-        )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
