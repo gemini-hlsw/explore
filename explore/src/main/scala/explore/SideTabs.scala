@@ -13,9 +13,11 @@ import lucuma.core.data.EnumZipper
 import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.divider.Divider
 import react.semanticui.elements.label.Label
+import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
 
 final case class SideTabs(
@@ -41,15 +43,22 @@ object SideTabs {
               as = <.a,
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
-              onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
+              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                e.preventDefaultCB *> p.tabs
+                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
+                  .runAsyncCB
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def tab(tab:                AppTab): Label        =
-            Label(as = <.a,
-                  active = tab === focus,
-                  clazz = ExploreStyles.TabSelector,
-                  size = Tiny,
-                  onClick = p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)).runAsyncCB
+            Label(
+              as = <.a,
+              active = tab === focus,
+              clazz = ExploreStyles.TabSelector,
+              size = Tiny,
+              onClickE = (e: ReactMouseEvent, _: LabelProps) =>
+                e.preventDefaultCB *> p.tabs
+                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
+                  .runAsyncCB
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {

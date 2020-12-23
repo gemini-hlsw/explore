@@ -298,7 +298,8 @@ object TargetObsList {
                                   ^.href := ctx.pageUrl(AppTab.Targets, focusedTarget.some),
                                   opIcon,
                                   target.name.value,
-                                  ExploreStyles.TargetLabelTitle
+                                  ExploreStyles.TargetLabelTitle,
+                                  ^.onClick ==> {(e: ReactEvent) => e.preventDefaultCB}
                                 ),
                                 Button(
                                   size = Small,
