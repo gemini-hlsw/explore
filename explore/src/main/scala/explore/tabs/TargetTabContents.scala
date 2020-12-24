@@ -6,11 +6,13 @@ package explore.tabs
 import scala.collection.immutable.SortedSet
 
 import cats.syntax.all._
+import cats.effect.IO
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
+import explore.utils.react._
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
@@ -107,10 +109,7 @@ object TargetTabContents {
               as = <.a,
               size = Mini,
               clazz = ExploreStyles.TargetBackButton |+| ExploreStyles.BlendedButton,
-              onClickE = { (e: ReactMouseEvent, _: ButtonProps) =>
-                (e.preventDefaultCB *> props.focused.set(none).runAsyncCB)
-                  .unless_(e.ctrlKey || e.metaKey)
-              }
+              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
             )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
           )
 

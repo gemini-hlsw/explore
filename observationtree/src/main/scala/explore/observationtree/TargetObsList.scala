@@ -26,6 +26,7 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
+import explore.utils.react._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -299,11 +300,7 @@ object TargetObsList {
                                   opIcon,
                                   target.name.value,
                                   ExploreStyles.TargetLabelTitle,
-                                  ^.onClick ==> { (e: ReactMouseEvent) =>
-                                    (e.preventDefaultCB *> props.focused
-                                      .set(focusedTarget.some)
-                                      .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
-                                  }
+                                  ^.onClick ==> linkOverride(props.focused.set(focusedTarget.some))
                                 ),
                                 Button(
                                   size = Small,

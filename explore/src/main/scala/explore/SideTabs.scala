@@ -4,9 +4,11 @@
 package explore
 
 import cats.syntax.all._
+import cats.effect.IO
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
+import explore.utils.react._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.data.EnumZipper
@@ -38,15 +40,15 @@ object SideTabs {
           val tabsL = p.tabs.get.toNel
           val focus = p.tabs.get.focus
 
+          def onClickE[A](tab: AppTab) =
+            linkOverride[IO, A](p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)))
+
           def tabButton(tab:          AppTab): Button       =
             Button(
               as = <.a,
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
-              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                (e.preventDefaultCB *> p.tabs
-                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
-                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
+              onClickE = onClickE[ButtonProps](tab)
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def tab(tab:                AppTab): Label        =
@@ -55,10 +57,7 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.TabSelector,
               size = Tiny,
-              onClickE = (e: ReactMouseEvent, _: LabelProps) =>
-                (e.preventDefaultCB *> p.tabs
-                  .mod(z => z.findFocus(_ === tab).getOrElse(z))
-                  .runAsyncCB).unless_(e.ctrlKey || e.metaKey)
+              onClickE = onClickE[LabelProps](tab)
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
