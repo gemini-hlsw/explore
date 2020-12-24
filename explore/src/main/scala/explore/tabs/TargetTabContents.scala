@@ -12,7 +12,7 @@ import explore._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
-import explore.utils.react._
+import explore.utils._
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab

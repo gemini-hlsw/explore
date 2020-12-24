@@ -8,7 +8,7 @@ import japgolly.scalajs.react.ReactMouseEvent
 import cats.effect.Effect
 import crystal.react.implicits._
 
-package object react {
+trait ReactUtils {
   def linkOverride[F[_]: Effect](f: => F[Unit]): ReactMouseEvent => Callback =
     e => linkOverride[F, Unit](f)(Effect[F])(e, ())
 
@@ -18,5 +18,3 @@ package object react {
         .unless_(e.ctrlKey || e.metaKey)
     }
 }
-
-package react {}

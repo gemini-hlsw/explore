@@ -8,7 +8,7 @@ import cats.effect.IO
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
-import explore.utils.react._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.data.EnumZipper
