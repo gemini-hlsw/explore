@@ -15,7 +15,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
 
-package object utils {
+package object utils extends ReactUtils {
 
   def abbreviate(s: String, maxLength: Int): String =
     if (s.length > maxLength) s"${s.substring(0, maxLength)}\u2026" else s
