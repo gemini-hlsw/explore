@@ -25,6 +25,7 @@ object Settings {
     val monocle           = "2.1.0"
     val mouse             = "0.26.2"
     val mUnit             = "0.7.20"
+    val reactAgGrid       = "0.0.3"
     val reactAladin       = "0.4.2"
     val reactAtlasKitTree = "0.3.0"
     val reactClipboard    = "1.4.2"
@@ -174,6 +175,12 @@ object Settings {
         "org.scalameta" %%% "munit",
         "org.scalameta" %%% "munit-scalacheck"
       )(mUnit)
+    )
+
+    val ReactAgGrid = Def.setting(
+      deps(
+        "com.rpiaggio" %%% "scalajs-react-ag-grid"
+      )(reactAgGrid)
     )
 
     val ReactAladin = Def.setting(

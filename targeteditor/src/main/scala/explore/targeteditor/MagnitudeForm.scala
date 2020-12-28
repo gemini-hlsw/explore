@@ -13,6 +13,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
+import explore.components.AgGridHelpers._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
@@ -41,6 +42,9 @@ import react.semanticui.collections.table.TableRow
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+import reactST.agGridReact.components._
+
+import scalajs.js.JSConverters._
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -82,9 +86,54 @@ object MagnitudeForm {
               )
             )
 
+          val deleteButton = Button(
+            size = Small,
+            compact = true,
+            clazz = ExploreStyles.DeleteButton
+          )(
+            Icons.Delete
+              .size(Small)
+              .fitted(true)
+              .clazz(ExploreStyles.TrashIcon)
+          )
+
+          val deleteFn: Magnitude => Callback =
+            mag => props.magnitudes.mod(_.filterNot(_.band === mag.band)).runAsyncCB
+
           React.Fragment(
             <.div(<.label("Magnitudes")),
             Segment(
+              <.div(
+                ^.cls := "ag-theme-alpine-dark",
+                ^.height := "400px",
+                ^.width := "600px",
+                AgGridReact
+                  .disableStaticMarkup(
+                    true
+                  )                  // necessary to keep cell renderers from duplicating in the first cell
+                  .headerHeight(0.0) // no header
+                  .stopEditingWhenGridLosesFocus(true)
+                  .rowData(props.magnitudes.toSortedAgGridData(_.band, _.band).toJSArray)(
+                    editableViewColumn(
+                      lens = Magnitude.value,
+                      validFormat = ValidFormatInput.fromFormat(MagnitudeValue.fromString),
+                      changeAuditor =
+                        ChangeAuditor.fromFormat(MagnitudeValue.fromString).decimal(3),
+                      disabled = props.disabled
+                    ).width(200.0),
+                    editableEnumViewColumn(lens = Magnitude.band,
+                                           disabled = props.disabled,
+                                           exclude = state.usedBands,
+                                           includeCurrent = true
+                    ).width(100.0),
+                    editableEnumViewColumn(lens = Magnitude.system, disabled = props.disabled)
+                      .width(200.0),
+                    buttonViewColumn(button = deleteButton,
+                                     onClick = deleteFn,
+                                     disabled = props.disabled
+                    ).width(50.0)
+                  )
+              ),
               Table(compact = TableCompact.Very)(
                 TableBody(
                   props.magnitudes.get.toTagMod { magnitude =>

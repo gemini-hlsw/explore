@@ -44,7 +44,18 @@ import js.annotation._
 
 object AppCtx extends AppRootContext[AppContextIO]
 
+@JSImport("ag-grid-community/dist/styles/ag-grid.css", JSImport.Default)
+@js.native
+object GridCss extends js.Object
+
+@JSImport("ag-grid-community/dist/styles/ag-theme-alpine-dark.css", JSImport.Default)
+@js.native
+object GridThemeCss extends js.Object
+
 trait AppMain extends IOApp {
+  val gridCss      = GridCss
+  val gridThemeCss = GridThemeCss
+
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]

@@ -17,6 +17,7 @@ import explore.GraphQLSchemas._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._
+import explore.utils._
 import io.chrisdavenport.log4cats.Logger
 import shapeless._
 
@@ -42,6 +43,33 @@ trait ListImplicits {
       mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
       monoid: Monoid[Out]
     ): Out = hlists.map(_.map(singleton)).combineAll
+  }
+
+  implicit class ViewListOps[F[_], A](val viewList: ViewF[F, List[A]]) {
+    def toAgGridData[B](eqBy: A => B)(implicit eq: Eq[B]): List[ViewF[F, A]] =
+      viewList.get.map { a =>
+        // We're already focused on "this" element
+        val getA: List[A] => A = _ => a
+        def modA(mod: A => A): List[A] => List[A] =
+          list => list.modFirstWhere(thisA => eqBy(thisA) === eqBy(a), mod)
+
+        viewList.zoom[A](getA)(modA)
+      }
+
+    def toSortedAgGridData[B, C](eqBy: A => B, sortBy: A => C)(implicit
+      eq:                              Eq[B],
+      ord:                             Ordering[C]
+    ): List[ViewF[F, A]] =
+      viewList.get
+        .map { a =>
+          // We're already focused on "this" element
+          val getA: List[A] => A = _ => a
+          def modA(mod: A => A): List[A] => List[A] =
+            list => list.modFirstWhere(thisA => eqBy(thisA) === eqBy(a), mod).sortBy(sortBy)
+
+          viewList.zoom[A](getA)(modA)
+        }
+        .sortBy(va => sortBy(va.get))
   }
 }
 

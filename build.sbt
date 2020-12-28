@@ -124,6 +124,7 @@ lazy val common = project
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
+        ReactAgGrid.value ++
         ReactClipboard.value ++
         ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](
@@ -148,6 +149,7 @@ lazy val targeteditor = project
     libraryDependencies ++=
       GeminiLocales.value ++
         LucumaCatalog.value ++
+        ReactAgGrid.value ++
         ReactAladin.value ++
         ReactDatepicker.value ++
         ReactHighcharts.value ++
