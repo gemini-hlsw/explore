@@ -4,7 +4,6 @@
   position: relative;
   border: 2px solid lighten(@borderColor, 100%);
   height: 100%;
-  /*overflow: hidden;*/
 }
 
 .aladin-imageCanvas {
@@ -33,7 +32,6 @@
   bottom: 2px;
   right: 5px;
   z-index: 20;
-
   min-width: 32px;
   max-width: 90px;
 }
@@ -57,13 +55,10 @@
 .aladin-location {
   z-index: 20;
   position: absolute;
-  top: 0px;
+  top: 0;
   padding: 2px 4px 2px 4px;
   background-color: rgba(255, 255, 255, 0.5);
   font-size: 11px;
-}
-
-.aladin-location select {
 }
 
 .aladin-location-text {
@@ -74,7 +69,7 @@
 .aladin-measurement-div {
   z-index: 77;
   position: absolute;
-  bottom: 0px;
+  bottom: 0;
   background-color: rgba(255, 255, 255, 0.8);
   font-family: monospace;
   font-size: 12px;
@@ -90,8 +85,8 @@
 }
 
 .aladin-measurement-div thead {
-  background-color: #e0e0e0;
-  color: #000;
+  background-color: hsl(0, 0%, 88%);
+  color: hsl(0, 0%, 0%);
 }
 
 .aladin-measurement-div td,
@@ -113,18 +108,22 @@
   overflow-x: hidden;
   font-family: monospace;
   font-size: 11px;
-  color: #000;
+  color: hsl(0, 0%, 0%);
 }
+
 .aladin-marker-measurement table {
   table-layout: fixed;
   width: 100%;
 }
+
 .aladin-marker-measurement table tr td {
   word-wrap: break-word;
 }
+
 .aladin-marker-measurement tr:nth-child(even) {
-  background-color: #dddddd;
+  background-color: hsl(0, 0%, 87%);
 }
+
 .aladin-marker-measurement td:first-child {
   font-weight: bold;
 }
@@ -132,13 +131,13 @@
 .aladin-fov {
   z-index: 20;
   position: absolute;
-  padding: 0;
   font-size: 12px;
   font-weight: bold;
-  bottom: 0px;
+  bottom: 0;
   padding: 2px;
-  color: #321bdf;
-  /*text-shadow: 0 0 1px white, 0 0 1px white, 0 0 1px white, 0 0 1px white, 0 0 1px white;*/
+  color: hsl(247, 78%, 49%);
+
+  /* text-shadow: 0 0 1px white, 0 0 1px white, 0 0 1px white, 0 0 1px white, 0 0 1px white; */
   background-color: rgba(255, 255, 255, 0.5);
 }
 
@@ -186,17 +185,17 @@
   display: none;
   z-index: 30;
   position: absolute;
-  background: #eee;
+  background: hsl(0, 0%, 93%);
   left: 4px;
   border-radius: 4px;
   font-size: 14px;
-  font-family: Verdana, Lucida, Arial;
+  font-family: Verdana, Lucida, Arial, sans-serif;
   line-height: 1.3;
-  color: #222;
+  color: hsl(0, 0%, 13%);
 }
 
 .aladin-box-title {
-  background-color: #ccc;
+  background-color: hsl(0, 0%, 80%);
   padding: 4px;
   font-weight: bold;
   cursor: pointer;
@@ -204,7 +203,7 @@
 }
 
 .aladin-box-title:hover {
-  background-color: #bbb;
+  background-color: hsl(0, 0%, 73%);
 }
 
 .aladin-box-content {
@@ -320,10 +319,10 @@
   float: right;
   margin-top: 0 0 2px 0;
   cursor: pointer;
-  color: #605f61;
-  border: 1px solid #aeaeae;
+  color: hsl(270, 1%, 38%);
+  border: 1px solid hsl(0, 0%, 68%);
   border-radius: 3px;
-  background: #fff;
+  background: hsl(0, 0%, 100%);
   font-size: 15px;
   font-weight: bold;
   display: inline-block;
@@ -332,7 +331,7 @@
 }
 
 .aladin-closeBtn:hover {
-  color: #201f21;
+  color: hsl(270, 3%, 13%);
 }
 
 .aladin-label {
@@ -342,8 +341,8 @@
 
 .aladin-box-separator {
   height: 0;
-  border-top: 1px solid #bbb;
-  margin: 5px 0px 5px -4px;
+  border-top: 1px solid hsl(0, 0%, 73%);
+  margin: 5px 0 5px -4px;
 }
 
 .aladin-blank-separator {
@@ -371,7 +370,18 @@
   width: 100% !important;
   border: 0 !important;
   max-width: none !important;
-  background: #fff; /* allows to hide all HTML elements in the background */
+  background: hsl(0, 0%, 100%); /* allows to hide all HTML elements in the background */
+}
+
+.aladin-sp-title a {
+  text-decoration: none;
+  color: hsl(190, 48%, 37%);
+}
+
+.aladin-sp-content a {
+  text-decoration: none;
+  color: hsl(213, 70%, 57%);
+  font-size: 11px;
 }
 
 .aladin-zoomControl {
@@ -384,7 +394,7 @@
   margin: -24px 0 0 0;
   font-weight: bold;
   font-size: 18px;
-  font-family: Verdana, Lucida, Arial;
+  font-family: Verdana, Lucida, Arial, sans-serif;
 }
 
 .aladin-zoomControl a {
@@ -396,9 +406,9 @@
   margin: 1px;
   text-align: center;
   border-radius: 4px;
-  border: 1px solid #aaa;
+  border: 1px solid hsl(0, 0%, 67%);
   text-decoration: none;
-  color: #222;
+  color: hsl(0, 0%, 13%);
 }
 
 .aladin-zoomControl a:hover {
@@ -426,9 +436,9 @@
   cursor: pointer;
   border: 1px solid transparent;
   border-radius: 3px;
-  color: #ffffff;
-  background-color: #428bca;
-  border-color: #357ebd;
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(208, 56%, 53%);
+  border-color: hsl(208, 56%, 47%);
 }
 
 .aladin-btn-small {
@@ -436,9 +446,9 @@
 }
 
 .aladin-button:hover {
-  color: #ffffff;
-  background-color: #3276b1;
-  border-color: #285e8e;
+  color: hsl(0, 0%, 100%);
+  background-color: hsl(208, 56%, 45%);
+  border-color: hsl(208, 56%, 36%);
 }
 
 .aladin-unknownObject {
@@ -454,10 +464,10 @@
 }
 
 .aladin-popup {
-  font-family: Verdana, Lucida, Arial;
+  font-family: Verdana, Lucida, Arial, sans-serif;
   font-size: 13px;
   background: white;
-  border: 1px solid #bbb;
+  border: 1px solid hsl(0, 0%, 73%);
   border-radius: 4px;
   padding: 4px;
   top: 80px;
@@ -466,39 +476,23 @@
 
 .aladin-popup-arrow {
   display: block;
-  border-color: #fff transparent transparent;
+  border-color: hsl(0, 0%, 100%) transparent transparent;
   border-style: solid;
   border-width: 12px;
-  width: 0px;
-  height: 0px;
+  width: 0;
+  height: 0;
   margin-top: -1px;
   margin-left: auto;
   margin-right: auto;
-  /*
-    width: 15px;
-    height: 15px;
-    background: white;
-    margin: -12px 94px;
-    padding-bottom: 10px;
-    overflow: hidden;
-    -webkit-transform: rotate(45deg);
-       -moz-transform: rotate(45deg);
-        -ms-transform: rotate(45deg);
-         -o-transform: rotate(45deg);
-            transform: rotate(45deg);
-*/
 }
 
 .aladin-popupTitle {
   font-weight: bold;
 }
 
-.aladin-popupText {
-}
-
 .aladin-layer-label {
   padding: 0 4px 0 4px;
-  color: #ddd;
+  color: hsl(0, 0%, 87%);
   border-bottom-left-radius: 8px;
   border-top-left-radius: 8px;
   border-bottom-right-radius: 8px;
@@ -507,19 +501,8 @@
   user-select: none;
 }
 
-.aladin-sp-title a {
-  text-decoration: none;
-  color: #317d8d;
-}
-
 .aladin-sp-content {
   font-size: 12px;
-}
-
-.aladin-sp-content a {
-  text-decoration: none;
-  color: #478ade;
-  font-size: 11px;
 }
 
 /* Icons figuring layers in the Stack */
@@ -538,18 +521,23 @@
   height: 16px;
   cursor: pointer;
   vertical-align: middle;
-  background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDQ0IDQ0IiBzdHJva2U9IiM0NDQiIGJhY2tncm91bmQtY29sb3I9ImJsdWUiPgoKICAgIDxyZWN0IHg9IjIiIHk9IjIiIGhlaWdodD0iNDAiIHdpZHRoPSI0MCIgZmlsbD0idHJhbnNwYXJlbnQiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiAvPgogICAgPHBhdGggZD0iTTEwIDEzIEwyMiAyMSBMMzQgMTMiIGZpbGw9InRyYW5zcGFyZW50IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPiAKICAgIDxwYXRoIGQ9Ik05IDI1IEwyMiAzMyBMMzUgMjUiIGZpbGw9InRyYW5zcGFyZW50IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPiAKCjwvc3ZnPgo=")
+  background:
+    url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDQ0IDQ0IiBzdHJva2U9IiM0NDQiIGJhY2tncm91bmQtY29sb3I9ImJsdWUiPgoKICAgIDxyZWN0IHg9IjIiIHk9IjIiIGhlaWdodD0iNDAiIHdpZHRoPSI0MCIgZmlsbD0idHJhbnNwYXJlbnQiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiAvPgogICAgPHBhdGggZD0iTTEwIDEzIEwyMiAyMSBMMzQgMTMiIGZpbGw9InRyYW5zcGFyZW50IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPiAKICAgIDxwYXRoIGQ9Ik05IDI1IEwyMiAzMyBMMzUgMjUiIGZpbGw9InRyYW5zcGFyZW50IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPiAKCjwvc3ZnPgo=")
     no-repeat;
 }
+
 .aladin-chevron-down {
   transform: rotate(0deg);
 }
+
 .aladin-chevron-left {
   transform: rotate(90deg);
 }
+
 .aladin-chevron-up {
   transform: rotate(180deg);
 }
+
 .aladin-chevron-right {
   transform: rotate(270deg);
 }
@@ -561,7 +549,8 @@
 /* Simbad pointer cursor */
 .aladin-sp-cursor {
   cursor: auto;
-  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gEIEwUMBS20MQAAApRJREFUWEfdV7GO2zAMfXY7x1luzOFwDeB/KHCAB87eumvqmI/JWhTwF3TIrMFAv8JbgWyHG3IpOjbpcKJC02KipECHclIU+j2KfKRlAABRUyFYak3UgKiZiXUJAIt1d1ysu2PYn53DsPCucpbkRE3JAdxKTtQgWo6zJAfGGbAwLuEV7OB9/yrXIbqZ9/0+rMuhdb+RYfWmm+fged8fihzyoXXxlNcYB2KRxwwA6SzI9Crgd973B/5/u3IF8FYSw98M5D2QR86kRE3pfX+AMqKm8iEQoqYaWrfj/4bW7QgokMhCeSs5KeVrDM4K29C6Y6oE0YGEUlndocVGyg/rGZDXBQpr0kmjLiAlOOvk3vf7RJZM5Q+te2W/7coVEq+wnC1yCZYyS3B8MMYF3vBKK9Jz5PWmm8sab1eu4N9D63aaHEAsH88SzmQpnSHsHDmnWvlXIoiJ4JTviY8FRUJ8ZAiOEiJbLpcjARM1M0twpmjZOeGQrXYm1/7yMLz/eH8fnyus6XXOtmLgWBrKtdMguNKYPPystIausn9egsVDfI674KxS6003F/sX357AdOBwcADwWD9EjBKJubxYd0cml4RhP5IPrduFk04GjiZXMyZiRHKdAU3OWeB2lLNAk+tpl9IHY0zSlBo4OgsaTJpFzs+F0pxKYEXK73Nd8+3KFfWmG71qGfgSeQqPN0fvdlZrSvmUoXaJJ7EiocArZaS6tgzA+5RQe3gumUl5gPLXzy+6pEQNzDuhvFKx1ZuuEuTxliwmY/KuoHxGhzGv5QDw9PTx7senz88aLHUpJeOu8OHb17u+//4CTMm97/eFVQK5vqR8y6xOyipByjn3+0C3moUH4O++D1UX3PR9eJWzJCf6Tz5O/wDUeIfTLPlbywAAAABJRU5ErkJggg==")
-      15 15,
+  cursor:
+    url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gEIEwUMBS20MQAAApRJREFUWEfdV7GO2zAMfXY7x1luzOFwDeB/KHCAB87eumvqmI/JWhTwF3TIrMFAv8JbgWyHG3IpOjbpcKJC02KipECHclIU+j2KfKRlAABRUyFYak3UgKiZiXUJAIt1d1ysu2PYn53DsPCucpbkRE3JAdxKTtQgWo6zJAfGGbAwLuEV7OB9/yrXIbqZ9/0+rMuhdb+RYfWmm+fged8fihzyoXXxlNcYB2KRxwwA6SzI9Crgd973B/5/u3IF8FYSw98M5D2QR86kRE3pfX+AMqKm8iEQoqYaWrfj/4bW7QgokMhCeSs5KeVrDM4K29C6Y6oE0YGEUlndocVGyg/rGZDXBQpr0kmjLiAlOOvk3vf7RJZM5Q+te2W/7coVEq+wnC1yCZYyS3B8MMYF3vBKK9Jz5PWmm8sab1eu4N9D63aaHEAsH88SzmQpnSHsHDmnWvlXIoiJ4JTviY8FRUJ8ZAiOEiJbLpcjARM1M0twpmjZOeGQrXYm1/7yMLz/eH8fnyus6XXOtmLgWBrKtdMguNKYPPystIausn9egsVDfI674KxS6003F/sX357AdOBwcADwWD9EjBKJubxYd0cml4RhP5IPrduFk04GjiZXMyZiRHKdAU3OWeB2lLNAk+tpl9IHY0zSlBo4OgsaTJpFzs+F0pxKYEXK73Nd8+3KFfWmG71qGfgSeQqPN0fvdlZrSvmUoXaJJ7EiocArZaS6tgzA+5RQe3gumUl5gPLXzy+6pEQNzDuhvFKx1ZuuEuTxliwmY/KuoHxGhzGv5QDw9PTx7senz88aLHUpJeOu8OHb17u+//4CTMm97/eFVQK5vqR8y6xOyipByjn3+0C3moUH4O++D1UX3PR9eJWzJCf6Tz5O/wDUeIfTLPlbywAAAABJRU5ErkJggg==")
+    15 15,
     auto;
 }

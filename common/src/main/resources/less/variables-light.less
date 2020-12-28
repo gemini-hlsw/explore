@@ -2,86 +2,109 @@
 // LIGHT THEME VARS
 //=================
 .colors-light() {
-  --focus-inner-color: hsla(240, 72%, 42%, 1);
-  --focus-outer-color: hsla(200, 72%, 83%, 0.75);
-  --error-label-color: @red;
-
   --color-text-base-h: 0;
   --color-text-base-s: 0%;
   --color-text-base-l: 0%;
   --color-text-base-a: 0.86;
-  --color-text-base-hsla: var(--color-background-base-h),
-    var(--color-background-base-s), var(--color-text-base-l),
+  --color-text-base-hsla:
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    var(--color-text-base-l),
     var(--color-text-base-a);
   --color-text-base: hsla(var(--color-text-base-hsla));
   // Light shades
-  --color-text-light-45: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 45%)
-  );
-  --color-text-light-75: hsl(
-    var(--color-text-base-h),
-    var(--color-text-base-s),
-    calc(var(--color-text-base-l) + 75%)
-  );
-  --control-background-color: gray;
+  --color-text-light-45:
+    hsl(
+      var(--color-text-base-h),
+      var(--color-text-base-s),
+      calc(
+        var(--color-text-base-l) + 45%
+      )
+    );
+  --color-text-light-75:
+    hsl(
+      var(--color-text-base-h),
+      var(--color-text-base-s),
+      calc(
+        var(--color-text-base-l) + 75%
+      )
+    );
   --gray: gray;
+  --gray-dark: @color-gray-dark;
+}
+
+.named-colors-light() {
+  --focus-inner-color: hsla(240, 72%, 42%, 1);
+  --focus-outer-color: hsla(200, 72%, 83%, 0.75);
+  --hover-background-color: @lightGrey;
+  --dragging-background-color: @grey;
+  // Colors from semantic ui
+  --text-color: rgba(0, 0, 0, 0.87);
+  --text-alt: rgba(0, 0, 0, 0.8);
+  --control-background-color: gray;
   --negative-text-color: @negativeTextColor;
   --negative-background-color: @negativeBackgroundColor;
   --negative-icon-color: @negativeBackgroundColor;
-
+  --warning-text-color: hsl(0, 0%, 100%);
+  --warning-background-color: hsl(35, 95%, 50%);
+  // TODO Update these colors for light
+  --under-tab-background-color: white;
+  --under-tab-background-focus-color: gray;
+  --under-tab-border-color: black;
+  --under-tab-background-active-color: gray;
+  --under-tab-background-focus-active-color: gray;
   --explore-accent-color: hsl(41, 89.5%, 51.4%);
+  --sidetab-background: @lightGrey;
+  --explore-group-hover: @lightGrey;
+  --explore-group-dragging: @grey;
 }
 
 .site-light() {
-  --site-page-background: #ffffff;
-  --site-text-color: rgba(0, 0, 0, 0.87);
-  --site-hovered-text-color: rgba(0, 0, 0, 0.8);
+  --site-page-background: hsl(0, 0%, 100%);
+  --site-text-color: var(--text-color);
+  --site-hovered-text-color: var(--text-alt);
   --site-input-color: var(--color-text-base);
   --site-border-color: rgba(34, 36, 38, 0.15);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
   --site-input-placeholder-color: var(--color-text-light-75);
-  // site @inputHighlightBackground
-  --site-input-highlight-background: rgba(100, 100, 100, 0.4);
   --site-input-highlight-color: var(--site-text-color);
   --site-disabled-opacity: 0.45;
 }
 
 .form-light() {
   --input-color: var(--color-text-base);
-
   --form-input-color: var(--input-color);
   --form-input-focus-color: var(--input-color);
   --form-input-background: @white;
-  --form-input-focus-border-color: #85b7d9;
+  --form-input-focus-border-color: hsl(204, 53%, 69%);
   --form-input-focus-box-shadow: none;
-  --form-input-hover-border-color: var(--form-input-focus-border-color);
   --form-prompt-text-color: var(--negative-text-color);
+  --form-prompt-background: var(--negative-background-color);
 }
 
 .button-light() {
   @textColor: rgba(0, 0, 0, 0.6);
   @tertiaryTextColor: rgba(0, 0, 0, 0.6);
-  --button-hover-background-color: #CACBCD;
-  --button-basic-hover-background-color: #FFFFFF;
-  --button-background-color: #E0E1E2;
+  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
+  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
+
+  --button-hover-background-color: hsl(220, 2.9%, 79.8%);
+  --button-basic-hover-background-color: ffff;
+  --button-background-color: hsl(210, 3%, 88%);
   --button-text-color: @textColor;
   --button-tertiary-text-color: @textColor;
   --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
-  @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
   --button-tertiary-hover-color: @tertiaryHoverColor;
   --button-tertiary-hover-line-color: lighten(@tertiaryHoverColor, 20%);
   --button-tertiary-focus-color: @tertiaryHoverColor;
   --button-tertiary-focus-line-color: lighten(@tertiaryHoverColor, 20%);
-  @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
   --button-tertiary-active-color: @tertiaryActiveColor;
   --button-tertiary-active-line-color: lighten(@tertiaryActiveColor, 20%);
 }
 
 .label-light() {
-  --label-background-color: #E8E8E8;
-  --label-inverted-background-color: darken(#E8E8E8, 20%);
+  --label-background-color: hsl(0, 0%, 91%);
+  --label-inverted-background-color: darken(#e8e8e8, 20%);
   --label-ribbon-shadow-color: rgba(0, 0, 0, 0.15);
 }
 
@@ -97,11 +120,11 @@
 }
 
 .menu-light() {
-  --menu-background: #FFFFFF;
+  --menu-background: hsl(0, 0%, 100%);
   --menu-pressed-item-background: @subtleTransparentBlack;
   --menu-pagination-active-background: @transparentBlack;
   --menu-hover-item-background: @subtleTransparentBlack;
-  --menu-secondary-hover-item-background:  var(--tile-title-background);
+  --menu-secondary-hover-item-background: var(--tile-title-background);
   --menu-secondary-hover-item-color: var(--input-color);
   --menu-tabular-active-background: none @white;
 }
@@ -117,15 +140,15 @@
 }
 
 .popup-light() {
+  @borderColor: @solidBorderColor;
+
   --popup-background: @white;
   --popup-arrow-background: var(--popup-background);
-  --popup-header-border: var(--gray-dark-5);
-  // FIXME @arrowColor: darken(@borderColor, 10);
-  --popup-arrow-border: var(--gray-dark-10);
+  --popup-arrow-color: darken(@borderColor, 10);
 }
 
 .dropdown-light() {
-  --dropdown-selection-background: var(--input-background-color);
+  --dropdown-selection-background: var(--control-background-color);
   --dropdown-selection-visible-color: @hoveredTextColor;
 }
 
@@ -142,7 +165,7 @@
 .table-light() {
   --table-background: @white;
   --table-striped-background: rgba(0, 0, 50, 0.02);
-  --table-active-background-hover: #efefef;
+  --table-active-background-hover: hsl(0, 0%, 94%);
   --table-header-background: @offWhite;
   --table-footer-background: @offWhite;
 }
@@ -152,12 +175,14 @@
 }
 
 .dimmer-light() {
-  --dimmer-background-color: rgba(0, 0, 0 , 0.15);
+  --dimmer-background-color: rgba(0, 0, 0, 0.15);
 }
 
 .light-theme() {
   // Values here come from the default SUI theme
+  // COLORS
   .colors-light();
+  .named-colors-light();
   .site-light();
   .button-light();
   .label-light();
@@ -173,30 +198,4 @@
   .table-light();
   .modal-light();
   .dimmer-light();
-
-  // EXPLORE VARIABLES
-  --sidetab-background: @lightGrey;
-  --explore-group-hover: @lightGrey;
-  --explore-group-dragging: @grey;
 }
-
-body.dark-theme {
-  .dark-theme();
-}
-
-body.light-theme {
-  .light-theme();
-}
-
-@media (prefers-color-scheme: dark) {
-  /* defaults to dark theme */
-  body {
-    .dark-theme();
-  }
-  /* Override dark mode with light mode styles if the user decides to swap */
-  body.light-theme {
-    .light-theme();
-  }
-}
-
-

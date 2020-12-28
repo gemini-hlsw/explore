@@ -7,57 +7,57 @@
  */
 .ui.form.explore-grid .field,
 .ui.form .explore-grid .field {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .explore-grid {
-    display: grid;
-    grid-gap: 1em;
+  display: grid;
+  grid-gap: 1em;
 
-    &.explore-compact {
-        grid-gap: 0.3em;
-    }
+  &.explore-compact {
+    grid-gap: 0.3em;
+  }
 
-    /*
+  /*
      You do not not to specify the row and column of each cell
      for most simple layouts, such as most forms. It will fill
      in each cell in a row and then go to the next column.
     */
 
-    /*
+  /*
      A two column grid that devolves to a single column
      when less than @two-column-breakpoint width.
      */
-    &.explore-two-columns {
-        grid-template-columns: 1fr 1fr;
+  &.explore-two-columns {
+    grid-template-columns: 1fr 1fr;
 
-        @media (max-width: @two-column-break) {
-            grid-template-columns: unset;
-        }
+    @media (max-width: @two-column-break) {
+      grid-template-columns: unset;
     }
+  }
 
-    /*
+  /*
      A three column grid that devolves to a single column
      when less than @three-column-breakpoint width.
      */
-    &.explore-three-columns {
-        grid-template-columns: 1fr 1fr 1fr;
+  &.explore-three-columns {
+    grid-template-columns: 1fr 1fr 1fr;
 
-        @media (max-width: @three-column-break) {
-            grid-template-columns: unset;
-        }
+    @media (max-width: @three-column-break) {
+      grid-template-columns: unset;
     }
+  }
 
-    /*
+  /*
      The explore-column-span-* classes can be used to control how many
      columns an item spans in a css grid
      */
-    each(range(16), {
-        .explore-column-span-@{value} {
-            grid-column: span @value;
-        }
-    });
+  each(range(16), {
+    .explore-column-span-@{value} {
+      grid-column: span @value;
+    }
+  });
 }
 
 /*
@@ -68,47 +68,48 @@
  nature of the grid - they will remain grouped together even
  when the grid goes down to one column.
 */
+/* stylelint-disable */
 .explore-flex-container {
-    display: flex;
+  display: flex;
 
-    &.explore-flex-wrap {
-        flex-wrap: wrap;
-    }
+  &.explore-flex-wrap {
+    flex-wrap: wrap;
+  }
 
-    .ui.form & > * + *, // override SUI 
+  .ui.form & > * + *, /* override SUI */
     .ui.form.explore-grid & > * + *,
     .ui.form .explore-grid & > * + *,
     > * + * {
-        margin-left: 0.5em;
-    }
+    margin-left: 0.5em;
+  }
 
-    /*
+  /*
      The explore-grow-* classes can be used to control the width of 
      elements in a flex container via the flex grow attribute.
      */
-    each(range(0, 4), {
+  each(range(0, 4), {
         .explore-grow-@{value} {
             flex: @value;
         }
     });
 
-    /*
+  /*
      The explore-shrink-* classes can be used to control the width of 
      elements in a flex container via the flex shrink attribute.
      */
-    each(range(0, 4), {
+  each(range(0, 4), {
         .explore-shrink-@{value} {
             flex-shrink: @value;
         }
     });
 
-    /*
+  /*
      Applying to-end to an field will push that field and the ones
      that follow it to the end of the cell wrapper.
      */
-    .ui.form & .explore-flex-end, // override SUI
+  .ui.form & .explore-flex-end, /* override SUI */
     .explore-flex-end {
-        margin-left: auto;
-    }
-
+    margin-left: auto;
+  }
 }
+/* stylelint-enable */
