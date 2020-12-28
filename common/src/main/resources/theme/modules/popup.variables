@@ -1,6 +1,5 @@
 @background: var(--popup-background);
-@headerBorder: var(--popup-header-border);
-@arrowColor: var(--popup-arrow-border);
+@arrowColor: var(--popup-arrow-color);
 
 @arrowBackground: var(--popup-arrow-background);
 @borderColor: @gray;

@@ -9,7 +9,6 @@
 // theming variables
 @import "variables-dark.less";
 @import "variables-light.less";
-
 @import "explore-grid.less";
 
 @gridSpace: 5px;
@@ -30,24 +29,29 @@
   width: 12px;
 }
 
-// https://zellwk.com/blog/creating-focus-style/
-i.icon.explore-button-icon:hover,
-i.icon.explore-button-icon:focus {
-  outline: none;
-  opacity: 1;
-  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
-    0 0 0 0.2rem var(--focus-outer-color);
-}
-
-html {
-  // Required for iOS to work with 100vh
-  // https://css-tricks.com/css-fix-for-100vh-in-mobile-webkit/
-  height: -webkit-fill-avilable;
-}
-
 html,
 body {
   box-sizing: border-box;
+}
+
+body.dark-theme {
+  .dark-theme();
+}
+
+body.light-theme {
+  .light-theme();
+}
+
+@media (prefers-color-scheme: dark) {
+  /* defaults to dark theme */
+  body {
+    .dark-theme();
+  }
+
+  /* Override dark mode with light mode styles if the user decides to swap */
+  body.light-theme {
+    .light-theme();
+  }
 }
 
 // Mixins
@@ -71,6 +75,7 @@ body {
 //----------
 .main-grid {
   @topBottom: 42px;
+
   display: grid;
   min-height: 100vh;
   // Required for iOS to work with 100vh
@@ -85,8 +90,8 @@ body {
     "sidebar";
 
   @media (min-width: @target-grid-responsive-cutoff) {
-    grid-template-columns: 50px auto;
-    grid-template-rows: @topBottom minmax(calc(100% - @topBottom ), 1fr);
+    grid-template-columns: 50 auto;
+    grid-template-rows: @topBottom minmax(calc(100% - @topBottom), 1fr);
     grid-template-areas:
       "header header"
       "sidebar body";
@@ -114,7 +119,6 @@ body {
 
 .main-header {
   grid-area: header;
-  min-width: 0;
   width: 100vw;
   min-width: 100vw;
 
@@ -170,11 +174,6 @@ body {
   border-top: 1px solid var(--under-tab-border-color);
 }
 
-.ui.label.bottom-tab-selector:hover,
-.ui.label.bottom-tab-selector:focus {
-  background-color: var(--under-tab-background-focus-color);
-}
-
 .ui.label.bottom-tab-selector {
   flex-grow: 1;
   flex-shrink: 1;
@@ -182,22 +181,27 @@ body {
   text-align: center;
   padding-top: 0.4em;
   padding-bottom: 0.2em;
-  margin-right: .2em;
-  margin-left: .2em;
+  margin-right: 0.2em;
+  margin-left: 0.2em;
   border-radius: 0.2em;
   border: 1px solid var(--under-tab-border-color);
   background-color: var(--under-tab-background-color);
 }
 
-.ui.label.active.bottom-tab-selector:hover,
-.ui.label.active.bottom-tab-selector:focus {
-  background-color: var(--under-tab-background-focus-active-color);
+.ui.label.bottom-tab-selector:hover,
+.ui.label.bottom-tab-selector:focus {
+  background-color: var(--under-tab-background-focus-color);
 }
 
 .ui.label.active.bottom-tab-selector {
   border-top: var(--explore-accent-color) solid 4px;
   background-color: var(--under-tab-background-active-color);
   font-weight: bold;
+}
+
+.ui.label.active.bottom-tab-selector:hover,
+.ui.label.active.bottom-tab-selector:focus {
+  background-color: var(--under-tab-background-focus-active-color);
 }
 
 //----------
@@ -212,7 +216,8 @@ body {
   border-bottom-right-radius: unset;
   background-color: var(--under-tab-background-color);
   font-weight: 300;
-  transition: opacity @defaultDuration @defaultEasing,
+  transition:
+    opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
 }
@@ -239,7 +244,7 @@ body {
 }
 
 .ui.menu:not(.vertical) .right.menu.main-menu {
-  margin-left: 0px !important; //SUI has !imporant
+  margin-left: 0 !important; //SUI has !imporant
 }
 
 .explore-tile-title {
@@ -255,8 +260,6 @@ body {
   align-items: center;
 }
 
-.explore-tile-button {
-}
 .ui.button.target-back-button {
   @media (min-width: @target-grid-responsive-cutoff) {
     display: none;
@@ -271,6 +274,7 @@ body {
 
 .explore-tile {
   .full-height-width();
+
   background-color: var(--tile-background);
 }
 
@@ -321,10 +325,10 @@ body {
 // Section on the left to place the tree
 .tree {
   height: 100%;
-  left: 0px;
-  top: 0px;
+  left: 0;
+  top: 0;
   position: absolute;
-  box-shadow: inset -5px 0px 0px 0px var(--tile-background);
+  box-shadow: inset -5px 0 0 0 var(--tile-background);
   width: 100%;
 
   // Special css to decorate the resize handle. It needs to be very specific
@@ -337,19 +341,20 @@ body {
 .rgl-body {
   height: 100%;
   position: absolute;
-  top: 0px;
+  top: 0;
   overflow-y: scroll;
 }
 
 .rgl-placeholder {
   background-color: var(--tile-background);
   height: 100%;
-  top: 0px;
+  top: 0;
   position: absolute;
 }
 
 .single-panel-tile {
   .full-height-width();
+
   position: absolute;
 }
 
@@ -382,7 +387,7 @@ body {
 }
 
 .obs-item {
-  margin: 0px;
+  margin: 0;
   padding: 5px;
 }
 
@@ -410,6 +415,14 @@ body {
   background-color: var(--tile-background);
 }
 
+.obs-tree-group-header {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding-bottom: 1px;
+  align-content: center;
+}
+
 .vertical.segment.selected-obs-tree-group {
   background-color: var(--tile-background);
 }
@@ -427,14 +440,6 @@ body {
   padding-bottom: 5px;
   padding-right: 5px;
   user-select: none;
-}
-
-.obs-tree-group-header {
-  display: flex;
-  flex-wrap: nowrap;
-  width: 100%;
-  padding-bottom: 1px;
-  align-content: center;
 }
 
 .trash-icon {
@@ -458,7 +463,7 @@ body {
   display: flex;
   flex-shrink: 0;
   justify-content: space-between;
-  padding: 5px 0px 5px 5px;
+  padding: 5px 0 5px 5px;
   background-color: var(--tile-title-background);
 }
 
@@ -469,11 +474,11 @@ body {
 }
 
 .sky-plot {
-  height: 350px;
+  height: 350;
 }
 
 .sky-plot-section {
-  height: 390px;
+  height: 390;
   background-color: white;
   color: black;
 }
@@ -488,27 +493,27 @@ body {
 }
 
 .plot-toggle {
-  margin-left: 10px;
-  margin-right: 10px;
+  margin-left: 10;
+  margin-right: 10;
   padding-top: 6px;
 }
 
-.plot-toggle.ui.slider.checkbox .box:before,
-.plot-toggle.ui.slider.checkbox label:before {
-  background-color: #545454 !important;
+.plot-toggle.ui.slider.checkbox .box::before,
+.plot-toggle.ui.slider.checkbox label::before {
+  background-color: hsl(0, 0%, 33%) !important;
 }
 
-.plot-toggle.ui.slider.checkbox input:focus:checked ~ label:before {
-  background-color: #545454 !important;
+.plot-toggle.ui.slider.checkbox input:focus:checked ~ label::before {
+  background-color: hsl(0, 0%, 33%) !important;
 }
 
 .ui.grid > .row > .column.aladin-column {
-  padding-top: 0px;
-  padding-bottom: 0px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .aladin-container-column {
-  min-height: 500px;
+  min-height: 500;
   height: 100%;
   display: grid;
   grid-template-rows: 1fr min-content;
@@ -548,7 +553,7 @@ body {
 .moon-phase {
   position: absolute;
   top: 5px;
-  right: 20px;
+  right: 20;
   z-index: 10;
 }
 
@@ -571,7 +576,7 @@ body {
 
 .wip .wip-warning {
   visibility: hidden;
-  width: 120px;
+  width: 120;
   background-color: yellow;
   color: black;
   text-align: center;
@@ -581,7 +586,7 @@ body {
   /* Position the tooltip */
   position: absolute;
   z-index: 3;
-  top: 30px;
+  top: 30;
   left: calc(50% - 60px);
 }
 
@@ -591,11 +596,10 @@ body {
 
 // The Target Position layout
 @target-grid-responsive-cutoff: 992px;
-@mobile-responsive-cutoff: 670px;
+@mobile-responsive-cutoff: 670;
 
 .target-grid {
   display: grid;
-
   grid-gap: 1em;
   padding: 1em;
   grid-template-columns: 1fr 2fr;
@@ -606,8 +610,8 @@ body {
 }
 
 .target-aladin-cell {
-  height: 100px;
-  min-height: 300px; // don't collapse in single column mode.
+  height: 100;
+  min-height: 300; // don't collapse in single column mode.
 }
 
 .target-skyplot-cell {
@@ -647,7 +651,10 @@ body {
   background-color: var(--negative-background-color);
 }
 
-.ui.ui.form .field.error > .explore-error-label,
+.ui.label.explore-error-label {
+  .error-label-mixin();
+}
+
 .ui.form .field > .explore-error-label {
   .error-label-mixin();
 }
@@ -701,18 +708,18 @@ body {
   }
 }
 
-// The split edit button and the band totals
-div.partner-split-total {
-  &,
-  & > div > data {
-    width: 5.5em;
-  }
+.version {
+  font-size: smaller;
+  float: right;
 
-  & > div > data {
-    text-align: end;
+  // CopyToClipboard
+  div {
+    display: inline-block;
+    margin-left: 5px;
   }
 }
 
+// The split edit button and the band totals
 .partner-split-data {
   &,
   div& data {
@@ -734,6 +741,24 @@ div.partner-split-total {
       flex: 1;
       text-align: end;
     }
+  }
+}
+
+.version.uncopied {
+  // CopyToClipboard
+  div {
+    cursor: pointer;
+  }
+}
+
+div.partner-split-total {
+  &,
+  & > div > data {
+    width: 5.5em;
+  }
+
+  & > div > data {
+    text-align: end;
   }
 }
 
@@ -767,9 +792,9 @@ img.partner-split-flag {
 
 .explore-input-error-tooltip {
   position: absolute;
-  transform: translate(0px, -33px);
+  transform: translate(0, -33px);
   left: 30%;
-  z-index:3;
+  z-index: 3;
 }
 
 .ui.button.blended-button {
@@ -801,7 +826,7 @@ img.partner-split-flag {
   margin-bottom: 0;
 }
 
-i.icon.user-astronaut:before { content: "\f4fb"; }
+i.icon.user-astronaut::before { content: "\f4fb"; }
 
 .ui.modal.explore-login-box > .content {
   background-color: var(--modal-background);
@@ -819,7 +844,8 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 }
 
 .explore-login-title {
-  @spacing: 20px;
+  @spacing: 20;
+
   transform: translate(-100%, 0%);
   font-weight: 300;
   font-size: 3em;
@@ -833,8 +859,15 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 }
 
 @keyframes showTopText {
-  0% { transform: translate3d(0, 100%, 0); opacity: 0; }
-  100% { transform: translate3d(0, 0, 0); opacity: 1;}
+  0% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
 }
 
 .explore-login-orcid-button {
@@ -845,10 +878,6 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 .warning-label-mixin() {
   color: var(--warning-text-color);
   background-color: var(--warning-background-color);
-}
-
-.ui.label.explore-error-label {
-  .error-label-mixin();
 }
 
 .ui.label.explore-warning-label {
@@ -871,6 +900,7 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 .explore-orcid-icon-menu,
 .explore-login-orcid-icon {
   @logosize: 1.18em;
+
   margin-right: 0.42em;
   vertical-align: baseline;
   width: @logosize;
@@ -889,7 +919,8 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
 }
 
 #staging-banner {
-  @spacing: 20px;
+  @spacing: 20;
+
   z-index: 2000;
   position: absolute;
   top: 0;
@@ -903,20 +934,18 @@ i.icon.user-astronaut:before { content: "\f4fb"; }
   background-color: var(--explore-accent-color);
 }
 
-.version {
-  font-size: smaller;
-  float: right;
-
-  // CopyToClipboard
-  div {
-    display: inline-block;
-    margin-left: 5px;
-  }
+// https://zellwk.com/blog/creating-focus-style/
+i.icon.explore-button-icon:hover,
+i.icon.explore-button-icon:focus {
+  outline: none;
+  opacity: 1;
+  box-shadow:
+    0 0 0 0.1rem var(--focus-inner-color),
+    0 0 0 0.2rem var(--focus-outer-color);
 }
 
-.version.uncopied {
-  // CopyToClipboard
-  div {
-    cursor: pointer;
-  }
+html {
+  // Required for iOS to work with 100vh
+  // https://css-tricks.com/css-fix-for-100vh-in-mobile-webkit/
+  height: -webkit-fill-available;
 }

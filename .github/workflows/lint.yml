@@ -1,0 +1,48 @@
+name: Lint
+
+on: push
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      # Install your linters here
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.8.0"
+      - name: Setup and expand vars
+        run: |
+          npm install
+          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/resources/less/variables-dark.less > common/src/main/resources/less/vars.css
+          cat common/src/main/resources/less/vars.css
+      - name: Run linters in dark mode
+        uses: wearerequired/lint-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Enable your linters herename: Lint
+          stylelint: true
+          stylelint_args: "common/src/main/resources/less"
+          stylelint_dir: "common/src/main/resources/less"
+          stylelint_extensions: "css,less"
+
+      - name: Setup and expand vars light
+        run: |
+          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/resources/less/variables-light.less > common/src/main/resources/less/vars.css
+          cat common/src/main/resources/less/vars.css
+      - name: Run linters in light mode
+        uses: wearerequired/lint-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Enable your linters herename: Lint
+          stylelint: true
+          stylelint_args: "common/src/main/resources/less"
+          stylelint_dir: "common/src/main/resources/less"
+          stylelint_extensions: "css,less"
+

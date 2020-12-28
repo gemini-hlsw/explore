@@ -1,5 +1,16 @@
-{ 
-    "engines": { 
-        "node": "14.8.0" 
+{
+    "engines": {
+        "node": "14.8.0"
+    },
+    "devDependencies": {
+        "stylelint": "^13.8.0",
+        "stylelint-color-format": "^1.1.0",
+        "stylelint-config-standard": "^20.0.0",
+        "stylelint-value-no-unknown-custom-properties": "^3.0.0"
+    },
+    "scripts": {
+        "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-dark.less > vars.css;npx stylelint common/src/main/resources/less; rm vars.css",
+        "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-dark.less > vars.css;npx stylelint --fix common/src/main/resources/less; rm vars.css",
+        "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-light.less > vars.css;npx stylelint common/src/main/resources/less; rm vars.css"
     }
 }
