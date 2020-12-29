@@ -3,8 +3,6 @@
 
 package explore.components
 
-import scala.annotation.unused
-
 import cats._
 import cats.data.Validated._
 import cats.syntax.all._
@@ -64,7 +62,7 @@ object AgGridHelpers {
    */
   def editableViewColumn[A, B](
     lens:          Lens[A, B],
-    validFormat:   ValidFormatInput[B] = ValidFormatInput.id,
+    validFormat:   ValidFormatInput[B],
     changeAuditor: ChangeAuditor[B] = ChangeAuditor.accept[B],
     disabled:      Boolean = false
   )(implicit eq:   Eq[B]): AgGridColumn.ColDef.Builder =
@@ -116,9 +114,9 @@ object AgGridHelpers {
    * @return An AgGridColumn Builder.
    */
   def buttonViewColumn[A](
-    @unused button:   Button,
-    @unused onClick:  A => Callback,
-    @unused disabled: Boolean = false
+    button:   Button,
+    onClick:  A => Callback,
+    disabled: Boolean = false
   ): AgGridColumn.ColDef.Builder = {
     val component = ScalaComponent
       .builder[View[A]]
@@ -201,7 +199,7 @@ object AgGridHelpers {
             val len = i.value.length
             i.setSelectionRange(0, len)
           }
-        }.void.delayMs(50).completeWith(_ => Callback(()))
+        }.void.delayMs(1).toCallback
 
       // We have to wait until getValue is called before setting the value or
       // we get "kicked out of" editing due to re-rendering of the table.
