@@ -18,6 +18,7 @@ import explore.observationtree.ObsQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reusability._
 import react.common._
 import react.draggable.Axis
 import react.gridlayout._
@@ -59,13 +60,14 @@ object ObsTabContents {
       val treeWidth  = state.treeWidth.toDouble
 
       // Tree area
-      def tree(observations: View[List[ObsSummary]]) =
-        <.div(^.width := treeWidth.px, ExploreStyles.Tree)(
-          <.div(ExploreStyles.TreeBody)(
-            ObsList(
-              observations,
-              props
-            )
+      def tree(observations:      View[List[ObsSummary]]) =
+        <.div(^.width := treeWidth.px, ExploreStyles.Tree)(treeInner(observations))
+
+      def treeInner(observations: View[List[ObsSummary]]) =
+        <.div(ExploreStyles.TreeBody)(
+          ObsList(
+            observations,
+            props
           )
         )
 
@@ -126,8 +128,7 @@ object ObsTabContents {
                     )
                   )
                 )
-              ).when(false),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.RGLPlaceholder)
+              )
             )
           }
         )

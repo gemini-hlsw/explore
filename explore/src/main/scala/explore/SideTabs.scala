@@ -8,11 +8,11 @@ import cats.effect.IO
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.data.EnumZipper
 import lucuma.ui.reusability._
+import lucuma.ui.utils._
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps

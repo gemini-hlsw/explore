@@ -4,9 +4,6 @@
 package explore
 
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 import scala.scalajs.js
 
@@ -14,26 +11,10 @@ import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
+import lucuma.ui.utils.versionDateTimeFormatter
+import lucuma.ui.utils.versionDateFormatter
 
-package object utils extends ReactUtils {
-
-  def abbreviate(s: String, maxLength: Int): String =
-    if (s.length > maxLength) s"${s.substring(0, maxLength)}\u2026" else s
-
-  implicit class ListOps[A](val list: List[A]) extends AnyVal {
-    def modFirstWhere(find: A => Boolean, mod: A => A): List[A] =
-      list.indexWhere(find) match {
-        case -1 => list
-        case n  => (list.take(n) :+ mod(list(n))) ++ list.drop(n + 1)
-      }
-  }
-
-  private val versionDateFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.from(ZoneOffset.UTC))
-
-  private val versionDateTimeFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneId.from(ZoneOffset.UTC))
-
+package object utils {
   def version(environment: ExecutionEnvironment): NonEmptyString = {
     val instant = Instant.ofEpochMilli(BuildInfo.buildTime)
     NonEmptyString.unsafeFrom(

@@ -12,7 +12,7 @@ import explore.WebpackResources
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.UserVault
-import explore.utils.UAParser
+import lucuma.ui.utils.UAParser
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom

@@ -16,7 +16,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
-import explore.utils._
+import lucuma.ui.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand

@@ -26,11 +26,11 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.ui.utils._
 import monocle.Getter
 import monocle.function.Field1.first
 import mouse.boolean._

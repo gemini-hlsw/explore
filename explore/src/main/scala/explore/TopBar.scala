@@ -11,7 +11,6 @@ import explore.WebpackResources
 import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
-import explore.model.reusability._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
