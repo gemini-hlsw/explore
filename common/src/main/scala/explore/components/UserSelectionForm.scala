@@ -12,9 +12,9 @@ import explore.WebpackResources
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.UserVault
-import lucuma.ui.utils.UAParser
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.utils.UAParser
 import org.scalajs.dom
 import react.common._
 import react.common.implicits._

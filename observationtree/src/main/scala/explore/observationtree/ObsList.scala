@@ -11,9 +11,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.model.reusability._
 import react.common.ReactProps
 import react.common.implicits._
 

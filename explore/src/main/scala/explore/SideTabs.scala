@@ -3,8 +3,8 @@
 
 package explore
 
-import cats.syntax.all._
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab

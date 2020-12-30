@@ -5,8 +5,8 @@ package explore.tabs
 
 import scala.collection.immutable.SortedSet
 
-import cats.syntax.all._
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
@@ -15,17 +15,17 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
+import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
-import explore.model.reusability._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
-import lucuma.ui.utils._
 import lucuma.ui.reusability._
+import lucuma.ui.utils._
 import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._

@@ -12,7 +12,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import lucuma.ui.utils.abbreviate
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -20,6 +19,7 @@ import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
+import lucuma.ui.utils.abbreviate
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form.FormProps

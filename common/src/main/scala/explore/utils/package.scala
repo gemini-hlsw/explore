@@ -11,8 +11,8 @@ import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
-import lucuma.ui.utils.versionDateTimeFormatter
 import lucuma.ui.utils.versionDateFormatter
+import lucuma.ui.utils.versionDateTimeFormatter
 
 package object utils {
   def version(environment: ExecutionEnvironment): NonEmptyString = {
