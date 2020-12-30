@@ -190,10 +190,12 @@ body.light-theme {
 
 .ui.label.bottom-tab-selector:hover,
 .ui.label.bottom-tab-selector:focus {
+  border: 1px solid var(--under-tab-border-color);
   background-color: var(--under-tab-background-focus-color);
 }
 
 .ui.label.active.bottom-tab-selector {
+  border: 1px solid var(--under-tab-border-color);
   border-top: var(--explore-accent-color) solid 4px;
   background-color: var(--under-tab-background-active-color);
   font-weight: bold;
@@ -201,6 +203,8 @@ body.light-theme {
 
 .ui.label.active.bottom-tab-selector:hover,
 .ui.label.active.bottom-tab-selector:focus {
+  border: 1px solid var(--under-tab-border-color);
+  border-top: var(--explore-accent-color) solid 4px;
   background-color: var(--under-tab-background-focus-active-color);
 }
 
@@ -249,6 +253,9 @@ body.light-theme {
 
 .explore-tile-title {
   background-color: var(--tile-title-background);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
   & .tabular.menu .item {
     color: var(--tile-title-color);
@@ -256,11 +263,23 @@ body.light-theme {
   }
 }
 
-.explore-tile-title-menu {
-  align-items: center;
+.ui.menu.explore-tile-title-menu {
+  margin-top: 0;
+  cursor: pointer;
 }
 
-.ui.button.target-back-button {
+.ui.menu.explore-tile-title-menu .item {
+  padding-left: 0;
+}
+
+.ui.menu.explore-tile-title-menu a.item:hover {
+  background: unset;
+  color: unset;
+}
+
+.ui.button.tile-back-button {
+  margin-right: 0;
+
   @media (min-width: @target-grid-responsive-cutoff) {
     display: none;
   }
@@ -322,14 +341,18 @@ body.light-theme {
   .full-height-width();
 }
 
+.tree-rgl {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 // Section on the left to place the tree
 .tree {
   height: 100%;
+  width: 100%;
   left: 0;
   top: 0;
   position: absolute;
-  box-shadow: inset -5px 0 0 0 var(--tile-background);
-  width: 100%;
 
   // Special css to decorate the resize handle. It needs to be very specific
   .react-resizable-handle.react-resizable-handle-e {
@@ -338,11 +361,12 @@ body.light-theme {
   }
 }
 
-.rgl-body {
-  height: 100%;
-  position: absolute;
-  top: 0;
-  overflow-y: scroll;
+.resizable-single-panel {
+  box-shadow: inset -5px 0 0 0 var(--tile-background);
+}
+
+.resizable-multi-panel {
+  box-shadow: inset -5px 0 0 0 var(--site-page-background);
 }
 
 .rgl-placeholder {
@@ -360,8 +384,11 @@ body.light-theme {
 
 // Inner area of the tree
 .tree-body {
-  width: ~"calc(100% - @{resizeHandleWidth})";
-  height: 100%;
+  .full-height-width();
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    width: ~"calc(100% - @{resizeHandleWidth})";
+  }
 }
 
 .obs-tree-wrapper {
@@ -383,12 +410,15 @@ body.light-theme {
 .obs-scroll-tree {
   height: 100%;
   flex-grow: 1;
+  padding-top: 0.2em;
+  padding-right: 0.2em;
+  padding-left: 0.2em;
   overflow-y: auto;
 }
 
 .obs-item {
   margin: 0;
-  padding: 5px;
+  padding: 0;
 }
 
 .obs-count {
@@ -402,7 +432,17 @@ body.light-theme {
 
 .card.obs-badge {
   width: 100%;
+  margin: 0 0;
   background-color: var(--obs-badge-background);
+  border: solid 1px var(--site-border-color);
+}
+
+.card.obs-badge:last-child {
+  margin-bottom: 0.2em;
+}
+
+.raised.card.obs-badge {
+  box-shadow: none;
 }
 
 .card.obs-badge .content .meta,
@@ -411,8 +451,8 @@ body.light-theme {
   color: var(--obs-badge-color);
 }
 
-.selected-obs-item {
-  background-color: var(--tile-background);
+.selected-obs-item .card.obs-badge {
+  background-color: var(--obs-selected-badge-background);
 }
 
 .obs-tree-group-header {

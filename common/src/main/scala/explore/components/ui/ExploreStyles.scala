@@ -10,11 +10,12 @@ import react.common.implicits._
 import react.common.style._
 
 object ExploreStyles {
-  val Tile: Css          = Css("explore-tile")
-  val TileTitle: Css     = Css("explore-tile-title")
-  val TileTitleMenu: Css = Css("explore-tile-title-menu")
-  val TileBody: Css      = Css("explore-tile-body")
-  val TileButton: Css    = Css("explore-tile-button")
+  val Tile: Css           = Css("explore-tile")
+  val TileTitle: Css      = Css("explore-tile-title")
+  val TileTitleMenu: Css  = Css("explore-tile-title-menu")
+  val TileBackButton: Css = Css("tile-back-button")
+  val TileBody: Css       = Css("explore-tile-body")
+  val TileButton: Css     = Css("explore-tile-button")
 
   val TextInForm: Css = Css("explore-text-in-form")
   val Accented: Css   = Css("explore-accented")
@@ -57,15 +58,17 @@ object ExploreStyles {
   val TargetLabelTitle: Css = Css("target-label-title")
   val DeleteButton: Css     = Css("delete-button")
 
-  val ResizeHandle: Css       = Css("resize-handle")
-  val ResizableSeparator: Css = Css("resize-separator")
-  val Tree: Css               = Css("tree")
-  val TreeBody: Css           = Css("tree-body")
-  val TreeRGL: Css            = Css("tree-rgl")
-  val RGLBody: Css            = Css("rgl-body")
-  val RGLArea: Css            = Css("rgl-area")
-  val RGLPlaceholder: Css     = Css("rgl-placeholder")
-  val SinglePanelTile: Css    = Css("single-panel-tile")
+  val ResizeHandle: Css         = Css("resize-handle")
+  val ResizableSeparator: Css   = Css("resize-separator")
+  val Tree: Css                 = Css("tree")
+  val ResizableSinglePanel: Css = Css("resizable-single-panel")
+  val ResizableMultiPanel: Css  = Css("resizable-multi-panel")
+  val TreeBody: Css             = Css("tree-body")
+  val TreeRGL: Css              = Css("tree-rgl")
+  val TreeRGLWrapper: Css       = Css("tree-rgl-wrapper")
+  val RGLArea: Css              = Css("rgl-area")
+  val RGLPlaceholder: Css       = Css("rgl-placeholder")
+  val SinglePanelTile: Css      = Css("single-panel-tile")
 
   val SideTabsVertical: Css     = Css("sidetabs-body-vertical")
   val SideTabsHorizontal: Css   = Css("sidetabs-body-horizontal")
@@ -140,7 +143,6 @@ object ExploreStyles {
 
   // The Target tab contents
   val TargetGrid: Css           = Css("target-grid")
-  val TargetBackButton: Css     = Css("target-back-button")
   val TargetAladinCell: Css     = Css("target-aladin-cell")
   val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")

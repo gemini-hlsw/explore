@@ -30,6 +30,7 @@ object Tile {
           ExploreStyles.Tile,
           <.div(
             ExploreStyles.TileTitle,
+            p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
             Menu(
               attached = MenuAttached.Top,
               compact = true,
@@ -38,7 +39,6 @@ object Tile {
               clazz = ExploreStyles.TileTitleMenu,
               tabular = MenuTabular.Right
             )(
-              p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
               MenuItem(as = <.a)(Icons.Bars.when(p.movable), p.title)
             )
           ),

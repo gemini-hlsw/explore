@@ -5,38 +5,54 @@ package explore.tabs
 
 import scala.annotation.unused
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
+import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.model.Focused.FocusedObs
 import explore.model._
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
+import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
+import lucuma.ui.utils._
+import org.scalajs.dom.window
 import react.common._
+import react.common.implicits._
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
+import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.sizes._
 import react.sizeme._
+
+final case class ObsTabContents(
+  focused: View[Option[Focused]]
+) extends ReactProps[ObsTabContents](ObsTabContents.component) {
+  def isObsSelected: Boolean = focused.get.isDefined
+}
 
 object ObsTabContents {
   private val layoutLg: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 8, i = "constraints")
+      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "overview"),
+      LayoutItem(x = 0, y = 8, w = 12, h = 8, i = "target")
     )
   )
 
   private val layoutMd: Layout = Layout(
     List(
-      LayoutItem(x = 0, y = 0, w = 12, h = 16, i = "target"),
-      LayoutItem(x = 0, y = 8, w = 12, h = 8, i = "constraints")
+      LayoutItem(x = 0, y = 0, w = 12, h = 8, i = "overview"),
+      LayoutItem(x = 0, y = 8, w = 12, h = 8, i = "target")
     )
   )
 
@@ -48,91 +64,118 @@ object ObsTabContents {
       // (BreakpointName.xs, (480, 6, layout))
     )
 
-  type Props = View[Option[Focused]]
+  type Props = ObsTabContents
+  type State = TwoPanelState
 
-  final case class State(treeWidth: JsNumber)
-
-  implicit val stateReuse: Reusability[State] = Reusability.derive
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val treeResize = (_: ReactEvent, d: ResizeCallbackData) => $.setState(State(d.size.width))
-      val treeWidth  = state.treeWidth.toDouble
+      AppCtx.withCtx { ctx =>
+        val treeResize = (_: ReactEvent, d: ResizeCallbackData) =>
+          $.setStateL(TwoPanelState.treeWidth)(d.size.width)
+        val treeWidth  = state.treeWidth.toDouble
 
-      // Tree area
-      def tree(observations:      View[List[ObsSummary]]) =
-        <.div(^.width := treeWidth.px, ExploreStyles.Tree)(treeInner(observations))
-
-      def treeInner(observations: View[List[ObsSummary]]) =
-        <.div(ExploreStyles.TreeBody)(
-          ObsList(
-            observations,
-            props
+        // Tree area
+        def tree(observations: View[List[ObsSummary]]) =
+          <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
+            treeInner(observations)
           )
-        )
 
-      ObsLiveQuery { observations =>
-        @unused val obsSummaryOpt = props.get.collect { case FocusedObs(obsId) =>
-          observations.get.find(_.id === obsId)
-        }.flatten
+        def treeInner(observations: View[List[ObsSummary]]) =
+          <.div(ExploreStyles.TreeBody)(
+            ObsList(
+              observations,
+              props.focused
+            )
+          )
 
-        <.div(
-          ExploreStyles.RGLArea,
-          SizeMe() { s =>
-            val coreWidth = s.width.toDouble - treeWidth
+        ObsLiveQuery { observations =>
+          @unused val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
+            observations.get.find(_.id === obsId)
+          }.flatten
 
-            <.div(
-              ExploreStyles.TreeRGL,
-              Resizable(
-                axis = Axis.X,
-                width = treeWidth,
-                height = Option(s.height).getOrElse(0),
-                minConstraints = (270, 0),
-                maxConstraints = (s.width.toInt / 2, 0),
-                onResize = treeResize,
-                resizeHandles = List(ResizeHandleAxis.East),
-                content = tree(observations)
-              ),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.RGLBody)(
-                ResponsiveReactGridLayout(
-                  width = coreWidth,
-                  margin = (5, 5),
-                  containerPadding = (5, 5),
-                  rowHeight = 30,
-                  draggableHandle = s".${ExploreStyles.TileTitle.htmlClass}",
-                  // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
-                  layouts = layouts
-                )(
-                  <.div(
-                    ^.key := "target",
-                    ^.cls := "tile",
-                    Tile("Target Position", movable = true, None)(
-                      <.span(
-                        // obsSummaryOpt.whenDefined(obs =>
-                        //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
-                        // )
-                      )
+          val backButton = TileButton(
+            Button(
+              as = <.a,
+              basic = true,
+              size = Mini,
+              compact = true,
+              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+            )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
+          )
+
+          React.Fragment(
+            SizeMe() { s =>
+              val coreWidth =
+                if (window.innerWidth <= Constants.TwoPanelCutoff) {
+                  s.width.toDouble
+                } else {
+                  s.width.toDouble - treeWidth
+                }
+              val rightSide = ResponsiveReactGridLayout(
+                width = coreWidth,
+                margin = (5, 5),
+                containerPadding = (5, 0),
+                rowHeight = 30,
+                draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
+                // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                layouts = layouts
+              )(
+                <.div(
+                  ^.key := "overview",
+                  Tile("Overview", movable = false, backButton.some)(
+                    <.span(
+                      // obsSummaryOpt.whenDefined(obs =>
+                      //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
+                      // )
                     )
-                  ),
-                  <.div(
-                    ^.key := "constraints",
-                    ^.cls := "tile",
-                    Tile("Constraints", movable = true, None)(
-                      <.span(
-                        // obsSummaryOpt.whenDefined(obs =>
-                        //   ConstraintsSubscription(obs.constraints.id) { constraints =>
-                        //     ConstraintsPanel(obs.constraints.id, constraints)
-                        //   }.withKey(obs.constraints.id.toString)
-                        // )
-                      )
+                  )
+                ),
+                <.div(
+                  ^.key := "target",
+                  Tile("Target", movable = false, None)(
+                    <.span(
+                      // obsSummaryOpt.whenDefined(obs =>
+                      //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
+                      // )
                     )
                   )
                 )
-              ).when(false),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.RGLPlaceholder)
-            )
-          }
-        )
+              )
+
+              if (window.innerWidth <= Constants.TwoPanelCutoff) {
+                <.div(
+                  ExploreStyles.TreeRGL,
+                  <.div(ExploreStyles.Tree, treeInner(observations))
+                    .when(state.leftPanelVisible),
+                  <.div(ExploreStyles.SinglePanelTile, rightSide).when(state.rightPanelVisible)
+                )
+              } else {
+                <.div(
+                  ExploreStyles.TreeRGL,
+                  Resizable(
+                    axis = Axis.X,
+                    width = treeWidth,
+                    height = Option(s.height).getOrElse(0),
+                    minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+                    maxConstraints = (s.width.toInt / 2, 0),
+                    onResize = treeResize,
+                    resizeHandles = List(ResizeHandleAxis.East),
+                    content = tree(observations)
+                  ),
+                  <.div(^.width := coreWidth.px,
+                        ^.left := treeWidth.px,
+                        ExploreStyles.SinglePanelTile
+                  )(
+                    <.div(ExploreStyles.TreeRGLWrapper, rightSide)
+                  )
+                )
+              }
+            }
+          )
+        }
       }
     }
   }
@@ -140,10 +183,18 @@ object ObsTabContents {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State(295))
+      .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
+        s match {
+          case None    =>
+            TwoPanelState.initial(p.isObsSelected)
+          case Some(s) =>
+            if (s.elementSelected =!= p.isObsSelected)
+              s.copy(elementSelected = p.isObsSelected)
+            else s
+        }
+      )
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  def apply(props: Props) = component(props)
 }
