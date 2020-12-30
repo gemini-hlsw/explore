@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
@@ -24,34 +25,32 @@ final case class ObsList(
 object ObsList {
   type Props = ObsList
 
-  class Backend() {
-    def render(props: Props): VdomElement =
-      <.div(ExploreStyles.ObsTree)(
-        <.div(
-          props.observations.get.toTagMod { obs =>
-            val selected = props.focused.get.exists(_ === FocusedObs(obs.id))
-            <.div(
-              ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-              ^.cursor.pointer,
-              ^.onClick ==> { e: ReactEvent =>
-                e.stopPropagationCB >>
-                  props.focused
-                    .set(FocusedObs(obs.id).some)
-                    .runAsyncCB
-              }
-            )(
-              ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
-            )
-          }
-        )
-      )
-
-  }
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val component =
     ScalaComponent
       .builder[Props]
-      .backend(_ => new Backend())
-      .renderBackend
+      .render_P { (props: Props) =>
+        <.div(ExploreStyles.ObsTree)(
+          <.div(
+            props.observations.get.toTagMod { obs =>
+              val selected = props.focused.get.exists(_ === FocusedObs(obs.id))
+              <.div(
+                ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
+                ^.cursor.pointer,
+                ^.onClick ==> { e: ReactEvent =>
+                  e.stopPropagationCB >>
+                    props.focused
+                      .set(FocusedObs(obs.id).some)
+                      .runAsyncCB
+                }
+              )(
+                ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
+              )
+            }
+          )
+        )
+      }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

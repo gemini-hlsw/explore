@@ -8,6 +8,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 
 trait Constants {
   val UnnamedTarget: NonEmptyString = "<UNNAMED>"
+  val TwoPanelCutoff                = 550.0
+  val InitialTreeWidth              = 300.0
+  val MinLeftPanelWidth             = 270.0
 }
 
 object Constants extends Constants

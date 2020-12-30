@@ -5,14 +5,13 @@ package explore.tabs
 
 import scala.collection.immutable.SortedSet
 
-import cats.syntax.all._
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
-import explore.utils._
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
@@ -25,6 +24,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
+import lucuma.ui.reusability._
+import lucuma.ui.utils._
 import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
@@ -45,9 +46,6 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
-  val TwoPanelCutoff    = 550.0
-  val InitialTreeWidth  = 300.0
-  val MinLeftPanelWidth = 270.0
 
   @Lenses
   final case class State(treeWidth: JsNumber, targetSelected: Boolean) {
@@ -58,10 +56,10 @@ object TargetTabContents {
   object State {
     // Keep them as def to take the value window.innerWidth at the current time
     def isTwoPanel: Boolean =
-      window.innerWidth > TwoPanelCutoff
+      window.innerWidth > Constants.TwoPanelCutoff
 
     def initialPanelWidth(v: Boolean): Double =
-      if (isTwoPanel) InitialTreeWidth
+      if (isTwoPanel) Constants.InitialTreeWidth
       else if (v) 0
       else window.innerWidth
 
@@ -136,7 +134,7 @@ object TargetTabContents {
                 // It would be nice to make a single component here but it gets hard when you
                 // have the resizable element. Instead we have either two panels with a resizable
                 // or only one panel at a time (Mobile)
-                if (window.innerWidth <= TwoPanelCutoff) {
+                if (window.innerWidth <= Constants.TwoPanelCutoff) {
                   <.div(
                     ExploreStyles.TreeRGL,
                     <.div(ExploreStyles.Tree, treeInner(targetsWithObs))
@@ -150,7 +148,7 @@ object TargetTabContents {
                       axis = Axis.X,
                       width = treeWidth,
                       height = coreHeight,
-                      minConstraints = (MinLeftPanelWidth.toInt, 0),
+                      minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
                       maxConstraints = (s.width.toInt / 2, 0),
                       onResize = treeResize,
                       resizeHandles = List(ResizeHandleAxis.East),
