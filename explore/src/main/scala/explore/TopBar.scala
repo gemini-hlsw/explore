@@ -11,6 +11,8 @@ import explore.WebpackResources
 import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
+import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.Theme
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -18,10 +20,12 @@ import lucuma.core.model.GuestRole
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
+import org.scalajs.dom
 import react.clipboard.CopyToClipboard
 import react.common._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
+import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.dropdown.DropdownDivider
 import react.semanticui.modules.dropdown.DropdownItem
@@ -37,17 +41,26 @@ object TopBar {
   type Props = TopBar
 
   @Lenses
-  protected case class State(copied: Boolean = false)
+  protected case class State(copied: Boolean = false, theme: Theme) {
+    def flip: State = if (theme === Theme.Dark) copy(theme = Theme.Light) else copy(theme = Theme.Dark)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
+  def currentTheme: Theme =
+    if (dom.document.body.classList.contains(Theme.Light.clazz.htmlClass))
+      Theme.Light
+    else
+      Theme.Dark
+
   private val component =
     ScalaComponent
       .builder[TopBar]
-      .initialState(State())
+      .initialState(State(false, currentTheme))
       .render { $ =>
-        val p = $.props
+        val p            = $.props
+        val currentTheme = $.state.theme
 
         AppCtx.withCtx { implicit appCtx =>
           implicit val cs = appCtx.cs
@@ -117,7 +130,17 @@ object TopBar {
                       DropdownItem(text = "Logout",
                                    icon = Icons.Logout,
                                    onClick = logout.runAsyncCB
+                      ),
+                      DropdownItem(text = "Theme",
+                                   onClick = utils
+                                     .setupScheme[IO](
+                                       if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
+                                     )
+                                       .runAsyncCB *> $.modState(_.flip)
+                      )(
+                        Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
+                        .when(appCtx.environment === ExecutionEnvironment.Development)
                     )
                   )
                 )

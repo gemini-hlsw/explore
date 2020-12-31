@@ -12,6 +12,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas._
 import explore.common.SSOClient
 import explore.model.enum.AppTab
+import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
 import explore.utils
 import io.chrisdavenport.log4cats.Logger
@@ -43,16 +44,17 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  version:    NonEmptyString,
-  clients:    Clients[F],
-  actions:    Actions[F],
-  sso:        SSOClient[F],
-  pageUrl:    (AppTab, Option[Focused]) => String
+  version:     NonEmptyString,
+  clients:     Clients[F],
+  actions:     Actions[F],
+  sso:         SSOClient[F],
+  pageUrl:     (AppTab, Option[Focused]) => String,
+  environment: ExecutionEnvironment
 )(implicit
-  val F:      Applicative[F],
-  val cs:     ContextShift[F],
-  val timer:  Timer[F],
-  val logger: Logger[F]
+  val F:       Applicative[F],
+  val cs:      ContextShift[F],
+  val timer:   Timer[F],
+  val logger:  Logger[F]
 )
 
 object AppContext {
@@ -69,5 +71,11 @@ object AppContext {
       version          = utils.version(config.environment)
       clients          = Clients(exploreDBClient, odbClient)
       actions          = Actions[F]()
-    } yield AppContext[F](version, clients, actions, SSOClient(config.sso, fromFuture), pageUrl)
+    } yield AppContext[F](version,
+                          clients,
+                          actions,
+                          SSOClient(config.sso, fromFuture),
+                          pageUrl,
+                          config.environment
+    )
 }
