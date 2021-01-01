@@ -6,7 +6,7 @@ jobs:
   clubhouse:
     runs-on: ubuntu-latest
     steps:
-      - uses: singingwolfboy/create-linked-clubhouse-story@v1.6
+      - uses: singingwolfboy/create-linked-clubhouse-story@v1.7
         if: contains(github.event.pull_request.body, '[ch-new]') || contains(github.event.pull_request.labels.*.name, 'new clubhouse story')
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
