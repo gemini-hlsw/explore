@@ -42,7 +42,8 @@ object TopBar {
 
   @Lenses
   protected case class State(copied: Boolean = false, theme: Theme) {
-    def flip: State = if (theme === Theme.Dark) copy(theme = Theme.Light) else copy(theme = Theme.Dark)
+    def flip: State =
+      if (theme === Theme.Dark) copy(theme = Theme.Light) else copy(theme = Theme.Dark)
   }
 
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)
@@ -136,7 +137,7 @@ object TopBar {
                                      .setupScheme[IO](
                                        if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
                                      )
-                                       .runAsyncCB *> $.modState(_.flip)
+                                     .runAsyncCB *> $.modState(_.flip)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
