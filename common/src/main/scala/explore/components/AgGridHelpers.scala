@@ -13,6 +13,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.MonocleReact._
@@ -34,6 +35,22 @@ import reactST.agGridReact.components._
 import scalajs.js
 
 object AgGridHelpers {
+  case class RowData[A](row: View[A], allData: View[List[A]])
+
+  def toSortedAgGridData[A, B, C](viewList: View[List[A]])(eqBy: A => B, sortBy: A => C)(implicit
+    eq:                                     Eq[B],
+    ord:                                    Ordering[C]
+  ): List[RowData[A]] =
+    viewList.get
+      .map { a =>
+        // We're already focused on "this" element
+        val getA: List[A] => A = _ => a
+        def modA(mod: A => A): List[A] => List[A] =
+          list => list.modFirstWhere(thisA => eqBy(thisA) === eqBy(a), mod).sortBy(sortBy)
+
+        RowData(viewList.zoom[A](getA)(modA), viewList)
+      }
+      .sortBy(rd => sortBy(rd.row.get))
 
   /**
    * Returns a display only AgGridColumn Builder.
@@ -46,7 +63,7 @@ object AgGridHelpers {
    */
   def viewColumn[A, B](lens: Lens[A, B])(formatter: B => String): AgGridColumn.ColDef.Builder =
     AgGridColumn.ColDef
-      .valueGetter(getter(lens))
+      .valueGetter(columnGetter(lens))
       .cellRendererFramework(renderer(formatter))
 
   /**
@@ -68,7 +85,7 @@ object AgGridHelpers {
   )(implicit eq:   Eq[B]): AgGridColumn.ColDef.Builder =
     AgGridColumn.ColDef
       .editable(!disabled)
-      .valueGetter(getter(lens))
+      .valueGetter(columnGetter(lens))
       .valueSetter(noopSetter)
       .cellRendererFramework(renderer(validFormat.reverseGet))
       .cellEditorFramework(makeFormInputEVEditor(validFormat, changeAuditor))
@@ -82,22 +99,19 @@ object AgGridHelpers {
    *
    * @param lens Lens to go between the Row value and the Cell value.
    * @param disabled Whether editing should be disabled or not.
-   * @param exclude A Set of values to exclude from the dropdown list.
-   * @param includeCurrent Used with `exclude` to always include the currently selected value in the dropdown list, even if it is in the exclude set.
+   * @param excludeFn An optional function that determines a set of enums thst should be excluded from the dropdown.
    * @return An AgGridColumn Builder.
    */
-  def editableEnumViewColumn[A, B](
-    lens:           Lens[A, B],
-    disabled:       Boolean = false,
-    exclude:        Set[B] = Set.empty[B],
-    includeCurrent: Boolean = false
-  )(implicit enum:  Enumerated[B], display: Display[B]): AgGridColumn.ColDef.Builder =
+  def editableEnumViewColumn[A, B](lens: Lens[A, B])(
+    disabled:                            Boolean = false,
+    excludeFn:                           Option[RowData[A] => Set[B]] = None
+  )(implicit enum:                       Enumerated[B], display: Display[B]): AgGridColumn.ColDef.Builder =
     AgGridColumn.ColDef
       .editable(!disabled)
-      .valueGetter(getter(lens))
+      .valueGetter(rowDataGetter)
       .valueSetter(noopSetter)
-      .cellRendererFramework(renderer[B](display.shortName))
-      .cellEditorFramework(makeFormInputEnumEditor(exclude, includeCurrent))
+      .cellRendererFramework(rowDataRenderer(lens, display.shortName))
+      .cellEditorFramework(makeFormInputEnumEditor(lens, excludeFn))
       .suppressKeyboardEvent(suppressKeys)
 
   /**
@@ -115,32 +129,42 @@ object AgGridHelpers {
    */
   def buttonViewColumn[A](
     button:   Button,
-    onClick:  A => Callback,
+    onClick:  RowData[A] => Callback,
     disabled: Boolean = false
   ): AgGridColumn.ColDef.Builder = {
     val component = ScalaComponent
-      .builder[View[A]]
-      .render_P { view =>
-        button.addModifiers(Seq(^.onClick ==> (_ => onClick(view.get)), ^.disabled := disabled))
+      .builder[RowData[A]]
+      .render_P { rowData =>
+        button.addModifiers(Seq(^.onClick ==> (_ => onClick(rowData)), ^.disabled := disabled))
       }
       .build
-      .cmapCtorProps[ICellEditorParams](parms => parms.value.asInstanceOf[View[A]])
+      .cmapCtorProps[ICellEditorParams](parms => parms.value.asInstanceOf[RowData[A]])
       .toJsComponent
       .raw
 
-    def getter: js.Function1[ValueGetterParams, js.Any] = parms => parms.data
-    AgGridColumn.ColDef.valueGetter(getter).cellRendererFramework(component)
+    AgGridColumn.ColDef.valueGetter(rowDataGetter).cellRendererFramework(component)
   }
 
-  // We return a View into the column
-  private def getter[A, B](lens: Lens[A, B]): js.Function1[ValueGetterParams, js.Any] =
-    parms => parms.data.asInstanceOf[View[A]].zoom(lens).asInstanceOf[js.Any]
+  // Return a view into the RowData for the row.
+  def rowDataGetter: js.Function1[ValueGetterParams, js.Any] = parms => parms.data
+
+  // Return a View into the column
+  private def columnGetter[A, B](lens: Lens[A, B]): js.Function1[ValueGetterParams, js.Any] =
+    parms => parms.data.asInstanceOf[RowData[A]].row.zoom(lens).asInstanceOf[js.Any]
 
   // We use the View to set the values, not the grid functions.
   // Return Boolean would prevent a re-render, but I don't think that's necessary if we
   // use the isCancelAfterEnd method in the editing component to just cancel if the value
   // is invalid.
   private val noopSetter: js.Function1[ValueSetterParams, Boolean] = _ => true
+
+  private def rowDataRenderer[A, B](lens: Lens[A, B], formatter: B => String) = ScalaComponent
+    .builder[View[B]]
+    .render_P((props: View[B]) => <.span(formatter(props.get)))
+    .build
+    .cmapCtorProps[ICellRendererParams](p => p.value.asInstanceOf[RowData[A]].row.zoom(lens))
+    .toJsComponent
+    .raw
 
   // This receives a View[A] in the Props.
   private def renderer[A](formatter: A => String) = ScalaComponent
@@ -163,19 +187,23 @@ object AgGridHelpers {
   // TODO: Need to make a Backend for this to expose the ag-grid lifecycle methods
   // (if that's how we expose them). Also probably want to edit State instead of view
   // directly, as with the FormInputEV version.
-  private def makeFormInputEnumEditor[A](exclude: Set[A], includeCurrent: Boolean)(implicit
-    enum:                                         Enumerated[A],
-    display:                                      Display[A]
-  ) = {
-    val excludeFn: A => Set[A] = a => if (includeCurrent) exclude - a else exclude
+  private def makeFormInputEnumEditor[A, B](
+    lens:      Lens[A, B],
+    excludeFn: Option[RowData[A] => Set[B]]
+  )(implicit
+    enum:      Enumerated[B],
+    display:   Display[B]
+  ) =
     ScalaComponent
-      .builder[View[A]]
-      .render_P(view => EnumViewSelect(id = newId, value = view, exclude = excludeFn(view.get)))
+      .builder[RowData[A]]
+      .render_P { rd =>
+        val excluded = excludeFn.fold(Set.empty[B])(_.apply(rd))
+        EnumViewSelect(id = newId, value = rd.row.zoom(lens), exclude = excluded)
+      }
       .build
-      .cmapCtorProps[ICellEditorParams](parms => parms.value.asInstanceOf[View[A]])
+      .cmapCtorProps[ICellEditorParams](parms => parms.value.asInstanceOf[RowData[A]])
       .toJsComponent
       .raw
-  }
 
   private def makeFormInputEVEditor[A](
     validator:     ValidFormatInput[A],

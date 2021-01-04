@@ -13,6 +13,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
+import explore.components.AgGridHelpers
 import explore.components.AgGridHelpers._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -97,8 +98,11 @@ object MagnitudeForm {
               .clazz(ExploreStyles.TrashIcon)
           )
 
-          val deleteFn: Magnitude => Callback =
-            mag => props.magnitudes.mod(_.filterNot(_.band === mag.band)).runAsyncCB
+          val deleteFn: RowData[Magnitude] => Callback =
+            rd => rd.allData.mod(_.filterNot(_.band === rd.row.get.band)).runAsyncCB
+
+          val excludeFn: RowData[Magnitude] => Set[MagnitudeBand] =
+            rd => HashSet.from(rd.allData.get.map(_.band)) - rd.row.get.band
 
           React.Fragment(
             <.div(<.label("Magnitudes")),
@@ -113,7 +117,9 @@ object MagnitudeForm {
                   )                  // necessary to keep cell renderers from duplicating in the first cell
                   .headerHeight(0.0) // no header
                   .stopEditingWhenGridLosesFocus(true)
-                  .rowData(props.magnitudes.toSortedAgGridData(_.band, _.band).toJSArray)(
+                  .rowData(
+                    AgGridHelpers.toSortedAgGridData(props.magnitudes)(_.band, _.band).toJSArray
+                  )(
                     editableViewColumn(
                       lens = Magnitude.value,
                       validFormat = ValidFormatInput.fromFormat(MagnitudeValue.fromString),
@@ -121,12 +127,10 @@ object MagnitudeForm {
                         ChangeAuditor.fromFormat(MagnitudeValue.fromString).decimal(3),
                       disabled = props.disabled
                     ).width(200.0),
-                    editableEnumViewColumn(lens = Magnitude.band,
-                                           disabled = props.disabled,
-                                           exclude = state.usedBands,
-                                           includeCurrent = true
+                    editableEnumViewColumn(lens = Magnitude.band)(disabled = props.disabled,
+                                                                  excludeFn = excludeFn.some
                     ).width(100.0),
-                    editableEnumViewColumn(lens = Magnitude.system, disabled = props.disabled)
+                    editableEnumViewColumn(lens = Magnitude.system)(disabled = props.disabled)
                       .width(200.0),
                     buttonViewColumn(button = deleteButton,
                                      onClick = deleteFn,
