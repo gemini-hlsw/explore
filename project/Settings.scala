@@ -36,7 +36,7 @@ object Settings {
     val reactSemanticUI   = "0.10.1"
     val reactSizeMe       = "0.6.3"
     val scalaJsReact      = "1.7.7"
-    val sttp              = "3.0.0-RC13"
+    val sttp              = "3.0.0-RC14"
   }
 
   object Libraries {
