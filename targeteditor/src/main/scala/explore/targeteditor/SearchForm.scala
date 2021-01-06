@@ -53,7 +53,6 @@ object SearchForm {
   @Lenses
   final case class State(
     initialName:   NonEmptyString,
-    searchTerm:    String, // Shadow tracking of name input for the case of submit without blur (enter key)
     searchEnabled: Boolean,
     searchError:   Option[NonEmptyString]
   )
@@ -69,12 +68,12 @@ object SearchForm {
       val search: Callback =
         props
           .submit(
-            state.searchTerm,
+            props.name.get,
             $.setStateL(State.searchError)(none) >> props.searching.set(true).runAsyncCB,
             t =>
               searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
                 NonEmptyString
-                  .unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found")
+                  .unsafeFrom(s"'${abbreviate(props.name.get, 10)}' not found")
                   .some
               )).when_(t.isEmpty),
             _ =>
@@ -117,8 +116,7 @@ object SearchForm {
           disabled = props.searching.get,
           errorClazz = ExploreStyles.InputErrorTooltip,
           errorPointing = LabelPointing.Below,
-          onTextChange =
-            v => $.setStateL(State.searchTerm)(v) >> $.setStateL(State.searchError)(none),
+          onTextChange = _ => $.setStateL(State.searchError)(none),
           onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
           icon = searchIcon
         ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
@@ -138,7 +136,6 @@ object SearchForm {
           case _                                              => // Initialize or reset.
             State(
               initialName = propsName,
-              searchTerm = propsName.value,
               searchEnabled = true,
               searchError = stateOpt.flatMap(_.searchError)
             )

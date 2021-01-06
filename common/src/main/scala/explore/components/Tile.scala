@@ -39,7 +39,7 @@ object Tile {
               tabular = MenuTabular.Right
             )(
               p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
-              MenuItem(as = "a")(Icons.Bars.when(p.movable), p.title)
+              MenuItem(as = <.a)(Icons.Bars.when(p.movable), p.title)
             )
           ),
           <.div(ExploreStyles.TileBody, c)
