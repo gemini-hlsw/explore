@@ -162,7 +162,7 @@ object TargetBody {
                   stateView,
                   searchAndSet
                 ),
-                Form(size = Small)(
+                Form(as = <.div, size = Small)(
                   ExploreStyles.Grid,
                   ExploreStyles.Compact,
                   <.div(
