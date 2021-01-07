@@ -7,14 +7,28 @@ import java.time.Instant
 
 import scala.scalajs.js
 
+import cats.effect.Sync
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
+import explore.model.enum.Theme
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
+import org.scalajs.dom
 
 package object utils {
+  def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
+    Sync[F].delay {
+      if (theme === Theme.Dark) {
+        dom.document.body.classList.add(Theme.Dark.clazz.htmlClass)
+        dom.document.body.classList.remove(Theme.Light.clazz.htmlClass)
+      } else {
+        dom.document.body.classList.add(Theme.Light.clazz.htmlClass)
+        dom.document.body.classList.remove(Theme.Dark.clazz.htmlClass)
+      }
+    }
+
   def version(environment: ExecutionEnvironment): NonEmptyString = {
     val instant = Instant.ofEpochMilli(BuildInfo.buildTime)
     NonEmptyString.unsafeFrom(

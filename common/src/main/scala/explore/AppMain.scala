@@ -26,7 +26,9 @@ import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.Theme
 import explore.model.reusability._
+import explore.utils
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
@@ -35,7 +37,7 @@ import org.scalajs.dom
 import org.scalajs.dom.experimental.RequestCache
 import org.scalajs.dom.experimental.RequestInit
 import org.scalajs.dom.experimental.{ Request => FetchRequest }
-import org.scalajs.dom.ext._
+import org.scalajs.dom.raw.Element
 import sttp.client3._
 import sttp.client3.circe._
 import sttp.model.Uri
@@ -69,14 +71,6 @@ trait AppMain extends IOApp {
       vault = vault,
       tabs = EnumZipper.of[AppTab]
     )
-
-    val setupScheme: IO[Unit] =
-      IO.delay {
-        dom.document.getElementsByTagName("body").foreach { body =>
-          body.classList.remove("light-theme")
-          body.classList.add("dark-theme")
-        }
-      }
 
     val fetchConfig: IO[AppConfig] = {
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
@@ -119,22 +113,12 @@ trait AppMain extends IOApp {
                          TimeUnit.SECONDS
           ).some
 
-    for {
-      _         <- setupScheme
-      appConfig <- fetchConfig
-      _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
-      _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
-      vault     <- ctx.sso.whoami
-      _         <- AppCtx.initIn[IO](ctx)
-    } yield {
-      val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
-
-      val container = Option(dom.document.getElementById("root")).getOrElse {
+    def setupDOM(env: ExecutionEnvironment): IO[Element] = IO(
+      Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)
-        if (appConfig.environment === ExecutionEnvironment.Staging) {
+        if (env === ExecutionEnvironment.Staging) {
           val stagingBanner = dom.document.createElement("div")
           stagingBanner.id = "staging-banner"
           stagingBanner.textContent = "Staging"
@@ -142,6 +126,19 @@ trait AppMain extends IOApp {
         }
         elem
       }
+    )
+
+    for {
+      _         <- utils.setupScheme[IO](Theme.Dark)
+      appConfig <- fetchConfig
+      _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+      _         <- logger.info(s"Config: ${appConfig.show}")
+      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
+      vault     <- ctx.sso.whoami
+      _         <- AppCtx.initIn[IO](ctx)
+      container <- setupDOM(appConfig.environment)
+    } yield {
+      val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
 
       RootComponent().renderIntoDOM(container)
 
