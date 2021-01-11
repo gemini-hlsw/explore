@@ -88,8 +88,8 @@ trait AppMain extends IOApp {
       val baseURI = Uri.unsafeParse(dom.window.location.href)
       val path    = List("conf.json")
       val uri     = baseURI.port.fold(
-        Uri.unsafeApply(baseURI.scheme, baseURI.host, path)
-      )(port => Uri.unsafeApply(baseURI.scheme, baseURI.host, port, path))
+        Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, path)
+      )(port => Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, port, path))
 
       def httpCall =
         IO(
