@@ -17,7 +17,7 @@ object Settings {
     val geminiLocales     = "0.5.1"
     val log4Cats          = "1.1.1"
     val log4CatsLogLevel  = "0.1.1"
-    val lucumaCore        = "0.7.4"
+    val lucumaCore        = "0.7.5"
     val lucumaCatalog     = "0.3.5"
     val lucumaUI          = "0.11.3"
     val lucumaSSO         = "0.0.9"
