@@ -11,11 +11,15 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes._
 
 final case class ObsList(
   observations: View[List[ObsSummary]],
@@ -31,25 +35,32 @@ object ObsList {
     ScalaComponent
       .builder[Props]
       .render_P { (props: Props) =>
-        <.div(ExploreStyles.ObsTree)(
-          <.div(
-            props.observations.get.toTagMod { obs =>
-              val selected = props.focused.get.exists(_ === FocusedObs(obs.id))
+        AppCtx.withCtx { ctx =>
+          <.div(ExploreStyles.ObsTreeWrapper)(
+            <.div(ExploreStyles.TreeToolbar)(
               <.div(
-                ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                ^.cursor.pointer,
-                ^.onClick ==> { e: ReactEvent =>
-                  e.stopPropagationCB >>
-                    props.focused
-                      .set(FocusedObs(obs.id).some)
-                      .runAsyncCB
-                }
-              )(
-                ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
+                Button(size = Mini, compact = true, disabled = true)(
+                  Icons.New.size(Small).fitted(true)
+                )
               )
-            }
+            ),
+            <.div(ExploreStyles.ObsTree)(
+              <.div(ExploreStyles.ObsScrollTree)(
+                props.observations.get.toTagMod { obs =>
+                  val focusedObs = FocusedObs(obs.id)
+                  val selected   = props.focused.get.exists(_ === focusedObs)
+                  <.a(
+                    ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
+                    ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
+                    ^.onClick ==> linkOverride(props.focused.set(focusedObs.some))
+                  )(
+                    ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
+                  )
+                }
+              )
+            )
           )
-        )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

@@ -26,7 +26,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
@@ -46,39 +45,19 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
-
-  @Lenses
-  final case class State(treeWidth: JsNumber, targetSelected: Boolean) {
-    val leftPanelVisible: Boolean  = !targetSelected
-    val rightPanelVisible: Boolean = targetSelected
-  }
-
-  object State {
-    // Keep them as def to take the value window.innerWidth at the current time
-    def isTwoPanel: Boolean =
-      window.innerWidth > Constants.TwoPanelCutoff
-
-    def initialPanelWidth(v: Boolean): Double =
-      if (isTwoPanel) Constants.InitialTreeWidth
-      else if (v) 0
-      else window.innerWidth
-
-    def initialState(v: Boolean): State =
-      State(initialPanelWidth(v), v)
-
-  }
+  type State = TwoPanelState
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => State.initialState(p.isTargetSelected)
+          case None    => TwoPanelState.initial(p.isTargetSelected)
           case Some(s) =>
-            if (s.targetSelected =!= p.isTargetSelected) s.copy(targetSelected = p.isTargetSelected)
+            if (s.elementSelected =!= p.isTargetSelected)
+              s.copy(elementSelected = p.isTargetSelected)
             else s
         }
       )
@@ -86,12 +65,14 @@ object TargetTabContents {
         AppCtx.withCtx { ctx =>
           implicit val cs = ctx.cs
           val treeResize  =
-            (_: ReactEvent, d: ResizeCallbackData) => $.setStateL(State.treeWidth)(d.size.width)
+            (_: ReactEvent, d: ResizeCallbackData) =>
+              $.setStateL(TwoPanelState.treeWidth)(d.size.width)
           val treeWidth   = state.treeWidth.toDouble
 
-          // Tree area
-          def tree(targetsWithObs:      View[TargetsWithObs]) =
-            <.div(^.width := treeWidth.px, ExploreStyles.Tree)(treeInner(targetsWithObs))
+          def tree(targetsWithObs: View[TargetsWithObs]) =
+            <.div(^.width := treeWidth.px,
+                  ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
+            )(treeInner(targetsWithObs))
 
           def treeInner(targetsWithObs: View[TargetsWithObs]) =
             <.div(ExploreStyles.TreeBody)(
@@ -106,7 +87,9 @@ object TargetTabContents {
             Button(
               as = <.a,
               size = Mini,
-              clazz = ExploreStyles.TargetBackButton |+| ExploreStyles.BlendedButton,
+              compact = true,
+              basic = true,
+              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
               onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
             )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
           )

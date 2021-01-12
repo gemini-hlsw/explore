@@ -130,8 +130,11 @@ lazy val common = project
       scalaVersion,
       sbtVersion,
       git.gitHeadCommit,
-      BuildInfoKey.action("buildTime")(System.currentTimeMillis)
     ),
+    buildInfoKeys ++= {
+      if (sys.env.contains("SBT_IGNORE_BUILDTIME")) Seq(BuildInfoKey.action("buildTime")(0L))
+      else Seq(BuildInfoKey.action("buildTime")(System.currentTimeMillis))
+    },
     buildInfoPackage := "explore"
   )
   .enablePlugins(ScalaJSBundlerPlugin, BuildInfoPlugin)

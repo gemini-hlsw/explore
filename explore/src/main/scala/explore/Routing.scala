@@ -46,8 +46,8 @@ object Routing {
           | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
             ObsTabContents(view.zoom(RootModel.focused))
           )
-          | dynamicRouteCT(("/obs" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(view =>
-            ObsTabContents(view.zoom(RootModel.focused))
+          | dynamicRouteCT(("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(
+            view => ObsTabContents(view.zoom(RootModel.focused))
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
           | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(

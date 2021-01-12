@@ -132,12 +132,12 @@ object TopBar {
                                    icon = Icons.Logout,
                                    onClick = logout.runAsyncCB
                       ),
-                      DropdownItem(text = "Theme",
-                                   onClick = utils
-                                     .setupScheme[IO](
-                                       if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
-                                     )
-                                     .runAsyncCB *> $.modState(_.flip)
+                      DropdownItem(onClick =
+                        utils
+                          .setupScheme[IO](
+                            if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
+                          )
+                          .runAsyncCB *> $.modState(_.flip)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
