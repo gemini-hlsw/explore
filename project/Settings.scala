@@ -30,7 +30,7 @@ object Settings {
     val reactClipboard    = "1.4.3"
     val reactCommon       = "0.11.3"
     val reactDatepicker   = "0.1.0"
-    val reactGridLayout   = "0.9.2"
+    val reactGridLayout   = "0.9.3"
     val reactHighcharts   = "0.2.0"
     val reactResizable    = "0.4.2"
     val reactSemanticUI   = "0.10.3"
