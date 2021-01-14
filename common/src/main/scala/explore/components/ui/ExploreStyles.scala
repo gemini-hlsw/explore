@@ -10,12 +10,13 @@ import react.common.implicits._
 import react.common.style._
 
 object ExploreStyles {
-  val Tile: Css           = Css("explore-tile")
-  val TileTitle: Css      = Css("explore-tile-title")
-  val TileTitleMenu: Css  = Css("explore-tile-title-menu")
-  val TileBackButton: Css = Css("tile-back-button")
-  val TileBody: Css       = Css("explore-tile-body")
-  val TileButton: Css     = Css("explore-tile-button")
+  val Tile: Css            = Css("explore-tile")
+  val TileTitle: Css       = Css("explore-tile-title")
+  val TileTitleMenu: Css   = Css("explore-tile-title-menu")
+  val TileBackButton: Css  = Css("tile-back-button")
+  val TileBody: Css        = Css("explore-tile-body")
+  val TileButton: Css      = Css("explore-tile-button")
+  val TileStateButton: Css = Css("explore-tile-state-button")
 
   val TextInForm: Css = Css("explore-text-in-form")
   val Accented: Css   = Css("explore-accented")
@@ -94,6 +95,9 @@ object ExploreStyles {
   val SelectedObsItem: Css        = Css("selected-obs-item")
   val ObsItem: Css                = Css("obs-item")
   val TrashIcon: Css              = Css("trash-icon")
+
+  val ObserverNotes: Css = Css("observer-notes")
+  val NotesWrapper: Css  = Css("observer-notes-wrapper")
 
   val DraggingOver: Css = Css("dragging-over")
 

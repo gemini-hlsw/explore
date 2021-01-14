@@ -1,16 +1,6 @@
-// React grid layout
 .react-grid-layout {
   position: relative;
   transition: height 200ms ease;
-}
-
-.non-draggable {
-  user-select: none;
-}
-
-.centered {
-  display: flex;
-  justify-content: center;
 }
 
 .react-grid-item {
@@ -33,6 +23,10 @@
   will-change: transform;
 }
 
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
 .react-grid-item.react-grid-placeholder {
   background: lightgreen;
   opacity: 0.2;
@@ -43,21 +37,6 @@
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
-}
-
-.react-resizable-handle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  bottom: 0;
-  right: 0;
-  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+");
-  background-position: bottom right;
-  padding: 0 3px 3px 0;
-  background-repeat: no-repeat;
-  background-origin: content-box;
-  box-sizing: border-box;
-  cursor: se-resize;
 }
 
 .react-grid-item > .react-resizable-handle {
@@ -74,13 +53,12 @@
   position: absolute;
   right: 3px;
   bottom: 3px;
-  width: @gridSpace;
-  height: @gridSpace;
-  border-right: 2px solid rgba(255, 255, 255, 0.6);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
 }
 
-// React resizable
-.react-resizable {
-  position: relative;
+.react-resizable-hide > .react-resizable-handle {
+  display: none;
 }

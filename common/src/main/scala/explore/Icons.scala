@@ -35,4 +35,6 @@ object Icons {
   val Close               = Icon("close")
   val MousePointer        = Icon("mouse pointer")
   val Expand              = Icon("expand")
+  val Minimize            = Icon(className = "compress alt")
+  val Maximize            = Icon(className = "expand alt")
 }
