@@ -5,8 +5,7 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all._
-import clue.TerminateOptions
-import clue.WebSocketCloseParams
+import clue.{ TerminateOptions, WebSocketCloseParams }
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString

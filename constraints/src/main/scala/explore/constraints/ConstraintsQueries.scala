@@ -3,8 +3,7 @@
 
 package explore.constraints
 
-import cats.effect.ContextShift
-import cats.effect.IO
+import cats.effect.{ ContextShift, IO }
 import clue.GraphQLOperation
 import clue.data.syntax._
 import clue.macros.GraphQL
@@ -15,10 +14,7 @@ import explore.components.graphql.SubscriptionRenderMod
 import explore.implicits._
 import explore.model.Constraints
 import explore.model.decoders._
-import explore.model.enum.CloudCover
-import explore.model.enum.ImageQuality
-import explore.model.enum.SkyBackground
-import explore.model.enum.WaterVapor
+import explore.model.enum.{ CloudCover, ImageQuality, SkyBackground, WaterVapor }
 import explore.model.reusability._
 import explore.undo.Undoer
 import japgolly.scalajs.react.vdom.html_<^._

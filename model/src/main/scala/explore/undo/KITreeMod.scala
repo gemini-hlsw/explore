@@ -4,8 +4,7 @@
 package explore.undo
 
 import explore.data.tree._
-import monocle.Getter
-import monocle.Lens
+import monocle.{ Getter, Lens }
 
 import KeyedIndexedTree.Index
 

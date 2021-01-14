@@ -6,8 +6,7 @@ package explore.constraints
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.GraphQLSchemas.ExploreDB.Types._
-import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
+import explore.components.undo.{ UndoButtons, UndoRegion }
 import explore.constraints.ConstraintsQueries._
 import explore.implicits._
 import explore.model.Constraints
@@ -15,13 +14,11 @@ import explore.model.display._
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
+import lucuma.core.util.{ Display, Enumerated }
 import lucuma.ui.forms.EnumViewSelect
 import monocle.Lens
 import react.common._
-import react.semanticui.collections.form.Form
-import react.semanticui.collections.form.FormGroup
+import react.semanticui.collections.form.{ Form, FormGroup }
 import react.semanticui.collections.grid._
 import react.semanticui.widths._
 

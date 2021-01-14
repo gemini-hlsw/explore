@@ -3,21 +3,12 @@
 
 package explore.components.graphql
 
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
 import cats.data.NonEmptyList
-import cats.effect.CancelToken
-import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
-import cats.effect.IO
-import cats.effect.Timer
+import cats.effect.{ CancelToken, ConcurrentEffect, ContextShift, IO, Timer }
 import cats.syntax.all._
-import clue.GraphQLSubscription
-import clue.GraphQLWebSocketClient
-import crystal.Pot
-import crystal.ViewF
+import clue.{ GraphQLSubscription, GraphQLWebSocketClient }
 import crystal.react._
+import crystal.{ Pot, ViewF }
 import explore._
 import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger
@@ -27,6 +18,9 @@ import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 final case class LiveQueryRenderMod[S, D, A](
   query:               IO[D],

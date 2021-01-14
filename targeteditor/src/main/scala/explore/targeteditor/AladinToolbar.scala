@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.math.rint
-
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
@@ -17,6 +15,8 @@ import react.aladin.reusability._
 import react.common.ReactProps
 import react.semanticui.elements.label._
 import react.semanticui.sizes.Small
+
+import scala.math.rint
 
 final case class AladinToolbar(
   fov:     Fov,

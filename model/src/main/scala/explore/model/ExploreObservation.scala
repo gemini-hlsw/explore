@@ -3,12 +3,12 @@
 
 package explore.model
 
-import java.time.Duration
-import java.util.UUID
-
 import cats.Eq
 import explore.model.enum.ObsStatus
 import monocle.macros.Lenses
+
+import java.time.Duration
+import java.util.UUID
 
 @Lenses
 final case class ExploreObservation(

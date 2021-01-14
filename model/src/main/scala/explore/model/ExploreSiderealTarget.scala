@@ -3,8 +3,6 @@
 
 package explore.model
 
-import java.util.UUID
-
 import cats._
 import cats.effect.Sync
 import cats.syntax.all._
@@ -12,11 +10,11 @@ import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Epoch
-import lucuma.core.model.SiderealTracking
-import lucuma.core.model.Target
+import lucuma.core.math.{ Coordinates, Epoch }
+import lucuma.core.model.{ SiderealTracking, Target }
 import monocle.macros.Lenses
+
+import java.util.UUID
 
 /**
  * A refinement of gem.Tracker meant for sidereal targets

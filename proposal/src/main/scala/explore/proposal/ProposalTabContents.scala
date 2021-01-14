@@ -3,8 +3,6 @@
 
 package explore.proposal
 
-import java.net.URI
-
 import cats.effect._
 import coulomb.accepted.Percent
 import coulomb.refined._
@@ -24,6 +22,8 @@ import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model._
+
+import java.net.URI
 
 object ProposalTabContents {
   type Props = View[Option[Focused]]

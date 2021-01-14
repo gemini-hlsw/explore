@@ -8,11 +8,10 @@ import crystal.react.implicits._
 import explore._
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
-import explore.model.Focused
 import explore.model.Focused.FocusedObs
-import explore.model.ObsSummary
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.model.{ Focused, ObsSummary }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils._

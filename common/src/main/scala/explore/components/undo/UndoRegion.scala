@@ -3,8 +3,7 @@
 
 package explore.components.undo
 
-import cats.effect.Async
-import cats.effect.IO
+import cats.effect.{ Async, IO }
 import crystal.react.implicits._
 import explore.undo._
 import japgolly.scalajs.react._

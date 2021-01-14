@@ -3,9 +3,7 @@
 
 package explore.model
 
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
+import lucuma.core.math.{ Coordinates, Declination, RightAscension }
 import lucuma.core.model.SiderealTracking
 import monocle.Lens
 

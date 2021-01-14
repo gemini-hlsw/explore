@@ -3,11 +3,11 @@
 
 package explore.model
 
-import java.util.UUID
-
 import cats._
 import explore.model.enum._
 import monocle.macros.Lenses
+
+import java.util.UUID
 
 @Lenses
 final case class Constraints(

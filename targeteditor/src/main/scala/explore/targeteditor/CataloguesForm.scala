@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.collection.SortedMap
-
 import cats.data.NonEmptyList
 import crystal.react.implicits._
 import explore.View
@@ -22,6 +20,8 @@ import react.semanticui.collections.form.FormDropdown.FormDropdownProps
 import react.semanticui.collections.form._
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.sizes._
+
+import scala.collection.SortedMap
 
 final case class CataloguesForm(
   options:          View[TargetVisualOptions]

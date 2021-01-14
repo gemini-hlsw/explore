@@ -3,11 +3,11 @@
 
 package explore.observationtree
 
-import java.util.UUID
-
 import explore.model.ExploreObservation
 import monocle.Lens
 import monocle.macros.Lenses
+
+import java.util.UUID
 
 sealed trait ObsNode {
   val id: UUID

@@ -3,11 +3,10 @@
 
 package explore.data.tree
 
-import scala.collection.immutable.HashMap
-import scala.collection.immutable.HashSet
-
 import cats.kernel.Eq
 import cats.syntax.all._
+
+import scala.collection.immutable.{ HashMap, HashSet }
 
 import KeyedIndexedTree._
 

@@ -14,9 +14,8 @@ import lucuma.core.data.EnumZipper
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import react.common._
-import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
-import react.semanticui.elements.button.ButtonGroup
+import react.semanticui.elements.button.{ Button, ButtonGroup }
 import react.semanticui.elements.divider.Divider
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.Label.LabelProps

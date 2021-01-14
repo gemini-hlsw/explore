@@ -3,8 +3,7 @@
 
 package explore.undo
 
-import cats.effect.Async
-import cats.effect.ContextShift
+import cats.effect.{ Async, ContextShift }
 import cats.syntax.all._
 import crystal.ViewF
 import monocle.Lens

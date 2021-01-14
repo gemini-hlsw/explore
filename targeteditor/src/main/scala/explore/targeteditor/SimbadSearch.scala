@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.concurrent.duration._
-
 import cats.data.Validated
 import cats.effect._
 import cats.syntax.all._
@@ -14,6 +12,8 @@ import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Target
 import sttp.client3._
+
+import scala.concurrent.duration._
 
 object SimbadSearch {
   def search(term: NonEmptyString)(implicit cs: ContextShift[IO]): IO[Option[Target]] = {

@@ -3,14 +3,12 @@
 
 package explore.targeteditor
 
-import java.time.Duration
-import java.time.Instant
-
 import cats.syntax.all._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
-import lucuma.core.math.skycalc.ImprovedSkyCalc
-import lucuma.core.math.skycalc.SkyCalcResults
+import lucuma.core.math.skycalc.{ ImprovedSkyCalc, SkyCalcResults }
+
+import java.time.{ Duration, Instant }
 
 object SkyCalc {
   // TODO Cache

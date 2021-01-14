@@ -3,15 +3,12 @@
 
 package explore.tabs
 
-import scala.annotation.unused
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
-import explore.components.Tile
-import explore.components.TileButton
 import explore.components.ui.ExploreStyles
+import explore.components.{ Tile, TileButton }
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.AppTab
@@ -34,6 +31,8 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 import react.sizeme._
+
+import scala.annotation.unused
 
 final case class ObsTabContents(
   focused: View[Option[Focused]]

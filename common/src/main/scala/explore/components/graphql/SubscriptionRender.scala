@@ -4,8 +4,7 @@
 package explore.components.graphql
 
 import cats.Id
-import cats.effect.ConcurrentEffect
-import cats.effect.IO
+import cats.effect.{ ConcurrentEffect, IO }
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.react._

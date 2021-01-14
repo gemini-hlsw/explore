@@ -3,15 +3,13 @@
 
 package explore
 
-import java.math.MathContext
-
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.SiderealTarget
 import explore.model.enum._
-import lucuma.core.model.Magnitude
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
+import lucuma.core.model.{ Magnitude, Observation, Target }
+
+import java.math.MathContext
 
 object GraphQLSchemas {
 

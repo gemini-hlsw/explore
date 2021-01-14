@@ -3,15 +3,12 @@
 
 package explore.tabs
 
-import scala.collection.immutable.SortedSet
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
-import explore.components.Tile
-import explore.components.TileButton
 import explore.components.ui.ExploreStyles
+import explore.components.{ Tile, TileButton }
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
@@ -35,6 +32,8 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 import react.sizeme._
+
+import scala.collection.immutable.SortedSet
 
 final case class TargetTabContents(
   focused:           View[Option[Focused]],
