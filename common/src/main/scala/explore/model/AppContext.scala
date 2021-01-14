@@ -19,21 +19,21 @@ import io.circe.Json
 import sttp.client3.Response
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
-  exploreDB: GraphQLWebSocketClient[F, ExploreDB],
-  odb:       GraphQLWebSocketClient[F, ObservationDB]
+  odb:           GraphQLWebSocketClient[F, ObservationDB],
+  preferencesDB: GraphQLWebSocketClient[F, UserPreferencesDB]
 ) {
-  lazy val ExploreDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
-    StreamRenderer.build(exploreDB.statusStream)
+  lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
+    StreamRenderer.build(preferencesDB.statusStream)
 
   lazy val ODBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
   def init(payload: F[Map[String, Json]]): F[Unit] =
-    exploreDB.init() >> odb.init(payload)
+    preferencesDB.init() >> odb.init(payload)
 
   def disconnect(): F[Unit] =
     List(
-      exploreDB.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000))),
+      preferencesDB.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000))),
       odb.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
     ).sequence.void
 }
@@ -64,12 +64,14 @@ object AppContext {
     fromFuture:           SSOClient.FromFuture[F, Response[Either[String, String]]]
   ): F[AppContext[F]] =
     for {
-      exploreDBClient <-
-        ApolloWebSocketClient.of[F, ExploreDB](config.exploreDBURI, reconnectionStrategy)
-      odbClient       <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
-      version          = utils.version(config.environment)
-      clients          = Clients(exploreDBClient, odbClient)
-      actions          = Actions[F]()
+      preferencesDBClient <-
+        ApolloWebSocketClient.of[F, UserPreferencesDB](config.preferencesDBURI,
+                                                       reconnectionStrategy
+        )
+      odbClient           <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
+      version              = utils.version(config.environment)
+      clients              = Clients(odbClient, preferencesDBClient)
+      actions              = Actions[F]()
     } yield AppContext[F](version,
                           clients,
                           actions,

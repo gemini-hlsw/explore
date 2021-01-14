@@ -36,7 +36,7 @@ object Tile {
 
   val component =
     ScalaComponent
-      .builder[Props]("Tile")
+      .builder[Props]
       .stateless
       .render_PC { (p, c) =>
         val maximizeButton =

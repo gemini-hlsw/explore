@@ -7,8 +7,10 @@ import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.SiderealTarget
 import explore.model.enum._
-import lucuma.core.model.{ Magnitude, Observation, Target }
-
+import lucuma.core.model.Magnitude
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
+import lucuma.core.model.User
 import java.math.MathContext
 
 object GraphQLSchemas {
@@ -62,6 +64,23 @@ object GraphQLSchemas {
       type TargetsInsertInput = SiderealTarget
       implicit final val jsonEncoderTargetsInsertInput: io.circe.Encoder[TargetsInsertInput] =
         explore.model.encoders.siderealTargetEncoder
+    }
+  }
+
+  @GraphQLSchema(debug = false)
+  object UserPreferencesDB {
+    object Scalars {
+      type UserId        = User.Id
+      type ResizableArea = String
+    }
+
+    object Types {
+      type WidthInsertInput = ExploreResizableWidthInsertInput
+      type WidthInsertInputL = Array[ExploreResizableWidthInsertInput]
+      implicit final val jsonEncoderWidthInsertInput: io.circe.Encoder[WidthInsertInput] =
+        ???
+      implicit final val jsonEncoderWidthInsertInputL: io.circe.Encoder[Array[WidthInsertInput]] =
+        ???
     }
   }
 }

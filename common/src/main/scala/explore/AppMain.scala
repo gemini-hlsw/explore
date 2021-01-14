@@ -30,6 +30,9 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
+import explore.target.UserPreferencesQueries._
+import clue.data.Input
+import cats.data.OptionT
 
 object AppCtx extends AppRootContext[AppContextIO]
 
@@ -115,6 +118,17 @@ trait AppMain extends IOApp {
       }
     )
 
+    // Creates a "profile" for user preferences.
+    def createUserPrefs(vault: Option[UserVault], ctx: AppContext[IO]): IO[Unit] = {
+      implicit val db = ctx.clients.preferencesDB
+      (for {
+        u <- OptionT.fromOption[IO](vault)
+        i <- OptionT.pure[IO](u.user.id)
+        _ <- OptionT.liftF(UserInsertMutation.execute(Input(i.toString())))
+        _ <- OptionT.liftF(UserWidthsCreation.execute(Input(i.toString()), Input(10)))
+      } yield ()).value.void
+    }
+
     for {
       _         <- utils.setupScheme[IO](Theme.Dark)
       appConfig <- fetchConfig
@@ -123,6 +137,7 @@ trait AppMain extends IOApp {
       ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
       vault     <- ctx.sso.whoami
       _         <- AppCtx.initIn[IO](ctx)
+      _         <- createUserPrefs(vault, ctx).start
       container <- setupDOM(appConfig.environment)
     } yield {
       val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
