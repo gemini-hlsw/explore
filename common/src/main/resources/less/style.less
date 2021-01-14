@@ -117,10 +117,15 @@ body.light-theme {
   text-overflow: ellipsis;
 }
 
+.main-header > .ui.tabular.menu .item {
+  color: var(--main-header-color);
+}
+
 .main-header {
   grid-area: header;
   width: 100vw;
   min-width: 100vw;
+  background-color: var(--main-header-background-color);
 
   & > .ui.tabular.menu {
     border-bottom: none;
@@ -430,6 +435,7 @@ body.light-theme {
   padding-right: 0.2em;
   padding-left: 0.2em;
   overflow-y: auto;
+  border: solid 1px var(--under-tab-border-color);
 }
 
 .obs-item {

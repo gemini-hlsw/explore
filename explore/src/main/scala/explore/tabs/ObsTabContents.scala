@@ -12,7 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
 import explore.model.Focused.FocusedObs
 import explore.model._
-import explore.model.enum.{AppTab, TileSizeState}
+import explore.model.enum.{ AppTab, TileSizeState }
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
@@ -24,7 +24,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.function.Field3._
 import monocle.function.Index._
-import monocle.macros.{GenLens, Lenses}
+import monocle.macros.{ GenLens, Lenses }
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
