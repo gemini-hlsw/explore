@@ -13,10 +13,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.forms.ExternalValue
-import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.forms.{ ExternalValue, FormInputEV }
+import lucuma.ui.optics.{ ChangeAuditor, ValidFormatInput }
 import react.common._
 import react.semanticui.elements.label.LabelPointing
 

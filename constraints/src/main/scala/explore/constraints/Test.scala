@@ -3,10 +3,6 @@
 
 package explore.constraints
 
-import java.util.UUID
-
-import scala.scalajs.js
-
 import explore.AppMain
 import explore.components.state.IfLogged
 import explore.constraints.ConstraintsQueries._
@@ -14,6 +10,9 @@ import explore.implicits._
 import explore.model.RootModel
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+
+import java.util.UUID
+import scala.scalajs.js
 
 import js.annotation._
 

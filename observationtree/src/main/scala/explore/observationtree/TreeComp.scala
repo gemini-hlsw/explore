@@ -3,8 +3,6 @@
 
 package explore.observationtree
 
-import scala.scalajs.js
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ModState
@@ -13,8 +11,7 @@ import explore.components.undo.UndoRegion
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
 import explore.implicits._
-import explore.undo.KITreeMod
-import explore.undo.Undoer
+import explore.undo.{ KITreeMod, Undoer }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -22,6 +19,8 @@ import monocle.macros.Lenses
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.common.ReactProps
 import react.semanticui.elements.button.Button
+
+import scala.scalajs.js
 
 import js.JSConverters._
 

@@ -3,22 +3,19 @@
 
 package explore
 
-import scala.annotation.unused
-
 import cats._
-import cats.effect.ContextShift
-import cats.effect.Timer
+import cats.effect.{ ContextShift, Timer }
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
-import crystal.ViewF
-import crystal.ViewOptF
+import crystal.{ ViewF, ViewOptF }
 import explore.GraphQLSchemas._
-import explore.model.AppContext
-import explore.model.RootModel
+import explore.model.{ AppContext, RootModel }
 import explore.optics._
 import io.chrisdavenport.log4cats.Logger
 import shapeless._
+
+import scala.annotation.unused
 
 trait ListImplicits {
 

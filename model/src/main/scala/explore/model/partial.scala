@@ -3,15 +3,14 @@
 
 package explore.model
 
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-
 import cats.syntax.all._
 import explore.model.enum.ObsStatus
-import io.circe.Decoder
-import io.circe.HCursor
+import io.circe.{ Decoder, HCursor }
 import lucuma.core.model.Observation
 import monocle.macros.Lenses
+
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 @Lenses
 final case class ConstraintsSummary(id: Constraints.Id, name: String)

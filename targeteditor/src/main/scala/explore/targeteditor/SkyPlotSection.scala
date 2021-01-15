@@ -3,11 +3,6 @@
 
 package explore.targeteditor
 
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-
 import cats.Eq
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
@@ -22,6 +17,8 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 import react.datepicker._
 import react.semanticui.modules.checkbox.Checkbox
+
+import java.time.{ LocalDate, ZoneId, ZoneOffset, ZonedDateTime }
 
 final case class SkyPlotSection(
   coords: Coordinates

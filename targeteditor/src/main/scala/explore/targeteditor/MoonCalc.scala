@@ -3,10 +3,7 @@
 
 package explore.targeteditor
 
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
+import java.time.{ Duration, Instant, ZoneOffset, ZonedDateTime }
 
 object MoonCalc {
   val MeanLunationDays: Double    = 29.530588861

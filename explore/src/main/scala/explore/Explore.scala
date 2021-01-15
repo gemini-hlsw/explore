@@ -3,18 +3,16 @@
 
 package explore
 
-import scala.scalajs.js
-
 import cats.effect.IO
 import crystal.react.implicits._
 import explore.Routing
-import explore.model.Focused
-import explore.model.RootModel
-import explore.model.RootModelRouting
 import explore.model.enum.AppTab
+import explore.model.{ Focused, RootModel, RootModelRouting }
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
+
+import scala.scalajs.js
 
 import js.annotation._
 

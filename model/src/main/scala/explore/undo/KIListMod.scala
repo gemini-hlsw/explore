@@ -4,9 +4,7 @@
 package explore.undo
 
 import explore.data.KeyedIndexedList
-import monocle.Getter
-import monocle.Iso
-import monocle.Lens
+import monocle.{ Getter, Iso, Lens }
 
 class KIListMod[F[_], A, K](protected val keyLens: Lens[A, K])
     extends IndexedCollMod[F, KeyedIndexedList, Int, A, cats.Id, K] {

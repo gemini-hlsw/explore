@@ -3,9 +3,9 @@
 
 package explore.data
 
-import scala.collection.immutable.TreeSeqMap
-
 import cats.Eq
+
+import scala.collection.immutable.TreeSeqMap
 
 // Each element has a unique Key.
 // Efficient loookup of elements and positions by Key.

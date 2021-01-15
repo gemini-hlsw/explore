@@ -5,8 +5,6 @@ package explore.model
 
 // import java.time.Instant
 
-import scala.collection.immutable.SortedSet
-
 import cats.Order._
 import cats.kernel.Eq
 import cats.syntax.all._
@@ -17,6 +15,8 @@ import lucuma.core.data.EnumZipper
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Id._
 import monocle.macros.Lenses
+
+import scala.collection.immutable.SortedSet
 
 @Lenses
 case class RootModel(

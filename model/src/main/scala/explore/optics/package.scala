@@ -6,12 +6,9 @@ package explore
 import cats.syntax.all._
 import coulomb._
 import explore.model.utils._
-import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
-import lucuma.core.math.ProperMotion
-import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Redshift
 import lucuma.core.math.units._
+import lucuma.core.math.{ ApparentRadialVelocity, ProperMotion, RadialVelocity, Redshift }
 import monocle._
 import monocle.std.option.some
 

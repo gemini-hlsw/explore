@@ -11,8 +11,7 @@ import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas._
 import explore.common.SSOClient
-import explore.model.enum.AppTab
-import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.{ AppTab, ExecutionEnvironment }
 import explore.model.reusability._
 import explore.utils
 import io.chrisdavenport.log4cats.Logger

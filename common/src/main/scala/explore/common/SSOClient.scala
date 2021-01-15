@@ -3,19 +3,11 @@
 
 package explore.common
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.{ util => ju }
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import cats.effect._
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
-import explore.model.SSOConfig
-import explore.model.UserVault
+import explore.model.{ SSOConfig, UserVault }
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import io.circe.generic.semiauto._
@@ -25,6 +17,12 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import sttp.client3._
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.{ util => ju }
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 

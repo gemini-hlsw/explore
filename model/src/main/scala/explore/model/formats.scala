@@ -3,19 +3,18 @@
 
 package explore.model
 
-import java.text.NumberFormat
-import java.util.Locale
-
 import cats.syntax.all._
 import coulomb._
 import eu.timepit.refined.refineV
 import explore.optics._
-import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
-import lucuma.core.math._
 import lucuma.core.math.units._
+import lucuma.core.math.{ Parallax, _ }
 import lucuma.core.optics.Format
 import lucuma.core.syntax.string._
+
+import java.text.NumberFormat
+import java.util.Locale
 
 trait formats {
   val pxFormat: Format[String, Parallax] =

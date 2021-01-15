@@ -3,44 +3,42 @@
 
 package explore.targeteditor
 
-import scala.collection.immutable.HashSet
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
+import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
-import lucuma.core.model.Magnitude
-import lucuma.core.model.Target
-import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.forms.FormInputEV
-import lucuma.ui.optics.ChangeAuditor
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.core.model.{ Magnitude, Target }
+import lucuma.ui.forms.{ EnumViewSelect, FormInputEV }
+import lucuma.ui.optics.{ ChangeAuditor, ValidFormatInput }
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.macros.Lenses
 import monocle.std.option.some
 import react.common.ReactProps
-import react.semanticui.collections.table.Table
-import react.semanticui.collections.table.TableBody
-import react.semanticui.collections.table.TableCell
-import react.semanticui.collections.table.TableCompact
-import react.semanticui.collections.table.TableFooter
-import react.semanticui.collections.table.TableHeaderCell
-import react.semanticui.collections.table.TableRow
+import react.semanticui.collections.table.{
+  Table,
+  TableBody,
+  TableCell,
+  TableCompact,
+  TableFooter,
+  TableHeaderCell,
+  TableRow
+}
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+
+import scala.collection.immutable.HashSet
 
 final case class MagnitudeForm(
   targetId:   Target.Id,

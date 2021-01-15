@@ -3,18 +3,16 @@
 
 package explore.model
 
-import java.util.concurrent.TimeUnit
-
-import scala.concurrent.duration.FiniteDuration
-
-import cats.Eq
-import cats.Show
+import cats.{ Eq, Show }
 import explore.model.decoders._
 import explore.model.encoders._
 import explore.model.enum.ExecutionEnvironment
 import io.circe._
 import io.circe.generic.semiauto._
 import sttp.model.Uri
+
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 
 case class SSOConfig(
   uri:                        Uri,

@@ -3,33 +3,23 @@
 
 package explore.observationtree
 
-import scala.collection.immutable.SortedSet
-import scala.util.Random
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
-import explore.AppCtx
-import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
-import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
+import explore.components.undo.{ UndoButtons, UndoRegion }
 import explore.implicits._
-import explore.model.Constants
-import explore.model.Focused
 import explore.model.Focused._
-import explore.model.ObsSummary
 import explore.model.enum.AppTab
-import explore.optics.GetAdjust
-import explore.optics._
-import explore.undo.KIListMod
-import explore.undo.Undoer
+import explore.model.{ Constants, Focused, ObsSummary }
+import explore.optics.{ GetAdjust, _ }
+import explore.undo.{ KIListMod, Undoer }
+import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
+import lucuma.core.model.{ Observation, Target }
 import lucuma.ui.utils._
 import monocle.Getter
 import monocle.function.Field1.first
@@ -42,6 +32,9 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+
+import scala.collection.immutable.SortedSet
+import scala.util.Random
 
 import TargetObsQueries._
 

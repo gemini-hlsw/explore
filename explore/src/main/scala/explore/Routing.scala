@@ -3,23 +3,21 @@
 
 package explore
 
-import scala.scalajs.LinkingInfo
-import scala.util.Random
-
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.model.Page
 import explore.model.Page._
-import explore.model._
+import explore.model.{ Page, _ }
 import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
+import lucuma.core.model.{ Observation, Target }
 import lucuma.core.util.Gid
+
+import scala.scalajs.LinkingInfo
+import scala.util.Random
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

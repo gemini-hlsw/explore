@@ -7,8 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import explore.components.UserSelectionForm
 import explore.implicits._
-import explore.model.RootModel
-import explore.model.UserVault
+import explore.model.{ RootModel, UserVault }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps

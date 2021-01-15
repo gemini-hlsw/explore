@@ -3,8 +3,6 @@
 
 package explore.components.state
 
-import java.time.Instant
-
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
@@ -19,6 +17,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common.ReactProps
+
+import java.time.Instant
 
 final case class SSOManager(
   expiration: Instant,

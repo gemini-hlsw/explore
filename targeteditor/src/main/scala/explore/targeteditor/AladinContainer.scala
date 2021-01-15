@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import scala.concurrent.duration._
-
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.View
@@ -16,9 +14,7 @@ import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
+import lucuma.core.math.{ Coordinates, Declination, RightAscension }
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
@@ -27,6 +23,8 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
+
+import scala.concurrent.duration._
 
 @Lenses
 final case class AladinContainer(

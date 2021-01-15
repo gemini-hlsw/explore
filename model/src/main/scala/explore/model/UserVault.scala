@@ -3,8 +3,6 @@
 
 package explore.model
 
-import java.time.Instant
-
 import cats.Eq
 import cats.implicits._
 import eu.timepit.refined.cats._
@@ -12,6 +10,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.chrisdavenport.cats.time.instances.instant._
 import lucuma.core.model.User
 import monocle.macros.Lenses
+
+import java.time.Instant
 
 @Lenses
 final case class UserVault(user: User, expiration: Instant, token: NonEmptyString)

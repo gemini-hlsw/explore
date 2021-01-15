@@ -3,34 +3,27 @@
 
 package explore.observationtree
 
-import java.time.Duration
-import java.time.temporal.ChronoUnit._
-import java.util.UUID
-
-import scala.util.Random
-
 import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ObsBadge
 import explore.data.tree._
-import explore.model.Constraints
-import explore.model.ExploreObservation
-import explore.model.ObsSummary
-import explore.model.SiderealTarget
-import explore.model.enum.ObsStatus
-import explore.model.enum._
+import explore.model.enum.{ ObsStatus, _ }
+import explore.model.{ Constraints, ExploreObservation, ObsSummary, SiderealTarget }
 import explore.undo.KITreeMod
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Epoch
-import lucuma.core.model.Observation
-import lucuma.core.model.SiderealTracking
+import lucuma.core.math.{ Coordinates, Epoch }
+import lucuma.core.model.{ Observation, SiderealTracking }
 import mouse.boolean._
 import react.atlasKit.tree.{ Tree => AtlasTree }
 import react.semanticui.elements.icon.Icon
+
+import java.time.Duration
+import java.time.temporal.ChronoUnit._
+import java.util.UUID
+import scala.util.Random
 
 object AndOrTest {
   private def randomElement[A](list: List[A]): A =

@@ -5,8 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.syntax.all._
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
+import lucuma.core.model.{ Observation, Target }
 import monocle.Iso
 
 sealed trait Page extends Product with Serializable

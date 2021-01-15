@@ -3,22 +3,16 @@
 
 package explore.observationtree
 
-import java.time.Duration
-import java.util.UUID
-
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.Constraints
-import explore.model.ExploreObservation
-import explore.model.SiderealTarget
-import explore.model.enum.ObsStatus
-import explore.model.enum._
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.Epoch
-import lucuma.core.math.RightAscension
+import explore.model.enum.{ ObsStatus, _ }
+import explore.model.{ Constraints, ExploreObservation, SiderealTarget }
+import lucuma.core.math.{ Coordinates, Declination, Epoch, RightAscension }
 import lucuma.core.model.SiderealTracking
+
+import java.time.Duration
+import java.util.UUID
 
 object TargetTreeTest {
 

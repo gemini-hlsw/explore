@@ -4,8 +4,7 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.Focused.FocusedObs
-import explore.model.Focused.FocusedTarget
+import explore.model.Focused.{ FocusedObs, FocusedTarget }
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens

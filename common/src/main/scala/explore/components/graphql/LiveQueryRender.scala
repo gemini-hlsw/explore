@@ -5,12 +5,9 @@ package explore.components.graphql
 
 import cats.Id
 import cats.data.NonEmptyList
-import cats.effect.CancelToken
-import cats.effect.ConcurrentEffect
-import cats.effect.IO
+import cats.effect.{ CancelToken, ConcurrentEffect, IO }
 import cats.syntax.all._
-import clue.GraphQLSubscription
-import clue.GraphQLWebSocketClient
+import clue.{ GraphQLSubscription, GraphQLWebSocketClient }
 import crystal.react._
 import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger
