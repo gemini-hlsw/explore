@@ -6,21 +6,25 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore._
+import explore.GraphQLSchemas.UserPreferencesDB.Types._
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
+import explore.AppCtx
+import explore.Icons
+import explore.implicits._
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
+import explore.target.UserPreferencesQueries._
 import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
+import lucuma.core.model.{ Target, User }
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -34,8 +38,10 @@ import react.semanticui.sizes._
 import react.sizeme._
 
 import scala.collection.immutable.SortedSet
+import scala.concurrent.duration._
 
 final case class TargetTabContents(
+  userId:            ViewOpt[User.Id],
   focused:           View[Option[Focused]],
   expandedTargetIds: View[SortedSet[Target.Id]]
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
@@ -61,12 +67,22 @@ object TargetTabContents {
         }
       )
       .renderPS { ($, props, state) =>
-        AppCtx.withCtx { ctx =>
-          implicit val cs = ctx.cs
+        AppCtx.withCtx { implicit ctx =>
           val treeResize  =
             (_: ReactEvent, d: ResizeCallbackData) =>
-              $.setStateL(TwoPanelState.treeWidth)(d.size.width)
-          val treeWidth   = state.treeWidth.toDouble
+              $.setStateL(TwoPanelState.treeWidth)(d.size.width) *> Callback.empty *>
+                props.userId.get
+                  .map { i =>
+                    UserWidthsCreation
+                      .execute[IO](
+                        WidthUpsertInput(i, ResizableSection.TargetsTree, d.size.width)
+                      )
+                      .runAsyncAndForgetCB
+                  }
+                  .getOrEmpty
+                  .debounce(1.second)
+
+          val treeWidth = state.treeWidth.toDouble
 
           def tree(targetsWithObs: View[TargetsWithObs]) =
             <.div(^.width := treeWidth.px,

@@ -31,21 +31,17 @@ object UserPreferencesQueries {
   @GraphQL
   object UserWidthsCreation extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-        mutation initial_area_width($userId: String, $width: Int) {
-          insert_explore_resizable_width(
-            objects: [
-              {section: "observations_tree", user_id: $userId, width: $width},
-              {section: "targets_tree", user_id: $userId, width: $width}
-            ], on_conflict: {
-              constraint: explore_resizable_width_pkey,
-              update_columns: []
-            }) {
-            returning {
-              user_id
-            }
+      mutation update_area_width($item: explore_resizable_width_insert_input!) {
+        insert_explore_resizable_width_one(
+          object: $item,
+          on_conflict: {
+            constraint: explore_resizable_width_pkey,
+            update_columns: width
+          }
+        ) {
+          user_id
           }
         }
-      }
    """
   }
 }

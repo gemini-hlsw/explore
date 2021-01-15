@@ -3,14 +3,13 @@
 
 package explore
 
+import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
-import explore.model.SiderealTarget
 import explore.model.enum._
-import lucuma.core.model.Magnitude
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
-import lucuma.core.model.User
+import explore.model.{ ResizableSection, SiderealTarget }
+import lucuma.core.model.{ Magnitude, Observation, Target, User }
+
 import java.math.MathContext
 
 object GraphQLSchemas {
@@ -75,12 +74,13 @@ object GraphQLSchemas {
     }
 
     object Types {
-      type WidthInsertInput = ExploreResizableWidthInsertInput
-      type WidthInsertInputL = Array[ExploreResizableWidthInsertInput]
-      implicit final val jsonEncoderWidthInsertInput: io.circe.Encoder[WidthInsertInput] =
-        ???
-      implicit final val jsonEncoderWidthInsertInputL: io.circe.Encoder[Array[WidthInsertInput]] =
-        ???
+      final case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
+      implicit def widthUpsertInput(w: WidthUpsertInput): ExploreResizableWidthInsertInput =
+        ExploreResizableWidthInsertInput(
+          Input(w.section.value),
+          Input(w.user.toString),
+          Input(w.width)
+        )
     }
   }
 }

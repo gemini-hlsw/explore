@@ -26,7 +26,10 @@ case object LabelsElement extends ElementItem
 object Routing {
 
   private def targetTab(model: View[RootModel]): TargetTabContents =
-    TargetTabContents(model.zoom(RootModel.focused), model.zoom(RootModel.expandedTargetIds))
+    TargetTabContents(model.zoom(RootModel.userId),
+                      model.zoom(RootModel.focused),
+                      model.zoom(RootModel.expandedTargetIds)
+    )
 
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
