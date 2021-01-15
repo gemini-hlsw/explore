@@ -105,7 +105,7 @@ object TargetTabContents {
                 val coreHeight: JsNumber = Option(s.height).getOrElse(0)
 
                 val rightSide =
-                  Tile(s"Target", movable = false, backButton.some)(
+                  Tile(s"Target", backButton.some)(
                     <.span(
                       targetIdOpt.whenDefined(targetId =>
                         TargetEditor(targetId).withKey(targetId.toString)

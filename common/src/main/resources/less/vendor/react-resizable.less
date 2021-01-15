@@ -9,10 +9,11 @@
   background-repeat: no-repeat;
   background-origin: content-box;
   box-sizing: border-box;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+");
+  // encoded resizable-handle.svg
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2IiBoZWlnaHQ9IjYiPgogIDxwYXRoIGQ9Ik02IDZIMFY0LjJoNC4yVjBINnY2eiIgZmlsbD0iI2UzZGVkYiIvPgo8L3N2Zz4K");
   background-position: bottom right;
   padding: 0 3px 3px 0;
-  color: white;
+  filter: brightness(var(--tile-resize-handle-brightness)) opacity(0.302);
 }
 
 .react-resizable-handle-sw {
@@ -46,7 +47,6 @@
 .react-resizable-handle-e {
   top: 50%;
   margin-top: -10px;
-  color: red;
   cursor: ew-resize;
 }
 

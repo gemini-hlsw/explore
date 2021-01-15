@@ -162,7 +162,7 @@ object ProposalDetailsEditor {
             <.div(
               ^.key := "details",
               ExploreStyles.ProposalTile,
-              Tile("Details", movable = false, None)(
+              Tile("Details")(
                 Form(
                   <.div(
                     ExploreStyles.TwoColumnGrid,
@@ -248,7 +248,7 @@ object ProposalDetailsEditor {
               <.div(
                 ^.key := "preview",
                 ExploreStyles.ProposalTile,
-                Tile("Preview", movable = false, None)(
+                Tile("Preview")(
                   <.span("Placeholder for PDF preview.")
                 )
               ),

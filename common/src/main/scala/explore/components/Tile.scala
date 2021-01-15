@@ -3,17 +3,30 @@
 
 package explore.components
 
+import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.enum.TileSizeState
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
+import react.common.implicits._
 import react.semanticui.collections.menu._
+import react.semanticui.elements.button.Button
 
 final case class TileButton(body: VdomNode)
 
-final case class Tile(title: String, movable: Boolean, back: Option[TileButton])
-    extends ReactPropsWithChildren[Tile](Tile.component)
+final case class Tile(
+  title:             String,
+  back:              Option[TileButton] = None,
+  canMinimize:       Boolean = false,
+  canMaximize:       Boolean = false,
+  state:             TileSizeState = TileSizeState.Normal,
+  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty
+) extends ReactPropsWithChildren[Tile](Tile.component) {
+  def showMaximize: Boolean = canMaximize && state === TileSizeState.Minimized
+  def showMinimize: Boolean = canMinimize && state === TileSizeState.Normal
+}
 
 object Tile {
   type Props = Tile
@@ -26,6 +39,24 @@ object Tile {
       .builder[Props]("Tile")
       .stateless
       .render_PC { (p, c) =>
+        val maximizeButton =
+          Button(
+            as = <.a,
+            basic = true,
+            compact = true,
+            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            onClick = p.sizeStateCallback(TileSizeState.Maximized)
+          )(Icons.Maximize.fitted(true))
+
+        val minimizeButton =
+          Button(
+            as = <.a,
+            basic = true,
+            compact = true,
+            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            onClick = p.sizeStateCallback(TileSizeState.Minimized)
+          )(Icons.Minimize.fitted(true))
+
         <.div(
           ExploreStyles.Tile,
           <.div(
@@ -39,10 +70,12 @@ object Tile {
               clazz = ExploreStyles.TileTitleMenu,
               tabular = MenuTabular.Right
             )(
-              MenuItem(as = <.a)(Icons.Bars.when(p.movable), p.title)
-            )
+              MenuItem(as = <.a)(p.title)
+            ),
+            minimizeButton.when(p.showMinimize),
+            maximizeButton.when(p.showMaximize)
           ),
-          <.div(ExploreStyles.TileBody, c)
+          <.div(ExploreStyles.TileBody, c).when(p.state =!= TileSizeState.Minimized)
         )
       }
       .configure(Reusability.shouldComponentUpdate)

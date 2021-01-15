@@ -117,10 +117,76 @@ body.light-theme {
   text-overflow: ellipsis;
 }
 
+.ui.button.active.side-button {
+  border-top: var(--explore-accent-color) solid 4px;
+  background-color: var(--under-tab-background-active-color);
+  font-weight: bold;
+}
+
+.ui.menu .item.main-user-name {
+  flex-shrink: 1;
+  display: inline-block;
+}
+
+.ui.tabular.menu .item.connection-icon {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+.ui.tabular.menu .item.main-menu-dropdown {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+.ui.menu:not(.vertical) .right.menu.main-menu {
+  margin-left: 0 !important; //SUI has !imporant
+}
+
+.explore-tile-title {
+  background-color: var(--tile-title-background);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & .tabular.menu .item {
+    color: var(--tile-title-color);
+    letter-spacing: 0.1em;
+  }
+}
+
+.ui.menu.explore-tile-title-menu {
+  margin-top: 0;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.ui.menu.explore-tile-title-menu .item {
+  padding-left: 0.5em;
+  letter-spacing: 2px;
+}
+
+.ui.menu.explore-tile-title-menu a.item:hover {
+  background: unset;
+  color: unset;
+}
+
+.ui.button.tile-back-button {
+  margin-right: 0;
+
+  @media (min-width: @target-grid-responsive-cutoff) {
+    display: none;
+  }
+}
+
+.main-header > .ui.tabular.menu .item {
+  color: var(--main-header-color);
+}
+
 .main-header {
   grid-area: header;
   width: 100vw;
   min-width: 100vw;
+  background-color: var(--main-header-background-color);
 
   & > .ui.tabular.menu {
     border-bottom: none;
@@ -226,65 +292,6 @@ body.light-theme {
     box-shadow @defaultDuration @defaultEasing;
 }
 
-.ui.button.active.side-button {
-  border-top: var(--explore-accent-color) solid 4px;
-  background-color: var(--under-tab-background-active-color);
-  font-weight: bold;
-}
-
-.ui.menu .item.main-user-name {
-  flex-shrink: 1;
-  display: inline-block;
-}
-
-.ui.tabular.menu .item.connection-icon {
-  padding-right: 0.5em;
-  padding-left: 0;
-}
-
-.ui.tabular.menu .item.main-menu-dropdown {
-  padding-right: 0.5em;
-  padding-left: 0;
-}
-
-.ui.menu:not(.vertical) .right.menu.main-menu {
-  margin-left: 0 !important; //SUI has !imporant
-}
-
-.explore-tile-title {
-  background-color: var(--tile-title-background);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  & .tabular.menu .item {
-    color: var(--tile-title-color);
-    letter-spacing: 0.1em;
-  }
-}
-
-.ui.menu.explore-tile-title-menu {
-  margin-top: 0;
-  cursor: pointer;
-}
-
-.ui.menu.explore-tile-title-menu .item {
-  padding-left: 0;
-}
-
-.ui.menu.explore-tile-title-menu a.item:hover {
-  background: unset;
-  color: unset;
-}
-
-.ui.button.tile-back-button {
-  margin-right: 0;
-
-  @media (min-width: @target-grid-responsive-cutoff) {
-    display: none;
-  }
-}
-
 .explore-tile-body {
   height: ~"calc(100% - @{minHeight})";
   overflow-y: auto;
@@ -295,6 +302,21 @@ body.light-theme {
   .full-height-width();
 
   background-color: var(--tile-background);
+}
+
+.ui.basic.button.explore-tile-state-button:hover {
+  background: transparent;
+  transform: scale(1.05);
+  box-shadow: none;
+  outline: none;
+  filter: brightness(100%);
+}
+
+.explore-tile-state-button {
+  filter: brightness(80%);
+  margin-right: 0.5em;
+  transform-origin: center center;
+  transition: transform 0.25s, filter 0.25s ease-in;
 }
 
 .proposal-tile {
@@ -357,7 +379,6 @@ body.light-theme {
   // Special css to decorate the resize handle. It needs to be very specific
   .react-resizable-handle.react-resizable-handle-e {
     cursor: e-resize;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgd2lkdGg9IjYiIGhlaWdodD0iNiI+CiAgPHBhdGggZD0iTTYgNkgwVjQuMmg0LjJWMEg2djZ6IiBvcGFjaXR5PSIuMzAyIiBmaWxsPSIjZTNkZWRiIi8+Cjwvc3ZnPgo=");
   }
 }
 
@@ -414,6 +435,7 @@ body.light-theme {
   padding-right: 0.2em;
   padding-left: 0.2em;
   overflow-y: auto;
+  border: solid 1px var(--under-tab-border-color);
 }
 
 .obs-item {
@@ -988,4 +1010,14 @@ html {
   // Required for iOS to work with 100vh
   // https://css-tricks.com/css-fix-for-100vh-in-mobile-webkit/
   height: -webkit-fill-available;
+}
+
+.observer-notes-wrapper {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+.observer-notes {
+  padding: 1em;
 }

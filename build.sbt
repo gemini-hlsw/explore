@@ -124,6 +124,7 @@ lazy val common = project
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
+        ReactGridLayout.value ++
         ReactClipboard.value ++
         ReactCommon.value,
     buildInfoKeys := Seq[BuildInfoKey](
