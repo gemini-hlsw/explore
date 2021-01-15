@@ -7,24 +7,24 @@ import cats.effect.IO
 import cats.kernel.Order
 import cats.syntax.all._
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.{ AppTab, TileSizeState }
+import explore.model.layout._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.function.Field3._
-import monocle.function.Index._
-import monocle.macros.{ GenLens, Lenses }
+import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
@@ -46,17 +46,21 @@ final case class ObsTabContents(
 }
 
 object ObsTabContents {
+  val NotesIndex: NonNegInt     = 0
+  val NotesMaxHeight: NonNegInt = 3
+  val NotesMinHeight: NonNegInt = 1
+
   private val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
                  w = 12,
-                 h = 3,
+                 h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = 3, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
     )
   )
 
@@ -65,12 +69,12 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = 0,
                  w = 12,
-                 h = 3,
+                 h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = 3, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
     )
   )
 
@@ -79,19 +83,19 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = 0,
                  w = 12,
-                 h = 3,
+                 h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = 3, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
     )
   )
 
   implicit val breakpointNameOrder: Order[BreakpointName] = Order.by(_.name)
   implicit val breakpointNameOrdering                     = breakpointNameOrder.toOrdering
 
-  private val layouts: SortedMap[BreakpointName, (JsNumber, JsNumber, Layout)] =
+  private val layouts: LayoutsMap =
     SortedMap(
       (BreakpointName.lg, (1200, 12, layoutLarge)),
       (BreakpointName.md, (996, 10, layoutMedium)),
@@ -101,30 +105,26 @@ object ObsTabContents {
   @Lenses
   final case class State(
     panels:  TwoPanelState,
-    layouts: SortedMap[BreakpointName, (JsNumber, JsNumber, Layout)]
+    layouts: LayoutsMap
   )
 
   object State {
-    val panelsWidth      = State.panels.composeLens(TwoPanelState.treeWidth)
-    val panelSelected    = State.panels.composeLens(TwoPanelState.elementSelected)
-    val layoutLens       = GenLens[Layout](_.l)
-    val layoutItemHeight = GenLens[LayoutItem](_.h)
+    val panelsWidth   = State.panels.composeLens(TwoPanelState.treeWidth)
+    val panelSelected = State.panels.composeLens(TwoPanelState.elementSelected)
 
-    def breakPoint(n:       BreakpointName) = layouts.composeOptional(index(n))
-    def breakPointLayout(n: BreakpointName) = breakPoint(n).composeLens(third)
-    def breakPointNote(n:   BreakpointName) =
-      breakPointLayout(n).composeLens(layoutLens).composeOptional(index(0))
+    def breakPointNote(n: BreakpointName) =
+      layouts.breakPointLayout(n, NotesIndex)
     def notesHeight =
       breakPointNote(BreakpointName.sm).composeLens(layoutItemHeight)
     def notesHeightState(s: State): TileSizeState = notesHeight.getOption(s) match {
-      case Some(x) if x === 1 => TileSizeState.Minimized
-      case _                  => TileSizeState.Normal
+      case Some(x) if x === NotesMinHeight.value => TileSizeState.Minimized
+      case _                                     => TileSizeState.Normal
     }
   }
 
   type Props = ObsTabContents
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.never
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
