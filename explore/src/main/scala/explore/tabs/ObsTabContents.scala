@@ -4,12 +4,16 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.data.NonEmptyList
 import cats.kernel.Order
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
+import explore.GraphQLSchemas.ObservationDB
 import explore.common.UserPreferencesQueries._
+import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
 import explore.implicits._
@@ -20,11 +24,13 @@ import explore.model.layout._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
+import explore.target.TargetQueries._
 import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
+import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.macros.Lenses
@@ -42,6 +48,7 @@ import react.sizeme._
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import explore.targeteditor.TargetBody
 
 final case class ObsTabContents(
   userId:  ViewOpt[User.Id],
@@ -110,7 +117,8 @@ object ObsTabContents {
   @Lenses
   final case class State(
     panels:  TwoPanelState,
-    layouts: LayoutsMap
+    layouts: LayoutsMap,
+    options: TargetVisualOptions
   )
 
   object State {
@@ -186,6 +194,7 @@ object ObsTabContents {
             )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
           )
 
+          val targetId = Target.Id(2L)
           React.Fragment(
             SizeMe() { s =>
               val coreWidth =
@@ -206,7 +215,7 @@ object ObsTabContents {
                 <.div(
                   ^.key := "notes",
                   Tile(
-                    "Note for Observer",
+                    s"Note for Observer ${obsSummaryOpt}",
                     backButton.some,
                     canMinimize = true,
                     canMaximize = true,
@@ -229,11 +238,21 @@ object ObsTabContents {
                 <.div(
                   ^.key := "target",
                   Tile("Target")(
-                    <.span(
-                      // obsSummaryOpt.whenDefined(obs =>
-                      //   TargetEditor(obs.target.id).withKey(obs.target.id.toString)
-                      // )
-                    )
+                    LiveQueryRenderMod[ObservationDB,
+                                       TargetEditQuery.Data,
+                                       Option[TargetEditQuery.Data.Target]
+                    ](
+                      TargetEditQuery.query(targetId),
+                      _.target,
+                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                    ) { targetOpt =>
+                      <.div(
+                      targetOpt.get.whenDefined { _ =>
+                        val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                        TargetBody(targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                      }
+                      )
+                    }
                   )
                 )
               )
@@ -280,7 +299,7 @@ object ObsTabContents {
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
           case None    =>
-            State(TwoPanelState.initial(p.isObsSelected), layouts)
+            State(TwoPanelState.initial(p.isObsSelected), layouts, TargetVisualOptions.Default)
           case Some(s) =>
             if (s.panels.elementSelected =!= p.isObsSelected)
               State.panelSelected.set(p.isObsSelected)(s)

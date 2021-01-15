@@ -122,6 +122,7 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         ReactGridLayout.value ++
+        ReactSizeMe.value ++
         ReactClipboard.value ++
         ReactCommon.value ++
         ReactTable.value,

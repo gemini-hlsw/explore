@@ -18,6 +18,11 @@ object ExploreStyles {
   val TileButton: Css      = Css("explore-tile-button")
   val TileStateButton: Css = Css("explore-tile-state-button")
 
+  val TileSMW: Css = Css("tile-sm-width")
+  val TileMDW: Css = Css("tile-md-width")
+  val TileLGW: Css = Css("tile-lg-width")
+  val TileXLW: Css = Css("tile-xl-width")
+
   val TextInForm: Css = Css("explore-text-in-form")
   val Accented: Css   = Css("explore-accented")
 
