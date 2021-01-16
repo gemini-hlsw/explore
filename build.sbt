@@ -280,7 +280,7 @@ lazy val commonSettings = Seq(
       "-Wunused:params"
     )
   )),
-  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.1").cross(CrossVersion.full)),
+  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full)),
   // don't publish anything
   publish := {},
   publishLocal := {},
