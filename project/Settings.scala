@@ -26,7 +26,7 @@ object Settings {
     val mouse             = "0.26.2"
     val mUnit             = "0.7.20"
     val reactAladin       = "0.4.2"
-    val reactAtlasKitTree = "0.3.0"
+    val reactAtlasKitTree = "0.3.1"
     val reactClipboard    = "1.4.3"
     val reactCommon       = "0.11.3"
     val reactDatepicker   = "0.1.0"
