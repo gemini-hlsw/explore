@@ -3,12 +3,16 @@
 
 package explore
 
+import cats.data.OptionT
 import cats.effect.{ ExitCode, IO, IOApp }
 import cats.syntax.all._
+import clue.data.Input
 import clue.js.{ AjaxJSBackend, WebSocketJSBackend }
 import clue.{ Backend, WebSocketReconnectionStrategy }
 import crystal.AppRootContext
 import crystal.react.AppRoot
+import explore.common.UserPreferencesQueries._
+import explore.implicits._
 import explore.model.enum.{ AppTab, ExecutionEnvironment, Theme }
 import explore.model.reusability._
 import explore.model.{ AppConfig, AppContext, Focused, RootModel, UserVault }
@@ -115,6 +119,14 @@ trait AppMain extends IOApp {
       }
     )
 
+    // Creates a "profile" for user preferences.
+    def createUserPrefs(vault: Option[UserVault])(implicit ctx: AppContext[IO]): IO[Unit] =
+      (for {
+        u <- OptionT.fromOption[IO](vault)
+        i <- OptionT.pure[IO](u.user.id)
+        _ <- OptionT.liftF(UserInsertMutation.execute(Input(i.toString())))
+      } yield ()).value.void
+
     for {
       _         <- utils.setupScheme[IO](Theme.Dark)
       appConfig <- fetchConfig
@@ -123,6 +135,7 @@ trait AppMain extends IOApp {
       ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
       vault     <- ctx.sso.whoami
       _         <- AppCtx.initIn[IO](ctx)
+      _         <- createUserPrefs(vault)(ctx).start
       container <- setupDOM(appConfig.environment)
     } yield {
       val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))

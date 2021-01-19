@@ -34,10 +34,10 @@ object SSOConfig {
 }
 
 case class AppConfig(
-  environment:  ExecutionEnvironment,
-  exploreDBURI: Uri,
-  odbURI:       Uri,
-  sso:          SSOConfig
+  environment:      ExecutionEnvironment,
+  preferencesDBURI: Uri,
+  odbURI:           Uri,
+  sso:              SSOConfig
 )
 
 object AppConfig {

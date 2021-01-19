@@ -6,9 +6,10 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore._
+import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
+import explore.implicits._
 import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
@@ -16,11 +17,13 @@ import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
+import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
+import lucuma.core.model.{ Target, User }
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -34,8 +37,10 @@ import react.semanticui.sizes._
 import react.sizeme._
 
 import scala.collection.immutable.SortedSet
+import scala.concurrent.duration._
 
 final case class TargetTabContents(
+  userId:            ViewOpt[User.Id],
   focused:           View[Option[Focused]],
   expandedTargetIds: View[SortedSet[Target.Id]]
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
@@ -47,6 +52,16 @@ object TargetTabContents {
   type State = TwoPanelState
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
+
+  def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
+    AppCtx.withCtx { implicit ctx =>
+      UserAreaWidths
+        .queryWithDefault[IO]($.props.userId.get,
+                              ResizableSection.TargetsTree,
+                              Constants.InitialTreeWidth.toInt
+        )
+        .runAsyncAndThenCB(w => $.setStateL(TwoPanelState.treeWidth)(w))
+    }
 
   protected val component =
     ScalaComponent
@@ -61,12 +76,16 @@ object TargetTabContents {
         }
       )
       .renderPS { ($, props, state) =>
-        AppCtx.withCtx { ctx =>
-          implicit val cs = ctx.cs
-          val treeResize  =
+        AppCtx.withCtx { implicit ctx =>
+          val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
-              $.setStateL(TwoPanelState.treeWidth)(d.size.width)
-          val treeWidth   = state.treeWidth.toDouble
+              $.setStateL(TwoPanelState.treeWidth)(d.size.width) *>
+                storeWidthPreference[IO](props.userId.get,
+                                         ResizableSection.TargetsTree,
+                                         d.size.width
+                ).debounce(1.second)
+
+          val treeWidth = state.treeWidth.toDouble
 
           def tree(targetsWithObs: View[TargetsWithObs]) =
             <.div(^.width := treeWidth.px,
@@ -150,6 +169,7 @@ object TargetTabContents {
           }
         }
       }
+      .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build
 

@@ -26,7 +26,13 @@ case object LabelsElement extends ElementItem
 object Routing {
 
   private def targetTab(model: View[RootModel]): TargetTabContents =
-    TargetTabContents(model.zoom(RootModel.focused), model.zoom(RootModel.expandedTargetIds))
+    TargetTabContents(model.zoom(RootModel.userId),
+                      model.zoom(RootModel.focused),
+                      model.zoom(RootModel.expandedTargetIds)
+    )
+
+  private def obsTab(model: View[RootModel]): ObsTabContents =
+    ObsTabContents(model.zoom(RootModel.userId), model.zoom(RootModel.focused))
 
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
@@ -41,11 +47,9 @@ object Routing {
           | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
             ProposalTabContents(view.zoom(RootModel.focused))
           )
-          | staticRoute("/observations", ObservationsBasePage) ~> renderP(view =>
-            ObsTabContents(view.zoom(RootModel.focused))
-          )
+          | staticRoute("/observations", ObservationsBasePage) ~> renderP(obsTab)
           | dynamicRouteCT(("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(
-            view => ObsTabContents(view.zoom(RootModel.focused))
+            obsTab
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
           | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(

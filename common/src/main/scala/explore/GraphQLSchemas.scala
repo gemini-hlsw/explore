@@ -3,11 +3,12 @@
 
 package explore
 
+import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
-import explore.model.SiderealTarget
 import explore.model.enum._
-import lucuma.core.model.{ Magnitude, Observation, Target }
+import explore.model.{ ResizableSection, SiderealTarget }
+import lucuma.core.model.{ Magnitude, Observation, Target, User }
 
 import java.math.MathContext
 
@@ -62,6 +63,24 @@ object GraphQLSchemas {
       type TargetsInsertInput = SiderealTarget
       implicit final val jsonEncoderTargetsInsertInput: io.circe.Encoder[TargetsInsertInput] =
         explore.model.encoders.siderealTargetEncoder
+    }
+  }
+
+  @GraphQLSchema(debug = false)
+  object UserPreferencesDB {
+    object Scalars {
+      type UserId        = User.Id
+      type ResizableArea = String
+    }
+
+    object Types {
+      final case class WidthUpsertInput(user: User.Id, section: ResizableSection, width: Int)
+      implicit def widthUpsertInput(w: WidthUpsertInput): ExploreResizableWidthInsertInput =
+        ExploreResizableWidthInsertInput(
+          Input(w.section.value),
+          Input(w.user.toString),
+          Input(w.width)
+        )
     }
   }
 }

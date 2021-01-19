@@ -1,0 +1,694 @@
+
+# columns and relationships of "explore_resizable_width"
+type explore_resizable_width {
+  section: resizable_area!
+  user_id: String!
+  width: Int
+}
+
+# aggregated selection of "explore_resizable_width"
+type explore_resizable_width_aggregate {
+  aggregate: explore_resizable_width_aggregate_fields
+  nodes: [explore_resizable_width!]!
+}
+
+# aggregate fields of "explore_resizable_width"
+type explore_resizable_width_aggregate_fields {
+  avg: explore_resizable_width_avg_fields
+  count(columns: [explore_resizable_width_select_column!], distinct: Boolean): Int
+  max: explore_resizable_width_max_fields
+  min: explore_resizable_width_min_fields
+  stddev: explore_resizable_width_stddev_fields
+  stddev_pop: explore_resizable_width_stddev_pop_fields
+  stddev_samp: explore_resizable_width_stddev_samp_fields
+  sum: explore_resizable_width_sum_fields
+  var_pop: explore_resizable_width_var_pop_fields
+  var_samp: explore_resizable_width_var_samp_fields
+  variance: explore_resizable_width_variance_fields
+}
+
+# order by aggregate values of table "explore_resizable_width"
+input explore_resizable_width_aggregate_order_by {
+  avg: explore_resizable_width_avg_order_by
+  count: order_by
+  max: explore_resizable_width_max_order_by
+  min: explore_resizable_width_min_order_by
+  stddev: explore_resizable_width_stddev_order_by
+  stddev_pop: explore_resizable_width_stddev_pop_order_by
+  stddev_samp: explore_resizable_width_stddev_samp_order_by
+  sum: explore_resizable_width_sum_order_by
+  var_pop: explore_resizable_width_var_pop_order_by
+  var_samp: explore_resizable_width_var_samp_order_by
+  variance: explore_resizable_width_variance_order_by
+}
+
+# input type for inserting array relation for remote table "explore_resizable_width"
+input explore_resizable_width_arr_rel_insert_input {
+  data: [explore_resizable_width_insert_input!]!
+  on_conflict: explore_resizable_width_on_conflict
+}
+
+# aggregate avg on columns
+type explore_resizable_width_avg_fields {
+  width: Float
+}
+
+# order by avg() on columns of table "explore_resizable_width"
+input explore_resizable_width_avg_order_by {
+  width: order_by
+}
+
+# Boolean expression to filter rows from the table "explore_resizable_width". All fields are combined with a logical 'AND'.
+input explore_resizable_width_bool_exp {
+  _and: [explore_resizable_width_bool_exp]
+  _not: explore_resizable_width_bool_exp
+  _or: [explore_resizable_width_bool_exp]
+  section: resizable_area_comparison_exp
+  user_id: String_comparison_exp
+  width: Int_comparison_exp
+}
+
+# unique or primary key constraints on table "explore_resizable_width"
+enum explore_resizable_width_constraint {
+  # unique or primary key constraint
+  explore_resizable_width_pkey
+
+  # unique or primary key constraint
+  explore_resizable_width_user_id_section_key
+}
+
+# input type for incrementing integer column in table "explore_resizable_width"
+input explore_resizable_width_inc_input {
+  width: Int
+}
+
+# input type for inserting data into table "explore_resizable_width"
+input explore_resizable_width_insert_input {
+  section: resizable_area
+  user_id: String
+  width: Int
+}
+
+# aggregate max on columns
+type explore_resizable_width_max_fields {
+  user_id: String
+  width: Int
+}
+
+# order by max() on columns of table "explore_resizable_width"
+input explore_resizable_width_max_order_by {
+  user_id: order_by
+  width: order_by
+}
+
+# aggregate min on columns
+type explore_resizable_width_min_fields {
+  user_id: String
+  width: Int
+}
+
+# order by min() on columns of table "explore_resizable_width"
+input explore_resizable_width_min_order_by {
+  user_id: order_by
+  width: order_by
+}
+
+# response of any mutation on the table "explore_resizable_width"
+type explore_resizable_width_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [explore_resizable_width!]!
+}
+
+# input type for inserting object relation for remote table "explore_resizable_width"
+input explore_resizable_width_obj_rel_insert_input {
+  data: explore_resizable_width_insert_input!
+  on_conflict: explore_resizable_width_on_conflict
+}
+
+# on conflict condition type for table "explore_resizable_width"
+input explore_resizable_width_on_conflict {
+  constraint: explore_resizable_width_constraint!
+  update_columns: [explore_resizable_width_update_column!]!
+  where: explore_resizable_width_bool_exp
+}
+
+# ordering options when selecting data from "explore_resizable_width"
+input explore_resizable_width_order_by {
+  section: order_by
+  user_id: order_by
+  width: order_by
+}
+
+# primary key columns input for table: "explore_resizable_width"
+input explore_resizable_width_pk_columns_input {
+  user_id: String!
+}
+
+# select columns of table "explore_resizable_width"
+enum explore_resizable_width_select_column {
+  # column name
+  section
+
+  # column name
+  user_id
+
+  # column name
+  width
+}
+
+# input type for updating data in table "explore_resizable_width"
+input explore_resizable_width_set_input {
+  section: resizable_area
+  user_id: String
+  width: Int
+}
+
+# aggregate stddev on columns
+type explore_resizable_width_stddev_fields {
+  width: Float
+}
+
+# order by stddev() on columns of table "explore_resizable_width"
+input explore_resizable_width_stddev_order_by {
+  width: order_by
+}
+
+# aggregate stddev_pop on columns
+type explore_resizable_width_stddev_pop_fields {
+  width: Float
+}
+
+# order by stddev_pop() on columns of table "explore_resizable_width"
+input explore_resizable_width_stddev_pop_order_by {
+  width: order_by
+}
+
+# aggregate stddev_samp on columns
+type explore_resizable_width_stddev_samp_fields {
+  width: Float
+}
+
+# order by stddev_samp() on columns of table "explore_resizable_width"
+input explore_resizable_width_stddev_samp_order_by {
+  width: order_by
+}
+
+# aggregate sum on columns
+type explore_resizable_width_sum_fields {
+  width: Int
+}
+
+# order by sum() on columns of table "explore_resizable_width"
+input explore_resizable_width_sum_order_by {
+  width: order_by
+}
+
+# update columns of table "explore_resizable_width"
+enum explore_resizable_width_update_column {
+  # column name
+  section
+
+  # column name
+  user_id
+
+  # column name
+  width
+}
+
+# aggregate var_pop on columns
+type explore_resizable_width_var_pop_fields {
+  width: Float
+}
+
+# order by var_pop() on columns of table "explore_resizable_width"
+input explore_resizable_width_var_pop_order_by {
+  width: order_by
+}
+
+# aggregate var_samp on columns
+type explore_resizable_width_var_samp_fields {
+  width: Float
+}
+
+# order by var_samp() on columns of table "explore_resizable_width"
+input explore_resizable_width_var_samp_order_by {
+  width: order_by
+}
+
+# aggregate variance on columns
+type explore_resizable_width_variance_fields {
+  width: Float
+}
+
+# order by variance() on columns of table "explore_resizable_width"
+input explore_resizable_width_variance_order_by {
+  width: order_by
+}
+
+# expression to compare columns of type Int. All fields are combined with logical 'AND'.
+input Int_comparison_exp {
+  _eq: Int
+  _gt: Int
+  _gte: Int
+  _in: [Int!]
+  _is_null: Boolean
+  _lt: Int
+  _lte: Int
+  _neq: Int
+  _nin: [Int!]
+}
+
+# columns and relationships of "lucuma_user"
+type lucuma_user {
+  user_id: String!
+}
+
+# aggregated selection of "lucuma_user"
+type lucuma_user_aggregate {
+  aggregate: lucuma_user_aggregate_fields
+  nodes: [lucuma_user!]!
+}
+
+# aggregate fields of "lucuma_user"
+type lucuma_user_aggregate_fields {
+  count(columns: [lucuma_user_select_column!], distinct: Boolean): Int
+  max: lucuma_user_max_fields
+  min: lucuma_user_min_fields
+}
+
+# order by aggregate values of table "lucuma_user"
+input lucuma_user_aggregate_order_by {
+  count: order_by
+  max: lucuma_user_max_order_by
+  min: lucuma_user_min_order_by
+}
+
+# input type for inserting array relation for remote table "lucuma_user"
+input lucuma_user_arr_rel_insert_input {
+  data: [lucuma_user_insert_input!]!
+  on_conflict: lucuma_user_on_conflict
+}
+
+# Boolean expression to filter rows from the table "lucuma_user". All fields are combined with a logical 'AND'.
+input lucuma_user_bool_exp {
+  _and: [lucuma_user_bool_exp]
+  _not: lucuma_user_bool_exp
+  _or: [lucuma_user_bool_exp]
+  user_id: String_comparison_exp
+}
+
+# unique or primary key constraints on table "lucuma_user"
+enum lucuma_user_constraint {
+  # unique or primary key constraint
+  lucuma_user_pkey
+}
+
+# input type for inserting data into table "lucuma_user"
+input lucuma_user_insert_input {
+  user_id: String
+}
+
+# aggregate max on columns
+type lucuma_user_max_fields {
+  user_id: String
+}
+
+# order by max() on columns of table "lucuma_user"
+input lucuma_user_max_order_by {
+  user_id: order_by
+}
+
+# aggregate min on columns
+type lucuma_user_min_fields {
+  user_id: String
+}
+
+# order by min() on columns of table "lucuma_user"
+input lucuma_user_min_order_by {
+  user_id: order_by
+}
+
+# response of any mutation on the table "lucuma_user"
+type lucuma_user_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [lucuma_user!]!
+}
+
+# input type for inserting object relation for remote table "lucuma_user"
+input lucuma_user_obj_rel_insert_input {
+  data: lucuma_user_insert_input!
+  on_conflict: lucuma_user_on_conflict
+}
+
+# on conflict condition type for table "lucuma_user"
+input lucuma_user_on_conflict {
+  constraint: lucuma_user_constraint!
+  update_columns: [lucuma_user_update_column!]!
+  where: lucuma_user_bool_exp
+}
+
+# ordering options when selecting data from "lucuma_user"
+input lucuma_user_order_by {
+  user_id: order_by
+}
+
+# primary key columns input for table: "lucuma_user"
+input lucuma_user_pk_columns_input {
+  user_id: String!
+}
+
+# select columns of table "lucuma_user"
+enum lucuma_user_select_column {
+  # column name
+  user_id
+}
+
+# input type for updating data in table "lucuma_user"
+input lucuma_user_set_input {
+  user_id: String
+}
+
+# update columns of table "lucuma_user"
+enum lucuma_user_update_column {
+  # column name
+  user_id
+}
+
+# mutation root
+type Mutation {
+  # delete data from the table: "explore_resizable_width"
+  delete_explore_resizable_width(
+    # filter the rows which have to be deleted
+    where: explore_resizable_width_bool_exp!
+  ): explore_resizable_width_mutation_response
+
+  # delete single row from the table: "explore_resizable_width"
+  delete_explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+
+  # delete data from the table: "lucuma_user"
+  delete_lucuma_user(
+    # filter the rows which have to be deleted
+    where: lucuma_user_bool_exp!
+  ): lucuma_user_mutation_response
+
+  # delete single row from the table: "lucuma_user"
+  delete_lucuma_user_by_pk(user_id: String!): lucuma_user
+
+  # insert data into the table: "explore_resizable_width"
+  insert_explore_resizable_width(
+    # the rows to be inserted
+    objects: [explore_resizable_width_insert_input!]!
+
+    # on conflict condition
+    on_conflict: explore_resizable_width_on_conflict
+  ): explore_resizable_width_mutation_response
+
+  # insert a single row into the table: "explore_resizable_width"
+  insert_explore_resizable_width_one(
+    # the row to be inserted
+    object: explore_resizable_width_insert_input!
+
+    # on conflict condition
+    on_conflict: explore_resizable_width_on_conflict
+  ): explore_resizable_width
+
+  # insert data into the table: "lucuma_user"
+  insert_lucuma_user(
+    # the rows to be inserted
+    objects: [lucuma_user_insert_input!]!
+
+    # on conflict condition
+    on_conflict: lucuma_user_on_conflict
+  ): lucuma_user_mutation_response
+
+  # insert a single row into the table: "lucuma_user"
+  insert_lucuma_user_one(
+    # the row to be inserted
+    object: lucuma_user_insert_input!
+
+    # on conflict condition
+    on_conflict: lucuma_user_on_conflict
+  ): lucuma_user
+
+  # update data of the table: "explore_resizable_width"
+  update_explore_resizable_width(
+    # increments the integer columns with given value of the filtered values
+    _inc: explore_resizable_width_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: explore_resizable_width_set_input
+
+    # filter the rows which have to be updated
+    where: explore_resizable_width_bool_exp!
+  ): explore_resizable_width_mutation_response
+
+  # update single row of the table: "explore_resizable_width"
+  update_explore_resizable_width_by_pk(
+    # increments the integer columns with given value of the filtered values
+    _inc: explore_resizable_width_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: explore_resizable_width_set_input
+    pk_columns: explore_resizable_width_pk_columns_input!
+  ): explore_resizable_width
+
+  # update data of the table: "lucuma_user"
+  update_lucuma_user(
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_user_set_input
+
+    # filter the rows which have to be updated
+    where: lucuma_user_bool_exp!
+  ): lucuma_user_mutation_response
+
+  # update single row of the table: "lucuma_user"
+  update_lucuma_user_by_pk(
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_user_set_input
+    pk_columns: lucuma_user_pk_columns_input!
+  ): lucuma_user
+}
+
+# column ordering options
+enum order_by {
+  # in the ascending order, nulls last
+  asc
+
+  # in the ascending order, nulls first
+  asc_nulls_first
+
+  # in the ascending order, nulls last
+  asc_nulls_last
+
+  # in the descending order, nulls first
+  desc
+
+  # in the descending order, nulls first
+  desc_nulls_first
+
+  # in the descending order, nulls last
+  desc_nulls_last
+}
+
+# query root
+type Query {
+  # fetch data from the table: "explore_resizable_width"
+  explore_resizable_width(
+    # distinct select on columns
+    distinct_on: [explore_resizable_width_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [explore_resizable_width_order_by!]
+
+    # filter the rows returned
+    where: explore_resizable_width_bool_exp
+  ): [explore_resizable_width!]!
+
+  # fetch aggregated fields from the table: "explore_resizable_width"
+  explore_resizable_width_aggregate(
+    # distinct select on columns
+    distinct_on: [explore_resizable_width_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [explore_resizable_width_order_by!]
+
+    # filter the rows returned
+    where: explore_resizable_width_bool_exp
+  ): explore_resizable_width_aggregate!
+
+  # fetch data from the table: "explore_resizable_width" using primary key columns
+  explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+
+  # fetch data from the table: "lucuma_user"
+  lucuma_user(
+    # distinct select on columns
+    distinct_on: [lucuma_user_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_user_order_by!]
+
+    # filter the rows returned
+    where: lucuma_user_bool_exp
+  ): [lucuma_user!]!
+
+  # fetch aggregated fields from the table: "lucuma_user"
+  lucuma_user_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_user_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_user_order_by!]
+
+    # filter the rows returned
+    where: lucuma_user_bool_exp
+  ): lucuma_user_aggregate!
+
+  # fetch data from the table: "lucuma_user" using primary key columns
+  lucuma_user_by_pk(user_id: String!): lucuma_user
+}
+
+scalar resizable_area
+
+# expression to compare columns of type resizable_area. All fields are combined with logical 'AND'.
+input resizable_area_comparison_exp {
+  _eq: resizable_area
+  _gt: resizable_area
+  _gte: resizable_area
+  _in: [resizable_area!]
+  _is_null: Boolean
+  _lt: resizable_area
+  _lte: resizable_area
+  _neq: resizable_area
+  _nin: [resizable_area!]
+}
+
+# expression to compare columns of type String. All fields are combined with logical 'AND'.
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+  _ilike: String
+  _in: [String!]
+  _is_null: Boolean
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+  _nilike: String
+  _nin: [String!]
+  _nlike: String
+  _nsimilar: String
+  _similar: String
+}
+
+# subscription root
+type Subscription {
+  # fetch data from the table: "explore_resizable_width"
+  explore_resizable_width(
+    # distinct select on columns
+    distinct_on: [explore_resizable_width_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [explore_resizable_width_order_by!]
+
+    # filter the rows returned
+    where: explore_resizable_width_bool_exp
+  ): [explore_resizable_width!]!
+
+  # fetch aggregated fields from the table: "explore_resizable_width"
+  explore_resizable_width_aggregate(
+    # distinct select on columns
+    distinct_on: [explore_resizable_width_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [explore_resizable_width_order_by!]
+
+    # filter the rows returned
+    where: explore_resizable_width_bool_exp
+  ): explore_resizable_width_aggregate!
+
+  # fetch data from the table: "explore_resizable_width" using primary key columns
+  explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+
+  # fetch data from the table: "lucuma_user"
+  lucuma_user(
+    # distinct select on columns
+    distinct_on: [lucuma_user_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_user_order_by!]
+
+    # filter the rows returned
+    where: lucuma_user_bool_exp
+  ): [lucuma_user!]!
+
+  # fetch aggregated fields from the table: "lucuma_user"
+  lucuma_user_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_user_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_user_order_by!]
+
+    # filter the rows returned
+    where: lucuma_user_bool_exp
+  ): lucuma_user_aggregate!
+
+  # fetch data from the table: "lucuma_user" using primary key columns
+  lucuma_user_by_pk(user_id: String!): lucuma_user
+}
+

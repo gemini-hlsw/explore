@@ -9,9 +9,10 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
-import explore._
+import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
+import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.{ AppTab, TileSizeState }
@@ -19,9 +20,11 @@ import explore.model.layout._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
+import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.macros.Lenses
@@ -38,8 +41,10 @@ import react.sizeme._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
+import scala.concurrent.duration._
 
 final case class ObsTabContents(
+  userId:  ViewOpt[User.Id],
   focused: View[Option[Focused]]
 ) extends ReactProps[ObsTabContents](ObsTabContents.component) {
   def isObsSelected: Boolean = focused.get.isDefined
@@ -127,11 +132,29 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
+    def readWidthPreference: Callback =
+      $.props.flatMap { p =>
+        AppCtx.withCtx { implicit ctx =>
+          UserAreaWidths
+            .queryWithDefault[IO](p.userId.get,
+                                  ResizableSection.ObservationsTree,
+                                  Constants.InitialTreeWidth.toInt
+            )
+            .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
+        }
+      }
+
     def render(props: Props, state: State) = {
-      AppCtx.withCtx { ctx =>
+      AppCtx.withCtx { implicit ctx =>
         val treeResize =
-          (_: ReactEvent, d: ResizeCallbackData) => $.setStateL(State.panelsWidth)(d.size.width)
-        val treeWidth  = state.panels.treeWidth.toDouble
+          (_: ReactEvent, d: ResizeCallbackData) =>
+            $.setStateL(State.panelsWidth)(d.size.width) *>
+              storeWidthPreference[IO](props.userId.get,
+                                       ResizableSection.ObservationsTree,
+                                       d.size.width
+              ).debounce(1.second)
+
+        val treeWidth = state.panels.treeWidth.toDouble
 
         // Tree area
         def tree(observations: View[List[ObsSummary]]) =
@@ -265,6 +288,7 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
+      .componentDidMount(_.backend.readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build
 
