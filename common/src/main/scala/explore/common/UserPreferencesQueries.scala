@@ -1,18 +1,21 @@
 // Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.target
+package explore.common
 
-import clue.GraphQLOperation
+import cats.MonadError
+import cats.data.OptionT
+import cats.effect.Effect
+import cats.syntax.all._
 import clue.macros.GraphQL
+import clue.{ GraphQLClient, GraphQLOperation }
+import crystal.react.implicits._
 import explore.GraphQLSchemas.UserPreferencesDB
+import explore.GraphQLSchemas.UserPreferencesDB.Types._
+import explore.model.ResizableSection
+import japgolly.scalajs.react.Callback
 import lucuma.core.model.User
 import lucuma.core.util.Gid
-import explore.model.ResizableSection
-import cats.syntax.all._
-import clue.GraphQLClient
-import cats.data.OptionT
-import cats.MonadError
 
 object UserPreferencesQueries {
 
@@ -92,8 +95,24 @@ object UserPreferencesQueries {
                 .map { r =>
                   r.explore_resizable_width_by_pk.flatMap(_.width)
                 }
-                .recover { e => println(e); none }
+                .recover(_ => none)
             }
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
   }
+
+  def storeWidthPreference[F[_]: Effect](
+    userId:  Option[User.Id],
+    section: ResizableSection,
+    width:   Int
+  )(implicit
+    cl:      GraphQLClient[F, UserPreferencesDB]
+  ): Callback =
+    userId.map { i =>
+      UserWidthsCreation
+        .execute[F](
+          WidthUpsertInput(i, section, width)
+        )
+        .attempt
+        .runAsyncAndForgetCB
+    }.getOrEmpty
 }

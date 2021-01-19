@@ -11,12 +11,12 @@ import clue.js.{ AjaxJSBackend, WebSocketJSBackend }
 import clue.{ Backend, WebSocketReconnectionStrategy }
 import crystal.AppRootContext
 import crystal.react.AppRoot
+import explore.common.UserPreferencesQueries._
+import explore.implicits._
 import explore.model.enum.{ AppTab, ExecutionEnvironment, Theme }
 import explore.model.reusability._
 import explore.model.{ AppConfig, AppContext, Focused, RootModel, UserVault }
-import explore.target.UserPreferencesQueries._
 import explore.utils
-import explore.implicits._
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger

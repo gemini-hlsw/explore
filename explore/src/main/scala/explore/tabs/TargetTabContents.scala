@@ -6,12 +6,9 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.GraphQLSchemas.UserPreferencesDB
-import explore.GraphQLSchemas.UserPreferencesDB.Types._
+import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.{ Tile, TileButton }
-import explore.AppCtx
-import explore.Icons
 import explore.implicits._
 import explore.model.Focused._
 import explore.model._
@@ -19,10 +16,11 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
-import explore.target.UserPreferencesQueries._
 import explore.targeteditor.TargetEditor
+import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.{ Target, User }
@@ -40,9 +38,6 @@ import react.sizeme._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
-import clue.GraphQLClient
-import cats.effect.Effect
 
 final case class TargetTabContents(
   userId:            ViewOpt[User.Id],
@@ -68,17 +63,6 @@ object TargetTabContents {
         .runAsyncAndThenCB(w => $.setStateL(TwoPanelState.treeWidth)(w))
     }
 
-  def storeWidthPreference[F[_]: Effect](props: Props, width: Int)(implicit
-    cl:                                         GraphQLClient[F, UserPreferencesDB]
-  ): Callback =
-    props.userId.get.map { i =>
-      UserWidthsCreation
-        .execute[F](
-          WidthUpsertInput(i, ResizableSection.TargetsTree, width)
-        )
-        .runAsyncAndForgetCB
-    }.getOrEmpty
-
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -96,7 +80,10 @@ object TargetTabContents {
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
               $.setStateL(TwoPanelState.treeWidth)(d.size.width) *>
-                storeWidthPreference[IO](props, d.size.width).debounce(1.second)
+                storeWidthPreference[IO](props.userId.get,
+                                         ResizableSection.TargetsTree,
+                                         d.size.width
+                ).debounce(1.second)
 
           val treeWidth = state.treeWidth.toDouble
 
