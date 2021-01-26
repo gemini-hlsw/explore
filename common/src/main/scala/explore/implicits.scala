@@ -13,6 +13,7 @@ import explore.GraphQLSchemas._
 import explore.model.{ AppContext, RootModel }
 import explore.optics._
 import io.chrisdavenport.log4cats.Logger
+import lucuma.ui.utils._
 import shapeless._
 
 import scala.annotation.unused
@@ -39,6 +40,18 @@ trait ListImplicits {
       mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
       monoid: Monoid[Out]
     ): Out = hlists.map(_.map(singleton)).combineAll
+  }
+
+  implicit class ViewListOps[F[_], A](val viewList: ViewF[F, List[A]]) {
+    def toListOfViews[B](eqBy: A => B)(implicit eq: Eq[B]): List[ViewF[F, A]] =
+      viewList.get.map { a =>
+        // We're already focused on "this" element
+        val getA: List[A] => A = _ => a
+        def modA(mod: A => A): List[A] => List[A] =
+          list => list.modFirstWhere(thisA => eqBy(thisA) === eqBy(a), mod)
+
+        viewList.zoom[A](getA)(modA)
+      }
   }
 }
 

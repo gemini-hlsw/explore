@@ -35,6 +35,7 @@ object Settings {
     val reactResizable    = "0.4.2"
     val reactSemanticUI   = "0.10.4"
     val reactSizeMe       = "0.6.4"
+    val reactTable        = "0.0.1"
     val scalaJsReact      = "1.7.7"
     val sttp              = "3.0.0"
   }
@@ -235,6 +236,12 @@ object Settings {
       deps(
         "io.github.cquiroz.react" %%% "react-semantic-ui"
       )(reactSemanticUI)
+    )
+
+    val ReactTable = Def.setting(
+      deps(
+        "io.github.toddburnside" %%% "scalajs-react-table"
+      )(reactTable)
     )
 
     val ScalaJSReact = Def.setting(

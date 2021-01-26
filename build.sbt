@@ -126,11 +126,12 @@ lazy val common = project
         LucumaBC.value ++
         ReactGridLayout.value ++
         ReactClipboard.value ++
-        ReactCommon.value,
+        ReactCommon.value ++
+        ReactTable.value,
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,
-      git.gitHeadCommit,
+      git.gitHeadCommit
     ),
     buildInfoKeys ++= {
       if (sys.env.contains("SBT_IGNORE_BUILDTIME")) Seq(BuildInfoKey.action("buildTime")(0L))
