@@ -21,15 +21,14 @@ import scalajs.js
 object ReactTableHelpers {
 
   /**
-   * Create a AgGridColumn Builder for a column which edits the value in a FormInputEv.
-   * Since this returns a Builder, additional column configuration methods can
-   * be chained onto the return value.
+   * Create a component which edits the value in a FormInputEv and can be passed
+   * to the TableMaker componentColumn method.
    *
    * @param lens Lens to go between the Row value and the Cell value.
    * @param validFormat The ValidFormatInput for the editor.
    * @param changeAuditor The ChangeAuditor for the editor.
    * @param disabled Whether editing should be disabled or not.
-   * @return An AgGridColumn Builder
+   * @return The component.
    */
   def editableViewColumn[A, B](
     lens:          Lens[A, B],
@@ -55,15 +54,13 @@ object ReactTableHelpers {
       .raw
 
   /**
-   * Create a AgGridColumn Builder for a column which edits the value via a EnumViewSelect.
-   * Obviously, the cell value must have an Enumerated instance.
-   * Since this returns a Builder, additional column configuration methods can
-   * be chained onto the return value.
+   * Create a component which edits the value via a EnumViewSelect and can be passed
+   * to the TableMaker componentColumn method.
    *
    * @param lens Lens to go between the Row value and the Cell value.
    * @param disabled Whether editing should be disabled or not.
    * @param excludeFn An optional function that determines a set of enums thst should be excluded from the dropdown.
-   * @return An AgGridColumn Builder.
+   * @return The component.
    */
   def editableEnumViewColumn[A, B](lens: Lens[A, B])(
     disabled:                            Boolean = false,
@@ -87,7 +84,8 @@ object ReactTableHelpers {
       .raw
 
   /**
-   * Create a column containing a button.
+   * Create a component containing a button which can be passed to the
+   * TableMaker componentColumn method.
    * The button is passed in to allow maximum flexibility, but the
    * onClick handler should not be specified for the button, since
    * it will be added here.
@@ -97,7 +95,7 @@ object ReactTableHelpers {
    * @param button The button to put in the cell.
    * @param onClick The onClick handler for the button.
    * @param disabled Whether the button should be disabled.
-   * @return An AgGridColumn Builder.
+   * @return The component.
    */
   def buttonViewColumn[A](
     button:   Button,
