@@ -78,8 +78,6 @@ body.light-theme {
 
   display: grid;
   min-height: 100vh;
-  // Required for iOS to work with 100vh
-  min-height: -webkit-fill-available;
   width: 100%;
   overflow: hidden;
   grid-template-columns: 1fr;
@@ -95,6 +93,14 @@ body.light-theme {
     grid-template-areas:
       "header header"
       "sidebar body";
+  }
+}
+
+/* Avoid Chrome to see Safari hack */
+@supports (-webkit-touch-callout: none) {
+  .main-grid {
+    /* The hack for Safari */
+    min-height: -webkit-fill-available;
   }
 }
 
