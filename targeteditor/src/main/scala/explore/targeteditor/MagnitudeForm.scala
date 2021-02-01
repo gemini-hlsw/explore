@@ -8,37 +8,32 @@ import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
+import explore.utils.ReactTableHelpers
 import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.model.{ Magnitude, Target }
-import lucuma.ui.forms.{ EnumViewSelect, FormInputEV }
+import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.{ ChangeAuditor, ValidFormatInput }
 import lucuma.ui.reusability._
-import lucuma.ui.utils._
 import monocle.macros.Lenses
 import monocle.std.option.some
-import react.common.ReactProps
-import react.semanticui.collections.table.{
-  Table,
-  TableBody,
-  TableCell,
-  TableCompact,
-  TableFooter,
-  TableHeaderCell,
-  TableRow
-}
+import react.common.{ Css, ReactProps }
+import react.semanticui.collections.table.{ TableFooter, TableHeaderCell, TableRow }
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+import reactST.reactTable.TableMaker
+import reactST.reactTable.mod._
 
 import scala.collection.immutable.HashSet
+
+import scalajs.js.JSConverters._
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -80,119 +75,114 @@ object MagnitudeForm {
               )
             )
 
-          React.Fragment(
-            <.div(<.label("Magnitudes")),
-            Segment(
-              Table(compact = TableCompact.Very)(
-                TableBody(
-                  props.magnitudes.get.toTagMod { magnitude =>
-                    // We are already focused in the magnitude we want
-                    val getMagnitude: List[Magnitude] => Magnitude = _ => magnitude
+          val deleteButton = Button(
+            size = Small,
+            compact = true,
+            clazz = ExploreStyles.DeleteButton
+          )(
+            Icons.Delete
+              .size(Small)
+              .fitted(true)
+              .clazz(ExploreStyles.TrashIcon)
+          )
 
-                    def modMagnitude(mod: Magnitude => Magnitude)
-                      : List[Magnitude] => List[Magnitude] =
-                      list => list.modFirstWhere(_.band === magnitude.band, mod).sortBy(_.band)
+          val deleteFn: View[Magnitude] => Callback =
+            mag => props.magnitudes.mod(_.filterNot(_.band === mag.get.band)).runAsyncCB
 
-                    val magnitudeView: View[Magnitude] =
-                      props.magnitudes
-                        .zoom[Magnitude](getMagnitude)(modMagnitude)
+          val excludeFn: View[Magnitude] => Set[MagnitudeBand] =
+            mag => HashSet.from(props.magnitudes.get.map(_.band)) - mag.get.band
 
-                    val magnitudeValueView: View[MagnitudeValue] =
-                      magnitudeView.zoom(Magnitude.value)
+          val footer = TableFooter(
+            TableRow(
+              TableHeaderCell()(^.colSpan := 4)(
+                <.span(^.display.flex, ^.justifyContent.flexEnd)(
+                  newBandView.whenDefined { view =>
+                    val addMagnitude =
+                      props.magnitudes.mod(list =>
+                        (list :+ Magnitude(MagnitudeValue(0), view.get, view.get.magnitudeSystem))
+                          .sortBy(_.band)
+                      )
 
-                    TableRow(
-                      TableCell(
-                        <.span(
-                          FormInputEV(
-                            id = NonEmptyString
-                              .from(magnitude.band.toString + "_VALUE")
-                              .getOrElse("NEW_MAGNITUDE_VALUE"),
-                            value = magnitudeValueView,
-                            validFormat = ValidFormatInput.fromFormat(MagnitudeValue.fromString,
-                                                                      "Invalid magnitude"
-                            ),
-                            changeAuditor = ChangeAuditor
-                              .fromFormat(MagnitudeValue.fromString)
-                              .decimal(3)
-                              .allowEmpty,
-                            disabled = props.disabled
-                          ).withMods(^.width := "80px")
-                        )
+                    React.Fragment(
+                      EnumViewSelect(
+                        id = "NEW_BAND",
+                        value = view,
+                        exclude = state.usedBands,
+                        clazz = ExploreStyles.FlatFormField,
+                        disabled = props.disabled
                       ),
-                      TableCell(
-                        <.span(
-                          EnumViewSelect(
-                            id = magnitude.band.toString + "_BAND",
-                            value = magnitudeView.zoom(Magnitude.band),
-                            exclude = state.usedBands - magnitude.band,
-                            disabled = props.disabled
-                          )
-                        )
-                      ),
-                      TableCell(
-                        <.span(
-                          EnumViewSelect(
-                            id = magnitude.band.toString + "_SYSTEM",
-                            value = magnitudeView.zoom(Magnitude.system),
-                            disabled = props.disabled
-                          )
-                        )
-                      ),
-                      TableCell(
-                        <.span(
-                          Button(
-                            size = Small,
-                            compact = true,
-                            clazz = ExploreStyles.DeleteButton,
-                            onClick = props.magnitudes
-                              .mod(_.filterNot(_.band === magnitude.band))
-                              .runAsyncCB,
-                            disabled = props.disabled
-                          )(
-                            Icons.Delete
-                              .size(Small)
-                              .fitted(true)
-                              .clazz(ExploreStyles.TrashIcon)
-                          )
-                        )
+                      Button(size = Mini,
+                             compact = true,
+                             onClick = addMagnitude.runAsyncCB,
+                             disabled = props.disabled
+                      )(^.marginLeft := "5px")(
+                        Icons.New.size(Small).fitted(true)
                       )
                     )
                   }
-                ),
-                TableFooter(
-                  TableRow(
-                    TableHeaderCell()(^.colSpan := 4)(
-                      <.span(^.display.flex, ^.justifyContent.flexEnd)(
-                        newBandView.whenDefined { view =>
-                          val addMagnitude =
-                            props.magnitudes.mod(list =>
-                              (list :+ Magnitude(MagnitudeValue(0),
-                                                 view.get,
-                                                 view.get.magnitudeSystem
-                              )).sortBy(_.band)
-                            )
-
-                          React.Fragment(
-                            EnumViewSelect(
-                              id = "NEW_BAND",
-                              value = view,
-                              exclude = state.usedBands,
-                              clazz = ExploreStyles.FlatFormField,
-                              disabled = props.disabled
-                            ),
-                            Button(size = Mini,
-                                   compact = true,
-                                   onClick = addMagnitude.runAsyncCB,
-                                   disabled = props.disabled
-                            )(^.marginLeft := "5px")(
-                              Icons.New.size(Small).fitted(true)
-                            )
-                          )
-                        }
-                      )
-                    )
-                  )
                 )
+              )
+            )
+          )
+
+          val tableMaker = TableMaker[View[Magnitude]].withSort
+          import tableMaker.syntax._
+
+          val columns = tableMaker.columnArray(
+            tableMaker
+              .componentColumn(
+                "value",
+                ReactTableHelpers
+                  .editableViewColumn(
+                    Magnitude.value,
+                    validFormat =
+                      ValidFormatInput.fromFormat(MagnitudeValue.fromString, "Invalid magnitude"),
+                    changeAuditor = ChangeAuditor
+                      .fromFormat(MagnitudeValue.fromString)
+                      .decimal(3)
+                      .allowEmpty,
+                    disabled = props.disabled,
+                    modifiers = List(^.width := "80px")
+                  )
+              ),
+            tableMaker
+              .componentColumn("band",
+                               ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
+                                 disabled = props.disabled,
+                                 excludeFn = Some(excludeFn)
+                               )
+              )
+              .setSortByFn(_.get.band),
+            tableMaker
+              .componentColumn("system",
+                               ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
+                                 disabled = props.disabled
+                               )
+              ),
+            tableMaker.componentColumn(
+              "action",
+              ReactTableHelpers.buttonViewColumn(button = deleteButton,
+                                                 onClick = deleteFn,
+                                                 disabled = props.disabled
+              )
+            )
+          )
+
+          val tableState = tableMaker.emptyState.setSortByVarargs(SortingRule("band"))
+          val options    = tableMaker.emptyOptions
+            .setRowIdFn(_.get.band.tag)
+            .setInitialStateFull(tableState)
+            .setColumns(columns)
+
+          React.Fragment(
+            <.div(<.label("Magnitudes")),
+            Segment(
+              tableMaker.makeTable(
+                options = options,
+                data = props.magnitudes.toListOfViews(_.band).toJSArray,
+                headerCellFn = None,
+                tableClass = Css("ui very compact table"),
+                footer = footer
               )
             )(^.display.`inline-block`)
           )
