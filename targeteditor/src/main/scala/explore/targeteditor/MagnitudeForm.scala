@@ -169,10 +169,9 @@ object MagnitudeForm {
           )
 
           val tableState = tableMaker.emptyState.setSortByVarargs(SortingRule("band"))
-          val options    = tableMaker.emptyOptions
-            .setRowIdFn(_.get.band.tag)
+          val options    = tableMaker
+            .options(rowIdFn = _.get.band.tag, columns = columns)
             .setInitialStateFull(tableState)
-            .setColumns(columns)
 
           React.Fragment(
             <.div(<.label("Magnitudes")),
