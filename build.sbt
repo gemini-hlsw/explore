@@ -118,9 +118,6 @@ lazy val common = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
-    npmDependencies in Compile ++= Seq(
-      "loglevel" -> "1.6.8"
-    ),
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
