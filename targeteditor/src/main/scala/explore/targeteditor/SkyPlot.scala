@@ -106,7 +106,7 @@ object SkyPlot {
           val millisSinceEpoch = instant.toEpochMilli.toDouble
 
           def point(value: Double): Chart.Data =
-            PointOptionsObject()
+            PointOptionsObject(js.undefined)
               .setX(millisSinceEpoch)
               .setY(value)
 
