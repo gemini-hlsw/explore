@@ -11,11 +11,17 @@ import clue.macros.GraphQL
 import clue.{ GraphQLClient, GraphQLOperation }
 import crystal.react.implicits._
 import explore.GraphQLSchemas.UserPreferencesDB
-import explore.GraphQLSchemas.UserPreferencesDB.Types._
 import explore.model.ResizableSection
+import explore.model.GridLayoutSection
+import explore.model.layout._
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.raw.JsNumber
 import lucuma.core.model.User
 import lucuma.core.util.Gid
+import clue.data.Input
+import react.common._
+import react.gridlayout.{ BreakpointName => _, _ }
+import scala.collection.immutable.SortedMap
 
 object UserPreferencesQueries {
 
@@ -60,6 +66,23 @@ object UserPreferencesQueries {
           }
         }
    """
+
+    def storeWidthPreference[F[_]: Effect](
+      userId:  Option[User.Id],
+      section: ResizableSection,
+      width:   Int
+    )(implicit
+      cl:      GraphQLClient[F, UserPreferencesDB]
+    ): Callback =
+      userId.map { i =>
+        UserWidthsCreation
+          .execute[F](
+            WidthUpsertInput(i, section, width)
+          )
+          .attempt
+          .runAsyncAndForgetCB
+      }.getOrEmpty
+
   }
 
   /**
@@ -100,19 +123,105 @@ object UserPreferencesQueries {
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
   }
 
-  def storeWidthPreference[F[_]: Effect](
-    userId:  Option[User.Id],
-    section: ResizableSection,
-    width:   Int
-  )(implicit
-    cl:      GraphQLClient[F, UserPreferencesDB]
-  ): Callback =
-    userId.map { i =>
-      UserWidthsCreation
-        .execute[F](
-          WidthUpsertInput(i, section, width)
-        )
-        .attempt
-        .runAsyncAndForgetCB
-    }.getOrEmpty
+  /**
+   * Read the grid layout for a given section
+   */
+  @GraphQL(debug = false)
+  object UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query layout_positions($criteria: grid_layout_positions_bool_exp!) {
+        grid_layout_positions(where: $criteria) {
+          breakpoint_name
+          height
+          width
+          x
+          y
+          tile
+        }
+      }"""
+
+    def positions2LayoutMap(
+      g: (BreakpointName, List[Data.GridLayoutPositions])
+    ): (react.gridlayout.BreakpointName, (JsNumber, JsNumber, Layout)) =
+      breakpointNameFromString(g._1) -> ((1,
+                                          1,
+                                          Layout(
+                                            g._2.map(p =>
+                                              LayoutItem(p.width, p.height, p.x, p.y, p.tile)
+                                            )
+                                          )
+                                         )
+      )
+
+    // Gets the layout of a section.
+    // This is coded to return a default in case
+    // there is no data or errors
+    def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
+      userId:       Option[User.Id],
+      area:         GridLayoutSection,
+      defaultValue: LayoutsMap
+    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]): F[LayoutsMap] =
+      (for {
+        uid <- OptionT.fromOption[F](userId)
+        c   <-
+          OptionT.pure(
+            GridLayoutPositionsBoolExp(user_id =
+              Input(StringComparisonExp(Input(Gid[User.Id].show(uid))))
+            )
+          )
+        w   <-
+          OptionT
+            .liftF[F, Map[BreakpointName, List[Data.GridLayoutPositions]]] {
+              query[F](c)
+                .map { r =>
+                  r.grid_layout_positions.groupBy(_.breakpoint_name)
+                }
+                .recover(_ => Map.empty)
+            }
+        r   <- OptionT.pure(w.map(positions2LayoutMap))
+      } yield SortedMap(r.toList: _*)).value.map(_.getOrElse(defaultValue))
+  }
+
+  @GraphQL(debug = true)
+  object UserGridLayoutUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation insert_layout_positions($objects: [grid_layout_positions_insert_input!]! = {}) {
+        insert_grid_layout_positions(objects: $objects, on_conflict: {
+          constraint: grid_layout_positions_pkey,
+          update_columns: [width, height, x, y]
+        }) {
+          affected_rows
+        }
+      }"""
+
+    def storeLayoutsPreference[F[_]: Effect](
+      userId:  Option[User.Id],
+      section: GridLayoutSection,
+      layouts: Layouts
+    )(implicit
+      cl:      GraphQLClient[F, UserPreferencesDB]
+    ): Callback =
+      userId.map { uid =>
+        UserGridLayoutUpsert
+          .execute[F](
+            layouts.layouts.flatMap { bl =>
+              bl.layout.l.map(i =>
+                GridLayoutPositionsInsertInput(
+                  user_id = Input(Gid[User.Id].show(uid)),
+                  section = Input(section.value),
+                  breakpoint_name = Input(bl.name.name),
+                  width = Input(i.w.toInt),
+                  height = Input(i.h.toInt),
+                  x = Input(i.x.toInt),
+                  y = Input(i.y.toInt),
+                  tile = Input(i.i.getOrElse(""))
+                )
+              )
+            }
+          )
+          .attempt
+          .runAsyncAndForgetCB
+      }.getOrEmpty
+
+  }
 }

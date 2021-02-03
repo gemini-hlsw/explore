@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.data.NonEmptyList
-import cats.kernel.Order
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -21,10 +20,12 @@ import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.{ AppTab, TileSizeState }
 import explore.model.layout._
+import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
 import explore.target.TargetQueries._
+import explore.targeteditor.TargetBody
 import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -46,9 +47,7 @@ import react.semanticui.sizes._
 import react.sizeme._
 
 import scala.annotation.unused
-import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import explore.targeteditor.TargetBody
 
 final case class ObsTabContents(
   userId:  ViewOpt[User.Id],
@@ -104,14 +103,13 @@ object ObsTabContents {
     )
   )
 
-  implicit val breakpointNameOrder: Order[BreakpointName] = Order.by(_.name)
-  implicit val breakpointNameOrdering                     = breakpointNameOrder.toOrdering
-
-  private val layouts: LayoutsMap =
-    SortedMap(
-      (BreakpointName.lg, (1200, 12, layoutLarge)),
-      (BreakpointName.md, (996, 10, layoutMedium)),
-      (BreakpointName.sm, (768, 8, layoutSmall))
+  private val defaultLayout: LayoutsMap =
+    defineStdLayouts(
+      Map(
+        (BreakpointName.lg, layoutLarge),
+        (BreakpointName.md, layoutMedium),
+        (BreakpointName.sm, layoutSmall)
+      )
     )
 
   @Lenses
@@ -119,7 +117,10 @@ object ObsTabContents {
     panels:  TwoPanelState,
     layouts: LayoutsMap,
     options: TargetVisualOptions
-  )
+  ) {
+    def updateLayouts(newLayouts: LayoutsMap): State =
+      copy(layouts = mergeMap(layouts, newLayouts))
+  }
 
   object State {
     val panelsWidth   = State.panels.composeLens(TwoPanelState.treeWidth)
@@ -140,6 +141,15 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
+    def readLayoutPreference: Callback =
+      $.props.flatMap { p =>
+        AppCtx.withCtx { implicit ctx =>
+          UserGridLayoutQuery
+            .queryWithDefault[IO](p.userId.get, GridLayoutSection.ObservationsLayout, defaultLayout)
+            .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
+        }
+      }
+
     def readWidthPreference: Callback =
       $.props.flatMap { p =>
         AppCtx.withCtx { implicit ctx =>
@@ -157,10 +167,12 @@ object ObsTabContents {
         val treeResize =
           (_: ReactEvent, d: ResizeCallbackData) =>
             $.setStateL(State.panelsWidth)(d.size.width) *>
-              storeWidthPreference[IO](props.userId.get,
-                                       ResizableSection.ObservationsTree,
-                                       d.size.width
-              ).debounce(1.second)
+              UserWidthsCreation
+                .storeWidthPreference[IO](props.userId.get,
+                                          ResizableSection.ObservationsTree,
+                                          d.size.width
+                )
+                .debounce(1.second)
 
         val treeWidth = state.panels.treeWidth.toDouble
 
@@ -178,6 +190,14 @@ object ObsTabContents {
             )
           )
 
+        def storeLayouts(layouts: Layouts): Callback =
+          UserGridLayoutUpsert
+            .storeLayoutsPreference[IO](props.userId.get,
+                                        GridLayoutSection.ObservationsLayout,
+                                        layouts
+            )
+            .debounce(1.second)
+
         ObsLiveQuery { observations =>
           @unused val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
             observations.get.find(_.id === obsId)
@@ -194,6 +214,7 @@ object ObsTabContents {
             )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
           )
 
+          // Use a fixed target id until observations have a real target
           val targetId = Target.Id(2L)
           React.Fragment(
             SizeMe() { s =>
@@ -209,7 +230,7 @@ object ObsTabContents {
                 containerPadding = (5, 0),
                 rowHeight = Constants.GridRowHeight,
                 draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-                // onLayoutChange = (a, b) => Callback.log(a.toString) *> Callback.log(b.toString),
+                onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
                 layouts = state.layouts
               )(
                 <.div(
@@ -247,10 +268,12 @@ object ObsTabContents {
                       NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
                     ) { targetOpt =>
                       <.div(
-                      targetOpt.get.whenDefined { _ =>
-                        val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                        TargetBody(targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
-                      }
+                        <.div(
+                          targetOpt.get.whenDefined { _ =>
+                            val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                            TargetBody(targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                          }
+                        ).when(false)
                       )
                     }
                   )
@@ -299,7 +322,10 @@ object ObsTabContents {
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
           case None    =>
-            State(TwoPanelState.initial(p.isObsSelected), layouts, TargetVisualOptions.Default)
+            State(TwoPanelState.initial(p.isObsSelected),
+                  defaultLayout,
+                  TargetVisualOptions.Default
+            )
           case Some(s) =>
             if (s.panels.elementSelected =!= p.isObsSelected)
               State.panelSelected.set(p.isObsSelected)(s)
@@ -307,7 +333,7 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
-      .componentDidMount(_.backend.readWidthPreference)
+      .componentDidMount($ => $.backend.readWidthPreference *> $.backend.readLayoutPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build
 

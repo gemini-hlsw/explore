@@ -69,8 +69,10 @@ object GraphQLSchemas {
   @GraphQLSchema(debug = false)
   object UserPreferencesDB {
     object Scalars {
-      type UserId        = User.Id
-      type ResizableArea = String
+      type UserId         = User.Id
+      type ResizableArea  = String
+      type BreakpointName = String
+      type GridLayoutArea = String
     }
 
     object Types {

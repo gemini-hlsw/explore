@@ -1,4 +1,19 @@
 
+scalar breakpoint_name
+
+# expression to compare columns of type breakpoint_name. All fields are combined with logical 'AND'.
+input breakpoint_name_comparison_exp {
+  _eq: breakpoint_name
+  _gt: breakpoint_name
+  _gte: breakpoint_name
+  _in: [breakpoint_name!]
+  _is_null: Boolean
+  _lt: breakpoint_name
+  _lte: breakpoint_name
+  _neq: breakpoint_name
+  _nin: [breakpoint_name!]
+}
+
 # columns and relationships of "explore_resizable_width"
 type explore_resizable_width {
   section: resizable_area!
@@ -72,9 +87,6 @@ input explore_resizable_width_bool_exp {
 enum explore_resizable_width_constraint {
   # unique or primary key constraint
   explore_resizable_width_pkey
-
-  # unique or primary key constraint
-  explore_resizable_width_user_id_section_key
 }
 
 # input type for incrementing integer column in table "explore_resizable_width"
@@ -144,6 +156,7 @@ input explore_resizable_width_order_by {
 
 # primary key columns input for table: "explore_resizable_width"
 input explore_resizable_width_pk_columns_input {
+  section: resizable_area!
   user_id: String!
 }
 
@@ -246,6 +259,392 @@ type explore_resizable_width_variance_fields {
 # order by variance() on columns of table "explore_resizable_width"
 input explore_resizable_width_variance_order_by {
   width: order_by
+}
+
+scalar grid_layout_area
+
+# expression to compare columns of type grid_layout_area. All fields are combined with logical 'AND'.
+input grid_layout_area_comparison_exp {
+  _eq: grid_layout_area
+  _gt: grid_layout_area
+  _gte: grid_layout_area
+  _in: [grid_layout_area!]
+  _is_null: Boolean
+  _lt: grid_layout_area
+  _lte: grid_layout_area
+  _neq: grid_layout_area
+  _nin: [grid_layout_area!]
+}
+
+# columns and relationships of "grid_layout_positions"
+type grid_layout_positions {
+  breakpoint_name: breakpoint_name!
+  height: Int!
+  section: grid_layout_area!
+  tile: String!
+  user_id: String!
+  width: Int!
+  x: Int!
+  y: Int!
+}
+
+# aggregated selection of "grid_layout_positions"
+type grid_layout_positions_aggregate {
+  aggregate: grid_layout_positions_aggregate_fields
+  nodes: [grid_layout_positions!]!
+}
+
+# aggregate fields of "grid_layout_positions"
+type grid_layout_positions_aggregate_fields {
+  avg: grid_layout_positions_avg_fields
+  count(columns: [grid_layout_positions_select_column!], distinct: Boolean): Int
+  max: grid_layout_positions_max_fields
+  min: grid_layout_positions_min_fields
+  stddev: grid_layout_positions_stddev_fields
+  stddev_pop: grid_layout_positions_stddev_pop_fields
+  stddev_samp: grid_layout_positions_stddev_samp_fields
+  sum: grid_layout_positions_sum_fields
+  var_pop: grid_layout_positions_var_pop_fields
+  var_samp: grid_layout_positions_var_samp_fields
+  variance: grid_layout_positions_variance_fields
+}
+
+# order by aggregate values of table "grid_layout_positions"
+input grid_layout_positions_aggregate_order_by {
+  avg: grid_layout_positions_avg_order_by
+  count: order_by
+  max: grid_layout_positions_max_order_by
+  min: grid_layout_positions_min_order_by
+  stddev: grid_layout_positions_stddev_order_by
+  stddev_pop: grid_layout_positions_stddev_pop_order_by
+  stddev_samp: grid_layout_positions_stddev_samp_order_by
+  sum: grid_layout_positions_sum_order_by
+  var_pop: grid_layout_positions_var_pop_order_by
+  var_samp: grid_layout_positions_var_samp_order_by
+  variance: grid_layout_positions_variance_order_by
+}
+
+# input type for inserting array relation for remote table "grid_layout_positions"
+input grid_layout_positions_arr_rel_insert_input {
+  data: [grid_layout_positions_insert_input!]!
+  on_conflict: grid_layout_positions_on_conflict
+}
+
+# aggregate avg on columns
+type grid_layout_positions_avg_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by avg() on columns of table "grid_layout_positions"
+input grid_layout_positions_avg_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# Boolean expression to filter rows from the table "grid_layout_positions". All fields are combined with a logical 'AND'.
+input grid_layout_positions_bool_exp {
+  _and: [grid_layout_positions_bool_exp]
+  _not: grid_layout_positions_bool_exp
+  _or: [grid_layout_positions_bool_exp]
+  breakpoint_name: breakpoint_name_comparison_exp
+  height: Int_comparison_exp
+  section: grid_layout_area_comparison_exp
+  tile: String_comparison_exp
+  user_id: String_comparison_exp
+  width: Int_comparison_exp
+  x: Int_comparison_exp
+  y: Int_comparison_exp
+}
+
+# unique or primary key constraints on table "grid_layout_positions"
+enum grid_layout_positions_constraint {
+  # unique or primary key constraint
+  grid_layout_positions_pkey
+}
+
+# input type for incrementing integer column in table "grid_layout_positions"
+input grid_layout_positions_inc_input {
+  height: Int
+  width: Int
+  x: Int
+  y: Int
+}
+
+# input type for inserting data into table "grid_layout_positions"
+input grid_layout_positions_insert_input {
+  breakpoint_name: breakpoint_name
+  height: Int
+  section: grid_layout_area
+  tile: String
+  user_id: String
+  width: Int
+  x: Int
+  y: Int
+}
+
+# aggregate max on columns
+type grid_layout_positions_max_fields {
+  height: Int
+  tile: String
+  user_id: String
+  width: Int
+  x: Int
+  y: Int
+}
+
+# order by max() on columns of table "grid_layout_positions"
+input grid_layout_positions_max_order_by {
+  height: order_by
+  tile: order_by
+  user_id: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate min on columns
+type grid_layout_positions_min_fields {
+  height: Int
+  tile: String
+  user_id: String
+  width: Int
+  x: Int
+  y: Int
+}
+
+# order by min() on columns of table "grid_layout_positions"
+input grid_layout_positions_min_order_by {
+  height: order_by
+  tile: order_by
+  user_id: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# response of any mutation on the table "grid_layout_positions"
+type grid_layout_positions_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [grid_layout_positions!]!
+}
+
+# input type for inserting object relation for remote table "grid_layout_positions"
+input grid_layout_positions_obj_rel_insert_input {
+  data: grid_layout_positions_insert_input!
+  on_conflict: grid_layout_positions_on_conflict
+}
+
+# on conflict condition type for table "grid_layout_positions"
+input grid_layout_positions_on_conflict {
+  constraint: grid_layout_positions_constraint!
+  update_columns: [grid_layout_positions_update_column!]!
+  where: grid_layout_positions_bool_exp
+}
+
+# ordering options when selecting data from "grid_layout_positions"
+input grid_layout_positions_order_by {
+  breakpoint_name: order_by
+  height: order_by
+  section: order_by
+  tile: order_by
+  user_id: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# primary key columns input for table: "grid_layout_positions"
+input grid_layout_positions_pk_columns_input {
+  breakpoint_name: breakpoint_name!
+  section: grid_layout_area!
+  tile: String!
+  user_id: String!
+}
+
+# select columns of table "grid_layout_positions"
+enum grid_layout_positions_select_column {
+  # column name
+  breakpoint_name
+
+  # column name
+  height
+
+  # column name
+  section
+
+  # column name
+  tile
+
+  # column name
+  user_id
+
+  # column name
+  width
+
+  # column name
+  x
+
+  # column name
+  y
+}
+
+# input type for updating data in table "grid_layout_positions"
+input grid_layout_positions_set_input {
+  breakpoint_name: breakpoint_name
+  height: Int
+  section: grid_layout_area
+  tile: String
+  user_id: String
+  width: Int
+  x: Int
+  y: Int
+}
+
+# aggregate stddev on columns
+type grid_layout_positions_stddev_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by stddev() on columns of table "grid_layout_positions"
+input grid_layout_positions_stddev_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate stddev_pop on columns
+type grid_layout_positions_stddev_pop_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by stddev_pop() on columns of table "grid_layout_positions"
+input grid_layout_positions_stddev_pop_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate stddev_samp on columns
+type grid_layout_positions_stddev_samp_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by stddev_samp() on columns of table "grid_layout_positions"
+input grid_layout_positions_stddev_samp_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate sum on columns
+type grid_layout_positions_sum_fields {
+  height: Int
+  width: Int
+  x: Int
+  y: Int
+}
+
+# order by sum() on columns of table "grid_layout_positions"
+input grid_layout_positions_sum_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# update columns of table "grid_layout_positions"
+enum grid_layout_positions_update_column {
+  # column name
+  breakpoint_name
+
+  # column name
+  height
+
+  # column name
+  section
+
+  # column name
+  tile
+
+  # column name
+  user_id
+
+  # column name
+  width
+
+  # column name
+  x
+
+  # column name
+  y
+}
+
+# aggregate var_pop on columns
+type grid_layout_positions_var_pop_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by var_pop() on columns of table "grid_layout_positions"
+input grid_layout_positions_var_pop_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate var_samp on columns
+type grid_layout_positions_var_samp_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by var_samp() on columns of table "grid_layout_positions"
+input grid_layout_positions_var_samp_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
+}
+
+# aggregate variance on columns
+type grid_layout_positions_variance_fields {
+  height: Float
+  width: Float
+  x: Float
+  y: Float
+}
+
+# order by variance() on columns of table "grid_layout_positions"
+input grid_layout_positions_variance_order_by {
+  height: order_by
+  width: order_by
+  x: order_by
+  y: order_by
 }
 
 # expression to compare columns of type Int. All fields are combined with logical 'AND'.
@@ -389,7 +788,16 @@ type Mutation {
   ): explore_resizable_width_mutation_response
 
   # delete single row from the table: "explore_resizable_width"
-  delete_explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+  delete_explore_resizable_width_by_pk(section: resizable_area!, user_id: String!): explore_resizable_width
+
+  # delete data from the table: "grid_layout_positions"
+  delete_grid_layout_positions(
+    # filter the rows which have to be deleted
+    where: grid_layout_positions_bool_exp!
+  ): grid_layout_positions_mutation_response
+
+  # delete single row from the table: "grid_layout_positions"
+  delete_grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
   # delete data from the table: "lucuma_user"
   delete_lucuma_user(
@@ -417,6 +825,24 @@ type Mutation {
     # on conflict condition
     on_conflict: explore_resizable_width_on_conflict
   ): explore_resizable_width
+
+  # insert data into the table: "grid_layout_positions"
+  insert_grid_layout_positions(
+    # the rows to be inserted
+    objects: [grid_layout_positions_insert_input!]!
+
+    # on conflict condition
+    on_conflict: grid_layout_positions_on_conflict
+  ): grid_layout_positions_mutation_response
+
+  # insert a single row into the table: "grid_layout_positions"
+  insert_grid_layout_positions_one(
+    # the row to be inserted
+    object: grid_layout_positions_insert_input!
+
+    # on conflict condition
+    on_conflict: grid_layout_positions_on_conflict
+  ): grid_layout_positions
 
   # insert data into the table: "lucuma_user"
   insert_lucuma_user(
@@ -457,6 +883,28 @@ type Mutation {
     _set: explore_resizable_width_set_input
     pk_columns: explore_resizable_width_pk_columns_input!
   ): explore_resizable_width
+
+  # update data of the table: "grid_layout_positions"
+  update_grid_layout_positions(
+    # increments the integer columns with given value of the filtered values
+    _inc: grid_layout_positions_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: grid_layout_positions_set_input
+
+    # filter the rows which have to be updated
+    where: grid_layout_positions_bool_exp!
+  ): grid_layout_positions_mutation_response
+
+  # update single row of the table: "grid_layout_positions"
+  update_grid_layout_positions_by_pk(
+    # increments the integer columns with given value of the filtered values
+    _inc: grid_layout_positions_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: grid_layout_positions_set_input
+    pk_columns: grid_layout_positions_pk_columns_input!
+  ): grid_layout_positions
 
   # update data of the table: "lucuma_user"
   update_lucuma_user(
@@ -535,7 +983,46 @@ type Query {
   ): explore_resizable_width_aggregate!
 
   # fetch data from the table: "explore_resizable_width" using primary key columns
-  explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+  explore_resizable_width_by_pk(section: resizable_area!, user_id: String!): explore_resizable_width
+
+  # fetch data from the table: "grid_layout_positions"
+  grid_layout_positions(
+    # distinct select on columns
+    distinct_on: [grid_layout_positions_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [grid_layout_positions_order_by!]
+
+    # filter the rows returned
+    where: grid_layout_positions_bool_exp
+  ): [grid_layout_positions!]!
+
+  # fetch aggregated fields from the table: "grid_layout_positions"
+  grid_layout_positions_aggregate(
+    # distinct select on columns
+    distinct_on: [grid_layout_positions_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [grid_layout_positions_order_by!]
+
+    # filter the rows returned
+    where: grid_layout_positions_bool_exp
+  ): grid_layout_positions_aggregate!
+
+  # fetch data from the table: "grid_layout_positions" using primary key columns
+  grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
   # fetch data from the table: "lucuma_user"
   lucuma_user(
@@ -650,7 +1137,46 @@ type Subscription {
   ): explore_resizable_width_aggregate!
 
   # fetch data from the table: "explore_resizable_width" using primary key columns
-  explore_resizable_width_by_pk(user_id: String!): explore_resizable_width
+  explore_resizable_width_by_pk(section: resizable_area!, user_id: String!): explore_resizable_width
+
+  # fetch data from the table: "grid_layout_positions"
+  grid_layout_positions(
+    # distinct select on columns
+    distinct_on: [grid_layout_positions_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [grid_layout_positions_order_by!]
+
+    # filter the rows returned
+    where: grid_layout_positions_bool_exp
+  ): [grid_layout_positions!]!
+
+  # fetch aggregated fields from the table: "grid_layout_positions"
+  grid_layout_positions_aggregate(
+    # distinct select on columns
+    distinct_on: [grid_layout_positions_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [grid_layout_positions_order_by!]
+
+    # filter the rows returned
+    where: grid_layout_positions_bool_exp
+  ): grid_layout_positions_aggregate!
+
+  # fetch data from the table: "grid_layout_positions" using primary key columns
+  grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
   # fetch data from the table: "lucuma_user"
   lucuma_user(

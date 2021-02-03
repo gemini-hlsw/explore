@@ -80,10 +80,12 @@ object TargetTabContents {
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
               $.setStateL(TwoPanelState.treeWidth)(d.size.width) *>
-                storeWidthPreference[IO](props.userId.get,
-                                         ResizableSection.TargetsTree,
-                                         d.size.width
-                ).debounce(1.second)
+                UserWidthsCreation
+                  .storeWidthPreference[IO](props.userId.get,
+                                            ResizableSection.TargetsTree,
+                                            d.size.width
+                  )
+                  .debounce(1.second)
 
           val treeWidth = state.treeWidth.toDouble
 
