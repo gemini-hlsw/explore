@@ -15,7 +15,6 @@ import explore.model.ResizableSection
 import explore.model.GridLayoutSection
 import explore.model.layout._
 import lucuma.core.model.User
-import lucuma.core.util.Gid
 import react.gridlayout.{ BreakpointName => _, _ }
 import scala.collection.immutable.SortedMap
 
@@ -109,9 +108,9 @@ object UserPreferencesQueries {
         w   <-
           OptionT
             .liftF[F, Option[Int]] {
-              query[F](Gid[User.Id].show(uid), area.value)
+              query[F](uid.show, area.value)
                 .map { r =>
-                  r.explore_resizable_width_by_pk.flatMap(_.width)
+                  r.explore_resizable_width_by_pk.map(_.width)
                 }
                 .recover(_ => none)
             }
@@ -137,16 +136,16 @@ object UserPreferencesQueries {
 
     def positions2LayoutMap(
       g: (BreakpointName, List[Data.GridLayoutPositions])
-    ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
-      breakpointNameFromString(g._1) -> ((1,
-                                          1,
-                                          Layout(
-                                            g._2.map(p =>
-                                              LayoutItem(p.width, p.height, p.x, p.y, p.tile)
-                                            )
-                                          )
-                                         )
+    ): (react.gridlayout.BreakpointName, (Int, Int, Layout)) = {
+      val bn = breakpointNameFromString(g._1)
+      bn -> ((breakpointWidth(bn),
+              breakpointCols(bn),
+              Layout(
+                g._2.map(p => LayoutItem(p.width, p.height, p.x, p.y, p.tile))
+              )
+             )
       )
+    }
 
     // Gets the layout of a section.
     // This is coded to return a default in case
@@ -162,17 +161,22 @@ object UserPreferencesQueries {
           OptionT.pure(
             GridLayoutPositionsBoolExp(user_id = StringComparisonExp(uid.show.assign).assign)
           )
-        w   <-
+        r   <-
           OptionT
-            .liftF[F, Map[BreakpointName, List[Data.GridLayoutPositions]]] {
-              query[F](c)
-                .map { r =>
-                  r.grid_layout_positions.groupBy(_.breakpoint_name)
-                }
-                .recover(_ => Map.empty)
+            .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
+              query[F](c).map { r =>
+                if (r.grid_layout_positions.isEmpty) defaultValue
+                else
+                  SortedMap(
+                    r.grid_layout_positions
+                      .groupBy(_.breakpoint_name)
+                      .map(positions2LayoutMap)
+                      .toList: _*
+                  )
+              }
             }
-        r   <- OptionT.pure(w.map(positions2LayoutMap))
-      } yield SortedMap(r.toList: _*)).value.map(_.getOrElse(defaultValue))
+            .handleErrorWith(_ => OptionT.none)
+      } yield r).getOrElse(defaultValue)
   }
 
   @GraphQL(debug = false)

@@ -18,7 +18,7 @@ input breakpoint_name_comparison_exp {
 type explore_resizable_width {
   section: resizable_area!
   user_id: String!
-  width: Int
+  width: Int!
 }
 
 # aggregated selection of "explore_resizable_width"
