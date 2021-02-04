@@ -164,19 +164,18 @@ object UserPreferencesQueries {
         r   <-
           OptionT
             .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
-              query[F](c)
-                .map { r =>
-                  if (r.grid_layout_positions.isEmpty) defaultValue
-                  else
-                    SortedMap(
-                      r.grid_layout_positions
-                        .groupBy(_.breakpoint_name)
-                        .map(positions2LayoutMap)
-                        .toList: _*
-                    )
-                }
+              query[F](c).map { r =>
+                if (r.grid_layout_positions.isEmpty) defaultValue
+                else
+                  SortedMap(
+                    r.grid_layout_positions
+                      .groupBy(_.breakpoint_name)
+                      .map(positions2LayoutMap)
+                      .toList: _*
+                  )
+              }
             }
-            .handleError(_ => defaultValue)
+            .handleErrorWith(_ => OptionT.none)
       } yield r).getOrElse(defaultValue)
   }
 
