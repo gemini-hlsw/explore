@@ -7,12 +7,14 @@ import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.enum.TileSizeState
+import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
+import react.sizeme._
 
 final case class TileButton(body: VdomNode)
 
@@ -33,50 +35,57 @@ object Tile {
 
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
+  val defaultBreakpoints                     =
+    List((384 -> TileSMW), (576 -> TileMDW), (768 -> TileLGW), (1024 -> TileXLW))
 
-  val component =
+  val component                              =
     ScalaComponent
       .builder[Props]
       .stateless
       .render_PC { (p, c) =>
-        val maximizeButton =
-          Button(
-            as = <.a,
-            basic = true,
-            compact = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-            onClick = p.sizeStateCallback(TileSizeState.Maximized)
-          )(Icons.Maximize.fitted(true))
-
-        val minimizeButton =
-          Button(
-            as = <.a,
-            basic = true,
-            compact = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-            onClick = p.sizeStateCallback(TileSizeState.Minimized)
-          )(Icons.Minimize.fitted(true))
-
-        <.div(
-          ExploreStyles.Tile,
-          <.div(
-            ExploreStyles.TileTitle,
-            p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
-            Menu(
-              attached = MenuAttached.Top,
+        SizeMe(monitorHeight = true) { s =>
+          val widthClass     =
+            defaultBreakpoints.findLast(_._1 < s.width.toInt).map(_._2).getOrElse(TileSMW)
+          val maximizeButton =
+            Button(
+              as = <.a,
+              basic = true,
               compact = true,
-              borderless = true,
-              secondary = true,
-              clazz = ExploreStyles.TileTitleMenu,
-              tabular = MenuTabular.Right
-            )(
-              MenuItem(as = <.a)(p.title)
+              clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+              onClick = p.sizeStateCallback(TileSizeState.Maximized)
+            )(Icons.Maximize.fitted(true))
+
+          val minimizeButton =
+            Button(
+              as = <.a,
+              basic = true,
+              compact = true,
+              clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+              onClick = p.sizeStateCallback(TileSizeState.Minimized)
+            )(Icons.Minimize.fitted(true))
+
+          <.div(
+            ExploreStyles.Tile,
+            <.div(
+              ExploreStyles.TileTitle,
+              p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
+              Menu(
+                attached = MenuAttached.Top,
+                compact = true,
+                borderless = true,
+                secondary = true,
+                clazz = ExploreStyles.TileTitleMenu,
+                tabular = MenuTabular.Right
+              )(
+                MenuItem(as = <.a)(p.title)
+              ),
+              minimizeButton.when(p.showMinimize),
+              maximizeButton.when(p.showMaximize)
             ),
-            minimizeButton.when(p.showMinimize),
-            maximizeButton.when(p.showMaximize)
-          ),
-          <.div(ExploreStyles.TileBody, c).when(p.state =!= TileSizeState.Minimized)
-        )
+            <.div(ExploreStyles.TileBody |+| widthClass, c)
+              .when(p.state =!= TileSizeState.Minimized)
+          )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
