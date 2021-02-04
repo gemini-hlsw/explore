@@ -172,6 +172,7 @@ object ObsTabContents {
                                           ResizableSection.ObservationsTree,
                                           d.size.width
                 )
+                .runAsyncAndForgetCB
                 .debounce(1.second)
 
         val treeWidth = state.panels.treeWidth.toDouble
@@ -196,6 +197,7 @@ object ObsTabContents {
                                         GridLayoutSection.ObservationsLayout,
                                         layouts
             )
+            .runAsyncAndForgetCB
             .debounce(1.second)
 
         ObsLiveQuery { observations =>
@@ -225,7 +227,7 @@ object ObsTabContents {
                   s.width.toDouble - treeWidth
                 }
               val rightSide = ResponsiveReactGridLayout(
-                width = coreWidth,
+                width = coreWidth.toInt,
                 margin = (5, 5),
                 containerPadding = (5, 0),
                 rowHeight = Constants.GridRowHeight,

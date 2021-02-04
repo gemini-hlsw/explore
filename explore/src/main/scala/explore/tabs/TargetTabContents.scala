@@ -85,6 +85,7 @@ object TargetTabContents {
                                             ResizableSection.TargetsTree,
                                             d.size.width
                   )
+                  .runAsyncAndForgetCB
                   .debounce(1.second)
 
           val treeWidth = state.treeWidth.toDouble

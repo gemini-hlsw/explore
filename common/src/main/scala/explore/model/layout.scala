@@ -7,7 +7,6 @@ import cats._
 import cats.syntax.all._
 import eu.timepit.refined.types.numeric.NonNegInt
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.raw.JsNumber
 import lucuma.ui.reusability._
 import monocle.function.Field3._
 import monocle.function.Index._
@@ -21,8 +20,8 @@ import scala.collection.immutable.SortedMap
  * Utilities related to react-grid-layout
  */
 object layout {
-  type LayoutEntry = (JsNumber, JsNumber, Layout)
-  type LayoutsMap  = SortedMap[BreakpointName, (JsNumber, JsNumber, Layout)]
+  type LayoutEntry = (Int, Int, Layout)
+  type LayoutsMap  = SortedMap[BreakpointName, (Int, Int, Layout)]
 
   val breakpoints: Map[BreakpointName, (Int, Int)] =
     Map(
@@ -33,7 +32,7 @@ object layout {
 
   def defineStdLayouts(l: Map[BreakpointName, Layout]): LayoutsMap =
     l.map { case (n, l) =>
-      (n, (breakpointWidth(n): JsNumber, breakpointCols(n): JsNumber, l))
+      (n, (breakpointWidth(n): Int, breakpointCols(n): Int, l))
     }.to(SortedMap)
 
   def breakpointNameFromString(s: String): BreakpointName =
@@ -73,7 +72,7 @@ object layout {
       a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
     }
 
-    implicit val layoutGroupSemigroup: Semigroup[(JsNumber, JsNumber, Layout)] =
+    implicit val layoutGroupSemigroup: Semigroup[(Int, Int, Layout)] =
       Semigroup.instance { case ((a, b, c), (_, _, d)) =>
         (a, b, c |+| d)
       }
