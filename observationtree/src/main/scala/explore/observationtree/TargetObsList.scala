@@ -11,6 +11,7 @@ import eu.timepit.refined.types.numeric.PosLong
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.{ UndoButtons, UndoRegion }
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.Focused._
 import explore.model.{ Constants, Focused, ObsSummary, TargetViewExpandedIds }
@@ -130,12 +131,20 @@ object TargetObsList {
                 case None        =>
                   Target.Id.parse(result.draggableId) match {
                     case Some(targetId) =>
+                      // Target dragged to asterism.
                       Asterism.Id.parse(destination.droppableId) match {
                         case Some(asterismId) =>
                           props.objectsWithObs.get.targets
                             .getElement(targetId)
                             .foldMap(target =>
-                              addTargetToAsterism(props.objectsWithObs, target, asterismId, setter)
+                              expandedIds
+                                .zoom(TargetViewExpandedIds.asterismIds)
+                                .mod(_ + asterismId) >>
+                                addTargetToAsterism(props.objectsWithObs,
+                                                    target,
+                                                    asterismId,
+                                                    setter
+                                )
                             )
                         case None             => IO.unit
                       }
@@ -215,6 +224,24 @@ object TargetObsList {
       $.props.flatMap { props =>
         targetMod(setter, props.objectsWithObs, props.focused, targetId, focusOnDelete)(
           targetListMod.delete
+        ).runAsyncCB
+      }
+
+    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs]): Callback =
+      $.props >>= { props =>
+        // Temporary measure until we have id pools.
+        val newAsterism =
+          AsterismIdName(Asterism.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
+                         KeyedIndexedList.empty,
+                         Constants.UnnamedAsterism
+          )
+
+        val upsert =
+          asterismListMod
+            .upsert(newAsterism, props.objectsWithObs.get.asterisms.length)
+
+        asterismMod(setter, props.objectsWithObs, props.focused, newAsterism.id, none)(
+          upsert
         ).runAsyncCB
       }
 
@@ -407,7 +434,12 @@ object TargetObsList {
               <.div(ExploreStyles.TreeToolbar)(
                 <.div(
                   Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
-                    Icons.New.size(Small).fitted(true)
+                    Icons.New.size(Small).fitted(true),
+                    " Target"
+                  ),
+                  Button(size = Mini, compact = true, onClick = newAsterism(undoCtx.setter))(
+                    Icons.New.size(Small).fitted(true),
+                    " Asterism"
                   )
                 ),
                 UndoButtons(props.objectsWithObs.get, undoCtx, size = Mini)
