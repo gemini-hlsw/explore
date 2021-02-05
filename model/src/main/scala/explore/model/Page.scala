@@ -7,6 +7,7 @@ import cats.Eq
 import cats.syntax.all._
 import lucuma.core.model.{ Observation, Target }
 import monocle.Iso
+import lucuma.core.model.Asterism
 
 sealed trait Page extends Product with Serializable
 
@@ -17,21 +18,23 @@ object Page {
   final case class ObsPage(obsId: Observation.Id) extends Page
   final case object TargetsBasePage      extends Page
   final case class TargetPage(targetId: Target.Id) extends Page
+  final case class TargetsAsterismPage(asterismId: Asterism.Id) extends Page
   final case class TargetsObsPage(obsId: Observation.Id) extends Page
   case object ConfigurationsPage         extends Page
   case object ConstraintsPage            extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
-    case (HomePage, HomePage)                         => true
-    case (ProposalPage, ProposalPage)                 => true
-    case (ObservationsBasePage, ObservationsBasePage) => true
-    case (ObsPage(a), ObsPage(b))                     => a === b
-    case (TargetsBasePage, TargetsBasePage)           => true
-    case (TargetPage(a), TargetPage(b))               => a === b
-    case (TargetsObsPage(a), TargetsObsPage(b))       => a === b
-    case (ConfigurationsPage, ConfigurationsPage)     => true
-    case (ConstraintsPage, ConstraintsPage)           => true
-    case _                                            => false
+    case (HomePage, HomePage)                             => true
+    case (ProposalPage, ProposalPage)                     => true
+    case (ObservationsBasePage, ObservationsBasePage)     => true
+    case (ObsPage(a), ObsPage(b))                         => a === b
+    case (TargetsBasePage, TargetsBasePage)               => true
+    case (TargetPage(a), TargetPage(b))                   => a === b
+    case (TargetsAsterismPage(a), TargetsAsterismPage(b)) => a === b
+    case (TargetsObsPage(a), TargetsObsPage(b))           => a === b
+    case (ConfigurationsPage, ConfigurationsPage)         => true
+    case (ConstraintsPage, ConstraintsPage)               => true
+    case _                                                => false
   }
 
   object ObsPage {
@@ -42,6 +45,11 @@ object Page {
   object TargetPage {
     final val targetId: Iso[Target.Id, TargetPage] =
       Iso[Target.Id, TargetPage](TargetPage.apply)(_.targetId)
+  }
+
+  object TargetsAsterismPage {
+    final val asterismId: Iso[Asterism.Id, TargetsAsterismPage] =
+      Iso[Asterism.Id, TargetsAsterismPage](TargetsAsterismPage.apply)(_.asterismId)
   }
 
   object TargetsObsPage {

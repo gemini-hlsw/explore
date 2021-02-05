@@ -3,8 +3,8 @@
 
 package explore.tabs
 
-import cats.effect.IO
 import cats.syntax.all._
+import cats.effect.IO
 import crystal.react.implicits._
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
@@ -23,7 +23,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ Target, User }
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -36,13 +36,12 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 import react.sizeme._
 
-import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class TargetTabContents(
-  userId:            ViewOpt[User.Id],
-  focused:           View[Option[Focused]],
-  expandedTargetIds: View[SortedSet[Target.Id]]
+  userId:                ViewOpt[User.Id],
+  focused:               View[Option[Focused]],
+  targetViewExpandedIds: View[TargetViewExpandedIds]
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
   def isTargetSelected: Boolean = focused.get.isDefined
 }
@@ -90,17 +89,18 @@ object TargetTabContents {
 
           val treeWidth = state.treeWidth.toDouble
 
-          def tree(targetsWithObs: View[TargetsWithObs]) =
+          // Tree area
+          def tree(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
             <.div(^.width := treeWidth.px,
                   ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
-            )(treeInner(targetsWithObs))
+            )(treeInner(objectsWithObs))
 
-          def treeInner(targetsWithObs: View[TargetsWithObs]) =
+          def treeInner(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
             <.div(ExploreStyles.TreeBody)(
               TargetObsList(
-                targetsWithObs,
+                objectsWithObs,
                 props.focused,
-                props.expandedTargetIds
+                props.targetViewExpandedIds
               )
             )
 
@@ -115,10 +115,11 @@ object TargetTabContents {
             )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
           )
 
-          TargetObsLiveQuery { targetsWithObs =>
+          TargetObsLiveQuery { objectsWithObs =>
             val targetIdOpt = props.focused.get.collect {
               case FocusedTarget(targetId) => targetId.some
-              case FocusedObs(obsId)       => targetsWithObs.get.obs.getElement(obsId).map(_.target.id)
+              case FocusedObs(obsId)       =>
+                objectsWithObs.get.obs.getElement(obsId).flatMap(_.attached.left.toOption)
             }.flatten
 
             React.Fragment(
@@ -141,7 +142,7 @@ object TargetTabContents {
                 if (window.innerWidth <= Constants.TwoPanelCutoff) {
                   <.div(
                     ExploreStyles.TreeRGL,
-                    <.div(ExploreStyles.Tree, treeInner(targetsWithObs))
+                    <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
                       .when(state.leftPanelVisible),
                     <.div(ExploreStyles.SinglePanelTile, rightSide).when(state.rightPanelVisible)
                   )
@@ -156,7 +157,7 @@ object TargetTabContents {
                       maxConstraints = (s.width.toInt / 2, 0),
                       onResize = treeResize,
                       resizeHandles = List(ResizeHandleAxis.East),
-                      content = tree(targetsWithObs),
+                      content = tree(objectsWithObs),
                       clazz = ExploreStyles.ResizableSeparator
                     ),
                     <.div(

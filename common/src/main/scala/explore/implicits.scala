@@ -55,7 +55,28 @@ trait ListImplicits {
   }
 }
 
-object implicits extends ShorthandTypes with ListImplicits {
+trait OpticsImplicits {
+  implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A]) {
+    def zoomGetAdjust[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
+      view.zoom(getAdjust.get)(getAdjust.mod)
+
+    // Helps type inference by sidestepping overloaded "zoom".
+    def zoomPrism[B](prism: monocle.Prism[A, B]): ViewOptF[F, B] =
+      view.zoom(prism)
+
+    // Helps type inference by sidestepping overloaded "zoom".
+    def zoomLens[B](lens: monocle.Lens[A, B]): ViewF[F, B] =
+      view.zoom(lens)
+  }
+
+  implicit class ViewOptOpticsOps[F[_], A](val viewOpt: ViewOptF[F, A]) {
+    // Helps type inference by sidestepping overloaded "zoom".
+    def zoomLens[B](lens: monocle.Lens[A, B]): ViewOptF[F, B] =
+      viewOpt.zoom(lens)
+  }
+}
+
+object implicits extends ShorthandTypes with ListImplicits with OpticsImplicits {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
   implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger

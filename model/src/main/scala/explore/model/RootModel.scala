@@ -3,30 +3,24 @@
 
 package explore.model
 
-// import java.time.Instant
-
-import cats.Order._
 import cats.kernel.Eq
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
-import lucuma.core.model.Target.Id._
-import lucuma.core.model.{ GuestUser, ServiceUser, StandardUser, Target, User }
+import lucuma.core.model.{ GuestUser, ServiceUser, StandardUser, User }
 import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option
 
-import scala.collection.immutable.SortedSet
-
 @Lenses
 case class RootModel(
-  vault:                Option[UserVault],
-  tabs:                 EnumZipper[AppTab],
-  focused:              Option[Focused] = none,
-  expandedTargetIds:    SortedSet[Target.Id] = SortedSet.empty,
-  userSelectionMessage: Option[NonEmptyString] = none
+  vault:                 Option[UserVault],
+  tabs:                  EnumZipper[AppTab],
+  focused:               Option[Focused] = none,
+  targetViewExpandedIds: TargetViewExpandedIds = TargetViewExpandedIds(),
+  userSelectionMessage:  Option[NonEmptyString] = none
 )
 
 object RootModel {
@@ -46,5 +40,5 @@ object RootModel {
       .composeLens(userUserId)
 
   implicit val eqRootModel: Eq[RootModel] =
-    Eq.by(m => (m.vault, m.tabs, m.focused, m.expandedTargetIds, m.userSelectionMessage))
+    Eq.by(m => (m.vault, m.tabs, m.focused, m.targetViewExpandedIds, m.userSelectionMessage))
 }
