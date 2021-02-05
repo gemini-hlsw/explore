@@ -15,8 +15,10 @@ import explore.model.ResizableSection
 import explore.model.GridLayoutSection
 import explore.model.layout._
 import lucuma.core.model.User
+import lucuma.core.model.Target
 import react.gridlayout.{ BreakpointName => _, _ }
 import scala.collection.immutable.SortedMap
+import lucuma.core.math.Angle
 
 object UserPreferencesQueries {
 
@@ -221,4 +223,69 @@ object UserPreferencesQueries {
       }.void
 
   }
+  @GraphQL(debug = false)
+  object UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query target_preferences($user_id: String! = "", $target_id: String! = "") {
+        lucuma_target_preferences_by_pk(target_id: $target_id, user_id: $user_id) {
+          fov
+        }
+      }
+    """
+
+    // Gets the layout of a section.
+    // This is coded to return a default in case
+    // there is no data or errors
+    def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
+      uid:         User.Id,
+      tid:         Target.Id,
+      defaultFov:  Angle
+    )(implicit cl: GraphQLClient[F, UserPreferencesDB]): F[Angle] =
+      (for {
+        r <-
+          query[F](uid.show, tid.show)
+            .map { r =>
+              r.lucuma_target_preferences_by_pk.map(_.fov)
+            }
+            .handleError(_ => none)
+      } yield r.map(Angle.fromMicroarcseconds)).map(_.getOrElse(defaultFov))
+  }
+
+  @GraphQL(debug = false)
+  object UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document =
+      """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {
+        insert_lucuma_target(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: target_id}) {
+          affected_rows
+        }
+      }"""
+
+    def updateFov[F[_]: Effect](
+      uid:      User.Id,
+      targetId: Target.Id,
+      fov:      Angle
+    )(implicit
+      cl:       GraphQLClient[F, UserPreferencesDB]
+    ): F[Unit] =
+      UserTargetPreferencesUpsert
+        .execute[F](
+          LucumaTargetInsertInput(
+            target_id = targetId.show.assign,
+            lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
+              data = List(
+                LucumaTargetPreferencesInsertInput(user_id = uid.show.assign,
+                                                   fov = fov.toMicroarcseconds.assign
+                )
+              ),
+              on_conflict = LucumaTargetPreferencesOnConflict(
+                constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+                update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov)
+              ).assign
+            ).assign
+          )
+        )
+        .attempt
+        .void
+  }
+
 }

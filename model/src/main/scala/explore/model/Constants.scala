@@ -5,6 +5,7 @@ package explore.model
 
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.math.Angle
 
 trait Constants {
   val UnnamedTarget: NonEmptyString   = "<UNNAMED>"
@@ -13,6 +14,7 @@ trait Constants {
   val InitialTreeWidth                = 300.0
   val MinLeftPanelWidth               = 270.0
   val GridRowHeight                   = 36
+  val InitialFov: Angle               = Angle.fromDoubleDegrees(0.25)
 }
 
 object Constants extends Constants

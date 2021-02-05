@@ -271,9 +271,13 @@ object ObsTabContents {
                     ) { targetOpt =>
                       <.div(
                         <.div(
-                          targetOpt.get.whenDefined { _ =>
+                          (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
                             val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                            TargetBody(targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                            TargetBody(uid,
+                                       targetId,
+                                       targetOpt.zoom(_.get)(f => _.map(f)),
+                                       stateView
+                            )
                           }
                         ).when(false)
                       )

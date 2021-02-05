@@ -10,6 +10,7 @@ import explore.model._
 import explore.{ AppMain, _ }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
+import lucuma.core.model.User
 
 import scala.scalajs.js.annotation._
 
@@ -17,13 +18,14 @@ import scala.scalajs.js.annotation._
 object Test extends AppMain {
 
   override protected def rootComponent(view: View[RootModel]): VdomElement = {
-    val id = Target.Id(2L)
+    val uid = User.Id(112L)
+    val id  = Target.Id(2L)
 
     IfLogged(view)((_, _) =>
       <.div(^.height := "100vh",
             ^.width := "100%",
             Tile("Target")(
-              TargetEditor(id)
+              TargetEditor(uid, id)
             )
       )
     )

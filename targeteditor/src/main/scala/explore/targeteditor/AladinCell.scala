@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.model.reusability._
 import explore.model.{ ModelOptics, TargetVisualOptions }
@@ -13,16 +14,24 @@ import explore.{ Icons, View }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import explore.implicits._
 import lucuma.core.math.{ Angle, Coordinates }
 import lucuma.ui.reusability._
+import lucuma.core.model.User
+import lucuma.core.model.Target
 import monocle.macros.Lenses
 import react.aladin.Fov
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.{ Popup, PopupPosition }
 import react.semanticui.sizes._
+import cats.effect.IO
+import explore.AppCtx
+import scala.concurrent.duration._
 
 final case class AladinCell(
+  uid:     User.Id,
+  tid:     Target.Id,
   target:  View[Coordinates],
   options: View[TargetVisualOptions]
 ) extends ReactProps[AladinCell](AladinCell.component) {
@@ -68,7 +77,13 @@ object AladinCell extends ModelOptics {
                 props.target,
                 props.options.get,
                 $.setStateL(State.current)(_),
-                $.setStateL(State.fov)(_)
+                fov =>
+                  AppCtx.withCtx { implicit ctx =>
+                    $.setStateL(State.fov)(fov) *> UserTargetPreferencesUpsert
+                      .updateFov[IO](props.uid, props.tid, fov.x)
+                      .runAsyncAndForgetCB
+                      .debounce(1.seconds)
+                  }
               )
             },
           AladinToolbar(state.fov, state.current),

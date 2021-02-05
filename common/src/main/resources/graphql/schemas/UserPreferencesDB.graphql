@@ -1,3 +1,17 @@
+scalar bigint
+
+# expression to compare columns of type bigint. All fields are combined with logical 'AND'.
+input bigint_comparison_exp {
+  _eq: bigint
+  _gt: bigint
+  _gte: bigint
+  _in: [bigint!]
+  _is_null: Boolean
+  _lt: bigint
+  _lte: bigint
+  _neq: bigint
+  _nin: [bigint!]
+}
 
 scalar breakpoint_name
 
@@ -660,6 +674,420 @@ input Int_comparison_exp {
   _nin: [Int!]
 }
 
+# columns and relationships of "lucuma_target"
+type lucuma_target {
+  # An array relationship
+  lucuma_target_preferences(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): [lucuma_target_preferences!]!
+
+  # An aggregated array relationship
+  lucuma_target_preferences_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): lucuma_target_preferences_aggregate!
+  target_id: String!
+}
+
+# aggregated selection of "lucuma_target"
+type lucuma_target_aggregate {
+  aggregate: lucuma_target_aggregate_fields
+  nodes: [lucuma_target!]!
+}
+
+# aggregate fields of "lucuma_target"
+type lucuma_target_aggregate_fields {
+  count(columns: [lucuma_target_select_column!], distinct: Boolean): Int
+  max: lucuma_target_max_fields
+  min: lucuma_target_min_fields
+}
+
+# order by aggregate values of table "lucuma_target"
+input lucuma_target_aggregate_order_by {
+  count: order_by
+  max: lucuma_target_max_order_by
+  min: lucuma_target_min_order_by
+}
+
+# input type for inserting array relation for remote table "lucuma_target"
+input lucuma_target_arr_rel_insert_input {
+  data: [lucuma_target_insert_input!]!
+  on_conflict: lucuma_target_on_conflict
+}
+
+# Boolean expression to filter rows from the table "lucuma_target". All fields are combined with a logical 'AND'.
+input lucuma_target_bool_exp {
+  _and: [lucuma_target_bool_exp]
+  _not: lucuma_target_bool_exp
+  _or: [lucuma_target_bool_exp]
+  lucuma_target_preferences: lucuma_target_preferences_bool_exp
+  target_id: String_comparison_exp
+}
+
+# unique or primary key constraints on table "lucuma_target"
+enum lucuma_target_constraint {
+  # unique or primary key constraint
+  lucuma_target_pkey
+}
+
+# input type for inserting data into table "lucuma_target"
+input lucuma_target_insert_input {
+  lucuma_target_preferences: lucuma_target_preferences_arr_rel_insert_input
+  target_id: String
+}
+
+# aggregate max on columns
+type lucuma_target_max_fields {
+  target_id: String
+}
+
+# order by max() on columns of table "lucuma_target"
+input lucuma_target_max_order_by {
+  target_id: order_by
+}
+
+# aggregate min on columns
+type lucuma_target_min_fields {
+  target_id: String
+}
+
+# order by min() on columns of table "lucuma_target"
+input lucuma_target_min_order_by {
+  target_id: order_by
+}
+
+# response of any mutation on the table "lucuma_target"
+type lucuma_target_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [lucuma_target!]!
+}
+
+# input type for inserting object relation for remote table "lucuma_target"
+input lucuma_target_obj_rel_insert_input {
+  data: lucuma_target_insert_input!
+  on_conflict: lucuma_target_on_conflict
+}
+
+# on conflict condition type for table "lucuma_target"
+input lucuma_target_on_conflict {
+  constraint: lucuma_target_constraint!
+  update_columns: [lucuma_target_update_column!]!
+  where: lucuma_target_bool_exp
+}
+
+# ordering options when selecting data from "lucuma_target"
+input lucuma_target_order_by {
+  lucuma_target_preferences_aggregate: lucuma_target_preferences_aggregate_order_by
+  target_id: order_by
+}
+
+# primary key columns input for table: "lucuma_target"
+input lucuma_target_pk_columns_input {
+  target_id: String!
+}
+
+# columns and relationships of "lucuma_target_preferences"
+type lucuma_target_preferences {
+  fov: bigint!
+
+  # An object relationship
+  lucuma_target: lucuma_target!
+  target_id: String!
+  user_id: String!
+}
+
+# aggregated selection of "lucuma_target_preferences"
+type lucuma_target_preferences_aggregate {
+  aggregate: lucuma_target_preferences_aggregate_fields
+  nodes: [lucuma_target_preferences!]!
+}
+
+# aggregate fields of "lucuma_target_preferences"
+type lucuma_target_preferences_aggregate_fields {
+  avg: lucuma_target_preferences_avg_fields
+  count(columns: [lucuma_target_preferences_select_column!], distinct: Boolean): Int
+  max: lucuma_target_preferences_max_fields
+  min: lucuma_target_preferences_min_fields
+  stddev: lucuma_target_preferences_stddev_fields
+  stddev_pop: lucuma_target_preferences_stddev_pop_fields
+  stddev_samp: lucuma_target_preferences_stddev_samp_fields
+  sum: lucuma_target_preferences_sum_fields
+  var_pop: lucuma_target_preferences_var_pop_fields
+  var_samp: lucuma_target_preferences_var_samp_fields
+  variance: lucuma_target_preferences_variance_fields
+}
+
+# order by aggregate values of table "lucuma_target_preferences"
+input lucuma_target_preferences_aggregate_order_by {
+  avg: lucuma_target_preferences_avg_order_by
+  count: order_by
+  max: lucuma_target_preferences_max_order_by
+  min: lucuma_target_preferences_min_order_by
+  stddev: lucuma_target_preferences_stddev_order_by
+  stddev_pop: lucuma_target_preferences_stddev_pop_order_by
+  stddev_samp: lucuma_target_preferences_stddev_samp_order_by
+  sum: lucuma_target_preferences_sum_order_by
+  var_pop: lucuma_target_preferences_var_pop_order_by
+  var_samp: lucuma_target_preferences_var_samp_order_by
+  variance: lucuma_target_preferences_variance_order_by
+}
+
+# input type for inserting array relation for remote table "lucuma_target_preferences"
+input lucuma_target_preferences_arr_rel_insert_input {
+  data: [lucuma_target_preferences_insert_input!]!
+  on_conflict: lucuma_target_preferences_on_conflict
+}
+
+# aggregate avg on columns
+type lucuma_target_preferences_avg_fields {
+  fov: Float
+}
+
+# order by avg() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_avg_order_by {
+  fov: order_by
+}
+
+# Boolean expression to filter rows from the table "lucuma_target_preferences". All fields are combined with a logical 'AND'.
+input lucuma_target_preferences_bool_exp {
+  _and: [lucuma_target_preferences_bool_exp]
+  _not: lucuma_target_preferences_bool_exp
+  _or: [lucuma_target_preferences_bool_exp]
+  fov: bigint_comparison_exp
+  lucuma_target: lucuma_target_bool_exp
+  target_id: String_comparison_exp
+  user_id: String_comparison_exp
+}
+
+# unique or primary key constraints on table "lucuma_target_preferences"
+enum lucuma_target_preferences_constraint {
+  # unique or primary key constraint
+  lucuma_target_preferences_pkey
+}
+
+# input type for incrementing integer column in table "lucuma_target_preferences"
+input lucuma_target_preferences_inc_input {
+  fov: bigint
+}
+
+# input type for inserting data into table "lucuma_target_preferences"
+input lucuma_target_preferences_insert_input {
+  fov: bigint
+  lucuma_target: lucuma_target_obj_rel_insert_input
+  target_id: String
+  user_id: String
+}
+
+# aggregate max on columns
+type lucuma_target_preferences_max_fields {
+  fov: bigint
+  target_id: String
+  user_id: String
+}
+
+# order by max() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_max_order_by {
+  fov: order_by
+  target_id: order_by
+  user_id: order_by
+}
+
+# aggregate min on columns
+type lucuma_target_preferences_min_fields {
+  fov: bigint
+  target_id: String
+  user_id: String
+}
+
+# order by min() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_min_order_by {
+  fov: order_by
+  target_id: order_by
+  user_id: order_by
+}
+
+# response of any mutation on the table "lucuma_target_preferences"
+type lucuma_target_preferences_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [lucuma_target_preferences!]!
+}
+
+# input type for inserting object relation for remote table "lucuma_target_preferences"
+input lucuma_target_preferences_obj_rel_insert_input {
+  data: lucuma_target_preferences_insert_input!
+  on_conflict: lucuma_target_preferences_on_conflict
+}
+
+# on conflict condition type for table "lucuma_target_preferences"
+input lucuma_target_preferences_on_conflict {
+  constraint: lucuma_target_preferences_constraint!
+  update_columns: [lucuma_target_preferences_update_column!]!
+  where: lucuma_target_preferences_bool_exp
+}
+
+# ordering options when selecting data from "lucuma_target_preferences"
+input lucuma_target_preferences_order_by {
+  fov: order_by
+  lucuma_target: lucuma_target_order_by
+  target_id: order_by
+  user_id: order_by
+}
+
+# primary key columns input for table: "lucuma_target_preferences"
+input lucuma_target_preferences_pk_columns_input {
+  target_id: String!
+  user_id: String!
+}
+
+# select columns of table "lucuma_target_preferences"
+enum lucuma_target_preferences_select_column {
+  # column name
+  fov
+
+  # column name
+  target_id
+
+  # column name
+  user_id
+}
+
+# input type for updating data in table "lucuma_target_preferences"
+input lucuma_target_preferences_set_input {
+  fov: bigint
+  target_id: String
+  user_id: String
+}
+
+# aggregate stddev on columns
+type lucuma_target_preferences_stddev_fields {
+  fov: Float
+}
+
+# order by stddev() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_stddev_order_by {
+  fov: order_by
+}
+
+# aggregate stddev_pop on columns
+type lucuma_target_preferences_stddev_pop_fields {
+  fov: Float
+}
+
+# order by stddev_pop() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_stddev_pop_order_by {
+  fov: order_by
+}
+
+# aggregate stddev_samp on columns
+type lucuma_target_preferences_stddev_samp_fields {
+  fov: Float
+}
+
+# order by stddev_samp() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_stddev_samp_order_by {
+  fov: order_by
+}
+
+# aggregate sum on columns
+type lucuma_target_preferences_sum_fields {
+  fov: bigint
+}
+
+# order by sum() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_sum_order_by {
+  fov: order_by
+}
+
+# update columns of table "lucuma_target_preferences"
+enum lucuma_target_preferences_update_column {
+  # column name
+  fov
+
+  # column name
+  target_id
+
+  # column name
+  user_id
+}
+
+# aggregate var_pop on columns
+type lucuma_target_preferences_var_pop_fields {
+  fov: Float
+}
+
+# order by var_pop() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_var_pop_order_by {
+  fov: order_by
+}
+
+# aggregate var_samp on columns
+type lucuma_target_preferences_var_samp_fields {
+  fov: Float
+}
+
+# order by var_samp() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_var_samp_order_by {
+  fov: order_by
+}
+
+# aggregate variance on columns
+type lucuma_target_preferences_variance_fields {
+  fov: Float
+}
+
+# order by variance() on columns of table "lucuma_target_preferences"
+input lucuma_target_preferences_variance_order_by {
+  fov: order_by
+}
+
+# select columns of table "lucuma_target"
+enum lucuma_target_select_column {
+  # column name
+  target_id
+}
+
+# input type for updating data in table "lucuma_target"
+input lucuma_target_set_input {
+  target_id: String
+}
+
+# update columns of table "lucuma_target"
+enum lucuma_target_update_column {
+  # column name
+  target_id
+}
+
 # columns and relationships of "lucuma_user"
 type lucuma_user {
   user_id: String!
@@ -799,6 +1227,24 @@ type Mutation {
   # delete single row from the table: "grid_layout_positions"
   delete_grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
 
+  # delete data from the table: "lucuma_target"
+  delete_lucuma_target(
+    # filter the rows which have to be deleted
+    where: lucuma_target_bool_exp!
+  ): lucuma_target_mutation_response
+
+  # delete single row from the table: "lucuma_target"
+  delete_lucuma_target_by_pk(target_id: String!): lucuma_target
+
+  # delete data from the table: "lucuma_target_preferences"
+  delete_lucuma_target_preferences(
+    # filter the rows which have to be deleted
+    where: lucuma_target_preferences_bool_exp!
+  ): lucuma_target_preferences_mutation_response
+
+  # delete single row from the table: "lucuma_target_preferences"
+  delete_lucuma_target_preferences_by_pk(target_id: String!, user_id: String!): lucuma_target_preferences
+
   # delete data from the table: "lucuma_user"
   delete_lucuma_user(
     # filter the rows which have to be deleted
@@ -843,6 +1289,42 @@ type Mutation {
     # on conflict condition
     on_conflict: grid_layout_positions_on_conflict
   ): grid_layout_positions
+
+  # insert data into the table: "lucuma_target"
+  insert_lucuma_target(
+    # the rows to be inserted
+    objects: [lucuma_target_insert_input!]!
+
+    # on conflict condition
+    on_conflict: lucuma_target_on_conflict
+  ): lucuma_target_mutation_response
+
+  # insert a single row into the table: "lucuma_target"
+  insert_lucuma_target_one(
+    # the row to be inserted
+    object: lucuma_target_insert_input!
+
+    # on conflict condition
+    on_conflict: lucuma_target_on_conflict
+  ): lucuma_target
+
+  # insert data into the table: "lucuma_target_preferences"
+  insert_lucuma_target_preferences(
+    # the rows to be inserted
+    objects: [lucuma_target_preferences_insert_input!]!
+
+    # on conflict condition
+    on_conflict: lucuma_target_preferences_on_conflict
+  ): lucuma_target_preferences_mutation_response
+
+  # insert a single row into the table: "lucuma_target_preferences"
+  insert_lucuma_target_preferences_one(
+    # the row to be inserted
+    object: lucuma_target_preferences_insert_input!
+
+    # on conflict condition
+    on_conflict: lucuma_target_preferences_on_conflict
+  ): lucuma_target_preferences
 
   # insert data into the table: "lucuma_user"
   insert_lucuma_user(
@@ -905,6 +1387,44 @@ type Mutation {
     _set: grid_layout_positions_set_input
     pk_columns: grid_layout_positions_pk_columns_input!
   ): grid_layout_positions
+
+  # update data of the table: "lucuma_target"
+  update_lucuma_target(
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_target_set_input
+
+    # filter the rows which have to be updated
+    where: lucuma_target_bool_exp!
+  ): lucuma_target_mutation_response
+
+  # update single row of the table: "lucuma_target"
+  update_lucuma_target_by_pk(
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_target_set_input
+    pk_columns: lucuma_target_pk_columns_input!
+  ): lucuma_target
+
+  # update data of the table: "lucuma_target_preferences"
+  update_lucuma_target_preferences(
+    # increments the integer columns with given value of the filtered values
+    _inc: lucuma_target_preferences_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_target_preferences_set_input
+
+    # filter the rows which have to be updated
+    where: lucuma_target_preferences_bool_exp!
+  ): lucuma_target_preferences_mutation_response
+
+  # update single row of the table: "lucuma_target_preferences"
+  update_lucuma_target_preferences_by_pk(
+    # increments the integer columns with given value of the filtered values
+    _inc: lucuma_target_preferences_inc_input
+
+    # sets the columns of the filtered rows to the given values
+    _set: lucuma_target_preferences_set_input
+    pk_columns: lucuma_target_preferences_pk_columns_input!
+  ): lucuma_target_preferences
 
   # update data of the table: "lucuma_user"
   update_lucuma_user(
@@ -1023,6 +1543,84 @@ type Query {
 
   # fetch data from the table: "grid_layout_positions" using primary key columns
   grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
+
+  # fetch data from the table: "lucuma_target"
+  lucuma_target(
+    # distinct select on columns
+    distinct_on: [lucuma_target_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_bool_exp
+  ): [lucuma_target!]!
+
+  # fetch aggregated fields from the table: "lucuma_target"
+  lucuma_target_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_target_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_bool_exp
+  ): lucuma_target_aggregate!
+
+  # fetch data from the table: "lucuma_target" using primary key columns
+  lucuma_target_by_pk(target_id: String!): lucuma_target
+
+  # fetch data from the table: "lucuma_target_preferences"
+  lucuma_target_preferences(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): [lucuma_target_preferences!]!
+
+  # fetch aggregated fields from the table: "lucuma_target_preferences"
+  lucuma_target_preferences_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): lucuma_target_preferences_aggregate!
+
+  # fetch data from the table: "lucuma_target_preferences" using primary key columns
+  lucuma_target_preferences_by_pk(target_id: String!, user_id: String!): lucuma_target_preferences
 
   # fetch data from the table: "lucuma_user"
   lucuma_user(
@@ -1177,6 +1775,84 @@ type Subscription {
 
   # fetch data from the table: "grid_layout_positions" using primary key columns
   grid_layout_positions_by_pk(breakpoint_name: breakpoint_name!, section: grid_layout_area!, tile: String!, user_id: String!): grid_layout_positions
+
+  # fetch data from the table: "lucuma_target"
+  lucuma_target(
+    # distinct select on columns
+    distinct_on: [lucuma_target_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_bool_exp
+  ): [lucuma_target!]!
+
+  # fetch aggregated fields from the table: "lucuma_target"
+  lucuma_target_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_target_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_bool_exp
+  ): lucuma_target_aggregate!
+
+  # fetch data from the table: "lucuma_target" using primary key columns
+  lucuma_target_by_pk(target_id: String!): lucuma_target
+
+  # fetch data from the table: "lucuma_target_preferences"
+  lucuma_target_preferences(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): [lucuma_target_preferences!]!
+
+  # fetch aggregated fields from the table: "lucuma_target_preferences"
+  lucuma_target_preferences_aggregate(
+    # distinct select on columns
+    distinct_on: [lucuma_target_preferences_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [lucuma_target_preferences_order_by!]
+
+    # filter the rows returned
+    where: lucuma_target_preferences_bool_exp
+  ): lucuma_target_preferences_aggregate!
+
+  # fetch data from the table: "lucuma_target_preferences" using primary key columns
+  lucuma_target_preferences_by_pk(target_id: String!, user_id: String!): lucuma_target_preferences
 
   # fetch data from the table: "lucuma_user"
   lucuma_user(
