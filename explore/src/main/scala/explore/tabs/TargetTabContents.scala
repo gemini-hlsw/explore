@@ -130,9 +130,9 @@ object TargetTabContents {
                 val rightSide =
                   Tile(s"Target", backButton.some)(
                     <.span(
-                      targetIdOpt.whenDefined(targetId =>
-                        TargetEditor(targetId).withKey(targetId.toString)
-                      )
+                      (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
+                        TargetEditor(uid, tid).withKey(tid.show)
+                      }
                     )
                   )
 

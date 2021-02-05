@@ -25,7 +25,7 @@ import explore.{ AppCtx, View }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-import lucuma.core.model.{ Magnitude, SiderealTracking, Target }
+import lucuma.core.model.{ Magnitude, SiderealTracking, Target, User }
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
 import lucuma.ui.optics.{ ChangeAuditor, TruncatedDec, TruncatedRA, ValidFormatInput }
@@ -46,6 +46,7 @@ final case class SearchCallback(
 }
 
 final case class TargetBody(
+  uid:     User.Id,
   id:      Target.Id,
   target:  View[TargetResult],
   options: View[TargetVisualOptions]
@@ -232,6 +233,8 @@ object TargetBody {
               ),
               <.div(
                 AladinCell(
+                  props.uid,
+                  props.target.get.id,
                   props.target.zoom(TargetQueries.baseCoordinates),
                   props.options
                 ),

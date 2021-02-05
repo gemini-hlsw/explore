@@ -242,12 +242,13 @@ object AladinContainer {
       <.div(
         ExploreStyles.AladinContainerBody,
         AladinComp.withRef(aladinRef) {
-          Aladin(showReticle = false,
-                 showLayersControl = false,
-                 target = props.aladinCoordsStr,
-                 fov = 0.25,
-                 showGotoControl = false,
-                 customize = includeSvg _
+          Aladin(
+            showReticle = false,
+            showLayersControl = false,
+            target = props.aladinCoordsStr,
+            fov = props.options.fovAngle.toDoubleDegrees,
+            showGotoControl = false,
+            customize = includeSvg _
           )
         }
       )

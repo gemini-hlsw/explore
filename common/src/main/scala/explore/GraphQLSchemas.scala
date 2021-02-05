@@ -73,6 +73,7 @@ object GraphQLSchemas {
       type ResizableArea  = String
       type BreakpointName = String
       type GridLayoutArea = String
+      type Bigint         = Long
     }
 
     object Types {

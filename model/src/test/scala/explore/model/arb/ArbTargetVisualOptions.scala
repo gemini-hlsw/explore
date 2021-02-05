@@ -17,12 +17,13 @@ trait ArbTargetVisualOptions {
 
   implicit val targetVisualOptionsArb = Arbitrary[TargetVisualOptions] {
     for {
-      f <- arbitrary[Display]
-      o <- arbitrary[Display]
-      g <- arbitrary[Display]
-      p <- arbitrary[Display]
-      a <- arbitrary[Angle]
-    } yield TargetVisualOptions(f, o, g, p, a)
+      f  <- arbitrary[Display]
+      fa <- arbitrary[Angle]
+      o  <- arbitrary[Display]
+      g  <- arbitrary[Display]
+      p  <- arbitrary[Display]
+      a  <- arbitrary[Angle]
+    } yield TargetVisualOptions(f, fa, o, g, p, a)
   }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =

@@ -9,6 +9,7 @@ import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
+import explore.common.UserPreferencesQueries._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.TargetVisualOptions
@@ -17,12 +18,15 @@ import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
+import explore.model.Constants
 
 final case class TargetEditor(
-  id: Target.Id
+  uid: User.Id,
+  tid: Target.Id
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -30,6 +34,10 @@ object TargetEditor {
 
   @Lenses
   final case class State(options: TargetVisualOptions)
+
+  object State {
+    val fovAngle = options.composeLens(TargetVisualOptions.fovAngle)
+  }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
@@ -41,14 +49,14 @@ object TargetEditor {
                            TargetEditQuery.Data,
                            Option[TargetEditQuery.Data.Target]
         ](
-          TargetEditQuery.query(props.id),
+          TargetEditQuery.query(props.tid),
           _.target,
-          NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.id))
+          NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
         ) { targetOpt =>
           <.div(
             targetOpt.get.whenDefined { _ =>
               val stateView = ViewF.fromState[IO]($).zoom(State.options)
-              TargetBody(props.id, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+              TargetBody(props.uid, props.tid, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
             }
           )
         }
@@ -60,6 +68,16 @@ object TargetEditor {
       .builder[Props]
       .initialState(State(TargetVisualOptions.Default))
       .renderBackend[Backend]
+      .componentDidMount { $ =>
+        val p = $.props
+        AppCtx
+          .withCtx { implicit ctx =>
+            UserTargetPreferencesQuery
+              .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
+              .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+              .runAsyncAndForgetCB
+          }
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 

@@ -12,6 +12,7 @@ import monocle.macros.Lenses
 @Lenses
 final case class TargetVisualOptions(
   fov:      Display,
+  fovAngle: Angle,
   offsets:  Display,
   guiding:  Display,
   probe:    Display,
@@ -20,8 +21,14 @@ final case class TargetVisualOptions(
 
 object TargetVisualOptions {
   val Default =
-    TargetVisualOptions(Display.Hidden, Display.Hidden, Display.Hidden, Display.Hidden, 145.deg)
+    TargetVisualOptions(Display.Hidden,
+                        Constants.InitialFov,
+                        Display.Hidden,
+                        Display.Hidden,
+                        Display.Hidden,
+                        145.deg
+    )
 
   implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] =
-    Eq.by(x => (x.fov, x.offsets, x.guiding, x.probe, x.posAngle))
+    Eq.by(x => (x.fov, x.fovAngle, x.offsets, x.guiding, x.probe, x.posAngle))
 }
