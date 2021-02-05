@@ -1,5 +1,5 @@
-# Collection of stars observed in a single observation
-type Asterism {
+# Common fields shared by all asterisms
+interface Asterism {
   # Asterism ID
   id: AsterismId!
 
@@ -47,22 +47,10 @@ type AsterismEdit implements Event {
 # AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
 scalar AsterismId
 
-# Asterism and the observations with which they are associated
-input AsterismObservationLinks {
-  asterismId: AsterismId!
-  observationIds: [ObservationId!]!
-}
-
 # Asterism and the programs with which they are associated
 input AsterismProgramLinks {
-  asterismId: AsterismId!
+  asterismIds: [AsterismId!]!
   programIds: [ProgramId!]!
-}
-
-# Asterism and the targets with which they are associated
-input AsterismTargetLinks {
-  asterismId: AsterismId!
-  targetIds: [TargetId!]!
 }
 
 # Bias calibration step
@@ -126,6 +114,9 @@ input CreateDefaultAsterismInput {
   name: String
   programIds: [ProgramId!]!
   explicitBase: CoordinatesInput
+
+  # Targets to include in default asterism
+  targetIds: [TargetId!]!
 }
 
 # Nonsidereal target parameters
@@ -144,7 +135,6 @@ input CreateObservationInput {
   programId: ProgramId!
   name: String
   asterismId: AsterismId
-  targetId: TargetId
   status: ObsStatus
 }
 
@@ -216,6 +206,42 @@ enum DeclinationUnits {
   DEGREES
 }
 
+# Default asterism
+type DefaultAsterism implements Asterism {
+  # Asterism ID
+  id: AsterismId!
+
+  # Whether the asterism is deleted or present
+  existence: Existence!
+
+  # Asterism name, if any.
+  name: String
+
+  # When set, overrides the default base position of the asterism
+  explicitBase: Coordinates
+
+  # All observations associated with the asterism.
+  observations(
+    # Program ID
+    programId: ProgramId
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): [Observation!]!
+
+  # All asterism targets
+  targets(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): [Target!]!
+
+  # The programs associated with the asterism.
+  programs(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): [Program!]!
+}
+
 # Target declination coordinate in format '[+/-]DD:MM:SS.sss'
 scalar DmsString
 
@@ -248,6 +274,9 @@ input EditDefaultAsterismInput {
 
   # The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
   explicitBase: CoordinatesInput
+
+  # Targets to include in the default asterism
+  targetIds: [TargetId!]
 }
 
 # Edit observation
@@ -265,9 +294,6 @@ input EditObservationInput {
 
   # The asterismId field may be unset by assigning a null value, or ignored by skipping it altogether
   asterismId: AsterismId
-
-  # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
-  targetId: TargetId
 }
 
 # Sidereal target edit parameters
@@ -1308,14 +1334,14 @@ enum MosPreImaging {
 }
 
 type Mutation {
-  createAsterism(
+  createDefaultAsterism(
     # Default Asterism description
     input: CreateDefaultAsterismInput!
-  ): Asterism
-  updateAsterism(
+  ): DefaultAsterism
+  updateDefaultAsterism(
     # Edit default asterism
     input: EditDefaultAsterismInput!
-  ): Asterism!
+  ): DefaultAsterism!
   deleteAsterism(
     # Asterism ID
     asterismId: AsterismId!
@@ -1360,54 +1386,30 @@ type Mutation {
     # Target ID
     targetId: TargetId!
   ): Target!
-  shareAsterismWithObservations(
-    # Asterism/observation links
-    input: AsterismObservationLinks!
-  ): Asterism!
-  unshareAsterismWithObservations(
-    # Asterism/observation links
-    input: AsterismObservationLinks!
-  ): Asterism!
-  shareAsterismWithPrograms(
+  shareAsterismsWithPrograms(
     # Asterism/program links
     input: AsterismProgramLinks!
-  ): Asterism!
-  unshareAsterismWithPrograms(
+  ): [Asterism!]!
+  unshareAsterismsWithPrograms(
     # Asterism/program links
     input: AsterismProgramLinks!
-  ): Asterism!
-  shareAsterismWithTargets(
-    # Asterism/target links
-    input: AsterismTargetLinks!
-  ): Asterism!
-  unshareAsterismWithTargets(
-    # Asterism/target links
-    input: AsterismTargetLinks!
-  ): Asterism!
-  shareTargetWithAsterisms(
-    # Target/observation links
-    input: TargetAsterismLinks!
-  ): Target!
-  unshareTargetWithAsterisms(
-    # Target/observation links
-    input: TargetAsterismLinks!
-  ): Target!
-  shareTargetWithObservations(
+  ): [Asterism!]!
+  shareTargetsWithObservations(
     # Target/observation links
     input: TargetObservationLinks!
-  ): Target!
-  unshareTargetWithObservations(
+  ): [Asterism!]!
+  unshareTargetsWithObservations(
     # Target/observation links
     input: TargetObservationLinks!
-  ): Target!
-  shareTargetWithPrograms(
+  ): [Asterism!]!
+  shareTargetsWithPrograms(
     # Target/program links
     input: TargetProgramLinks!
-  ): Target!
-  unshareTargetWithPrograms(
+  ): [Target!]!
+  unshareTargetsWithPrograms(
     # Target/program links
     input: TargetProgramLinks!
-  ): Target!
+  ): [Target!]!
 }
 
 type Nonsidereal {
@@ -1440,23 +1442,17 @@ type Observation {
     includeDeleted: Boolean! = false
   ): Program!
 
-  # The observation's asterism or target (see also `asterism` and `target` fields)
-  observationTarget(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): ObservationTarget
-
-  # The observation's asterism, if a multi-target observation
+  # The observation's asterism, if any
   asterism(
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): Asterism
 
-  # The observation's target, if a single-target observation
-  target(
+  # The observation's targets, if any
+  targets(
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
-  ): Target
+  ): [Target!]!
 
   # Instrument configuration
   config: Config
@@ -1474,9 +1470,6 @@ type ObservationEdit implements Event {
 
 # ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
 scalar ObservationId
-
-# Either asterism or target
-union ObservationTarget = Asterism | Target
 
 # Observation status options
 enum ObsStatus {
@@ -2028,12 +2021,6 @@ type Target {
   magnitudes: [Magnitude!]!
 }
 
-# Targets and the asterisms with which they are associated
-input TargetAsterismLinks {
-  targetId: TargetId!
-  asterismIds: [AsterismId!]!
-}
-
 # Event sent when a new object is created or updated
 type TargetEdit implements Event {
   # Type of edit
@@ -2049,13 +2036,13 @@ scalar TargetId
 
 # Targets and the observations with which they are associated
 input TargetObservationLinks {
-  targetId: TargetId!
+  targetIds: [TargetId!]!
   observationIds: [ObservationId!]!
 }
 
 # Targets and the programs with which they are associated
 input TargetProgramLinks {
-  targetId: TargetId!
+  targetIds: [TargetId!]!
   programIds: [ProgramId!]!
 }
 
