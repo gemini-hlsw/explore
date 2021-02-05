@@ -251,19 +251,6 @@ object TargetObsQueries {
     """
   }
 
-  // @GraphQL
-  // object UnshareTargetWithObs extends GraphQLOperation[ObservationDB] {
-  //   val document = """
-  //     mutation($targetId: TargetId!, $obsId: ObservationId!) {
-  //       unshareTargetWithObservations(
-  //         input: { targetId: $targetId, observationIds: [$obsId] }
-  //       ) {
-  //         id
-  //       }
-  //     }
-  //   """
-  // }
-
   @GraphQL
   object ShareTargetWithAsterisms extends GraphQLOperation[ObservationDB] {
     val document = """
@@ -288,11 +275,6 @@ object TargetObsQueries {
 
   def moveObs(obsId: Observation.Id, to: ObjectId): IO[Unit] =
     AppCtx.withCtx { implicit appCtx =>
-      // (fromTarget match {
-      //   case Left(targetId)           => UnshareTargetWithObs.execute(targetId, obsId)
-      //   case Right(_ /*asterismId*/ ) =>
-      //     IO.unit // UnshareAsterismWithObs.execute(asterismId, obsId)
-      // }) >>
       (to match {
         case Left(targetId)    => ShareTargetWithObs.execute(targetId, obsId)
         case Right(asterismId) => ShareAsterismWithObs.execute(asterismId, obsId)

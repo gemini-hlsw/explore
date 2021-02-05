@@ -137,22 +137,6 @@ object TargetObsList {
                             .foldMap(target =>
                               addTargetToAsterism(props.objectsWithObs, target, asterismId, setter)
                             )
-                        // protected def addTargetToAsterism(
-                        //   target:     TargetIdName,
-                        //   asterismId: Asterism.Id,
-                        //   setter:     Undoer.Setter[IO, TargetsAndAsterismsWithObs]
-
-                        // asterismMod(setter, props.objectsWithObs, asterismId)(
-                        //   asterismListMod
-                        //     .mod(
-                        //       AsterismIdName.targets.modify(targets =>
-                        //         if (!targets.exists(_.id === targetId))
-                        //           targets ++ props.objectsWithObs.get.targets.getElement(targetId)
-                        //         else
-                        //           targets
-                        //       )
-                        //     )
-                        // )
                         case None             => IO.unit
                       }
                     case None           => IO.unit
@@ -276,49 +260,6 @@ object TargetObsList {
         )
     }
 
-    // private def setAsterismWithIndex(
-    //   objectsWithObs:          View[TargetsAndAsterismsWithObs],
-    //   asterismId:              Asterism.Id,
-    //   asterismWithIndexSetter: Adjuster[AsterismList, asterismListMod.ElemWithIndex]
-    // ): asterismListMod.ElemWithIndex => IO[Unit] = { asterismWithIndex =>
-    //   val view = objectsWithObs
-    //     .zoom(TargetsAndAsterismsWithObs.asterisms)
-
-    //   val isNew = view.get.getElement(asterismId).isEmpty
-
-    //   // 1) Update internal model
-    //   view
-    //     .mod(asterismWithIndexSetter.set(asterismWithIndex)) >>
-    //     // 2) Send mutation & adjust focus
-    //     asterismWithIndex.fold(
-    //       IO(println(s"DELETE ASTERISM $asterismId"))
-    //     ) { case (asterism, _) =>
-    //       if (isNew)
-    //         IO(println(s"CREATE ASTERISM $asterism"))
-    //       else
-    //         IO(println(s"UPDATE ASTERISM $asterism")) >>
-    //           updateAsterism(asterism)
-    //     }
-    // }
-
-    // private def asterismMod(
-    //   setter:         Undoer.Setter[IO, TargetsAndAsterismsWithObs],
-    //   objectsWithObs: View[TargetsAndAsterismsWithObs],
-    //   asterismId:     Asterism.Id
-    // ): asterismListMod.Operation => IO[Unit] = {
-    //   val asterismWithId: GetAdjust[AsterismList, asterismListMod.ElemWithIndex] =
-    //     asterismListMod.withKey(asterismId)
-
-    //   setter
-    //     .mod[asterismListMod.ElemWithIndex](
-    //       objectsWithObs.get,
-    //       TargetsAndAsterismsWithObs.asterisms
-    //         .composeGetter(asterismWithId.getter)
-    //         .get,
-    //       setAsterismWithIndex(objectsWithObs, asterismId, asterismWithId.adjuster)
-    //     )
-    // }
-
     protected def addTargetToAsterism(
       objectsWithObs: View[TargetsAndAsterismsWithObs],
       target:         TargetIdName,
@@ -399,8 +340,6 @@ object TargetObsList {
       val targetIdxs = targets.zipWithIndex
 
       val asterisms = props.objectsWithObs.get.asterisms.toList
-      // val asterismIds  = asterisms.map(_.id)
-      // val asterimsIdxs = asterisms.zipWithIndex
 
       React.Fragment(
         UndoRegion[TargetsAndAsterismsWithObs] { undoCtx =>
