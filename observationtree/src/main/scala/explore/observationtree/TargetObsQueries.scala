@@ -226,6 +226,43 @@ object TargetObsQueries {
   }
 
   @GraphQL
+  object AddAsterism extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($asterismId: AsterismId!, $name: String!) {
+        createAsterism(input:{
+          asterismId: $asterismId,
+          name: $name,
+          programIds: ["p-2"]
+        }) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  object RemoveAsterism extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($asterismId: AsterismId!) {
+        deleteAsterism(asterismId: $asterismId) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  object UndeleteAsterism extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($asterismId: AsterismId!) {
+        undeleteAsterism(asterismId: $asterismId) {
+          id
+        }
+      }    
+    """
+  }
+
+  @GraphQL
   object ShareTargetWithObs extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($targetId: TargetId!, $obsId: ObservationId!) {
@@ -296,6 +333,19 @@ object TargetObsQueries {
 
   def removeTarget(id: Target.Id): IO[Unit] =
     AppCtx.flatMap(implicit ctx => RemoveTarget.execute(id).void)
+
+  def insertAsterism(asterism: AsterismIdName): IO[Unit] =
+    AppCtx.flatMap(implicit ctx =>
+      AddAsterism
+        .execute(asterism.id, asterism.name.value)
+        .void
+        .handleErrorWith { _ =>
+          UndeleteAsterism.execute(asterism.id).void
+        }
+    )
+
+  def removeAsterism(id: Asterism.Id): IO[Unit] =
+    AppCtx.flatMap(implicit ctx => RemoveAsterism.execute(id).void)
 
   def shareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id): IO[Unit] =
     AppCtx.flatMap(implicit ctx => ShareTargetWithAsterisms.execute(targetId, asterismId).void)

@@ -218,6 +218,63 @@ object TargetObsList {
         ).runAsyncCB
       }
 
+    protected def deleteAsterism(
+      asterismId:    Asterism.Id,
+      setter:        Undoer.Setter[IO, TargetsAndAsterismsWithObs],
+      focusOnDelete: Option[AsterismIdName]
+    ): Callback =
+      $.props.flatMap { props =>
+        asterismMod(setter, props.objectsWithObs, props.focused, asterismId, focusOnDelete)(
+          asterismListMod.delete
+        ).runAsyncCB
+      }
+
+    private def setAsterismWithIndex(
+      objectsWithObs:          View[TargetsAndAsterismsWithObs],
+      focused:                 View[Option[Focused]],
+      asterismId:              Asterism.Id,
+      asterismWithIndexSetter: Adjuster[AsterismList, asterismListMod.ElemWithIndex],
+      nextToFoucs:             Option[AsterismIdName]
+    ): asterismListMod.ElemWithIndex => IO[Unit] = { asterismWithIndex =>
+      val view = objectsWithObs
+        .zoom(TargetsAndAsterismsWithObs.asterisms)
+
+      // 1) Update internal model
+      view
+        .mod(asterismWithIndexSetter.set(asterismWithIndex)) >>
+        // 2) Send mutation & adjust focus
+        asterismWithIndex.fold(
+          focused.set(nextToFoucs.map(f => FocusedAsterism(f.id))) *> removeAsterism(asterismId)
+        ) { case (asterism, _) =>
+          insertAsterism(asterism) *> focused.set(FocusedAsterism(asterismId).some)
+        }
+    }
+
+    private def asterismMod(
+      setter:         Undoer.Setter[IO, TargetsAndAsterismsWithObs],
+      objectsWithObs: View[TargetsAndAsterismsWithObs],
+      focused:        View[Option[Focused]],
+      asterismId:     Asterism.Id,
+      focusOnDelete:  Option[AsterismIdName]
+    ): asterismListMod.Operation => IO[Unit] = {
+      val asterismWithId: GetAdjust[AsterismList, asterismListMod.ElemWithIndex] =
+        asterismListMod.withKey(asterismId)
+
+      setter
+        .mod[asterismListMod.ElemWithIndex](
+          objectsWithObs.get,
+          TargetsAndAsterismsWithObs.asterisms
+            .composeGetter(asterismWithId.getter)
+            .get,
+          setAsterismWithIndex(objectsWithObs,
+                               focused,
+                               asterismId,
+                               asterismWithId.adjuster,
+                               focusOnDelete
+          )
+        )
+    }
+
     private def setAsterismTargetWithIndex(
       objectsWithObs:        View[TargetsAndAsterismsWithObs],
       targetId:              Target.Id,
@@ -339,7 +396,9 @@ object TargetObsList {
       val targetIds  = targets.map(_.id)
       val targetIdxs = targets.zipWithIndex
 
-      val asterisms = props.objectsWithObs.get.asterisms.toList
+      val asterisms    = props.objectsWithObs.get.asterisms.toList
+      val asterismIds  = asterisms.map(_.id)
+      val asterismIdxs = asterisms.zipWithIndex
 
       React.Fragment(
         UndoRegion[TargetsAndAsterismsWithObs] { undoCtx =>
@@ -471,7 +530,11 @@ object TargetObsList {
               <.div(ExploreStyles.ObsTree)(
                 <.div(ExploreStyles.ObsScrollTree)(
                   asterisms.toTagMod { asterism =>
-                    val asterismId = asterism.id
+                    val asterismId    = asterism.id
+                    val currIdx       = asterismIds.indexOf(asterismId)
+                    val nextToSelect  = asterismIdxs.find(_._2 === currIdx + 1).map(_._1)
+                    val prevToSelect  = asterismIdxs.find(_._2 === currIdx - 1).map(_._1)
+                    val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
                     val asterismTargets = asterism.targets.toList
                     val asterismObs     = obsByObject.get(asterismId.asRight).orEmpty
@@ -529,10 +592,10 @@ object TargetObsList {
                             Button(
                               size = Small,
                               compact = true,
-                              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight
-                              // onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                              //   e.stopPropagationCB *>
-                              //     deleteTarget(targetId, undoCtx.setter, focusOnDelete)
+                              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                e.stopPropagationCB *>
+                                  deleteAsterism(asterismId, undoCtx.setter, focusOnDelete)
                             )(
                               Icons.Delete
                                 .size(Small)
