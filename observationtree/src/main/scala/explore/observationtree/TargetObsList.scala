@@ -414,7 +414,7 @@ object TargetObsList {
                                         clazz = ExploreStyles.ObsTreeGroup |+| Option
                                           .when(
                                             memberObsSelected || props.focused.get
-                                              .exists(_ === FocusedTarget(target.id))
+                                              .exists(_ === FocusedTarget(targetId))
                                           )(ExploreStyles.SelectedObsTreeGroup)
                                           .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
                                       )(
@@ -496,6 +496,9 @@ object TargetObsList {
                         Icons.ChevronRight
                       )
 
+                    val memberObsSelected = props.focused.get
+                      .exists(f => asterismObs.map(obs => FocusedObs(obs.id)).exists(f === _))
+
                     Droppable(asterismId.toString) { case (provided, snapshot) =>
                       <.div(
                         provided.innerRef,
@@ -504,13 +507,13 @@ object TargetObsList {
                       )(
                         Segment(
                           vertical = true,
-                          clazz = ExploreStyles.ObsTreeGroup |+| None
-                            // Option
-                            //   .when(
-                            //     memberObsSelected || props.focused.get
-                            //       .exists(_ === FocusedTarget(target.id))
-                            //   )(ExploreStyles.SelectedObsTreeGroup)
-                            .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
+                          clazz = ExploreStyles.ObsTreeGroup |+|
+                            Option
+                              .when(
+                                memberObsSelected || props.focused.get
+                                  .exists(_ === FocusedAsterism(asterismId))
+                              )(ExploreStyles.SelectedObsTreeGroup)
+                              .getOrElse(ExploreStyles.UnselectedObsTreeGroup)
                         )(
                           ^.cursor.pointer,
                           ^.onClick --> props.focused
@@ -591,22 +594,38 @@ object TargetObsList {
       .builder[Props]
       .renderBackend[Backend]
       .componentDidMount { $ =>
-        // Remove objects from expanded set which are no longer present.
+        val objectsWithObs      = $.props.objectsWithObs.get
         val expandedTargetIds   = $.props.expandedIds.zoom(TargetViewExpandedIds.targetIds)
         val expandedAsterismIds = $.props.expandedIds.zoom(TargetViewExpandedIds.asterismIds)
 
-        (expandedTargetIds.get -- $.props.objectsWithObs.get.targets.toList
-          .map(_.id)).toNes
-          .map(removedTargetIds =>
-            expandedTargetIds.mod(_ -- removedTargetIds.toSortedSet).runAsyncCB
-          )
-          .getOrEmpty >>
-          (expandedAsterismIds.get -- $.props.objectsWithObs.get.asterisms.toList
+        // Expand target or asterism with focused observation
+        val expandObservationObject =
+          $.props.focused.get
+            .collect { case FocusedObs(obsId) =>
+              objectsWithObs.obs
+                .getElement(obsId)
+                .map(_.attached match {
+                  case Right(asterismId) => expandedAsterismIds.mod(_ + asterismId)
+                  case Left(targetId)    => expandedTargetIds.mod(_ + targetId)
+                })
+            }
+            .flatten
+            .orEmpty
+
+        // Remove objects from expanded set which are no longer present.
+        val removeTargets =
+          (expandedTargetIds.get -- objectsWithObs.targets.toList
             .map(_.id)).toNes
-            .map(removedAsterismIds =>
-              expandedAsterismIds.mod(_ -- removedAsterismIds.toSortedSet).runAsyncCB
-            )
-            .getOrEmpty
+            .map(removedTargetIds => expandedTargetIds.mod(_ -- removedTargetIds.toSortedSet))
+            .orEmpty
+
+        val removeAsterisms =
+          (expandedAsterismIds.get -- objectsWithObs.asterisms.toList
+            .map(_.id)).toNes
+            .map(removedAsterismIds => expandedAsterismIds.mod(_ -- removedAsterismIds.toSortedSet))
+            .orEmpty
+
+        (expandObservationObject >> removeTargets >> removeAsterisms).runAsyncCB
       }
       .build
 }

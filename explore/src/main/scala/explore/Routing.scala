@@ -18,6 +18,7 @@ import lucuma.core.util.Gid
 
 import scala.scalajs.LinkingInfo
 import scala.util.Random
+import lucuma.core.model.Asterism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -53,6 +54,11 @@ object Routing {
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
           | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
+            targetTab
+          )
+          | dynamicRouteCT(
+            ("/asterism" / id[Asterism.Id]).xmapL(TargetsAsterismPage.asterismId)
+          ) ~> renderP(
             targetTab
           )
           | dynamicRouteCT(

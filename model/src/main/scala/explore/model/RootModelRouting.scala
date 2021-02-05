@@ -8,6 +8,7 @@ import explore.model.Focused.{ FocusedObs, FocusedTarget }
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens
+import explore.model.Focused.FocusedAsterism
 
 object RootModelRouting {
 
@@ -25,8 +26,9 @@ object RootModelRouting {
       case AppTab.Targets        =>
         focused
           .collect {
-            case FocusedObs(obsId)       => TargetsObsPage(obsId)
-            case FocusedTarget(targetId) => TargetPage(targetId)
+            case FocusedObs(obsId)           => TargetsObsPage(obsId)
+            case FocusedAsterism(asterismId) => TargetsAsterismPage(asterismId)
+            case FocusedTarget(targetId)     => TargetPage(targetId)
           }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
@@ -38,22 +40,24 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage          => setTab(AppTab.Proposal) >>> RootModel.focused.set(none)
-      case ObservationsBasePage  =>
+      case ProposalPage                    => setTab(AppTab.Proposal) >>> RootModel.focused.set(none)
+      case ObservationsBasePage            =>
         setTab(AppTab.Observations) >>> RootModel.focused.set(none)
-      case ObsPage(obsId)        =>
+      case ObsPage(obsId)                  =>
         setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
-      case TargetsBasePage       =>
+      case TargetsBasePage                 =>
         setTab(AppTab.Targets) >>> RootModel.focused.set(none)
-      case TargetPage(targetId)  =>
+      case TargetPage(targetId)            =>
         setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedTarget(targetId).some)
-      case TargetsObsPage(obsId) =>
+      case TargetsAsterismPage(asterismId) =>
+        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedAsterism(asterismId).some)
+      case TargetsObsPage(obsId)           =>
         setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedObs(obsId).some)
-      case ConstraintsPage       =>
+      case ConstraintsPage                 =>
         setTab(AppTab.Constraints)
-      case ConfigurationsPage    =>
+      case ConfigurationsPage              =>
         setTab(AppTab.Configurations)
-      case HomePage              =>
+      case HomePage                        =>
         setTab(AppTab.Overview)
     }
 
