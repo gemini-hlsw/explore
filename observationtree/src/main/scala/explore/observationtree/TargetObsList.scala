@@ -79,15 +79,11 @@ object TargetObsList {
         val observationsView = objectsWithObs
           .zoom(TargetsAndAsterismsWithObs.obs)
 
-        val oldTargetId = obsTargetAdjuster.get(observationsView.get)
-
         // 1) Update internal model
         observationsView.mod(obsTargetAdjuster.set(objectOpt)) >>
           // 2) Send mutation
-          oldTargetId
-            .flatMap(oldTargetId =>
-              objectOpt.map(newObjectId => moveObs(obsId, oldTargetId, newObjectId))
-            )
+          objectOpt
+            .map(newObjectId => moveObs(obsId, newObjectId))
             .orEmpty
       }
 
@@ -106,23 +102,30 @@ object TargetObsList {
             .map(destination =>
               (Observation.Id.parse(result.draggableId) match {
                 case Some(obsId) =>
-                  Target.Id.parse(destination.droppableId) match {
-                    case Some(newTargetId) =>
-                      // Observation dragged to a target.
-                      val obsWithId: GetAdjust[ObsList, obsListMod.ElemWithIndex] =
-                        obsListMod.withKey(obsId)
+                  // Observation dragged to a target or asterism.
+                  val obsWithId: GetAdjust[ObsList, obsListMod.ElemWithIndex] =
+                    obsListMod.withKey(obsId)
 
-                      val set: Option[ObjectId] => IO[Unit] =
-                        setter
-                          .set[Option[ObjectId]](
-                            props.objectsWithObs.get,
-                            getObjectForObsWithId(obsWithId.getter).get,
-                            setObjectForObsWithId(props.objectsWithObs, obsId, obsWithId)
-                          )
+                  val set: Option[ObjectId] => IO[Unit] =
+                    setter
+                      .set[Option[ObjectId]](
+                        props.objectsWithObs.get,
+                        getObjectForObsWithId(obsWithId.getter).get,
+                        setObjectForObsWithId(props.objectsWithObs, obsId, obsWithId)
+                      )
 
+                  Asterism.Id
+                    .parse(destination.droppableId)
+                    .toRight(Target.Id.parse(destination.droppableId)) match {
+                    // Drag to asterism.
+                    case Right(newAsterismId)    =>
+                      expandedIds.zoom(TargetViewExpandedIds.asterismIds).mod(_ + newAsterismId) >>
+                        set(newAsterismId.asRight.some)
+                    // Drag to target.
+                    case Left(Some(newTargetId)) =>
                       expandedIds.zoom(TargetViewExpandedIds.targetIds).mod(_ + newTargetId) >>
                         set(newTargetId.asLeft.some)
-                    case None              => IO.unit // TODO: To/From asterism
+                    case _                       => IO.unit // Report error?
                   }
                 case None        =>
                   Target.Id.parse(result.draggableId) match {

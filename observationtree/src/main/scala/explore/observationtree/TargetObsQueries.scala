@@ -229,8 +229,8 @@ object TargetObsQueries {
   object ShareTargetWithObs extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($targetId: TargetId!, $obsId: ObservationId!) {
-        shareTargetsWithObservations(
-          input: { targetIds: [$targetId], observationIds: [$obsId] }
+        shareTargetWithObservations(
+          input: { targetId: $targetId, observationIds: [$obsId] }
         ) {
           id
         }
@@ -239,23 +239,36 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object UnshareTargetWithObs extends GraphQLOperation[ObservationDB] {
+  object ShareAsterismWithObs extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($targetId: TargetId!, $obsId: ObservationId!) {
-        unshareTargetsWithObservations(
-          input: { targetIds: [$targetId], observationIds: [$obsId] }
+      mutation($asterismId: AsterismId!, $obsId: ObservationId!) {
+        shareAsterismWithObservations(
+          input: { asterismId: $asterismId, observationIds: [$obsId] }
         ) {
           id
         }
       }
     """
   }
+
+  // @GraphQL
+  // object UnshareTargetWithObs extends GraphQLOperation[ObservationDB] {
+  //   val document = """
+  //     mutation($targetId: TargetId!, $obsId: ObservationId!) {
+  //       unshareTargetWithObservations(
+  //         input: { targetId: $targetId, observationIds: [$obsId] }
+  //       ) {
+  //         id
+  //       }
+  //     }
+  //   """
+  // }
 
   @GraphQL
   object ShareTargetWithAsterisms extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: TargetAsterismLinks!) {
-        shareTargetWithAsterisms(input: $input) {
+      mutation($targetId: TargetId!, $asterismId: AsterismId!) {
+        shareTargetWithAsterisms(input: { targetId: $targetId, asterismIds: [$asterismId] }) {
           id
         }
       }    
@@ -265,26 +278,25 @@ object TargetObsQueries {
   @GraphQL
   object UnshareTargetWithAsterisms extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: TargetAsterismLinks!) {
-        unshareTargetWithAsterisms(input: $input) {
+      mutation($targetId: TargetId!, $asterismId: AsterismId!) {
+        unshareTargetWithAsterisms(input: { targetId: $targetId, asterismIds: [$asterismId] }) {
           id
         }
       }    
     """
   }
 
-  def moveObs(obsId: Observation.Id, fromTarget: ObjectId, toTarget: ObjectId): IO[Unit] =
+  def moveObs(obsId: Observation.Id, to: ObjectId): IO[Unit] =
     AppCtx.withCtx { implicit appCtx =>
-      (fromTarget match {
-        case Left(targetId)           => UnshareTargetWithObs.execute(targetId, obsId)
-        case Right(_ /*asterismId*/ ) =>
-          IO.unit // UnshareAsterismWithObs.execute(asterismId, obsId)
-      }) >>
-        (toTarget match {
-          case Left(targetId)           => ShareTargetWithObs.execute(targetId, obsId)
-          case Right(_ /*asterismId*/ ) =>
-            IO.unit // ShareAsterismWithObs.execute(asterismId, obsId)
-        }).void
+      // (fromTarget match {
+      //   case Left(targetId)           => UnshareTargetWithObs.execute(targetId, obsId)
+      //   case Right(_ /*asterismId*/ ) =>
+      //     IO.unit // UnshareAsterismWithObs.execute(asterismId, obsId)
+      // }) >>
+      (to match {
+        case Left(targetId)    => ShareTargetWithObs.execute(targetId, obsId)
+        case Right(asterismId) => ShareAsterismWithObs.execute(asterismId, obsId)
+      }).void
     }
 
   def updateObs(input: EditObservationInput): IO[Unit] =
@@ -304,22 +316,10 @@ object TargetObsQueries {
     AppCtx.flatMap(implicit ctx => RemoveTarget.execute(id).void)
 
   def shareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx =>
-      ShareTargetWithAsterisms
-        .execute(
-          TargetAsterismLinks(targetId = targetId, asterismIds = List(asterismId))
-        )
-        .void
-    )
+    AppCtx.flatMap(implicit ctx => ShareTargetWithAsterisms.execute(targetId, asterismId).void)
 
   def unshareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx =>
-      UnshareTargetWithAsterisms
-        .execute(
-          TargetAsterismLinks(targetId = targetId, asterismIds = List(asterismId))
-        )
-        .void
-    )
+    AppCtx.flatMap(implicit ctx => UnshareTargetWithAsterisms.execute(targetId, asterismId).void)
 
   implicit val targetIdNameReusability: Reusability[TargetIdName]                 =
     Reusability.by(x => (x.id, x.name))
