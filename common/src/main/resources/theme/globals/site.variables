@@ -69,3 +69,13 @@
 
 @disabledOpacity: var(--site-disabled-opacity);
 
+/*-------------------
+  Highlighted Text
+--------------------*/
+
+@highlightBackground      : var(--site-highlight-background);
+@highlightColor           : var(--site-text-color);
+
+@inputHighlightBackground : var(--site-input-highlight-background);
+@inputHighlightColor      : var(--site-text-color);
+
