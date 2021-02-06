@@ -34,6 +34,7 @@ import reactST.reactTable.mod._
 import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
+import react.semanticui.elements.segment.SegmentAttached
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -43,6 +44,31 @@ final case class MagnitudeForm(
 
 object MagnitudeForm {
   type Props = MagnitudeForm
+
+  sealed trait Column extends Product with Serializable {
+    def id: String
+    def label: String
+  }
+  object Column {
+    case object Value  extends Column {
+      val id    = "value"
+      val label = id
+    }
+    case object Band   extends Column {
+      val id    = "band"
+      val label = id
+    }
+    case object System extends Column {
+      val id    = "system"
+      val label = id
+    }
+    case object Delete extends Column {
+      val id    = "delete"
+      val label = ""
+    }
+
+    val all: Map[String, Column] = List(Value, Band, System, Delete).fproductLeft(_.id).toMap
+  }
 
   @Lenses
   protected case class State(usedBands: Set[MagnitudeBand], newBand: Option[MagnitudeBand])
@@ -95,7 +121,8 @@ object MagnitudeForm {
           val footer = TableFooter(
             TableRow(
               TableHeaderCell()(^.colSpan := 4)(
-                <.span(^.display.flex, ^.justifyContent.flexEnd)(
+                <.div(
+                  ExploreStyles.MagnitudesTableFooter,
                   newBandView.whenDefined { view =>
                     val addMagnitude =
                       props.magnitudes.mod(list =>
@@ -131,7 +158,7 @@ object MagnitudeForm {
           val columns = tableMaker.columnArray(
             tableMaker
               .componentColumn(
-                "value",
+                Column.Value.id,
                 ReactTableHelpers
                   .editableViewColumn(
                     Magnitude.value,
@@ -141,12 +168,11 @@ object MagnitudeForm {
                       .fromFormat(MagnitudeValue.fromString)
                       .decimal(3)
                       .allowEmpty,
-                    disabled = props.disabled,
-                    modifiers = List(^.width := "80px")
+                    disabled = props.disabled
                   )
               ),
             tableMaker
-              .componentColumn("band",
+              .componentColumn(Column.Band.id,
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
                                  disabled = props.disabled,
                                  excludeFn = Some(excludeFn)
@@ -154,16 +180,18 @@ object MagnitudeForm {
               )
               .setSortByFn(_.get.band),
             tableMaker
-              .componentColumn("system",
+              .componentColumn(Column.System.id,
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
                                  disabled = props.disabled
                                )
               ),
             tableMaker.componentColumn(
-              "action",
+              Column.Delete.id,
               ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                  onClick = deleteFn,
-                                                 disabled = props.disabled
+                                                 disabled = props.disabled,
+                                                 wrapperClass =
+                                                   ExploreStyles.MagnitudesTableDeletButtonWrapper
               )
             )
           )
@@ -174,16 +202,21 @@ object MagnitudeForm {
             .setInitialStateFull(tableState)
 
           React.Fragment(
-            <.div(<.label("Magnitudes")),
-            Segment(
-              tableMaker.makeTable(
-                options = options,
-                data = props.magnitudes.toListOfViews(_.band).toJSArray,
-                headerCellFn = None,
-                tableClass = Css("ui very compact table"),
-                footer = footer
+            <.div(
+              <.label("Magnitudes"),
+              Segment(attached = SegmentAttached.Attached,
+                      compact = true,
+                      clazz = ExploreStyles.MagnitudesTableContainer
+              )(
+                tableMaker.makeTable(
+                  options = options,
+                  data = props.magnitudes.toListOfViews(_.band).toJSArray,
+                  headerCellFn = Some(c => <.th(Column.all.get(c.id.toString).foldMap(_.label))),
+                  tableClass = Css("ui very celled selectable  striped compact table"),
+                  footer = footer
+                )
               )
-            )(^.display.`inline-block`)
+            )
           )
         }
       }
