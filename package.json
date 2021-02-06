@@ -11,6 +11,7 @@
     "scripts": {
         "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-dark.less > vars.css;npx stylelint common/src/main/resources/less; rm vars.css",
         "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-dark.less > vars.css;npx stylelint --fix common/src/main/resources/less; rm vars.css",
-        "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-light.less > vars.css;npx stylelint common/src/main/resources/less; rm vars.css"
+        "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-light.less > vars.css;npx stylelint common/src/main/resources/less; rm vars.css",
+        "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/resources/less/variables-light.less > vars.css;npx stylelint --fix common/src/main/resources/less; rm vars.css"
     }
 }
