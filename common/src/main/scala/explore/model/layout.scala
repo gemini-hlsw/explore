@@ -65,7 +65,15 @@ object layout {
 
   object unsafe {
     implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
-      Layout(a.l |+| b.l)
+      val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
+        b.l
+          .find(_.i.exists(_ === la.i.get))
+          .map { lb =>
+            la |+| lb
+          }
+          .getOrElse(la) :: l
+      }
+      Layout(result)
     }
 
     implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>

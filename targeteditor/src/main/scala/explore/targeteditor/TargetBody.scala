@@ -150,102 +150,99 @@ object TargetBody {
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
-              <.div(
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                // Keep the search field and the coords always together
                 SearchForm(
                   nameView,
                   stateView,
                   searchAndSet
                 ),
-                Form(as = <.div, size = Small)(
-                  ExploreStyles.Grid,
-                  ExploreStyles.Compact,
-                  <.div(
-                    ExploreStyles.FlexContainer,
-                    ExploreStyles.TargetRaDecMinWidth,
-                    FormInputEV(
-                      id = "ra",
-                      value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-                      validFormat = ValidFormatInput.truncatedRA,
-                      changeAuditor = ChangeAuditor.truncatedRA,
-                      label = "RA",
-                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                      errorPointing = LabelPointing.Below,
-                      errorClazz = ExploreStyles.InputErrorTooltip,
-                      disabled = stateView.get
-                    ),
-                    FormInputEV(
-                      id = "dec",
-                      value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-                      validFormat = ValidFormatInput.truncatedDec,
-                      changeAuditor = ChangeAuditor.truncatedDec,
-                      label = "Dec",
-                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                      errorPointing = LabelPointing.Below,
-                      errorClazz = ExploreStyles.InputErrorTooltip,
-                      disabled = stateView.get
-                    )
+                <.div(
+                  ExploreStyles.FlexContainer,
+                  ExploreStyles.TargetRaDecMinWidth,
+                  FormInputEV(
+                    id = "ra",
+                    value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                    validFormat = ValidFormatInput.truncatedRA,
+                    changeAuditor = ChangeAuditor.truncatedRA,
+                    label = "RA",
+                    clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                    errorPointing = LabelPointing.Below,
+                    errorClazz = ExploreStyles.InputErrorTooltip,
+                    disabled = stateView.get
                   ),
-                  <.div(
-                    ExploreStyles.Grid,
-                    ExploreStyles.Compact,
-                    ExploreStyles.TargetPropertiesForm,
-                    InputWithUnits(
-                      epochView,
-                      ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                      ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
-                      id = "epoch",
-                      label = "Epoch",
-                      units = "years",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits(
-                      properMotionRAView,
-                      ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
-                      id = "raPM",
-                      label = "µ RA",
-                      units = "mas/y",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits(
-                      properMotionDecView,
-                      ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
-                      id = "raDec",
-                      label = "µ Dec",
-                      units = "mas/y",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits[IO, Option[Parallax]](
-                      parallaxView,
-                      ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
-                      id = "parallax",
-                      label = "Parallax",
-                      units = "mas",
-                      disabled = stateView.get
-                    ),
-                    RVInput(radialVelocityView, stateView)
-                  ),
-                  MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
-                  UndoButtons(target, undoCtx, disabled = stateView.get)
+                  FormInputEV(
+                    id = "dec",
+                    value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                    validFormat = ValidFormatInput.truncatedDec,
+                    changeAuditor = ChangeAuditor.truncatedDec,
+                    label = "Dec",
+                    clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                    errorPointing = LabelPointing.Below,
+                    errorClazz = ExploreStyles.InputErrorTooltip,
+                    disabled = stateView.get
+                  )
                 )
               ),
-              <.div(
-                AladinCell(
-                  props.uid,
-                  props.target.get.id,
-                  props.target.zoom(TargetQueries.baseCoordinates),
-                  props.options
-                ),
-                CataloguesForm(props.options).when(false)
+              AladinCell(
+                props.uid,
+                props.target.get.id,
+                props.target.zoom(TargetQueries.baseCoordinates),
+                props.options
               ),
+              CataloguesForm(props.options).when(false),
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                ExploreStyles.TargetPropertiesForm,
+                InputWithUnits(
+                  epochView,
+                  ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
+                  ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                  id = "epoch",
+                  label = "Epoch",
+                  units = "years",
+                  disabled = stateView.get
+                ),
+                InputWithUnits(
+                  properMotionRAView,
+                  ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                  id = "raPM",
+                  label = "µ RA",
+                  units = "mas/y",
+                  disabled = stateView.get
+                ),
+                InputWithUnits(
+                  properMotionDecView,
+                  ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                  id = "raDec",
+                  label = "µ Dec",
+                  units = "mas/y",
+                  disabled = stateView.get
+                ),
+                InputWithUnits[IO, Option[Parallax]](
+                  parallaxView,
+                  ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                  id = "parallax",
+                  label = "Parallax",
+                  units = "mas",
+                  disabled = stateView.get
+                ),
+                RVInput(radialVelocityView, stateView)
+              ),
+              MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
+              UndoButtons(target, undoCtx, disabled = stateView.get),
               <.div(
                 ExploreStyles.TargetSkyplotCell,
                 WIP(
                   SkyPlotSection(props.baseCoordinates)
-                )
-              ).when(false)
+                ).when(false)
+              )
             )
           )
         }

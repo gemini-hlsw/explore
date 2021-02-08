@@ -25,12 +25,20 @@ object ObsQueries {
         observations(programId: "p-2") {
           id
           name
+          observationTarget {
+            ... on Asterism {
+              asterism_id: id
+            }
+            ... on Target {
+              target_id: id
+            }
+          }
         }
-      }    
+      }
     """
 
     object Data {
-      trait Observations extends ObsSummary
+      type Observations = ObsSummary
     }
   }
 
@@ -41,7 +49,7 @@ object ObsQueries {
         observationEdit(programId:"p-2") {
           id
         }
-      }   
+      }
     """
   }
 

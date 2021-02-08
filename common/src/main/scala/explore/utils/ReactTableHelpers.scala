@@ -75,6 +75,7 @@ object ReactTableHelpers {
         EnumViewSelect(id = newId,
                        value = va.zoom(lens),
                        exclude = excluded,
+                       compact = true,
                        disabled = disabled,
                        modifiers = modifiers
         )

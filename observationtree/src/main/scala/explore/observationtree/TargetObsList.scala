@@ -410,7 +410,10 @@ object TargetObsList {
 
       def renderObsBadge(obs: ObsAttached): TagMod =
         ObsBadge(
-          ObsSummary(obs.id, obs.name.orEmpty),
+          ObsSummary(id = obs.id,
+                     name = obs.name,
+                     observationTarget = None
+          ), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
           selected = props.focused.get.exists(_ === FocusedObs(obs.id))
         )

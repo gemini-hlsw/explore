@@ -23,6 +23,8 @@ import lucuma.core.math.{
 }
 import lucuma.core.model.{ Magnitude, SiderealTracking }
 import sttp.model.Uri
+import lucuma.core.model.Target
+import lucuma.core.model.Asterism
 
 object decoders {
   implicit val uriDecoder: Decoder[Uri] = Decoder.decodeString.emap(Uri.parse)
@@ -134,4 +136,8 @@ object decoders {
         s <- c.downField("system").as[MagnitudeSystem]
       } yield Magnitude(v, b, s)
   }
+
+  implicit val eitherDecoder: Decoder[Either[Asterism.Id, Target.Id]] =
+    Decoder.decodeEither("target_id", "asterism_id")
+
 }

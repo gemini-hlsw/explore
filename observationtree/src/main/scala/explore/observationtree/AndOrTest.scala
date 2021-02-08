@@ -87,8 +87,9 @@ object AndOrTest {
   def renderObs(obs: ExploreObservation, dragIcon: VdomNode): VdomNode =
     wrap(^.width := "200px", ^.margin := "5px")(
       ObsBadge(
-        ObsSummary(Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
-                   obs.target.name
+        ObsSummary(id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
+                   name = obs.target.name.value.some,
+                   observationTarget = None
         ),
         ObsBadge.Layout.NameAndConf
       ),

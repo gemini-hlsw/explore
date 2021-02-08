@@ -677,17 +677,31 @@ tfoot {
 .target-grid {
   display: grid;
   grid-gap: 1em;
-  padding: 1em;
-  grid-template-columns: 1fr 2fr;
-
-  @media (max-width: @target-grid-responsive-cutoff) {
-    grid-template-columns: 1fr;
-  }
+  padding: 0.5em;
 }
 
 .target-aladin-cell {
   height: 100;
   min-height: 300; // don't collapse in single column mode.
+}
+
+.tile-xl-width,
+.tile-lg-width,
+.tile-md-width,
+.tile-sm-width {
+  .target-grid {
+    grid-template-columns: repeat(auto-fit, minmax(40ch, 1fr));
+  }
+
+  @supports (grid-template-rows: masonry) {
+    .target-grid {
+      grid-template-rows: masonry;
+    }
+  }
+
+  .target-aladin-cell {
+    grid-row: span 2;
+  }
 }
 
 .target-skyplot-cell {
@@ -698,18 +712,9 @@ tfoot {
   }
 }
 
-.target-search-form,
-.target-properties-form {
-  margin-bottom: 1em;
-}
-
 .target-properties-form {
   grid-template-columns: [field] 6fr [units] auto;
   justify-items: stretch;
-
-  @media (max-width: @target-grid-responsive-cutoff) {
-    display: none;
-  }
 }
 
 .catalogue-form {
@@ -850,22 +855,34 @@ img.partner-split-flag {
 }
 
 // For very small tables hide the headers and add fake "header" to the left of the row
-.tile-xs-width .explore-magnitudes-container {
-  .ui.table,
-  thead,
-  tbody,
-  th,
-  td,
-  tr {
-    // SUI already has an !ímportant
-    display: block !important;
+.tile-xs-width {
+  .target-grid {
+    grid-template-columns: 1fr;
   }
 
-  // Hide table headers (but not display: none;, for accessibility)
-  thead tr {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
+  .explore-magnitudes-container {
+    .ui.table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      // SUI already has an !important
+      display: block !important;
+    }
+
+    // Hide table headers (but not display: none;, for accessibility)
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+  }
+}
+
+.tile-xs-height {
+  .explore-magnitudes-section {
+    display: none;
   }
 }
 

@@ -53,12 +53,10 @@ object TargetEditor {
           _.target,
           NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
         ) { targetOpt =>
-          <.div(
-            targetOpt.get.whenDefined { _ =>
-              val stateView = ViewF.fromState[IO]($).zoom(State.options)
-              TargetBody(props.uid, props.tid, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
-            }
-          )
+          targetOpt.get.map { _ =>
+            val stateView = ViewF.fromState[IO]($).zoom(State.options)
+            TargetBody(props.uid, props.tid, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+          }
         }
       }
   }

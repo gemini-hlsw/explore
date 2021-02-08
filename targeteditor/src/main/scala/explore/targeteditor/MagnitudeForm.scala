@@ -35,6 +35,7 @@ import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
 import react.semanticui.elements.segment.SegmentAttached
+import react.semanticui.collections.form.Form
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -179,8 +180,10 @@ object MagnitudeForm {
             .options(rowIdFn = _.get.band.tag, columns = columns)
             .setInitialStateFull(tableState)
 
-          React.Fragment(
+          // Put it inside a form to get the SUI styles right
+          Form(as = <.div, size = Small)(
             <.div(
+              ExploreStyles.MagnitudesTableSection,
               <.label("Magnitudes"),
               Segment(attached = SegmentAttached.Attached,
                       compact = true,
