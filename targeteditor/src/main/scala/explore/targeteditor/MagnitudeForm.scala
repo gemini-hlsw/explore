@@ -45,31 +45,6 @@ final case class MagnitudeForm(
 object MagnitudeForm {
   type Props = MagnitudeForm
 
-  sealed trait Column extends Product with Serializable {
-    def id: String
-    def label: String
-  }
-  object Column {
-    case object Value  extends Column {
-      val id    = "value"
-      val label = id
-    }
-    case object Band   extends Column {
-      val id    = "band"
-      val label = id
-    }
-    case object System extends Column {
-      val id    = "system"
-      val label = id
-    }
-    case object Delete extends Column {
-      val id    = "delete"
-      val label = ""
-    }
-
-    val all: Map[String, Column] = List(Value, Band, System, Delete).fproductLeft(_.id).toMap
-  }
-
   @Lenses
   protected case class State(usedBands: Set[MagnitudeBand], newBand: Option[MagnitudeBand])
 
@@ -158,7 +133,7 @@ object MagnitudeForm {
           val columns = tableMaker.columnArray(
             tableMaker
               .componentColumn(
-                Column.Value.id,
+                "value",
                 ReactTableHelpers
                   .editableViewColumn(
                     Magnitude.value,
@@ -170,23 +145,26 @@ object MagnitudeForm {
                       .allowEmpty,
                     disabled = props.disabled
                   )
-              ),
+              )
+              .setHeader("Value"),
             tableMaker
-              .componentColumn(Column.Band.id,
+              .componentColumn("band",
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
                                  disabled = props.disabled,
                                  excludeFn = Some(excludeFn)
                                )
               )
-              .setSortByFn(_.get.band),
+              .setSortByFn(_.get.band)
+              .setHeader("Band"),
             tableMaker
-              .componentColumn(Column.System.id,
+              .componentColumn("system",
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
                                  disabled = props.disabled
                                )
-              ),
+              )
+              .setHeader("System"),
             tableMaker.componentColumn(
-              Column.Delete.id,
+              "delete",
               ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                  onClick = deleteFn,
                                                  disabled = props.disabled,
@@ -211,7 +189,10 @@ object MagnitudeForm {
                 tableMaker.makeTable(
                   options = options,
                   data = props.magnitudes.toListOfViews(_.band).toJSArray,
-                  headerCellFn = Some(c => <.th(Column.all.get(c.id.toString).foldMap(_.label))),
+                  headerCellFn = Some(c =>
+                    TableMaker
+                      .basicHeaderCellFn(Css.Empty)(c)
+                  ),
                   tableClass = Css("ui very celled selectable  striped compact table"),
                   footer = footer
                 )
