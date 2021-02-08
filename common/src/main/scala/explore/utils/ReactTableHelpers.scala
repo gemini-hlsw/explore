@@ -14,6 +14,7 @@ import lucuma.ui.forms._
 import lucuma.ui.optics._
 import monocle.Lens
 import react.semanticui.elements.button.Button
+import react.common.style.Css
 import reactST.reactTable.mod._
 
 import scalajs.js
@@ -98,14 +99,18 @@ object ReactTableHelpers {
    * @return The component.
    */
   def buttonViewColumn[A](
-    button:   Button,
-    onClick:  View[A] => Callback,
-    disabled: Boolean = false
+    button:       Button,
+    onClick:      View[A] => Callback,
+    wrapperClass: Css = Css.Empty,
+    disabled:     Boolean = false
   ) =
     ScalaComponent
       .builder[View[A]]
       .render_P { rowData =>
-        button.addModifiers(Seq(^.onClick ==> (_ => onClick(rowData)), ^.disabled := disabled))
+        <.div(
+          wrapperClass,
+          button.addModifiers(Seq(^.onClick ==> (_ => onClick(rowData)), ^.disabled := disabled))
+        )
       }
       .build
       .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)

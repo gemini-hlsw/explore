@@ -1,3 +1,11 @@
 @placeholderColor: @gray-lighter;
-@focusColor: black;
+@selectable focusColor: black;
+
+// Use a reduced padding
+@tightInputVerticalPadding: (@tightVerticalPadding + ((1em - @inputLineHeight) / 2));
+@padding: @tightInputVerticalPadding @tightHorizontalPadding;
+
+@inputBackground: var(--form-input-background);
+@inputFocusBorderColor: var(--form-input-focus-border-color);
+@inputFocusBoxShadow: var(--form-input-focus-box-shadow);
 

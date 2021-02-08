@@ -34,6 +34,7 @@ import reactST.reactTable.mod._
 import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
+import react.semanticui.elements.segment.SegmentAttached
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -95,7 +96,8 @@ object MagnitudeForm {
           val footer = TableFooter(
             TableRow(
               TableHeaderCell()(^.colSpan := 4)(
-                <.span(^.display.flex, ^.justifyContent.flexEnd)(
+                <.div(
+                  ExploreStyles.MagnitudesTableFooter,
                   newBandView.whenDefined { view =>
                     val addMagnitude =
                       props.magnitudes.mod(list =>
@@ -141,10 +143,10 @@ object MagnitudeForm {
                       .fromFormat(MagnitudeValue.fromString)
                       .decimal(3)
                       .allowEmpty,
-                    disabled = props.disabled,
-                    modifiers = List(^.width := "80px")
+                    disabled = props.disabled
                   )
-              ),
+              )
+              .setHeader("Value"),
             tableMaker
               .componentColumn("band",
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
@@ -152,18 +154,22 @@ object MagnitudeForm {
                                  excludeFn = Some(excludeFn)
                                )
               )
-              .setSortByFn(_.get.band),
+              .setSortByFn(_.get.band)
+              .setHeader("Band"),
             tableMaker
               .componentColumn("system",
                                ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
                                  disabled = props.disabled
                                )
-              ),
+              )
+              .setHeader("System"),
             tableMaker.componentColumn(
-              "action",
+              "delete",
               ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                  onClick = deleteFn,
-                                                 disabled = props.disabled
+                                                 disabled = props.disabled,
+                                                 wrapperClass =
+                                                   ExploreStyles.MagnitudesTableDeletButtonWrapper
               )
             )
           )
@@ -174,16 +180,24 @@ object MagnitudeForm {
             .setInitialStateFull(tableState)
 
           React.Fragment(
-            <.div(<.label("Magnitudes")),
-            Segment(
-              tableMaker.makeTable(
-                options = options,
-                data = props.magnitudes.toListOfViews(_.band).toJSArray,
-                headerCellFn = None,
-                tableClass = Css("ui very compact table"),
-                footer = footer
+            <.div(
+              <.label("Magnitudes"),
+              Segment(attached = SegmentAttached.Attached,
+                      compact = true,
+                      clazz = ExploreStyles.MagnitudesTableContainer
+              )(
+                tableMaker.makeTable(
+                  options = options,
+                  data = props.magnitudes.toListOfViews(_.band).toJSArray,
+                  headerCellFn = Some(c =>
+                    TableMaker
+                      .basicHeaderCellFn(Css.Empty)(c)
+                  ),
+                  tableClass = Css("ui very celled selectable  striped compact table"),
+                  footer = footer
+                )
               )
-            )(^.display.`inline-block`)
+            )
           )
         }
       }

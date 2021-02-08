@@ -70,6 +70,10 @@ body.light-theme {
   color: var(--explore-accent-color);
 }
 
+tfoot {
+  background-color: var(--table-footer-background);
+}
+
 //----------
 // Main grid
 //----------
@@ -843,6 +847,26 @@ img.partner-split-flag {
   font-size: larger;
 }
 
+// For very small tables hide the headers and add fake "header" to the left of the row
+.tile-xs-width .explore-magnitudes-container {
+  .ui.table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    // SUI already has an !ímportant
+    display: block !important;
+  }
+
+  // Hide table headers (but not display: none;, for accessibility)
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+}
+
 .ui.table.partner-splits-editor-table {
   th:last-child,
   td:last-child,
@@ -1028,4 +1052,75 @@ html {
 
 .observer-notes {
   padding: 1em;
+}
+
+.ui.segment.explore-magnitudes-container {
+  padding: 0;
+  display: inline-block;
+}
+
+// https://css-tricks.com/responsive-data-tables/
+.tile-xs-width .explore-magnitudes-container .ui.ui.ui.ui.table:not(.unstackable) {
+  tfoot {
+    display: block;
+  }
+
+  td {
+    /* Behave  like a "row" */
+    position: relative;
+    padding-left: 40%;
+    padding-right: 0.5em;
+  }
+
+  td::before {
+    /* Now like a table header */
+    position: absolute;
+
+    /* Top/left values mimic padding */
+    top: 6px;
+    left: 6px;
+    width: 45%;
+    padding-left: 0.25em;
+    white-space: nowrap;
+  }
+
+  td:first-child::before {
+    font-weight: normal;
+  }
+
+  // It is a bit unfortunate that we have to hardcode the column names here
+  td:nth-of-type(1)::before {
+    content: "Value";
+  }
+
+  td:nth-of-type(2)::before {
+    content: "Band";
+  }
+
+  td:nth-of-type(3)::before {
+    content: "System";
+  }
+
+  td:nth-of-type(4)::before {
+    content: "";
+  }
+
+  // Align the trash button
+  td:last-child button {
+    margin-left: auto;
+  }
+}
+
+.explore-magnitudes-delete-button-wrapper {
+  display: flex;
+  justify-content: center;
+
+  .ui.button.delete-button {
+    margin-right: 0.2em;
+  }
+}
+
+.explore-magnitudes-footer {
+  display: flex;
+  justify-content: flex-end;
 }

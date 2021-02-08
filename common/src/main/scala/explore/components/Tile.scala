@@ -15,6 +15,7 @@ import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 import react.sizeme._
+import explore.model.Constants
 
 final case class TileButton(body: VdomNode)
 
@@ -36,9 +37,13 @@ object Tile {
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
   val defaultBreakpoints                     =
-    List((384 -> TileSMW), (576 -> TileMDW), (768 -> TileLGW), (1024 -> TileXLW))
+    List((300                            -> TileXSW),
+         (Constants.TwoPanelCutoff.toInt -> TileSMW),
+         (768                            -> TileMDW),
+         (1024                           -> TileLGW)
+    )
 
-  val component                              =
+  val component =
     ScalaComponent
       .builder[Props]
       .stateless

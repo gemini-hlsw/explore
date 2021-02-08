@@ -18,6 +18,7 @@ object ExploreStyles {
   val TileButton: Css      = Css("explore-tile-button")
   val TileStateButton: Css = Css("explore-tile-state-button")
 
+  val TileXSW: Css = Css("tile-xs-width")
   val TileSMW: Css = Css("tile-sm-width")
   val TileMDW: Css = Css("tile-md-width")
   val TileLGW: Css = Css("tile-lg-width")
@@ -182,4 +183,8 @@ object ExploreStyles {
   // Version with copy icon
   val Version: Css         = Css("version")
   val VersionUncopied: Css = Css("uncopied")
+
+  val MagnitudesTableContainer: Css          = Css("explore-magnitudes-container")
+  val MagnitudesTableFooter: Css             = Css("explore-magnitudes-footer")
+  val MagnitudesTableDeletButtonWrapper: Css = Css("explore-magnitudes-delete-button-wrapper")
 }

@@ -8,3 +8,18 @@
 @border: darken(@gray-darker, 5%);
 @definitionPageBackground: transparent;
 @activeBackgroundColor: @gray;
+
+@smallPadding: 0.25em;
+@headerVerticalPadding: @smallPadding;
+@headerHorizontalPadding: @smallPadding;
+@footerVerticalPadding: @smallPadding;
+@footerHorizontalPadding: @smallPadding;
+@responsiveRowVerticalPadding: @smallPadding;
+@responsiveRowHorizontalPadding: @smallPadding;
+@headerTextTransform: capitalize;
+@headerFontWeight: normal;
+@compactHorizontalPadding: @smallPadding;
+
+@selectableBackground: var(--table-selectable-background);
+@selectableTextColor: var(--table-selectable-color);
+
