@@ -46,7 +46,6 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 import react.sizeme._
 
-import scala.annotation.unused
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
@@ -141,26 +140,24 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def readLayoutPreference: Callback =
-      $.props.flatMap { p =>
-        AppCtx.withCtx { implicit ctx =>
+    def readLayoutPreference(userId: Option[User.Id]): Callback =
+      AppCtx
+        .flatMap { implicit ctx =>
           UserGridLayoutQuery
-            .queryWithDefault[IO](p.userId.get, GridLayoutSection.ObservationsLayout, defaultLayout)
-            .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
+            .queryWithDefault[IO](userId, GridLayoutSection.ObservationsLayout, defaultLayout)
         }
-      }
+        .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
 
-    def readWidthPreference: Callback =
-      $.props.flatMap { p =>
-        AppCtx.withCtx { implicit ctx =>
+    def readWidthPreference(userId: Option[User.Id]): Callback =
+      AppCtx
+        .flatMap { implicit ctx =>
           UserAreaWidths
-            .queryWithDefault[IO](p.userId.get,
+            .queryWithDefault[IO](userId,
                                   ResizableSection.ObservationsTree,
                                   Constants.InitialTreeWidth.toInt
             )
-            .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
         }
-      }
+        .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
 
     def render(props: Props, state: State) = {
       AppCtx.withCtx { implicit ctx =>
@@ -200,123 +197,118 @@ object ObsTabContents {
             .runAsyncAndForgetCB
             .debounce(1.second)
 
-        ObsLiveQuery { observations =>
-          @unused val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
-            observations.get.find(_.id === obsId)
-          }.flatten
+        SizeMe() { s =>
+          ObsLiveQuery { observations =>
+            val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
+              observations.get.find(_.id === obsId)
+            }.flatten
 
-          val backButton = TileButton(
-            Button(
-              as = <.a,
-              basic = true,
-              size = Mini,
-              compact = true,
-              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
-            )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
-          )
+            val backButton = TileButton(
+              Button(
+                as = <.a,
+                basic = true,
+                size = Mini,
+                compact = true,
+                clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+                onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+              )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
+            )
 
-          // Use a fixed target id until observations have a real target
-          val targetId = Target.Id(2L)
-          React.Fragment(
-            SizeMe() { s =>
-              val coreWidth =
-                if (window.innerWidth <= Constants.TwoPanelCutoff) {
-                  s.width.toDouble
-                } else {
-                  s.width.toDouble - treeWidth
-                }
-              val rightSide = ResponsiveReactGridLayout(
-                width = coreWidth.toInt,
-                margin = (5, 5),
-                containerPadding = (5, 0),
-                rowHeight = Constants.GridRowHeight,
-                draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-                onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
-                layouts = state.layouts
-              )(
-                <.div(
-                  ^.key := "notes",
-                  Tile(
-                    s"Note for Observer ${obsSummaryOpt}",
-                    backButton.some,
-                    canMinimize = true,
-                    canMaximize = true,
-                    state = State.notesHeightState(state),
-                    sizeStateCallback = (s: TileSizeState) =>
-                      $.setStateL(State.notesHeight)(s match {
-                        case TileSizeState.Minimized => 1
-                        case _                       => 3
-                      })
-                  )(
+            // Use a fixed target id until observations have a real target
+            val targetId = Target.Id(2L)
+
+            val coreWidth =
+              if (window.innerWidth <= Constants.TwoPanelCutoff) {
+                s.width.toDouble
+              } else {
+                s.width.toDouble - treeWidth
+              }
+            val rightSide = ResponsiveReactGridLayout(
+              width = coreWidth.toInt,
+              margin = (5, 5),
+              containerPadding = (5, 0),
+              rowHeight = Constants.GridRowHeight,
+              draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
+              onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
+              layouts = state.layouts
+            )(
+              <.div(
+                ^.key := "notes",
+                Tile(
+                  s"Note for Observer ${obsSummaryOpt}",
+                  backButton.some,
+                  canMinimize = true,
+                  canMaximize = true,
+                  state = State.notesHeightState(state),
+                  sizeStateCallback = (s: TileSizeState) =>
+                    $.setStateL(State.notesHeight)(s match {
+                      case TileSizeState.Minimized => 1
+                      case _                       => 3
+                    })
+                )(
+                  <.div(
+                    ExploreStyles.NotesWrapper,
                     <.div(
-                      ExploreStyles.NotesWrapper,
-                      <.div(
-                        ExploreStyles.ObserverNotes,
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-                      )
+                      ExploreStyles.ObserverNotes,
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
                     )
                   )
-                ),
-                <.div(
-                  ^.key := "target",
-                  Tile("Target")(
-                    LiveQueryRenderMod[ObservationDB,
-                                       TargetEditQuery.Data,
-                                       Option[TargetEditQuery.Data.Target]
-                    ](
-                      TargetEditQuery.query(targetId),
-                      _.target,
-                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                    ) { targetOpt =>
+                )
+              ),
+              <.div(
+                ^.key := "target",
+                Tile("Target")(
+                  LiveQueryRenderMod[ObservationDB,
+                                     TargetEditQuery.Data,
+                                     Option[TargetEditQuery.Data.Target]
+                  ](
+                    TargetEditQuery.query(targetId),
+                    _.target,
+                    NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                  ) { targetOpt =>
+                    <.div(
                       <.div(
-                        <.div(
-                          (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
-                            val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                            TargetBody(uid,
-                                       targetId,
-                                       targetOpt.zoom(_.get)(f => _.map(f)),
-                                       stateView
-                            )
-                          }
-                        ).when(false)
-                      )
-                    }
-                  )
+                        (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
+                          val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                          TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                        }
+                      ).when(false)
+                    )
+                  }
                 )
               )
+            )
 
-              if (window.innerWidth <= Constants.TwoPanelCutoff) {
-                <.div(
-                  ExploreStyles.TreeRGL,
-                  <.div(ExploreStyles.Tree, treeInner(observations))
-                    .when(state.panels.leftPanelVisible),
-                  <.div(ExploreStyles.SinglePanelTile, rightSide)
-                    .when(state.panels.rightPanelVisible)
+            if (window.innerWidth <= Constants.TwoPanelCutoff) {
+              <.div(
+                ExploreStyles.TreeRGL,
+                <.div(ExploreStyles.Tree, treeInner(observations))
+                  .when(state.panels.leftPanelVisible),
+                <.div(ExploreStyles.SinglePanelTile, rightSide)
+                  .when(state.panels.rightPanelVisible)
+              )
+            } else {
+              <.div(
+                ExploreStyles.TreeRGL,
+                Resizable(
+                  axis = Axis.X,
+                  width = treeWidth,
+                  height = Option(s.height).getOrElse(0),
+                  minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+                  maxConstraints = (s.width.toInt / 2, 0),
+                  onResize = treeResize,
+                  resizeHandles = List(ResizeHandleAxis.East),
+                  content = tree(observations)
+                ),
+                <.div(^.width := coreWidth.px,
+                      ^.left := treeWidth.px,
+                      ExploreStyles.SinglePanelTile
+                )(
+                  <.div(ExploreStyles.TreeRGLWrapper, rightSide)
                 )
-              } else {
-                <.div(
-                  ExploreStyles.TreeRGL,
-                  Resizable(
-                    axis = Axis.X,
-                    width = treeWidth,
-                    height = Option(s.height).getOrElse(0),
-                    minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-                    maxConstraints = (s.width.toInt / 2, 0),
-                    onResize = treeResize,
-                    resizeHandles = List(ResizeHandleAxis.East),
-                    content = tree(observations)
-                  ),
-                  <.div(^.width := coreWidth.px,
-                        ^.left := treeWidth.px,
-                        ExploreStyles.SinglePanelTile
-                  )(
-                    <.div(ExploreStyles.TreeRGLWrapper, rightSide)
-                  )
-                )
-              }
+              )
             }
-          )
+          }
         }
       }
     }
@@ -339,7 +331,10 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
-      .componentDidMount($ => $.backend.readWidthPreference *> $.backend.readLayoutPreference)
+      .componentDidMount($ =>
+        $.backend.readWidthPreference($.props.userId.get) *>
+          $.backend.readLayoutPreference($.props.userId.get)
+      )
       .configure(Reusability.shouldComponentUpdate)
       .build
 
