@@ -6,7 +6,7 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats              = "2.3.1"
+    val cats              = "2.4.1"
     val catsEffect        = "2.3.1"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
@@ -34,7 +34,6 @@ object Settings {
     val reactHighcharts   = "0.2.1"
     val reactResizable    = "0.4.2"
     val reactSemanticUI   = "0.10.5"
-    val reactSizeMe       = "0.6.4"
     val reactTable        = "0.0.2"
     val scalaJsReact      = "1.7.7"
     val sttp              = "3.1.1"
@@ -224,12 +223,6 @@ object Settings {
       deps(
         "io.github.cquiroz.react" %%% "react-resizable"
       )(reactResizable)
-    )
-
-    val ReactSizeMe = Def.setting(
-      deps(
-        "io.github.cquiroz.react" %%% "react-sizeme"
-      )(reactSizeMe)
     )
 
     val ReactSemanticUI = Def.setting(

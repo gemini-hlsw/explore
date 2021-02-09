@@ -3,12 +3,15 @@
 
 package explore.tabs
 
-import cats.syntax.all._
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.implicits._
+import explore.AppCtx
+import explore.Icons
 import explore.common.UserPreferencesQueries._
+import explore.components.Tile
+import explore.components.TileButton
 import explore.components.ui.ExploreStyles
-import explore.components.{ Tile, TileButton }
 import explore.implicits._
 import explore.model.Focused._
 import explore.model._
@@ -17,11 +20,9 @@ import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
-import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
-import japgolly.scalajs.react.raw.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -31,17 +32,18 @@ import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
+import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import react.sizeme._
 
 import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:                ViewOpt[User.Id],
   focused:               View[Option[Focused]],
-  targetViewExpandedIds: View[TargetViewExpandedIds]
+  targetViewExpandedIds: View[TargetViewExpandedIds],
+  size:                  ResizeDetector.Dimensions
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
   def isTargetSelected: Boolean = focused.get.isDefined
 }
@@ -53,14 +55,15 @@ object TargetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
-    AppCtx.withCtx { implicit ctx =>
-      UserAreaWidths
-        .queryWithDefault[IO]($.props.userId.get,
-                              ResizableSection.TargetsTree,
-                              Constants.InitialTreeWidth.toInt
-        )
-        .runAsyncAndThenCB(w => $.setStateL(TwoPanelState.treeWidth)(w))
-    }
+    AppCtx
+      .flatMap { implicit ctx =>
+        UserAreaWidths
+          .queryWithDefault[IO]($.props.userId.get,
+                                ResizableSection.TargetsTree,
+                                Constants.InitialTreeWidth.toInt
+          )
+      }
+      .runAsyncAndThenCB(w => $.setStateL(TwoPanelState.treeWidth)(w))
 
   protected val component =
     ScalaComponent
@@ -87,7 +90,7 @@ object TargetTabContents {
                   .runAsyncAndForgetCB
                   .debounce(1.second)
 
-          val treeWidth = state.treeWidth.toDouble
+          val treeWidth = state.treeWidth.toInt
 
           // Tree area
           def tree(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
@@ -122,54 +125,50 @@ object TargetTabContents {
                 objectsWithObs.get.obs.getElement(obsId).flatMap(_.attached.left.toOption)
             }.flatten
 
-            React.Fragment(
-              SizeMe() { s =>
-                val coreWidth            = s.width.toDouble - treeWidth
-                val coreHeight: JsNumber = Option(s.height).getOrElse(0)
+            val coreWidth  = props.size.width.getOrElse(0) - treeWidth
+            val coreHeight = props.size.height.getOrElse(0)
 
-                val rightSide =
-                  Tile(s"Target", backButton.some)(
-                    <.span(
-                      (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
-                        TargetEditor(uid, tid).withKey(tid.show)
-                      }
-                    )
-                  )
+            val rightSide =
+              Tile(s"Target", backButton.some)(
+                <.span(
+                  (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
+                    TargetEditor(uid, tid).withKey(tid.show)
+                  }
+                )
+              )
 
-                // It would be nice to make a single component here but it gets hard when you
-                // have the resizable element. Instead we have either two panels with a resizable
-                // or only one panel at a time (Mobile)
-                if (window.innerWidth <= Constants.TwoPanelCutoff) {
-                  <.div(
-                    ExploreStyles.TreeRGL,
-                    <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
-                      .when(state.leftPanelVisible),
-                    <.div(ExploreStyles.SinglePanelTile, rightSide).when(state.rightPanelVisible)
-                  )
-                } else {
-                  <.div(
-                    ExploreStyles.TreeRGL,
-                    Resizable(
-                      axis = Axis.X,
-                      width = treeWidth,
-                      height = coreHeight,
-                      minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-                      maxConstraints = (s.width.toInt / 2, 0),
-                      onResize = treeResize,
-                      resizeHandles = List(ResizeHandleAxis.East),
-                      content = tree(objectsWithObs),
-                      clazz = ExploreStyles.ResizableSeparator
-                    ),
-                    <.div(
-                      ExploreStyles.SinglePanelTile,
-                      ^.width := coreWidth.px,
-                      ^.left := treeWidth.px,
-                      rightSide
-                    )
-                  )
-                }
-              }
-            )
+            // It would be nice to make a single component here but it gets hard when you
+            // have the resizable element. Instead we have either two panels with a resizable
+            // or only one panel at a time (Mobile)
+            if (window.innerWidth <= Constants.TwoPanelCutoff) {
+              <.div(
+                ExploreStyles.TreeRGL,
+                <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
+                  .when(state.leftPanelVisible),
+                <.div(ExploreStyles.SinglePanelTile, rightSide).when(state.rightPanelVisible)
+              )
+            } else {
+              <.div(
+                ExploreStyles.TreeRGL,
+                Resizable(
+                  axis = Axis.X,
+                  width = treeWidth,
+                  height = coreHeight,
+                  minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+                  maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
+                  onResize = treeResize,
+                  resizeHandles = List(ResizeHandleAxis.East),
+                  content = tree(objectsWithObs),
+                  clazz = ExploreStyles.ResizableSeparator
+                ),
+                <.div(
+                  ExploreStyles.SinglePanelTile,
+                  ^.width := coreWidth.px,
+                  ^.left := treeWidth.px,
+                  rightSide
+                )
+              )
+            }
           }
         }
       }

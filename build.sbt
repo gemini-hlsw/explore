@@ -122,7 +122,6 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         ReactGridLayout.value ++
-        ReactSizeMe.value ++
         ReactClipboard.value ++
         ReactCommon.value ++
         ReactTable.value,
@@ -153,8 +152,7 @@ lazy val targeteditor = project
         LucumaCatalog.value ++
         ReactAladin.value ++
         ReactDatepicker.value ++
-        ReactHighcharts.value ++
-        ReactSizeMe.value
+        ReactHighcharts.value
   )
 
 lazy val constraints = project
@@ -201,8 +199,7 @@ lazy val explore: Project = project
       ReactCommon.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
-        ReactResizable.value ++
-        ReactSizeMe.value
+        ReactResizable.value
   )
   .dependsOn(constraints, targeteditor, observationtree, proposal)
 
@@ -383,14 +380,15 @@ lazy val commonWDS = Seq(
     "@packtracker/webpack-plugin"   -> "2.3.0"
   ),
   Compile / npmDependencies ++= Seq(
-    "react"             -> reactJS,
-    "react-dom"         -> reactJS,
-    "react-is"          -> reactJS,
-    "fomantic-ui-less"  -> FUILess,
-    "prop-types"        -> "15.7.2",
-    "react-moon"        -> "2.0.1",
-    "styled-components" -> "5.1.1",
-    "react-popper"      -> "2.2.3",
-    "ua-parser-js"      -> "0.7.23"
+    "react"                 -> reactJS,
+    "react-dom"             -> reactJS,
+    "react-is"              -> reactJS,
+    "fomantic-ui-less"      -> FUILess,
+    "prop-types"            -> "15.7.2",
+    "react-moon"            -> "2.0.1",
+    "styled-components"     -> "5.1.1",
+    "react-popper"          -> "2.2.3",
+    "ua-parser-js"          -> "0.7.23",
+    "react-resize-detector" -> "6.5.0"
   )
 )
