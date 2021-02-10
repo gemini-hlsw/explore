@@ -37,7 +37,7 @@ object Settings {
     val reactSizeMe       = "0.6.4"
     val reactTable        = "0.0.2"
     val scalaJsReact      = "1.7.7"
-    val sttp              = "3.1.0"
+    val sttp              = "3.1.1"
   }
 
   object Libraries {
