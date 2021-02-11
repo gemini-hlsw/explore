@@ -287,8 +287,9 @@ object ObsTabContents {
               ExploreStyles.TreeRGL,
               <.div(ExploreStyles.Tree, treeInner(observations))
                 .when(state.panels.leftPanelVisible),
-              <.div(ExploreStyles.SinglePanelTile, rightSide)
-                .when(state.panels.rightPanelVisible)
+              <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
+                <.div(rightSide)
+              ).when(state.panels.rightPanelVisible)
             )
           } else {
             <.div(
@@ -303,7 +304,11 @@ object ObsTabContents {
                 resizeHandles = List(ResizeHandleAxis.East),
                 content = tree(observations)
               ),
-              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.SinglePanelTile)(
+              <.div(^.key := "obs-right-side",
+                    ^.width := coreWidth.px,
+                    ^.left := treeWidth.px,
+                    ExploreStyles.SinglePanelTile
+              )(
                 <.div(ExploreStyles.TreeRGLWrapper, rightSide)
               )
             )

@@ -145,7 +145,9 @@ object TargetTabContents {
                 ExploreStyles.TreeRGL,
                 <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
                   .when(state.leftPanelVisible),
-                <.div(ExploreStyles.SinglePanelTile, rightSide).when(state.rightPanelVisible)
+                <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
+                  rightSide
+                ).when(state.rightPanelVisible)
               )
             } else {
               <.div(
@@ -161,10 +163,11 @@ object TargetTabContents {
                   content = tree(objectsWithObs),
                   clazz = ExploreStyles.ResizableSeparator
                 ),
-                <.div(
-                  ExploreStyles.SinglePanelTile,
-                  ^.width := coreWidth.px,
-                  ^.left := treeWidth.px,
+                <.div(^.key := "target-right-side",
+                      ExploreStyles.SinglePanelTile,
+                      ^.width := coreWidth.px,
+                      ^.left := treeWidth.px
+                )(
                   rightSide
                 )
               )
