@@ -3,22 +3,26 @@
 
 package explore.tabs
 
-import cats.effect.IO
 import cats.data.NonEmptyList
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
+import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
+import explore.Icons
 import explore.common.UserPreferencesQueries._
+import explore.components.Tile
+import explore.components.TileButton
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
-import explore.components.{ Tile, TileButton }
 import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model._
-import explore.model.enum.{ AppTab, TileSizeState }
+import explore.model.enum.AppTab
+import explore.model.enum.TileSizeState
 import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
@@ -26,12 +30,11 @@ import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
 import explore.target.TargetQueries._
 import explore.targeteditor.TargetBody
-import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.User
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.macros.Lenses
@@ -41,17 +44,17 @@ import react.common.implicits._
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
+import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import react.sizeme._
 
-import scala.annotation.unused
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:  ViewOpt[User.Id],
-  focused: View[Option[Focused]]
+  focused: View[Option[Focused]],
+  size:    ResizeDetector.Dimensions
 ) extends ReactProps[ObsTabContents](ObsTabContents.component) {
   def isObsSelected: Boolean = focused.get.isDefined
 }
@@ -141,26 +144,24 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def readLayoutPreference: Callback =
-      $.props.flatMap { p =>
-        AppCtx.withCtx { implicit ctx =>
+    def readLayoutPreference(userId: Option[User.Id]): Callback =
+      AppCtx
+        .flatMap { implicit ctx =>
           UserGridLayoutQuery
-            .queryWithDefault[IO](p.userId.get, GridLayoutSection.ObservationsLayout, defaultLayout)
-            .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
+            .queryWithDefault[IO](userId, GridLayoutSection.ObservationsLayout, defaultLayout)
         }
-      }
+        .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
 
-    def readWidthPreference: Callback =
-      $.props.flatMap { p =>
-        AppCtx.withCtx { implicit ctx =>
+    def readWidthPreference(userId: Option[User.Id]): Callback =
+      AppCtx
+        .flatMap { implicit ctx =>
           UserAreaWidths
-            .queryWithDefault[IO](p.userId.get,
+            .queryWithDefault[IO](userId,
                                   ResizableSection.ObservationsTree,
                                   Constants.InitialTreeWidth.toInt
             )
-            .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
         }
-      }
+        .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
 
     def render(props: Props, state: State) = {
       AppCtx.withCtx { implicit ctx =>
@@ -175,7 +176,7 @@ object ObsTabContents {
                 .runAsyncAndForgetCB
                 .debounce(1.second)
 
-        val treeWidth = state.panels.treeWidth.toDouble
+        val treeWidth = state.panels.treeWidth.toInt
 
         // Tree area
         def tree(observations: View[List[ObsSummary]]) =
@@ -201,7 +202,7 @@ object ObsTabContents {
             .debounce(1.second)
 
         ObsLiveQuery { observations =>
-          @unused val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
+          val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
             observations.get.find(_.id === obsId)
           }.flatten
 
@@ -218,105 +219,95 @@ object ObsTabContents {
 
           // Use a fixed target id until observations have a real target
           val targetId = Target.Id(2L)
-          React.Fragment(
-            SizeMe() { s =>
-              val coreWidth =
-                if (window.innerWidth <= Constants.TwoPanelCutoff) {
-                  s.width.toDouble
-                } else {
-                  s.width.toDouble - treeWidth
-                }
-              val rightSide = ResponsiveReactGridLayout(
-                width = coreWidth.toInt,
-                margin = (5, 5),
-                containerPadding = (5, 0),
-                rowHeight = Constants.GridRowHeight,
-                draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-                onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
-                layouts = state.layouts
+
+          val coreWidth =
+            if (window.innerWidth <= Constants.TwoPanelCutoff) {
+              props.size.width.getOrElse(0)
+            } else {
+              props.size.width.getOrElse(0) - treeWidth
+            }
+          val rightSide = ResponsiveReactGridLayout(
+            width = coreWidth,
+            margin = (5, 5),
+            containerPadding = (5, 0),
+            rowHeight = Constants.GridRowHeight,
+            draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
+            onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
+            layouts = state.layouts
+          )(
+            <.div(
+              ^.key := "notes",
+              Tile(
+                s"Note for Observer ${obsSummaryOpt}",
+                backButton.some,
+                canMinimize = true,
+                canMaximize = true,
+                state = State.notesHeightState(state),
+                sizeStateCallback = (s: TileSizeState) =>
+                  $.setStateL(State.notesHeight)(s match {
+                    case TileSizeState.Minimized => 1
+                    case _                       => 3
+                  })
               )(
                 <.div(
-                  ^.key := "notes",
-                  Tile(
-                    s"Note for Observer ${obsSummaryOpt}",
-                    backButton.some,
-                    canMinimize = true,
-                    canMaximize = true,
-                    state = State.notesHeightState(state),
-                    sizeStateCallback = (s: TileSizeState) =>
-                      $.setStateL(State.notesHeight)(s match {
-                        case TileSizeState.Minimized => 1
-                        case _                       => 3
-                      })
-                  )(
-                    <.div(
-                      ExploreStyles.NotesWrapper,
-                      <.div(
-                        ExploreStyles.ObserverNotes,
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-                      )
-                    )
-                  )
-                ),
-                <.div(
-                  ^.key := "target",
-                  Tile("Target")(
-                    LiveQueryRenderMod[ObservationDB,
-                                       TargetEditQuery.Data,
-                                       Option[TargetEditQuery.Data.Target]
-                    ](
-                      TargetEditQuery.query(targetId),
-                      _.target,
-                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                    ) { targetOpt =>
-                      <.div(
-                        <.div(
-                          (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
-                            val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                            TargetBody(uid,
-                                       targetId,
-                                       targetOpt.zoom(_.get)(f => _.map(f)),
-                                       stateView
-                            )
-                          }
-                        ).when(false)
-                      )
-                    }
+                  ExploreStyles.NotesWrapper,
+                  <.div(
+                    ExploreStyles.ObserverNotes,
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
                   )
                 )
               )
-
-              if (window.innerWidth <= Constants.TwoPanelCutoff) {
-                <.div(
-                  ExploreStyles.TreeRGL,
-                  <.div(ExploreStyles.Tree, treeInner(observations))
-                    .when(state.panels.leftPanelVisible),
-                  <.div(ExploreStyles.SinglePanelTile, rightSide)
-                    .when(state.panels.rightPanelVisible)
-                )
-              } else {
-                <.div(
-                  ExploreStyles.TreeRGL,
-                  Resizable(
-                    axis = Axis.X,
-                    width = treeWidth,
-                    height = Option(s.height).getOrElse(0),
-                    minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-                    maxConstraints = (s.width.toInt / 2, 0),
-                    onResize = treeResize,
-                    resizeHandles = List(ResizeHandleAxis.East),
-                    content = tree(observations)
-                  ),
-                  <.div(^.width := coreWidth.px,
-                        ^.left := treeWidth.px,
-                        ExploreStyles.SinglePanelTile
-                  )(
-                    <.div(ExploreStyles.TreeRGLWrapper, rightSide)
+            ),
+            <.div(
+              ^.key := "target",
+              Tile("Target")(
+                LiveQueryRenderMod[ObservationDB,
+                                   TargetEditQuery.Data,
+                                   Option[TargetEditQuery.Data.Target]
+                ](
+                  TargetEditQuery.query(targetId),
+                  _.target,
+                  NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                ) { targetOpt =>
+                  <.div(
+                    <.div(
+                      (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
+                        val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                        TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                      }
+                    ).when(false)
                   )
-                )
-              }
-            }
+                }
+              )
+            )
           )
+
+          if (window.innerWidth <= Constants.TwoPanelCutoff) {
+            <.div(
+              ExploreStyles.TreeRGL,
+              <.div(ExploreStyles.Tree, treeInner(observations))
+                .when(state.panels.leftPanelVisible),
+              <.div(ExploreStyles.SinglePanelTile, rightSide)
+                .when(state.panels.rightPanelVisible)
+            )
+          } else {
+            <.div(
+              ExploreStyles.TreeRGL,
+              Resizable(
+                axis = Axis.X,
+                width = treeWidth,
+                height = props.size.height.getOrElse[Int](0),
+                minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+                maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
+                onResize = treeResize,
+                resizeHandles = List(ResizeHandleAxis.East),
+                content = tree(observations)
+              ),
+              <.div(^.width := coreWidth.px, ^.left := treeWidth.px, ExploreStyles.SinglePanelTile)(
+                <.div(ExploreStyles.TreeRGLWrapper, rightSide)
+              )
+            )
+          }
         }
       }
     }
@@ -339,7 +330,10 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
-      .componentDidMount($ => $.backend.readWidthPreference *> $.backend.readLayoutPreference)
+      .componentDidMount($ =>
+        $.backend.readWidthPreference($.props.userId.get) *>
+          $.backend.readLayoutPreference($.props.userId.get)
+      )
       .configure(Reusability.shouldComponentUpdate)
       .build
 

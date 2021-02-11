@@ -5,20 +5,24 @@ package explore
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.model.Page
 import explore.model.Page._
-import explore.model.{ Page, _ }
+import explore.model._
 import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
-import lucuma.core.model.{ Observation, Target }
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.core.util.Gid
+import react.resizeDetector.ResizeDetector
 
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import lucuma.core.model.Asterism
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -26,14 +30,26 @@ case object LabelsElement extends ElementItem
 
 object Routing {
 
-  private def targetTab(model: View[RootModel]): TargetTabContents =
-    TargetTabContents(model.zoom(RootModel.userId),
-                      model.zoom(RootModel.focused),
-                      model.zoom(RootModel.targetViewExpandedIds)
+  private def withSize(f: ResizeDetector.Dimensions => VdomElement): VdomElement =
+    ResizeDetector() { s =>
+      <.div(^.height := "100%", s.targetRef)(
+        f(s)
+      )
+    }
+
+  private def targetTab(model: View[RootModel]): VdomElement =
+    withSize(size =>
+      TargetTabContents(model.zoom(RootModel.userId),
+                        model.zoom(RootModel.focused),
+                        model.zoom(RootModel.targetViewExpandedIds),
+                        size
+      )
     )
 
-  private def obsTab(model: View[RootModel]): ObsTabContents =
-    ObsTabContents(model.zoom(RootModel.userId), model.zoom(RootModel.focused))
+  private def obsTab(model: View[RootModel]): VdomElement =
+    withSize(size =>
+      ObsTabContents(model.zoom(RootModel.userId), model.zoom(RootModel.focused), size)
+    )
 
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>

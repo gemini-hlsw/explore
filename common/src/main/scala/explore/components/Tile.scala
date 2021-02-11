@@ -6,16 +6,16 @@ package explore.components
 import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.enum.TileSizeState
 import explore.components.ui.ExploreStyles._
+import explore.model.Constants
+import explore.model.enum.TileSizeState
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.common.implicits._
+import react.resizeDetector.ResizeDetector
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
-import react.sizeme._
-import explore.model.Constants
 
 final case class TileButton(body: VdomNode)
 
@@ -48,9 +48,9 @@ object Tile {
       .builder[Props]
       .stateless
       .render_PC { (p, c) =>
-        SizeMe(monitorHeight = true) { s =>
+        ResizeDetector() { s =>
           val widthClass     =
-            defaultBreakpoints.findLast(_._1 < s.width.toInt).map(_._2).getOrElse(TileSMW)
+            defaultBreakpoints.findLast(_._1 < s.width.getOrElse(0)).map(_._2).getOrElse(TileSMW)
           val maximizeButton =
             Button(
               as = <.a,
@@ -69,8 +69,7 @@ object Tile {
               onClick = p.sizeStateCallback(TileSizeState.Minimized)
             )(Icons.Minimize.fitted(true))
 
-          <.div(
-            ExploreStyles.Tile,
+          <.div(ExploreStyles.Tile, s.targetRef)(
             <.div(
               ExploreStyles.TileTitle,
               p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
