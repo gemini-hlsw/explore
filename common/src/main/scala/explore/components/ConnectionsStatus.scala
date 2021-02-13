@@ -29,11 +29,11 @@ object ConnectionsStatus {
       case Ready(value) =>
         (value.toString,
          value match {
-           case Connecting                                                        => (ConnectionWarning, true)
-           case Connected | Initializing | Initialized | Terminating | Terminated =>
+           case Connecting                                           => (ConnectionWarning, true)
+           case Connected | Initializing | Initialized | Terminating =>
              (ConnectionOK, false)
-           case Disconnecting                                                     => (ConnectionWarning, true)
-           case Disconnected                                                      => (ConnectionError, true)
+           case Disconnecting                                        => (ConnectionWarning, true)
+           case Disconnected                                         => (ConnectionError, true)
          }
         )
     }

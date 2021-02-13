@@ -66,9 +66,11 @@ object AppContext {
     for {
       preferencesDBClient <-
         ApolloWebSocketClient.of[F, UserPreferencesDB](config.preferencesDBURI,
+                                                       "PREFS",
                                                        reconnectionStrategy
         )
-      odbClient           <- ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, reconnectionStrategy)
+      odbClient           <-
+        ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, "ODB", reconnectionStrategy)
       version              = utils.version(config.environment)
       clients              = Clients(odbClient, preferencesDBClient)
       actions              = Actions[F]()

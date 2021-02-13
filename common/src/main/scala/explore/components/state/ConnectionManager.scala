@@ -10,10 +10,12 @@ import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.implicits._
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
+import io.chrisdavenport.log4cats.Logger
 
 final case class ConnectionManager(ssoToken: NonEmptyString)
     extends ReactProps[ConnectionManager](ConnectionManager.component)
@@ -38,9 +40,12 @@ object ConnectionManager {
     .componentDidMount(_.backend.connect.runAsyncCB)
     .componentDidUpdate($ =>
       AppCtx
-        .flatMap(
-          // We should change to TerminateOptions.KeepConnection when ODB supports it.
-          _.clients.odb.terminate(TerminateOptions.Disconnect())
+        .flatMap(implicit ctx =>
+          Logger[IO].debug(
+            s"[ConnectionManager.componentDidUpdate] Token changed. Terminating connections."
+          ) >>
+            // We should change to TerminateOptions.KeepConnection when ODB supports it.
+            ctx.clients.odb.terminate(TerminateOptions.Disconnect(), keepSubscriptions = true)
         ) // This will trigger reconnection strategy and start reconnection attempts.
         .runAsyncCB
         .when($.prevProps.ssoToken =!= $.currentProps.ssoToken)
@@ -48,9 +53,12 @@ object ConnectionManager {
     )
     .componentWillUnmountConst( // With code = 1000 we don't attempt reconnection.
       AppCtx
-        .flatMap(
-          _.clients.odb
-            .terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
+        .flatMap(implicit ctx =>
+          Logger[IO].debug(
+            s"[ConnectionManager.componentWillUnmount] Terminating connections."
+          ) >>
+            ctx.clients.odb
+              .terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
         )
         .runAsyncCB
     )
