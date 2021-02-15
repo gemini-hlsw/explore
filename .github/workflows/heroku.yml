@@ -20,7 +20,7 @@ jobs:
         env: 
           CI: false
           ODB_ENDPOINT: ${{ secrets.ODB_ENDPOINT }}
-        run: sbt -v stage        
+        run: sbt -v -J-Xmx6g stage
       - name: Heroku - Deploy
         working-directory: ./explore/target/scala-2.13/stage
         env: 
