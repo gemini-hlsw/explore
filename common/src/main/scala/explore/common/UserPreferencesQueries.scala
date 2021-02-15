@@ -123,18 +123,26 @@ object UserPreferencesQueries {
    * Read the grid layout for a given section
    */
   @GraphQL(debug = false)
-  object UserGridLayoutQuery extends GraphQLOperation[UserPreferencesDB] {
+  object ObsTabPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query layout_positions($criteria: grid_layout_positions_bool_exp!) {
-        grid_layout_positions(where: $criteria) {
-          breakpoint_name
-          height
-          width
-          x
-          y
-          tile
+      query
+        obs_tab_preferences($user_id: String!, $criteria: grid_layout_positions_bool_exp!, $section: resizable_area!) {
+          grid_layout_positions(where: $criteria) {
+            breakpoint_name
+            height
+            width
+            x
+            y
+            tile
+          }
+          explore_resizable_width_by_pk(
+            section: $section,
+            user_id: $user_id
+          ) {
+            width
+          }
         }
-      }"""
+    """
 
     def positions2LayoutMap(
       g: (BreakpointName, List[Data.GridLayoutPositions])
@@ -148,15 +156,15 @@ object UserPreferencesQueries {
              )
       )
     }
-
     // Gets the layout of a section.
     // This is coded to return a default in case
     // there is no data or errors
     def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
-      userId:       Option[User.Id],
-      area:         GridLayoutSection,
-      defaultValue: LayoutsMap
-    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]): F[LayoutsMap] =
+      userId:        Option[User.Id],
+      layoutSection: GridLayoutSection,
+      resizableArea: ResizableSection,
+      defaultValue:  (Int, LayoutsMap)
+    )(implicit cl:   GraphQLClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         c   <-
@@ -165,20 +173,24 @@ object UserPreferencesQueries {
           )
         r   <-
           OptionT
-            .liftF[F, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)]] {
-              query[F](c).map { r =>
+            .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
+              query[F](uid.show, c, resizableArea.value).map { r =>
+                val w = r.explore_resizable_width_by_pk.map(_.width).getOrElse(defaultValue._1)
                 if (r.grid_layout_positions.isEmpty) defaultValue
                 else
-                  SortedMap(
-                    r.grid_layout_positions
-                      .groupBy(_.breakpoint_name)
-                      .map(positions2LayoutMap)
-                      .toList: _*
+                  (w,
+                   SortedMap(
+                     r.grid_layout_positions
+                       .groupBy(_.breakpoint_name)
+                       .map(positions2LayoutMap)
+                       .toList: _*
+                   )
                   )
               }
             }
             .handleErrorWith(_ => OptionT.none)
       } yield r).getOrElse(defaultValue)
+
   }
 
   @GraphQL(debug = false)

@@ -144,24 +144,19 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def readLayoutPreference(userId: Option[User.Id]): Callback =
+    def readTabPreference(userId: Option[User.Id]): Callback =
       AppCtx
         .flatMap { implicit ctx =>
-          UserGridLayoutQuery
-            .queryWithDefault[IO](userId, GridLayoutSection.ObservationsLayout, defaultLayout)
-        }
-        .runAsyncAndThenCB(l => $.setStateL(State.layouts)(l))
-
-    def readWidthPreference(userId: Option[User.Id]): Callback =
-      AppCtx
-        .flatMap { implicit ctx =>
-          UserAreaWidths
+          ObsTabPreferencesQuery
             .queryWithDefault[IO](userId,
+                                  GridLayoutSection.ObservationsLayout,
                                   ResizableSection.ObservationsTree,
-                                  Constants.InitialTreeWidth.toInt
+                                  (Constants.InitialTreeWidth.toInt, defaultLayout)
             )
         }
-        .runAsyncAndThenCB(w => $.setStateL(State.panelsWidth)(w))
+        .runAsyncAndThenCB { case (w, l) =>
+          $.setStateL(State.panelsWidth)(w) *> $.setStateL(State.layouts)(l)
+        }
 
     def render(props: Props, state: State) = {
       AppCtx.withCtx { implicit ctx =>
@@ -335,10 +330,7 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
-      .componentDidMount($ =>
-        $.backend.readWidthPreference($.props.userId.get) *>
-          $.backend.readLayoutPreference($.props.userId.get)
-      )
+      .componentDidMount($ => $.backend.readTabPreference($.props.userId.get))
       .configure(Reusability.shouldComponentUpdate)
       .build
 
