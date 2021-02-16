@@ -175,17 +175,13 @@ object UserPreferencesQueries {
           OptionT
             .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
               query[F](uid.show, c, resizableArea.value).map { r =>
-                val w = r.explore_resizable_width_by_pk.map(_.width).getOrElse(defaultValue._1)
-                if (r.grid_layout_positions.isEmpty) defaultValue
-                else
-                  (w,
-                   SortedMap(
-                     r.grid_layout_positions
-                       .groupBy(_.breakpoint_name)
-                       .map(positions2LayoutMap)
-                       .toList: _*
-                   )
-                  )
+                (r.explore_resizable_width_by_pk.map(_.width), r.grid_layout_positions) match {
+                  case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
+                  case (w, l)              =>
+                    (w.getOrElse(defaultValue._1),
+                     SortedMap(l.groupBy(_.breakpoint_name).map(positions2LayoutMap).toList: _*)
+                    )
+                }
               }
             }
             .handleErrorWith(_ => OptionT.none)
