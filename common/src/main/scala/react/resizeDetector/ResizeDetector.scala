@@ -27,13 +27,13 @@ object ResizeDetector {
   private object RawComponent extends js.Object
 
   @js.native
-  trait DimensionsJS extends js.Object {
-    val height: js.UndefOr[Int]
-    val width: js.UndefOr[Int]
+  protected trait DimensionsJS extends js.Object {
+    val height: js.UndefOr[Raw.JsNumber]
+    val width: js.UndefOr[Raw.JsNumber]
   }
 
   @js.native
-  trait RenderPropsJS extends DimensionsJS {
+  protected trait RenderPropsJS extends DimensionsJS {
     val targetRef: Raw.React.RefFn[html.Element]
   }
 
@@ -49,10 +49,12 @@ object ResizeDetector {
       extends Dimensions
   object RenderProps {
     def apply(renderPropsJS: RenderPropsJS): RenderProps =
-      RenderProps(renderPropsJS.height.toOption,
-                  renderPropsJS.width.toOption,
-                  TagMod.fn(_.addRefFn(renderPropsJS.targetRef))
+      RenderProps(
+        renderPropsJS.height.toOption.map(_.toInt),
+        renderPropsJS.width.toOption.map(_.toInt),
+        TagMod.fn(_.addRefFn(renderPropsJS.targetRef))
       )
+
   }
 
   protected type RenderJS = js.Function1[RenderPropsJS, Raw.React.Node | Null]
