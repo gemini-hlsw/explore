@@ -3,12 +3,16 @@
 
 package explore.components.graphql
 
-import cats.effect.{ ConcurrentEffect, ContextShift, IO, Timer }
+import cats.effect.ConcurrentEffect
+import cats.effect.ContextShift
+import cats.effect.IO
+import cats.effect.Timer
 import cats.syntax.all._
 import clue.GraphQLSubscription
+import crystal.Pot
+import crystal.ViewF
 import crystal.react._
 import crystal.react.implicits._
-import crystal.{ Pot, ViewF }
 import explore.View
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._

@@ -6,10 +6,11 @@ package explore.model
 import cats._
 import explore.model.enum.ObsStatus
 import io.circe.Decoder
+import io.circe.DecodingFailure
 import io.circe.Encoder
 import io.circe.HCursor
 import io.circe.Json
-import io.circe.DecodingFailure
+import io.circe.JsonObject
 import io.circe.syntax._
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
@@ -18,7 +19,6 @@ import monocle.macros.Lenses
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import io.circe.JsonObject
 
 @Lenses
 final case class ObsSummary(

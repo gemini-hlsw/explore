@@ -5,7 +5,10 @@ package explore.components
 
 import clue.StreamingClientStatus
 import clue.StreamingClientStatus._
-import crystal.{ Error, Pending, Pot, Ready }
+import crystal.Error
+import crystal.Pending
+import crystal.Pot
+import crystal.Ready
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._

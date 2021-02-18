@@ -8,10 +8,11 @@ import cats.syntax.all._
 import eu.timepit.refined.types.numeric.NonNegInt
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability._
+import monocle.Lens
+import monocle.Optional
 import monocle.function.Field3._
 import monocle.function.Index._
 import monocle.macros.GenLens
-import monocle.{ Lens, Optional }
 import react.gridlayout._
 
 import scala.collection.immutable.SortedMap

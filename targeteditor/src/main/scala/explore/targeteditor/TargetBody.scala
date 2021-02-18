@@ -10,10 +10,13 @@ import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
+import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.View
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
-import explore.components.undo.{ UndoButtons, UndoRegion }
+import explore.components.undo.UndoButtons
+import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.formats._
@@ -21,14 +24,19 @@ import explore.model.reusability._
 import explore.model.utils._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
-import explore.{ AppCtx, View }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-import lucuma.core.model.{ Magnitude, SiderealTracking, Target, User }
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
-import lucuma.ui.optics.{ ChangeAuditor, TruncatedDec, TruncatedRA, ValidFormatInput }
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._

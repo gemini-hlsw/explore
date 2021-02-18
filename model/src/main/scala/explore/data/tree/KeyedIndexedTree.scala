@@ -6,7 +6,8 @@ package explore.data.tree
 import cats.kernel.Eq
 import cats.syntax.all._
 
-import scala.collection.immutable.{ HashMap, HashSet }
+import scala.collection.immutable.HashMap
+import scala.collection.immutable.HashSet
 
 import KeyedIndexedTree._
 

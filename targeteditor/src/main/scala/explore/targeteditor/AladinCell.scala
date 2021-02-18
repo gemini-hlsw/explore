@@ -3,30 +3,35 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.AppCtx
+import explore.Icons
+import explore.View
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
+import explore.implicits._
+import explore.model.ModelOptics
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import explore.model.{ ModelOptics, TargetVisualOptions }
-import explore.{ Icons, View }
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.implicits._
-import lucuma.core.math.{ Angle, Coordinates }
-import lucuma.ui.reusability._
-import lucuma.core.model.User
+import lucuma.core.math.Angle
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
+import lucuma.core.model.User
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.aladin.Fov
 import react.common._
 import react.semanticui.elements.button.Button
-import react.semanticui.modules.popup.{ Popup, PopupPosition }
+import react.semanticui.modules.popup.Popup
+import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
-import cats.effect.IO
-import explore.AppCtx
+
 import scala.concurrent.duration._
 
 final case class AladinCell(

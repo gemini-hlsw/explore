@@ -4,7 +4,8 @@
 package explore.undo
 
 import cats.syntax.all._
-import explore.optics.{ Adjuster, GetAdjust }
+import explore.optics.Adjuster
+import explore.optics.GetAdjust
 import monocle._
 import monocle.function.Field1.first
 import monocle.std.option.some

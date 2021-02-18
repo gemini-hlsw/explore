@@ -12,6 +12,7 @@ import explore.GraphQLSchemas.ObservationDB
 import explore.common.UserPreferencesQueries._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
+import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.target.TargetQueries._
@@ -22,7 +23,6 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
-import explore.model.Constants
 
 final case class TargetEditor(
   uid: User.Id,

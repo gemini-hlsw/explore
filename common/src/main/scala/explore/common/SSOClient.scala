@@ -7,7 +7,8 @@ import cats.effect._
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
-import explore.model.{ SSOConfig, UserVault }
+import explore.model.SSOConfig
+import explore.model.UserVault
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import io.circe.generic.semiauto._

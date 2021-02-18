@@ -7,18 +7,20 @@ import cats.MonadError
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.syntax.all._
-import clue.macros.GraphQL
-import clue.{ GraphQLClient, GraphQLOperation }
+import clue.GraphQLClient
+import clue.GraphQLOperation
 import clue.data.syntax._
+import clue.macros.GraphQL
 import explore.GraphQLSchemas.UserPreferencesDB
-import explore.model.ResizableSection
 import explore.model.GridLayoutSection
+import explore.model.ResizableSection
 import explore.model.layout._
-import lucuma.core.model.User
-import lucuma.core.model.Target
-import react.gridlayout.{ BreakpointName => _, _ }
-import scala.collection.immutable.SortedMap
 import lucuma.core.math.Angle
+import lucuma.core.model.Target
+import lucuma.core.model.User
+import react.gridlayout.{ BreakpointName => _, _ }
+
+import scala.collection.immutable.SortedMap
 
 object UserPreferencesQueries {
 

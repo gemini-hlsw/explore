@@ -9,12 +9,13 @@ import eu.timepit.refined.types.string._
 import explore._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.util.{ Display, Enumerated }
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import monocle.Lens
-import react.semanticui.elements.button.Button
 import react.common.style.Css
+import react.semanticui.elements.button.Button
 import reactST.reactTable.mod._
 
 import scalajs.js

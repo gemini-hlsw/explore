@@ -3,7 +3,8 @@
 
 package explore.model
 
-import cats.{ Eq, Show }
+import cats.Eq
+import cats.Show
 import explore.model.decoders._
 import explore.model.encoders._
 import explore.model.enum.ExecutionEnvironment

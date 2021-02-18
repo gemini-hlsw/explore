@@ -8,25 +8,33 @@ import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.AppCtx
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
 import explore.utils.ReactTableHelpers
-import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
-import lucuma.core.model.{ Magnitude, Target }
+import lucuma.core.model.Magnitude
+import lucuma.core.model.Target
 import lucuma.ui.forms.EnumViewSelect
-import lucuma.ui.optics.{ ChangeAuditor, ValidFormatInput }
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import monocle.std.option.some
-import react.common.{ Css, ReactProps }
-import react.semanticui.collections.table.{ TableFooter, TableHeaderCell, TableRow }
+import react.common.Css
+import react.common.ReactProps
+import react.semanticui.collections.form.Form
+import react.semanticui.collections.table.TableFooter
+import react.semanticui.collections.table.TableHeaderCell
+import react.semanticui.collections.table.TableRow
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
+import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
 import reactST.reactTable.TableMaker
 import reactST.reactTable.mod._
@@ -34,8 +42,6 @@ import reactST.reactTable.mod._
 import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
-import react.semanticui.elements.segment.SegmentAttached
-import react.semanticui.collections.form.Form
 
 final case class MagnitudeForm(
   targetId:   Target.Id,

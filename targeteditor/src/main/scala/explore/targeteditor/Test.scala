@@ -4,10 +4,11 @@
 package explore.targeteditor
 
 import eu.timepit.refined.auto._
+import explore.AppMain
+import explore._
 import explore.components.Tile
 import explore.components.state.IfLogged
 import explore.model._
-import explore.{ AppMain, _ }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User

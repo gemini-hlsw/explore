@@ -4,7 +4,8 @@
 package explore.model
 
 import explore.model.enum._
-import lucuma.core.enum.{ MagnitudeBand, MagnitudeSystem }
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.util.Display
 
 object display {

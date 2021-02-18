@@ -18,18 +18,20 @@ import explore.implicits._
 import explore.model.Constants
 import explore.model.decoders._
 import explore.optics._
-import explore.undo.{ UndoableView, Undoer }
+import explore.undo.UndoableView
+import explore.undo.Undoer
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.Epoch
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
-import lucuma.core.math.{
-  Coordinates,
-  Declination,
-  Epoch,
-  Parallax,
-  ProperMotion,
-  RadialVelocity,
-  RightAscension
-}
-import lucuma.core.model.{ CatalogId, Magnitude, SiderealTracking, Target }
+import lucuma.core.model.CatalogId
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Lens
 

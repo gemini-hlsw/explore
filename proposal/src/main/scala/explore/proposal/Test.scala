@@ -4,9 +4,10 @@
 package explore.proposal
 
 import eu.timepit.refined.auto._
+import explore.AppMain
+import explore.View
 import explore.components.state.IfLogged
 import explore.model.RootModel
-import explore.{ AppMain, View }
 import japgolly.scalajs.react.vdom.VdomElement
 
 import scala.scalajs.js

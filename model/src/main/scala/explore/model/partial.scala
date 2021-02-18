@@ -3,7 +3,8 @@
 
 package explore.model
 
-import io.circe.{ Decoder, HCursor }
+import io.circe.Decoder
+import io.circe.HCursor
 import monocle.macros.Lenses
 
 @Lenses
