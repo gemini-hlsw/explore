@@ -9,6 +9,7 @@ import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.HCursor
 import io.circe.Json
+import io.circe.DecodingFailure
 import io.circe.syntax._
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
@@ -17,6 +18,7 @@ import monocle.macros.Lenses
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import io.circe.JsonObject
 
 @Lenses
 final case class ObsSummary(
@@ -34,14 +36,17 @@ object ObsSummary {
 
   implicit val obsSummaryEncoder: Encoder[ObsSummary] = new Encoder[ObsSummary] {
     final def apply(c: ObsSummary): Json = {
-      val common = Json.obj(("id", c.id.asJson), ("name", c.name.asJson))
-      c.observationTarget match {
-        case None             => common
-        case Some(Right(tid)) =>
-          common.deepMerge(Json.obj(("observationTarget", Json.obj(("target_id", tid.asJson)))))
-        case Some(Left(aid))  =>
-          common.deepMerge(Json.obj(("observationTarget", Json.obj(("asterism_id", aid.asJson)))))
-      }
+      val common = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
+      (c.observationTarget match {
+        case None    => common
+        case Some(t) =>
+          common.add("observationTarget",
+                     t match {
+                       case Right(tid) => Json.obj(("target_id", tid.asJson))
+                       case Left(aid)  => Json.obj(("asterism_id", aid.asJson))
+                     }
+          )
+      }).asJson
     }
 
   }
@@ -49,15 +54,14 @@ object ObsSummary {
   implicit val obsTargetDecoder: Decoder[Either[Asterism.Id, Target.Id]] =
     new Decoder[Either[Asterism.Id, Target.Id]] {
       final def apply(c: HCursor): Decoder.Result[Either[Asterism.Id, Target.Id]] =
-        for {
+        (for {
           aid <- c.downField("asterism_id").as[Option[Asterism.Id]]
           tid <- c.downField("target_id").as[Option[Target.Id]]
         } yield (aid, tid) match {
-          case (Some(aid), _)    => Left(aid)
-          case (None, Some(tid)) => Right(tid)
-          case _                 => sys.error("graphql schema doesn't allow this")
-        }
-
+          case (Some(aid), None) => Right(Left(aid))
+          case (None, Some(tid)) => Right(Right(tid))
+          case _                 => Left(DecodingFailure("graphql schema doesn't allow this", Nil))
+        }).flatten
     }
 
   implicit val obsSummaryDecoder: Decoder[ObsSummary] = new Decoder[ObsSummary] {

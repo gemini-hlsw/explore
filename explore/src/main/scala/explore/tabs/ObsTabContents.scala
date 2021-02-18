@@ -273,27 +273,24 @@ object ObsTabContents {
             ),
             <.div(
               ^.key := "target",
-              <.div(
-                ^.key := s"target-$targetId",
-                Tile("Target")(
-                  targetId
-                    .map { targetId =>
-                      LiveQueryRenderMod[ObservationDB,
-                                         TargetEditQuery.Data,
-                                         Option[TargetEditQuery.Data.Target]
-                      ](
-                        TargetEditQuery.query(targetId),
-                        _.target,
-                        NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                      ) { targetOpt =>
-                        (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
-                          val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                          TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
-                        }
-
+              Tile("Target")(
+                targetId
+                  .map { targetId =>
+                    LiveQueryRenderMod[ObservationDB,
+                                       TargetEditQuery.Data,
+                                       Option[TargetEditQuery.Data.Target]
+                    ](
+                      TargetEditQuery.query(targetId),
+                      _.target,
+                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                    ) { targetOpt =>
+                      (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
+                        val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                        TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
                       }
-                    }
-                )
+
+                    }.withKey(s"target-$targetId")
+                  }
               )
             )
           )
