@@ -9,7 +9,10 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
-import lucuma.core.model.{ GuestUser, ServiceUser, StandardUser, User }
+import lucuma.core.model.GuestUser
+import lucuma.core.model.ServiceUser
+import lucuma.core.model.StandardUser
+import lucuma.core.model.User
 import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option

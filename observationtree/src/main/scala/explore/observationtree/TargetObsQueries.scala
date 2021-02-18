@@ -20,11 +20,12 @@ import explore.model.reusability._
 import io.scalaland.chimney.dsl._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ Observation, Target }
+import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.macros.Lenses
-import lucuma.core.model.Asterism
 
 object TargetObsQueries {
 

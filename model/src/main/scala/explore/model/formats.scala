@@ -7,9 +7,10 @@ import cats.syntax.all._
 import coulomb._
 import eu.timepit.refined.refineV
 import explore.optics._
+import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
+import lucuma.core.math._
 import lucuma.core.math.units._
-import lucuma.core.math.{ Parallax, _ }
 import lucuma.core.optics.Format
 import lucuma.core.syntax.string._
 

@@ -17,12 +17,14 @@ object ExploreStyles {
   val TileBody: Css        = Css("explore-tile-body")
   val TileButton: Css      = Css("explore-tile-button")
   val TileStateButton: Css = Css("explore-tile-state-button")
-
-  val TileXSW: Css = Css("tile-xs-width")
-  val TileSMW: Css = Css("tile-sm-width")
-  val TileMDW: Css = Css("tile-md-width")
-  val TileLGW: Css = Css("tile-lg-width")
-  val TileXLW: Css = Css("tile-xl-width")
+  val TileXSW: Css         = Css("tile-xs-width")
+  val TileSMW: Css         = Css("tile-sm-width")
+  val TileMDW: Css         = Css("tile-md-width")
+  val TileLGW: Css         = Css("tile-lg-width")
+  val TileXLW: Css         = Css("tile-xl-width")
+  val TileXSH: Css         = Css("tile-xs-height")
+  val TileSMH: Css         = Css("tile-sm-height")
+  val TileMDH: Css         = Css("tile-md-height")
 
   val TextInForm: Css = Css("explore-text-in-form")
   val Accented: Css   = Css("explore-accented")
@@ -187,4 +189,5 @@ object ExploreStyles {
   val MagnitudesTableContainer: Css          = Css("explore-magnitudes-container")
   val MagnitudesTableFooter: Css             = Css("explore-magnitudes-footer")
   val MagnitudesTableDeletButtonWrapper: Css = Css("explore-magnitudes-delete-button-wrapper")
+  val MagnitudesTableSection: Css            = Css("explore-magnitudes-section")
 }

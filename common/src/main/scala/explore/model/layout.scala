@@ -8,10 +8,11 @@ import cats.syntax.all._
 import eu.timepit.refined.types.numeric.NonNegInt
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability._
+import monocle.Lens
+import monocle.Optional
 import monocle.function.Field3._
 import monocle.function.Index._
 import monocle.macros.GenLens
-import monocle.{ Lens, Optional }
 import react.gridlayout._
 
 import scala.collection.immutable.SortedMap
@@ -65,7 +66,15 @@ object layout {
 
   object unsafe {
     implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
-      Layout(a.l |+| b.l)
+      val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
+        b.l
+          .find(_.i.exists(_ === la.i.get))
+          .map { lb =>
+            la |+| lb
+          }
+          .getOrElse(la) :: l
+      }
+      Layout(result)
     }
 
     implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>

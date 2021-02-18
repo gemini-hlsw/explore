@@ -8,7 +8,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 import react.semanticui.modules.modal.Dimmer.Blurring
-import react.semanticui.modules.modal.{ Modal, ModalContent }
+import react.semanticui.modules.modal.Modal
+import react.semanticui.modules.modal.ModalContent
 
 case class About(trigger: VdomNode, content: VdomNode) extends ReactProps[About](About.component)
 

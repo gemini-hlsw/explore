@@ -13,7 +13,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.common.implicits._
-import react.resizeDetector.ResizeDetector
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
@@ -36,7 +35,10 @@ object Tile {
 
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
-  val defaultBreakpoints                     =
+  val heightBreakpoints                      =
+    List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
+
+  val widthBreakpoints                       =
     List((300                            -> TileXSW),
          (Constants.TwoPanelCutoff.toInt -> TileSMW),
          (768                            -> TileMDW),
@@ -48,48 +50,45 @@ object Tile {
       .builder[Props]
       .stateless
       .render_PC { (p, c) =>
-        ResizeDetector() { s =>
-          val widthClass     =
-            defaultBreakpoints.findLast(_._1 < s.width.getOrElse(0)).map(_._2).getOrElse(TileSMW)
-          val maximizeButton =
-            Button(
-              as = <.a,
-              basic = true,
-              compact = true,
-              clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-              onClick = p.sizeStateCallback(TileSizeState.Maximized)
-            )(Icons.Maximize.fitted(true))
+        val maximizeButton =
+          Button(
+            as = <.a,
+            basic = true,
+            compact = true,
+            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            onClick = p.sizeStateCallback(TileSizeState.Maximized)
+          )(Icons.Maximize.fitted(true))
 
-          val minimizeButton =
-            Button(
-              as = <.a,
-              basic = true,
-              compact = true,
-              clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-              onClick = p.sizeStateCallback(TileSizeState.Minimized)
-            )(Icons.Minimize.fitted(true))
+        val minimizeButton =
+          Button(
+            as = <.a,
+            basic = true,
+            compact = true,
+            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+            onClick = p.sizeStateCallback(TileSizeState.Minimized)
+          )(Icons.Minimize.fitted(true))
 
-          <.div(ExploreStyles.Tile, s.targetRef)(
-            <.div(
-              ExploreStyles.TileTitle,
-              p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
-              Menu(
-                attached = MenuAttached.Top,
-                compact = true,
-                borderless = true,
-                secondary = true,
-                clazz = ExploreStyles.TileTitleMenu,
-                tabular = MenuTabular.Right
-              )(
-                MenuItem(as = <.a)(p.title)
-              ),
-              minimizeButton.when(p.showMinimize),
-              maximizeButton.when(p.showMaximize)
+        <.div(ExploreStyles.Tile)(
+          <.div(
+            ExploreStyles.TileTitle,
+            p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
+            Menu(
+              attached = MenuAttached.Top,
+              compact = true,
+              borderless = true,
+              secondary = true,
+              clazz = ExploreStyles.TileTitleMenu,
+              tabular = MenuTabular.Right
+            )(
+              MenuItem(as = <.a)(p.title)
             ),
-            <.div(ExploreStyles.TileBody |+| widthClass, c)
-              .when(p.state =!= TileSizeState.Minimized)
-          )
-        }
+            minimizeButton.when(p.showMinimize),
+            maximizeButton.when(p.showMaximize)
+          ),
+          ResponsiveComponent(widthBreakpoints, heightBreakpoints, clazz = ExploreStyles.TileBody)(
+            c
+          ).when(p.state =!= TileSizeState.Minimized)
+        )
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

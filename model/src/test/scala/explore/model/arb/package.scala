@@ -15,3 +15,4 @@ object all
     with ArbTree
     with ArbKeyedIndexedTree
     with ArbUserVault
+    with ArbObsSummary

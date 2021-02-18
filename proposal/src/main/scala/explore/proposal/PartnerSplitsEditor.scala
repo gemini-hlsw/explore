@@ -7,7 +7,9 @@ import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.components.ui.{ ExploreStyles, FomanticStyles, PartnerFlags }
+import explore.components.ui.ExploreStyles
+import explore.components.ui.FomanticStyles
+import explore.components.ui.PartnerFlags
 import explore.implicits._
 import explore.model._
 import explore.model.refined._

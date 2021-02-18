@@ -74,7 +74,7 @@ object ObsTabContents {
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
     )
   )
 
@@ -88,7 +88,7 @@ object ObsTabContents {
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
     )
   )
 
@@ -102,7 +102,7 @@ object ObsTabContents {
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 8, i = "target")
+      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
     )
   )
 
@@ -128,6 +128,7 @@ object ObsTabContents {
   object State {
     val panelsWidth   = State.panels.composeLens(TwoPanelState.treeWidth)
     val panelSelected = State.panels.composeLens(TwoPanelState.elementSelected)
+    val fovAngle      = State.options.composeLens(TargetVisualOptions.fovAngle)
 
     def breakPointNote(n: BreakpointName) =
       layouts.breakPointLayout(n, NotesIndex)
@@ -155,8 +156,21 @@ object ObsTabContents {
             )
         }
         .runAsyncAndThenCB { case (w, l) =>
-          $.setStateL(State.panelsWidth)(w) *> $.setStateL(State.layouts)(l)
+          $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
         }
+
+    def readTargetPreferences(targetId: Target.Id): Callback =
+      $.props.flatMap { p =>
+        p.userId.get.map { uid =>
+          AppCtx
+            .withCtx { implicit ctx =>
+              UserTargetPreferencesQuery
+                .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
+                .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+                .runAsyncAndForgetCB
+            }
+        }.getOrEmpty
+      }
 
     def render(props: Props, state: State) = {
       AppCtx.withCtx { implicit ctx =>
@@ -197,9 +211,15 @@ object ObsTabContents {
             .debounce(1.second)
 
         ObsLiveQuery { observations =>
-          val obsSummaryOpt = props.focused.get.collect { case FocusedObs(obsId) =>
-            observations.get.find(_.id === obsId)
+          val obsSummaryOpt: Option[ObsSummary] = props.focused.get.collect {
+            case FocusedObs(obsId) =>
+              observations.get.find(_.id === obsId)
           }.flatten
+
+          val targetId = obsSummaryOpt.collect {
+            case ObsSummary(_, _, _, _, _, _, Some(Right(tid))) =>
+              tid
+          }
 
           val backButton = TileButton(
             Button(
@@ -212,15 +232,13 @@ object ObsTabContents {
             )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
           )
 
-          // Use a fixed target id until observations have a real target
-          val targetId = Target.Id(2L)
-
           val coreWidth =
             if (window.innerWidth <= Constants.TwoPanelCutoff) {
               props.size.width.getOrElse(0)
             } else {
               props.size.width.getOrElse(0) - treeWidth
             }
+
           val rightSide = ResponsiveReactGridLayout(
             width = coreWidth,
             margin = (5, 5),
@@ -233,7 +251,7 @@ object ObsTabContents {
             <.div(
               ^.key := "notes",
               Tile(
-                s"Note for Observer ${obsSummaryOpt}",
+                s"Note for Observer",
                 backButton.some,
                 canMinimize = true,
                 canMaximize = true,
@@ -256,23 +274,23 @@ object ObsTabContents {
             <.div(
               ^.key := "target",
               Tile("Target")(
-                LiveQueryRenderMod[ObservationDB,
-                                   TargetEditQuery.Data,
-                                   Option[TargetEditQuery.Data.Target]
-                ](
-                  TargetEditQuery.query(targetId),
-                  _.target,
-                  NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                ) { targetOpt =>
-                  <.div(
-                    <.div(
+                targetId
+                  .map { targetId =>
+                    LiveQueryRenderMod[ObservationDB,
+                                       TargetEditQuery.Data,
+                                       Option[TargetEditQuery.Data.Target]
+                    ](
+                      TargetEditQuery.query(targetId),
+                      _.target,
+                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                    ) { targetOpt =>
                       (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
                         val stateView = ViewF.fromState[IO]($).zoom(State.options)
                         TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
                       }
-                    ).when(false)
-                  )
-                }
+
+                    }.withKey(s"target-$targetId")
+                  }
               )
             )
           )

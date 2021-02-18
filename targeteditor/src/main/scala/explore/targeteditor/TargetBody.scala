@@ -10,10 +10,13 @@ import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
+import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.View
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
-import explore.components.undo.{ UndoButtons, UndoRegion }
+import explore.components.undo.UndoButtons
+import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.formats._
@@ -21,14 +24,19 @@ import explore.model.reusability._
 import explore.model.utils._
 import explore.target.TargetQueries
 import explore.target.TargetQueries._
-import explore.{ AppCtx, View }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-import lucuma.core.model.{ Magnitude, SiderealTracking, Target, User }
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
-import lucuma.ui.optics.{ ChangeAuditor, TruncatedDec, TruncatedRA, ValidFormatInput }
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
@@ -150,102 +158,99 @@ object TargetBody {
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
-              <.div(
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                // Keep the search field and the coords always together
                 SearchForm(
                   nameView,
                   stateView,
                   searchAndSet
                 ),
-                Form(as = <.div, size = Small)(
-                  ExploreStyles.Grid,
-                  ExploreStyles.Compact,
-                  <.div(
-                    ExploreStyles.FlexContainer,
-                    ExploreStyles.TargetRaDecMinWidth,
-                    FormInputEV(
-                      id = "ra",
-                      value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-                      validFormat = ValidFormatInput.truncatedRA,
-                      changeAuditor = ChangeAuditor.truncatedRA,
-                      label = "RA",
-                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                      errorPointing = LabelPointing.Below,
-                      errorClazz = ExploreStyles.InputErrorTooltip,
-                      disabled = stateView.get
-                    ),
-                    FormInputEV(
-                      id = "dec",
-                      value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-                      validFormat = ValidFormatInput.truncatedDec,
-                      changeAuditor = ChangeAuditor.truncatedDec,
-                      label = "Dec",
-                      clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                      errorPointing = LabelPointing.Below,
-                      errorClazz = ExploreStyles.InputErrorTooltip,
-                      disabled = stateView.get
-                    )
+                <.div(
+                  ExploreStyles.FlexContainer,
+                  ExploreStyles.TargetRaDecMinWidth,
+                  FormInputEV(
+                    id = "ra",
+                    value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                    validFormat = ValidFormatInput.truncatedRA,
+                    changeAuditor = ChangeAuditor.truncatedRA,
+                    label = "RA",
+                    clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                    errorPointing = LabelPointing.Below,
+                    errorClazz = ExploreStyles.InputErrorTooltip,
+                    disabled = stateView.get
                   ),
-                  <.div(
-                    ExploreStyles.Grid,
-                    ExploreStyles.Compact,
-                    ExploreStyles.TargetPropertiesForm,
-                    InputWithUnits(
-                      epochView,
-                      ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                      ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
-                      id = "epoch",
-                      label = "Epoch",
-                      units = "years",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits(
-                      properMotionRAView,
-                      ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
-                      id = "raPM",
-                      label = "µ RA",
-                      units = "mas/y",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits(
-                      properMotionDecView,
-                      ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
-                      id = "raDec",
-                      label = "µ Dec",
-                      units = "mas/y",
-                      disabled = stateView.get
-                    ),
-                    InputWithUnits[IO, Option[Parallax]](
-                      parallaxView,
-                      ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
-                      ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
-                      id = "parallax",
-                      label = "Parallax",
-                      units = "mas",
-                      disabled = stateView.get
-                    ),
-                    RVInput(radialVelocityView, stateView)
-                  ),
-                  MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
-                  UndoButtons(target, undoCtx, disabled = stateView.get)
+                  FormInputEV(
+                    id = "dec",
+                    value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                    validFormat = ValidFormatInput.truncatedDec,
+                    changeAuditor = ChangeAuditor.truncatedDec,
+                    label = "Dec",
+                    clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
+                    errorPointing = LabelPointing.Below,
+                    errorClazz = ExploreStyles.InputErrorTooltip,
+                    disabled = stateView.get
+                  )
                 )
               ),
-              <.div(
-                AladinCell(
-                  props.uid,
-                  props.target.get.id,
-                  props.target.zoom(TargetQueries.baseCoordinates),
-                  props.options
-                ),
-                CataloguesForm(props.options).when(false)
+              AladinCell(
+                props.uid,
+                props.target.get.id,
+                props.target.zoom(TargetQueries.baseCoordinates),
+                props.options
               ),
+              CataloguesForm(props.options).when(false),
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                ExploreStyles.TargetPropertiesForm,
+                InputWithUnits(
+                  epochView,
+                  ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
+                  ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                  id = "epoch",
+                  label = "Epoch",
+                  units = "years",
+                  disabled = stateView.get
+                ),
+                InputWithUnits(
+                  properMotionRAView,
+                  ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                  id = "raPM",
+                  label = "µ RA",
+                  units = "mas/y",
+                  disabled = stateView.get
+                ),
+                InputWithUnits(
+                  properMotionDecView,
+                  ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                  id = "raDec",
+                  label = "µ Dec",
+                  units = "mas/y",
+                  disabled = stateView.get
+                ),
+                InputWithUnits[IO, Option[Parallax]](
+                  parallaxView,
+                  ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                  id = "parallax",
+                  label = "Parallax",
+                  units = "mas",
+                  disabled = stateView.get
+                ),
+                RVInput(radialVelocityView, stateView)
+              ),
+              MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
+              UndoButtons(target, undoCtx, disabled = stateView.get),
               <.div(
                 ExploreStyles.TargetSkyplotCell,
                 WIP(
                   SkyPlotSection(props.baseCoordinates)
-                )
-              ).when(false)
+                ).when(false)
+              )
             )
           )
         }

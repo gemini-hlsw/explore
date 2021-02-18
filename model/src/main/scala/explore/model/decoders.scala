@@ -6,22 +6,24 @@ package explore.model
 import cats.syntax.all._
 import coulomb._
 import explore.model.enum._
+import io.circe.Decoder
+import io.circe.DecodingFailure
+import io.circe.HCursor
 import io.circe.generic.semiauto
-import io.circe.{ Decoder, DecodingFailure, HCursor }
-import lucuma.core.enum.{ MagnitudeBand, MagnitudeSystem }
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.MagnitudeSystem
+import lucuma.core.math.Angle
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.Epoch
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.RightAscension
 import lucuma.core.math.units.CentimetersPerSecond
-import lucuma.core.math.{
-  Angle,
-  Coordinates,
-  Declination,
-  Epoch,
-  MagnitudeValue,
-  Parallax,
-  ProperMotion,
-  RadialVelocity,
-  RightAscension
-}
-import lucuma.core.model.{ Magnitude, SiderealTracking }
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SiderealTracking
 import sttp.model.Uri
 
 object decoders {
@@ -134,4 +136,5 @@ object decoders {
         s <- c.downField("system").as[MagnitudeSystem]
       } yield Magnitude(v, b, s)
   }
+
 }

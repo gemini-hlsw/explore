@@ -6,14 +6,18 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.Icons
+import explore.WebpackResources
+import explore.components.About
+import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
-import explore.components.{ About, ConnectionsStatus }
-import explore.model.enum.{ ExecutionEnvironment, Theme }
-import explore.{ Icons, WebpackResources }
+import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.Theme
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ GuestRole, User }
+import lucuma.core.model.GuestRole
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import org.scalajs.dom
@@ -22,7 +26,10 @@ import react.common._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
 import react.semanticui.modules.checkbox.Checkbox
-import react.semanticui.modules.dropdown.{ Dropdown, DropdownDivider, DropdownItem, DropdownMenu }
+import react.semanticui.modules.dropdown.Dropdown
+import react.semanticui.modules.dropdown.DropdownDivider
+import react.semanticui.modules.dropdown.DropdownItem
+import react.semanticui.modules.dropdown.DropdownMenu
 import react.semanticui.views.item.Item
 
 final case class TopBar(

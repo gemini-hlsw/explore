@@ -12,15 +12,17 @@ import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import explore.AppCtx
+import explore.Icons
+import explore.components.FormStaticData
+import explore.components.Tile
 import explore.components.ui._
-import explore.components.{ FormStaticData, Tile }
 import explore.implicits._
 import explore.model._
 import explore.model.display._
 import explore.model.enum.ProposalClass._
 import explore.model.refined._
 import explore.model.reusability._
-import explore.{ AppCtx, Icons }
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

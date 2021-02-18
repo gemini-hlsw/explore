@@ -7,12 +7,15 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import gpp.highcharts.highchartsStrings.line
-import gpp.highcharts.mod.{ XAxisLabelsOptions, _ }
+import gpp.highcharts.mod.XAxisLabelsOptions
+import gpp.highcharts.mod._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.{ Site, TwilightType }
-import lucuma.core.math.{ Angle, Coordinates }
+import lucuma.core.enum.Site
+import lucuma.core.enum.TwilightType
+import lucuma.core.math.Angle
+import lucuma.core.math.Coordinates
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.ui.reusability._
@@ -22,8 +25,13 @@ import react.highcharts.Chart
 import reactmoon.MoonPhase
 import shapeless._
 
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.{ Duration, Instant, LocalDate, ZoneId, ZoneOffset, ZonedDateTime }
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 

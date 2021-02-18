@@ -3,7 +3,8 @@
 
 package explore.optics
 
-import monocle.{ Getter, Lens }
+import monocle.Getter
+import monocle.Lens
 
 // Wrap a Getter and an Adjuster
 final case class GetAdjust[T, A](getter: Getter[T, A], adjuster: Adjuster[T, A]) {

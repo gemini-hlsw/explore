@@ -8,22 +8,31 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
+import explore.Icons
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
-import explore.components.undo.{ UndoButtons, UndoRegion }
+import explore.components.undo.UndoButtons
+import explore.components.undo.UndoRegion
 import explore.data.KeyedIndexedList
 import explore.implicits._
+import explore.model.Constants
+import explore.model.Focused
 import explore.model.Focused._
-import explore.model.{ Constants, Focused, ObsSummary, TargetViewExpandedIds }
-import explore.optics.{ GetAdjust, _ }
-import explore.undo.{ KIListMod, Undoer }
-import explore.Icons
-import japgolly.scalajs.react._
+import explore.model.ObsSummary
+import explore.model.TargetViewExpandedIds
+import explore.optics.GetAdjust
+import explore.optics._
+import explore.undo.KIListMod
+import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ Observation, Target }
+import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import monocle.Getter
 import monocle.function.Field1.first
+import monocle.macros.Lenses
 import monocle.std.option.some
 import mouse.boolean._
 import react.beautifuldnd._
@@ -35,15 +44,13 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.sizes._
+import react.semanticui.views.card.Card
+import react.semanticui.views.card.CardContent
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
 
 import TargetObsQueries._
-import lucuma.core.model.Asterism
-import react.semanticui.views.card.Card
-import react.semanticui.views.card.CardContent
-import monocle.macros.Lenses
 
 final case class TargetObsList(
   objectsWithObs: View[TargetsAndAsterismsWithObs],
@@ -410,7 +417,10 @@ object TargetObsList {
 
       def renderObsBadge(obs: ObsAttached): TagMod =
         ObsBadge(
-          ObsSummary(obs.id, obs.name.orEmpty),
+          ObsSummary(id = obs.id,
+                     name = obs.name,
+                     observationTarget = None
+          ), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
           selected = props.focused.get.exists(_ === FocusedObs(obs.id))
         )

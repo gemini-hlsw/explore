@@ -4,11 +4,17 @@
 package explore.components.graphql
 
 import cats.data.NonEmptyList
-import cats.effect.{ CancelToken, ConcurrentEffect, ContextShift, IO, Timer }
+import cats.effect.CancelToken
+import cats.effect.ConcurrentEffect
+import cats.effect.ContextShift
+import cats.effect.IO
+import cats.effect.Timer
 import cats.syntax.all._
-import clue.{ GraphQLSubscription, GraphQLWebSocketClient }
+import clue.GraphQLSubscription
+import clue.GraphQLWebSocketClient
+import crystal.Pot
+import crystal.ViewF
 import crystal.react._
-import crystal.{ Pot, ViewF }
 import explore._
 import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger

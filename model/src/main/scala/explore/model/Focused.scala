@@ -5,9 +5,10 @@ package explore.model
 
 import cats.kernel.Eq
 import cats.syntax.all._
-import lucuma.core.model.{ Observation, Target }
-import monocle.macros.Lenses
 import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
+import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable
 object Focused {
