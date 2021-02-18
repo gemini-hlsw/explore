@@ -10,6 +10,7 @@ object Settings {
     val catsEffect        = "2.3.3"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
+    val circeGolden       = "0.3.0"
     val clue              = "0.9.0"
     val crystal           = "0.9.1"
     val discipline        = "1.1.3"
@@ -73,6 +74,12 @@ object Settings {
         "io.circe" %%% "circe-parser",
         "io.circe" %%% "circe-generic-extras"
       )(circe)
+    )
+
+    val CirceGolden = Def.setting(
+      Seq(
+        "io.circe" %%% "circe-golden" % circeGolden
+      )
     )
 
     val Clue = Def.setting(
