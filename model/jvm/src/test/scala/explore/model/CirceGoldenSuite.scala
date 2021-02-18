@@ -9,5 +9,5 @@ import io.circe.testing.ArbitraryInstances
 import munit.DisciplineSuite
 
 class CirceGoldenSuite extends DisciplineSuite with ArbitraryInstances {
-  checkAll("GoldenCodec[ObsSummary]", GoldenCodecTests[ObsSummary].goldenCodec)
+  checkAll("GoldenCodec[ObsSummary]", GoldenCodecTests[ObsSummary](5).goldenCodec)
 }
