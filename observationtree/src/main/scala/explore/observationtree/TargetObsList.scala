@@ -55,8 +55,8 @@ import TargetObsQueries._
 final case class TargetObsList(
   objectsWithObs: View[TargetsAndAsterismsWithObs],
   focused:        View[Option[Focused]],
-  expandedIds:    View[TargetViewExpandedIds]
-) extends ReactProps[TargetObsList](TargetObsList.component)
+  expandedIds:    View[TargetViewExpandedIds])
+    extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
   type Props = TargetObsList

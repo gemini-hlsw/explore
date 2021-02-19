@@ -32,8 +32,8 @@ import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
   value:    ViewF[IO, Option[RadialVelocity]],
-  disabled: ViewF[IO, Boolean]
-) extends ReactProps[RVInput](RVInput.component)
+  disabled: ViewF[IO, Boolean])
+    extends ReactProps[RVInput](RVInput.component)
 
 object RVInput {
   type Props = RVInput

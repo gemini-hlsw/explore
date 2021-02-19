@@ -46,8 +46,8 @@ import scalajs.js.JSConverters._
 final case class MagnitudeForm(
   targetId:   Target.Id,
   magnitudes: View[List[Magnitude]],
-  disabled:   Boolean
-) extends ReactProps[MagnitudeForm](MagnitudeForm.component)
+  disabled:   Boolean)
+    extends ReactProps[MagnitudeForm](MagnitudeForm.component)
 
 object MagnitudeForm {
   type Props = MagnitudeForm

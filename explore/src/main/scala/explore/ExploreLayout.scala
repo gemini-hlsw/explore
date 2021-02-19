@@ -12,9 +12,11 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
-final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
-  val view:                       View[RootModel]
-) extends ReactProps[ExploreLayout](ExploreLayout.component)
+final case class ExploreLayout(
+  c:        RouterCtl[Page],
+  r:        ResolutionWithProps[Page, View[RootModel]]
+)(val view: View[RootModel])
+    extends ReactProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
   type Props = ExploreLayout

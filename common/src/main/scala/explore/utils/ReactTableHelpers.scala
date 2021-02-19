@@ -38,7 +38,8 @@ object ReactTableHelpers {
     changeAuditor: ChangeAuditor[B] = ChangeAuditor.accept[B],
     disabled:      Boolean = false,
     modifiers:     Seq[TagMod] = Seq.empty
-  )(implicit eq:   Eq[B]) =
+  )(implicit eq:   Eq[B]
+  ) =
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>
@@ -64,11 +65,14 @@ object ReactTableHelpers {
    * @param excludeFn An optional function that determines a set of enums thst should be excluded from the dropdown.
    * @return The component.
    */
-  def editableEnumViewColumn[A, B](lens: Lens[A, B])(
-    disabled:                            Boolean = false,
-    excludeFn:                           Option[View[A] => Set[B]] = None,
-    modifiers:                           Seq[TagMod] = Seq.empty
-  )(implicit enum:                       Enumerated[B], display: Display[B]) =
+  def editableEnumViewColumn[A, B](
+    lens:          Lens[A, B]
+  )(disabled:      Boolean = false,
+    excludeFn:     Option[View[A] => Set[B]] = None,
+    modifiers:     Seq[TagMod] = Seq.empty
+  )(implicit enum: Enumerated[B],
+    display:       Display[B]
+  ) =
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>

@@ -28,8 +28,7 @@ final case class ObsSummary(
   conf:              String = "GMOS-N R831 1x300",
   constraints:       String = "<0.7\" <0.3 mag Bright",
   duration:          Duration = Duration.of(93, ChronoUnit.MINUTES),
-  observationTarget: Option[Either[Asterism.Id, Target.Id]]
-)
+  observationTarget: Option[Either[Asterism.Id, Target.Id]])
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.by(x => (x.id, x.name, x.observationTarget))

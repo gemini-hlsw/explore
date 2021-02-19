@@ -10,7 +10,8 @@ import org.scalacheck.Cogen._
 import explore.data.KeyedIndexedList
 
 trait ArbKeyedIndexedList {
-  implicit def keyedIndexedListArb[K, A](implicit
+  implicit def keyedIndexedListArb[K, A](
+    implicit
     arbA:     Arbitrary[A],
     arbKeyFn: Arbitrary[A => K]
   ) =
@@ -21,7 +22,8 @@ trait ArbKeyedIndexedList {
       } yield KeyedIndexedList.fromList(list, getKey)
     }
 
-  implicit def keyedIndexedListCogen[K, A](implicit
+  implicit def keyedIndexedListCogen[K, A](
+    implicit
     cogenA: Cogen[A]
   ): Cogen[KeyedIndexedList[K, A]] =
     Cogen[List[A]].contramap(_.toList)

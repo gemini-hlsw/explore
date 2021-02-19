@@ -23,8 +23,8 @@ import react.semanticui.sizes._
 
 final case class ObsList(
   observations: View[List[ObsSummary]],
-  focused:      View[Option[Focused]]
-) extends ReactProps[ObsList](ObsList.component)
+  focused:      View[Option[Focused]])
+    extends ReactProps[ObsList](ObsList.component)
 
 object ObsList {
   type Props = ObsList

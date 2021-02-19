@@ -48,8 +48,7 @@ import react.semanticui.sizes.Small
 final case class SearchCallback(
   searchTerm: NonEmptyString,
   onComplete: Option[Target] => Callback,
-  onError:    Throwable => Callback
-) {
+  onError:    Throwable => Callback) {
   def run: Callback = Callback.empty
 }
 
@@ -57,8 +56,8 @@ final case class TargetBody(
   uid:     User.Id,
   id:      Target.Id,
   target:  View[TargetResult],
-  options: View[TargetVisualOptions]
-) extends ReactProps[TargetBody](TargetBody.component) {
+  options: View[TargetVisualOptions])
+    extends ReactProps[TargetBody](TargetBody.component) {
   val baseCoordinates: Coordinates =
     target.zoom(TargetQueries.baseCoordinates).get
 }

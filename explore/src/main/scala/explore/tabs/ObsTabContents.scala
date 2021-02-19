@@ -54,8 +54,8 @@ import scala.concurrent.duration._
 final case class ObsTabContents(
   userId:  ViewOpt[User.Id],
   focused: View[Option[Focused]],
-  size:    ResizeDetector.Dimensions
-) extends ReactProps[ObsTabContents](ObsTabContents.component) {
+  size:    ResizeDetector.Dimensions)
+    extends ReactProps[ObsTabContents](ObsTabContents.component) {
   def isObsSelected: Boolean = focused.get.isDefined
 }
 
@@ -119,8 +119,7 @@ object ObsTabContents {
   final case class State(
     panels:  TwoPanelState,
     layouts: LayoutsMap,
-    options: TargetVisualOptions
-  ) {
+    options: TargetVisualOptions) {
     def updateLayouts(newLayouts: LayoutsMap): State =
       copy(layouts = mergeMap(layouts, newLayouts))
   }

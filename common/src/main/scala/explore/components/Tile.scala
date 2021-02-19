@@ -24,8 +24,8 @@ final case class Tile(
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty
-) extends ReactPropsWithChildren[Tile](Tile.component) {
+  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty)
+    extends ReactPropsWithChildren[Tile](Tile.component) {
   def showMaximize: Boolean = canMaximize && state === TileSizeState.Minimized
   def showMinimize: Boolean = canMinimize && state === TileSizeState.Normal
 }

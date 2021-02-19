@@ -17,21 +17,22 @@ object Undoer {
     undo:      Undo[F, M],
     redo:      Redo[F, M],
     undoEmpty: Boolean,
-    redoEmpty: Boolean
-  )
+    redoEmpty: Boolean)
 
   trait Setter[F[_], M] {
     def set[A](
       m:        M,
       getter:   M => A,
       onChange: A => F[Unit]
-    )(v:        A): F[Unit]
+    )(v:        A
+    ): F[Unit]
 
     def mod[A](
       m:        M,
       getter:   M => A,
       onChange: A => F[Unit]
-    )(f:        A => A): F[Unit] =
+    )(f:        A => A
+    ): F[Unit] =
       set(m, getter, onChange)(f(getter(m)))
   }
 
@@ -88,7 +89,8 @@ abstract class Undoer[F[_]: Sync, M] {
       m:        M,
       getter:   M => A,
       onChange: A => F[Unit]
-    )(v:        A): F[Unit] =
+    )(v:        A
+    ): F[Unit] =
       for {
         _ <- pushUndo(Restorer[F, M, A](m, getter, onChange))
         _ <- resetRedo
@@ -100,7 +102,8 @@ abstract class Undoer[F[_]: Sync, M] {
   private def restore(
     popFrom: F[Option[Restorer[F, M]]],
     pushTo:  Restorer[F, M] => F[Unit]
-  )(m:       M): F[Unit] =
+  )(m:       M
+  ): F[Unit] =
     popFrom.flatMap(
       _.map(restorer => restorer.restore(m).flatMap(pushTo)).orUnit
     )

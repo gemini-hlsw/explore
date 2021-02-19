@@ -13,8 +13,8 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class UndoRegion[M](
-  renderer: Undoer.Context[IO, M] => VdomNode
-) extends ReactProps(UndoRegion.component)
+  renderer: Undoer.Context[IO, M] => VdomNode)
+    extends ReactProps(UndoRegion.component)
     with UndoRegion.Props[IO, M]
 
 object UndoRegion {
@@ -25,8 +25,7 @@ object UndoRegion {
   @Lenses
   protected final case class State[F[_], M](
     undoStack: Undoer.Stack[F, M] = List.empty,
-    redoStack: Undoer.Stack[F, M] = List.empty
-  )
+    redoStack: Undoer.Stack[F, M] = List.empty)
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], M]: Reusability[Props[F, M]] =

@@ -29,7 +29,8 @@ final case class InputWithUnits[F[_]: Effect, A](
   units:           String,
   disabled:        Boolean,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2
-)(implicit val ev: ExternalValue[ViewF[F, *]], val eq: Eq[A])
+)(implicit val ev: ExternalValue[ViewF[F, *]],
+  val eq:          Eq[A])
     extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
 
 object InputWithUnits {

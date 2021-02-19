@@ -16,8 +16,7 @@ final case class Constraints(
   cc:   CloudCover,
   iq:   ImageQuality,
   sb:   SkyBackground,
-  wv:   WaterVapor
-) {
+  wv:   WaterVapor) {
   override def toString: String =
     s"""$productPrefix(UUID.fromString("$id")
        |"$name"

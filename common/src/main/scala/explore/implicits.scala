@@ -39,7 +39,8 @@ trait ListImplicits {
   private object singleton extends Poly1 { implicit def anything[A] = at[A](List(_)) }
 
   implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
-    def unzipN[Out <: HList](implicit
+    def unzipN[Out <: HList](
+      implicit
       mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
       monoid: Monoid[Out]
     ): Out = hlists.map(_.map(singleton)).combineAll
@@ -83,11 +84,13 @@ object implicits extends ShorthandTypes with ListImplicits with OpticsImplicits 
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
   implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger
-  implicit def appContext2UserPreferencesDBClient[F[_]](implicit
+  implicit def appContext2UserPreferencesDBClient[F[_]](
+    implicit
     ctx:                                                   AppContext[F]
   ): GraphQLWebSocketClient[F, UserPreferencesDB] =
     ctx.clients.preferencesDB
-  implicit def appContext2ODBClient[F[_]](implicit
+  implicit def appContext2ODBClient[F[_]](
+    implicit
     ctx: AppContext[F]
   ): GraphQLWebSocketClient[F, ObservationDB] =
     ctx.clients.odb

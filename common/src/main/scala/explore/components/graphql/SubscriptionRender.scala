@@ -21,16 +21,15 @@ import react.semanticui.sizes._
 final case class SubscriptionRender[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
-)(
-  val valueRender:   A => VdomNode,
+)(val valueRender:   A => VdomNode,
   val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
   val F:             ConcurrentEffect[IO],
   val logger:        Logger[IO],
-  val reuse:         Reusability[A]
-) extends ReactProps(SubscriptionRender.component)
+  val reuse:         Reusability[A])
+    extends ReactProps(SubscriptionRender.component)
     with SubscriptionRender.Props[IO, D, A]
 
 object SubscriptionRender {
@@ -38,8 +37,8 @@ object SubscriptionRender {
 
   final case class State[F[_], D, A](
     subscription: GraphQLSubscription[F, D],
-    renderer:     StreamRenderer.Component[A]
-  ) extends Render.Subscription.State[F, Id, D, A]
+    renderer:     StreamRenderer.Component[A])
+      extends Render.Subscription.State[F, Id, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] = Reusability.never

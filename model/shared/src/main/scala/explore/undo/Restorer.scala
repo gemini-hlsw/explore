@@ -24,8 +24,12 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
 }
 
 object Restorer {
-  def apply[F[_], M, A](m: M, _getter: M => A, _onChange: A => F[Unit])(implicit
-    ff:                    Functor[F]
+  def apply[F[_], M, A](
+    m:         M,
+    _getter:   M => A,
+    _onChange: A => F[Unit]
+  )(implicit
+    ff:        Functor[F]
   ): Restorer[F, M] =
     new Restorer[F, M] {
       override protected implicit val functorF = ff

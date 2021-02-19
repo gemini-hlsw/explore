@@ -19,8 +19,7 @@ case class SSOConfig(
   uri:                        Uri,
   readTimeoutSeconds:         Long = 10,
   refreshTimeoutDeltaSeconds: Long = 10, // time before expiration to renew
-  refreshIntervalFactor:      Long = 1
-) {
+  refreshIntervalFactor:      Long = 1) {
   val readTimeout: FiniteDuration         = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
   val refreshTimeoutDelta: FiniteDuration =
     FiniteDuration(refreshTimeoutDeltaSeconds, TimeUnit.SECONDS)
@@ -38,8 +37,7 @@ case class AppConfig(
   environment:      ExecutionEnvironment,
   preferencesDBURI: Uri,
   odbURI:           Uri,
-  sso:              SSOConfig
-)
+  sso:              SSOConfig)
 
 object AppConfig {
   implicit val eqAppConfig: Eq[AppConfig]     = Eq.fromUniversalEquals

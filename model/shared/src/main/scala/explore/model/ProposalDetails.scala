@@ -30,8 +30,7 @@ final case class ProposalDetails(
   requestTime1:  NonNegHour,
   requestTime2:  NonNegHour,
   minimumPct1:   IntPercent,
-  minimumPct2:   IntPercent
-)
+  minimumPct2:   IntPercent)
 
 object ProposalDetails {
   implicit val equalProposalDetails: Eq[ProposalDetails] = Eq.fromUniversalEquals

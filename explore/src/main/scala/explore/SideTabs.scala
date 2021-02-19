@@ -23,8 +23,8 @@ import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
 
 final case class SideTabs(
-  tabs: View[EnumZipper[AppTab]]
-) extends ReactProps[SideTabs](SideTabs.component)
+  tabs: View[EnumZipper[AppTab]])
+    extends ReactProps[SideTabs](SideTabs.component)
 
 object SideTabs {
   type Props = SideTabs

@@ -12,7 +12,8 @@ import explore.data.tree.KeyedIndexedTree
 import cats.kernel.Eq
 
 trait ArbKeyedIndexedTree {
-  implicit def keyedIndexedTreeArb[K, A](implicit
+  implicit def keyedIndexedTreeArb[K, A](
+    implicit
     eqK:      Eq[K],
     arbKeyFn: Arbitrary[A => K],
     arbTree:  Arbitrary[Tree[A]]
@@ -24,7 +25,8 @@ trait ArbKeyedIndexedTree {
       } yield KeyedIndexedTree.fromTree(tree, getKey)
     }
 
-  implicit def keyedIndexedTreeCogen[K, A](implicit
+  implicit def keyedIndexedTreeCogen[K, A](
+    implicit
     cogenTreeA: Cogen[Tree[A]]
   ): Cogen[KeyedIndexedTree[K, A]] =
     Cogen[Tree[A]].contramap(_.toTree)

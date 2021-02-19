@@ -165,7 +165,8 @@ object ResizeDetector {
     refreshRate:     js.UndefOr[Int] = js.undefined,
     refreshOptions:  js.UndefOr[RefreshOptions] = js.undefined,
     observerOptions: js.UndefOr[ObserverOptions] = js.undefined
-  )(children:        Render) = component(
+  )(children:        Render
+  ) = component(
     Props(children,
           onResize,
           handleHeight,

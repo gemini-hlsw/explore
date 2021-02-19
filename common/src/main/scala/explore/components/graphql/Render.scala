@@ -104,13 +104,10 @@ object Render {
       def apply[P <: Props[F, G, S, D, A], ST <: State[F, G, S, D, A]](
         componentName: String,
         buildRenderer: (fs2.Stream[F, A], P) => StreamRendererComponent[G, A],
-        buildState:    (
-          Queue[F, A],
-          NonEmptyList[GraphQLSubscription[F, _]],
-          CancelToken[F],
-          StreamRendererComponent[G, A]
-        ) => ST
-      )($             : ComponentDidMount[P, Option[ST], Unit]): Callback = {
+        buildState:    (Queue[F, A], NonEmptyList[GraphQLSubscription[F, _]], CancelToken[F],
+          StreamRendererComponent[G, A]) => ST
+      )($             : ComponentDidMount[P, Option[ST], Unit]
+      ): Callback = {
         implicit val F      = $.props.F
         implicit val logger = $.props.logger
 

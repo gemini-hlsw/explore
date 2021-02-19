@@ -32,8 +32,8 @@ import scalajs.js.JSConverters._
 final case class SearchForm(
   name:        View[NonEmptyString],
   searching:   View[Boolean],
-  searchAndGo: SearchCallback => Callback
-) extends ReactProps[SearchForm](SearchForm.component) {
+  searchAndGo: SearchCallback => Callback)
+    extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
     searchTerm: String,
     before:     Callback,
@@ -54,8 +54,7 @@ object SearchForm {
   final case class State(
     initialName:   NonEmptyString,
     searchEnabled: Boolean,
-    searchError:   Option[NonEmptyString]
-  )
+    searchError:   Option[NonEmptyString])
 
   implicit val stateReuse                     = Reusability.derive[State]
   implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.name, x.searching))

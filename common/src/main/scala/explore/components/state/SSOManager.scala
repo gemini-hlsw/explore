@@ -23,8 +23,8 @@ import java.time.Instant
 final case class SSOManager(
   expiration: Instant,
   setVault:   Option[UserVault] => IO[Unit],
-  setMessage: NonEmptyString => IO[Unit]
-) extends ReactProps[SSOManager](SSOManager.component)
+  setMessage: NonEmptyString => IO[Unit])
+    extends ReactProps[SSOManager](SSOManager.component)
 
 object SSOManager {
   type Props = SSOManager

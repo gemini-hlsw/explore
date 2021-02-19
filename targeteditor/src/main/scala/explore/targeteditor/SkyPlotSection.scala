@@ -24,8 +24,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 final case class SkyPlotSection(
-  coords: Coordinates
-) extends ReactProps[SkyPlotSection](SkyPlotSection.component)
+  coords: Coordinates)
+    extends ReactProps[SkyPlotSection](SkyPlotSection.component)
 
 object SkyPlotSection {
   type Props = SkyPlotSection

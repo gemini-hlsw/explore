@@ -14,8 +14,7 @@ import KeyedIndexedTree._
 case class KeyedIndexedTree[K: Eq, A] private (
   private val byKey:  Map[K, Node[IndexedElem[K, A]]],
   private val tree:   Tree[IndexedElem[K, A]]
-)(
-  private val getKey: A => K // Having in another param set keeps this out of equality
+)(private val getKey: A => K // Having in another param set keeps this out of equality
 ) {
 
   def toTree: Tree[A] = tree.map(_.elem)
@@ -37,8 +36,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
   private def removeInTree(key: K): Tree[IndexedElem[K, A]] = {
     def removeInChildren(
       idx:       Index[K]
-    )(
-      children:  List[Node[IndexedElem[K, A]]],
+    )(children:  List[Node[IndexedElem[K, A]]],
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
       if (parentKey === idx.parentKey)

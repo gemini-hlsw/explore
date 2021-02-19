@@ -38,8 +38,8 @@ final case class AladinCell(
   uid:     User.Id,
   tid:     Target.Id,
   target:  View[Coordinates],
-  options: View[TargetVisualOptions]
-) extends ReactProps[AladinCell](AladinCell.component) {
+  options: View[TargetVisualOptions])
+    extends ReactProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get
 }
 

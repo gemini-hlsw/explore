@@ -30,8 +30,8 @@ final case class TreeComp[K, A](
   keyToItemId:   K => AtlasTree.ItemId,
   keyFromItemId: AtlasTree.ItemId => K,
   treeMod:       KITreeMod[IO, A, K],
-  render:        AtlasTree.RenderItemParams[A] => VdomNode
-) extends ReactProps[TreeComp[Any, Any]](TreeComp.component)
+  render:        AtlasTree.RenderItemParams[A] => VdomNode)
+    extends ReactProps[TreeComp[Any, Any]](TreeComp.component)
 
 object TreeComp {
   type Props[K, A] = TreeComp[K, A]
@@ -73,8 +73,7 @@ object TreeComp {
   @Lenses
   final case class State[K, A](
     tree:             KeyedIndexedTree[K, A],
-    collapsedItemIds: Set[AtlasTree.ItemId] = Set.empty
-  )
+    collapsedItemIds: Set[AtlasTree.ItemId] = Set.empty)
 
   class Backend[K, A]($ : BackendScope[Props[K, A], State[K, A]]) {
 
@@ -89,10 +88,12 @@ object TreeComp {
         $.modStateL(State.collapsedItemIds[K, A])(_ - itemId)
 
     def onDragEnd(
-      tree:     KeyedIndexedTree[K, A],
-      modState: ModState[IO, KeyedIndexedTree[K, A]],
-      setter:   Undoer.Setter[IO, KeyedIndexedTree[K, A]]
-    )(source:   AtlasTree.Position, destination: Option[AtlasTree.Position]): Callback =
+      tree:        KeyedIndexedTree[K, A],
+      modState:    ModState[IO, KeyedIndexedTree[K, A]],
+      setter:      Undoer.Setter[IO, KeyedIndexedTree[K, A]]
+    )(source:      AtlasTree.Position,
+      destination: Option[AtlasTree.Position]
+    ): Callback =
       $.props >>= { props =>
         def pos2Index(pos: AtlasTree.Position): Index[K] =
           Index(pos.parentId.some.filterNot(_.isEmpty).map(props.keyFromItemId), pos.index)

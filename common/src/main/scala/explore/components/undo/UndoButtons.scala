@@ -21,8 +21,8 @@ final case class UndoButtons[F[_], A](
   iconSize:   SemanticSize = Small,
   disabled:   Boolean = false
 )(implicit
-  val effect: Effect[F]
-) extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
+  val effect: Effect[F])
+    extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
 
 object UndoButtons {
   type Props[F[_], A] = UndoButtons[F, A]

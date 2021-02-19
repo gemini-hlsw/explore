@@ -42,8 +42,8 @@ final case class SkyPlot(
   coords: Coordinates,
   date:   LocalDate,
   zoneId: ZoneId,
-  height: Int
-) extends ReactProps[SkyPlot](SkyPlot.component)
+  height: Int)
+    extends ReactProps[SkyPlot](SkyPlot.component)
 
 object SkyPlot {
   type Props = SkyPlot
@@ -63,14 +63,12 @@ object SkyPlot {
     targetAltitude:   List[Chart.Data],
     skyBrightness:    List[Chart.Data],
     parallacticAngle: List[Chart.Data],
-    moonAltitude:     List[Chart.Data]
-  )
+    moonAltitude:     List[Chart.Data])
 
   sealed abstract class ElevationSeries(
     val name:  String,
     val yAxis: Int,
-    val data:  SeriesData => List[Chart.Data]
-  )
+    val data:  SeriesData => List[Chart.Data])
   object ElevationSeries extends Enumerated[ElevationSeries] {
     case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
     case object ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)

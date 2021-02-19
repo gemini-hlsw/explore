@@ -106,7 +106,8 @@ object UserPreferencesQueries {
       userId:       Option[User.Id],
       area:         ResizableSection,
       defaultValue: Int
-    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]): F[Int] =
+    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]
+    ): F[Int] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         w   <-
@@ -166,7 +167,8 @@ object UserPreferencesQueries {
       layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
-    )(implicit cl:   GraphQLClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
+    )(implicit cl:   GraphQLClient[F, UserPreferencesDB]
+    ): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         c   <-
@@ -250,7 +252,8 @@ object UserPreferencesQueries {
       uid:         User.Id,
       tid:         Target.Id,
       defaultFov:  Angle
-    )(implicit cl: GraphQLClient[F, UserPreferencesDB]): F[Angle] =
+    )(implicit cl: GraphQLClient[F, UserPreferencesDB]
+    ): F[Angle] =
       (for {
         r <-
           query[F](uid.show, tid.show)
