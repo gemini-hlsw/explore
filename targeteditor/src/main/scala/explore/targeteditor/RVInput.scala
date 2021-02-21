@@ -15,10 +15,15 @@ import explore.implicits._
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.{ ApparentRadialVelocity, RadialVelocity, Redshift }
-import lucuma.core.util.{ Display, Enumerated }
-import lucuma.ui.forms.{ EnumViewSelect, FormInputEV }
-import lucuma.ui.optics.{ ChangeAuditor, ValidFormatInput }
+import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
+import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._

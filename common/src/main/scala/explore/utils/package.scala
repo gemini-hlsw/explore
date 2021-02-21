@@ -6,9 +6,11 @@ package explore
 import cats.effect.Sync
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
-import explore.model.enum.{ ExecutionEnvironment, Theme }
-import lucuma.ui.utils.{ versionDateFormatter, versionDateTimeFormatter }
+import explore.model.enum.Theme
+import lucuma.ui.utils.versionDateFormatter
+import lucuma.ui.utils.versionDateTimeFormatter
 import org.scalajs.dom
 
 import java.time.Instant

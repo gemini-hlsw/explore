@@ -18,7 +18,10 @@ import react.common.ReactProps
 import react.datepicker._
 import react.semanticui.modules.checkbox.Checkbox
 
-import java.time.{ LocalDate, ZoneId, ZoneOffset, ZonedDateTime }
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 final case class SkyPlotSection(
   coords: Coordinates

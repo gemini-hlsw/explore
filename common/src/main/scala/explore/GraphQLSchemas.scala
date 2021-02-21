@@ -6,9 +6,14 @@ package explore
 import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
+import explore.model.ResizableSection
+import explore.model.SiderealTarget
 import explore.model.enum._
-import explore.model.{ ResizableSection, SiderealTarget }
-import lucuma.core.model.{ Asterism, Magnitude, Observation, Target, User }
+import lucuma.core.model.Asterism
+import lucuma.core.model.Magnitude
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
+import lucuma.core.model.User
 
 import java.math.MathContext
 

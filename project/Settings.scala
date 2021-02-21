@@ -6,10 +6,11 @@ import sbt.librarymanagement._
 object Settings {
 
   object LibraryVersions {
-    val cats              = "2.4.1"
-    val catsEffect        = "2.3.1"
+    val cats              = "2.4.2"
+    val catsEffect        = "2.3.3"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
+    val circeGolden       = "0.3.0"
     val clue              = "0.9.0"
     val crystal           = "0.9.1"
     val discipline        = "1.1.3"
@@ -19,13 +20,13 @@ object Settings {
     val log4CatsLogLevel  = "0.1.2"
     val lucumaCore        = "0.7.6"
     val lucumaCatalog     = "0.3.6"
-    val lucumaUI          = "0.11.3"
+    val lucumaUI          = "0.11.4"
     val lucumaSSO         = "0.0.9"
     val lucumaBC          = "0.1.0"
     val monocle           = "2.1.0"
     val mouse             = "0.26.2"
-    val mUnit             = "0.7.22"
-    val reactAladin       = "0.4.2"
+    val mUnit             = "0.7.21"
+    val reactAladin       = "0.4.3"
     val reactAtlasKitTree = "0.4.0"
     val reactClipboard    = "1.4.3"
     val reactCommon       = "0.11.3"
@@ -36,7 +37,7 @@ object Settings {
     val reactSemanticUI   = "0.10.5"
     val reactTable        = "0.0.2"
     val scalaJsReact      = "1.7.7"
-    val sttp              = "3.1.2"
+    val sttp              = "3.1.3"
   }
 
   object Libraries {
@@ -73,6 +74,12 @@ object Settings {
         "io.circe" %%% "circe-parser",
         "io.circe" %%% "circe-generic-extras"
       )(circe)
+    )
+
+    val CirceGolden = Def.setting(
+      Seq(
+        "io.circe" %%% "circe-golden" % circeGolden
+      )
     )
 
     val Clue = Def.setting(

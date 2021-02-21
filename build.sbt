@@ -105,13 +105,14 @@ lazy val root = project
   )
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
+  .crossType(CrossType.Full)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .jsSettings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
+  .jvmSettings(commonJVMSettings)
 
 lazy val common = project
   .in(file("common"))
@@ -320,6 +321,13 @@ lazy val commonLibSettings = Seq(
       ),
   testFrameworks += new TestFramework("munit.Framework")
 )
+
+lazy val commonJVMSettings = Seq(
+  libraryDependencies ++=
+    In(Test)(
+      CirceGolden.value
+    )
+  )
 
 lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(
   libraryDependencies ++=

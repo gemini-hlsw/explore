@@ -11,7 +11,8 @@ import explore.components.undo.UndoRegion
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
 import explore.implicits._
-import explore.undo.{ KITreeMod, Undoer }
+import explore.undo.KITreeMod
+import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

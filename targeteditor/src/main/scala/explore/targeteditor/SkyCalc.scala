@@ -6,9 +6,11 @@ package explore.targeteditor
 import cats.syntax.all._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
-import lucuma.core.math.skycalc.{ ImprovedSkyCalc, SkyCalcResults }
+import lucuma.core.math.skycalc.ImprovedSkyCalc
+import lucuma.core.math.skycalc.SkyCalcResults
 
-import java.time.{ Duration, Instant }
+import java.time.Duration
+import java.time.Instant
 
 object SkyCalc {
   // TODO Cache

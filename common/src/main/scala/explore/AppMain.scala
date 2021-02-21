@@ -4,25 +4,37 @@
 package explore
 
 import cats.data.OptionT
-import cats.effect.{ ExitCode, IO, IOApp }
+import cats.effect.ExitCode
+import cats.effect.IO
+import cats.effect.IOApp
 import cats.syntax.all._
+import clue.Backend
+import clue.WebSocketReconnectionStrategy
 import clue.data.Input
-import clue.js.{ AjaxJSBackend, WebSocketJSBackend }
-import clue.{ Backend, WebSocketReconnectionStrategy }
+import clue.js.AjaxJSBackend
+import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
 import crystal.react.AppRoot
 import explore.common.UserPreferencesQueries._
 import explore.implicits._
-import explore.model.enum.{ AppTab, ExecutionEnvironment, Theme }
+import explore.model.AppConfig
+import explore.model.AppContext
+import explore.model.Focused
+import explore.model.RootModel
+import explore.model.UserVault
+import explore.model.enum.AppTab
+import explore.model.enum.ExecutionEnvironment
+import explore.model.enum.Theme
 import explore.model.reusability._
-import explore.model.{ AppConfig, AppContext, Focused, RootModel, UserVault }
 import explore.utils
 import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
 import org.scalajs.dom
-import org.scalajs.dom.experimental.{ Request => FetchRequest, RequestCache, RequestInit }
+import org.scalajs.dom.experimental.RequestCache
+import org.scalajs.dom.experimental.RequestInit
+import org.scalajs.dom.experimental.{ Request => FetchRequest }
 import org.scalajs.dom.raw.Element
 import sttp.client3._
 import sttp.client3.circe._

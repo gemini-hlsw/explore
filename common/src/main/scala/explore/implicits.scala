@@ -4,13 +4,16 @@
 package explore
 
 import cats._
-import cats.effect.{ ContextShift, Timer }
+import cats.effect.ContextShift
+import cats.effect.Timer
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
-import crystal.{ ViewF, ViewOptF }
+import crystal.ViewF
+import crystal.ViewOptF
 import explore.GraphQLSchemas._
-import explore.model.{ AppContext, RootModel }
+import explore.model.AppContext
+import explore.model.RootModel
 import explore.optics._
 import io.chrisdavenport.log4cats.Logger
 import lucuma.ui.utils._

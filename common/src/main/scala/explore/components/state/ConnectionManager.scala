@@ -5,17 +5,18 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all._
-import clue.{ TerminateOptions, WebSocketCloseParams }
+import clue.TerminateOptions
+import clue.WebSocketCloseParams
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.implicits._
+import io.chrisdavenport.log4cats.Logger
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
-import io.chrisdavenport.log4cats.Logger
 
 final case class ConnectionManager(ssoToken: NonEmptyString)
     extends ReactProps[ConnectionManager](ConnectionManager.component)

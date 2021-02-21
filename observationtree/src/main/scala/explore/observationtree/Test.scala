@@ -3,9 +3,10 @@
 
 package explore.observationtree
 
+import explore.AppMain
+import explore._
 import explore.components.state.IfLogged
 import explore.model.RootModel
-import explore.{ AppMain, _ }
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js.annotation.JSExportTopLevel

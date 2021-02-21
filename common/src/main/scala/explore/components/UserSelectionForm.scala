@@ -6,10 +6,12 @@ package explore.components
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.AppCtx
+import explore.Icons
+import explore.WebpackResources
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.UserVault
-import explore.{ AppCtx, Icons, WebpackResources }
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils.UAParser
@@ -19,7 +21,9 @@ import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.image.Image
 import react.semanticui.elements.label.Label
-import react.semanticui.modules.modal.{ Modal, ModalContent, ModalSize }
+import react.semanticui.modules.modal.Modal
+import react.semanticui.modules.modal.ModalContent
+import react.semanticui.modules.modal.ModalSize
 import react.semanticui.sizes._
 
 final case class UserSelectionForm(
