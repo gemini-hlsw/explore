@@ -67,4 +67,15 @@ object ObsQueries {
           NonEmptyList.of(ProgramObservationsEditSubscription.subscribe[IO]())
         )(render)
       }
+
+  @GraphQL
+  object ProgramCreateObservations extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation CreateObservation($createObservation: CreateObservationInput!) {
+        createObservation(input: $createObservation) {
+          id
+        }
+      }
+    """
+  }
 }

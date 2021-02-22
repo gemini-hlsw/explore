@@ -61,15 +61,13 @@ object InputModal {
                      disabled = state.inputValue.isEmpty,
                      onClick = cleanInput *> props.onComplete(state.inputValue)
               )(
-                ^.key := "input-ok",
                 Icons.Checkmark,
                 props.okLabel
-              ),
+              )(^.key := "input-ok"),
               Button(size = Small, onClick = cleanInput)(
-                ^.key := "input-cancel",
                 Icons.Remove,
                 "Cancel"
-              )
+              )(^.key := "input-cancel")
             ),
             trigger = props.trigger,
             closeIcon = Icons.Close,
