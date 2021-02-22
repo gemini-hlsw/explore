@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
+import explore.components.InputModal
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.model.Focused
@@ -34,13 +35,21 @@ object ObsList {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .render_P { (props: Props) =>
+      .renderP { (_, props) =>
         AppCtx.withCtx { ctx =>
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
-                Button(size = Mini, compact = true, disabled = true)(
-                  Icons.New.size(Small).fitted(true)
+                InputModal(
+                  "Create new Observation",
+                  initialValue = "",
+                  label = "Name",
+                  placeholder = "Observation name",
+                  okLabel = "Create",
+                  onComplete = s => Callback.log(s),
+                  trigger = Button(size = Mini, compact = true)(
+                    Icons.New.size(Small).fitted(true)
+                  )
                 )
               )
             ),
