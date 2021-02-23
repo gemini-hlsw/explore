@@ -16,12 +16,13 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import monocle.macros.Lenses
 import react.common._
-import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
-import react.semanticui.elements.header.Header
 import react.semanticui.modules.modal._
 import react.semanticui.sizes.Small
 
+/**
+ * Generic component to accept user input
+ */
 final case class InputModal(
   title:        String,
   initialValue: String,
@@ -54,7 +55,9 @@ object InputModal {
           val valueView = ViewF.fromState[IO]($).zoom(State.inputValue)
 
           val cleanInput = $.setStateL(State.inputValue)("")
+
           Modal(
+            as = <.form,      // This lets us sumbit on enter
             actions = List(
               Button(size = Small,
                      primary = true,
@@ -69,22 +72,21 @@ object InputModal {
                 "Cancel"
               )(^.key := "input-cancel")
             ),
+            centered = false, //Works betten on iOS
             trigger = props.trigger,
             closeIcon = Icons.Close,
             dimmer = Dimmer.Blurring,
             size = ModalSize.Small,
             onClose = cleanInput,
+            header = ModalHeader(props.title),
             content = ModalContent(
-              Header(props.title),
-              Form(size = Small)(
-                FormInputEV(
-                  id = "name",
-                  value = valueView,
-                  label = props.label,
-                  onTextChange = t => $.setStateL(State.inputValue)(t)
-                )
-                  .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
+              FormInputEV(
+                id = "name",
+                value = valueView,
+                label = props.label,
+                onTextChange = t => $.setStateL(State.inputValue)(t)
               )
+                .withMods(^.placeholder := props.placeholder, ^.autoFocus := true)
             )
           )
         }

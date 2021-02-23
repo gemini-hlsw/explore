@@ -46,7 +46,10 @@ const Web = Merge(
       new HtmlWebpackPlugin({
         title: "Explore",
         filename: "index.html",
-        meta: { "color-scheme": "dark" },
+        meta: { 
+          "color-scheme": "dark", 
+          "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=0"
+        }
       }),
       new FaviconsWebpackPlugin({
         logo: path.resolve(parts.resourcesDir, "images/logo.png"),
