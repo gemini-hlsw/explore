@@ -85,11 +85,11 @@ object implicits extends ShorthandTypes with ListImplicits with OpticsImplicits 
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
     ctx:                                                   AppContext[F]
-  ): GraphQLWebSocketClient[F, UserPreferencesDB] =
+  ): WebSocketClient[F, UserPreferencesDB] =
     ctx.clients.preferencesDB
   implicit def appContext2ODBClient[F[_]](implicit
     ctx: AppContext[F]
-  ): GraphQLWebSocketClient[F, ObservationDB] =
+  ): WebSocketClient[F, ObservationDB] =
     ctx.clients.odb
 
   implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {

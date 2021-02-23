@@ -11,7 +11,7 @@ import cats.effect.IO
 import cats.effect.Timer
 import cats.syntax.all._
 import clue.GraphQLSubscription
-import clue.GraphQLWebSocketClient
+import clue.WebSocketClient
 import crystal.Pot
 import crystal.ViewF
 import crystal.react._
@@ -43,7 +43,7 @@ final case class LiveQueryRenderMod[S, D, A](
   val cs:              ContextShift[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
-  val client:          GraphQLWebSocketClient[IO, S]
+  val client:          WebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRenderMod.component)
     with LiveQueryRenderMod.Props[IO, S, D, A]
 

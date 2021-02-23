@@ -10,7 +10,7 @@ import cats.effect.ConcurrentEffect
 import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLSubscription
-import clue.GraphQLWebSocketClient
+import clue.WebSocketClient
 import crystal.react._
 import fs2.concurrent.Queue
 import io.chrisdavenport.log4cats.Logger
@@ -34,7 +34,7 @@ final case class LiveQueryRender[S, D, A](
   val F:               ConcurrentEffect[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
-  val client:          GraphQLWebSocketClient[IO, S]
+  val client:          WebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRender.component)
     with LiveQueryRender.Props[IO, S, D, A]
 

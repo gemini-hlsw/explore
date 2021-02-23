@@ -7,8 +7,8 @@ import cats.MonadError
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.syntax.all._
-import clue.GraphQLClient
 import clue.GraphQLOperation
+import clue.TransactionalClient
 import clue.data.syntax._
 import clue.macros.GraphQL
 import explore.GraphQLSchemas.UserPreferencesDB
@@ -71,7 +71,7 @@ object UserPreferencesQueries {
       section: ResizableSection,
       width:   Int
     )(implicit
-      cl:      GraphQLClient[F, UserPreferencesDB]
+      cl:      TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       userId.traverse { i =>
         UserWidthsCreation
@@ -106,7 +106,7 @@ object UserPreferencesQueries {
       userId:       Option[User.Id],
       area:         ResizableSection,
       defaultValue: Int
-    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]): F[Int] =
+    )(implicit cl:  TransactionalClient[F, UserPreferencesDB]): F[Int] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         w   <-
@@ -166,7 +166,7 @@ object UserPreferencesQueries {
       layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
-    )(implicit cl:   GraphQLClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
+    )(implicit cl:   TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
         c   <-
@@ -208,7 +208,7 @@ object UserPreferencesQueries {
       section: GridLayoutSection,
       layouts: Layouts
     )(implicit
-      cl:      GraphQLClient[F, UserPreferencesDB]
+      cl:      TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       userId.traverse { uid =>
         UserGridLayoutUpsert
@@ -250,7 +250,7 @@ object UserPreferencesQueries {
       uid:         User.Id,
       tid:         Target.Id,
       defaultFov:  Angle
-    )(implicit cl: GraphQLClient[F, UserPreferencesDB]): F[Angle] =
+    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[Angle] =
       (for {
         r <-
           query[F](uid.show, tid.show)
@@ -275,7 +275,7 @@ object UserPreferencesQueries {
       targetId: Target.Id,
       fov:      Angle
     )(implicit
-      cl:       GraphQLClient[F, UserPreferencesDB]
+      cl:       TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       UserTargetPreferencesUpsert
         .execute[F](

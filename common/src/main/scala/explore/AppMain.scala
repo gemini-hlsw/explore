@@ -3,20 +3,14 @@
 
 package explore
 
-import cats.data.OptionT
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
 import cats.syntax.all._
-import clue.Backend
 import clue.WebSocketReconnectionStrategy
-import clue.data.Input
-import clue.js.AjaxJSBackend
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
 import crystal.react.AppRoot
-import explore.common.UserPreferencesQueries._
-import explore.implicits._
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.Focused
@@ -53,8 +47,6 @@ trait AppMain extends IOApp {
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
-
-  implicit val gqlHttpBackend: Backend[IO] = AjaxJSBackend[IO]
 
   implicit val gqlStreamingBackend: WebSocketJSBackend[IO] = WebSocketJSBackend[IO]
 
@@ -131,14 +123,6 @@ trait AppMain extends IOApp {
       }
     )
 
-    // Creates a "profile" for user preferences.
-    def createUserPrefs(vault: Option[UserVault])(implicit ctx: AppContext[IO]): IO[Unit] =
-      (for {
-        u <- OptionT.fromOption[IO](vault)
-        i <- OptionT.pure[IO](u.user.id)
-        _ <- OptionT.liftF(UserInsertMutation.execute(Input(i.toString())))
-      } yield ()).value.void
-
     for {
       _         <- utils.setupScheme[IO](Theme.Dark)
       appConfig <- fetchConfig
@@ -147,7 +131,6 @@ trait AppMain extends IOApp {
       ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
       vault     <- ctx.sso.whoami
       _         <- AppCtx.initIn[IO](ctx)
-      _         <- createUserPrefs(vault)(ctx).start
       container <- setupDOM(appConfig.environment)
     } yield {
       val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))

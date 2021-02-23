@@ -5,8 +5,6 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all._
-import clue.TerminateOptions
-import clue.WebSocketCloseParams
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -17,37 +15,48 @@ import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
+import react.semanticui.elements.icon.Icon
+import react.semanticui.sizes._
 
-final case class ConnectionManager(ssoToken: NonEmptyString)
-    extends ReactProps[ConnectionManager](ConnectionManager.component)
+final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
+  val render:                                () => VdomNode
+) extends ReactProps[ConnectionManager](ConnectionManager.component)
 
 object ConnectionManager {
   type Props = ConnectionManager
 
-  final class Backend($ : BackendScope[Props, Unit]) {
-    val connect: IO[Unit] = AppCtx.flatMap(
+  protected case class State(initialized: Boolean = false)
+
+  final class Backend($ : BackendScope[Props, State]) {
+    val initialize: IO[Unit] = AppCtx.flatMap(
       _.clients.init(
         $.propsIn[IO].map(props => Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson))
-      )
+      ) >>
+        $.setStateIn[IO](State(true)) >>
+        $.propsIn[IO].flatMap(_.onConnect)
     )
 
-    // This is a "phantom" component. Doesn't render anything.
-    def render(): VdomNode = React.Fragment()
+    def render(props: Props, state: State): VdomNode =
+      if (state.initialized)
+        props.render()
+      else
+        Icon(name = "spinner", loading = true, size = Large)
   }
 
   val component = ScalaComponent
     .builder[Props]
+    .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount(_.backend.connect.runAsyncCB)
+    .componentDidMount(_.backend.initialize.runAsyncCB)
     .componentDidUpdate($ =>
       AppCtx
         .flatMap(implicit ctx =>
           Logger[IO].debug(
             s"[ConnectionManager.componentDidUpdate] Token changed. Terminating connections."
           ) >>
-            // We should change to TerminateOptions.KeepConnection when ODB supports it.
-            ctx.clients.odb.terminate(TerminateOptions.Disconnect(), keepSubscriptions = true)
-        ) // This will trigger reconnection strategy and start reconnection attempts.
+            // We should switch from reestablish() to reinitialize() when ODB supports reinitializing.
+            ctx.clients.odb.reestablish()
+        )
         .runAsyncCB
         .when($.prevProps.ssoToken =!= $.currentProps.ssoToken)
         .void
@@ -58,8 +67,7 @@ object ConnectionManager {
           Logger[IO].debug(
             s"[ConnectionManager.componentWillUnmount] Terminating connections."
           ) >>
-            ctx.clients.odb
-              .terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
+            ctx.clients.close()
         )
         .runAsyncCB
     )
