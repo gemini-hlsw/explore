@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.data
@@ -79,6 +79,6 @@ object KeyedIndexedList {
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
-  implicit def eqKeyedIndexedList[K: Eq, A: Eq]: Eq[KeyedIndexedList[K, A]] =
+  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
     Eq.by(_.list: Map[K, (A, Int)])
 }

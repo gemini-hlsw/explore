@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package reactmoon
@@ -8,6 +8,7 @@ import react.common._
 
 import scalajs.js
 import js.annotation.JSImport
+import scala.annotation.nowarn
 
 final case class MoonPhase(
   phase:      js.UndefOr[Double] = js.undefined,
@@ -29,6 +30,7 @@ object MoonPhase {
     def apply(i: js.Any): js.Any = js.native
   }
 
+  @nowarn
   @js.native
   trait MoonPhaseProps extends js.Object {
     var phase: js.UndefOr[Double]      = js.native

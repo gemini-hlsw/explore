@@ -10,7 +10,7 @@ import org.scalacheck.Prop._
 import org.typelevel.discipline.Laws
 
 object AdjusterTests extends Laws {
-  def apply[S: Arbitrary: Eq, A: Arbitrary: Eq](
+  def apply[S: Arbitrary: Eq, A: Arbitrary](
     adjuster: Adjuster[S, A]
   ): RuleSet = {
     val laws: AdjusterLaws[S, A] = new AdjusterLaws(adjuster)
