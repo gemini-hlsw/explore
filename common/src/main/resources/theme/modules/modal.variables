@@ -1,5 +1,8 @@
-@contentBackground: @pageBackground;
 @headerBorder: #e5e5e5;
 @background: var(--modal-background);
-@headerBackground: @gray-dark;
-@actionBackground: @gray-dark;
+@contentBackground: var(--modal-background);
+@headerBackground: var(--modal-header-background);
+@actionBackground: var(--modal-action-background);
+@actionPadding: 0.5rem;
+@headerPadding: 0.5rem;
+@contentPadding: 0.5rem;

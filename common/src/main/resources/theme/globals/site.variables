@@ -31,7 +31,7 @@
 @negativeBorderColor: darken(spin(@negativeBackgroundColor, -10), 3%);
 
 
-@darkTextColor               : rgba(255, 255, 255, 0.85);
+@darkTextColor               : var(--dark-text-color);
 @invertedMutedTextColor              : rgba(0, 0, 0, 0.6);
 @invertedLightTextColor              : rgba(0, 0, 0, 0.4);
 

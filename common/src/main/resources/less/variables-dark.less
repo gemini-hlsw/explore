@@ -175,6 +175,7 @@
   --hover-background-color: hsla(260, 72%, 10%, 0.85);
   --dragging-background-color: hsla(259, 39%, 24%, 0.85);
   --text-color: var(--color-text-base);
+  --dark-text-color: rgba(255, 255, 255, 0.85);
   --text-alt: var(--color-text-alt);
   --control-background-color: var(--color-background-light-20);
   --negative-text-color: var(--color-text-full);
@@ -198,6 +199,7 @@
 .site-dark() {
   --site-page-background: var(--color-background);
   --site-text-color: var(--text-color);
+  --site-dark-text-color: var(--dark-text-color);
   --site-hovered-text-color: var(--text-alt);
   --site-input-color: var(--input-color);
   --site-border-color: var(--gray);
@@ -310,7 +312,9 @@
 }
 
 .modal-dark() {
-  --modal-background: var(--color-background-light-8);
+  --modal-background: var(--color-background-light-10);
+  --modal-header-background: var(--color-background-light-10);
+  --modal-action-background: var(--color-background-light-12);
 }
 
 .dimmer-dark() {

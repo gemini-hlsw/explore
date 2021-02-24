@@ -37,4 +37,6 @@ object Icons {
   val Expand              = Icon("expand")
   val Minimize            = Icon(className = "compress alt")
   val Maximize            = Icon(className = "expand alt")
+  val Checkmark           = Icon("checkmark")
+  val Remove              = Icon("remove")
 }

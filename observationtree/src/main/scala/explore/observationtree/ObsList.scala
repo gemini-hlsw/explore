@@ -3,11 +3,20 @@
 
 package explore.observationtree
 
+import cats.Applicative
+import cats.effect.IO
 import cats.syntax.all._
+import clue.GraphQLClient
+import clue.data.syntax._
 import crystal.react.implicits._
-import explore._
+import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB
+import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.Icons
+import explore.components.InputModal
 import explore.components.ObsBadge
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
@@ -31,16 +40,33 @@ object ObsList {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  def createObservation[F[_]: Applicative](
+    name:       String
+  )(implicit c: GraphQLClient[F, ObservationDB]): F[Unit] =
+    ObsQueries.ProgramCreateObservations
+      .execute[F](
+        CreateObservationInput(programId = "p-2", name = name.assign)
+      )
+      .void
+
   protected val component =
     ScalaComponent
       .builder[Props]
-      .render_P { (props: Props) =>
-        AppCtx.withCtx { ctx =>
+      .render_P { props =>
+        AppCtx.withCtx { implicit ctx =>
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
-                Button(size = Mini, compact = true, disabled = true)(
-                  Icons.New.size(Small).fitted(true)
+                InputModal(
+                  "Create new Observation",
+                  initialValue = "",
+                  label = "Name",
+                  placeholder = "Observation name",
+                  okLabel = "Create",
+                  onComplete = s => createObservation[IO](s).runAsyncAndForgetCB,
+                  trigger = Button(size = Mini, compact = true)(
+                    Icons.New.size(Small).fitted(true)
+                  )
                 )
               )
             ),

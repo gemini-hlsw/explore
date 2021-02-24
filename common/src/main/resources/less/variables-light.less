@@ -40,6 +40,7 @@
   --dragging-background-color: @grey;
   // Colors from semantic ui
   --text-color: rgba(0, 0, 0, 0.87);
+  --dark-text-color: rgba(0, 0, 0, 0.85);
   --text-alt: rgba(0, 0, 0, 0.8);
   --control-background-color: gray;
   --negative-text-color: @negativeTextColor;
@@ -64,6 +65,7 @@
 .site-light() {
   --site-page-background: hsl(0, 0%, 100%);
   --site-text-color: var(--text-color);
+  --site-dark-text-color: var(--dark-text-color);
   --site-hovered-text-color: var(--text-alt);
   --site-input-color: var(--color-text-base);
   --site-border-color: rgba(34, 36, 38, 0.15);
@@ -180,6 +182,8 @@
 
 .modal-light() {
   --modal-background: @white;
+  --modal-header-background: @white;
+  --modal-action-background: @offWhite;
 }
 
 .dimmer-light() {

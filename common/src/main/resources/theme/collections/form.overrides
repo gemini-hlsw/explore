@@ -1,60 +1,126 @@
-/*
-  Style a readonly FormInput as static data.
-  The FormInput requires a className of 'static-data'
-*/
-.ui.form .static-data input[readonly] {
-    background-color: @inputColor;
-    color: @inputBackground;
+/*******************************
+         Theme Overrides
+*******************************/
+/*--------------------
+        Field
+---------------------*/
+
+.ui.modal .field {
+  clear: both;
+  margin: @fieldMargin;
 }
 
-/*
-  Styles for FormStaticData
-*/
-.ui.form data.static-data {
-    background-color: @inputColor;
-    color: @inputBackground;
-    border-radius: @defaultBorderRadius;
-    border: @borderWidth solid @gray;
-    padding: @inputPadding;
-    line-height: @inputLineHeight;
-
+.ui.modal .fields .fields,
+.ui.modal .field:last-child,
+.ui.modal .fields:last-child .field {
+  margin-bottom: 0;
 }
 
-.ui.form data.static-data:focus {
-    border: @borderWidth solid @focusedFormBorderColor;
-    outline: 0;
+.ui.modal .fields .field {
+  clear: both;
+  margin: 0;
 }
 
-/* 
-  For instances where you want plain text properly aligned in a form.
-*/
-.explore-text-in-form {
-  margin-top: auto;
-  padding-bottom: @tightInputVerticalPadding;
+/*--------------------
+        Labels
+---------------------*/
+
+.ui.modal .field > label {
+  display: block;
+  margin: @labelMargin;
+  color: @labelColor;
+  font-size: @labelFontSize;
+  font-weight: @labelFontWeight;
+  text-transform: @labelTextTransform;
 }
 
-/*
-  Hide the label by moving it offscreen - it will still be available
-  to screen readers.
+/*--------------------
+    Standard Inputs
+---------------------*/
 
-  Note that not providing a label will cause the field to float up
-  and be mis-aligned. Instead, provide a label and hide it.
-*/
-.ui.form .field.hide-label label {
-    opacity: 0;
+
+.ui.modal textarea,
+.ui.modal input:not([type]),
+.ui.modal input[type="date"],
+.ui.modal input[type="datetime-local"],
+.ui.modal input[type="email"],
+.ui.modal input[type="number"],
+.ui.modal input[type="password"],
+.ui.modal input[type="search"],
+.ui.modal input[type="tel"],
+.ui.modal input[type="time"],
+.ui.modal input[type="text"],
+.ui.modal input[type="file"],
+.ui.modal input[type="url"] {
+  width: @inputWidth;
+  vertical-align: top;
 }
 
-.ui.form .field .icon.button:not(.animated):not(.compact),
-.ui.form .field button {
-  padding: @tightVerticalPadding @tightHorizontalPadding;
+/* Set max height on unusual input */
+.ui.modal ::-webkit-datetime-edit,
+.ui.modal ::-webkit-inner-spin-button {
+  height: @inputLineHeight;
+}
+
+.ui.modal input:not([type]),
+.ui.modal input[type="date"],
+.ui.modal input[type="datetime-local"],
+.ui.modal input[type="email"],
+.ui.modal input[type="number"],
+.ui.modal input[type="password"],
+.ui.modal input[type="search"],
+.ui.modal input[type="tel"],
+.ui.modal input[type="time"],
+.ui.modal input[type="text"],
+.ui.modal input[type="file"],
+.ui.modal input[type="url"] {
+  font-family: @inputFont;
+  margin: 0;
+  outline: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color:  rgba(255, 255, 255, 0);
+
   line-height: @inputLineHeight;
+  padding: @inputPadding;
+  font-size: @inputFontSize;
+
+  background: @inputBackground;
+  border: @inputBorder;
+  color: @inputColor;
+  border-radius: @inputBorderRadius;
+  box-shadow: @inputBoxShadow;
+  transition: @inputTransition;
 }
 
-.ui.form .field label:hover {
-  pointer-events: none;
+/*--------------------
+       UI Input
+---------------------*/
+
+/* Block */
+.ui.modal .field .ui.input,
+.ui.modal .fields .field .ui.input,
+.ui.modal .wide.field .ui.input {
+  width: 100%;
 }
 
-.ui.form .field .ui.input:hover:not(:focus),
-.ui.form .field .ui.input > input:hover:not(:focus) {
-  border-color: var(--form-input-hover-border-color);
+/* Auto Input */
+.ui.modal .fields .field .ui.input input,
+.ui.modal .field .ui.input input {
+  width: auto;
 }
+
+/* Full Width Input */
+.ui.modal .ten.fields .ui.input input,
+.ui.modal .nine.fields .ui.input input,
+.ui.modal .eight.fields .ui.input input,
+.ui.modal .seven.fields .ui.input input,
+.ui.modal .six.fields .ui.input input,
+.ui.modal .five.fields .ui.input input,
+.ui.modal .four.fields .ui.input input,
+.ui.modal .three.fields .ui.input input,
+.ui.modal .two.fields .ui.input input,
+.ui.modal .wide.field .ui.input input {
+  flex: 1 0 auto;
+  width: 0;
+}
+
