@@ -39,10 +39,6 @@ object InputModal {
   @Lenses
   final case class State(inputValue: String)
 
-  object State {
-    val Zero = State("")
-  }
-
   implicit val propsReuse: Reusability[Props] = Reusability.caseClassExcept("trigger", "onComplete")
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
