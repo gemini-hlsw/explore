@@ -4,15 +4,11 @@ import Settings.Libraries._
 
 val reactJS                   = "16.13.1"
 val FUILess                   = "2.8.7"
-lazy val kindProjectorVersion = "0.11.2"
+lazy val kindProjectorVersion = "0.11.3"
 
 parallelExecution in (ThisBuild, Test) := false
 
 cancelable in Global := true
-
-Global / onChangedBuildSource := ReloadOnSourceChanges
-
-ThisBuild / useLog4J := true
 
 addCommandAlias(
   "exploreWDS",
@@ -54,15 +50,19 @@ addCommandAlias(
   "; scalafix OrganizeImports"
 )
 
-val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
-
 inThisBuild(
   Seq(
+    homepage := Some(url("https://github.com/gemini-hlsw/explore")),
     addCompilerPlugin(
       ("org.typelevel" % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
-    )
-  )
+    ),
+    description := "Explore",
+    scalacOptions += "-Ymacro-annotations",
+    Global / onChangedBuildSource := ReloadOnSourceChanges
+  ) ++ lucumaPublishSettings
 )
+
+val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
 // For simplicity, the build's stage only deals with the explore app.
 stage := {
@@ -264,20 +264,7 @@ def clueSchemaDirSettingsTask(conf: ConfigKey): sbt.Def.Initialize[sbt.Task[Seq[
   }
 // ***** END: Move to plugin *****
 
-lazy val commonSettings = Seq(
-  scalaVersion := "2.13.4",
-  description := "Explore",
-  homepage := Some(url("https://github.com/geminihlsw/explore")),
-  licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
-  scalacOptions += "-Ymacro-annotations",
-  scalacOptions ~= (_.filterNot(
-    Set(
-      // By necessity facades will have unused params
-      "-Wdead-code",
-      "-Wunused:params"
-    )
-  )),
-  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full)),
+lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   // don't publish anything
   publish := {},
   publishLocal := {},
@@ -327,7 +314,7 @@ lazy val commonJVMSettings = Seq(
     In(Test)(
       CirceGolden.value
     )
-  )
+)
 
 lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(
   libraryDependencies ++=

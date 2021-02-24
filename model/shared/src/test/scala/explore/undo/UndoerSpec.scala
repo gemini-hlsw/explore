@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.undo
@@ -23,9 +23,9 @@ class UndoerSpec extends munit.FunSuite {
 
   def id[A] = GetAdjust(idLens[A])
 
-  class ListModByIdEq[F[_], A, Id: Eq](idLens: Lens[A, Id]) extends KIListMod[F, A, Id](idLens)
+  class ListModByIdEq[F[_], A, Id](idLens: Lens[A, Id]) extends KIListMod[F, A, Id](idLens)
 
-  class ListModIdentityId[F[_], A: Eq] extends ListModByIdEq[F, A, A](idLens[A])
+  class ListModIdentityId[F[_], A] extends ListModByIdEq[F, A, A](idLens[A])
 
   val listIntMod = new ListModIdentityId[IO, Int]
 
@@ -144,9 +144,9 @@ class UndoerSpec extends munit.FunSuite {
     } yield ()).unsafeToFuture()
   }
 
-  class TreeModByIdEq[F[_], A, K: Eq](keyLens: Lens[A, K]) extends KITreeMod[F, A, K](keyLens)
+  class TreeModByIdEq[F[_], A, K](keyLens: Lens[A, K]) extends KITreeMod[F, A, K](keyLens)
 
-  class TreeModIdentityId[F[_], A: Eq] extends TreeModByIdEq[F, A, A](idLens[A])
+  class TreeModIdentityId[F[_], A] extends TreeModByIdEq[F, A, A](idLens[A])
 
   val treeIntMod = new TreeModIdentityId[IO, Int]
 

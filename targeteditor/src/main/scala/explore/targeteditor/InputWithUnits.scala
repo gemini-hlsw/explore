@@ -1,10 +1,9 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.targeteditor
 
 import cats.Eq
-import cats.effect.Effect
 import crystal.ViewF
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -20,7 +19,7 @@ import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.semanticui.elements.label.LabelPointing
 
-final case class InputWithUnits[F[_]: Effect, A](
+final case class InputWithUnits[F[_], A](
   value:           ViewF[F, A],
   validFormat:     ValidFormatInput[A],
   changeAuditor:   ChangeAuditor[A],

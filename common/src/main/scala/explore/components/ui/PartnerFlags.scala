@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.components.ui
@@ -7,7 +7,9 @@ import lucuma.core.model.Partner
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
+import scala.annotation.nowarn
 
+@nowarn
 object PartnerFlags {
   @js.native
   @JSImport("resources/images/flags/argentina-flag-icon-32.png", JSImport.Default)

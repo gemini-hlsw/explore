@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 Association of Universities for Research in Astronomy, Inc. (AURA)
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.optics
@@ -10,7 +10,7 @@ import org.scalacheck.Prop._
 import org.typelevel.discipline.Laws
 
 object AdjusterTests extends Laws {
-  def apply[S: Arbitrary: Eq, A: Arbitrary: Eq](
+  def apply[S: Arbitrary: Eq, A: Arbitrary](
     adjuster: Adjuster[S, A]
   ): RuleSet = {
     val laws: AdjusterLaws[S, A] = new AdjusterLaws(adjuster)
