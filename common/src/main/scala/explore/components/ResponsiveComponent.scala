@@ -13,8 +13,8 @@ import react.resizeDetector.ResizeDetector
 final case class ResponsiveComponent(
   widthBreakpoints:  List[(Int, Css)],
   heightBreakpoints: List[(Int, Css)] = Nil,
-  clazz:             Css = Css.Empty)
-    extends ReactPropsWithChildren[ResponsiveComponent](ResponsiveComponent.component)
+  clazz:             Css = Css.Empty
+) extends ReactPropsWithChildren[ResponsiveComponent](ResponsiveComponent.component)
 
 object ResponsiveComponent {
   type Props = ResponsiveComponent

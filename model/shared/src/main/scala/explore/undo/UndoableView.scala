@@ -23,7 +23,8 @@ import monocle.Lens
  */
 case class UndoableView[F[_]: Async: ContextShift, T](
   view:   ViewF[F, T],
-  setter: Undoer.Setter[F, T]) {
+  setter: Undoer.Setter[F, T]
+) {
   def apply[A](get: T => A, mod: (A => A) => T => T, onChange: A => F[Unit]): ViewF[F, A] = {
     val zoomed = view.zoom(get)(mod)
     ViewF(

@@ -28,8 +28,8 @@ import react.semanticui.sizes._
 
 final case class UserSelectionForm(
   vault:   View[Option[UserVault]],
-  message: View[Option[NonEmptyString]])
-    extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
+  message: View[Option[NonEmptyString]]
+) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
   def guest: Callback = AppCtx.flatMap(_.sso.guest.flatMap(v => vault.set(v.some))).runAsyncCB
   def login: Callback = AppCtx.flatMap(_.sso.redirectToLogin).runAsyncCB
 

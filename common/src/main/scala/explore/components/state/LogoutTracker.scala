@@ -19,8 +19,9 @@ import react.common.ReactProps
 final case class LogoutTracker(
   setVault:   Option[UserVault] => IO[Unit],
   setMessage: NonEmptyString => IO[Unit]
-)(val render: IO[Unit] => VdomNode)
-    extends ReactProps[LogoutTracker](LogoutTracker.component)
+)(
+  val render: IO[Unit] => VdomNode
+) extends ReactProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {
   type Props = LogoutTracker

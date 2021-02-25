@@ -17,8 +17,8 @@ import lucuma.core.util.Enumerated
  */
 sealed abstract class AppTab(
   val title:       String,
-  val buttonGroup: Int)
-    extends Product
+  val buttonGroup: Int
+) extends Product
     with Serializable
 
 object AppTab {

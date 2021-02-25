@@ -21,7 +21,8 @@ import sttp.client3.Response
 
 case class Clients[F[_]: ConcurrentEffect: Logger](
   odb:           GraphQLWebSocketClient[F, ObservationDB],
-  preferencesDB: GraphQLWebSocketClient[F, UserPreferencesDB]) {
+  preferencesDB: GraphQLWebSocketClient[F, UserPreferencesDB]
+) {
   lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
 
@@ -53,7 +54,8 @@ case class AppContext[F[_]](
   val F:       Applicative[F],
   val cs:      ContextShift[F],
   val timer:   Timer[F],
-  val logger:  Logger[F])
+  val logger:  Logger[F]
+)
 
 object AppContext {
   def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: Backend: WebSocketBackend](

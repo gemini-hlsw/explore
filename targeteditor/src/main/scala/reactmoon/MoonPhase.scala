@@ -15,8 +15,8 @@ final case class MoonPhase(
   lightColor: js.UndefOr[String] = js.undefined,
   darkColor:  js.UndefOr[String] = js.undefined,
   border:     js.UndefOr[String] = js.undefined,
-  rotation:   js.UndefOr[String] = js.undefined)
-    extends GenericFnComponentP[MoonPhase.MoonPhaseProps] {
+  rotation:   js.UndefOr[String] = js.undefined
+) extends GenericFnComponentP[MoonPhase.MoonPhaseProps] {
   override protected def cprops                        = MoonPhase.props(this)
   @inline def render: Render[MoonPhase.MoonPhaseProps] = MoonPhase.component(cprops)
 }

@@ -14,7 +14,8 @@ import scala.collection.immutable.SortedSet
 @Lenses
 case class TargetViewExpandedIds(
   targetIds:   SortedSet[Target.Id] = SortedSet.empty,
-  asterismIds: SortedSet[Asterism.Id] = SortedSet.empty)
+  asterismIds: SortedSet[Asterism.Id] = SortedSet.empty
+)
 
 object TargetViewExpandedIds {
   implicit val eqTargetViewExpandedIds: Eq[TargetViewExpandedIds] =

@@ -164,10 +164,12 @@ object TargetQueries {
   }
 
   case class UndoView(
-    id:           Target.Id,
-    view:         View[TargetResult],
-    setter:       Undoer.Setter[IO, TargetResult]
-  )(implicit ctx: AppContextIO) {
+    id:     Target.Id,
+    view:   View[TargetResult],
+    setter: Undoer.Setter[IO, TargetResult]
+  )(implicit
+    ctx:    AppContextIO
+  ) {
     private val undoableView = UndoableView(view, setter)
 
     def apply[A](

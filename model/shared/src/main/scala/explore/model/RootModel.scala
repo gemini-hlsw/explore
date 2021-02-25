@@ -23,7 +23,8 @@ case class RootModel(
   tabs:                  EnumZipper[AppTab],
   focused:               Option[Focused] = none,
   targetViewExpandedIds: TargetViewExpandedIds = TargetViewExpandedIds(),
-  userSelectionMessage:  Option[NonEmptyString] = none)
+  userSelectionMessage:  Option[NonEmptyString] = none
+)
 
 object RootModel {
   val userUserId = Lens[User, User.Id](_.id)(s =>

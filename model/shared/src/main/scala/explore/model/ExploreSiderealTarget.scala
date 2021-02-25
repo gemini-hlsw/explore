@@ -25,7 +25,8 @@ import java.util.UUID
 final case class SiderealTarget(
   id:    SiderealTarget.Id,
   name:  NonEmptyString,
-  track: SiderealTracking)
+  track: SiderealTracking
+)
 
 object SiderealTarget {
   type Id = UUID
@@ -52,7 +53,8 @@ object SiderealTarget {
 final case class ExploreSiderealTarget(
   searchTerm: String,
   target:     Option[SiderealTarget],
-  options:    TargetVisualOptions)
+  options:    TargetVisualOptions
+)
 
 object ExploreSiderealTarget {
   implicit val siderealTargetEq: Eq[ExploreSiderealTarget] =

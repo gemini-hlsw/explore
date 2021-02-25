@@ -43,8 +43,8 @@ final case class TargetTabContents(
   userId:                ViewOpt[User.Id],
   focused:               View[Option[Focused]],
   targetViewExpandedIds: View[TargetViewExpandedIds],
-  size:                  ResizeDetector.Dimensions)
-    extends ReactProps[TargetTabContents](TargetTabContents.component) {
+  size:                  ResizeDetector.Dimensions
+) extends ReactProps[TargetTabContents](TargetTabContents.component) {
   def isTargetSelected: Boolean = focused.get.isDefined
 }
 

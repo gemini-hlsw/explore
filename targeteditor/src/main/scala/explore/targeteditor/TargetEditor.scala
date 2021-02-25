@@ -26,8 +26,8 @@ import react.common._
 
 final case class TargetEditor(
   uid: User.Id,
-  tid: Target.Id)
-    extends ReactProps[TargetEditor](TargetEditor.component)
+  tid: Target.Id
+) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
   type Props = TargetEditor

@@ -27,8 +27,8 @@ import react.semanticui.widths._
 
 final case class ConstraintsPanel(
   id:          Constraints.Id,
-  constraints: View[Constraints])
-    extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
+  constraints: View[Constraints]
+) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
   type Props = ConstraintsPanel
