@@ -10,8 +10,8 @@ import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.GraphQLSubscription
-import clue.GraphQLWebSocketClient
-import clue.StreamingClientStatus
+import clue.PersistentClientStatus
+import clue.WebSocketClient
 import crystal.Pot
 import crystal.react.implicits._
 import fs2.concurrent.Queue
@@ -91,7 +91,7 @@ object Render {
       val extract: D => A
       val changeSubscriptions: NonEmptyList[F[GraphQLSubscription[F, _]]]
 
-      implicit val client: GraphQLWebSocketClient[F, S]
+      implicit val client: WebSocketClient[F, S]
     }
 
     trait State[F[_], G[_], S, D, A] extends Render.State[G, A] {
@@ -136,7 +136,7 @@ object Render {
         // Once run, this effect has to be cancelled manually.
         def trackConnection(queue: Queue[F, A]): F[Unit] =
           $.props.client.statusStream.tail // Skip current status. We only want future updates here.
-            .filter(_ === StreamingClientStatus.Connected)
+            .filter(_ === PersistentClientStatus.Connected)
             .evalTap(_ => queryAndEnqueue(queue))
             .compile
             .drain

@@ -6,7 +6,7 @@ package explore.observationtree
 import cats.Applicative
 import cats.effect.IO
 import cats.syntax.all._
-import clue.GraphQLClient
+import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
 import explore.AppCtx
@@ -42,7 +42,7 @@ object ObsList {
 
   def createObservation[F[_]: Applicative](
     name:       String
-  )(implicit c: GraphQLClient[F, ObservationDB]): F[Unit] =
+  )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] =
     ObsQueries.ProgramCreateObservations
       .execute[F](
         CreateObservationInput(programId = "p-2", name = name.assign)

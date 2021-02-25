@@ -18,24 +18,28 @@ import explore.utils
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Json
 import sttp.client3.Response
+import sttp.model.Uri
 
-case class Clients[F[_]: ConcurrentEffect: Logger](
-  odb:           GraphQLWebSocketClient[F, ObservationDB],
-  preferencesDB: GraphQLWebSocketClient[F, UserPreferencesDB]
+case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
+  odb:           WebSocketClient[F, ObservationDB],
+  preferencesDB: WebSocketClient[F, UserPreferencesDB]
 ) {
-  lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
+  lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
 
-  lazy val ODBConnectionStatus: StreamRenderer.Component[StreamingClientStatus] =
+  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
   def init(payload: F[Map[String, Json]]): F[Unit] =
-    preferencesDB.init() >> odb.init(payload)
+    (
+      preferencesDB.connect() >> preferencesDB.initialize(),
+      odb.connect() >> odb.initialize(payload)
+    ).parBisequence.void
 
-  def disconnect(): F[Unit] =
+  def close(): F[Unit] =
     List(
-      preferencesDB.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000))),
-      odb.terminate(TerminateOptions.Disconnect(WebSocketCloseParams(code = 1000)))
+      preferencesDB.terminate() >> preferencesDB.disconnect(WebSocketCloseParams(code = 1000)),
+      odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
 }
 
@@ -58,23 +62,28 @@ case class AppContext[F[_]](
 )
 
 object AppContext {
-  def from[F[_]: ConcurrentEffect: ContextShift: Timer: Logger: WebSocketBackend](
+  private def buildClients[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: Timer: Logger](
+    odbURI:               Uri,
+    prefsURI:             Uri,
+    reconnectionStrategy: WebSocketReconnectionStrategy
+  ): F[Clients[F]] =
+    for {
+      odbClient   <-
+        ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
+      prefsClient <-
+        ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
+    } yield Clients(odbClient, prefsClient)
+
+  def from[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: ContextShift: Timer: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String,
     fromFuture:           SSOClient.FromFuture[F, Response[Either[String, String]]]
   ): F[AppContext[F]] =
     for {
-      preferencesDBClient <-
-        ApolloWebSocketClient.of[F, UserPreferencesDB](config.preferencesDBURI,
-                                                       "PREFS",
-                                                       reconnectionStrategy
-        )
-      odbClient           <-
-        ApolloWebSocketClient.of[F, ObservationDB](config.odbURI, "ODB", reconnectionStrategy)
-      version              = utils.version(config.environment)
-      clients              = Clients(odbClient, preferencesDBClient)
-      actions              = Actions[F]()
+      clients <- buildClients(config.odbURI, config.preferencesDBURI, reconnectionStrategy)
+      version  = utils.version(config.environment)
+      actions  = Actions[F]()
     } yield AppContext[F](version,
                           clients,
                           actions,

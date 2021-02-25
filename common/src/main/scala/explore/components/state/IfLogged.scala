@@ -5,6 +5,9 @@ package explore.components.state
 
 import cats.effect.IO
 import cats.syntax.all._
+import clue.data.Input
+import explore.AppCtx
+import explore.common.UserPreferencesQueries._
 import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel
@@ -19,6 +22,12 @@ final case class IfLogged(view: View[RootModel])(val render: (UserVault, IO[Unit
 object IfLogged {
   type Props = IfLogged
 
+  // Creates a "profile" for user preferences.
+  private def createUserPrefs(vault: UserVault): IO[Unit] =
+    AppCtx.flatMap(implicit ctx =>
+      UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
+    )
+
   private val component =
     ScalaComponent
       .builder[IfLogged]
@@ -32,9 +41,10 @@ object IfLogged {
         ) { vault =>
           React.Fragment(
             SSOManager(vault.expiration, vaultView.set, messageView.set.compose(_.some)),
-            ConnectionManager(vault.token),
-            LogoutTracker(vaultView.set, messageView.set.compose(_.some))(onLogout =>
-              p.render(vault, onLogout)
+            ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(() =>
+              LogoutTracker(vaultView.set, messageView.set.compose(_.some))(onLogout =>
+                p.render(vault, onLogout)
+              )
             )
           )
         }

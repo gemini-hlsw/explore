@@ -3,7 +3,7 @@
 
 package explore.model
 
-import clue.StreamingClientStatus
+import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
@@ -14,7 +14,7 @@ import react.common.Size
  * Reusability instances for model classes
  */
 object reusability {
-  implicit val statusReuse: Reusability[StreamingClientStatus]                       = Reusability.derive
+  implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.derive
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                      = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                    = Reusability.derive

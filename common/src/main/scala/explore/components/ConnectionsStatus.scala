@@ -3,8 +3,8 @@
 
 package explore.components
 
-import clue.StreamingClientStatus
-import clue.StreamingClientStatus._
+import clue.PersistentClientStatus
+import clue.PersistentClientStatus._
 import crystal.Error
 import crystal.Pending
 import crystal.Pot
@@ -25,18 +25,16 @@ final case class ConnectionsStatus()
 object ConnectionsStatus {
   type Props = ConnectionsStatus
 
-  private def renderStatus(name: String)(status: Pot[StreamingClientStatus]): VdomElement = {
+  private def renderStatus(name: String)(status: Pot[PersistentClientStatus]): VdomElement = {
     val (message, (clazz, show)) = status match {
       case Error(t)     => (t.getMessage, (ConnectionError, true))
       case Pending(_)   => ("Mounting...", (ConnectionWarning, true))
       case Ready(value) =>
         (value.toString,
          value match {
-           case Connecting                                           => (ConnectionWarning, true)
-           case Connected | Initializing | Initialized | Terminating =>
-             (ConnectionOK, false)
-           case Disconnecting                                        => (ConnectionWarning, true)
-           case Disconnected                                         => (ConnectionError, true)
+           case Connecting                             => (ConnectionWarning, true)
+           case Connected | Initializing | Initialized => (ConnectionOK, false)
+           case Disconnected                           => (ConnectionError, true)
          }
         )
     }
