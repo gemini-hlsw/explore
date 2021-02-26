@@ -4,19 +4,19 @@
 package explore.observationtree
 
 import cats.syntax.all._
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import react.common._
 import react.common.implicits._
-import react.semanticui.views.card._
-import react.semanticui.sizes._
-import explore.Icons
 import react.semanticui.elements.button.Button
-import lucuma.core.model.Observation
+import react.semanticui.sizes._
+import react.semanticui.views.card._
 
 final case class ObsBadge(
   obs:      ObsSummary,

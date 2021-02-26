@@ -3,9 +3,9 @@
 
 package explore
 
+import explore.components.ui.ExploreStyles
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes.Small
-import explore.components.ui.ExploreStyles
 
 object Icons {
   val Bars                = Icon("bars")

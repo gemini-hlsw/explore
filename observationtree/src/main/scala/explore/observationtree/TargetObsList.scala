@@ -9,7 +9,6 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
-import explore.observationtree.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -20,6 +19,7 @@ import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
 import explore.model.TargetViewExpandedIds
+import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
@@ -423,7 +423,7 @@ object TargetObsList {
           ), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
           selected = props.focused.get.exists(_ === FocusedObs(obs.id)),
-        deleteCB = (id: Observation.Id) => Callback.log(id.show)
+          deleteCB = (id: Observation.Id) => Callback.log(id.show)
         )
 
       def renderObsBadgeItem(obs: ObsAttached, idx: Int): TagMod =

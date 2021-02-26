@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.observationtree.ObsBadge
 import explore.data.tree._
 import explore.model.Constraints
 import explore.model.ExploreObservation
@@ -15,6 +14,7 @@ import explore.model.ObsSummary
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
 import explore.model.enum._
+import explore.observationtree.ObsBadge
 import explore.undo.KITreeMod
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

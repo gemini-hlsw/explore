@@ -9,12 +9,12 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
+import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.components.InputModal
-import explore.observationtree.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Focused
@@ -22,14 +22,17 @@ import explore.model.Focused.FocusedObs
 import explore.model.ObsSummary
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.observationtree.ObsBadge
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import lucuma.core.model.Observation
+
+import scala.util.Random
 
 final case class ObsList(
   observations: View[List[ObsSummary]],
@@ -42,16 +45,17 @@ object ObsList {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def createObservation[F[_]: Applicative](
+    obsId:      Observation.Id,
     name:       String
   )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] =
     ObsQueries.ProgramCreateObservations
       .execute[F](
-        CreateObservationInput(programId = "p-2", name = name.assign)
+        CreateObservationInput(programId = "p-2", observationId = obsId.assign, name = name.assign)
       )
       .void
 
   def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
-    c:                                         GraphQLClient[F, ObservationDB]
+    c:                                         TransactionalClient[F, ObservationDB]
   ): F[Unit] =
     ObsQueries.ProgramDeleteObservation.execute[F](id).void
 
@@ -66,18 +70,24 @@ object ObsList {
               case None    => props.focused.set(none)
             })
 
-        AppCtx.withCtx { implicit ctx =>
-          val focused        = props.focused.get
-          val observations   = props.observations.get
-          val someSelected   = focused.isDefined
-          val obsWithIdx     = observations.zipWithIndex
-          val obsId          = focused.collect { case FocusedObs(id) =>
-            id
+        def createLocal(name: String): IO[Observation.Id] =
+          IO(Observation.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).flatTap { oid =>
+            props.observations.mod(l =>
+              (ObsSummary(oid, name.some, observationTarget = none) :: l).reverse
+            ) *>
+              props.focused.set(FocusedObs(oid).some)
           }
-          val obsIdx         = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
-          val nextToSelect   = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
-          val prevToSelect   = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
-          val focusOnDelete  = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
+
+        AppCtx.withCtx { implicit ctx =>
+          val focused       = props.focused.get
+          val observations  = props.observations.get
+          val someSelected  = focused.isDefined
+          val obsWithIdx    = observations.zipWithIndex
+          val obsId         = focused.collect { case FocusedObs(id) => id }
+          val obsIdx        = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
+          val nextToSelect  = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
+          val prevToSelect  = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
+          val focusOnDelete = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
 
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
@@ -88,7 +98,8 @@ object ObsList {
                   label = "Name",
                   placeholder = "Observation name",
                   okLabel = "Create",
-                  onComplete = s => createObservation[IO](s).runAsyncAndForgetCB,
+                  onComplete = s =>
+                    (createLocal(s) >>= { i => createObservation[IO](i, s) }).runAsyncAndForgetCB,
                   trigger = Button(size = Mini, compact = true)(
                     Icons.New.size(Small).fitted(true)
                   )

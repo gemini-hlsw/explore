@@ -5,9 +5,9 @@ package explore.components.ui
 
 import lucuma.core.model.Partner
 
+import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import scala.annotation.nowarn
 
 @nowarn
 object PartnerFlags {
