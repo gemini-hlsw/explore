@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.syntax.all._
+import crystal.react.implicits._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
@@ -17,12 +18,13 @@ import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import react.semanticui.views.card._
+import cats.effect.IO
 
 final case class ObsBadge(
   obs:      ObsSummary,
   layout:   ObsBadge.Layout,
   selected: Boolean = false,
-  deleteCB: Option[Observation.Id => Callback] = None
+  deleteCB: Option[Observation.Id => IO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -57,7 +59,7 @@ object ObsBadge {
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
           onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
             e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-              .map(cb => cb(props.obs.id))
+              .map(cb => cb(props.obs.id).runAsyncAndForgetCB)
               .getOrEmpty
         )(
           Icons.Trash

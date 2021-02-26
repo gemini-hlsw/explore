@@ -70,7 +70,7 @@ object ObsList {
         def createLocal(name: String): IO[Observation.Id] =
           IO(Observation.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).flatTap { oid =>
             props.observations.mod(l =>
-              (ObsSummary(oid, name.some, observationTarget = none) :: l).reverse
+              l :+ ObsSummary(oid, name.some, observationTarget = none)
             ) *>
               props.focused.set(FocusedObs(oid).some)
           }
@@ -121,9 +121,7 @@ object ObsList {
                       selected = selected,
                       (
                         (id: Observation.Id) =>
-                          (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](
-                            id
-                          )).runAsyncAndForgetCB
+                          (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](id))
                       ).some
                     )
                   )
