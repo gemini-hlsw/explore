@@ -3,7 +3,9 @@
 
 package explore
 
-import react.semanticui.elements.icon._
+import explore.components.ui.ExploreStyles
+import react.semanticui.elements.icon.Icon
+import react.semanticui.sizes.Small
 
 object Icons {
   val Bars                = Icon("bars")
@@ -39,4 +41,5 @@ object Icons {
   val Maximize            = Icon(className = "expand alt")
   val Checkmark           = Icon("checkmark")
   val Remove              = Icon("remove")
+  val Trash               = Delete.size(Small).fitted(true).clazz(ExploreStyles.TrashIcon)
 }

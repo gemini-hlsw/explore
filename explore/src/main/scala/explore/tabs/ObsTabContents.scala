@@ -239,61 +239,71 @@ object ObsTabContents {
               props.size.width.getOrElse(0) - treeWidth
             }
 
-          val rightSide = ResponsiveReactGridLayout(
-            width = coreWidth,
-            margin = (5, 5),
-            containerPadding = (5, 0),
-            rowHeight = Constants.GridRowHeight,
-            draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-            onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
-            layouts = state.layouts
-          )(
-            <.div(
-              ^.key := "notes",
-              Tile(
-                s"Note for Observer",
-                backButton.some,
-                canMinimize = true,
-                canMaximize = true,
-                state = State.notesHeightState(state),
-                sizeStateCallback = (s: TileSizeState) =>
-                  $.setStateL(State.notesHeight)(s match {
-                    case TileSizeState.Minimized => 1
-                    case _                       => 3
-                  })
-              )(
-                <.div(
-                  ExploreStyles.NotesWrapper,
+          val rightSideRGL =
+            ResponsiveReactGridLayout(
+              width = coreWidth,
+              margin = (5, 5),
+              containerPadding = (5, 0),
+              rowHeight = Constants.GridRowHeight,
+              draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
+              onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
+              layouts = state.layouts
+            )(
+              <.div(
+                ^.key := "notes",
+                Tile(
+                  s"Note for Observer",
+                  backButton.some,
+                  canMinimize = true,
+                  canMaximize = true,
+                  state = State.notesHeightState(state),
+                  sizeStateCallback = (s: TileSizeState) =>
+                    $.setStateL(State.notesHeight)(s match {
+                      case TileSizeState.Minimized => 1
+                      case _                       => 3
+                    })
+                )(
                   <.div(
-                    ExploreStyles.ObserverNotes,
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+                    ExploreStyles.NotesWrapper,
+                    <.div(
+                      ExploreStyles.ObserverNotes,
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+                    )
                   )
                 )
-              )
-            ),
-            <.div(
-              ^.key := "target",
-              Tile("Target")(
-                targetId
-                  .map { targetId =>
-                    LiveQueryRenderMod[ObservationDB,
-                                       TargetEditQuery.Data,
-                                       Option[TargetEditQuery.Data.Target]
-                    ](
-                      TargetEditQuery.query(targetId),
-                      _.target,
-                      NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                    ) { targetOpt =>
-                      (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
-                        val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                        TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
-                      }
+              ),
+              <.div(
+                ^.key := "target",
+                Tile("Target")(
+                  targetId
+                    .map { targetId =>
+                      LiveQueryRenderMod[ObservationDB,
+                                         TargetEditQuery.Data,
+                                         Option[TargetEditQuery.Data.Target]
+                      ](
+                        TargetEditQuery.query(targetId),
+                        _.target,
+                        NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+                      ) { targetOpt =>
+                        (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
+                          val stateView = ViewF.fromState[IO]($).zoom(State.options)
+                          TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                        }
 
-                    }.withKey(s"target-$targetId")
-                  }
+                      }.withKey(s"target-$targetId")
+                    }
+                )
               )
             )
-          )
+
+          val rightSide =
+            if (props.focused.get.isDefined) {
+              <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL)
+            } else {
+              <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                    <.div("Select or add an observation")
+              )
+            }
 
           if (window.innerWidth <= Constants.TwoPanelCutoff) {
             <.div(
@@ -301,7 +311,7 @@ object ObsTabContents {
               <.div(ExploreStyles.Tree, treeInner(observations))
                 .when(state.panels.leftPanelVisible),
               <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
-                <.div(rightSide)
+                rightSide
               ).when(state.panels.rightPanelVisible)
             )
           } else {
@@ -322,7 +332,7 @@ object ObsTabContents {
                     ^.left := treeWidth.px,
                     ExploreStyles.SinglePanelTile
               )(
-                <.div(ExploreStyles.TreeRGLWrapper, rightSide)
+                rightSide
               )
             )
           }

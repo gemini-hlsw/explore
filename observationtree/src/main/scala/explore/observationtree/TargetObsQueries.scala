@@ -69,12 +69,12 @@ object TargetObsQueries {
           targets {
             id
             name
-          }          
+          }
           observations {
             id
             name
           }
-        }        
+        }
       }
     """
 

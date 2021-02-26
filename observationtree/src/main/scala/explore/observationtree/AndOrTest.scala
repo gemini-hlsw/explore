@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.components.ObsBadge
 import explore.data.tree._
 import explore.model.Constraints
 import explore.model.ExploreObservation
@@ -15,6 +14,7 @@ import explore.model.ObsSummary
 import explore.model.SiderealTarget
 import explore.model.enum.ObsStatus
 import explore.model.enum._
+import explore.observationtree.ObsBadge
 import explore.undo.KITreeMod
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -93,11 +93,13 @@ object AndOrTest {
   def renderObs(obs: ExploreObservation, dragIcon: VdomNode): VdomNode =
     wrap(^.width := "200px", ^.margin := "5px")(
       ObsBadge(
-        ObsSummary(id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
-                   name = obs.target.name.value.some,
-                   observationTarget = None
+        obs = ObsSummary(
+          id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
+          name = obs.target.name.value.some,
+          observationTarget = None
         ),
-        ObsBadge.Layout.NameAndConf
+        layout = ObsBadge.Layout.NameAndConf,
+        selected = false
       ),
       <.div(^.textAlign.right, dragIcon)
     )

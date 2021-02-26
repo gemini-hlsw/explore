@@ -6,9 +6,10 @@ package reactmoon
 import japgolly.scalajs.react._
 import react.common._
 
+import scala.annotation.nowarn
+
 import scalajs.js
 import js.annotation.JSImport
-import scala.annotation.nowarn
 
 final case class MoonPhase(
   phase:      js.UndefOr[Double] = js.undefined,

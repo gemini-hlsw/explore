@@ -3,9 +3,9 @@
 
 package explore
 
+import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import scala.annotation.nowarn
 
 object WebpackResources {
   @nowarn

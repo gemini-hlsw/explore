@@ -78,4 +78,15 @@ object ObsQueries {
       }
     """
   }
+
+  @GraphQL
+  object ProgramDeleteObservation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation DeleteObservation($oid: ObservationId!) {
+        deleteObservation(observationId: $oid) {
+          id
+        }
+      }
+    """
+  }
 }
