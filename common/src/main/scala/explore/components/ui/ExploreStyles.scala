@@ -194,4 +194,7 @@ object ExploreStyles {
   val MagnitudesTableSection: Css            = Css("explore-magnitudes-section")
 
   val EmptyTreeContent: Css = Css("explore-empty-tree-content")
+
+  // This is rendered without React, so we include SUI classes.
+  val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))
 }

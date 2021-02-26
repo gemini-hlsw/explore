@@ -294,6 +294,7 @@ lazy val commonLibSettings = Seq(
       Cats.value ++
       Mouse.value ++
       CatsEffect.value ++
+      CatsRetry.value ++
       Monocle.value ++
       Circe.value ++
       Crystal.value ++

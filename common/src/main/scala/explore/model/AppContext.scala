@@ -34,7 +34,7 @@ case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
       odb.connect() >> odb.initialize(payload)
-    ).parBisequence.void
+    ).parTupled.void
 
   def close(): F[Unit] =
     List(
