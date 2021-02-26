@@ -11,6 +11,7 @@ import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
 import crystal.AppRootContext
 import crystal.react.AppRoot
+import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.Focused
@@ -30,6 +31,7 @@ import org.scalajs.dom.experimental.RequestCache
 import org.scalajs.dom.experimental.RequestInit
 import org.scalajs.dom.experimental.{ Request => FetchRequest }
 import org.scalajs.dom.raw.Element
+import react.common.implicits._
 import sttp.client3._
 import sttp.client3.circe._
 import sttp.model.Uri
@@ -96,6 +98,8 @@ trait AppMain extends IOApp {
         )
 
       IO.fromFuture(httpCall).map(_.body)
+    }.adaptError { case t =>
+      new Exception("Could not retrieve configuration.", t)
     }
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
@@ -108,36 +112,50 @@ trait AppMain extends IOApp {
                          TimeUnit.SECONDS
           ).some
 
-    def setupDOM(env: ExecutionEnvironment): IO[Element] = IO(
+    def setupDOM(): IO[Element] = IO(
       Option(dom.document.getElementById("root")).getOrElse {
         val elem = dom.document.createElement("div")
         elem.id = "root"
         dom.document.body.appendChild(elem)
-        if (env === ExecutionEnvironment.Staging) {
-          val stagingBanner = dom.document.createElement("div")
-          stagingBanner.id = "staging-banner"
-          stagingBanner.textContent = "Staging"
-          dom.document.body.appendChild(stagingBanner)
-        }
         elem
       }
     )
 
-    for {
-      _         <- utils.setupScheme[IO](Theme.Dark)
-      appConfig <- fetchConfig
-      _         <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
-      _         <- logger.info(s"Config: ${appConfig.show}")
-      ctx       <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
-      vault     <- ctx.sso.whoami
-      _         <- AppCtx.initIn[IO](ctx)
-      container <- setupDOM(appConfig.environment)
+    def showEnvironment(env: ExecutionEnvironment): IO[Unit] = IO {
+      val stagingBanner = dom.document.createElement("div")
+      stagingBanner.id = "staging-banner"
+      stagingBanner.textContent = "Staging"
+      dom.document.body.appendChild(stagingBanner)
+    }.whenA(env === ExecutionEnvironment.Staging)
+
+    def crash(msg: String): IO[Unit] =
+      setupDOM().map { element =>
+        (ExploreStyles.CrashMessage |+| ExploreStyles.ErrorLabel).htmlClasses
+          .foreach(element.classList.add)
+        element.innerHTML = msg
+      }
+
+    (for {
+      _                       <- utils.setupScheme[IO](Theme.Dark)
+      appConfig               <- fetchConfig
+      _                       <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+      _                       <- logger.info(s"Config: ${appConfig.show}")
+      ctx                     <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
+      r                       <- (ctx.sso.whoami,
+                                  setupDOM(),
+                                  showEnvironment(appConfig.environment),
+                                  AppCtx.initIn[IO](ctx)
+                                 ).parTupled
+      (vault, container, _, _) = r
     } yield {
       val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
 
       RootComponent().renderIntoDOM(container)
 
       ExitCode.Success
+    }).handleErrorWith { t =>
+      logger.error(t)("Error initializing") >>
+        crash(s"There was an error initializing Explore:<br/>${t.getMessage}").as(ExitCode.Error)
     }
   }
 }

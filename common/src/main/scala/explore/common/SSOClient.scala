@@ -17,6 +17,9 @@ import lucuma.core.model.User
 import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
+import retry.RetryDetails._
+import retry.RetryPolicies._
+import retry._
 import sttp.client3._
 
 import java.time.Instant
@@ -24,6 +27,8 @@ import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
+import ju.concurrent.TimeUnit
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
@@ -39,6 +44,20 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
   config:     SSOConfig,
   fromFuture: SSOClient.FromFuture[F, Response[Either[String, String]]]
 ) {
+  private val retryPolicy =
+    capDelay(
+      FiniteDuration.apply(5, TimeUnit.SECONDS),
+      fullJitter[F](FiniteDuration.apply(10, TimeUnit.MILLISECONDS))
+    ).join(limitRetries[F](12))
+
+  def logError(msg: String)(err: Throwable, details: RetryDetails): F[Unit] = details match {
+    case WillDelayAndRetry(_, retriesSoFar, _) =>
+      Logger[F].warn(err)(s"$msg failed - Will retry. Retries so far: [$retriesSoFar]")
+
+    case GivingUp(totalRetries, _) =>
+      Logger[F].error(err)(s"$msg failed - Giving up after [$totalRetries] retries.")
+  }
+
   // Does a client side redirect to the sso site
   val redirectToLogin: F[Unit] =
     Sync[F].delay {
@@ -51,9 +70,7 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
     def httpCall =
       Sync[F].delay(
         basicRequest
-          .post(
-            uri"${config.uri}/api/v1/auth-as-guest"
-          )
+          .post(uri"${config.uri}/api/v1/auth-as-guest")
           .readTimeout(config.readTimeout)
           .send(backend)
       )
@@ -78,37 +95,39 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
       }
   }
 
-  val whoami: F[Option[UserVault]] = {
-    val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
-    val httpCall =
-      Sync[F].delay(
-        basicRequest
-          .post(
-            uri"${config.uri}/api/v1/refresh-token"
-          )
-          .readTimeout(config.readTimeout)
-          .send(backend)
-      )
+  val whoami: F[Option[UserVault]] =
+    retryingOnAllErrors(retryPolicy, logError("Calling whoami")) {
+      val backend = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
 
-    fromFuture(httpCall)
-      .flatMap {
-        case Response(Right(body), _, _, _, _, _) =>
-          Sync[F].delay {
-            (for {
-              k <- Either.catchNonFatal(
-                     ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
-                   )
-              j  = new String(k)
-              p <- parse(j)
-              u <- p.as[JwtOrcidProfile]
-              t <- refineV[NonEmpty](body)
-            } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t).some)
-              .getOrElse(throw new RuntimeException("Error decoding the token"))
-          }
-        case Response(Left(_), _, _, _, _, _)     =>
-          none[UserVault].pure[F]
-      }
-  }
+      val httpCall =
+        Sync[F].delay(
+          basicRequest
+            .post(uri"${config.uri}/api/v1/refresh-token")
+            .readTimeout(config.readTimeout)
+            .send(backend)
+        )
+
+      fromFuture(httpCall)
+        .flatMap {
+          case Response(Right(body), _, _, _, _, _) =>
+            Sync[F].delay {
+              (for {
+                k <- Either.catchNonFatal(
+                       ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
+                     )
+                j  = new String(k)
+                p <- parse(j)
+                u <- p.as[JwtOrcidProfile]
+                t <- refineV[NonEmpty](body)
+              } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t).some)
+                .getOrElse(throw new RuntimeException("Error decoding the token"))
+            }
+          case Response(Left(_), _, _, _, _, _)     =>
+            none[UserVault].pure[F]
+        }
+    }.adaptError { case t =>
+      new Exception("Error connecting to authentication server.", t)
+    }
 
   def refreshToken(expiration: Instant): F[Option[UserVault]] =
     Sync[F].delay(Instant.now).flatMap { n =>
@@ -123,9 +142,7 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
     val httpCall =
       Sync[F].delay(
         basicRequest
-          .post(
-            uri"${config.uri}/api/v1/logout"
-          )
+          .post(uri"${config.uri}/api/v1/logout")
           .readTimeout(config.readTimeout)
           .send(backend)
       )

@@ -8,6 +8,7 @@ object Settings {
   object LibraryVersions {
     val cats              = "2.4.2"
     val catsEffect        = "2.3.3"
+    val catsRetry         = "2.1.0"
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
     val circeGolden       = "0.3.0"
@@ -59,6 +60,12 @@ object Settings {
       deps(
         "org.typelevel" %%% "cats-effect"
       )(catsEffect)
+    )
+
+    val CatsRetry = Def.setting(
+      deps(
+        "com.github.cb372" %%% "cats-retry"
+      )(catsRetry)
     )
 
     val Chimney = Def.setting(
