@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.components.ObsBadge
+import explore.observationtree.ObsBadge
 import explore.data.tree._
 import explore.model.Constraints
 import explore.model.ExploreObservation
@@ -93,11 +93,14 @@ object AndOrTest {
   def renderObs(obs: ExploreObservation, dragIcon: VdomNode): VdomNode =
     wrap(^.width := "200px", ^.margin := "5px")(
       ObsBadge(
-        ObsSummary(id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
-                   name = obs.target.name.value.some,
-                   observationTarget = None
+        obs = ObsSummary(
+          id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
+          name = obs.target.name.value.some,
+          observationTarget = None
         ),
-        ObsBadge.Layout.NameAndConf
+        layout = ObsBadge.Layout.NameAndConf,
+        selected = false,
+        deleteCB = (id: Observation.Id) => Callback.log(id.show)
       ),
       <.div(^.textAlign.right, dragIcon)
     )

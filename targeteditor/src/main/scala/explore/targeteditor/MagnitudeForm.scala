@@ -88,10 +88,7 @@ object MagnitudeForm {
             compact = true,
             clazz = ExploreStyles.DeleteButton
           )(
-            Icons.Delete
-              .size(Small)
-              .fitted(true)
-              .clazz(ExploreStyles.TrashIcon)
+            Icons.Trash
           )
 
           val deleteFn: View[Magnitude] => Callback =

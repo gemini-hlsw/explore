@@ -14,7 +14,7 @@ import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.components.InputModal
-import explore.components.ObsBadge
+import explore.observationtree.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Focused
@@ -29,6 +29,7 @@ import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+import lucuma.core.model.Observation
 
 final case class ObsList(
   observations: View[List[ObsSummary]],
@@ -48,6 +49,11 @@ object ObsList {
         CreateObservationInput(programId = "p-2", name = name.assign)
       )
       .void
+
+  def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
+    c:                                         GraphQLClient[F, ObservationDB]
+  ): F[Unit] =
+    ObsQueries.ProgramDeleteObservation.execute[F](id).void
 
   protected val component =
     ScalaComponent
@@ -80,7 +86,11 @@ object ObsList {
                     ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                     ^.onClick ==> linkOverride(props.focused.set(focusedObs.some))
                   )(
-                    ObsBadge(obs, ObsBadge.Layout.NameAndConf, selected = selected)
+                    ObsBadge(obs,
+                             ObsBadge.Layout.NameAndConf,
+                             selected = selected,
+                             deleteObservation[IO](_).runAsyncAndForgetCB
+                    )
                   )
                 }
               )

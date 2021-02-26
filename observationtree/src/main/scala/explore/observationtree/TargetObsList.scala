@@ -9,7 +9,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
-import explore.components.ObsBadge
+import explore.observationtree.ObsBadge
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -422,7 +422,8 @@ object TargetObsList {
                      observationTarget = None
           ), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
-          selected = props.focused.get.exists(_ === FocusedObs(obs.id))
+          selected = props.focused.get.exists(_ === FocusedObs(obs.id)),
+        deleteCB = (id: Observation.Id) => Callback.log(id.show)
         )
 
       def renderObsBadgeItem(obs: ObsAttached, idx: Int): TagMod =
@@ -545,10 +546,7 @@ object TargetObsList {
                               e.stopPropagationCB *>
                                 deleteTarget(targetId, undoCtx.setter, focusOnDelete)
                           )(
-                            Icons.Delete
-                              .size(Small)
-                              .fitted(true)
-                              .clazz(ExploreStyles.TrashIcon)
+                            Icons.Trash
                           ),
                           <.span(ExploreStyles.ObsCount, s"${targetObs.length} Obs")
                         )
@@ -681,10 +679,7 @@ object TargetObsList {
                               e.stopPropagationCB *>
                                 deleteAsterism(asterismId, undoCtx.setter, focusOnDelete)
                           )(
-                            Icons.Delete
-                              .size(Small)
-                              .fitted(true)
-                              .clazz(ExploreStyles.TrashIcon)
+                            Icons.Trash
                           ),
                           <.span(ExploreStyles.ObsCount,
                                  s"${asterismTargets.length} Tgts - ${asterismObs.length} Obs"
@@ -708,10 +703,7 @@ object TargetObsList {
                                                                  undoCtx.setter
                                         )
                                   )(
-                                    Icons.Delete
-                                      .size(Small)
-                                      .fitted(true)
-                                      .clazz(ExploreStyles.TrashIcon)
+                                    Icons.Trash
                                   )
                                 )
                               )
