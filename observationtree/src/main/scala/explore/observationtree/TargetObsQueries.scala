@@ -36,7 +36,8 @@ object TargetObsQueries {
   case class AsterismIdName(
     id:      Asterism.Id,
     targets: TargetList,
-    name:    NonEmptyString = Constants.UnnamedAsterism)
+    name:    NonEmptyString = Constants.UnnamedAsterism
+  )
 
   type ObjectId = Either[Target.Id, Asterism.Id]
 

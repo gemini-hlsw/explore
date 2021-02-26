@@ -19,8 +19,8 @@ final case class FormStaticData(
   value:     TagMod,
   label:     String,
   hideLabel: Boolean = false,
-  modifiers: Seq[TagMod] = Seq.empty)
-    extends ReactProps[FormStaticData](FormStaticData.component) {
+  modifiers: Seq[TagMod] = Seq.empty
+) extends ReactProps[FormStaticData](FormStaticData.component) {
   def apply(mods: TagMod*): FormStaticData = copy(modifiers = modifiers ++ mods)
 }
 

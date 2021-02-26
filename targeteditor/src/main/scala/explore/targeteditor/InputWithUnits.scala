@@ -21,17 +21,18 @@ import react.common._
 import react.semanticui.elements.label.LabelPointing
 
 final case class InputWithUnits[F[_]: Effect, A](
-  value:           ViewF[F, A],
-  validFormat:     ValidFormatInput[A],
-  changeAuditor:   ChangeAuditor[A],
-  id:              NonEmptyString,
-  label:           String,
-  units:           String,
-  disabled:        Boolean,
-  columnSpam:      Int Refined Interval.Closed[1, 16] = 2
-)(implicit val ev: ExternalValue[ViewF[F, *]],
-  val eq:          Eq[A])
-    extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
+  value:         ViewF[F, A],
+  validFormat:   ValidFormatInput[A],
+  changeAuditor: ChangeAuditor[A],
+  id:            NonEmptyString,
+  label:         String,
+  units:         String,
+  disabled:      Boolean,
+  columnSpam:    Int Refined Interval.Closed[1, 16] = 2
+)(implicit
+  val ev:        ExternalValue[ViewF[F, *]],
+  val eq:        Eq[A]
+) extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
 
 object InputWithUnits {
   type Props[F[_], A] = InputWithUnits[F, A]

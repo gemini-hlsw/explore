@@ -20,8 +20,8 @@ import scala.math.rint
 
 final case class AladinToolbar(
   fov:     Fov,
-  current: Coordinates)
-    extends ReactProps[AladinToolbar](AladinToolbar.component)
+  current: Coordinates
+) extends ReactProps[AladinToolbar](AladinToolbar.component)
 
 object AladinToolbar {
   type Props = AladinToolbar

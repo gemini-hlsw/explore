@@ -32,7 +32,8 @@ final case class LiveQueryRenderMod[S, D, A](
   query:               IO[D],
   extract:             D => A,
   changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
-)(val valueRender:     View[A] => VdomNode,
+)(
+  val valueRender:     View[A] => VdomNode,
   val pendingRender:   Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
   val errorRender:     Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
@@ -42,8 +43,8 @@ final case class LiveQueryRenderMod[S, D, A](
   val cs:              ContextShift[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
-  val client:          GraphQLWebSocketClient[IO, S])
-    extends ReactProps(LiveQueryRenderMod.component)
+  val client:          GraphQLWebSocketClient[IO, S]
+) extends ReactProps(LiveQueryRenderMod.component)
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
 object LiveQueryRenderMod {
@@ -56,8 +57,8 @@ object LiveQueryRenderMod {
     queue:                   Queue[F, A],
     subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
     cancelConnectionTracker: CancelToken[F],
-    renderer:                StreamRendererMod.Component[F, A])
-      extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]
+    renderer:                StreamRendererMod.Component[F, A]
+  ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]]                 = Reusability.never

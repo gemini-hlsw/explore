@@ -24,9 +24,10 @@ import react.semanticui.sizes._
 import scala.collection.SortedMap
 
 final case class CataloguesForm(
-  options:          View[TargetVisualOptions]
-)(implicit val ctx: AppContextIO)
-    extends ReactProps[CataloguesForm](CataloguesForm.component)
+  options: View[TargetVisualOptions]
+)(implicit
+  val ctx: AppContextIO
+) extends ReactProps[CataloguesForm](CataloguesForm.component)
 
 object CataloguesForm {
   type Props = CataloguesForm

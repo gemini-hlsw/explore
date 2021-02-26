@@ -15,8 +15,9 @@ import react.common._
 final case class ExploreLayout(
   c:        RouterCtl[Page],
   r:        ResolutionWithProps[Page, View[RootModel]]
-)(val view: View[RootModel])
-    extends ReactProps[ExploreLayout](ExploreLayout.component)
+)(
+  val view: View[RootModel]
+) extends ReactProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
   type Props = ExploreLayout

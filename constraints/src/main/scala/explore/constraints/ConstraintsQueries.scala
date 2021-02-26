@@ -59,11 +59,13 @@ object ConstraintsQueries {
   case class UndoViewZoom(
     id:     Constraints.Id,
     view:   View[Constraints],
-    setter: Undoer.Setter[IO, Constraints]) {
+    setter: Undoer.Setter[IO, Constraints]
+  ) {
     def apply[A](
-      lens:        Lens[Constraints, A],
-      fields:      A => ConstraintsSetInput
-    )(implicit cs: ContextShift[IO]
+      lens:   Lens[Constraints, A],
+      fields: A => ConstraintsSetInput
+    )(implicit
+      cs:     ContextShift[IO]
     ): View[A] =
       ViewF[IO, A](
         lens.get(view.get),
@@ -99,7 +101,8 @@ object ConstraintsQueries {
 
   def ConstraintsSubscription(
     id:     Constraints.Id
-  )(render: View[Constraints] => VdomNode
+  )(
+    render: View[Constraints] => VdomNode
   ): SubscriptionRenderMod[Subscription.Data, Constraints] =
     ???
   // AppCtx.withCtx { implicit appCtx =>

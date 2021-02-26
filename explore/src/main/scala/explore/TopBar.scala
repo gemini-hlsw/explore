@@ -34,8 +34,8 @@ import react.semanticui.views.item.Item
 
 final case class TopBar(
   user:   User,
-  logout: IO[Unit])
-    extends ReactProps[TopBar](TopBar.component)
+  logout: IO[Unit]
+) extends ReactProps[TopBar](TopBar.component)
 
 object TopBar {
   type Props = TopBar

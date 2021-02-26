@@ -106,7 +106,8 @@ object UserPreferencesQueries {
       userId:       Option[User.Id],
       area:         ResizableSection,
       defaultValue: Int
-    )(implicit cl:  GraphQLClient[F, UserPreferencesDB]
+    )(implicit
+      cl:           GraphQLClient[F, UserPreferencesDB]
     ): F[Int] =
       (for {
         uid <- OptionT.fromOption[F](userId)
@@ -167,7 +168,8 @@ object UserPreferencesQueries {
       layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
-    )(implicit cl:   GraphQLClient[F, UserPreferencesDB]
+    )(implicit
+      cl:            GraphQLClient[F, UserPreferencesDB]
     ): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
@@ -249,10 +251,11 @@ object UserPreferencesQueries {
     // This is coded to return a default in case
     // there is no data or errors
     def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
-      uid:         User.Id,
-      tid:         Target.Id,
-      defaultFov:  Angle
-    )(implicit cl: GraphQLClient[F, UserPreferencesDB]
+      uid:        User.Id,
+      tid:        Target.Id,
+      defaultFov: Angle
+    )(implicit
+      cl:         GraphQLClient[F, UserPreferencesDB]
     ): F[Angle] =
       (for {
         r <-

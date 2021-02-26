@@ -16,8 +16,8 @@ import react.semanticui.views.card._
 final case class ObsBadge(
   obs:      ObsSummary,
   layout:   ObsBadge.Layout,
-  selected: Boolean = false)
-    extends ReactProps[ObsBadge](ObsBadge.component)
+  selected: Boolean = false
+) extends ReactProps[ObsBadge](ObsBadge.component)
 object ObsBadge {
   type Props = ObsBadge
 

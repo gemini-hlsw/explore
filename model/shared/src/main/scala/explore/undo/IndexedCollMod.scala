@@ -17,7 +17,8 @@ trait IndexedCollMod[
   Idx,
   A,
   N[_],
-  K] { // N = Type of internal Node containing A. Can be Id for just A.
+  K
+] { // N = Type of internal Node containing A. Can be Id for just A.
   protected val keyLens: Lens[A, K]
 
   protected val valueLens: Lens[N[A], A]

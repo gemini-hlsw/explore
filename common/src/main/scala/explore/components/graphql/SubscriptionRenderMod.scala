@@ -28,7 +28,8 @@ import scala.language.postfixOps
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
-)(val valueRender:   View[A] => VdomNode,
+)(
+  val valueRender:   View[A] => VdomNode,
   val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
   val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
@@ -37,8 +38,8 @@ final case class SubscriptionRenderMod[D, A](
   val timer:         Timer[IO],
   val cs:            ContextShift[IO],
   val logger:        Logger[IO],
-  val reuse:         Reusability[A])
-    extends ReactProps(SubscriptionRenderMod.component)
+  val reuse:         Reusability[A]
+) extends ReactProps(SubscriptionRenderMod.component)
     with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
@@ -49,8 +50,8 @@ object SubscriptionRenderMod {
 
   protected final case class State[F[_], D, A](
     subscription: GraphQLSubscription[F, D],
-    renderer:     StreamRendererMod.Component[F, A])
-      extends Render.Subscription.State[F, ViewF[F, *], D, A]
+    renderer:     StreamRendererMod.Component[F, A]
+  ) extends Render.Subscription.State[F, ViewF[F, *], D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =

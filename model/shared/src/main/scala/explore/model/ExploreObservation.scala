@@ -17,7 +17,8 @@ final case class ExploreObservation(
   status:      ObsStatus,
   conf:        String,
   constraints: Constraints,
-  duration:    Duration)
+  duration:    Duration
+)
 
 object ExploreObservation {
   type Id = UUID

@@ -30,8 +30,8 @@ final case class PartnerSplitsEditor(
   show:    Boolean,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
-  onSave:  List[PartnerSplit] => Callback)
-    extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
+  onSave:  List[PartnerSplit] => Callback
+) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {
   type Props = PartnerSplitsEditor

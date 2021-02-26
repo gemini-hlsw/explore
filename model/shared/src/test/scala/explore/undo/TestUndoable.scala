@@ -14,7 +14,8 @@ import monocle.macros.Lenses
 @Lenses
 case class TestStacks[F[_], A](
   undoStack: Undoer.Stack[F, A] = List.empty,
-  redoStack: Undoer.Stack[F, A] = List.empty)
+  redoStack: Undoer.Stack[F, A] = List.empty
+)
 
 class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]]) extends Undoer[F, M] {
   type Stacks = TestStacks[F, M]

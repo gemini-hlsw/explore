@@ -37,7 +37,8 @@ object SSOClient {
 
 case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
   config:     SSOConfig,
-  fromFuture: SSOClient.FromFuture[F, Response[Either[String, String]]]) {
+  fromFuture: SSOClient.FromFuture[F, Response[Either[String, String]]]
+) {
   // Does a client side redirect to the sso site
   val redirectToLogin: F[Unit] =
     Sync[F].delay {
