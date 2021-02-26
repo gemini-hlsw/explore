@@ -99,8 +99,7 @@ object AndOrTest {
           observationTarget = None
         ),
         layout = ObsBadge.Layout.NameAndConf,
-        selected = false,
-        deleteCB = (id: Observation.Id) => Callback.log(id.show)
+        selected = false
       ),
       <.div(^.textAlign.right, dragIcon)
     )

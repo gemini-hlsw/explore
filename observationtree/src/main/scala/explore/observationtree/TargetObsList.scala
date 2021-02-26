@@ -422,8 +422,7 @@ object TargetObsList {
                      observationTarget = None
           ), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
-          selected = props.focused.get.exists(_ === FocusedObs(obs.id)),
-          deleteCB = (id: Observation.Id) => Callback.log(id.show)
+          selected = props.focused.get.exists(_ === FocusedObs(obs.id))
         )
 
       def renderObsBadgeItem(obs: ObsAttached, idx: Int): TagMod =

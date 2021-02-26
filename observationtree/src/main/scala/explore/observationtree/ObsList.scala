@@ -65,10 +65,7 @@ object ObsList {
       .render_P { props =>
         def deleteLocal(id: Observation.Id, focus: Option[ObsSummary]) =
           props.observations.mod(l => l.filterNot(_.id === id)) *>
-            (focus match {
-              case Some(s) => props.focused.set(FocusedObs(s.id).some)
-              case None    => props.focused.set(none)
-            })
+            props.focused.set(focus.map(s => FocusedObs(s.id)))
 
         def createLocal(name: String): IO[Observation.Id] =
           IO(Observation.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).flatTap { oid =>
@@ -118,13 +115,16 @@ object ObsList {
                       props.focused.set(focusedObs.some)
                     )
                   )(
-                    ObsBadge(obs,
-                             ObsBadge.Layout.NameAndConf,
-                             selected = selected,
-                             id =>
-                               (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](
-                                 id
-                               )).runAsyncAndForgetCB
+                    ObsBadge(
+                      obs,
+                      ObsBadge.Layout.NameAndConf,
+                      selected = selected,
+                      (
+                        (id: Observation.Id) =>
+                          (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](
+                            id
+                          )).runAsyncAndForgetCB
+                      ).some
                     )
                   )
                 }

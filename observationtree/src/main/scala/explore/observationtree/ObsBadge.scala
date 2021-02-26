@@ -22,7 +22,7 @@ final case class ObsBadge(
   obs:      ObsSummary,
   layout:   ObsBadge.Layout,
   selected: Boolean = false,
-  deleteCB: Observation.Id => Callback
+  deleteCB: Option[Observation.Id => Callback] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -56,7 +56,9 @@ object ObsBadge {
           compact = true,
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
           onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB(props.obs.id)
+            e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
+              .map(cb => cb(props.obs.id))
+              .getOrEmpty
         )(
           Icons.Trash
         )
@@ -71,7 +73,7 @@ object ObsBadge {
                     case NameAndConf        => obs.name.orEmpty
                     case ConfAndConstraints => obs.conf
                   },
-                  deleteButton
+                  props.deleteCB.whenDefined(_ => deleteButton)
                 )
               ),
               CardMeta(
