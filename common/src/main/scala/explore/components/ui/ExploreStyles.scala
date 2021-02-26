@@ -192,4 +192,6 @@ object ExploreStyles {
   val MagnitudesTableFooter: Css             = Css("explore-magnitudes-footer")
   val MagnitudesTableDeletButtonWrapper: Css = Css("explore-magnitudes-delete-button-wrapper")
   val MagnitudesTableSection: Css            = Css("explore-magnitudes-section")
+
+  val EmptyTreeContent: Css = Css("explore-empty-tree-content")
 }
