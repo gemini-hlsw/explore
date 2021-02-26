@@ -59,7 +59,26 @@ object ObsList {
     ScalaComponent
       .builder[Props]
       .render_P { props =>
+        def deleteLocal(id: Observation.Id, focus: Option[ObsSummary]) =
+          props.observations.mod(l => l.filterNot(_.id === id)) *>
+            (focus match {
+              case Some(s) => props.focused.set(FocusedObs(s.id).some)
+              case None    => props.focused.set(none)
+            })
+
         AppCtx.withCtx { implicit ctx =>
+          val focused        = props.focused.get
+          val observations   = props.observations.get
+          val someSelected   = focused.isDefined
+          val obsWithIdx     = observations.zipWithIndex
+          val obsId          = focused.collect { case FocusedObs(id) =>
+            id
+          }
+          val obsIdx         = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
+          val nextToSelect   = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
+          val prevToSelect   = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
+          val focusOnDelete  = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
+
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
@@ -84,12 +103,17 @@ object ObsList {
                   <.a(
                     ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
                     ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                    ^.onClick ==> linkOverride(props.focused.set(focusedObs.some))
+                    ^.onClick ==> linkOverride(
+                      props.focused.set(focusedObs.some)
+                    )
                   )(
                     ObsBadge(obs,
                              ObsBadge.Layout.NameAndConf,
                              selected = selected,
-                             deleteObservation[IO](_).runAsyncAndForgetCB
+                             id =>
+                               (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](
+                                 id
+                               )).runAsyncAndForgetCB
                     )
                   )
                 }
