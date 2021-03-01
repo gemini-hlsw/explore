@@ -16,6 +16,8 @@ import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.components.InputModal
 import explore.components.ui.ExploreStyles
+import explore.components.undo.UndoButtons
+import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
@@ -23,6 +25,10 @@ import explore.model.ObsSummary
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
+import explore.optics.Adjuster
+import explore.optics.GetAdjust
+import explore.undo.KIListMod
+import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -34,8 +40,11 @@ import react.semanticui.sizes._
 
 import scala.util.Random
 
+import ObsQueries._
+import cats.ApplicativeError
+
 final case class ObsList(
-  observations: View[List[ObsSummary]],
+  observations: View[ObservationList],
   focused:      View[Option[Focused]]
 ) extends ReactProps[ObsList](ObsList.component)
 
@@ -44,48 +53,118 @@ object ObsList {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  def createObservation[F[_]: Applicative](
-    obsId:      Observation.Id,
-    name:       String
-  )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] =
-    ObsQueries.ProgramCreateObservations
-      .execute[F](
-        CreateObservationInput(programId = "p-2", observationId = obsId.assign, name = name.assign)
-      )
-      .void
+  val obsListMod = new KIListMod[IO, ObsSummary, Observation.Id](ObsSummary.id)
 
-  def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
-    c:                                         TransactionalClient[F, ObservationDB]
-  ): F[Unit] =
-    ObsQueries.ProgramDeleteObservation.execute[F](id).void
+  class Backend($ : BackendScope[Props, Unit]) {
 
-  protected val component =
-    ScalaComponent
-      .builder[Props]
-      .render_P { props =>
-        def deleteLocal(id: Observation.Id, focus: Option[ObsSummary]) =
-          props.observations.mod(l => l.filterNot(_.id === id)) *>
-            props.focused.set(focus.map(s => FocusedObs(s.id)))
+    def createObservation[F[_]](
+      obsId: Observation.Id,
+      name:  Option[String]
+    )(implicit
+      F:     ApplicativeError[F, Throwable],
+      c:     TransactionalClient[F, ObservationDB]
+    ): F[Unit] =
+      ObsQueries.ProgramCreateObservation
+        .execute[F](
+          CreateObservationInput(programId = "p-2",
+                                 observationId = obsId.assign,
+                                 name = name.orIgnore
+          )
+        )
+        .void
+        .handleErrorWith { _ =>
+          ProgramUndeleteObservation.execute(obsId).void
+        }
 
-        def createLocal(name: String): IO[Observation.Id] =
-          IO(Observation.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).flatTap { oid =>
-            props.observations.mod(l =>
-              l :+ ObsSummary(oid, name.some, observationTarget = none)
-            ) *>
-              props.focused.set(FocusedObs(oid).some)
+    def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
+      c:                                         TransactionalClient[F, ObservationDB]
+    ): F[Unit] =
+      ObsQueries.ProgramDeleteObservation.execute[F](id).void
+
+    private def setObsWithIndex(
+      observations:       View[ObservationList],
+      focused:            View[Option[Focused]],
+      obsId:              Observation.Id,
+      obsWithIndexSetter: Adjuster[ObservationList, obsListMod.ElemWithIndex],
+      nextToFoucs:        Option[ObsSummary]
+    )(implicit
+      c:                  TransactionalClient[IO, ObservationDB]
+    ): obsListMod.ElemWithIndex => IO[Unit] =
+      obsWithIndex =>
+        // 1) Update internal model
+        observations
+          .mod(obsWithIndexSetter.set(obsWithIndex)) >>
+          // 2) Send mutation & adjust focus
+          obsWithIndex.fold(
+            focused.set(nextToFoucs.map(f => Focused.FocusedObs(f.id))) >>
+              deleteObservation[IO](obsId)
+          ) { case (obs, _) =>
+            createObservation[IO](obs.id, obs.name) >>
+              focused.set(Focused.FocusedObs(obs.id).some)
           }
 
-        AppCtx.withCtx { implicit ctx =>
-          val focused       = props.focused.get
-          val observations  = props.observations.get
-          val someSelected  = focused.isDefined
-          val obsWithIdx    = observations.zipWithIndex
-          val obsId         = focused.collect { case FocusedObs(id) => id }
-          val obsIdx        = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
-          val nextToSelect  = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
-          val prevToSelect  = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
-          val focusOnDelete = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
+    private def obsMod(
+      setter:        Undoer.Setter[IO, ObservationList],
+      observations:  View[ObservationList],
+      focused:       View[Option[Focused]],
+      obsId:         Observation.Id,
+      focusOnDelete: Option[ObsSummary]
+    )(implicit
+      c:             TransactionalClient[IO, ObservationDB]
+    ): obsListMod.Operation => IO[Unit] = {
+      val obsWithId: GetAdjust[ObservationList, obsListMod.ElemWithIndex] =
+        obsListMod.withKey(obsId)
 
+      setter
+        .mod[obsListMod.ElemWithIndex](
+          observations.get,
+          obsWithId.getter.get,
+          setObsWithIndex(observations, focused, obsId, obsWithId.adjuster, focusOnDelete)
+        )
+    }
+
+    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: String)(implicit
+      c:                         TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = {
+      // Temporary measure until we have id pools.
+      val newObs = IO(Random.nextInt()).map(int =>
+        ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+                   name.some,
+                   observationTarget = none
+        )
+      )
+
+      $.propsIn[IO] >>= { props =>
+        newObs >>= { obs =>
+          val mod = obsMod(setter, props.observations, props.focused, obs.id, none)
+          mod(obsListMod.upsert(obs, props.observations.get.length))
+        }
+      }
+    }
+
+    protected def deleteObs(
+      obsId:         Observation.Id,
+      setter:        Undoer.Setter[IO, ObservationList],
+      focusOnDelete: Option[ObsSummary]
+    )(implicit c:    TransactionalClient[IO, ObservationDB]): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        val mod = obsMod(setter, props.observations, props.focused, obsId, focusOnDelete)
+        mod(obsListMod.delete)
+      }
+
+    def render(props: Props) =
+      AppCtx.withCtx { implicit ctx =>
+        val focused       = props.focused.get
+        val observations  = props.observations.get.toList
+        val someSelected  = focused.isDefined
+        val obsWithIdx    = observations.zipWithIndex
+        val obsId         = focused.collect { case FocusedObs(id) => id }
+        val obsIdx        = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
+        val nextToSelect  = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
+        val prevToSelect  = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
+        val focusOnDelete = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
+
+        UndoRegion[ObservationList] { undoCtx =>
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
@@ -95,17 +174,17 @@ object ObsList {
                   label = "Name",
                   placeholder = "Observation name",
                   okLabel = "Create",
-                  onComplete = s =>
-                    (createLocal(s) >>= { i => createObservation[IO](i, s) }).runAsyncAndForgetCB,
+                  onComplete = s => newObs(undoCtx.setter)(s).runAsyncCB,
                   trigger = Button(size = Mini, compact = true)(
                     Icons.New.size(Small).fitted(true)
                   )
                 )
-              )
+              ),
+              UndoButtons(props.observations.get, undoCtx, size = Mini)
             ),
             <.div(ExploreStyles.ObsTree)(
               <.div(ExploreStyles.ObsScrollTree)(
-                props.observations.get.toTagMod { obs =>
+                observations.toTagMod { obs =>
                   val focusedObs = FocusedObs(obs.id)
                   val selected   = props.focused.get.exists(_ === focusedObs)
                   <.a(
@@ -120,8 +199,7 @@ object ObsList {
                       ObsBadge.Layout.NameAndConf,
                       selected = selected,
                       (
-                        (id: Observation.Id) =>
-                          (deleteLocal(id, focusOnDelete) *> deleteObservation[IO](id))
+                        (id: Observation.Id) => deleteObs(id, undoCtx.setter, focusOnDelete)
                       ).some
                     )
                   )
@@ -131,6 +209,12 @@ object ObsList {
           )
         }
       }
+  }
+
+  protected val component =
+    ScalaComponent
+      .builder[Props]
+      .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

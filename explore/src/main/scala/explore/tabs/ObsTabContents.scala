@@ -188,12 +188,12 @@ object ObsTabContents {
         val treeWidth = state.panels.treeWidth.toInt
 
         // Tree area
-        def tree(observations: View[List[ObsSummary]]) =
+        def tree(observations: View[ObservationList]) =
           <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
             treeInner(observations)
           )
 
-        def treeInner(observations: View[List[ObsSummary]]) =
+        def treeInner(observations: View[ObservationList]) =
           <.div(ExploreStyles.TreeBody)(
             ObsList(
               observations,
@@ -213,7 +213,7 @@ object ObsTabContents {
         ObsLiveQuery { observations =>
           val obsSummaryOpt: Option[ObsSummary] = props.focused.get.collect {
             case FocusedObs(obsId) =>
-              observations.get.find(_.id === obsId)
+              observations.get.getElement(obsId)
           }.flatten
 
           val targetId = obsSummaryOpt.collect {

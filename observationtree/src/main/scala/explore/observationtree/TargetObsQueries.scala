@@ -326,10 +326,10 @@ object TargetObsQueries {
     AppCtx.flatMap(implicit ctx =>
       AddTarget
         .execute(target.id, target.name.value)
-        .void
         .handleErrorWith { _ =>
-          UndeleteTarget.execute(target.id).void
+          UndeleteTarget.execute(target.id)
         }
+        .void
     )
 
   def removeTarget(id: Target.Id): IO[Unit] =
