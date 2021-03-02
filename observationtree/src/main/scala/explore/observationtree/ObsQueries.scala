@@ -20,17 +20,19 @@ object ObsQueries {
 
   @GraphQL
   object ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
-    val document = """
+    val document = s"""
       query {
-        observations(programId: "p-2") {
-          id
-          name
-          observationTarget {
-            ... on Asterism {
-              asterism_id: id
-            }
-            ... on Target {
-              target_id: id
+        observations(programId: "p-2", first: ${Int.MaxValue}) {
+          nodes {
+            id
+            name
+            observationTarget {
+              ... on Asterism {
+                asterism_id: id
+              }
+              ... on Target {
+                target_id: id
+              }
             }
           }
         }
@@ -38,7 +40,9 @@ object ObsQueries {
     """
 
     object Data {
-      type Observations = ObsSummary
+      object Observations {
+        type Nodes = ObsSummary
+      }
     }
   }
 
@@ -63,7 +67,7 @@ object ObsQueries {
       AppCtx.withCtx { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]](
           ProgramObservationsQuery.query(),
-          _.observations,
+          _.observations.nodes,
           NonEmptyList.of(ProgramObservationsEditSubscription.subscribe[IO]())
         )(render)
       }

@@ -1,39 +1,3 @@
-# Common fields shared by all asterisms
-interface Asterism {
-  # Asterism ID
-  id: AsterismId!
-
-  # Whether the asterism is deleted or present
-  existence: Existence!
-
-  # Asterism name, if any.
-  name: String
-
-  # When set, overrides the default base position of the asterism
-  explicitBase: Coordinates
-
-  # All observations associated with the asterism.
-  observations(
-    # Program ID
-    programId: ProgramId
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # All asterism targets
-  targets(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # The programs associated with the asterism.
-  programs(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Program!]!
-}
-
 # Event sent when a new object is created or updated
 type AsterismEdit implements Event {
   # Type of edit
@@ -44,13 +8,22 @@ type AsterismEdit implements Event {
   id: Long!
 }
 
-# AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
-scalar AsterismId
+# Asterism and the observations with which it is associated
+input AsterismObservationLinks {
+  asterismId: AsterismId!
+  observationIds: [ObservationId!]!
+}
 
-# Asterism and the programs with which they are associated
+# Asterism and the programs with which it is associated
 input AsterismProgramLinks {
-  asterismIds: [AsterismId!]!
+  asterismId: AsterismId!
   programIds: [ProgramId!]!
+}
+
+# Asterism and the targets with which it is associated
+input AsterismTargetLinks {
+  asterismId: AsterismId!
+  targetIds: [TargetId!]!
 }
 
 # Bias calibration step
@@ -59,15 +32,13 @@ type Bias implements StepConfig {
   stepType: StepType!
 }
 
-# The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
-scalar BigDecimal
+# Stopping point in a series of steps
+enum Breakpoint {
+  # Breakpoint Enabled
+  ENABLED
 
-type CatalogId {
-  # Catalog name option
-  name: CatalogName!
-
-  # Catalog id string
-  id: String!
+  # Breakpoint Disabled
+  DISABLED
 }
 
 # Catalog id consisting of catalog name and string identifier
@@ -76,47 +47,18 @@ input CatalogIdInput {
   id: String!
 }
 
-# Catalog name values
-enum CatalogName {
-  # CatalogName Simbad
-  SIMBAD
-
-  # CatalogName Horizon
-  HORIZON
-
-  # CatalogName Gaia
-  GAIA
-}
-
-# Instrument configuration
-interface Config {
-  # Instrument type
-  instrument: InstrumentType!
-}
-
-type Coordinates {
-  # Right Ascension
-  ra: RightAscension!
-
-  # Declination
-  dec: Declination!
-}
-
 # Absolute coordinates relative base epoch
 input CoordinatesInput {
   ra: RightAscensionInput!
   dec: DeclinationInput!
 }
 
-# Default asterism parameters
-input CreateDefaultAsterismInput {
+# Asterism parameters
+input CreateAsterismInput {
   asterismId: AsterismId
   name: String
   programIds: [ProgramId!]!
   explicitBase: CoordinatesInput
-
-  # Targets to include in default asterism
-  targetIds: [TargetId!]!
 }
 
 # Nonsidereal target parameters
@@ -135,6 +77,7 @@ input CreateObservationInput {
   programId: ProgramId!
   name: String
   asterismId: AsterismId
+  targetId: TargetId
   status: ObsStatus
 }
 
@@ -157,17 +100,6 @@ input CreateSiderealInput {
 type Dark implements StepConfig {
   # Step type
   stepType: StepType!
-}
-
-type Declination {
-  # Declination in DD:MM:SS.SS format
-  dms: DmsString!
-
-  # Declination in signed degrees
-  degrees: BigDecimal!
-
-  # Declination in signed µas
-  microarcseconds: Long!
 }
 
 # Decimal value in Declination
@@ -206,64 +138,8 @@ enum DeclinationUnits {
   DEGREES
 }
 
-# Default asterism
-type DefaultAsterism implements Asterism {
-  # Asterism ID
-  id: AsterismId!
-
-  # Whether the asterism is deleted or present
-  existence: Existence!
-
-  # Asterism name, if any.
-  name: String
-
-  # When set, overrides the default base position of the asterism
-  explicitBase: Coordinates
-
-  # All observations associated with the asterism.
-  observations(
-    # Program ID
-    programId: ProgramId
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # All asterism targets
-  targets(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # The programs associated with the asterism.
-  programs(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Program!]!
-}
-
-# Target declination coordinate in format '[+/-]DD:MM:SS.sss'
-scalar DmsString
-
-type Duration {
-  # Duration in µs
-  microseconds: Long!
-
-  # Duration in ms
-  milliseconds: BigDecimal!
-
-  # Duration in seconds
-  seconds: BigDecimal!
-
-  # Duration in minutes
-  minutes: BigDecimal!
-
-  # Duration in hours
-  hours: BigDecimal!
-}
-
-# Default asterism edit
-input EditDefaultAsterismInput {
+# Asterism edit
+input EditAsterismInput {
   asterismId: AsterismId!
 
   # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
@@ -274,9 +150,6 @@ input EditDefaultAsterismInput {
 
   # The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
   explicitBase: CoordinatesInput
-
-  # Targets to include in the default asterism
-  targetIds: [TargetId!]
 }
 
 # Edit observation
@@ -294,6 +167,9 @@ input EditObservationInput {
 
   # The asterismId field may be unset by assigning a null value, or ignored by skipping it altogether
   asterismId: AsterismId
+
+  # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
+  targetId: TargetId
 }
 
 # Sidereal target edit parameters
@@ -346,39 +222,9 @@ enum EditType {
   UPDATED
 }
 
-# Ephemeris key type options
-enum EphemerisKeyType {
-  # EphemerisKeyType Comet
-  COMET
-
-  # EphemerisKeyType AsteroidNew
-  ASTEROID_NEW
-
-  # EphemerisKeyType AsteroidOld
-  ASTEROID_OLD
-
-  # EphemerisKeyType MajorBody
-  MAJOR_BODY
-
-  # EphemerisKeyType UserSupplied
-  USER_SUPPLIED
-}
-
-# Reference observation epoch in format '[JB]YYYY.YYY'
-scalar EpochString
-
 # Common fields shared by all events
 interface Event {
   id: Long!
-}
-
-# State of being: either Deleted or Present
-enum Existence {
-  # Existence Present
-  PRESENT
-
-  # Existence Deleted
-  DELETED
 }
 
 # GCAL calibration step (flat / arc)
@@ -653,6 +499,15 @@ type GmosNodAndShuffle {
   shuffleCycles: Int!
 }
 
+# GmosNorth step with potential breakpoint
+type GmosNorthBreakpointStep {
+  # Whether to pause before the execution of this step
+  breakpoint: Breakpoint!
+
+  # The sequence step itself
+  step: GmosNorthStep!
+}
+
 # GMOS North builtin-in FPU
 type GmosNorthBuiltinFpu {
   # GMOS North builtin-fpu
@@ -868,11 +723,11 @@ type GmosNorthSequence {
   # Static/unchanging configuration
   static: GmosNorthStaticConfig!
 
-  # Acquisition sequence
-  acquisition: [GmosNorthStep!]!
+  # Acquisition sequence. Each inner list of steps comprise an unsplittable scheduling unit.
+  acquisition: [[GmosNorthBreakpointStep!]!]!
 
-  # Science sequence
-  science: [GmosNorthStep!]!
+  # Science sequence. Each inner list of steps comprise an unsplittable scheduling unit.
+  science: [[GmosNorthBreakpointStep!]!]!
 }
 
 # GMOS North stage mode
@@ -939,6 +794,15 @@ enum GmosRoi {
 
   # GmosRoi Custom
   CUSTOM
+}
+
+# GmosSouth step with potential breakpoint
+type GmosSouthBreakpointStep {
+  # Whether to pause before the execution of this step
+  breakpoint: Breakpoint!
+
+  # The sequence step itself
+  step: GmosSouthStep!
 }
 
 # GMOS South Configuration
@@ -1099,11 +963,11 @@ type GmosSouthSequence {
   # Static/unchanging configuration
   static: GmosSouthStaticConfig!
 
-  # Acquisition sequence
-  acquisition: [GmosSouthStep!]!
+  # Acquisition sequence. Each inner list of steps comprise an unsplittable scheduling unit.
+  acquisition: [[GmosSouthBreakpointStep!]!]!
 
-  # Science sequence
-  science: [GmosSouthStep!]!
+  # Science sequence. Each inner list of steps comprise an unsplittable scheduling unit.
+  science: [[GmosSouthBreakpointStep!]!]!
 }
 
 # GMOS South stage mode
@@ -1172,156 +1036,12 @@ enum GmosYBinning {
   FOUR
 }
 
-# Target right ascension coordinate in format 'HH:MM:SS.sss'
-scalar HmsString
-
-# Instrument
-enum InstrumentType {
-  # InstrumentType Phoenix
-  PHOENIX
-
-  # InstrumentType Michelle
-  MICHELLE
-
-  # InstrumentType Gnirs
-  GNIRS
-
-  # InstrumentType Niri
-  NIRI
-
-  # InstrumentType Trecs
-  TRECS
-
-  # InstrumentType Nici
-  NICI
-
-  # InstrumentType Nifs
-  NIFS
-
-  # InstrumentType Gpi
-  GPI
-
-  # InstrumentType Gsaoi
-  GSAOI
-
-  # InstrumentType GmosS
-  GMOS_S
-
-  # InstrumentType AcqCam
-  ACQ_CAM
-
-  # InstrumentType GmosN
-  GMOS_N
-
-  # InstrumentType Bhros
-  BHROS
-
-  # InstrumentType Visitor
-  VISITOR
-
-  # InstrumentType Flamingos2
-  FLAMINGOS2
-
-  # InstrumentType Ghost
-  GHOST
-}
-
-# The `Long` scalar type represents non-fractional signed whole numeric values.
-# Long can represent values between -(2^63) and 2^63 - 1.
-scalar Long
-
-type Magnitude {
-  # Magnitude value (unitless)
-  value: BigDecimal!
-
-  # Magnitude band
-  band: MagnitudeBand!
-
-  # Magnitude System
-  system: MagnitudeSystem!
-}
-
-# Magnitude band
-enum MagnitudeBand {
-  # MagnitudeBand SloanU
-  SLOAN_U
-
-  # MagnitudeBand SloanG
-  SLOAN_G
-
-  # MagnitudeBand SloanR
-  SLOAN_R
-
-  # MagnitudeBand SloanI
-  SLOAN_I
-
-  # MagnitudeBand SloanZ
-  SLOAN_Z
-
-  # MagnitudeBand U
-  U
-
-  # MagnitudeBand B
-  B
-
-  # MagnitudeBand V
-  V
-
-  # MagnitudeBand Uc
-  UC
-
-  # MagnitudeBand R
-  R
-
-  # MagnitudeBand I
-  I
-
-  # MagnitudeBand Y
-  Y
-
-  # MagnitudeBand J
-  J
-
-  # MagnitudeBand H
-  H
-
-  # MagnitudeBand K
-  K
-
-  # MagnitudeBand L
-  L
-
-  # MagnitudeBand M
-  M
-
-  # MagnitudeBand N
-  N
-
-  # MagnitudeBand Q
-  Q
-
-  # MagnitudeBand Ap
-  AP
-}
-
 # Magnitude description
 input MagnitudeInput {
   value: BigDecimal!
   band: MagnitudeBand!
   error: BigDecimal
   system: MagnitudeSystem = VEGA
-}
-
-# Magnitude system
-enum MagnitudeSystem {
-  # MagnitudeSystem Vega
-  VEGA
-
-  # MagnitudeSystem AB
-  AB
-
-  # MagnitudeSystem Jy
-  JY
 }
 
 # MOS pre-imaging observation
@@ -1334,14 +1054,14 @@ enum MosPreImaging {
 }
 
 type Mutation {
-  createDefaultAsterism(
-    # Default Asterism description
-    input: CreateDefaultAsterismInput!
-  ): DefaultAsterism
-  updateDefaultAsterism(
+  createAsterism(
+    # Asterism description
+    input: CreateAsterismInput!
+  ): Asterism
+  updateAsterism(
     # Edit default asterism
-    input: EditDefaultAsterismInput!
-  ): DefaultAsterism!
+    input: EditAsterismInput!
+  ): Asterism!
   deleteAsterism(
     # Asterism ID
     asterismId: AsterismId!
@@ -1386,76 +1106,54 @@ type Mutation {
     # Target ID
     targetId: TargetId!
   ): Target!
-  shareAsterismsWithPrograms(
-    # Asterism/program links
+  shareAsterismWithObservations(
+    # Asterism / observation links
+    input: AsterismObservationLinks!
+  ): Asterism!
+  unshareAsterismWithObservations(
+    # Asterism / observation links
+    input: AsterismObservationLinks!
+  ): Asterism!
+  shareAsterismWithPrograms(
+    # Asterism / program links
     input: AsterismProgramLinks!
-  ): [Asterism!]!
-  unshareAsterismsWithPrograms(
-    # Asterism/program links
+  ): Asterism!
+  unshareAsterismWithPrograms(
+    # Asterism / program links
     input: AsterismProgramLinks!
-  ): [Asterism!]!
-  shareTargetsWithObservations(
-    # Target/observation links
+  ): Asterism!
+  shareAsterismWithTargets(
+    # Asterism / target links
+    input: AsterismTargetLinks!
+  ): Asterism!
+  unshareAsterismWithTargets(
+    # Asterism / target links
+    input: AsterismTargetLinks!
+  ): Asterism!
+  shareTargetWithAsterisms(
+    # Target / asterism links
+    input: TargetAsterismLinks!
+  ): Target!
+  unshareTargetWithAsterisms(
+    # Target / asterism links
+    input: TargetAsterismLinks!
+  ): Target!
+  shareTargetWithObservations(
+    # Target / observation links
     input: TargetObservationLinks!
-  ): [Asterism!]!
-  unshareTargetsWithObservations(
-    # Target/observation links
+  ): Target!
+  unshareTargetWithObservations(
+    # Target / observation links
     input: TargetObservationLinks!
-  ): [Asterism!]!
-  shareTargetsWithPrograms(
-    # Target/program links
+  ): Target!
+  shareTargetWithPrograms(
+    # Target / program links
     input: TargetProgramLinks!
-  ): [Target!]!
-  unshareTargetsWithPrograms(
-    # Target/program links
+  ): Target!
+  unshareTargetWithPrograms(
+    # Target / program links
     input: TargetProgramLinks!
-  ): [Target!]!
-}
-
-type Nonsidereal {
-  # Human readable designation that discriminates among ephemeris keys of the same type.
-  des: String!
-
-  # Nonsidereal target lookup type.
-  keyType: EphemerisKeyType!
-}
-
-type Observation {
-  # Observation ID
-  id: ObservationId!
-
-  # Deleted or Present
-  existence: Existence!
-
-  # Observation name
-  name: String
-
-  # Observation status
-  status: ObsStatus!
-
-  # Observation planned time calculation.
-  plannedTime: PlannedTimeSummary!
-
-  # The program that contains this observation
-  program(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Program!
-
-  # The observation's asterism, if any
-  asterism(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Asterism
-
-  # The observation's targets, if any
-  targets(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # Instrument configuration
-  config: Config
+  ): Target!
 }
 
 # Event sent when a new object is created or updated
@@ -1468,61 +1166,12 @@ type ObservationEdit implements Event {
   id: Long!
 }
 
-# ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
-scalar ObservationId
-
-# Observation status options
-enum ObsStatus {
-  # ObsStatus New
-  NEW
-
-  # ObsStatus Included
-  INCLUDED
-
-  # ObsStatus Proposed
-  PROPOSED
-
-  # ObsStatus Approved
-  APPROVED
-
-  # ObsStatus ForReview
-  FOR_REVIEW
-
-  # ObsStatus Ready
-  READY
-
-  # ObsStatus Ongoing
-  ONGOING
-
-  # ObsStatus Observed
-  OBSERVED
-}
-
 type Offset {
   # Offset in p
   p: p!
 
   # Offset in q
   q: q!
-}
-
-type p {
-  # p offset in µas
-  microarcseconds: Long!
-
-  # p offset in mas
-  milliarcseconds: BigDecimal!
-
-  # p offset in arcsec
-  arcseconds: BigDecimal!
-}
-
-type Parallax {
-  # Parallax in microarcseconds
-  microarcseconds: Long!
-
-  # Parallax in milliarcseconds
-  milliarcseconds: BigDecimal!
 }
 
 # Decimal value in Parallax
@@ -1560,52 +1209,6 @@ enum ParallaxUnits {
   MILLIARCSECONDS
 }
 
-type PlannedTimeSummary {
-  # The portion of planned time that will be charged
-  pi: Duration!
-
-  # The portion of planned time that will not be charged
-  uncharged: Duration!
-
-  # The total estimated execution time
-  execution: Duration!
-}
-
-type Program {
-  # Program ID
-  id: ProgramId!
-
-  # Deleted or Present
-  existence: Existence!
-
-  # Program name
-  name: String
-
-  # All asterisms associated with the program (needs pagination).
-  asterisms(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Asterism!]!
-
-  # All observations associated with the program (needs pagination).
-  observations(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # All targets associated with the program (needs pagination).
-  targets(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # Program planned time calculation.
-  plannedTime(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): PlannedTimeSummary!
-}
-
 # Event sent when a new object is created or updated
 type ProgramEdit implements Event {
   # Type of edit
@@ -1614,17 +1217,6 @@ type ProgramEdit implements Event {
   # Edited object
   value: Program!
   id: Long!
-}
-
-# ProgramId id formatted as `p-(0|[1-9a-f][0-9a-f]*)`
-scalar ProgramId
-
-type ProperMotion {
-  # Proper motion in RA
-  ra: ProperMotionRA!
-
-  # Proper motion in declination
-  dec: ProperMotionDeclination!
 }
 
 # Decimal value in ProperMotionComponent
@@ -1662,119 +1254,10 @@ enum ProperMotionComponentUnits {
   MILLIARCSECONDS_PER_YEAR
 }
 
-type ProperMotionDeclination {
-  # Proper motion in properMotion μas/year
-  microarcsecondsPerYear: Long!
-
-  # Proper motion in properMotion mas/year
-  milliarcsecondsPerYear: BigDecimal!
-}
-
 # Proper motion, choose one of the available units
 input ProperMotionInput {
   ra: ProperMotionComponentInput!
   dec: ProperMotionComponentInput!
-}
-
-type ProperMotionRA {
-  # Proper motion in properMotion μas/year
-  microarcsecondsPerYear: Long!
-
-  # Proper motion in properMotion mas/year
-  milliarcsecondsPerYear: BigDecimal!
-}
-
-type q {
-  # q offset in µas
-  microarcseconds: Long!
-
-  # q offset in mas
-  milliarcseconds: BigDecimal!
-
-  # q offset in arcsec
-  arcseconds: BigDecimal!
-}
-
-type Query {
-  # Returns all asterisms associated with the given program.
-  asterisms(
-    # Program ID
-    programId: ProgramId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Asterism!]!
-
-  # Returns the asterism with the given id, if any.
-  asterism(
-    # Asterism ID
-    asterismId: AsterismId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Asterism
-
-  # Returns all observations associated with the given program.
-  observations(
-    # Program ID
-    programId: ProgramId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # Returns the observation with the given id, if any.
-  observation(
-    # Observation ID
-    observationId: ObservationId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Observation
-
-  # Returns all programs (needs pagination).
-  programs(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Program!]!
-
-  # Returns the program with the given id, if any.
-  program(
-    # Program ID
-    programId: ProgramId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Program
-
-  # Return all targets associated with the given program.
-  targets(
-    # Program ID
-    programId: ProgramId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Target!]!
-
-  # Returns the target with the given id, if any.
-  target(
-    # Target ID
-    targetId: TargetId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Target
-}
-
-type RadialVelocity {
-  # Radial velocity in cm/s
-  centimetersPerSecond: Long!
-
-  # Radial velocity in m/s
-  metersPerSecond: BigDecimal!
-
-  # Radial velocity in km/s
-  kilometersPerSecond: BigDecimal!
 }
 
 # Decimal value in RadialVelocity
@@ -1814,20 +1297,6 @@ enum RadialVelocityUnits {
 
   # RadialVelocityUnits KilometersPerSecond
   KILOMETERS_PER_SECOND
-}
-
-type RightAscension {
-  # Right Ascension (RA) in HH:MM:SS.SSS format
-  hms: HmsString!
-
-  # Right Ascension (RA) in hours
-  hours: BigDecimal!
-
-  # Right Ascension (RA) in degrees
-  degrees: BigDecimal!
-
-  # Right Ascension (RA) in µas
-  microarcseconds: Long!
 }
 
 # Decimal value in RightAscension
@@ -1877,26 +1346,6 @@ type Science implements StepConfig {
 
   # Step type
   stepType: StepType!
-}
-
-type Sidereal {
-  # Catalog id, if any, describing from where the information in this target was obtained
-  catalogId: CatalogId
-
-  # Coordinates at epoch
-  coordinates: Coordinates!
-
-  # Epoch, time of base observation
-  epoch: EpochString!
-
-  # Proper motion per year in right ascension and declination
-  properMotion: ProperMotion
-
-  # Radial velocity
-  radialVelocity: RadialVelocity
-
-  # Parallax
-  parallax: Parallax
 }
 
 # Step (bias, dark, science, etc.)
@@ -1980,45 +1429,10 @@ type Subscription {
   ): TargetEdit!
 }
 
-type Target {
-  # Target id.
-  id: TargetId!
-
-  # Deleted or Present
-  existence: Existence!
-
-  # The asterisms associated with the target.
-  asterisms(
-    # Program ID
-    programId: ProgramId
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Asterism!]!
-
-  # The observations associated with the target.
-  observations(
-    # Program ID
-    programId: ProgramId
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Observation!]!
-
-  # The programs associated with the target.
-  programs(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): [Program!]!
-
-  # Target name.
-  name: String!
-
-  # Information required to find a target in the sky.
-  tracking: Tracking!
-
-  # Target magnitudes
-  magnitudes: [Magnitude!]!
+# Target and the asterisms with which it is associated
+input TargetAsterismLinks {
+  targetId: TargetId!
+  asterismIds: [AsterismId!]!
 }
 
 # Event sent when a new object is created or updated
@@ -2031,23 +1445,17 @@ type TargetEdit implements Event {
   id: Long!
 }
 
-# TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
-scalar TargetId
-
-# Targets and the observations with which they are associated
+# Target and the observations with which it is associated
 input TargetObservationLinks {
-  targetIds: [TargetId!]!
+  targetId: TargetId!
   observationIds: [ObservationId!]!
 }
 
-# Targets and the programs with which they are associated
+# Target and the programs with which it is associated
 input TargetProgramLinks {
-  targetIds: [TargetId!]!
+  targetId: TargetId!
   programIds: [ProgramId!]!
 }
-
-# Either Nonsidereal ephemeris lookup key or Sidereal proper motion.
-union Tracking = Nonsidereal | Sidereal
 
 type Wavelength {
   # Wavelength in pm
@@ -2063,3 +1471,806 @@ type Wavelength {
   micrometers: BigDecimal!
 }
 
+type p {
+  # p offset in µas
+  microarcseconds: Long!
+
+  # p offset in mas
+  milliarcseconds: BigDecimal!
+
+  # p offset in arcsec
+  arcseconds: BigDecimal!
+}
+
+type q {
+  # q offset in µas
+  microarcseconds: Long!
+
+  # q offset in mas
+  milliarcseconds: BigDecimal!
+
+  # q offset in arcsec
+  arcseconds: BigDecimal!
+}
+
+# Collection of stars observed in a single observation
+type Asterism {
+  # Asterism ID
+  id: AsterismId!
+
+  # Whether the asterism is deleted or present
+  existence: Existence!
+
+  # Asterism name, if any.
+  name: String
+
+  # When set, overrides the default base position of the asterism
+  explicitBase: Coordinates
+
+  # All observations associated with the asterism.
+  observations(
+    # Program ID
+    programId: ProgramId
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  # All asterism targets
+  targets(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): TargetConnection!
+
+  # The programs associated with the asterism.
+  programs(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ProgramConnection!
+}
+
+# Asterisms in the current page
+type AsterismConnection {
+  nodes: [Asterism!]!
+
+  # Edges in the current page
+  edges: [AsterismEdge!]!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# An Asterism and its cursor
+type AsterismEdge {
+  # AsterismEdge element
+  node: Asterism!
+
+  # AsterismEdge element cursor
+  cursor: Cursor!
+}
+
+# AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
+scalar AsterismId
+
+type CatalogId {
+  # Catalog name option
+  name: CatalogName!
+
+  # Catalog id string
+  id: String!
+}
+
+# Catalog name values
+enum CatalogName {
+  # CatalogName Simbad
+  SIMBAD
+
+  # CatalogName Horizon
+  HORIZON
+
+  # CatalogName Gaia
+  GAIA
+}
+
+# Instrument configuration
+interface Config {
+  # Instrument type
+  instrument: InstrumentType!
+}
+
+type Coordinates {
+  # Right Ascension
+  ra: RightAscension!
+
+  # Declination
+  dec: Declination!
+}
+
+# Opaque object cursor
+scalar Cursor
+
+type Declination {
+  # Declination in DD:MM:SS.SS format
+  dms: DmsString!
+
+  # Declination in signed degrees
+  degrees: BigDecimal!
+
+  # Declination in signed µas
+  microarcseconds: Long!
+}
+
+# Target declination coordinate in format '[+/-]DD:MM:SS.sss'
+scalar DmsString
+
+type Duration {
+  # Duration in µs
+  microseconds: Long!
+
+  # Duration in ms
+  milliseconds: BigDecimal!
+
+  # Duration in seconds
+  seconds: BigDecimal!
+
+  # Duration in minutes
+  minutes: BigDecimal!
+
+  # Duration in hours
+  hours: BigDecimal!
+}
+
+# Ephemeris key type options
+enum EphemerisKeyType {
+  # EphemerisKeyType Comet
+  COMET
+
+  # EphemerisKeyType AsteroidNew
+  ASTEROID_NEW
+
+  # EphemerisKeyType AsteroidOld
+  ASTEROID_OLD
+
+  # EphemerisKeyType MajorBody
+  MAJOR_BODY
+
+  # EphemerisKeyType UserSupplied
+  USER_SUPPLIED
+}
+
+# Reference observation epoch in format '[JB]YYYY.YYY'
+scalar EpochString
+
+# State of being: either Deleted or Present
+enum Existence {
+  # Existence Present
+  PRESENT
+
+  # Existence Deleted
+  DELETED
+}
+
+# Target right ascension coordinate in format 'HH:MM:SS.sss'
+scalar HmsString
+
+# Instrument
+enum InstrumentType {
+  # InstrumentType Phoenix
+  PHOENIX
+
+  # InstrumentType Michelle
+  MICHELLE
+
+  # InstrumentType Gnirs
+  GNIRS
+
+  # InstrumentType Niri
+  NIRI
+
+  # InstrumentType Trecs
+  TRECS
+
+  # InstrumentType Nici
+  NICI
+
+  # InstrumentType Nifs
+  NIFS
+
+  # InstrumentType Gpi
+  GPI
+
+  # InstrumentType Gsaoi
+  GSAOI
+
+  # InstrumentType GmosS
+  GMOS_S
+
+  # InstrumentType AcqCam
+  ACQ_CAM
+
+  # InstrumentType GmosN
+  GMOS_N
+
+  # InstrumentType Bhros
+  BHROS
+
+  # InstrumentType Visitor
+  VISITOR
+
+  # InstrumentType Flamingos2
+  FLAMINGOS2
+
+  # InstrumentType Ghost
+  GHOST
+}
+
+type Magnitude {
+  # Magnitude value (unitless)
+  value: BigDecimal!
+
+  # Magnitude band
+  band: MagnitudeBand!
+
+  # Magnitude System
+  system: MagnitudeSystem!
+}
+
+# Magnitude band
+enum MagnitudeBand {
+  # MagnitudeBand SloanU
+  SLOAN_U
+
+  # MagnitudeBand SloanG
+  SLOAN_G
+
+  # MagnitudeBand SloanR
+  SLOAN_R
+
+  # MagnitudeBand SloanI
+  SLOAN_I
+
+  # MagnitudeBand SloanZ
+  SLOAN_Z
+
+  # MagnitudeBand U
+  U
+
+  # MagnitudeBand B
+  B
+
+  # MagnitudeBand V
+  V
+
+  # MagnitudeBand Uc
+  UC
+
+  # MagnitudeBand R
+  R
+
+  # MagnitudeBand I
+  I
+
+  # MagnitudeBand Y
+  Y
+
+  # MagnitudeBand J
+  J
+
+  # MagnitudeBand H
+  H
+
+  # MagnitudeBand K
+  K
+
+  # MagnitudeBand L
+  L
+
+  # MagnitudeBand M
+  M
+
+  # MagnitudeBand N
+  N
+
+  # MagnitudeBand Q
+  Q
+
+  # MagnitudeBand Ap
+  AP
+}
+
+# Magnitude system
+enum MagnitudeSystem {
+  # MagnitudeSystem Vega
+  VEGA
+
+  # MagnitudeSystem AB
+  AB
+
+  # MagnitudeSystem Jy
+  JY
+}
+
+type Nonsidereal {
+  # Human readable designation that discriminates among ephemeris keys of the same type.
+  des: String!
+
+  # Nonsidereal target lookup type.
+  keyType: EphemerisKeyType!
+}
+
+# Observation status options
+enum ObsStatus {
+  # ObsStatus New
+  NEW
+
+  # ObsStatus Included
+  INCLUDED
+
+  # ObsStatus Proposed
+  PROPOSED
+
+  # ObsStatus Approved
+  APPROVED
+
+  # ObsStatus ForReview
+  FOR_REVIEW
+
+  # ObsStatus Ready
+  READY
+
+  # ObsStatus Ongoing
+  ONGOING
+
+  # ObsStatus Observed
+  OBSERVED
+}
+
+type Observation {
+  # Observation ID
+  id: ObservationId!
+
+  # Deleted or Present
+  existence: Existence!
+
+  # Observation name
+  name: String
+
+  # Observation status
+  status: ObsStatus!
+
+  # Observation planned time calculation.
+  plannedTime: PlannedTimeSummary!
+
+  # The program that contains this observation
+  program(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Program!
+
+  # The observation's asterism or target (see also `asterism` and `target` fields)
+  observationTarget(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationTarget
+
+  # The observation's asterism, if a multi-target observation
+  asterism(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Asterism
+
+  # The observation's target, if a single-target observation
+  target(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Target
+
+  # Instrument configuration
+  config: Config
+}
+
+# Matching observations
+type ObservationConnection {
+  nodes: [Observation!]!
+
+  # Edges in the current page
+  edges: [ObservationEdge!]!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# An observation and its cursor
+type ObservationEdge {
+  # ObservationEdge element
+  node: Observation!
+
+  # ObservationEdge element cursor
+  cursor: Cursor!
+}
+
+# ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
+scalar ObservationId
+
+# Either asterism or target
+union ObservationTarget = Asterism | Target
+
+# Information that supports paging through a list of elements
+type PageInfo {
+  # Cursor pointing to the first element in the result set, if any
+  startCursor: Cursor
+
+  # Cursor pointing to the last element in the result set, if any
+  endCursor: Cursor
+
+  # Whether there are any pages left to retrieve
+  hasNextPage: Boolean!
+}
+
+type Parallax {
+  # Parallax in microarcseconds
+  microarcseconds: Long!
+
+  # Parallax in milliarcseconds
+  milliarcseconds: BigDecimal!
+}
+
+type PlannedTimeSummary {
+  # The portion of planned time that will be charged
+  pi: Duration!
+
+  # The portion of planned time that will not be charged
+  uncharged: Duration!
+
+  # The total estimated execution time
+  execution: Duration!
+}
+
+type Program {
+  # Program ID
+  id: ProgramId!
+
+  # Deleted or Present
+  existence: Existence!
+
+  # Program name
+  name: String
+
+  # All asterisms associated with the program (needs pagination).
+  asterisms(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): AsterismConnection!
+
+  # All observations associated with the program (needs pagination).
+  observations(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  # All targets associated with the program (needs pagination).
+  targets(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): TargetConnection!
+
+  # Program planned time calculation.
+  plannedTime(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): PlannedTimeSummary!
+}
+
+# Programs in the current page
+type ProgramConnection {
+  nodes: [Program!]!
+
+  # Edges in the current page
+  edges: [ProgramEdge!]!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# A Program node and its cursor
+type ProgramEdge {
+  # ProgramEdge element
+  node: Program!
+
+  # ProgramEdge element cursor
+  cursor: Cursor!
+}
+
+# ProgramId id formatted as `p-(0|[1-9a-f][0-9a-f]*)`
+scalar ProgramId
+
+type ProperMotion {
+  # Proper motion in RA
+  ra: ProperMotionRA!
+
+  # Proper motion in declination
+  dec: ProperMotionDeclination!
+}
+
+type ProperMotionDeclination {
+  # Proper motion in properMotion μas/year
+  microarcsecondsPerYear: Long!
+
+  # Proper motion in properMotion mas/year
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+type ProperMotionRA {
+  # Proper motion in properMotion μas/year
+  microarcsecondsPerYear: Long!
+
+  # Proper motion in properMotion mas/year
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+type Query {
+  # Returns all asterisms associated with the given program.
+  asterisms(
+    # Program ID
+    programId: ProgramId!
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): AsterismConnection!
+
+  # Returns the asterism with the given id, if any.
+  asterism(
+    # Asterism ID
+    asterismId: AsterismId!
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Asterism
+
+  # Returns all observations associated with the given program.
+  observations(
+    # Program ID
+    programId: ProgramId!
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  # Returns the observation with the given id, if any.
+  observation(
+    # Observation ID
+    observationId: ObservationId!
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Observation
+
+  # Pages through all programs.
+  programs(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ProgramConnection!
+
+  # Returns the program with the given id, if any.
+  program(
+    # Program ID
+    programId: ProgramId!
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Program
+
+  # Return all targets associated with the given program.
+  targets(
+    # Program ID
+    programId: ProgramId!
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): TargetConnection!
+
+  # Returns the target with the given id, if any.
+  target(
+    # Target ID
+    targetId: TargetId!
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): Target
+}
+
+type RadialVelocity {
+  # Radial velocity in cm/s
+  centimetersPerSecond: Long!
+
+  # Radial velocity in m/s
+  metersPerSecond: BigDecimal!
+
+  # Radial velocity in km/s
+  kilometersPerSecond: BigDecimal!
+}
+
+type RightAscension {
+  # Right Ascension (RA) in HH:MM:SS.SSS format
+  hms: HmsString!
+
+  # Right Ascension (RA) in hours
+  hours: BigDecimal!
+
+  # Right Ascension (RA) in degrees
+  degrees: BigDecimal!
+
+  # Right Ascension (RA) in µas
+  microarcseconds: Long!
+}
+
+type Sidereal {
+  # Catalog id, if any, describing from where the information in this target was obtained
+  catalogId: CatalogId
+
+  # Coordinates at epoch
+  coordinates: Coordinates!
+
+  # Epoch, time of base observation
+  epoch: EpochString!
+
+  # Proper motion per year in right ascension and declination
+  properMotion: ProperMotion
+
+  # Radial velocity
+  radialVelocity: RadialVelocity
+
+  # Parallax
+  parallax: Parallax
+}
+
+type Target {
+  # Target id.
+  id: TargetId!
+
+  # Deleted or Present
+  existence: Existence!
+
+  # The asterisms associated with the target.
+  asterisms(
+    # Program ID
+    programId: ProgramId
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): AsterismConnection!
+
+  # The observations associated with the target.
+  observations(
+    # Program ID
+    programId: ProgramId
+
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  # The programs associated with the target.
+  programs(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ProgramConnection!
+
+  # Target name.
+  name: String!
+
+  # Information required to find a target in the sky.
+  tracking: Tracking!
+
+  # Target magnitudes
+  magnitudes: [Magnitude!]!
+}
+
+# Targets in the current page
+type TargetConnection {
+  nodes: [Target!]!
+
+  # Edges in the current page
+  edges: [TargetEdge!]!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# A Target and its cursor
+type TargetEdge {
+  # TargetEdge element
+  node: Target!
+
+  # TargetEdge element cursor
+  cursor: Cursor!
+}
+
+# TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
+scalar TargetId
+
+# Either Nonsidereal ephemeris lookup key or Sidereal proper motion.
+union Tracking = Nonsidereal | Sidereal
+
+# The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
+scalar BigDecimal
+
+# The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1.
+scalar Long
