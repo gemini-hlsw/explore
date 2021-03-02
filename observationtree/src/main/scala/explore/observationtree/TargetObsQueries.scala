@@ -10,7 +10,6 @@ import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
@@ -310,49 +309,6 @@ object TargetObsQueries {
       }    
     """
   }
-
-  def moveObs(obsId: Observation.Id, to: ObjectId): IO[Unit] =
-    AppCtx.withCtx { implicit appCtx =>
-      (to match {
-        case Left(targetId)    => ShareTargetWithObs.execute(targetId, obsId)
-        case Right(asterismId) => ShareAsterismWithObs.execute(asterismId, obsId)
-      }).void
-    }
-
-  def updateObs(input: EditObservationInput): IO[Unit] =
-    AppCtx.withCtx(implicit appCtx => UpdateObservationMutation.execute(input).void)
-
-  def insertTarget(target: TargetIdName): IO[Unit] =
-    AppCtx.flatMap(implicit ctx =>
-      AddTarget
-        .execute(target.id, target.name.value)
-        .handleErrorWith { _ =>
-          UndeleteTarget.execute(target.id)
-        }
-        .void
-    )
-
-  def removeTarget(id: Target.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx => RemoveTarget.execute(id).void)
-
-  def insertAsterism(asterism: AsterismIdName): IO[Unit] =
-    AppCtx.flatMap(implicit ctx =>
-      AddAsterism
-        .execute(asterism.id, asterism.name.value)
-        .void
-        .handleErrorWith { _ =>
-          UndeleteAsterism.execute(asterism.id).void
-        }
-    )
-
-  def removeAsterism(id: Asterism.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx => RemoveAsterism.execute(id).void)
-
-  def shareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx => ShareTargetWithAsterisms.execute(targetId, asterismId).void)
-
-  def unshareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id): IO[Unit] =
-    AppCtx.flatMap(implicit ctx => UnshareTargetWithAsterisms.execute(targetId, asterismId).void)
 
   implicit val targetIdNameReusability: Reusability[TargetIdName]                 =
     Reusability.by(x => (x.id, x.name))

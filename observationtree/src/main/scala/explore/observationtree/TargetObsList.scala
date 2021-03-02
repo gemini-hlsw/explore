@@ -6,8 +6,12 @@ package explore.observationtree
 import cats._
 import cats.effect.IO
 import cats.syntax.all._
+import clue.TransactionalClient
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
+import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -71,6 +75,59 @@ object TargetObsList {
 
   class Backend($ : BackendScope[Props, State]) {
 
+    def moveObs(obsId: Observation.Id, to: ObjectId)(implicit
+      c:               TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      (to match {
+        case Left(targetId)    => ShareTargetWithObs.execute(targetId, obsId)
+        case Right(asterismId) => ShareAsterismWithObs.execute(asterismId, obsId)
+      }).void
+
+    def updateObs(input: EditObservationInput)(implicit
+      c:                 TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      UpdateObservationMutation.execute(input).void
+
+    def insertTarget(target: TargetIdName)(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      AddTarget
+        .execute(target.id, target.name.value)
+        .handleErrorWith { _ =>
+          UndeleteTarget.execute(target.id)
+        }
+        .void
+
+    def removeTarget(id: Target.Id)(implicit
+      c:                 TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      RemoveTarget.execute(id).void
+
+    def insertAsterism(asterism: AsterismIdName)(implicit
+      c:                         TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      AddAsterism
+        .execute(asterism.id, asterism.name.value)
+        .handleErrorWith { _ =>
+          UndeleteAsterism.execute(asterism.id)
+        }
+        .void
+
+    def removeAsterism(id: Asterism.Id)(implicit
+      c:                   TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      RemoveAsterism.execute(id).void
+
+    def shareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id)(implicit
+      c:                                  TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      ShareTargetWithAsterisms.execute(targetId, asterismId).void
+
+    private def unshareTargetWithAsterism(targetId: Target.Id, asterismId: Asterism.Id)(implicit
+      c:                                            TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      UnshareTargetWithAsterisms.execute(targetId, asterismId).void
+
     private def getObjectForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
     ): Getter[TargetsAndAsterismsWithObs, Option[ObjectId]] =
@@ -85,6 +142,8 @@ object TargetObsList {
       objectsWithObs:        View[TargetsAndAsterismsWithObs],
       obsId:                 Observation.Id,
       obsWithIndexGetAdjust: GetAdjust[ObsList, obsListMod.ElemWithIndex]
+    )(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
     ): Option[ObjectId] => IO[Unit] =
       objectOpt => {
         val obsTargetAdjuster = obsWithIndexGetAdjust
@@ -105,9 +164,11 @@ object TargetObsList {
     protected def onDragEnd(
       setter:      Undoer.Setter[IO, TargetsAndAsterismsWithObs],
       expandedIds: View[TargetViewExpandedIds]
-    ): (DropResult, ResponderProvided) => Callback =
+    )(implicit
+      c:           TransactionalClient[IO, ObservationDB]
+    ): (DropResult, ResponderProvided) => IO[Unit] =
       (result, _) =>
-        $.props >>= { props =>
+        $.propsIn[IO] >>= { props =>
           println(scalajs.js.JSON.stringify(result))
           // We can drag:
           //  - An observation from a target or an asterism to another target or asterism.
@@ -164,9 +225,9 @@ object TargetObsList {
                       }
                     case None           => IO.unit
                   }
-              }).runAsyncCB
+              })
             )
-            .getOrEmpty
+            .orEmpty
         }
 
     private def setTargetWithIndex(
@@ -175,6 +236,8 @@ object TargetObsList {
       targetId:              Target.Id,
       targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex],
       nextToFoucs:           Option[TargetIdName]
+    )(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
     ): targetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
         // 1) Update internal model
@@ -194,6 +257,8 @@ object TargetObsList {
       focused:        View[Option[Focused]],
       targetId:       Target.Id,
       focusOnDelete:  Option[TargetIdName]
+    )(implicit
+      c:              TransactionalClient[IO, ObservationDB]
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -213,61 +278,64 @@ object TargetObsList {
         )
     }
 
-    protected def newTarget(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs]): Callback =
-      $.props >>= { props =>
-        // Temporary measure until we have id pools.
-        val newTarget =
-          TargetIdName(Target.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
-                       Constants.UnnamedTarget
-          )
+    protected def newTarget(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(implicit
+      c:                            TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = {
+      // Temporary measure until we have id pools.
+      val newTarget = IO(Random.nextInt()).map(int =>
+        TargetIdName(Target.Id(PosLong.unsafeFrom(int.abs.toLong + 1)), Constants.UnnamedTarget)
+      )
 
-        val upsert =
-          targetListMod
-            .upsert(newTarget, props.objectsWithObs.get.targets.length)
-
-        targetMod(setter, props.objectsWithObs, props.focused, newTarget.id, none)(
-          upsert
-        ).runAsyncCB
+      $.propsIn[IO] >>= { props =>
+        newTarget >>= { target =>
+          val mod = targetMod(setter, props.objectsWithObs, props.focused, target.id, none)
+          mod(targetListMod.upsert(target, props.objectsWithObs.get.targets.length))
+        }
       }
+    }
 
     protected def deleteTarget(
       targetId:      Target.Id,
       setter:        Undoer.Setter[IO, TargetsAndAsterismsWithObs],
       focusOnDelete: Option[TargetIdName]
-    ): Callback =
-      $.props.flatMap { props =>
-        targetMod(setter, props.objectsWithObs, props.focused, targetId, focusOnDelete)(
-          targetListMod.delete
-        ).runAsyncCB
+    )(implicit
+      c:             TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        val mod = targetMod(setter, props.objectsWithObs, props.focused, targetId, focusOnDelete)
+        mod(targetListMod.delete)
       }
 
-    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs]): Callback =
-      $.props >>= { props =>
-        // Temporary measure until we have id pools.
-        val newAsterism =
-          AsterismIdName(Asterism.Id(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
-                         KeyedIndexedList.empty,
-                         Constants.UnnamedAsterism
-          )
+    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(implicit
+      c:                              TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = {
+      // Temporary measure until we have id pools.
+      val newAsterism = IO(Random.nextInt()).map(int =>
+        AsterismIdName(Asterism.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+                       KeyedIndexedList.empty,
+                       Constants.UnnamedAsterism
+        )
+      )
 
-        val upsert =
-          asterismListMod
-            .upsert(newAsterism, props.objectsWithObs.get.asterisms.length)
-
-        asterismMod(setter, props.objectsWithObs, props.focused, newAsterism.id, none)(
-          upsert
-        ).runAsyncCB
+      $.propsIn[IO] >>= { props =>
+        newAsterism >>= { asterism =>
+          val mod = asterismMod(setter, props.objectsWithObs, props.focused, asterism.id, none)
+          mod(asterismListMod.upsert(asterism, props.objectsWithObs.get.asterisms.length))
+        }
       }
+    }
 
     protected def deleteAsterism(
       asterismId:    Asterism.Id,
       setter:        Undoer.Setter[IO, TargetsAndAsterismsWithObs],
       focusOnDelete: Option[AsterismIdName]
-    ): Callback =
-      $.props.flatMap { props =>
-        asterismMod(setter, props.objectsWithObs, props.focused, asterismId, focusOnDelete)(
-          asterismListMod.delete
-        ).runAsyncCB
+    )(implicit
+      c:             TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        val mod =
+          asterismMod(setter, props.objectsWithObs, props.focused, asterismId, focusOnDelete)
+        mod(asterismListMod.delete)
       }
 
     private def setAsterismWithIndex(
@@ -276,6 +344,8 @@ object TargetObsList {
       asterismId:              Asterism.Id,
       asterismWithIndexSetter: Adjuster[AsterismList, asterismListMod.ElemWithIndex],
       nextToFoucs:             Option[AsterismIdName]
+    )(implicit
+      c:                       TransactionalClient[IO, ObservationDB]
     ): asterismListMod.ElemWithIndex => IO[Unit] = { asterismWithIndex =>
       val view = objectsWithObs
         .zoom(TargetsAndAsterismsWithObs.asterisms)
@@ -297,6 +367,8 @@ object TargetObsList {
       focused:        View[Option[Focused]],
       asterismId:     Asterism.Id,
       focusOnDelete:  Option[AsterismIdName]
+    )(implicit
+      c:              TransactionalClient[IO, ObservationDB]
     ): asterismListMod.Operation => IO[Unit] = {
       val asterismWithId: GetAdjust[AsterismList, asterismListMod.ElemWithIndex] =
         asterismListMod.withKey(asterismId)
@@ -321,6 +393,8 @@ object TargetObsList {
       targetId:              Target.Id,
       asterismId:            Asterism.Id,
       targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
+    )(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
     ): targetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
         // 1) Update internal model
@@ -343,6 +417,8 @@ object TargetObsList {
       objectsWithObs: View[TargetsAndAsterismsWithObs],
       targetId:       Target.Id,
       asterismId:     Asterism.Id
+    )(implicit
+      c:              TransactionalClient[IO, ObservationDB]
     ): targetListMod.Operation => IO[Unit] = {
       val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
         targetListMod.withKey(targetId)
@@ -363,23 +439,28 @@ object TargetObsList {
       target:         TargetIdName,
       asterismId:     Asterism.Id,
       setter:         Undoer.Setter[IO, TargetsAndAsterismsWithObs]
-    ): IO[Unit] =
-      asterismTargetMod(setter, objectsWithObs, target.id, asterismId)(
+    )(implicit
+      c:              TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = {
+      val mod = asterismTargetMod(setter, objectsWithObs, target.id, asterismId)
+      mod(
         targetListMod.upsert(
           target,
           objectsWithObs.get.asterisms.getElement(asterismId).foldMap(_.targets.length)
         )
       )
+    }
 
     protected def deleteTargetFromAsterism(
       targetId:   Target.Id,
       asterismId: Asterism.Id,
       setter:     Undoer.Setter[IO, TargetsAndAsterismsWithObs]
-    ): Callback =
-      $.props.flatMap { props =>
-        asterismTargetMod(setter, props.objectsWithObs, targetId, asterismId)(
-          targetListMod.delete
-        ).runAsyncCB
+    )(implicit
+      c:          TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        val mod = asterismTargetMod(setter, props.objectsWithObs, targetId, asterismId)
+        mod(targetListMod.delete)
       }
 
     def toggleExpanded[A: Eq](
@@ -404,7 +485,7 @@ object TargetObsList {
     def getListStyle(isDragging: Boolean): TagMod =
       ExploreStyles.DraggingOver.when(isDragging)
 
-    def render(props: Props, state: State): VdomElement = {
+    def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations = props.objectsWithObs.get.obs
       val obsByObject  = observations.toList.groupBy(_.attached)
 
@@ -468,22 +549,24 @@ object TargetObsList {
         }
 
       UndoRegion[TargetsAndAsterismsWithObs] { undoCtx =>
+        val handleDragEnd = onDragEnd(undoCtx.setter, props.expandedIds)
+
         DragDropContext(
           onDragStart = (_: DragStart, _: ResponderProvided) => $.setStateL(State.dragging)(true),
           onDragEnd = (result, provided) =>
-            $.setStateL(State.dragging)(false) >> onDragEnd(undoCtx.setter, props.expandedIds)(
-              result,
-              provided
-            )
+            $.setStateL(State.dragging)(false) >> handleDragEnd(result, provided).runAsyncCB
         )(
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
-                Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter))(
+                Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter).runAsyncCB)(
                   Icons.New.size(Small).fitted(true),
                   " Target"
                 ),
-                Button(size = Mini, compact = true, onClick = newAsterism(undoCtx.setter))(
+                Button(size = Mini,
+                       compact = true,
+                       onClick = newAsterism(undoCtx.setter).runAsyncCB
+                )(
                   Icons.New.size(Small).fitted(true),
                   " Asterism"
                 )
@@ -543,7 +626,7 @@ object TargetObsList {
                             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
                             onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
                               e.stopPropagationCB *>
-                                deleteTarget(targetId, undoCtx.setter, focusOnDelete)
+                                deleteTarget(targetId, undoCtx.setter, focusOnDelete).runAsyncCB
                           )(
                             Icons.Trash
                           ),
@@ -675,8 +758,8 @@ object TargetObsList {
                             compact = true,
                             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
                             onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                              e.stopPropagationCB *>
-                                deleteAsterism(asterismId, undoCtx.setter, focusOnDelete)
+                              e.stopPropagationCB >>
+                                deleteAsterism(asterismId, undoCtx.setter, focusOnDelete).runAsyncCB
                           )(
                             Icons.Trash
                           ),
@@ -696,11 +779,11 @@ object TargetObsList {
                                     clazz =
                                       ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
                                     onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                      e.stopPropagationCB *>
+                                      e.stopPropagationCB >>
                                         deleteTargetFromAsterism(target.id,
                                                                  asterismId,
                                                                  undoCtx.setter
-                                        )
+                                        ).runAsyncCB
                                   )(
                                     Icons.Trash
                                   )
