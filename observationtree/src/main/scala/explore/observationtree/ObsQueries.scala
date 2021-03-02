@@ -10,13 +10,18 @@ import clue.macros.GraphQL
 import explore.AppCtx
 import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import monocle.Getter
 
 object ObsQueries {
+
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
 
   @GraphQL
   object ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
@@ -43,6 +48,9 @@ object ObsQueries {
       object Observations {
         type Nodes = ObsSummary
       }
+
+      val asObservationList: Getter[Data, ObservationList] = data =>
+        KeyedIndexedList.fromList(data.observations.nodes, ObsSummary.id.get)
     }
   }
 
@@ -59,23 +67,23 @@ object ObsQueries {
 
   type LiveQueryRenderer =
     (
-      View[List[ObsSummary]] => VdomNode
-    ) => LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]]
+      View[ObservationList] => VdomNode
+    ) => LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList]
 
   val ObsLiveQuery: LiveQueryRenderer =
     render =>
       AppCtx.withCtx { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, List[ObsSummary]](
+        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
           ProgramObservationsQuery.query(),
-          _.observations.nodes,
+          ProgramObservationsQuery.Data.asObservationList.get,
           NonEmptyList.of(ProgramObservationsEditSubscription.subscribe[IO]())
         )(render)
       }
 
   @GraphQL
-  object ProgramCreateObservations extends GraphQLOperation[ObservationDB] {
+  object ProgramCreateObservation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation CreateObservation($createObservation: CreateObservationInput!) {
+      mutation($createObservation: CreateObservationInput!) {
         createObservation(input: $createObservation) {
           id
         }
@@ -86,11 +94,23 @@ object ObsQueries {
   @GraphQL
   object ProgramDeleteObservation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation DeleteObservation($oid: ObservationId!) {
+      mutation($oid: ObservationId!) {
         deleteObservation(observationId: $oid) {
           id
         }
       }
     """
   }
+
+  @GraphQL
+  object ProgramUndeleteObservation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($oid: ObservationId!) {
+        undeleteObservation(observationId: $oid) {
+          id
+        }
+      }
+    """
+  }
+
 }

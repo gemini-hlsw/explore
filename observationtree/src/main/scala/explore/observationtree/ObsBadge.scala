@@ -3,6 +3,7 @@
 
 package explore.observationtree
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
@@ -18,7 +19,6 @@ import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import react.semanticui.views.card._
-import cats.effect.IO
 
 final case class ObsBadge(
   obs:      ObsSummary,
