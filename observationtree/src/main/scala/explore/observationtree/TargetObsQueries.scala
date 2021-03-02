@@ -53,26 +53,37 @@ object TargetObsQueries {
 
   @GraphQL(debug = false)
   object TargetsObsQuery extends GraphQLOperation[ObservationDB] {
-    val document = """
+    val document = s"""
       query {
-        targets(programId: "p-2") {
-          id
-          name
-          observations {
+        targets(programId: "p-2", first: ${Int.MaxValue}) {
+          nodes {
             id
             name
+            observations(first: ${Int.MaxValue}) {
+              nodes {
+                id
+                name
+              }
+            }
           }
         }
-        asterisms(programId: "p-2") {
-          id
-          name
-          targets {
+
+        asterisms(programId: "p-2", first: ${Int.MaxValue}) {
+          nodes {
             id
             name
-          }
-          observations {
-            id
-            name
+            targets(first: ${Int.MaxValue}) {
+              nodes {
+                id
+                name
+              }
+            }
+            observations(first: ${Int.MaxValue}) {
+              nodes {
+                id
+                name
+              }
+            }
           }
         }
       }
@@ -84,10 +95,16 @@ object TargetObsQueries {
         val name: String
       }
 
-      trait Targets extends TargetProps
+      object Targets {
+        trait Nodes extends TargetProps
+      }
 
       object Asterisms {
-        trait Targets extends TargetProps
+        object Nodes {
+          object Targets {
+            trait Nodes extends TargetProps
+          }
+        }
       }
 
       private def targetName(name: String): NonEmptyString =
@@ -104,27 +121,30 @@ object TargetObsQueries {
 
       val asTargetsWithObs: Getter[Data, TargetsAndAsterismsWithObs] = data => {
 
-        val targetsObservations = data.targets.map { target =>
+        val targetsObservations = data.targets.nodes.map { target =>
           val targetIdName = transformTarget(target)
           (targetIdName,
-           target.observations.map(
+           target.observations.nodes.map(
              _.into[ObsAttached].withFieldConst(_.attached, targetIdName.id.asLeft).transform
            )
           )
         }
 
-        val asterismsObservations = data.asterisms.map { asterism =>
+        val asterismsObservations = data.asterisms.nodes.map { asterism =>
           val asterismIdName =
             asterism
               .into[AsterismIdName]
               .withFieldComputed(_.name, a => asterismName(a.name))
               .withFieldComputed(
                 _.targets,
-                a => KeyedIndexedList.fromList(a.targets.map(transformTarget), TargetIdName.id.get)
+                a =>
+                  KeyedIndexedList.fromList(a.targets.nodes.map(transformTarget),
+                                            TargetIdName.id.get
+                  )
               )
               .transform
           (asterismIdName,
-           asterism.observations.map(
+           asterism.observations.nodes.map(
              _.into[ObsAttached].withFieldConst(_.attached, asterismIdName.id.asRight).transform
            )
           )
