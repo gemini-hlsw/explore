@@ -86,7 +86,7 @@ object ObsList {
       focused:            View[Option[Focused]],
       obsId:              Observation.Id,
       obsWithIndexSetter: Adjuster[ObservationList, obsListMod.ElemWithIndex],
-      nextToFoucs:        Option[ObsSummary]
+      nextToFocus:        Option[ObsSummary]
     )(implicit
       c:                  TransactionalClient[IO, ObservationDB]
     ): obsListMod.ElemWithIndex => IO[Unit] =
@@ -96,7 +96,7 @@ object ObsList {
           .mod(obsWithIndexSetter.set(obsWithIndex)) >>
           // 2) Send mutation & adjust focus
           obsWithIndex.fold(
-            focused.set(nextToFoucs.map(f => Focused.FocusedObs(f.id))) >>
+            focused.set(nextToFocus.map(f => Focused.FocusedObs(f.id))) >>
               deleteObservation[IO](obsId)
           ) { case (obs, _) =>
             createObservation[IO](obs.id, obs.name) >>
