@@ -3,7 +3,6 @@
 
 package explore.undo
 
-import cats.FlatMap
 import cats.effect.Sync
 import cats.syntax.all._
 import crystal.implicits._
@@ -57,7 +56,7 @@ abstract class Undoer[F[_]: Sync, M] {
     mod => modStacks(lens.modify { stack: List[Restorer[F, M]] => mod +: stack })
 
   private def pop(lens:  Lens[Stacks, Undoer.Stack[F, M]]): F[Option[Restorer[F, M]]] =
-    FlatMap[F].flatMap(getStacks) { s =>
+    getStacks >>= { s =>
       lens.get(s) match {
         case head :: tail =>
           modStacks(lens.set(tail)).as(head.some)
@@ -102,7 +101,7 @@ abstract class Undoer[F[_]: Sync, M] {
     pushTo:  Restorer[F, M] => F[Unit]
   )(m:       M): F[Unit] =
     popFrom.flatMap(
-      _.map(restorer => restorer.restore(m).flatMap(pushTo)).orUnit
+      _.map(restorer => pushTo(restorer.onModel(m)) >> restorer.restore).orUnit
     )
 
   protected val undo: Undoer.Undo[F, M] =
