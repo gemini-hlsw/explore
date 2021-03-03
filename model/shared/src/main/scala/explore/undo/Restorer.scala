@@ -15,10 +15,9 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
   val getter: M => T         // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
   val onChange: T => F[Unit] // Modify the model
 
-  def restore(
-    m: M
-  ): F[Restorer[F, M]] = // Actually restores the value and returns the reverse restorer
-    functorF.map(onChange(value))(_ => Restorer[F, M, T](m, getter, onChange))
+  def restore: F[Unit] = onChange(value)
+
+  def onModel(m: M): Restorer[F, M] = Restorer[F, M, T](m, getter, onChange)
 
   override def toString(): String = s"Restorer($value, ...)"
 }
