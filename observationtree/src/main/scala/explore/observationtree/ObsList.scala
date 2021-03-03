@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.Applicative
+import cats.ApplicativeError
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -41,7 +42,6 @@ import react.semanticui.sizes._
 import scala.util.Random
 
 import ObsQueries._
-import cats.ApplicativeError
 
 final case class ObsList(
   observations: View[ObservationList],
