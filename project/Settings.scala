@@ -12,13 +12,13 @@ object Settings {
     val chimney           = "0.6.1"
     val circe             = "0.13.0"
     val circeGolden       = "0.3.0"
-    val clue              = "0.10.2"
-    val crystal           = "0.9.1"
+    val clue              = "0.11.0"
+    val crystal           = "0.9.3"
     val discipline        = "1.1.4"
     val disciplineMUnit   = "1.0.6"
     val geminiLocales     = "0.5.1"
-    val log4Cats          = "1.1.1"
-    val log4CatsLogLevel  = "0.1.2"
+    val log4Cats          = "1.2.0"
+    val log4CatsLogLevel  = "0.2.0"
     val lucumaCore        = "0.7.8"
     val lucumaCatalog     = "0.3.7"
     val lucumaUI          = "0.11.5"
@@ -122,8 +122,8 @@ object Settings {
 
     val Log4Cats = Def.setting(
       Seq(
-        "io.chrisdavenport" %%% "log4cats-core"     % log4Cats,
-        "com.rpiaggio"      %%% "log4cats-loglevel" % log4CatsLogLevel
+        "org.typelevel" %%% "log4cats-core"     % log4Cats,
+        "com.rpiaggio"  %%% "log4cats-loglevel" % log4CatsLogLevel
       )
     )
 

@@ -15,8 +15,8 @@ import explore.GraphQLSchemas._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._
-import io.chrisdavenport.log4cats.Logger
 import lucuma.ui.utils._
+import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused

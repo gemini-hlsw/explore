@@ -13,9 +13,9 @@ import clue.GraphQLSubscription
 import clue.WebSocketClient
 import crystal.react._
 import fs2.concurrent.Queue
-import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon
