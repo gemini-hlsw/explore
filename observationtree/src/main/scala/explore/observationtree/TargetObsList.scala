@@ -246,9 +246,9 @@ object TargetObsList {
           .mod(targetWithIndexSetter.set(targetWithIndex)) >>
           // 2) Send mutation & adjust focus
           targetWithIndex.fold(
-            focused.set(nextToFoucs.map(f => Focused.FocusedTarget(f.id))) *> removeTarget(targetId)
+            focused.set(nextToFoucs.map(f => Focused.FocusedTarget(f.id))) >> removeTarget(targetId)
           ) { case (target, _) =>
-            insertTarget(target) *> focused.set(FocusedTarget(targetId).some)
+            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
           }
 
     private def targetMod(
@@ -355,9 +355,9 @@ object TargetObsList {
         .mod(asterismWithIndexSetter.set(asterismWithIndex)) >>
         // 2) Send mutation & adjust focus
         asterismWithIndex.fold(
-          focused.set(nextToFoucs.map(f => FocusedAsterism(f.id))) *> removeAsterism(asterismId)
+          focused.set(nextToFoucs.map(f => FocusedAsterism(f.id))) >> removeAsterism(asterismId)
         ) { case (asterism, _) =>
-          insertAsterism(asterism) *> focused.set(FocusedAsterism(asterismId).some)
+          insertAsterism(asterism) >> focused.set(FocusedAsterism(asterismId).some)
         }
     }
 
@@ -625,7 +625,7 @@ object TargetObsList {
                             compact = true,
                             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
                             onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                              e.stopPropagationCB *>
+                              e.stopPropagationCB >>
                                 deleteTarget(targetId, undoCtx.setter, focusOnDelete).runAsyncCB
                           )(
                             Icons.Trash
