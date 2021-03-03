@@ -10,10 +10,12 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.implicits._
-import io.chrisdavenport.log4cats.Logger
+import explore.model.Clients
+import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
@@ -28,15 +30,17 @@ object ConnectionManager {
   protected case class State(initialized: Boolean = false)
 
   final class Backend($ : BackendScope[Props, State]) {
-    val initialize: IO[Unit] =
-      $.propsIn[IO] >>= { props =>
-        AppCtx.flatMap(
-          _.clients.init(Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson))
-        )
-      }
+    val payload: IO[Map[String, Json]] =
+      $.propsIn[IO].map(props => Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson))
 
-    val onMount: IO[Unit] =
-      initialize >>
+    def initialize(clients: Clients[IO]): IO[Unit] =
+      payload >>= (p => clients.init(p))
+
+    def refresh(clients: Clients[IO]): IO[Unit] =
+      payload >>= (p => clients.odb.initialize(p))
+
+    def onMount(clients: Clients[IO]): IO[Unit] =
+      initialize(clients) >>
         $.setStateIn[IO](State(true)) >>
         $.propsIn[IO].flatMap(_.onConnect)
 
@@ -51,31 +55,25 @@ object ConnectionManager {
     .builder[Props]
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount(_.backend.initialize.runAsyncCB)
+    .componentDidMount($ =>
+      AppCtx
+        .flatMap(ctx => $.backend.onMount(ctx.clients))
+        .runAsyncCB
+    )
     .componentDidUpdate($ =>
       AppCtx
         .flatMap(implicit ctx =>
           Logger[IO].debug(
-            s"[ConnectionManager.componentDidUpdate] Token changed. Terminating connections."
-          ) >>
-            // We should switch from reestablish() to reinitialize() when ODB supports reinitializing.
-            ctx.clients.init(
-              $.propsIn[IO].map(props =>
-// store payload instead of F in clue state.
-                Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson)
-              )
-            )
+            s"[ConnectionManager.componentDidUpdate] Token changed. Refreshing connections."
+          ) >> $.backend.refresh(ctx.clients)
         )
+        .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
         .runAsyncCB
-        .when($.prevProps.ssoToken =!= $.currentProps.ssoToken)
-        .void
     )
     .componentWillUnmountConst( // With code = 1000 we don't attempt reconnection.
       AppCtx
         .flatMap(implicit ctx =>
-          Logger[IO].debug(
-            s"[ConnectionManager.componentWillUnmount] Terminating connections."
-          ) >>
+          Logger[IO].debug(s"[ConnectionManager.componentWillUnmount] Terminating connections.") >>
             ctx.clients.close()
         )
         .runAsyncCB

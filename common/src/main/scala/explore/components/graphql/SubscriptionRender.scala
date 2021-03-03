@@ -10,9 +10,9 @@ import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.react._
 import crystal.react.implicits._
-import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.icon.Icon

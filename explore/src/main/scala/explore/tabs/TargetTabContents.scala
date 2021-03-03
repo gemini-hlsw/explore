@@ -20,7 +20,6 @@ import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -55,15 +54,12 @@ object TargetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
-    AppCtx
-      .flatMap { implicit ctx =>
-        UserAreaWidths
-          .queryWithDefault[IO]($.props.userId.get,
-                                ResizableSection.TargetsTree,
-                                Constants.InitialTreeWidth.toInt
-          )
-      }
-      .runAsyncAndThenCB(w => $.setStateL(TwoPanelState.treeWidth)(w))
+    AppCtx.flatMap { implicit ctx =>
+      UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+                                          ResizableSection.TargetsTree,
+                                          Constants.InitialTreeWidth.toInt
+      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)
+    }.runAsyncCB
 
   protected val component =
     ScalaComponent
@@ -81,14 +77,13 @@ object TargetTabContents {
         AppCtx.withCtx { implicit ctx =>
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
-              $.setStateL(TwoPanelState.treeWidth)(d.size.width) *>
+              ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>
                 UserWidthsCreation
                   .storeWidthPreference[IO](props.userId.get,
                                             ResizableSection.TargetsTree,
                                             d.size.width
-                  )
-                  .runAsyncAndForgetCB
-                  .debounce(1.second)
+                  )).runAsyncCB
+                .debounce(1.second)
 
           val treeWidth = state.treeWidth.toInt
 

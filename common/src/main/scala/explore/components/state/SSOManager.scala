@@ -11,11 +11,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.implicits._
 import explore.model.UserVault
-import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
+import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 
 import java.time.Instant

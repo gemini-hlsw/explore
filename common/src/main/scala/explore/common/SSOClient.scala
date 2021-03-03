@@ -9,7 +9,6 @@ import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import explore.model.SSOConfig
 import explore.model.UserVault
-import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.parser._
@@ -17,6 +16,7 @@ import lucuma.core.model.User
 import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
+import org.typelevel.log4cats.Logger
 import retry.RetryDetails._
 import retry.RetryPolicies._
 import retry._

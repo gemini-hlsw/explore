@@ -15,8 +15,8 @@ import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
 import explore.utils
-import io.chrisdavenport.log4cats.Logger
 import io.circe.Json
+import org.typelevel.log4cats.Logger
 import sttp.client3.Response
 import sttp.model.Uri
 
@@ -30,7 +30,7 @@ case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
   lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
-  def init(payload: F[Map[String, Json]]): F[Unit] =
+  def init(payload: Map[String, Json]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
       odb.connect() >> odb.initialize(payload)

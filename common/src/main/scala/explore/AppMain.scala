@@ -22,7 +22,6 @@ import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
-import io.chrisdavenport.log4cats.Logger
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -31,6 +30,7 @@ import org.scalajs.dom.experimental.RequestCache
 import org.scalajs.dom.experimental.RequestInit
 import org.scalajs.dom.experimental.{ Request => FetchRequest }
 import org.scalajs.dom.raw.Element
+import org.typelevel.log4cats.Logger
 import react.common.implicits._
 import sttp.client3._
 import sttp.client3.circe._
