@@ -55,7 +55,12 @@ object ConnectionManager {
             s"[ConnectionManager.componentDidUpdate] Token changed. Terminating connections."
           ) >>
             // We should switch from reestablish() to reinitialize() when ODB supports reinitializing.
-            ctx.clients.odb.reestablish()
+            ctx.clients.init(
+              $.propsIn[IO].map(props =>
+// store payload instead of F in clue state.
+                Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson)
+              )
+            )
         )
         .runAsyncCB
         .when($.prevProps.ssoToken =!= $.currentProps.ssoToken)
