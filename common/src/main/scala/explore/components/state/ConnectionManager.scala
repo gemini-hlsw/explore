@@ -28,13 +28,17 @@ object ConnectionManager {
   protected case class State(initialized: Boolean = false)
 
   final class Backend($ : BackendScope[Props, State]) {
-    val initialize: IO[Unit] = AppCtx.flatMap(
-      _.clients.init(
-        $.propsIn[IO].map(props => Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson))
-      ) >>
+    val initialize: IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        AppCtx.flatMap(
+          _.clients.init(Map("Authorization" -> s"Bearer ${props.ssoToken.value}".asJson))
+        )
+      }
+
+    val onMount: IO[Unit] =
+      initialize >>
         $.setStateIn[IO](State(true)) >>
         $.propsIn[IO].flatMap(_.onConnect)
-    )
 
     def render(props: Props, state: State): VdomNode =
       if (state.initialized)
