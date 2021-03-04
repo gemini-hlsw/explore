@@ -18,6 +18,5 @@ case class TargetViewExpandedIds(
 )
 
 object TargetViewExpandedIds {
-  implicit val eqTargetViewExpandedIds: Eq[TargetViewExpandedIds] =
-    Eq.by(m => (m.targetIds, m.asterismIds))
+  implicit val eqTargetViewExpandedIds: Eq[TargetViewExpandedIds] = Eq.fromUniversalEquals
 }

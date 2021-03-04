@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.syntax.all._
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.types.string.NonEmptyString
@@ -15,7 +14,10 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.Constants
+import explore.model.ObsSummary
 import explore.model.reusability._
+import io.circe.Decoder
+import io.circe.HCursor
 import io.scalaland.chimney.dsl._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
@@ -30,25 +32,55 @@ object TargetObsQueries {
 
   @Lenses
   case class TargetIdName(id: Target.Id, name: NonEmptyString)
+  object TargetIdName {
+    implicit val decoder: Decoder[TargetIdName] = new Decoder[TargetIdName] {
+      final def apply(c: HCursor): Decoder.Result[TargetIdName] =
+        for {
+          id   <- c.downField("id").as[Target.Id]
+          name <-
+            c.downField("name")
+              .as[Option[String]]
+              .map(
+                _.flatMap(name => NonEmptyString.from(name).toOption)
+                  .getOrElse(Constants.UnnamedTarget)
+              )
+        } yield TargetIdName(id, name)
+    }
+  }
 
   @Lenses
   case class AsterismIdName(
     id:      Asterism.Id,
-    targets: TargetList,
-    name:    NonEmptyString = Constants.UnnamedAsterism
+    name:    NonEmptyString,
+    targets: TargetList
   )
-
-  type ObjectId = Either[Target.Id, Asterism.Id]
-
-  @Lenses
-  case class ObsAttached(id: Observation.Id, name: Option[String], attached: ObjectId)
+  object AsterismIdName {
+    implicit val decoder: Decoder[AsterismIdName] = new Decoder[AsterismIdName] {
+      final def apply(c: HCursor): Decoder.Result[AsterismIdName] =
+        for {
+          id      <- c.downField("id").as[Asterism.Id]
+          name    <-
+            c.downField("name")
+              .as[Option[String]]
+              .map(
+                _.flatMap(name => NonEmptyString.from(name).toOption)
+                  .getOrElse(Constants.UnnamedAsterism)
+              )
+          targets <- c.downField("targets").downField("nodes").as[List[TargetIdName]]
+        } yield AsterismIdName(id, name, KeyedIndexedList.fromList(targets, TargetIdName.id.get))
+    }
+  }
 
   type TargetList   = KeyedIndexedList[Target.Id, TargetIdName]
   type AsterismList = KeyedIndexedList[Asterism.Id, AsterismIdName]
-  type ObsList      = KeyedIndexedList[Observation.Id, ObsAttached]
+  type ObsList      = KeyedIndexedList[Observation.Id, ObsSummary]
 
   @Lenses
-  case class TargetsAndAsterismsWithObs(targets: TargetList, asterisms: AsterismList, obs: ObsList)
+  case class TargetsAndAsterismsWithObs(
+    targets:      TargetList,
+    asterisms:    AsterismList,
+    observations: ObsList
+  )
 
   @GraphQL(debug = false)
   object TargetsObsQuery extends GraphQLOperation[ObservationDB] {
@@ -58,12 +90,6 @@ object TargetObsQueries {
           nodes {
             id
             name
-            observations(first: ${Int.MaxValue}) {
-              nodes {
-                id
-                name
-              }
-            }
           }
         }
 
@@ -77,86 +103,63 @@ object TargetObsQueries {
                 name
               }
             }
-            observations(first: ${Int.MaxValue}) {
-              nodes {
-                id
-                name
+          }
+        }
+
+        observations(programId: "p-2", first: ${Int.MaxValue}) {
+          nodes {
+            id
+            name
+            observationTarget {
+              type: __typename
+              ... on Target {
+                target_id: id
               }
-            }
+              ... on Asterism {
+                asterism_id: id
+              }
+            }            
           }
         }
       }
     """
 
     object Data {
-      trait TargetProps {
-        val id: Target.Id
-        val name: String
-      }
-
       object Targets {
-        trait Nodes extends TargetProps
+        type Nodes = TargetIdName
       }
 
       object Asterisms {
         object Nodes {
           object Targets {
-            trait Nodes extends TargetProps
+            type Nodes = TargetIdName
           }
         }
       }
 
-      private def targetName(name: String): NonEmptyString =
-        NonEmptyString.from(name).getOrElse(Constants.UnnamedTarget)
+      object Observations {
+        type Nodes = ObsSummary
+      }
 
       private def asterismName(name: Option[String]): NonEmptyString =
         name.flatMap(n => NonEmptyString.from(n).toOption).getOrElse(Constants.UnnamedAsterism)
 
-      private def transformTarget(target: TargetProps): TargetIdName =
-        target
-          .into[TargetIdName]
-          .withFieldComputed(_.name, t => targetName(t.name))
-          .transform
-
       val asTargetsWithObs: Getter[Data, TargetsAndAsterismsWithObs] = data => {
 
-        val targetsObservations = data.targets.nodes.map { target =>
-          val targetIdName = transformTarget(target)
-          (targetIdName,
-           target.observations.nodes.map(
-             _.into[ObsAttached].withFieldConst(_.attached, targetIdName.id.asLeft).transform
-           )
-          )
-        }
-
-        val asterismsObservations = data.asterisms.nodes.map { asterism =>
-          val asterismIdName =
-            asterism
-              .into[AsterismIdName]
-              .withFieldComputed(_.name, a => asterismName(a.name))
-              .withFieldComputed(
-                _.targets,
-                a =>
-                  KeyedIndexedList.fromList(a.targets.nodes.map(transformTarget),
-                                            TargetIdName.id.get
-                  )
-              )
-              .transform
-          (asterismIdName,
-           asterism.observations.nodes.map(
-             _.into[ObsAttached].withFieldConst(_.attached, asterismIdName.id.asRight).transform
-           )
-          )
+        val asterisms = data.asterisms.nodes.map {
+          _.into[AsterismIdName]
+            .withFieldComputed(_.name, a => asterismName(a.name))
+            .withFieldComputed(
+              _.targets,
+              a => KeyedIndexedList.fromList(a.targets.nodes, TargetIdName.id.get)
+            )
+            .transform
         }
 
         TargetsAndAsterismsWithObs(
-          KeyedIndexedList.fromList(targetsObservations.map(_._1), TargetIdName.id.get),
-          KeyedIndexedList.fromList(asterismsObservations.map(_._1), AsterismIdName.id.get),
-          KeyedIndexedList.fromList(
-            // Asterisms first, so fromList's distinctBy keeps those.
-            asterismsObservations.flatMap(_._2) ++ targetsObservations.flatMap(_._2),
-            ObsAttached.id.get
-          )
+          KeyedIndexedList.fromList(data.targets.nodes, TargetIdName.id.get),
+          KeyedIndexedList.fromList(asterisms, AsterismIdName.id.get),
+          KeyedIndexedList.fromList(data.observations.nodes, ObsSummary.id.get)
         )
       }
     }
@@ -309,6 +312,19 @@ object TargetObsQueries {
   }
 
   @GraphQL
+  object UnassignObs extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($obsId: ObservationId!) {
+        updateObservation(
+          input: { observationId: $obsId, asterismId: null, targetId: null }
+        ) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
   object ShareTargetWithAsterisms extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($targetId: TargetId!, $asterismId: AsterismId!) {
@@ -334,7 +350,6 @@ object TargetObsQueries {
     Reusability.by(x => (x.id, x.name))
   implicit val asterismIdNameReusability: Reusability[AsterismIdName]             =
     Reusability.by(x => (x.id, x.name))
-  implicit val obsIdNameReusability: Reusability[ObsAttached]                     = Reusability.derive
   implicit val targetsWithObsReusability: Reusability[TargetsAndAsterismsWithObs] =
     Reusability.derive
 

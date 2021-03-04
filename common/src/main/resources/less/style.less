@@ -15,6 +15,29 @@
 @minHeight: 2.85714286em; // TODO: Calculate this on less
 @resizeHandleWidth: 5px; // Width of the tree resize handle
 
+// Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+}
+
+// Mixins
+//
+.full-height-width {
+  height: 100%;
+  width: 100%;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -27,11 +50,6 @@
 /* Works on Chrome/Edge/Safari */
 *::-webkit-scrollbar {
   width: 12px;
-}
-
-html,
-body {
-  box-sizing: border-box;
 }
 
 /*** iPhone and iOS Form Input Zoom Fixes ***/
@@ -121,13 +139,6 @@ body.light-theme {
   }
 }
 
-// Mixins
-//
-.full-height-width {
-  height: 100%;
-  width: 100%;
-}
-
 // Classes
 .tilemenu {
   background: darkgray;
@@ -148,6 +159,7 @@ tfoot {
   @topBottom: 42px;
 
   display: grid;
+  height: 100vh;
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
@@ -184,6 +196,10 @@ tfoot {
 .main-title {
   text-transform: uppercase;
   letter-spacing: 0.4em;
+}
+
+.size-detector {
+  .full-height-width();
 }
 
 .main-user-name {
@@ -536,6 +552,7 @@ tfoot {
 
 .obs-count {
   white-space: nowrap;
+  font-weight: 100;
 }
 
 .obs-tree-item {
@@ -588,11 +605,25 @@ tfoot {
   }
 }
 
+.block.header.obs-tree-header {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-right: 5px;
+  user-select: none;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
 .vertical.segment.obs-tree-group {
   padding-top: 0;
   padding-bottom: 0;
   padding-right: 5px;
   user-select: none;
+}
+
+.reflex-element.obs-tree-section {
+  display: flex;
+  flex-direction: column;
 }
 
 .trash-icon {
