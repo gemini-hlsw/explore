@@ -32,11 +32,12 @@ object ObsQueries {
             id
             name
             observationTarget {
-              ... on Asterism {
-                asterism_id: id
-              }
+              type: __typename
               ... on Target {
                 target_id: id
+              }              
+              ... on Asterism {
+                asterism_id: id
               }
             }
           }

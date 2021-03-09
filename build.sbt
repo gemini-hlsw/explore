@@ -385,6 +385,7 @@ lazy val commonWDS = Seq(
     "styled-components"     -> "5.1.1",
     "react-popper"          -> "2.2.3",
     "ua-parser-js"          -> "0.7.23",
-    "react-resize-detector" -> "6.5.0"
+    "react-resize-detector" -> "6.5.0",
+    "react-reflex"          -> "4.0.0"
   )
 )

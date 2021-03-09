@@ -5,6 +5,7 @@ package explore
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.components.ui.ExploreStyles
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
@@ -32,7 +33,7 @@ object Routing {
 
   private def withSize(f: ResizeDetector.Dimensions => VdomElement): VdomElement =
     ResizeDetector() { s =>
-      <.div(^.height := "100%", s.targetRef)(
+      <.div(ExploreStyles.SizeDetector, s.targetRef)(
         f(s)
       )
     }

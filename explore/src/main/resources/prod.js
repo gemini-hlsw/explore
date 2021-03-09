@@ -4,6 +4,7 @@ import "resources/less/components/visualization.less";
 import "resources/less/vendor/aladin.less";
 import "resources/css/charts.scss";
 import "resources/css/datepicker.scss";
+import "resources/less/vendor/react-reflex.less";
 
 import "resources/conf/staging.conf.json";
 import "resources/conf/production.conf.json";
