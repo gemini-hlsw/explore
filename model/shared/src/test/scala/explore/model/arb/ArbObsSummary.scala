@@ -8,7 +8,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import explore.model.AimId
+import explore.model.PointingId
 import explore.model.ObsSummary
 import lucuma.core.model.Observation
 import lucuma.core.util.arb.ArbGid._
@@ -19,12 +19,14 @@ trait ArbObsSummary {
     for {
       id  <- arbitrary[Observation.Id]
       nm  <- arbitrary[Option[String]]
-      aim <- arbitrary[Option[AimId]]
-    } yield ObsSummary(id = id, name = nm, aimId = aim)
+      aim <- arbitrary[Option[PointingId]]
+    } yield ObsSummary(id = id, name = nm, pointingId = aim)
   }
 
   implicit val obsSummaryCogen: Cogen[ObsSummary] =
-    Cogen[(Observation.Id, Option[String], Option[AimId])].contramap(c => (c.id, c.name, c.aimId))
+    Cogen[(Observation.Id, Option[String], Option[PointingId])].contramap(c =>
+      (c.id, c.name, c.pointingId)
+    )
 
 }
 

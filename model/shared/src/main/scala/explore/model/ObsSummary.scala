@@ -28,16 +28,16 @@ final case class ObsSummary(
   conf:        String = "GMOS-N R831 1x300",
   constraints: String = "<0.7\" <0.3 mag Bright",
   duration:    Duration = Duration.of(93, ChronoUnit.MINUTES),
-  aimId:       Option[AimId]
+  pointingId:  Option[PointingId]
 )
 
 object ObsSummary {
-  implicit val eqObsSummary: Eq[ObsSummary] = Eq.by(x => (x.id, x.name, x.aimId))
+  implicit val eqObsSummary: Eq[ObsSummary] = Eq.by(x => (x.id, x.name, x.pointingId))
 
   implicit val obsSummaryEncoder: Encoder[ObsSummary] = new Encoder[ObsSummary] {
     final def apply(c: ObsSummary): Json = {
       val common = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
-      (c.aimId match {
+      (c.pointingId match {
         case None    => common
         case Some(t) =>
           common.add(
@@ -54,9 +54,9 @@ object ObsSummary {
 
   }
 
-  implicit val obsTargetDecoder: Decoder[AimId] =
-    new Decoder[AimId] {
-      final def apply(c: HCursor): Decoder.Result[AimId] =
+  implicit val obsTargetDecoder: Decoder[PointingId] =
+    new Decoder[PointingId] {
+      final def apply(c: HCursor): Decoder.Result[PointingId] =
         c.downField("type").as[AimType].flatMap {
           case AimType.Target   => c.downField("target_id").as[Target.Id].map(_.asRight)
           case AimType.Asterism => c.downField("asterism_id").as[Asterism.Id].map(_.asLeft)
@@ -66,9 +66,9 @@ object ObsSummary {
   implicit val obsSummaryDecoder: Decoder[ObsSummary] = new Decoder[ObsSummary] {
     final def apply(c: HCursor): Decoder.Result[ObsSummary] =
       for {
-        id    <- c.downField("id").as[Observation.Id]
-        name  <- c.downField("name").as[Option[String]]
-        aimId <- c.downField("observationTarget").as[Option[AimId]]
-      } yield ObsSummary(id, name, aimId = aimId)
+        id         <- c.downField("id").as[Observation.Id]
+        name       <- c.downField("name").as[Option[String]]
+        pointingId <- c.downField("observationTarget").as[Option[PointingId]]
+      } yield ObsSummary(id, name, pointingId = pointingId)
   }
 }

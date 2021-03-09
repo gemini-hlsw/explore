@@ -119,7 +119,7 @@ object TargetTabContents {
               case FocusedObs(obsId)       =>
                 objectsWithObs.get.observations
                   .getElement(obsId)
-                  .flatMap(_.aimId.flatMap(_.toOption))
+                  .flatMap(_.pointingId.flatMap(_.toOption))
             }.flatten
 
             val coreWidth  = props.size.width.getOrElse(0) - treeWidth

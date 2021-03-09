@@ -20,7 +20,7 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.AimId
+import explore.model.PointingId
 import explore.model.Constants
 import explore.model.Focused
 import explore.model.Focused._
@@ -80,7 +80,7 @@ object TargetObsList {
   class Backend($ : BackendScope[Props, State]) {
     private val UnassignedObsId = "unassignedObs"
 
-    def moveObs(obsId: Observation.Id, to: Option[AimId])(implicit
+    def moveObs(obsId: Observation.Id, to: Option[PointingId])(implicit
       c:               TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       (to match {
@@ -136,12 +136,12 @@ object TargetObsList {
 
     private def getAimForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
-    ): Getter[TargetsAndAsterismsWithObs, Option[Option[AimId]]] =
+    ): Getter[TargetsAndAsterismsWithObs, Option[Option[PointingId]]] =
       TargetsAndAsterismsWithObs.observations
         .composeGetter(
           obsWithIndexGetter
             .composeOptionLens(first)
-            .composeOptionLens(ObsSummary.aimId)
+            .composeOptionLens(ObsSummary.pointingId)
         )
 
     private def setAimForObsWithId(
@@ -150,11 +150,11 @@ object TargetObsList {
       obsWithIndexGetAdjust: GetAdjust[ObsList, obsListMod.ElemWithIndex]
     )(implicit
       c:                     TransactionalClient[IO, ObservationDB]
-    ): Option[Option[AimId]] => IO[Unit] =
+    ): Option[Option[PointingId]] => IO[Unit] =
       aimOpt => {
         val obsAimAdjuster = obsWithIndexGetAdjust
           .composeOptionLens(first) // Focus on Observation within ElemWithIndex
-          .composeOptionLens(ObsSummary.aimId)
+          .composeOptionLens(ObsSummary.pointingId)
 
         val observationsView = aimsWithObs
           .zoom(TargetsAndAsterismsWithObs.observations)
@@ -163,7 +163,7 @@ object TargetObsList {
         observationsView.mod(obsAimAdjuster.set(aimOpt)) >>
           // 2) Send mutation
           aimOpt
-            .map(newAimId => moveObs(obsId, newAimId))
+            .map(newPointingId => moveObs(obsId, newPointingId))
             .orEmpty
       }
 
@@ -189,9 +189,9 @@ object TargetObsList {
                     obsListMod.withKey(obsId)
 
                   // TODO Here we should flatten.
-                  val set: Option[Option[AimId]] => IO[Unit] =
+                  val set: Option[Option[PointingId]] => IO[Unit] =
                     setter
-                      .set[Option[Option[AimId]]](
+                      .set[Option[Option[PointingId]]](
                         props.aimsWithObs.get,
                         getAimForObsWithId(obsWithId.getter).get,
                         setAimForObsWithId(props.aimsWithObs, obsId, obsWithId)
@@ -486,7 +486,7 @@ object TargetObsList {
 
     def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations = props.aimsWithObs.get.observations
-      val obsByAim     = observations.toList.groupBy(_.aimId)
+      val obsByAim     = observations.toList.groupBy(_.pointingId)
 
       val targets        = props.aimsWithObs.get.targets
       val targetsWithIdx = targets.toList.zipWithIndex
@@ -499,7 +499,7 @@ object TargetObsList {
 
       def renderObsBadge(obs: ObsSummary): TagMod =
         ObsBadge(
-          ObsSummary(id = obs.id, name = obs.name, aimId = None), // FIXME Add the target id
+          ObsSummary(id = obs.id, name = obs.name, pointingId = None), // FIXME Add the target id
           ObsBadge.Layout.ConfAndConstraints,
           selected = props.focused.get.exists(_ === FocusedObs(obs.id))
         )
@@ -889,7 +889,7 @@ object TargetObsList {
             .collect { case FocusedObs(obsId) =>
               aimsWithObs.observations
                 .getElement(obsId)
-                .flatMap(_.aimId.map(_ match {
+                .flatMap(_.pointingId.map(_ match {
                   case Right(targetId)  => expandedTargetIds.mod(_ + targetId)
                   case Left(asterismId) => expandedAsterismIds.mod(_ + asterismId)
                 }))
