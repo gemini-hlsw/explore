@@ -23,6 +23,7 @@ import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -41,6 +42,7 @@ import scala.concurrent.duration._
 final case class TargetTabContents(
   userId:                ViewOpt[User.Id],
   focused:               View[Option[Focused]],
+  searching:             View[Set[Target.Id]],
   targetViewExpandedIds: View[TargetViewExpandedIds],
   size:                  ResizeDetector.Dimensions
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
@@ -98,7 +100,8 @@ object TargetTabContents {
               TargetObsList(
                 objectsWithObs,
                 props.focused,
-                props.targetViewExpandedIds
+                props.targetViewExpandedIds,
+                props.searching
               )
             )
 
@@ -128,7 +131,7 @@ object TargetTabContents {
             val rightSide =
               Tile(s"Target", backButton.some)(
                 (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
-                  TargetEditor(uid, tid).withKey(tid.show)
+                  TargetEditor(uid, tid, props.searching).withKey(tid.show)
                 }
               )
 

@@ -9,18 +9,18 @@ import io.circe.DecodingFailure
 import io.circe.Encoder
 
 // We can't use Enumerated since it encodes/decodes as SCREAMING_SNAKE.
-sealed abstract class AimType(val typeName: String) { self =>
+sealed abstract class PointingType(val typeName: String) { self =>
   // Using self.type allows us to use eg: Target.asJosn without need of widening.
-  implicit val aimTypeEncoder: Encoder[self.type] =
+  implicit val pointingTypeEncoder: Encoder[self.type] =
     Encoder.encodeString.contramap[self.type](_.typeName)
 }
 
-object AimType {
-  case object Target   extends AimType("Target")
-  case object Asterism extends AimType("Asterism")
+object PointingType {
+  case object Target   extends PointingType("Target")
+  case object Asterism extends PointingType("Asterism")
 
-  implicit val aimTypeDecoder: Decoder[AimType] =
-    Decoder.instance[AimType] { c =>
+  implicit val pointingTypeDecoder: Decoder[PointingType] =
+    Decoder.instance[PointingType] { c =>
       c.as[String]
         .flatMap(_ match {
           case Target.typeName   => Target.asRight

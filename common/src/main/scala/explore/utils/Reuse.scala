@@ -67,13 +67,25 @@ trait Reuse[A] {
 
   protected val reuseBy: B // We need to store it to combine into tuples when currying.
 
-  protected val typeTag: TypeTag[B]
+  protected implicit val typeTag: TypeTag[B]
 
-  protected val reusability: Reusability[B] // Turn into "(B, B) => Boolean" (will work in JVM)
+  // Turn into "(B, B) => Boolean" (will work in JVM)
+  protected implicit val reusability: Reusability[B]
 
-  def andBy[C](c: C)(implicit typeTagC: TypeTag[C], reuseC: Reusability[C]): Reuse[A] = ???
+  // How to combine the TypeTags and Reusability?
+  // def andBy[C](c: C)(implicit typeTagBC: TypeTag[(B, C)], reuseBC: Reusability[(B, C)]): Reuse[A] =
+  //   new Reuse[A] {
+  //     type B = (Reuse.this.B, C)
+  //     val value                                          = Reuse.this.value
+  //     implicit protected val typeTag: TypeTag[B]         = typeTagBC
+  //     implicit protected val reusability: Reusability[B] = reuseBC
+  //   }
 
-  def orBy[C](c: C)(implicit typeTagC: TypeTag[C], reuseC: Reusability[C]): Reuse[A] = ???
+  // def orBy[C](c: C)(implicit typeTagC: TypeTag[C], reuseC: Reusability[C]): Reuse[A] = ???
+
+  // // Combine inputs and reusability.
+  // def flatMap[C](f: A => Reuse[C]): Reuse[C] =
+  //   f(value()).andBy(reuseBy)
 }
 
 object Reuse {

@@ -44,9 +44,9 @@ object ObsSummary {
             "observationTarget",
             t match {
               case Right(tid) =>
-                Json.obj("type" -> AimType.Target.asJson, "target_id" -> tid.asJson)
+                Json.obj("type" -> PointingType.Target.asJson, "target_id" -> tid.asJson)
               case Left(aid)  =>
-                Json.obj("type" -> AimType.Asterism.asJson, "asterism_id" -> aid.asJson)
+                Json.obj("type" -> PointingType.Asterism.asJson, "asterism_id" -> aid.asJson)
             }
           )
       }).asJson
@@ -57,9 +57,9 @@ object ObsSummary {
   implicit val obsTargetDecoder: Decoder[PointingId] =
     new Decoder[PointingId] {
       final def apply(c: HCursor): Decoder.Result[PointingId] =
-        c.downField("type").as[AimType].flatMap {
-          case AimType.Target   => c.downField("target_id").as[Target.Id].map(_.asRight)
-          case AimType.Asterism => c.downField("asterism_id").as[Asterism.Id].map(_.asLeft)
+        c.downField("type").as[PointingType].flatMap {
+          case PointingType.Target   => c.downField("target_id").as[Target.Id].map(_.asRight)
+          case PointingType.Asterism => c.downField("asterism_id").as[Asterism.Id].map(_.asLeft)
         }
     }
 
