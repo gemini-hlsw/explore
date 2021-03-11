@@ -321,7 +321,6 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
-      Chimney.value ++
       ClueScalaJS.value ++
       LucumaUI.value ++
       Log4Cats.value ++
