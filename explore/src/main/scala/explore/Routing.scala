@@ -52,6 +52,15 @@ object Routing {
       ObsTabContents(model.zoom(RootModel.userId), model.zoom(RootModel.focused), size)
     )
 
+  private def constraintSetTab(model: View[RootModel]): VdomElement =
+    withSize(size =>
+      ConstraintSetTabContents(model.zoom(RootModel.userId),
+                               model.zoom(RootModel.focused),
+                               model.zoom(RootModel.constraintSetViewExpandedIds),
+                               size
+      )
+    )
+
   val config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
@@ -84,7 +93,7 @@ object Routing {
             targetTab
           )
           | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
-          | staticRoute("/constraints", ConstraintsPage) ~> render(UnderConstruction()))
+          | staticRoute("/constraints", ConstraintsPage) ~> renderP(constraintSetTab))
 
       val configuration =
         rules

@@ -118,6 +118,9 @@ object TargetObsQueries {
               ... on Asterism {
                 asterism_id: id
               }
+            }
+            constraintSet {
+              id
             }            
           }
         }

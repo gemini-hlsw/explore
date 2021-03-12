@@ -498,10 +498,9 @@ object TargetObsList {
       val unassignedObs = obsByAim.get(none).orEmpty
 
       def renderObsBadge(obs: ObsSummary): TagMod =
-        ObsBadge(
-          ObsSummary(id = obs.id, name = obs.name, aimId = None), // FIXME Add the target id
-          ObsBadge.Layout.ConfAndConstraints,
-          selected = props.focused.get.exists(_ === FocusedObs(obs.id))
+        ObsBadge(obs,
+                 ObsBadge.Layout.ConfAndConstraints,
+                 selected = props.focused.get.exists(_ === FocusedObs(obs.id))
         )
 
       def renderObsBadgeItem(obs: ObsSummary, idx: Int): TagMod =

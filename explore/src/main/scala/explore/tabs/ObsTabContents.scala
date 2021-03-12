@@ -217,7 +217,7 @@ object ObsTabContents {
           }.flatten
 
           val targetId = obsSummaryOpt.collect {
-            case ObsSummary(_, _, _, _, _, _, Some(Right(tid))) =>
+            case ObsSummary(_, _, _, _, _, _, Some(Right(tid)), _) =>
               tid
           }
 

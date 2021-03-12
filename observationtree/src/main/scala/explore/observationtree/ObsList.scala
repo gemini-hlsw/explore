@@ -128,7 +128,11 @@ object ObsList {
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt()).map(int =>
-        ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)), name.some, aimId = none)
+        ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+                   name.some,
+                   aimId = none,
+                   constraintSetId = none
+        )
       )
 
       $.propsIn[IO] >>= { props =>
