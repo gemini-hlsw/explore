@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats._
+import cats.effect.ContextShift
 import cats.effect.IO
 import cats.instances.order._
 import cats.syntax.all._
@@ -11,20 +12,25 @@ import clue.TransactionalClient
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
+import explore.common.SimbadSearch
+import explore.common.TargetQueries
+import explore.common.TargetQueries._
+import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.AimId
 import explore.model.Constants
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
+import explore.model.PointingId
 import explore.model.TargetViewExpandedIds
 import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
@@ -64,7 +70,8 @@ import TargetObsQueries._
 final case class TargetObsList(
   aimsWithObs: View[TargetsAndAsterismsWithObs],
   focused:     View[Option[Focused]],
-  expandedIds: View[TargetViewExpandedIds]
+  expandedIds: View[TargetViewExpandedIds],
+  searching:   View[Set[Target.Id]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
 object TargetObsList {
@@ -80,7 +87,7 @@ object TargetObsList {
   class Backend($ : BackendScope[Props, State]) {
     private val UnassignedObsId = "unassignedObs"
 
-    def moveObs(obsId: Observation.Id, to: Option[AimId])(implicit
+    def moveObs(obsId: Observation.Id, to: Option[PointingId])(implicit
       c:               TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       (to match {
@@ -136,12 +143,12 @@ object TargetObsList {
 
     private def getAimForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
-    ): Getter[TargetsAndAsterismsWithObs, Option[Option[AimId]]] =
+    ): Getter[TargetsAndAsterismsWithObs, Option[Option[PointingId]]] =
       TargetsAndAsterismsWithObs.observations
         .composeGetter(
           obsWithIndexGetter
             .composeOptionLens(first)
-            .composeOptionLens(ObsSummary.aimId)
+            .composeOptionLens(ObsSummary.pointingId)
         )
 
     private def setAimForObsWithId(
@@ -150,11 +157,11 @@ object TargetObsList {
       obsWithIndexGetAdjust: GetAdjust[ObsList, obsListMod.ElemWithIndex]
     )(implicit
       c:                     TransactionalClient[IO, ObservationDB]
-    ): Option[Option[AimId]] => IO[Unit] =
+    ): Option[Option[PointingId]] => IO[Unit] =
       aimOpt => {
         val obsAimAdjuster = obsWithIndexGetAdjust
           .composeOptionLens(first) // Focus on Observation within ElemWithIndex
-          .composeOptionLens(ObsSummary.aimId)
+          .composeOptionLens(ObsSummary.pointingId)
 
         val observationsView = aimsWithObs
           .zoom(TargetsAndAsterismsWithObs.observations)
@@ -163,7 +170,7 @@ object TargetObsList {
         observationsView.mod(obsAimAdjuster.set(aimOpt)) >>
           // 2) Send mutation
           aimOpt
-            .map(newAimId => moveObs(obsId, newAimId))
+            .map(newPointingId => moveObs(obsId, newPointingId))
             .orEmpty
       }
 
@@ -189,9 +196,9 @@ object TargetObsList {
                     obsListMod.withKey(obsId)
 
                   // TODO Here we should flatten.
-                  val set: Option[Option[AimId]] => IO[Unit] =
+                  val set: Option[Option[PointingId]] => IO[Unit] =
                     setter
-                      .set[Option[Option[AimId]]](
+                      .set[Option[Option[PointingId]]](
                         props.aimsWithObs.get,
                         getAimForObsWithId(obsWithId.getter).get,
                         setAimForObsWithId(props.aimsWithObs, obsId, obsWithId)
@@ -277,21 +284,33 @@ object TargetObsList {
         )
     }
 
-    protected def newTarget(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(implicit
-      c:                            TransactionalClient[IO, ObservationDB]
-    ): IO[Unit] = {
-      // Temporary measure until we have id pools.
-      val newTarget = IO(Random.nextInt()).map(int =>
-        TargetIdName(Target.Id(PosLong.unsafeFrom(int.abs.toLong + 1)), Constants.UnnamedTarget)
-      )
-
-      $.propsIn[IO] >>= { props =>
-        newTarget >>= { target =>
-          val mod = targetMod(setter, props.aimsWithObs, props.focused, target.id, none)
-          mod(targetListMod.upsert(target, props.aimsWithObs.get.targets.length))
+    protected def newTarget(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(name: String)(
+      implicit
+      c:                            TransactionalClient[IO, ObservationDB],
+      cs:                           ContextShift[IO]
+    ): IO[Unit] =
+      ($.propsIn[IO],
+       IO(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
+       IO(NonEmptyString.unsafeFrom(name))
+      ).parTupled.flatMap { case (props, posLong, nonEmptyName) =>
+        val newTarget = TargetIdName(Target.Id(posLong), nonEmptyName)
+        val mod       = targetMod(setter, props.aimsWithObs, props.focused, newTarget.id, none)
+        (
+          mod(targetListMod.upsert(newTarget, props.aimsWithObs.get.targets.length)),
+          props.searching.mod(_ + newTarget.id) >>
+            SimbadSearch
+              .search(nonEmptyName)
+              .attempt
+              .guarantee(props.searching.mod(_ - newTarget.id))
+        ).parTupled.flatMap {
+          case (_, Right(Some(Target(_, Right(st), m)))) =>
+            val update = TargetQueries.UpdateSiderealTracking(st) >>>
+              TargetQueries.updateMagnitudes(m.values.toList)
+            TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
+          case _                                         =>
+            IO.unit
         }
       }
-    }
 
     protected def deleteTarget(
       targetId:      Target.Id,
@@ -305,13 +324,13 @@ object TargetObsList {
         mod(targetListMod.delete)
       }
 
-    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(implicit
-      c:                              TransactionalClient[IO, ObservationDB]
+    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(name: String)(
+      implicit c:                     TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newAsterism = IO(Random.nextInt()).map(int =>
         AsterismIdName(Asterism.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                       Constants.UnnamedAsterism,
+                       NonEmptyString.from(name).getOrElse(Constants.UnnamedAsterism),
                        KeyedIndexedList.empty
         )
       )
@@ -486,7 +505,7 @@ object TargetObsList {
 
     def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations = props.aimsWithObs.get.observations
-      val obsByAim     = observations.toList.groupBy(_.aimId)
+      val obsByAim     = observations.toList.groupBy(_.pointingId)
 
       val targets        = props.aimsWithObs.get.targets
       val targetsWithIdx = targets.toList.zipWithIndex
@@ -556,16 +575,29 @@ object TargetObsList {
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
               <.div(
-                Button(size = Mini, compact = true, onClick = newTarget(undoCtx.setter).runAsyncCB)(
-                  Icons.New.size(Small).fitted(true),
-                  " Target"
+                InputModal(
+                  "Create new Target",
+                  initialValue = "",
+                  label = "Name",
+                  placeholder = "Target name",
+                  okLabel = "Create",
+                  onComplete = s => newTarget(undoCtx.setter)(s).runAsyncCB, // TODO Set coordinates
+                  trigger = Button(size = Mini, compact = true)(
+                    Icons.New.size(Small).fitted(true),
+                    " Target"
+                  )
                 ),
-                Button(size = Mini,
-                       compact = true,
-                       onClick = newAsterism(undoCtx.setter).runAsyncCB
-                )(
-                  Icons.New.size(Small).fitted(true),
-                  " Asterism"
+                InputModal(
+                  "Create new Asterism",
+                  initialValue = "",
+                  label = "Name",
+                  placeholder = "Asterism name",
+                  okLabel = "Create",
+                  onComplete = s => newAsterism(undoCtx.setter)(s).runAsyncCB,
+                  trigger = Button(size = Mini, compact = true)(
+                    Icons.New.size(Small).fitted(true),
+                    " Asterism"
+                  )
                 )
               ),
               UndoButtons(props.aimsWithObs.get, undoCtx, size = Mini)
@@ -888,7 +920,7 @@ object TargetObsList {
             .collect { case FocusedObs(obsId) =>
               aimsWithObs.observations
                 .getElement(obsId)
-                .flatMap(_.aimId.map(_ match {
+                .flatMap(_.pointingId.map(_ match {
                   case Right(targetId)  => expandedTargetIds.mod(_ + targetId)
                   case Left(asterismId) => expandedAsterismIds.mod(_ + asterismId)
                 }))

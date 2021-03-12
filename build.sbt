@@ -122,6 +122,7 @@ lazy val common = project
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
+        LucumaCatalog.value ++
         ReactGridLayout.value ++
         ReactClipboard.value ++
         ReactCommon.value ++
@@ -150,7 +151,6 @@ lazy val targeteditor = project
   .settings(
     libraryDependencies ++=
       GeminiLocales.value ++
-        LucumaCatalog.value ++
         ReactAladin.value ++
         ReactDatepicker.value ++
         ReactHighcharts.value
@@ -321,7 +321,6 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   libraryDependencies ++=
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
-      Chimney.value ++
       ClueScalaJS.value ++
       LucumaUI.value ++
       Log4Cats.value ++

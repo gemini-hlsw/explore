@@ -39,17 +39,23 @@ object Routing {
     }
 
   private def targetTab(model: View[RootModel]): VdomElement =
-    withSize(size =>
-      TargetTabContents(model.zoom(RootModel.userId),
-                        model.zoom(RootModel.focused),
-                        model.zoom(RootModel.targetViewExpandedIds),
-                        size
+    withSize { size =>
+      TargetTabContents(
+        model.zoom(RootModel.userId),
+        model.zoom(RootModel.focused),
+        model.zoom(RootModel.searchingTarget),
+        model.zoom(RootModel.targetViewExpandedIds),
+        size
       )
-    )
+    }
 
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
-      ObsTabContents(model.zoom(RootModel.userId), model.zoom(RootModel.focused), size)
+      ObsTabContents(model.zoom(RootModel.userId),
+                     model.zoom(RootModel.focused),
+                     model.zoom(RootModel.searchingTarget),
+                     size
+      )
     )
 
   private def constraintSetTab(model: View[RootModel]): VdomElement =
@@ -110,7 +116,7 @@ object Routing {
             case _                  => Callback.empty
           }
           .renderWithP(layout)
-          .logToConsole
+      // .logToConsole
 
       // Only link and run this in dev mode. Works since calling `verify` trigger verification immediately.
       if (LinkingInfo.developmentMode) {

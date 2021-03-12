@@ -9,17 +9,18 @@ import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
-import lucuma.core.model.ConstraintSet
 import lucuma.core.data.EnumZipper
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option
 
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{ HashSet, SortedSet }
 
 @Lenses
 case class RootModel(
@@ -27,6 +28,7 @@ case class RootModel(
   tabs:                         EnumZipper[AppTab],
   focused:                      Option[Focused] = none,
   targetViewExpandedIds:        TargetViewExpandedIds = TargetViewExpandedIds(),
+  searchingTarget:              Set[Target.Id] = HashSet.empty,
   constraintSetViewExpandedIds: SortedSet[ConstraintSet.Id] = SortedSet.empty,
   userSelectionMessage:         Option[NonEmptyString] = none
 )
@@ -53,6 +55,7 @@ object RootModel {
        m.tabs,
        m.focused,
        m.targetViewExpandedIds,
+       m.searchingTarget,
        m.constraintSetViewExpandedIds,
        m.userSelectionMessage
       )

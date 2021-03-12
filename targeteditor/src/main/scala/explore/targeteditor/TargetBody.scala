@@ -6,13 +6,15 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
-import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.View
+import explore.common.SimbadSearch
+import explore.common.TargetQueries
+import explore.common.TargetQueries._
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -22,8 +24,6 @@ import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.utils._
-import explore.target.TargetQueries
-import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
@@ -38,7 +38,6 @@ import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.Form
@@ -54,10 +53,11 @@ final case class SearchCallback(
 }
 
 final case class TargetBody(
-  uid:     User.Id,
-  id:      Target.Id,
-  target:  View[TargetResult],
-  options: View[TargetVisualOptions]
+  uid:       User.Id,
+  id:        Target.Id,
+  target:    View[TargetResult],
+  searching: View[Set[Target.Id]],
+  options:   View[TargetVisualOptions]
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val baseCoordinates: Coordinates =
     target.zoom(TargetQueries.baseCoordinates).get
@@ -68,17 +68,12 @@ object TargetBody {
   type Props = TargetBody
   val AladinRef = AladinCell.component
 
-  @Lenses
-  final case class State(searching: Boolean)
-
   implicit val propsReuse = Reusability.derive[Props]
-  implicit val stateReuse = Reusability.derive[State]
 
-  class Backend($ : BackendScope[Props, State]) {
+  class Backend() {
     def render(props: Props) =
       AppCtx.withCtx { implicit appCtx =>
-        val target    = props.target.get
-        val stateView = ViewF.fromState[IO]($).zoom(State.searching)
+        val target = props.target.get
 
         UndoRegion[TargetResult] { undoCtx =>
           val undoViewSet =
@@ -155,6 +150,8 @@ object TargetBody {
                 case Left(t)                                  => s.onError(t)
               }
 
+          val disabled = props.searching.get.exists(_ === props.id)
+
           React.Fragment(
             <.div(
               ExploreStyles.TargetGrid,
@@ -163,8 +160,9 @@ object TargetBody {
                 ExploreStyles.Compact,
                 // Keep the search field and the coords always together
                 SearchForm(
+                  props.id,
                   nameView,
-                  stateView,
+                  props.searching,
                   searchAndSet
                 ),
                 <.div(
@@ -179,7 +177,7 @@ object TargetBody {
                     clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                     errorPointing = LabelPointing.Below,
                     errorClazz = ExploreStyles.InputErrorTooltip,
-                    disabled = stateView.get
+                    disabled = disabled
                   ),
                   FormInputEV(
                     id = "dec",
@@ -190,7 +188,7 @@ object TargetBody {
                     clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                     errorPointing = LabelPointing.Below,
                     errorClazz = ExploreStyles.InputErrorTooltip,
-                    disabled = stateView.get
+                    disabled = disabled
                   )
                 )
               ),
@@ -212,7 +210,7 @@ object TargetBody {
                   id = "epoch",
                   label = "Epoch",
                   units = "years",
-                  disabled = stateView.get
+                  disabled = disabled
                 ),
                 InputWithUnits(
                   properMotionRAView,
@@ -221,7 +219,7 @@ object TargetBody {
                   id = "raPM",
                   label = "µ RA",
                   units = "mas/y",
-                  disabled = stateView.get
+                  disabled = disabled
                 ),
                 InputWithUnits(
                   properMotionDecView,
@@ -230,7 +228,7 @@ object TargetBody {
                   id = "raDec",
                   label = "µ Dec",
                   units = "mas/y",
-                  disabled = stateView.get
+                  disabled = disabled
                 ),
                 InputWithUnits[IO, Option[Parallax]](
                   parallaxView,
@@ -239,12 +237,12 @@ object TargetBody {
                   id = "parallax",
                   label = "Parallax",
                   units = "mas",
-                  disabled = stateView.get
+                  disabled = disabled
                 ),
-                RVInput(radialVelocityView, stateView)
+                RVInput(radialVelocityView, disabled)
               ),
-              MagnitudeForm(target.id, magnitudesView, disabled = stateView.get),
-              UndoButtons(target, undoCtx, disabled = stateView.get),
+              MagnitudeForm(target.id, magnitudesView, disabled = disabled),
+              UndoButtons(target, undoCtx, disabled = disabled),
               <.div(
                 ExploreStyles.TargetSkyplotCell,
                 WIP(
@@ -260,7 +258,6 @@ object TargetBody {
   val component =
     ScalaComponent
       .builder[Props]
-      .initialState(State(false))
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build

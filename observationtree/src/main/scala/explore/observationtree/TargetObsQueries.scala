@@ -18,7 +18,6 @@ import explore.model.ObsSummary
 import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.HCursor
-import io.scalaland.chimney.dsl._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -133,11 +132,7 @@ object TargetObsQueries {
       }
 
       object Asterisms {
-        object Nodes {
-          object Targets {
-            type Nodes = TargetIdName
-          }
-        }
+        type Nodes = AsterismIdName
       }
 
       object Observations {
@@ -148,20 +143,9 @@ object TargetObsQueries {
         name.flatMap(n => NonEmptyString.from(n).toOption).getOrElse(Constants.UnnamedAsterism)
 
       val asTargetsWithObs: Getter[Data, TargetsAndAsterismsWithObs] = data => {
-
-        val asterisms = data.asterisms.nodes.map {
-          _.into[AsterismIdName]
-            .withFieldComputed(_.name, a => asterismName(a.name))
-            .withFieldComputed(
-              _.targets,
-              a => KeyedIndexedList.fromList(a.targets.nodes, TargetIdName.id.get)
-            )
-            .transform
-        }
-
         TargetsAndAsterismsWithObs(
           KeyedIndexedList.fromList(data.targets.nodes, TargetIdName.id.get),
-          KeyedIndexedList.fromList(asterisms, AsterismIdName.id.get),
+          KeyedIndexedList.fromList(data.asterisms.nodes, AsterismIdName.id.get),
           KeyedIndexedList.fromList(data.observations.nodes, ObsSummary.id.get)
         )
       }
