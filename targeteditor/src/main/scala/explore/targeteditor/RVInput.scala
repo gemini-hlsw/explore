@@ -31,8 +31,8 @@ import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
 
 final case class RVInput(
-  value:    ViewF[IO, Option[RadialVelocity]],
-  disabled: ViewF[IO, Boolean]
+  value:    View[Option[RadialVelocity]],
+  disabled: Boolean
 ) extends ReactProps[RVInput](RVInput.component)
 
 object RVInput {
@@ -73,7 +73,7 @@ object RVInput {
     }
   }
 
-  implicit def propsReuse: Reusability[Props] = Reusability.by(x => (x.value, x.disabled))
+  implicit def propsReuse: Reusability[Props] = Reusability.derive
   implicit def stateReuse: Reusability[State] = Reusability.derive
 
   private val rvToRedshiftGet: Option[RadialVelocity] => Option[Redshift] =
@@ -106,7 +106,7 @@ object RVInput {
               validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
-              disabled = props.disabled.get
+              disabled = props.disabled
             )
           case RVView.CZ =>
             FormInputEV(
@@ -118,7 +118,7 @@ object RVInput {
               validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
-              disabled = props.disabled.get
+              disabled = props.disabled
             )
           case RVView.RV =>
             FormInputEV(
@@ -130,7 +130,7 @@ object RVInput {
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
               clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
-              disabled = props.disabled.get
+              disabled = props.disabled
             )
         }
         React.Fragment(
@@ -139,7 +139,7 @@ object RVInput {
             EnumViewSelect[IO, RVView](id = "view",
                                        value = rvView,
                                        label = state.rvView.tag.value,
-                                       disabled = props.disabled.get
+                                       disabled = props.disabled
             ),
             input
           ),

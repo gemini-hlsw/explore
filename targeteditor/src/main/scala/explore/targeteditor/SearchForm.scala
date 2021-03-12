@@ -30,8 +30,9 @@ import react.semanticui.sizes._
 import scalajs.js.JSConverters._
 
 final case class SearchForm(
+  id:          Target.Id,
   name:        View[NonEmptyString],
-  searching:   View[Boolean],
+  searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
@@ -58,18 +59,18 @@ object SearchForm {
   )
 
   implicit val stateReuse                     = Reusability.derive[State]
-  implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.name, x.searching))
+  implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.id, x.name, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) = {
-      val searchComplete: IO[Unit] = props.searching.set(false)
+      val searchComplete: IO[Unit] = props.searching.mod(_ - props.id)
 
       val search: Callback =
         props
           .submit(
             props.name.get,
-            $.setStateL(State.searchError)(none) >> props.searching.set(true).runAsyncCB,
+            $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id).runAsyncCB,
             t =>
               searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
                 NonEmptyString
@@ -102,6 +103,8 @@ object SearchForm {
            Icons.Ban)
           .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
 
+      val disabled   = props.searching.get.exists(_ === props.id)
+
       Form(size = Small, onSubmitE = submitForm)(
         ExploreStyles.Grid,
         ExploreStyles.Compact,
@@ -112,8 +115,8 @@ object SearchForm {
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           label = "Name",
           error = state.searchError.orUndefined,
-          loading = props.searching.get,
-          disabled = props.searching.get,
+          loading = disabled,
+          disabled = disabled,
           errorClazz = ExploreStyles.InputErrorTooltip,
           errorPointing = LabelPointing.Below,
           onTextChange = _ => $.setStateL(State.searchError)(none),

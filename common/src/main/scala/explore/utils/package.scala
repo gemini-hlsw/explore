@@ -17,7 +17,8 @@ import java.time.Instant
 import scala.scalajs.js
 
 package object utils {
-  type ==>[A, B] = Reuse[A => B]
+  type ReuseFn[A, B] = Reuse[A => B]
+  type ==>[A, B]     = ReuseFn[A, B]
 
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
     Sync[F].delay {

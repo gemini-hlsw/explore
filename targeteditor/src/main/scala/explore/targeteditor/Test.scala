@@ -26,7 +26,7 @@ object Test extends AppMain {
       <.div(^.height := "100vh",
             ^.width := "100%",
             Tile("Target")(
-              TargetEditor(uid, id)
+              TargetEditor(uid, id, view.zoom(RootModel.searchingTarget))
             )
       )
     )

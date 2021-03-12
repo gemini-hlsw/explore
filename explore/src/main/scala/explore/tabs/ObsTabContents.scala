@@ -13,6 +13,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
+import explore.common.TargetQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileButton
@@ -28,7 +29,6 @@ import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.observationtree.ObsQueries._
-import explore.target.TargetQueries._
 import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -52,9 +52,10 @@ import react.semanticui.sizes._
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
-  userId:  ViewOpt[User.Id],
-  focused: View[Option[Focused]],
-  size:    ResizeDetector.Dimensions
+  userId:    ViewOpt[User.Id],
+  focused:   View[Option[Focused]],
+  searching: View[Set[Target.Id]],
+  size:      ResizeDetector.Dimensions
 ) extends ReactProps[ObsTabContents](ObsTabContents.component) {
   def isObsSelected: Boolean = focused.get.isDefined
 }
@@ -287,7 +288,12 @@ object ObsTabContents {
                       ) { targetOpt =>
                         (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
                           val stateView = ViewF.fromState[IO]($).zoom(State.options)
-                          TargetBody(uid, targetId, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+                          TargetBody(uid,
+                                     targetId,
+                                     targetOpt.zoom(_.get)(f => _.map(f)),
+                                     props.searching,
+                                     stateView
+                          )
                         }
 
                       }.withKey(s"target-$targetId")

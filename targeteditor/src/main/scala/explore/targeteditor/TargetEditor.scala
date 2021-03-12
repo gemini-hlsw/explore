@@ -9,13 +9,13 @@ import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
+import explore.common.TargetQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import explore.target.TargetQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -25,8 +25,9 @@ import monocle.macros.Lenses
 import react.common._
 
 final case class TargetEditor(
-  uid: User.Id,
-  tid: Target.Id
+  uid:       User.Id,
+  tid:       Target.Id,
+  searching: View[Set[Target.Id]]
 ) extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
@@ -55,7 +56,12 @@ object TargetEditor {
         ) { targetOpt =>
           targetOpt.get.map { _ =>
             val stateView = ViewF.fromState[IO]($).zoom(State.options)
-            TargetBody(props.uid, props.tid, targetOpt.zoom(_.get)(f => _.map(f)), stateView)
+            TargetBody(props.uid,
+                       props.tid,
+                       targetOpt.zoom(_.get)(f => _.map(f)),
+                       props.searching,
+                       stateView
+            )
           }
         }
       }

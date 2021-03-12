@@ -7,5 +7,5 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Target
 
 package object model {
-  type AimId = Either[Asterism.Id, Target.Id]
+  type PointingId = Either[Asterism.Id, Target.Id]
 }
