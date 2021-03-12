@@ -5,10 +5,12 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -31,7 +33,7 @@ import scalajs.js.JSConverters._
 
 final case class SearchForm(
   id:          Target.Id,
-  name:        View[NonEmptyString],
+  name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback => Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
@@ -54,6 +56,7 @@ object SearchForm {
   @Lenses
   final case class State(
     initialName:   NonEmptyString,
+    searchTerm:    NonEmptyString,
     searchEnabled: Boolean,
     searchError:   Option[NonEmptyString]
   )
@@ -63,18 +66,18 @@ object SearchForm {
 
   class Backend($ : BackendScope[Props, State]) {
 
-    def render(props: Props, state: State) = {
+    def render(props: Props, state: State) = AppCtx.withCtx { implicit ctx =>
       val searchComplete: IO[Unit] = props.searching.mod(_ - props.id)
 
       val search: Callback =
         props
           .submit(
-            props.name.get,
+            state.searchTerm,
             $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id).runAsyncCB,
             t =>
               searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
                 NonEmptyString
-                  .unsafeFrom(s"'${abbreviate(props.name.get, 10)}' not found")
+                  .unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found")
                   .some
               )).when_(t.isEmpty),
             _ =>
@@ -111,7 +114,7 @@ object SearchForm {
         ExploreStyles.SearchForm,
         FormInputEV(
           id = "search",
-          value = props.name,
+          value = ViewF.fromState[IO]($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           label = "Name",
           error = state.searchError.orUndefined,
@@ -133,12 +136,12 @@ object SearchForm {
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
-        val propsName = props.name.get
         stateOpt match {
-          case Some(state) if state.initialName === propsName => state
-          case _                                              => // Initialize or reset.
+          case Some(state) if state.initialName === props.name => state
+          case _                                               => // Initialize or reset.
             State(
-              initialName = propsName,
+              initialName = props.name,
+              searchTerm = props.name,
               searchEnabled = true,
               searchError = stateOpt.flatMap(_.searchError)
             )

@@ -144,10 +144,18 @@ object TargetBody {
               .attempt
               .runAsyncAndThenCB {
                 case Right(r @ Some(Target(n, Right(st), m))) =>
-                  allView.set((n, st, m.values.toList)).runAsyncCB *> s.onComplete(r)
-                case Right(Some(r))                           => Callback.log(s"Unknown target type $r") *> s.onComplete(none)
-                case Right(None)                              => s.onComplete(none)
-                case Left(t)                                  => s.onError(t)
+                  allView.set((n, st, m.values.toList)).runAsyncCB >>
+                    s.onComplete(r)
+                case Right(Some(r))                           =>
+                  Callback.log(s"Unknown target type $r") >>
+                    nameView.set(s.searchTerm).runAsyncCB >>
+                    s.onComplete(none)
+                case Right(None)                              =>
+                  nameView.set(s.searchTerm).runAsyncCB >>
+                    s.onComplete(none)
+                case Left(t)                                  =>
+                  nameView.set(s.searchTerm).runAsyncCB >>
+                    s.onError(t)
               }
 
           val disabled = props.searching.get.exists(_ === props.id)
@@ -161,7 +169,10 @@ object TargetBody {
                 // Keep the search field and the coords always together
                 SearchForm(
                   props.id,
-                  nameView,
+                  // SearchForm doesn't edit the name directly. It will set it atomically, together
+                  // with coords & magnitudes from the catalog search, so that all 3 fields are
+                  // a single undo/redo operation.
+                  props.target.zoom(unsafeTargetName).get,
                   props.searching,
                   searchAndSet
                 ),
