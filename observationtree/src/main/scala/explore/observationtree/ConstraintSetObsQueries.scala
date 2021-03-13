@@ -10,14 +10,12 @@ import clue.macros.GraphQL
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas._
-// import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.{ Constants, ObsSummary }
 import explore.model.reusability._
 import io.circe.{ Decoder, HCursor }
-// import io.scalaland.chimney.dsl._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.{ ConstraintSet, Observation }
@@ -44,13 +42,6 @@ object ConstraintSetObsQueries {
         } yield ConstraintSetIdName(id, name)
     }
   }
-
-  // @Lenses
-  // case class ObsForConstraintSet(
-  //   id:              Observation.Id,
-  //   name:            Option[String],
-  //   constraintSetId: ConstraintSet.Id
-  // )
 
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintSetIdName]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummary]
