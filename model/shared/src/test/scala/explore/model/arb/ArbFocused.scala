@@ -24,7 +24,7 @@ import lucuma.core.util.arb.ArbGid._
 trait ArbFocused {
   implicit val focusedArb: Arbitrary[Focused] =
     Arbitrary(
-      oneOf(focusedObsGen, focusedTargetGen)
+      oneOf(focusedObsGen, focusedTargetGen, focusedAsterismGen, focusedConstraintSetGen)
     )
 
   val focusedObsGen: Gen[Focused.FocusedObs] =
@@ -36,7 +36,7 @@ trait ArbFocused {
   val focusedAsterismGen: Gen[Focused.FocusedAsterism] =
     arbitrary[Asterism.Id].map(FocusedAsterism.apply)
 
-  val focusedConstraintSet: Gen[Focused.FocusedConstraintSet] =
+  val focusedConstraintSetGen: Gen[Focused.FocusedConstraintSet] =
     arbitrary[ConstraintSet.Id].map(FocusedConstraintSet.apply)
 
   implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
@@ -48,7 +48,7 @@ trait ArbFocused {
   implicit val focusedAsterismCogen: Cogen[Focused.FocusedAsterism] =
     Cogen[Asterism.Id].contramap(_.asterismId)
 
-  implicit val focusedConstraintSetCoget: Cogen[Focused.FocusedConstraintSet] =
+  implicit val focusedConstraintSetCogen: Cogen[Focused.FocusedConstraintSet] =
     Cogen[ConstraintSet.Id].contramap(_.constraintSetId)
 
   implicit val focusedCogen: Cogen[Focused] =

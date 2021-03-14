@@ -175,17 +175,6 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationEdit(programId: "p-2") {
-          id
-        }
-      }    
-    """
-  }
-
-  @GraphQL
   object UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: EditObservationInput!) {
@@ -354,7 +343,7 @@ object TargetObsQueries {
           NonEmptyList.of(
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
-            ObservationEditSubscription.subscribe[IO]()
+            ObsQueries.ProgramObservationsEditSubscription.subscribe[IO]()
           )
         )(render)
       }

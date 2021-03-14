@@ -6,12 +6,13 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.{ AppCtx, UnderConstruction }
+import explore.{ AppCtx, Icons, UnderConstruction }
 import explore.common.UserPreferencesQueries._
-import explore.components.Tile
+import explore.components.{ Tile, TileButton }
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
+import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintSetObsList
 import explore.observationtree.ConstraintSetObsQueries._
@@ -20,12 +21,16 @@ import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.{ ConstraintSet, User }
 import lucuma.ui.reusability._
+import lucuma.ui.utils._
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
 import react.resizeDetector.ResizeDetector
+import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
@@ -36,7 +41,9 @@ final case class ConstraintSetTabContents(
   expandedIds: View[SortedSet[ConstraintSet.Id]],
   size:        ResizeDetector.Dimensions
 ) extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
-  def isCsSelected: Boolean = focused.get.isDefined
+  def isCsSelected: Boolean = focused.get.collect { case Focused.FocusedConstraintSet(_) =>
+    ()
+  }.isDefined
 }
 
 object ConstraintSetTabContents {
@@ -88,11 +95,22 @@ object ConstraintSetTabContents {
               ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
             )
 
+          val backButton = TileButton(
+            Button(
+              as = <.a,
+              size = Mini,
+              compact = true,
+              basic = true,
+              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+            )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
+          )
+
           ConstraintSetObsLiveQuery { constraintSetsWithObs =>
             val coreWidth  = props.size.width.getOrElse(0) - treeWidth
             val coreHeight = props.size.height.getOrElse(0)
 
-            val rightSide = Tile("Constraints", none)(UnderConstruction())
+            val rightSide = Tile("Constraints", backButton.some)(UnderConstruction())
 
             if (window.innerWidth <= Constants.TwoPanelCutoff) {
               <.div(

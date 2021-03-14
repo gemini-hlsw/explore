@@ -111,17 +111,6 @@ object ConstraintSetObsQueries {
   }
 
   @GraphQL
-  object ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationEdit(programId: "p-2") {
-          id
-        }
-      }    
-    """
-  }
-
-  @GraphQL
   object RemoveConstraintSet extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($constraintSetId: ConstraintSetId!) {
@@ -187,7 +176,7 @@ object ConstraintSetObsQueries {
           ConstraintSetsObsQuery.Data.asConstraintSetsWithObs.get,
           NonEmptyList.of(
             CostraintSetEditSubscription.subscribe[IO](),
-            ObservationEditSubscription.subscribe[IO]()
+            ObsQueries.ProgramObservationsEditSubscription.subscribe[IO]()
           )
         )(render)
       }

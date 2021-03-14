@@ -25,7 +25,7 @@ object Test extends AppMain {
           TargetObsList(
             targetsWithObs,
             view.zoom(RootModel.focused),
-            view.zoom(RootModel.targetViewExpandedIds),
+            view.zoom(RootModel.expandedIds),
             view.zoom(RootModel.searchingTarget)
           )
         )

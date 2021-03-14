@@ -31,7 +31,7 @@ import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
 import explore.model.PointingId
-import explore.model.TargetViewExpandedIds
+import explore.model.ExpandedIds
 import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.optics._
@@ -70,7 +70,7 @@ import TargetObsQueries._
 final case class TargetObsList(
   aimsWithObs: View[TargetsAndAsterismsWithObs],
   focused:     View[Option[Focused]],
-  expandedIds: View[TargetViewExpandedIds],
+  expandedIds: View[ExpandedIds],
   searching:   View[Set[Target.Id]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
 
@@ -176,7 +176,7 @@ object TargetObsList {
 
     protected def onDragEnd(
       setter:      Undoer.Setter[IO, TargetsAndAsterismsWithObs],
-      expandedIds: View[TargetViewExpandedIds]
+      expandedIds: View[ExpandedIds]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => IO[Unit] =
@@ -208,11 +208,11 @@ object TargetObsList {
                     case UnassignedObsId            =>
                       set(none.some)
                     case Target.Id(newTargetId)     =>
-                      expandedIds.zoom(TargetViewExpandedIds.targetIds).mod(_ + newTargetId) >>
+                      expandedIds.zoom(ExpandedIds.targetIds).mod(_ + newTargetId) >>
                         set(newTargetId.asRight.some.some)
                     case Asterism.Id(newAsterismId) =>
                       expandedIds
-                        .zoom(TargetViewExpandedIds.asterismIds)
+                        .zoom(ExpandedIds.asterismIds)
                         .mod(_ + newAsterismId) >>
                         set(newAsterismId.asLeft.some.some)
 
@@ -228,7 +228,7 @@ object TargetObsList {
                             .getElement(targetId)
                             .foldMap(target =>
                               expandedIds
-                                .zoom(TargetViewExpandedIds.asterismIds)
+                                .zoom(ExpandedIds.asterismIds)
                                 .mod(_ + asterismId) >>
                                 addTargetToAsterism(props.aimsWithObs, target, asterismId, setter)
                             )
@@ -618,7 +618,7 @@ object TargetObsList {
                         val targetObs = obsByAim.get(targetId.asRight.some).orEmpty
 
                         val expandedTargetIds =
-                          props.expandedIds.zoom(TargetViewExpandedIds.targetIds)
+                          props.expandedIds.zoom(ExpandedIds.targetIds)
                         val opIcon            =
                           targetObs.nonEmpty.fold(
                             Icon(
@@ -748,7 +748,7 @@ object TargetObsList {
                         val asterismObs     = obsByAim.get(asterismId.asLeft.some).orEmpty
 
                         val expandedAsterismIds =
-                          props.expandedIds.zoom(TargetViewExpandedIds.asterismIds)
+                          props.expandedIds.zoom(ExpandedIds.asterismIds)
                         val opIcon              =
                           (asterismObs.nonEmpty || asterismTargets.nonEmpty).fold(
                             Icon(
@@ -911,8 +911,8 @@ object TargetObsList {
       .renderBackend[Backend]
       .componentDidMount { $ =>
         val aimsWithObs         = $.props.aimsWithObs.get
-        val expandedTargetIds   = $.props.expandedIds.zoom(TargetViewExpandedIds.targetIds)
-        val expandedAsterismIds = $.props.expandedIds.zoom(TargetViewExpandedIds.asterismIds)
+        val expandedTargetIds   = $.props.expandedIds.zoom(ExpandedIds.targetIds)
+        val expandedAsterismIds = $.props.expandedIds.zoom(ExpandedIds.asterismIds)
 
         // Expand target or asterism with focused observation
         val expandObservationObject =

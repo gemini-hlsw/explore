@@ -21,7 +21,7 @@ object reusability {
   implicit val constraintsReuse: Reusability[Constraints]                            = Reusability.derive
   implicit val expObsReuse: Reusability[ExploreObservation]                          = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq
-  implicit val targetViewExpandedIdsReuse: Reusability[TargetViewExpandedIds]        = Reusability.byEq
+  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                  = Reusability.byEq
   implicit val rootModelReuse: Reusability[RootModel]                                = Reusability.byEq
   implicit def sizeReuse: Reusability[Size]                                          = Reusability.by(x => (x.height, x.width))
   implicit def focusedReuse: Reusability[Focused]                                    = Reusability.derive

@@ -3,14 +3,12 @@
 
 package explore.model
 
-import cats.Order._
 import cats.kernel.Eq
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
@@ -20,17 +18,16 @@ import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option
 
-import scala.collection.immutable.{ HashSet, SortedSet }
+import scala.collection.immutable.HashSet
 
 @Lenses
 case class RootModel(
-  vault:                        Option[UserVault],
-  tabs:                         EnumZipper[AppTab],
-  focused:                      Option[Focused] = none,
-  targetViewExpandedIds:        TargetViewExpandedIds = TargetViewExpandedIds(),
-  searchingTarget:              Set[Target.Id] = HashSet.empty,
-  constraintSetViewExpandedIds: SortedSet[ConstraintSet.Id] = SortedSet.empty,
-  userSelectionMessage:         Option[NonEmptyString] = none
+  vault:                Option[UserVault],
+  tabs:                 EnumZipper[AppTab],
+  focused:              Option[Focused] = none,
+  expandedIds:          ExpandedIds = ExpandedIds(),
+  searchingTarget:      Set[Target.Id] = HashSet.empty,
+  userSelectionMessage: Option[NonEmptyString] = none
 )
 
 object RootModel {
@@ -51,13 +48,6 @@ object RootModel {
 
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>
-      (m.vault,
-       m.tabs,
-       m.focused,
-       m.targetViewExpandedIds,
-       m.searchingTarget,
-       m.constraintSetViewExpandedIds,
-       m.userSelectionMessage
-      )
+      (m.vault, m.tabs, m.focused, m.expandedIds, m.searchingTarget, m.userSelectionMessage)
     )
 }

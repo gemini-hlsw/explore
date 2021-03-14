@@ -44,7 +44,7 @@ object Routing {
         model.zoom(RootModel.userId),
         model.zoom(RootModel.focused),
         model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.targetViewExpandedIds),
+        model.zoom(RootModel.expandedIds),
         size
       )
     }
@@ -60,10 +60,13 @@ object Routing {
 
   private def constraintSetTab(model: View[RootModel]): VdomElement =
     withSize(size =>
-      ConstraintSetTabContents(model.zoom(RootModel.userId),
-                               model.zoom(RootModel.focused),
-                               model.zoom(RootModel.constraintSetViewExpandedIds),
-                               size
+      ConstraintSetTabContents(
+        model.zoom(RootModel.userId),
+        model.zoom(RootModel.focused),
+        model.zoom(
+          RootModel.expandedIds.composeLens(ExpandedIds.constraintSetIds)
+        ),
+        size
       )
     )
 

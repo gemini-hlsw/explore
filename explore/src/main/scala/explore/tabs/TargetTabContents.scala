@@ -40,13 +40,15 @@ import react.semanticui.sizes._
 import scala.concurrent.duration._
 
 final case class TargetTabContents(
-  userId:                ViewOpt[User.Id],
-  focused:               View[Option[Focused]],
-  searching:             View[Set[Target.Id]],
-  targetViewExpandedIds: View[TargetViewExpandedIds],
-  size:                  ResizeDetector.Dimensions
+  userId:      ViewOpt[User.Id],
+  focused:     View[Option[Focused]],
+  searching:   View[Set[Target.Id]],
+  expandedIds: View[ExpandedIds],
+  size:        ResizeDetector.Dimensions
 ) extends ReactProps[TargetTabContents](TargetTabContents.component) {
-  def isTargetSelected: Boolean = focused.get.isDefined
+  def isTargetSelected: Boolean = focused.get.collect { case Focused.FocusedTarget(_) =>
+    ()
+  }.isDefined
 }
 
 object TargetTabContents {
@@ -100,7 +102,7 @@ object TargetTabContents {
               TargetObsList(
                 objectsWithObs,
                 props.focused,
-                props.targetViewExpandedIds,
+                props.expandedIds,
                 props.searching
               )
             )
