@@ -73,6 +73,9 @@ final case class TargetObsList(
   expandedIds: View[ExpandedIds],
   searching:   View[Set[Target.Id]]
 ) extends ReactProps[TargetObsList](TargetObsList.component)
+    with ViewCommon {
+  override def obsBadgeLayout = ObsBadge.Layout.ConfAndConstraints
+}
 
 object TargetObsList {
   type Props = TargetObsList
@@ -491,18 +494,6 @@ object TargetObsList {
           .fold(expanded - id, expanded + id)
       }.runAsyncCB
 
-    // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
-    def getDraggedStyle(style:   TagMod, snapshot: Draggable.StateSnapshot): TagMod =
-      if (!snapshot.isDragging)
-        TagMod.empty
-      else if (!snapshot.isDropAnimating)
-        style
-      else
-        TagMod(style, ^.transitionDuration := "0.001s")
-
-    def getListStyle(isDragging: Boolean): TagMod =
-      ExploreStyles.DraggingOver.when(isDragging)
-
     def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations = props.aimsWithObs.get.observations
       val obsByAim     = observations.toList.groupBy(_.pointingId)
@@ -516,40 +507,12 @@ object TargetObsList {
 
       val unassignedObs = obsByAim.get(none).orEmpty
 
-      def renderObsBadge(obs: ObsSummary): TagMod =
-        ObsBadge(obs,
-                 ObsBadge.Layout.ConfAndConstraints,
-                 selected = props.focused.get.exists(_ === FocusedObs(obs.id))
-        )
-
-      def renderObsBadgeItem(obs: ObsSummary, idx: Int): TagMod =
-        <.div(ExploreStyles.ObsTreeItem)(
-          Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
-            <.div(
-              provided.innerRef,
-              provided.draggableProps,
-              getDraggedStyle(
-                provided.draggableStyle,
-                snapshot
-              ),
-              ^.onClick ==> { e: ReactEvent =>
-                e.stopPropagationCB >>
-                  props.focused.set(FocusedObs(obs.id).some).runAsyncCB
-              }
-            )(
-              <.span(provided.dragHandleProps)(
-                renderObsBadge(obs)
-              )
-            )
-          }
-        )
-
       val renderClone: Draggable.Render =
         (provided, snapshot, rubric) => {
           <.div(provided.innerRef,
                 provided.draggableProps,
                 provided.dragHandleProps,
-                getDraggedStyle(provided.draggableStyle, snapshot)
+                props.getDraggedStyle(provided.draggableStyle, snapshot)
           )(
             (Target.Id
               .parse(rubric.draggableId)
@@ -558,7 +521,7 @@ object TargetObsList {
                 targets
                   .getElement(targetId)
                   .map(target => Card(raised = true)(CardContent(target.name.value)).vdomElement)
-              case Left(Some(obsId)) => observations.getElement(obsId).map(renderObsBadge)
+              case Left(Some(obsId)) => observations.getElement(obsId).map(props.renderObsBadge)
               case _                 => none
             }).getOrElse(<.span("ERROR"))
           )
@@ -673,7 +636,7 @@ object TargetObsList {
                             <.div(
                               provided.innerRef,
                               provided.droppableProps,
-                              getListStyle(
+                              props.getListStyle(
                                 snapshot.draggingOverWith.exists(id =>
                                   Observation.Id.parse(id).isDefined
                                 )
@@ -708,8 +671,8 @@ object TargetObsList {
                                       <.span(
                                         targetProvided.innerRef,
                                         targetProvided.draggableProps,
-                                        getDraggedStyle(targetProvided.draggableStyle,
-                                                        targetSnapshot
+                                        props.getDraggedStyle(targetProvided.draggableStyle,
+                                                              targetSnapshot
                                         ),
                                         targetProvided.dragHandleProps
                                       )(
@@ -719,7 +682,7 @@ object TargetObsList {
                                 TagMod
                                   .when(expandedTargetIds.get.contains(targetId))(
                                     targetObs.zipWithIndex.toTagMod(
-                                      (renderObsBadgeItem _).tupled
+                                      (props.renderObsBadgeItem _).tupled
                                     )
                                   ),
                                 provided.placeholder
@@ -773,7 +736,7 @@ object TargetObsList {
                           <.div(
                             provided.innerRef,
                             provided.droppableProps,
-                            getListStyle(snapshot.isDraggingOver)
+                            props.getListStyle(snapshot.isDraggingOver)
                           )(
                             Segment(
                               vertical = true,
@@ -849,7 +812,7 @@ object TargetObsList {
                                       )
                                   ).when(asterismTargets.nonEmpty),
                                   asterismObs.zipWithIndex.toTagMod(
-                                    (renderObsBadgeItem _).tupled
+                                    (props.renderObsBadgeItem _).tupled
                                   )
                                 )
                               ),
@@ -879,14 +842,14 @@ object TargetObsList {
                         <.div(
                           provided.innerRef,
                           provided.droppableProps,
-                          getListStyle(snapshot.isDraggingOver)
+                          props.getListStyle(snapshot.isDraggingOver)
                         )(
                           Segment(
                             vertical = true,
                             clazz = ExploreStyles.ObsTreeGroup
                           )(
                             unassignedObs.zipWithIndex.toTagMod(
-                              (renderObsBadgeItem _).tupled
+                              (props.renderObsBadgeItem _).tupled
                             ),
                             provided.placeholder
                           )

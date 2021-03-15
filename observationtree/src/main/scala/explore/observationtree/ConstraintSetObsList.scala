@@ -16,7 +16,6 @@ import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
-import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
@@ -47,6 +46,9 @@ final case class ConstraintSetObsList(
   focused:               View[Option[Focused]],
   expandedIds:           View[SortedSet[ConstraintSet.Id]]
 ) extends ReactProps[ConstraintSetObsList](ConstraintSetObsList.component)
+    with ViewCommon {
+  override val obsBadgeLayout = ObsBadge.Layout.NameAndConf
+}
 
 object ConstraintSetObsList {
   type Props = ConstraintSetObsList
@@ -143,18 +145,6 @@ object ConstraintSetObsList {
         .mod(expanded => expanded.exists(_ === id).fold(expanded - id, expanded + id))
         .runAsyncCB
 
-    // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
-    def getDraggedStyle(style:   TagMod, snapshot: Draggable.StateSnapshot): TagMod =
-      if (!snapshot.isDragging)
-        TagMod.empty
-      else if (!snapshot.isDropAnimating)
-        style
-      else
-        TagMod(style, ^.transitionDuration := "0.001s")
-
-    def getListStyle(isDragging: Boolean): TagMod =
-      ExploreStyles.DraggingOver.when(isDragging)
-
     def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations       = props.constraintSetsWithObs.get.obs
       val obsByConstraintSet = observations.toList.groupBy(_.constraintSetId)
@@ -164,36 +154,15 @@ object ConstraintSetObsList {
 
       val unassignedObs = obsByConstraintSet.get(none).orEmpty
 
-      def renderObsBadge(obs: ObsSummary): TagMod =
-        ObsBadge(
-          obs,
-          ObsBadge.Layout.ConfAndConstraints,
-          selected = props.focused.get.exists(_ === FocusedObs(obs.id))
-        )
-
-      def renderObsBadgeItem(obs: ObsSummary, idx: Int): TagMod =
-        <.div(ExploreStyles.ObsTreeItem)(
-          Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
-            <.div(
-              provided.innerRef,
-              provided.draggableProps,
-              getDraggedStyle(provided.draggableStyle, snapshot),
-              ^.onClick ==> { e: ReactEvent =>
-                e.stopPropagationCB >> props.focused.set(FocusedObs(obs.id).some).runAsyncCB
-              }
-            )(<.span(provided.dragHandleProps)(renderObsBadge(obs)))
-          }
-        )
-
       val renderClone: Draggable.Render =
         (provided, snapshot, rubric) => {
           <.div(provided.innerRef,
                 provided.draggableProps,
                 provided.dragHandleProps,
-                getDraggedStyle(provided.draggableStyle, snapshot)
+                props.getDraggedStyle(provided.draggableStyle, snapshot)
           )(
             (Observation.Id.parse(rubric.draggableId) match {
-              case Some(obsId) => observations.getElement(obsId).map(renderObsBadge)
+              case Some(obsId) => observations.getElement(obsId).map(props.renderObsBadge)
               case _           => none
             }).getOrElse(<.span("ERROR"))
           )
@@ -248,13 +217,6 @@ object ConstraintSetObsList {
 
                         Droppable(csId.toString, renderClone = renderClone) {
                           case (provided, snapshot) =>
-                            // To implement "copy-drag", we use suggestion from
-                            // https://github.com/atlassian/react-beautiful-dnd/issues/216#issuecomment-586266295
-                            // val shouldRenderClone =
-                            //   snapshot.draggingFromThisWith.exists(
-                            //     _ === csId.toString
-                            //   )
-
                             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
                               // TODO: Give it its own style?
                               <.span(ExploreStyles.TargetLabelTitle)(
@@ -267,7 +229,7 @@ object ConstraintSetObsList {
                             <.div(
                               provided.innerRef,
                               provided.droppableProps,
-                              getListStyle(
+                              props.getListStyle(
                                 snapshot.draggingOverWith.exists(id =>
                                   Observation.Id.parse(id).isDefined
                                 )
@@ -295,7 +257,7 @@ object ConstraintSetObsList {
                                 csHeader,
                                 TagMod.when(props.expandedIds.get.contains(csId))(
                                   csObs.zipWithIndex.toTagMod(
-                                    (renderObsBadgeItem _).tupled
+                                    (props.renderObsBadgeItem _).tupled
                                   )
                                 ),
                                 <.span(provided.placeholder)
@@ -326,14 +288,14 @@ object ConstraintSetObsList {
                           <.div(
                             provided.innerRef,
                             provided.droppableProps,
-                            getListStyle(snapshot.isDraggingOver)
+                            props.getListStyle(snapshot.isDraggingOver)
                           )(
                             Segment(
                               vertical = true,
                               clazz = ExploreStyles.ObsTreeGroup
                             )(
                               unassignedObs.zipWithIndex.toTagMod(
-                                (renderObsBadgeItem _).tupled
+                                (props.renderObsBadgeItem _).tupled
                               ),
                               provided.placeholder
                             )
