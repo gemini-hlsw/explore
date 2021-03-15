@@ -57,7 +57,7 @@ final case class ObsTabContents(
   searching: View[Set[Target.Id]],
   size:      ResizeDetector.Dimensions
 ) extends ReactProps[ObsTabContents](ObsTabContents.component) {
-  def isObsSelected: Boolean = focused.get.isDefined
+  def isObsSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) => () }.isDefined
 }
 
 object ObsTabContents {
@@ -218,7 +218,7 @@ object ObsTabContents {
           }.flatten
 
           val targetId = obsSummaryOpt.collect {
-            case ObsSummary(_, _, _, _, _, _, Some(Right(tid))) =>
+            case ObsSummary(_, _, _, _, _, _, Some(Right(tid)), _) =>
               tid
           }
 

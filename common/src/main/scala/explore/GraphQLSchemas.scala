@@ -10,6 +10,7 @@ import explore.model.ResizableSection
 import explore.model.SiderealTarget
 import explore.model.enum._
 import lucuma.core.model.Asterism
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Magnitude
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -22,15 +23,16 @@ object GraphQLSchemas {
   @GraphQLSchema(debug = false)
   object ObservationDB {
     object Scalars {
-      type AsterismId    = Asterism.Id
-      type BigDecimal    = scala.BigDecimal
-      type DmsString     = String
-      type EpochString   = String
-      type HmsString     = String
-      type Long          = scala.Long
-      type ObservationId = Observation.Id
-      type ProgramId     = String
-      type TargetId      = Target.Id
+      type AsterismId      = Asterism.Id
+      type BigDecimal      = scala.BigDecimal
+      type ConstraintSetId = ConstraintSet.Id
+      type DmsString       = String
+      type EpochString     = String
+      type HmsString       = String
+      type Long            = scala.Long
+      type ObservationId   = Observation.Id
+      type ProgramId       = String
+      type TargetId        = Target.Id
     }
 
     object Enums {

@@ -117,6 +117,9 @@ object TargetObsQueries {
               ... on Asterism {
                 asterism_id: id
               }
+            }
+            constraintSet {
+              id
             }            
           }
         }
@@ -165,17 +168,6 @@ object TargetObsQueries {
     val document = """
       subscription {
         asterismEdit(programId: "p-2") {
-          id
-        }
-      }    
-    """
-  }
-
-  @GraphQL
-  object ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        observationEdit(programId: "p-2") {
           id
         }
       }    
@@ -351,7 +343,7 @@ object TargetObsQueries {
           NonEmptyList.of(
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
-            ObservationEditSubscription.subscribe[IO]()
+            ObsQueries.ProgramObservationsEditSubscription.subscribe[IO]()
           )
         )(render)
       }

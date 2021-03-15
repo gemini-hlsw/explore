@@ -6,17 +6,19 @@ package explore.model
 import cats.Order._
 import cats._
 import lucuma.core.model.Asterism
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Target
 import monocle.macros.Lenses
 
 import scala.collection.immutable.SortedSet
 
 @Lenses
-case class TargetViewExpandedIds(
-  targetIds:   SortedSet[Target.Id] = SortedSet.empty,
-  asterismIds: SortedSet[Asterism.Id] = SortedSet.empty
+case class ExpandedIds(
+  targetIds:        SortedSet[Target.Id] = SortedSet.empty,
+  asterismIds:      SortedSet[Asterism.Id] = SortedSet.empty,
+  constraintSetIds: SortedSet[ConstraintSet.Id] = SortedSet.empty
 )
 
-object TargetViewExpandedIds {
-  implicit val eqTargetViewExpandedIds: Eq[TargetViewExpandedIds] = Eq.fromUniversalEquals
+object ExpandedIds {
+  implicit val eqExpandedIds: Eq[ExpandedIds] = Eq.fromUniversalEquals
 }

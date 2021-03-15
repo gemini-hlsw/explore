@@ -17,7 +17,11 @@ object ResizableSection {
     val value = "observations_tree"
   }
 
+  case object ConstraintSetsTree extends ResizableSection {
+    val value = "constraintsets_tree"
+  }
+
   /** @group Typeclass Instances */
   implicit val ResizableSectionEnumerated: Enumerated[ResizableSection] =
-    Enumerated.of(TargetsTree, ObservationsTree)
+    Enumerated.of(TargetsTree, ObservationsTree, ConstraintSetsTree)
 }

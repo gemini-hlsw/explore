@@ -130,7 +130,8 @@ object ObsList {
       val newObs = IO(Random.nextInt()).map(int =>
         ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                    name.some,
-                   pointingId = none
+                   pointingId = none,
+                   constraintSetId = none
         )
       )
 

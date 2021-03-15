@@ -6,25 +6,20 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.AppCtx
-import explore.Icons
+import explore.{ AppCtx, Icons, UnderConstruction }
 import explore.common.UserPreferencesQueries._
-import explore.components.Tile
-import explore.components.TileButton
+import explore.components.{ Tile, TileButton }
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.observationtree.TargetObsList
-import explore.observationtree.TargetObsQueries._
-import explore.targeteditor.TargetEditor
+import explore.observationtree.ConstraintSetObsList
+import explore.observationtree.ConstraintSetObsQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
-import lucuma.core.model.User
+import lucuma.core.model.{ ConstraintSet, User }
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -37,22 +32,22 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
+import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
-final case class TargetTabContents(
+final case class ConstraintSetTabContents(
   userId:      ViewOpt[User.Id],
   focused:     View[Option[Focused]],
-  searching:   View[Set[Target.Id]],
-  expandedIds: View[ExpandedIds],
+  expandedIds: View[SortedSet[ConstraintSet.Id]],
   size:        ResizeDetector.Dimensions
-) extends ReactProps[TargetTabContents](TargetTabContents.component) {
-  def isTargetSelected: Boolean = focused.get.collect { case Focused.FocusedTarget(_) =>
+) extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
+  def isCsSelected: Boolean = focused.get.collect { case Focused.FocusedConstraintSet(_) =>
     ()
   }.isDefined
 }
 
-object TargetTabContents {
-  type Props = TargetTabContents
+object ConstraintSetTabContents {
+  type Props = ConstraintSetTabContents
   type State = TwoPanelState
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
@@ -60,7 +55,7 @@ object TargetTabContents {
   def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
     AppCtx.flatMap { implicit ctx =>
       UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
-                                          ResizableSection.TargetsTree,
+                                          ResizableSection.ConstraintSetsTree,
                                           Constants.InitialTreeWidth.toInt
       ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)
     }.runAsyncCB
@@ -70,10 +65,9 @@ object TargetTabContents {
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => TwoPanelState.initial(p.isTargetSelected)
+          case None    => TwoPanelState.initial(p.isCsSelected)
           case Some(s) =>
-            if (s.elementSelected =!= p.isTargetSelected)
-              s.copy(elementSelected = p.isTargetSelected)
+            if (s.elementSelected =!= p.isCsSelected) s.copy(elementSelected = p.isCsSelected)
             else s
         }
       )
@@ -84,27 +78,21 @@ object TargetTabContents {
               ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>
                 UserWidthsCreation
                   .storeWidthPreference[IO](props.userId.get,
-                                            ResizableSection.TargetsTree,
+                                            ResizableSection.ConstraintSetsTree,
                                             d.size.width
                   )).runAsyncCB
                 .debounce(1.second)
 
           val treeWidth = state.treeWidth.toInt
 
-          // Tree area
-          def tree(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
+          def tree(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
             <.div(^.width := treeWidth.px,
                   ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
-            )(treeInner(objectsWithObs))
+            )(treeInner(constraintSetsWithObs))
 
-          def treeInner(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
+          def treeInner(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
             <.div(ExploreStyles.TreeBody)(
-              TargetObsList(
-                objectsWithObs,
-                props.focused,
-                props.expandedIds,
-                props.searching
-              )
+              ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
             )
 
           val backButton = TileButton(
@@ -115,37 +103,21 @@ object TargetTabContents {
               basic = true,
               clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
               onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
-            )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
+            )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
           )
 
-          TargetObsLiveQuery { objectsWithObs =>
-            val targetIdOpt = props.focused.get.collect {
-              case FocusedTarget(targetId) => targetId.some
-              case FocusedObs(obsId)       =>
-                objectsWithObs.get.observations
-                  .getElement(obsId)
-                  .flatMap(_.pointingId.flatMap(_.toOption))
-            }.flatten
-
+          ConstraintSetObsLiveQuery { constraintSetsWithObs =>
             val coreWidth  = props.size.width.getOrElse(0) - treeWidth
             val coreHeight = props.size.height.getOrElse(0)
 
-            val rightSide =
-              Tile(s"Target", backButton.some)(
-                (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
-                  TargetEditor(uid, tid, props.searching).withKey(tid.show)
-                }
-              )
+            val rightSide = Tile("Constraints", backButton.some)(UnderConstruction())
 
-            // It would be nice to make a single component here but it gets hard when you
-            // have the resizable element. Instead we have either two panels with a resizable
-            // or only one panel at a time (Mobile)
             if (window.innerWidth <= Constants.TwoPanelCutoff) {
               <.div(
                 ExploreStyles.TreeRGL,
-                <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
+                <.div(ExploreStyles.Tree, treeInner(constraintSetsWithObs))
                   .when(state.leftPanelVisible),
-                <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
+                <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
                   rightSide
                 ).when(state.rightPanelVisible)
               )
@@ -160,10 +132,10 @@ object TargetTabContents {
                   maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
                   onResize = treeResize,
                   resizeHandles = List(ResizeHandleAxis.East),
-                  content = tree(objectsWithObs),
+                  content = tree(constraintSetsWithObs),
                   clazz = ExploreStyles.ResizableSeparator
                 ),
-                <.div(^.key := "target-right-side",
+                <.div(^.key := "constraintset-right-side",
                       ExploreStyles.SinglePanelTile,
                       ^.width := coreWidth.px,
                       ^.left := treeWidth.px
@@ -178,5 +150,4 @@ object TargetTabContents {
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build
-
 }

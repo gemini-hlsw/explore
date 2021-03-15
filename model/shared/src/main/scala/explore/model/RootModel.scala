@@ -22,12 +22,12 @@ import scala.collection.immutable.HashSet
 
 @Lenses
 case class RootModel(
-  vault:                 Option[UserVault],
-  tabs:                  EnumZipper[AppTab],
-  focused:               Option[Focused] = none,
-  targetViewExpandedIds: TargetViewExpandedIds = TargetViewExpandedIds(),
-  searchingTarget:       Set[Target.Id] = HashSet.empty,
-  userSelectionMessage:  Option[NonEmptyString] = none
+  vault:                Option[UserVault],
+  tabs:                 EnumZipper[AppTab],
+  focused:              Option[Focused] = none,
+  expandedIds:          ExpandedIds = ExpandedIds(),
+  searchingTarget:      Set[Target.Id] = HashSet.empty,
+  userSelectionMessage: Option[NonEmptyString] = none
 )
 
 object RootModel {
@@ -48,12 +48,6 @@ object RootModel {
 
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>
-      (m.vault,
-       m.tabs,
-       m.focused,
-       m.targetViewExpandedIds,
-       m.searchingTarget,
-       m.userSelectionMessage
-      )
+      (m.vault, m.tabs, m.focused, m.expandedIds, m.searchingTarget, m.userSelectionMessage)
     )
 }
