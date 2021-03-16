@@ -72,7 +72,7 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObservationCardHeader,
                   props.layout match {
-                    case NameAndConf        => obs.name.orEmpty
+                    case NameAndConf        => obs.name.fold("")(_.value)
                     case ConfAndConstraints => obs.conf
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)

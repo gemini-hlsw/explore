@@ -108,7 +108,7 @@ object TargetBody {
             undoViewSet(TargetResult.magnitudes, TargetQueries.updateMagnitudes)
 
           val nameView = undoViewSet(
-            unsafeTargetName,
+            TargetResult.name,
             (EditSiderealInput.name.set _).compose((_: NonEmptyString).value.assign)
           )
 
@@ -172,7 +172,7 @@ object TargetBody {
                   // SearchForm doesn't edit the name directly. It will set it atomically, together
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
-                  props.target.zoom(unsafeTargetName).get,
+                  props.target.zoom(TargetResult.name).get,
                   props.searching,
                   searchAndSet
                 ),

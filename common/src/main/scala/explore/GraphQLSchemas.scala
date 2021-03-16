@@ -6,9 +6,11 @@ package explore
 import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ResizableSection
 import explore.model.SiderealTarget
 import explore.model.enum._
+import io.circe.refined._
 import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Magnitude

@@ -94,8 +94,8 @@ object TargetObsList {
       c:               TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       (to match {
-        case Some(Right(targetId))  => ShareTargetWithObs.execute(targetId, obsId)
-        case Some(Left(asterismId)) => ShareAsterismWithObs.execute(asterismId, obsId)
+        case Some(Right(targetId))  => AssignTargetToObs.execute(targetId, obsId)
+        case Some(Left(asterismId)) => AssignAsterismToObs.execute(asterismId, obsId)
         case None                   => UnassignObs.execute(obsId)
       }).void
 
@@ -108,7 +108,7 @@ object TargetObsList {
       c:                     TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       AddTarget
-        .execute(target.id, target.name.value)
+        .execute(target.id, target.name)
         .handleErrorWith { _ =>
           UndeleteTarget.execute(target.id)
         }
@@ -123,7 +123,7 @@ object TargetObsList {
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       AddAsterism
-        .execute(asterism.id, asterism.name.value)
+        .execute(asterism.id, asterism.name)
         .handleErrorWith { _ =>
           UndeleteAsterism.execute(asterism.id)
         }

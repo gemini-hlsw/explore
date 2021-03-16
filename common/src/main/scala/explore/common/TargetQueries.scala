@@ -20,6 +20,7 @@ import explore.model.decoders._
 import explore.optics._
 import explore.undo.UndoableView
 import explore.undo.Undoer
+import io.circe.refined._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
@@ -104,14 +105,6 @@ object TargetQueries {
     baseCoordinates ^|-> Coordinates.declination
 
   /**
-   * Lens to the name of a sidereal target
-   */
-  val unsafeTargetName: Lens[TargetResult, NonEmptyString] =
-    TargetResult.name ^|-> Lens[String, NonEmptyString](x =>
-      NonEmptyString.from(x).getOrElse(Constants.UnnamedTarget)
-    )(s => _ => s.value)
-
-  /**
    * Lens used to change name and coordinates of a target
    */
   val targetPropsL =
@@ -121,7 +114,7 @@ object TargetQueries {
        t.magnitudes
       )
     )(s =>
-      TargetResult.name.set(s._1.value) >>>
+      TargetResult.name.set(s._1) >>>
         TargetResult.tracking.set(s._2) >>>
         TargetResult.magnitudes.set(s._3)
     )

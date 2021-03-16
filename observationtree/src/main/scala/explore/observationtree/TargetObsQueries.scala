@@ -18,6 +18,7 @@ import explore.model.ObsSummary
 import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.HCursor
+import io.circe.refined._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -188,7 +189,7 @@ object TargetObsQueries {
   @GraphQL
   object AddTarget extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($targetId: TargetId!, $name: String!) {
+      mutation($targetId: TargetId!, $name: NonEmptyString!) {
         createSiderealTarget(input:{
           targetId: $targetId,
           name: $name,
@@ -227,7 +228,7 @@ object TargetObsQueries {
   @GraphQL
   object AddAsterism extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($asterismId: AsterismId!, $name: String!) {
+      mutation($asterismId: AsterismId!, $name: NonEmptyString!) {
         createAsterism(input:{
           asterismId: $asterismId,
           name: $name,
@@ -262,10 +263,10 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object ShareTargetWithObs extends GraphQLOperation[ObservationDB] {
+  object AssignTargetToObs extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($targetId: TargetId!, $obsId: ObservationId!) {
-        shareTargetWithObservations(
+        updatePointing(
           input: { targetId: $targetId, observationIds: [$obsId] }
         ) {
           id
@@ -275,10 +276,10 @@ object TargetObsQueries {
   }
 
   @GraphQL
-  object ShareAsterismWithObs extends GraphQLOperation[ObservationDB] {
+  object AssignAsterismToObs extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($asterismId: AsterismId!, $obsId: ObservationId!) {
-        shareAsterismWithObservations(
+        updatePointing(
           input: { asterismId: $asterismId, observationIds: [$obsId] }
         ) {
           id
