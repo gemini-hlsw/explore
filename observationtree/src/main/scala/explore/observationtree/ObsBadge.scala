@@ -14,6 +14,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
+import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.button.Button
@@ -72,7 +73,7 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObservationCardHeader,
                   props.layout match {
-                    case NameAndConf        => obs.name.fold("")(_.value)
+                    case NameAndConf        => obs.name.fold("--------")(_.value)
                     case ConfAndConstraints => obs.conf
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)

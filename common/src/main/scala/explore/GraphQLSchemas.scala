@@ -6,7 +6,6 @@ package explore
 import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ResizableSection
 import explore.model.SiderealTarget
 import explore.model.enum._
@@ -35,6 +34,7 @@ object GraphQLSchemas {
       type ObservationId   = Observation.Id
       type ProgramId       = String
       type TargetId        = Target.Id
+      type NonEmptyString  = eu.timepit.refined.types.string.NonEmptyString
     }
 
     object Enums {

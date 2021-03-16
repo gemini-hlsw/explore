@@ -10,12 +10,10 @@ import clue.GraphQLOperation
 import clue.data.syntax._
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas.ObservationDB.Implicits._
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.GraphQLSchemas._
 import explore.implicits._
-import explore.model.Constants
 import explore.model.decoders._
 import explore.optics._
 import explore.undo.UndoableView
@@ -107,17 +105,7 @@ object TargetQueries {
   /**
    * Lens used to change name and coordinates of a target
    */
-  val targetPropsL =
-    Lens[TargetResult, (NonEmptyString, SiderealTracking, List[Magnitude])](t =>
-      (NonEmptyString.from(t.name).getOrElse(Constants.UnnamedTarget),
-       TargetResult.tracking.get(t),
-       t.magnitudes
-      )
-    )(s =>
-      TargetResult.name.set(s._1) >>>
-        TargetResult.tracking.set(s._2) >>>
-        TargetResult.magnitudes.set(s._3)
-    )
+  val targetPropsL = disjointZip(TargetResult.name, TargetResult.tracking, TargetResult.magnitudes)
 
   val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
     TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO

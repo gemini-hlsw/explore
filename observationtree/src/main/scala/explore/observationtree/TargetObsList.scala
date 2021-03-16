@@ -26,7 +26,6 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.Constants
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
@@ -287,32 +286,31 @@ object TargetObsList {
         )
     }
 
-    protected def newTarget(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(name: String)(
-      implicit
-      c:                            TransactionalClient[IO, ObservationDB],
-      cs:                           ContextShift[IO]
+    protected def newTarget(
+      setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs]
+    )(name:   NonEmptyString)(implicit
+      c:      TransactionalClient[IO, ObservationDB],
+      cs:     ContextShift[IO]
     ): IO[Unit] =
-      ($.propsIn[IO],
-       IO(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1)),
-       IO(NonEmptyString.unsafeFrom(name))
-      ).parTupled.flatMap { case (props, posLong, nonEmptyName) =>
-        val newTarget = TargetIdName(Target.Id(posLong), nonEmptyName)
-        val mod       = targetMod(setter, props.aimsWithObs, props.focused, newTarget.id, none)
-        (
-          mod(targetListMod.upsert(newTarget, props.aimsWithObs.get.targets.length)),
-          props.searching.mod(_ + newTarget.id) >>
-            SimbadSearch
-              .search(nonEmptyName)
-              .attempt
-              .guarantee(props.searching.mod(_ - newTarget.id))
-        ).parTupled.flatMap {
-          case (_, Right(Some(Target(_, Right(st), m)))) =>
-            val update = TargetQueries.UpdateSiderealTracking(st) >>>
-              TargetQueries.updateMagnitudes(m.values.toList)
-            TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
-          case _                                         =>
-            IO.unit
-        }
+      ($.propsIn[IO], IO(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).parTupled.flatMap {
+        case (props, posLong) =>
+          val newTarget = TargetIdName(Target.Id(posLong), name)
+          val mod       = targetMod(setter, props.aimsWithObs, props.focused, newTarget.id, none)
+          (
+            mod(targetListMod.upsert(newTarget, props.aimsWithObs.get.targets.length)),
+            props.searching.mod(_ + newTarget.id) >>
+              SimbadSearch
+                .search(name)
+                .attempt
+                .guarantee(props.searching.mod(_ - newTarget.id))
+          ).parTupled.flatMap {
+            case (_, Right(Some(Target(_, Right(st), m)))) =>
+              val update = TargetQueries.UpdateSiderealTracking(st) >>>
+                TargetQueries.updateMagnitudes(m.values.toList)
+              TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
+            case _                                         =>
+              IO.unit
+          }
       }
 
     protected def deleteTarget(
@@ -327,13 +325,15 @@ object TargetObsList {
         mod(targetListMod.delete)
       }
 
-    protected def newAsterism(setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs])(name: String)(
-      implicit c:                     TransactionalClient[IO, ObservationDB]
+    protected def newAsterism(
+      setter: Undoer.Setter[IO, TargetsAndAsterismsWithObs]
+    )(name:   NonEmptyString)(implicit
+      c:      TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newAsterism = IO(Random.nextInt()).map(int =>
         AsterismIdName(Asterism.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                       NonEmptyString.from(name).getOrElse(Constants.UnnamedAsterism),
+                       name,
                        KeyedIndexedList.empty
         )
       )
@@ -540,7 +540,7 @@ object TargetObsList {
               <.div(
                 InputModal(
                   "Create new Target",
-                  initialValue = "",
+                  initialValue = None,
                   label = "Name",
                   placeholder = "Target name",
                   okLabel = "Create",
@@ -552,7 +552,7 @@ object TargetObsList {
                 ),
                 InputModal(
                   "Create new Asterism",
-                  initialValue = "",
+                  initialValue = None,
                   label = "Name",
                   placeholder = "Asterism name",
                   okLabel = "Create",

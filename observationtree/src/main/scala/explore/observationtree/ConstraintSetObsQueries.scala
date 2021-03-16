@@ -13,9 +13,11 @@ import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.{ Constants, ObsSummary }
+import explore.model.ObsSummary
 import explore.model.reusability._
-import io.circe.{ Decoder, HCursor }
+import io.circe.Decoder
+import io.circe.refined._
+import io.circe.generic.semiauto._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.{ ConstraintSet, Observation }
@@ -29,18 +31,7 @@ object ConstraintSetObsQueries {
   case class ConstraintSetIdName(id: ConstraintSet.Id, name: NonEmptyString)
 
   object ConstraintSetIdName {
-    implicit val decoder: Decoder[ConstraintSetIdName] = new Decoder[ConstraintSetIdName] {
-      final def apply(c: HCursor): Decoder.Result[ConstraintSetIdName] =
-        for {
-          id   <- c.downField("id").as[ConstraintSet.Id]
-          name <- c.downField("name")
-                    .as[Option[String]]
-                    .map(
-                      _.flatMap(name => NonEmptyString.from(name).toOption)
-                        .getOrElse(Constants.UnnamedConstraintSet)
-                    )
-        } yield ConstraintSetIdName(id, name)
-    }
+    implicit val decoder: Decoder[ConstraintSetIdName] = deriveDecoder
   }
 
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintSetIdName]

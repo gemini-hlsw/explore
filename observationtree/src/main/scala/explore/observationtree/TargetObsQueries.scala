@@ -13,12 +13,12 @@ import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.Constants
 import explore.model.ObsSummary
 import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.HCursor
 import io.circe.refined._
+import io.circe.generic.semiauto._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -33,19 +33,7 @@ object TargetObsQueries {
   @Lenses
   case class TargetIdName(id: Target.Id, name: NonEmptyString)
   object TargetIdName {
-    implicit val decoder: Decoder[TargetIdName] = new Decoder[TargetIdName] {
-      final def apply(c: HCursor): Decoder.Result[TargetIdName] =
-        for {
-          id   <- c.downField("id").as[Target.Id]
-          name <-
-            c.downField("name")
-              .as[Option[String]]
-              .map(
-                _.flatMap(name => NonEmptyString.from(name).toOption)
-                  .getOrElse(Constants.UnnamedTarget)
-              )
-        } yield TargetIdName(id, name)
-    }
+    implicit val decoder: Decoder[TargetIdName] = deriveDecoder
   }
 
   @Lenses
@@ -59,13 +47,7 @@ object TargetObsQueries {
       final def apply(c: HCursor): Decoder.Result[AsterismIdName] =
         for {
           id      <- c.downField("id").as[Asterism.Id]
-          name    <-
-            c.downField("name")
-              .as[Option[String]]
-              .map(
-                _.flatMap(name => NonEmptyString.from(name).toOption)
-                  .getOrElse(Constants.UnnamedAsterism)
-              )
+          name    <- c.downField("name").as[NonEmptyString]
           targets <- c.downField("targets").downField("nodes").as[List[TargetIdName]]
         } yield AsterismIdName(id, name, KeyedIndexedList.fromList(targets, TargetIdName.id.get))
     }
@@ -139,9 +121,6 @@ object TargetObsQueries {
       object Observations {
         type Nodes = ObsSummary
       }
-
-      private def asterismName(name: Option[String]): NonEmptyString =
-        name.flatMap(n => NonEmptyString.from(n).toOption).getOrElse(Constants.UnnamedAsterism)
 
       val asTargetsWithObs: Getter[Data, TargetsAndAsterismsWithObs] = data => {
         TargetsAndAsterismsWithObs(

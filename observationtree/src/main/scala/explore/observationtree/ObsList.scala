@@ -124,13 +124,13 @@ object ObsList {
         )
     }
 
-    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: String)(implicit
+    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: NonEmptyString)(implicit
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt()).map(int =>
         ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                   NonEmptyString.from(name).toOption,
+                   name.some,
                    pointingId = none,
                    constraintSetId = none
         )
@@ -172,7 +172,7 @@ object ObsList {
               <.div(
                 InputModal(
                   "Create new Observation",
-                  initialValue = "",
+                  initialValue = None,
                   label = "Name",
                   placeholder = "Observation name",
                   okLabel = "Create",
