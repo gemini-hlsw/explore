@@ -11,6 +11,7 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
@@ -59,7 +60,7 @@ object ObsList {
 
     def createObservation[F[_]](
       obsId: Observation.Id,
-      name:  Option[String]
+      name:  Option[NonEmptyString]
     )(implicit
       F:     ApplicativeError[F, Throwable],
       c:     TransactionalClient[F, ObservationDB]
@@ -123,7 +124,7 @@ object ObsList {
         )
     }
 
-    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: String)(implicit
+    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: NonEmptyString)(implicit
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
@@ -171,7 +172,7 @@ object ObsList {
               <.div(
                 InputModal(
                   "Create new Observation",
-                  initialValue = "",
+                  initialValue = None,
                   label = "Name",
                   placeholder = "Observation name",
                   okLabel = "Create",

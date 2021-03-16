@@ -15,7 +15,7 @@ type Asterism {
   existence: Existence!
 
   # Asterism name, if any.
-  name: String
+  name: NonEmptyString
 
   # When set, overrides the default base position of the asterism
   explicitBase: Coordinates
@@ -92,12 +92,6 @@ type AsterismEdit implements Event {
 
 # AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
 scalar AsterismId
-
-# Asterism and the observations with which it is associated
-input AsterismObservationLinks {
-  asterismId: AsterismId!
-  observationIds: [ObservationId!]!
-}
 
 # Asterism and the programs with which it is associated
 input AsterismProgramLinks {
@@ -199,7 +193,7 @@ type ConstraintSet {
   ): Program!
 
   # Constraint set name
-  name: String!
+  name: NonEmptyString!
 
   # Image quality
   imageQuality: ImageQuality!
@@ -297,7 +291,7 @@ input CreateAirmassRangeInput {
 # Asterism parameters
 input CreateAsterismInput {
   asterismId: AsterismId
-  name: String
+  name: NonEmptyString
   programIds: [ProgramId!]!
   explicitBase: CoordinatesInput
 }
@@ -306,7 +300,7 @@ input CreateAsterismInput {
 input CreateConstraintSetInput {
   constraintSetId: ConstraintSetId
   programId: ProgramId!
-  name: String!
+  name: NonEmptyString!
   imageQuality: ImageQuality!
   cloudExtinction: CloudExtinction!
   skyBackground: SkyBackground!
@@ -330,7 +324,7 @@ input CreateHourAngleRangeInput {
 input CreateNonsiderealInput {
   targetId: TargetId
   programIds: [ProgramId!]
-  name: String!
+  name: NonEmptyString!
   key: EphemerisKeyType!
   des: String!
   magnitudes: [MagnitudeInput!]
@@ -340,7 +334,7 @@ input CreateNonsiderealInput {
 input CreateObservationInput {
   observationId: ObservationId
   programId: ProgramId!
-  name: String
+  name: NonEmptyString
   asterismId: AsterismId
   targetId: TargetId
   status: ObsStatus
@@ -350,7 +344,7 @@ input CreateObservationInput {
 input CreateSiderealInput {
   targetId: TargetId
   programIds: [ProgramId!]
-  name: String!
+  name: NonEmptyString!
   catalogId: CatalogIdInput
   ra: RightAscensionInput!
   dec: DeclinationInput!
@@ -445,7 +439,7 @@ input EditAsterismInput {
   existence: Existence
 
   # The name field may be unset by assigning a null value, or ignored by skipping it altogether
-  name: String
+  name: NonEmptyString
 
   # The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
   explicitBase: CoordinatesInput
@@ -459,7 +453,7 @@ input EditConstraintSetInput {
   existence: Existence
 
   # The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  name: String
+  name: NonEmptyString
 
   # The imageQuality field must be either specified or skipped altogether.  It cannot be unset with a null value.
   imageQuality: ImageQuality
@@ -485,7 +479,7 @@ input EditObservationInput {
   existence: Existence
 
   # The name field may be unset by assigning a null value, or ignored by skipping it altogether
-  name: String
+  name: NonEmptyString
 
   # The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
   status: ObsStatus
@@ -494,6 +488,13 @@ input EditObservationInput {
   asterismId: AsterismId
 
   # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
+  targetId: TargetId
+}
+
+# Edit the target or asterism for a set of observations
+input EditObservationPointingInput {
+  observationIds: [ObservationId!]!
+  asterismId: AsterismId
   targetId: TargetId
 }
 
@@ -1634,6 +1635,10 @@ type Mutation {
     # Edit observation
     input: EditObservationInput!
   ): Observation!
+  updatePointing(
+    # Edit observation asterism / target
+    input: EditObservationPointingInput!
+  ): [Observation!]!
   deleteObservation(
     # Observation ID
     observationId: ObservationId!
@@ -1666,14 +1671,6 @@ type Mutation {
     # Target ID
     targetId: TargetId!
   ): Target!
-  shareAsterismWithObservations(
-    # Asterism / observation links
-    input: AsterismObservationLinks!
-  ): Asterism!
-  unshareAsterismWithObservations(
-    # Asterism / observation links
-    input: AsterismObservationLinks!
-  ): Asterism!
   shareAsterismWithPrograms(
     # Asterism / program links
     input: AsterismProgramLinks!
@@ -1698,14 +1695,6 @@ type Mutation {
     # Target / asterism links
     input: TargetAsterismLinks!
   ): Target!
-  shareTargetWithObservations(
-    # Target / observation links
-    input: TargetObservationLinks!
-  ): Target!
-  unshareTargetWithObservations(
-    # Target / observation links
-    input: TargetObservationLinks!
-  ): Target!
   shareTargetWithPrograms(
     # Target / program links
     input: TargetProgramLinks!
@@ -1724,6 +1713,9 @@ type Mutation {
   ): ConstraintSet!
 }
 
+# A String value that cannot be empty
+scalar NonEmptyString
+
 type Nonsidereal {
   # Human readable designation that discriminates among ephemeris keys of the same type.
   des: String!
@@ -1740,7 +1732,7 @@ type Observation {
   existence: Existence!
 
   # Observation name
-  name: String
+  name: NonEmptyString
 
   # Observation status
   status: ObsStatus!
@@ -1938,7 +1930,7 @@ type Program {
   existence: Existence!
 
   # Program name
-  name: String
+  name: NonEmptyString
 
   # All asterisms associated with the program (needs pagination).
   asterisms(
@@ -2505,7 +2497,7 @@ type Target {
   ): ProgramConnection!
 
   # Target name.
-  name: String!
+  name: NonEmptyString!
 
   # Information required to find a target in the sky.
   tracking: Tracking!
@@ -2552,12 +2544,6 @@ type TargetEdit implements Event {
 
 # TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
 scalar TargetId
-
-# Target and the observations with which it is associated
-input TargetObservationLinks {
-  targetId: TargetId!
-  observationIds: [ObservationId!]!
-}
 
 # Target and the programs with which it is associated
 input TargetProgramLinks {

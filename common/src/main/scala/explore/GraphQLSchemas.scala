@@ -9,6 +9,7 @@ import clue.macros.GraphQLSchema
 import explore.model.ResizableSection
 import explore.model.SiderealTarget
 import explore.model.enum._
+import io.circe.refined._
 import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Magnitude
@@ -33,6 +34,7 @@ object GraphQLSchemas {
       type ObservationId   = Observation.Id
       type ProgramId       = String
       type TargetId        = Target.Id
+      type NonEmptyString  = eu.timepit.refined.types.string.NonEmptyString
     }
 
     object Enums {

@@ -95,7 +95,7 @@ object AndOrTest {
       ObsBadge(
         obs = ObsSummary(
           id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
-          name = obs.target.name.value.some,
+          name = obs.target.name.some,
           pointingId = None,
           constraintSetId = None
         ),

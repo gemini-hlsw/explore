@@ -5,12 +5,15 @@ package explore.model
 
 import cats._
 import cats.syntax.all._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ObsStatus
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.HCursor
 import io.circe.Json
 import io.circe.JsonObject
+import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
@@ -24,7 +27,7 @@ import java.time.temporal.ChronoUnit
 @Lenses
 final case class ObsSummary(
   id:              Observation.Id,
-  name:            Option[String],
+  name:            Option[NonEmptyString],
   status:          ObsStatus = ObsStatus.New,
   conf:            String = "GMOS-N R831 1x300",
   constraints:     String = "<0.7\" <0.3 mag Bright",
@@ -85,7 +88,7 @@ object ObsSummary {
     final def apply(c: HCursor): Decoder.Result[ObsSummary] =
       for {
         id         <- c.downField("id").as[Observation.Id]
-        name       <- c.downField("name").as[Option[String]]
+        name       <- c.downField("name").as[Option[NonEmptyString]]
         pointingId <- c.downField("observationTarget").as[Option[PointingId]]
         cs         <- c.downField("constraintSet").as[Option[CS]]
       } yield ObsSummary(id, name, pointingId = pointingId, constraintSetId = cs.map(_.id))

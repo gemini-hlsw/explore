@@ -7,6 +7,7 @@ import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
 import explore.implicits._
@@ -14,6 +15,7 @@ import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.elements.button.Button
@@ -25,12 +27,12 @@ import react.semanticui.sizes.Small
  */
 final case class InputModal(
   title:        String,
-  initialValue: String,
+  initialValue: Option[NonEmptyString],
   label:        String,
   placeholder:  String,
   okLabel:      String,
   trigger:      VdomNode,
-  onComplete:   String => Callback
+  onComplete:   NonEmptyString => Callback
 ) extends ReactProps[InputModal](InputModal.component)
 
 object InputModal {
@@ -45,7 +47,7 @@ object InputModal {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialStateFromProps(p => State(p.initialValue))
+      .initialStateFromProps(p => State(p.initialValue.fold("")(_.value)))
       .renderPS { ($, props, state) =>
         AppCtx.withCtx { implicit appCtx =>
           val valueView = ViewF.fromState[IO]($).zoom(State.inputValue)
@@ -55,10 +57,13 @@ object InputModal {
           Modal(
             as = <.form,      // This lets us sumbit on enter
             actions = List(
-              Button(size = Small,
-                     primary = true,
-                     disabled = state.inputValue.isEmpty,
-                     onClick = cleanInput *> props.onComplete(state.inputValue)
+              Button(
+                size = Small,
+                primary = true,
+                disabled = state.inputValue.isEmpty,
+                onClick = cleanInput *> props.onComplete(
+                  NonEmptyString.from(state.inputValue).getOrElse("------")
+                )
               )(
                 Icons.Checkmark,
                 props.okLabel
