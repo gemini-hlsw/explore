@@ -58,12 +58,12 @@ object TargetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
-    AppCtx.flatMap { implicit ctx =>
-      UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
-                                          ResizableSection.TargetsTree,
-                                          Constants.InitialTreeWidth.toInt
-      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)
-    }.runAsyncCB
+    AppCtx.runWithCtx { implicit ctx =>
+      (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+                                           ResizableSection.TargetsTree,
+                                           Constants.InitialTreeWidth.toInt
+      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
+    }
 
   protected val component =
     ScalaComponent
@@ -78,7 +78,7 @@ object TargetTabContents {
         }
       )
       .renderPS { ($, props, state) =>
-        AppCtx.withCtx { implicit ctx =>
+        AppCtx.runWithCtx { implicit ctx =>
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
               ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>

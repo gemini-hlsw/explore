@@ -6,7 +6,8 @@ package explore.utils
 import cats._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
-import explore._
+import explore.AppCtx
+import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.util.Display
@@ -42,13 +43,15 @@ object ReactTableHelpers {
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>
-        FormInputEV(id = newId,
-                    value = va.zoom(lens),
-                    validFormat = validFormat,
-                    changeAuditor = changeAuditor,
-                    disabled = disabled,
-                    modifiers = modifiers
-        )
+        AppCtx.runWithCtx { implicit ctx =>
+          FormInputEV(id = newId,
+                      value = va.zoom(lens),
+                      validFormat = validFormat,
+                      changeAuditor = changeAuditor,
+                      disabled = disabled,
+                      modifiers = modifiers
+          )
+        }
       }
       .build
       .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)
@@ -73,13 +76,16 @@ object ReactTableHelpers {
       .builder[View[A]]
       .render_P { va =>
         val excluded = excludeFn.fold(Set.empty[B])(_.apply(va))
-        EnumViewSelect(id = newId,
-                       value = va.zoom(lens),
-                       exclude = excluded,
-                       compact = true,
-                       disabled = disabled,
-                       modifiers = modifiers
-        )
+
+        AppCtx.runWithCtx { implicit ctx =>
+          EnumViewSelect(id = newId,
+                         value = va.zoom(lens),
+                         exclude = excluded,
+                         compact = true,
+                         disabled = disabled,
+                         modifiers = modifiers
+          )
+        }
       }
       .build
       .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)

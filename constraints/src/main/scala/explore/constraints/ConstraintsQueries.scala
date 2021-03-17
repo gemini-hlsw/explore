@@ -101,7 +101,7 @@ object ConstraintsQueries {
     id:     Constraints.Id
   )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
     ???
-  // AppCtx.withCtx { implicit appCtx =>
+  // AppCtx.runWithCtx { implicit appCtx =>
   //   SubscriptionRenderMod[Subscription.Data, Constraints](
   //     Subscription.subscribe(id),
   //     _.map(

@@ -3,15 +3,18 @@
 
 package explore.observationtree
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
-import explore.model.{ Focused, ObsSummary }
-import explore.model.Focused._
 import explore.components.ui.ExploreStyles
+import explore.model.Focused
+import explore.model.Focused._
+import explore.model.ObsSummary
 import japgolly.scalajs.react.ReactEvent
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
+import org.typelevel.log4cats.Logger
 import react.beautifuldnd._
 
 trait ViewCommon {
@@ -25,7 +28,7 @@ trait ViewCommon {
       selected = focused.get.exists(_ === FocusedObs(obs.id))
     )
 
-  def renderObsBadgeItem(obs: ObsSummary, idx: Int): TagMod =
+  def renderObsBadgeItem(obs: ObsSummary, idx: Int)(implicit logger: Logger[IO]): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(

@@ -45,7 +45,7 @@ object ConstraintsPanel {
           val undoViewZoom =
             UndoViewZoom($.props.id, constraints, undoCtx.setter)
 
-          AppCtx.withCtx { implicit appCtx =>
+          AppCtx.runWithCtx { implicit appCtx =>
             def selectEnum[A: Enumerated: Display](
               label:  String,
               lens:   Lens[Constraints, A],

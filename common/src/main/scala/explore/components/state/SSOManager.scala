@@ -61,22 +61,27 @@ object SSOManager {
     .initialState(State(none))
     .renderBackend[Backend]
     .componentDidMount { $ =>
-      $.backend
-        .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
-        .runCancelable {
-          case Left(t) =>
-            AppCtx.flatMap(implicit ctx => Logger[IO].error(t)("Error refreshing SSO token")) >>
-              $.props.setVault(none) >>
-              $.props.setMessage("There was an error while checking the validity of your session")
-          case _       => IO.unit
-        }
-        .toIO
-        .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.some)))
-        .runAsyncCB
+      AppCtx.runWithCtx { implicit ctx =>
+        $.backend
+          .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
+          .runCancelable {
+            case Left(t) =>
+              Logger[IO].error(t)("Error refreshing SSO token") >>
+                $.props.setVault(none) >>
+                $.props.setMessage("There was an error while checking the validity of your session")
+            case _       => IO.unit
+          }
+          .toIO
+          .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.some)))
+          .runAsyncCB
+      }
     }
     .componentWillUnmount($ =>
       // Setting vault to none is defensive. This component should actually unmount when vault is none.
-      $.state.cancelToken.map(cancel => (cancel >> $.props.setVault(none))).orEmpty.runAsyncCB
+      $.state.cancelToken
+        .map(cancel => (cancel >> $.props.setVault(none)))
+        .orEmpty
+        .runAsyncAndForgetCB
     )
     .shouldComponentUpdateConst(false)
     .build

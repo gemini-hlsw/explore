@@ -74,7 +74,7 @@ object MagnitudeForm {
         val props = $.props
         val state = $.state
 
-        AppCtx.withCtx { implicit ctx =>
+        AppCtx.runWithCtx { implicit ctx =>
           val newBandView: Option[View[MagnitudeBand]] =
             state.newBand.map(band =>
               ViewF(band,

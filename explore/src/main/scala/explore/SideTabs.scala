@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -36,7 +37,7 @@ object SideTabs {
       .builder[Props]
       .stateless
       .render_P { p =>
-        AppCtx.withCtx { ctx =>
+        AppCtx.runWithCtx { implicit ctx =>
           val tabsL = p.tabs.get.toNel
           val focus = p.tabs.get.focus
 

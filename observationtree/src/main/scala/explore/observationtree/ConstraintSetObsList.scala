@@ -7,11 +7,12 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.implicits._
-import explore.GraphQLSchemas.ObservationDB
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.components.undo.{ UndoButtons, UndoRegion }
+import explore.components.undo.UndoButtons
+import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.Focused
@@ -21,10 +22,11 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import lucuma.core.model.{ ConstraintSet, Observation }
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
@@ -153,12 +155,11 @@ object ConstraintSetObsList {
     def toggleExpanded(
       id:          ConstraintSet.Id,
       expandedIds: View[SortedSet[ConstraintSet.Id]]
-    ): Callback =
+    ): IO[Unit] =
       expandedIds
         .mod(expanded => expanded.exists(_ === id).fold(expanded - id, expanded + id))
-        .runAsyncCB
 
-    def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
+    def render(props: Props, state: State): VdomElement = AppCtx.runWithCtx { implicit ctx =>
       val observations       = props.constraintSetsWithObs.get.obs
       val obsByConstraintSet = observations.toList.groupBy(_.constraints.map(_.id))
 
@@ -217,9 +218,10 @@ object ConstraintSetObsList {
                               .fold("down", "right")
                           )(^.cursor.pointer,
                             ^.onClick ==> { e: ReactEvent =>
-                              e.stopPropagationCB >> toggleExpanded(csId, props.expandedIds)
-                                .asEventDefault(e)
-                                .void
+                              e.stopPropagationCB >>
+                                toggleExpanded(csId, props.expandedIds).runAsyncCB
+                                  .asEventDefault(e)
+                                  .void
                             }
                           ),
                           Icons.ChevronRight
@@ -333,26 +335,28 @@ object ConstraintSetObsList {
       .initialState(State())
       .renderBackend[Backend]
       .componentDidMount { $ =>
-        val constraintSetsWithObs = $.props.constraintSetsWithObs.get
-        val expandedIds           = $.props.expandedIds
+        AppCtx.runWithCtx { implicit ctx =>
+          val constraintSetsWithObs = $.props.constraintSetsWithObs.get
+          val expandedIds           = $.props.expandedIds
 
-        // expand constraint set with focused observation
-        val expandCs = $.props.focused.get
-          .collect { case FocusedObs(obsId) =>
-            constraintSetsWithObs.obs
-              .getElement(obsId)
-              .flatMap(_.constraints.map(c => expandedIds.mod(_ + c.id)))
-          }
-          .flatten
-          .orEmpty
-
-        // Remove contraint sets from expanded list which no longer exist.
-        val removeConstraintSets =
-          (expandedIds.get -- constraintSetsWithObs.constraintSets.toList.map(_.id)).toNes
-            .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
+          // expand constraint set with focused observation
+          val expandCs = $.props.focused.get
+            .collect { case FocusedObs(obsId) =>
+              constraintSetsWithObs.obs
+                .getElement(obsId)
+                .flatMap(_.constraints.map(c => expandedIds.mod(_ + c.id)))
+            }
+            .flatten
             .orEmpty
 
-        (expandCs >> removeConstraintSets).runAsyncCB
+          // Remove contraint sets from expanded list which no longer exist.
+          val removeConstraintSets =
+            (expandedIds.get -- constraintSetsWithObs.constraintSets.toList.map(_.id)).toNes
+              .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
+              .orEmpty
+
+          (expandCs >> removeConstraintSets).runAsyncCB
+        }
       }
       .build
 }

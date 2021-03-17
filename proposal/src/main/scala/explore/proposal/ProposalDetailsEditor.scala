@@ -112,7 +112,7 @@ object ProposalDetailsEditor {
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) =
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         val splitsZoom = ViewF.fromState[IO]($).zoom(State.splits)
 
         val details      = props.proposalDetails

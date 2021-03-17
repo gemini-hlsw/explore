@@ -16,7 +16,8 @@ import explore.model.{ ConstraintsSummary, ObsSummary }
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ ConstraintSet, Observation }
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.macros.Lenses
@@ -157,7 +158,7 @@ object ConstraintSetObsQueries {
 
   val ConstraintSetObsLiveQuery: LiveQueryRenderer =
     render =>
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),
           ConstraintSetsObsQuery.Data.asConstraintSetsWithObs.get,

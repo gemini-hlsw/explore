@@ -26,11 +26,11 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.data.KeyedIndexedList
 import explore.implicits._
+import explore.model.ExpandedIds
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
 import explore.model.PointingId
-import explore.model.ExpandedIds
 import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.optics._
@@ -487,14 +487,14 @@ object TargetObsList {
     def toggleExpanded[A: Eq](
       id:          A,
       expandedIds: View[SortedSet[A]]
-    ): Callback =
+    ): IO[Unit] =
       expandedIds.mod { expanded =>
         expanded
           .exists(_ === id)
           .fold(expanded - id, expanded + id)
-      }.runAsyncCB
+      }
 
-    def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
+    def render(props: Props, state: State): VdomElement = AppCtx.runWithCtx { implicit ctx =>
       val observations = props.aimsWithObs.get.observations
       val obsByAim     = observations.toList.groupBy(_.pointingId)
 
@@ -591,7 +591,7 @@ object TargetObsList {
                             )(^.cursor.pointer,
                               ^.onClick ==> { e: ReactEvent =>
                                 e.stopPropagationCB >>
-                                  toggleExpanded(targetId, expandedTargetIds)
+                                  toggleExpanded(targetId, expandedTargetIds).runAsyncCB
                                     .asEventDefault(e)
                                     .void
                               }
@@ -721,7 +721,7 @@ object TargetObsList {
                             )(^.cursor.pointer,
                               ^.onClick ==> { e: ReactEvent =>
                                 e.stopPropagationCB >>
-                                  toggleExpanded(asterismId, expandedAsterismIds)
+                                  toggleExpanded(asterismId, expandedAsterismIds).runAsyncCB
                                     .asEventDefault(e)
                                     .void
                               }
@@ -905,7 +905,7 @@ object TargetObsList {
             .map(removedAsterismIds => expandedAsterismIds.mod(_ -- removedAsterismIds.toSortedSet))
             .orEmpty
 
-        (expandObservationObject >> removeTargets >> removeAsterisms).runAsyncCB
+        (expandObservationObject >> removeTargets >> removeAsterisms).runAsyncAndForgetCB
       }
       .build
 }

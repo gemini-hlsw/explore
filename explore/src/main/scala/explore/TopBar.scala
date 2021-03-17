@@ -11,6 +11,7 @@ import explore.WebpackResources
 import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import japgolly.scalajs.react.MonocleReact._
@@ -63,9 +64,8 @@ object TopBar {
         val p            = $.props
         val currentTheme = $.state.theme
 
-        AppCtx.withCtx { implicit appCtx =>
-          implicit val cs = appCtx.cs
-          val role        = p.user.role
+        AppCtx.runWithCtx { implicit appCtx =>
+          val role = p.user.role
 
           def logout: IO[Unit] =
             appCtx.sso.logout >> p.logout

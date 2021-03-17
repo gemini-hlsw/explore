@@ -83,7 +83,7 @@ object AladinCell extends ModelOptics {
                 props.options.get,
                 $.setStateL(State.current)(_),
                 fov =>
-                  AppCtx.withCtx { implicit ctx =>
+                  AppCtx.runWithCtx { implicit ctx =>
                     $.setStateL(State.fov)(fov) *> UserTargetPreferencesUpsert
                       .updateFov[IO](props.uid, props.tid, fov.x)
                       .runAsyncAndForgetCB

@@ -75,7 +75,8 @@ object Render {
       def apply[P <: Props[F, G, D, A], S <: State[F, G, D, A]](
         $ : ComponentWillUnmount[P, Option[S], Unit]
       ): Callback = {
-        implicit val F = $.props.F
+        implicit val F      = $.props.F
+        implicit val logger = $.props.logger
 
         $.state.map(_.subscription.stop().runAsyncCB).getOrEmpty
       }
@@ -179,7 +180,8 @@ object Render {
       def apply[P <: Props[F, G, S, D, A], ST <: State[F, G, S, D, A]](
         $ : ComponentWillUnmount[P, Option[ST], Unit]
       ): Callback = {
-        implicit val F = $.props.F
+        implicit val F      = $.props.F
+        implicit val logger = $.props.logger
 
         $.state
           .map(state =>
