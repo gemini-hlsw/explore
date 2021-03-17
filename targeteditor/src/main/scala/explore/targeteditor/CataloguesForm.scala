@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.data.NonEmptyList
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -56,57 +57,59 @@ object CataloguesForm {
     ScalaComponent
       .builder[Props]
       .render { $ =>
-        val optionsV = $.props.options
-        val options  = optionsV.get
-        Form(size = Small)(
-          ExploreStyles.Grid,
-          ExploreStyles.Compact,
-          ExploreStyles.CatalogueForm,
-          FormDropdown(
-            label = "Catalogues",
-            value = 0,
-            selection = true,
-            options = List(DropdownItem(value = 0, text = "DSS2 Gemini"),
-                           DropdownItem(value = 1, text = "Spitzer")
-            )
-          ),
-          FormCheckbox(
-            label = "CCD",
-            checked = options.fov.visible,
-            onChange = (b: Boolean) => optionsV.zoom(fovL).set(b).runAsyncCB
-          ),
-          FormCheckbox(
-            label = "Patrol field",
-            checked = options.guiding.visible,
-            onChange = (b: Boolean) => optionsV.zoom(guidingL).set(b).runAsyncCB
-          ),
-          FormCheckbox(
-            label = "Probe",
-            checked = options.probe.visible,
-            onChange = (b: Boolean) => optionsV.zoom(probeL).set(b).runAsyncCB
-          ),
-          FormCheckbox(
-            label = "Offsets",
-            checked = options.offsets.visible,
-            onChange = (b: Boolean) => optionsV.zoom(offsetsL).set(b).runAsyncCB
-          ),
-          FormSelect(
-            label = "Position Angle",
-            options = angleItems.toList,
-            value = Angle.degrees.get(options.posAngle),
-            onChange = (p: FormDropdownProps) => {
-              angleItemsMap
-                .collectFirst {
-                  case (a, i) if i.value == p.value => a
-                }
-                .map { a =>
-                  optionsV.zoom(TargetVisualOptions.posAngle).set(a).runAsyncCB
-                }
-                .getOrEmpty
+        AppCtx.runWithCtx { implicit ctx =>
+          val optionsV = $.props.options
+          val options  = optionsV.get
+          Form(size = Small)(
+            ExploreStyles.Grid,
+            ExploreStyles.Compact,
+            ExploreStyles.CatalogueForm,
+            FormDropdown(
+              label = "Catalogues",
+              value = 0,
+              selection = true,
+              options = List(DropdownItem(value = 0, text = "DSS2 Gemini"),
+                             DropdownItem(value = 1, text = "Spitzer")
+              )
+            ),
+            FormCheckbox(
+              label = "CCD",
+              checked = options.fov.visible,
+              onChange = (b: Boolean) => optionsV.zoom(fovL).set(b).runAsyncCB
+            ),
+            FormCheckbox(
+              label = "Patrol field",
+              checked = options.guiding.visible,
+              onChange = (b: Boolean) => optionsV.zoom(guidingL).set(b).runAsyncCB
+            ),
+            FormCheckbox(
+              label = "Probe",
+              checked = options.probe.visible,
+              onChange = (b: Boolean) => optionsV.zoom(probeL).set(b).runAsyncCB
+            ),
+            FormCheckbox(
+              label = "Offsets",
+              checked = options.offsets.visible,
+              onChange = (b: Boolean) => optionsV.zoom(offsetsL).set(b).runAsyncCB
+            ),
+            FormSelect(
+              label = "Position Angle",
+              options = angleItems.toList,
+              value = Angle.degrees.get(options.posAngle),
+              onChange = (p: FormDropdownProps) => {
+                angleItemsMap
+                  .collectFirst {
+                    case (a, i) if i.value == p.value => a
+                  }
+                  .map { a =>
+                    optionsV.zoom(TargetVisualOptions.posAngle).set(a).runAsyncCB
+                  }
+                  .getOrEmpty
 
-            }
+              }
+            )
           )
-        )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

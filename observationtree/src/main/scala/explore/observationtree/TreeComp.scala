@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ModState
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.components.undo.UndoRegion
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
@@ -92,8 +93,8 @@ object TreeComp {
       tree:     KeyedIndexedTree[K, A],
       modState: ModState[IO, KeyedIndexedTree[K, A]],
       setter:   Undoer.Setter[IO, KeyedIndexedTree[K, A]]
-    )(source:   AtlasTree.Position, destination: Option[AtlasTree.Position]): Callback =
-      $.props >>= { props =>
+    )(source:   AtlasTree.Position, destination: Option[AtlasTree.Position]): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
         def pos2Index(pos: AtlasTree.Position): Index[K] =
           Index(pos.parentId.some.filterNot(_.isEmpty).map(props.keyFromItemId), pos.index)
 
@@ -116,43 +117,46 @@ object TreeComp {
                      (modState.apply _).compose(getSet.adjuster.set)(value)
                    }
               ) _
-          modify(newValue.some).runAsyncCB
-        }).getOrEmpty
+          modify(newValue.some)
+        }).orEmpty
       }
 
     def render(props: Props[K, A], state: State[K, A]): VdomElement =
-      UndoRegion[KeyedIndexedTree[K, A]] { undoCtx =>
-        // println(state.tree)
+      AppCtx.runWithCtx { implicit ctx =>
+        UndoRegion[KeyedIndexedTree[K, A]] { undoCtx =>
+          // println(state.tree)
 
-        <.div(
           <.div(
-            ^.height := "750px",
-            ^.width := "1000px",
-            ^.paddingTop := "30px",
-            ^.overflow.auto // overflow.auto or overflow.scroll needed to drag'n'drop intermediate nodes
-          )(
-            AtlasTree[A](
-              tree = treeToData(state.tree, props.keyToItemId, state.collapsedItemIds),
-              renderItem = props.render,
-              onCollapse = onCollapse,
-              onExpand = onExpand,
-              onDragEnd = onDragEnd(state.tree,
-                                    ($.modStateIn[IO] _).compose(State.tree.modify),
-                                    undoCtx.setter
-              ) _,
-              isDragEnabled = true
-              // isNestingEnabled = true // Work this into facade. Seems to trigger onDragEnd with defined dest but with undefined index.
-            )
-          ),
-          <.div(
-            Button(onClick = undoCtx.undo(state.tree).runAsyncCB, disabled = undoCtx.undoEmpty)(
-              "Undo"
+            <.div(
+              ^.height := "750px",
+              ^.width := "1000px",
+              ^.paddingTop := "30px",
+              ^.overflow.auto // overflow.auto or overflow.scroll needed to drag'n'drop intermediate nodes
+            )(
+              AtlasTree[A](
+                tree = treeToData(state.tree, props.keyToItemId, state.collapsedItemIds),
+                renderItem = props.render,
+                onCollapse = onCollapse,
+                onExpand = onExpand,
+                onDragEnd = (source: AtlasTree.Position, destination: Option[AtlasTree.Position]) =>
+                  onDragEnd(state.tree,
+                            ($.modStateIn[IO] _).compose(State.tree.modify),
+                            undoCtx.setter
+                  )(source, destination).runAsyncCB,
+                isDragEnabled = true
+                // isNestingEnabled = true // Work this into facade. Seems to trigger onDragEnd with defined dest but with undefined index.
+              )
             ),
-            Button(onClick = undoCtx.redo(state.tree).runAsyncCB, disabled = undoCtx.redoEmpty)(
-              "Redo"
+            <.div(
+              Button(onClick = undoCtx.undo(state.tree).runAsyncCB, disabled = undoCtx.undoEmpty)(
+                "Undo"
+              ),
+              Button(onClick = undoCtx.redo(state.tree).runAsyncCB, disabled = undoCtx.redoEmpty)(
+                "Redo"
+              )
             )
           )
-        )
+        }
       }
   }
 

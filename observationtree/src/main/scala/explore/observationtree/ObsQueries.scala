@@ -81,7 +81,7 @@ object ObsQueries {
 
   val ObsLiveQuery: LiveQueryRenderer =
     render =>
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
           ProgramObservationsQuery.query(),
           ProgramObservationsQuery.Data.asObservationList.get,

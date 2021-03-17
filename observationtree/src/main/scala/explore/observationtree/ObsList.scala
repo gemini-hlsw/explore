@@ -155,7 +155,7 @@ object ObsList {
       }
 
     def render(props: Props) =
-      AppCtx.withCtx { implicit ctx =>
+      AppCtx.runWithCtx { implicit ctx =>
         val focused       = props.focused.get
         val observations  = props.observations.get.toList
         val someSelected  = focused.isDefined

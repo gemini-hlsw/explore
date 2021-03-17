@@ -3,6 +3,7 @@
 
 package explore
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
@@ -20,6 +21,7 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
+import org.typelevel.log4cats.Logger
 import react.resizeDetector.ResizeDetector
 
 import scala.scalajs.LinkingInfo
@@ -70,7 +72,7 @@ object Routing {
       )
     )
 
-  val config: RouterWithPropsConfig[Page, View[RootModel]] =
+  def config(implicit logger: Logger[IO]): RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 

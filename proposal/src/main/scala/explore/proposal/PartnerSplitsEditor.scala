@@ -3,10 +3,12 @@
 
 package explore.proposal
 
+import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.components.ui.FomanticStyles
 import explore.components.ui.PartnerFlags
@@ -20,6 +22,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics._
 import monocle.function.Index
+import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
@@ -52,7 +55,7 @@ object PartnerSplitsEditor {
       )
     )
 
-  private def makeTableRows(p: Props): TagMod =
+  private def makeTableRows(p: Props)(implicit logger: Logger[IO]): TagMod =
     p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
       val splitView: ViewOpt[PartnerSplit] =
         p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))
@@ -89,7 +92,7 @@ object PartnerSplitsEditor {
   private def total(p:       Props) = p.splits.get.map(_.percent.value.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
-  def render(p: Props): VdomNode = {
+  def render(p: Props): VdomNode = AppCtx.runWithCtx { implicit ctx =>
     def save = if (addsUpTo100(p)) p.onSave(p.splits.get) else Callback.empty
 
     Modal(

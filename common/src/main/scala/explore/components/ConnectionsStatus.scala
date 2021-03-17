@@ -54,7 +54,7 @@ object ConnectionsStatus {
   val component = ScalaComponent
     .builder[Props]
     .render(_ =>
-      AppCtx.withCtx { ctx =>
+      AppCtx.runWithCtx { ctx =>
         ctx.clients.ODBConnectionStatus(renderStatus("ODB"))
       }
     )

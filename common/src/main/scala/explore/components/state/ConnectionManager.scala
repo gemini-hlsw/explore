@@ -56,27 +56,23 @@ object ConnectionManager {
     .initialState(State())
     .renderBackend[Backend]
     .componentDidMount($ =>
-      AppCtx
-        .flatMap(ctx => $.backend.onMount(ctx.clients))
-        .runAsyncCB
+      AppCtx.runWithCtx { implicit ctx =>
+        $.backend.onMount(ctx.clients).runAsyncCB
+      }
     )
     .componentDidUpdate($ =>
-      AppCtx
-        .flatMap(implicit ctx =>
-          Logger[IO].debug(
-            s"[ConnectionManager.componentDidUpdate] Token changed. Refreshing connections."
-          ) >> $.backend.refresh(ctx.clients)
-        )
-        .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
-        .runAsyncCB
+      AppCtx.runWithCtx { implicit ctx =>
+        (Logger[IO].debug(s"[ConnectionManager] Token changed. Refreshing connections.") >>
+          $.backend.refresh(ctx.clients))
+          .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
+          .runAsyncCB
+      }
     )
-    .componentWillUnmountConst( // With code = 1000 we don't attempt reconnection.
-      AppCtx
-        .flatMap(implicit ctx =>
-          Logger[IO].debug(s"[ConnectionManager.componentWillUnmount] Terminating connections.") >>
-            ctx.clients.close()
-        )
-        .runAsyncCB
+    .componentWillUnmountConst(
+      AppCtx.runWithCtx { implicit ctx =>
+        (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
+          ctx.clients.close()).runAsyncCB
+      }
     )
     .build
 }

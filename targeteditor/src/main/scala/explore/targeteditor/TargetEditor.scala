@@ -45,7 +45,7 @@ object TargetEditor {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) =
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            TargetEditQuery.Data,
                            Option[TargetEditQuery.Data.Target]
@@ -75,7 +75,7 @@ object TargetEditor {
       .componentDidMount { $ =>
         val p = $.props
         AppCtx
-          .withCtx { implicit ctx =>
+          .runWithCtx { implicit ctx =>
             UserTargetPreferencesQuery
               .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
               .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))

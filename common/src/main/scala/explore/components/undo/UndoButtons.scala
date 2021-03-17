@@ -10,6 +10,7 @@ import explore.components.WIP
 import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -21,7 +22,8 @@ final case class UndoButtons[F[_], A](
   iconSize:   SemanticSize = Small,
   disabled:   Boolean = false
 )(implicit
-  val effect: Effect[F]
+  val effect: Effect[F],
+  val logger: Logger[F]
 ) extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
 
 object UndoButtons {
@@ -32,6 +34,7 @@ object UndoButtons {
       .builder[Props[F, A]]
       .render_P { p =>
         implicit val effect = p.effect
+        implicit val logger = p.logger
 
         WIP(
           <.div(

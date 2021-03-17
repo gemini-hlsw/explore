@@ -30,8 +30,14 @@ final case class UserSelectionForm(
   vault:   View[Option[UserVault]],
   message: View[Option[NonEmptyString]]
 ) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
-  def guest: Callback = AppCtx.flatMap(_.sso.guest.flatMap(v => vault.set(v.some))).runAsyncCB
-  def login: Callback = AppCtx.flatMap(_.sso.redirectToLogin).runAsyncCB
+  def guest: Callback =
+    AppCtx.runWithCtx { implicit ctx =>
+      ctx.sso.guest.flatMap(v => vault.set(v.some)).runAsyncCB
+    }
+  def login: Callback =
+    AppCtx.runWithCtx { implicit ctx =>
+      ctx.sso.redirectToLogin.runAsyncCB
+    }
 
   def supportedOrcidBrowser: CallbackTo[(Boolean, Boolean)] = CallbackTo[(Boolean, Boolean)] {
     val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
@@ -62,50 +68,52 @@ object UserSelectionForm {
         p.supportedOrcidBrowser.map(Function.tupled(State.apply _))
       }
       .render_PS { (p, s) =>
-        Modal(
-          size = ModalSize.Large,
-          clazz = ExploreStyles.LoginBox,
-          content = ModalContent(
-            <.div(
-              ExploreStyles.LoginBoxLayout,
-              Logo(),
-              Button(
-                content =
-                  <.div(ExploreStyles.LoginOrcidButton,
-                        Image(clazz = ExploreStyles.OrcidIcon, src = WebpackResources.OrcidLogo),
-                        "Login with ORCID"
-                  ),
-                clazz = ExploreStyles.LoginBoxButton,
-                size = Big,
-                onClick = p.login >> p.message.set(none).runAsyncCB
-              ).when(s.showButtons),
-              Button(content = "Continue as Guest",
-                     size = Big,
-                     clazz = ExploreStyles.LoginBoxButton,
-                     onClick = p.guest >> p.message.set(none).runAsyncCB,
-                     icon = Icons.UserAstronaut
-              ).when(s.showButtons),
-              p.message.get.whenDefined(message =>
+        AppCtx.runWithCtx { implicit ctx =>
+          Modal(
+            size = ModalSize.Large,
+            clazz = ExploreStyles.LoginBox,
+            content = ModalContent(
+              <.div(
+                ExploreStyles.LoginBoxLayout,
+                Logo(),
+                Button(
+                  content =
+                    <.div(ExploreStyles.LoginOrcidButton,
+                          Image(clazz = ExploreStyles.OrcidIcon, src = WebpackResources.OrcidLogo),
+                          "Login with ORCID"
+                    ),
+                  clazz = ExploreStyles.LoginBoxButton,
+                  size = Big,
+                  onClick = p.login >> p.message.set(none).runAsyncCB
+                ).when(s.showButtons),
+                Button(content = "Continue as Guest",
+                       size = Big,
+                       clazz = ExploreStyles.LoginBoxButton,
+                       onClick = p.guest >> p.message.set(none).runAsyncCB,
+                       icon = Icons.UserAstronaut
+                ).when(s.showButtons),
+                p.message.get.whenDefined(message =>
+                  Label(size = Large,
+                        clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
+                  )(message.value)
+                ),
                 Label(size = Large,
                       clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
-                )(message.value)
-              ),
-              Label(size = Large,
-                    clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
-              )(
-                Icons.SkullCrossBones.size(Big),
-                "This version of Safari isn't supported. Try a newer version (≥14.0.1) or a recent version of Chrome or Firefox."
-              ).unless(s.supportedOrcidBrowser),
-              Label(size = Large,
-                    clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.WarningLabel
-              )(
-                Icons.WarningSign.size(Big),
-                "ORCID authentication does not work with some configurations of Safari and MacOS. If it doesn't work for you please try Chrome or Firefox."
-              ).when(s.warnBrowser)
-            )
-          ),
-          open = true
-        )
+                )(
+                  Icons.SkullCrossBones.size(Big),
+                  "This version of Safari isn't supported. Try a newer version (≥14.0.1) or a recent version of Chrome or Firefox."
+                ).unless(s.supportedOrcidBrowser),
+                Label(size = Large,
+                      clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.WarningLabel
+                )(
+                  Icons.WarningSign.size(Big),
+                  "ORCID authentication does not work with some configurations of Safari and MacOS. If it doesn't work for you please try Chrome or Firefox."
+                ).when(s.warnBrowser)
+              )
+            ),
+            open = true
+          )
+        }
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

@@ -72,7 +72,7 @@ object TargetBody {
 
   class Backend() {
     def render(props: Props) =
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         val target = props.target.get
 
         UndoRegion[TargetResult] { undoCtx =>
@@ -141,7 +141,6 @@ object TargetBody {
           val searchAndSet: SearchCallback => Callback = s =>
             SimbadSearch
               .search(s.searchTerm)
-              .attempt
               .runAsyncAndThenCB {
                 case Right(r @ Some(Target(n, Right(st), m))) =>
                   allView.set((n, st, m.values.toList)).runAsyncCB >>

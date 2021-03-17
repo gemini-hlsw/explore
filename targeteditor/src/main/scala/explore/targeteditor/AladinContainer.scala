@@ -5,8 +5,10 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.View
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Display
 import explore.model.reusability._
@@ -63,10 +65,14 @@ object AladinContainer {
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     def setRa(ra: RightAscension): Callback =
-      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
+      AppCtx.runWithCtx { implicit ctx =>
+        $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
+      }
 
     def setDec(dec: Declination): Callback =
-      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
+      AppCtx.runWithCtx { implicit ctx =>
+        $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
+      }
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get

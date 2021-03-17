@@ -17,8 +17,8 @@ import explore.model.ObsSummary
 import explore.model.reusability._
 import io.circe.Decoder
 import io.circe.HCursor
-import io.circe.refined._
 import io.circe.generic.semiauto._
+import io.circe.refined._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -321,7 +321,7 @@ object TargetObsQueries {
 
   val TargetObsLiveQuery: LiveQueryRenderer =
     render =>
-      AppCtx.withCtx { implicit appCtx =>
+      AppCtx.runWithCtx { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, TargetsAndAsterismsWithObs](
           TargetsObsQuery.query(),
           TargetsObsQuery.Data.asTargetsWithObs.get,

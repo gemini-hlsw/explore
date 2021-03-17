@@ -8,6 +8,8 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.AppCtx
+import explore.implicits._
 import explore.model.UserVault
 import explore.utils.ExploreEvent
 import japgolly.scalajs.react._
@@ -40,21 +42,22 @@ object LogoutTracker {
         )
       }
       .componentDidMount { $ =>
-        IO {
-          val bc = new BroadcastChannel[ExploreEvent]("explore")
-          bc.onmessage = (x: ExploreEvent) =>
-            // This is coming from the js world, we can't match the type
-            (x.event match {
-              case ExploreEvent.Logout.event =>
-                $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
-              case _                         => IO.unit
-            })
-          bc
-        }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
+        AppCtx.runWithCtx { implicit ctx =>
+          IO {
+            val bc = new BroadcastChannel[ExploreEvent]("explore")
+            bc.onmessage = (x: ExploreEvent) =>
+              // This is coming from the js world, we can't match the type
+              (x.event match {
+                case ExploreEvent.Logout.event =>
+                  $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
+                case _                         => IO.unit
+              })
+            bc
+          }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
+        }
       }
       .componentWillUnmount($ =>
-        // Setting vault to none is defensive. This component should actually unmount when vault is none.
-        $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncCB
+        $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForgetCB
       )
       .build
 

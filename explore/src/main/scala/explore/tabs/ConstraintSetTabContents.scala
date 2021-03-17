@@ -6,9 +6,12 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.{ AppCtx, Icons, UnderConstruction }
+import explore.AppCtx
+import explore.Icons
+import explore.UnderConstruction
 import explore.common.UserPreferencesQueries._
-import explore.components.{ Tile, TileButton }
+import explore.components.Tile
+import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
@@ -19,7 +22,8 @@ import explore.observationtree.ConstraintSetObsQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.{ ConstraintSet, User }
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -53,12 +57,12 @@ object ConstraintSetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
-    AppCtx.flatMap { implicit ctx =>
-      UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
-                                          ResizableSection.ConstraintSetsTree,
-                                          Constants.InitialTreeWidth.toInt
-      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)
-    }.runAsyncCB
+    AppCtx.runWithCtx { implicit ctx =>
+      (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+                                           ResizableSection.ConstraintSetsTree,
+                                           Constants.InitialTreeWidth.toInt
+      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
+    }
 
   protected val component =
     ScalaComponent
@@ -72,7 +76,7 @@ object ConstraintSetTabContents {
         }
       )
       .renderPS { ($, props, state) =>
-        AppCtx.withCtx { implicit ctx =>
+        AppCtx.runWithCtx { implicit ctx =>
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
               ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>

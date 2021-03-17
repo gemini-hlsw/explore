@@ -147,24 +147,25 @@ object ObsTabContents {
 
   class Backend($ : BackendScope[Props, State]) {
     def readTabPreference(userId: Option[User.Id]): Callback =
-      AppCtx
-        .flatMap { implicit ctx =>
-          ObsTabPreferencesQuery
-            .queryWithDefault[IO](userId,
-                                  GridLayoutSection.ObservationsLayout,
-                                  ResizableSection.ObservationsTree,
-                                  (Constants.InitialTreeWidth.toInt, defaultLayout)
-            )
-        }
-        .runAsyncAndThenCB { case (w, l) =>
-          $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
-        }
+      AppCtx.runWithCtx { implicit ctx =>
+        ObsTabPreferencesQuery
+          .queryWithDefault[IO](userId,
+                                GridLayoutSection.ObservationsLayout,
+                                ResizableSection.ObservationsTree,
+                                (Constants.InitialTreeWidth.toInt, defaultLayout)
+          )
+          .runAsyncAndThenCB {
+            case Right((w, l)) =>
+              $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
+            case Left(_)       => Callback.empty
+          }
+      }
 
     def readTargetPreferences(targetId: Target.Id): Callback =
       $.props.flatMap { p =>
         p.userId.get.map { uid =>
           AppCtx
-            .withCtx { implicit ctx =>
+            .runWithCtx { implicit ctx =>
               UserTargetPreferencesQuery
                 .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
                 .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
@@ -174,7 +175,7 @@ object ObsTabContents {
       }
 
     def render(props: Props, state: State) = {
-      AppCtx.withCtx { implicit ctx =>
+      AppCtx.runWithCtx { implicit ctx =>
         val treeResize =
           (_: ReactEvent, d: ResizeCallbackData) =>
             $.setStateL(State.panelsWidth)(d.size.width) *>
