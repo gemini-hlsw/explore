@@ -41,6 +41,10 @@ object GraphQLSchemas {
       type CatalogName     = lucuma.core.enum.CatalogName
       type MagnitudeSystem = lucuma.core.enum.MagnitudeSystem
       type MagnitudeBand   = lucuma.core.enum.MagnitudeBand
+      type ImageQuality    = lucuma.core.enum.ImageQuality
+      type CloudExtinction = lucuma.core.enum.CloudExtinction
+      type SkyBackground   = lucuma.core.enum.SkyBackground
+      type WaterVapor      = lucuma.core.enum.WaterVapor
     }
 
     object Implicits {

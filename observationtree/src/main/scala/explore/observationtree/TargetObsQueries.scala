@@ -103,6 +103,11 @@ object TargetObsQueries {
             }
             constraintSet {
               id
+              name
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
             }            
           }
         }

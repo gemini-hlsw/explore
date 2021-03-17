@@ -132,7 +132,7 @@ object ObsList {
         ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                    name.some,
                    pointingId = none,
-                   constraintSetId = none
+                   constraints = none
         )
       )
 

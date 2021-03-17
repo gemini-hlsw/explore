@@ -13,6 +13,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.{ UndoButtons, UndoRegion }
 import explore.implicits._
+import explore.model.ConstraintsSummary
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
@@ -58,7 +59,7 @@ object ConstraintSetObsList {
 
   val obsListMod           = new KIListMod[IO, ObsSummary, Observation.Id](ObsSummary.id)
   val constraintSetListMod =
-    new KIListMod[IO, ConstraintSetIdName, ConstraintSet.Id](ConstraintSetIdName.id)
+    new KIListMod[IO, ConstraintsSummary, ConstraintSet.Id](ConstraintsSummary.id)
 
   class Backend($ : BackendScope[Props, State]) {
     private val UnassignedObsId = "unassignedObs"
@@ -76,11 +77,11 @@ object ConstraintSetObsList {
 
     private def getConstraintSetForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
-    ): Getter[ConstraintSetsWithObs, Option[Option[ConstraintSet.Id]]] =
+    ): Getter[ConstraintSetsWithObs, Option[Option[ConstraintsSummary]]] =
       ConstraintSetsWithObs.obs.composeGetter(
         obsWithIndexGetter
           .composeOptionLens(first)
-          .composeOptionLens(ObsSummary.constraintSetId)
+          .composeOptionLens(ObsSummary.constraints)
       )
 
     private def setConstraintSetForObsWithId(
@@ -89,17 +90,17 @@ object ConstraintSetObsList {
       obsWithIndexGetAdjust: GetAdjust[ObsList, obsListMod.ElemWithIndex]
     )(implicit
       c:                     TransactionalClient[IO, ObservationDB]
-    ): Option[Option[ConstraintSet.Id]] => IO[Unit] = { csIdOpt =>
+    ): Option[Option[ConstraintsSummary]] => IO[Unit] = { csOpt =>
       val obsCsAdjuster = obsWithIndexGetAdjust
         .composeOptionLens(first)
-        .composeOptionLens(ObsSummary.constraintSetId)
+        .composeOptionLens(ObsSummary.constraints)
 
       val observationsView = constraintSetsWithObs.zoom(ConstraintSetsWithObs.obs)
 
       // 1) Update internal model
-      observationsView.mod(obsCsAdjuster.set(csIdOpt)) >>
+      observationsView.mod(obsCsAdjuster.set(csOpt)) >>
         // 2) Send mutation
-        csIdOpt.map(newId => moveObs(obsId, newId)).orEmpty
+        csOpt.map(newCs => moveObs(obsId, newCs.map(_.id))).orEmpty
 
     }
 
@@ -113,26 +114,38 @@ object ConstraintSetObsList {
         $.propsIn[IO] >>= { props =>
           result.destination.toOption
             .map(destination =>
-              (Observation.Id.parse(result.draggableId) match {
-                case Some(obsId) =>
+              result.draggableId match {
+                case Observation.Id(obsId) =>
                   val obsWithId: GetAdjust[ObsList, obsListMod.ElemWithIndex] =
                     obsListMod.withKey(obsId)
 
-                  val set: Option[Option[ConstraintSet.Id]] => IO[Unit] =
-                    setter.set[Option[Option[ConstraintSet.Id]]](
+                  val set: Option[Option[ConstraintsSummary]] => IO[Unit] =
+                    setter.set[Option[Option[ConstraintsSummary]]](
                       props.constraintSetsWithObs.get,
                       getConstraintSetForObsWithId(obsWithId.getter).get,
                       setConstraintSetForObsWithId(props.constraintSetsWithObs, obsId, obsWithId)
                     )
 
+                  def getSummary(csId: ConstraintSet.Id): IO[ConstraintsSummary] = {
+                    val csEither: Either[Throwable, ConstraintsSummary] = constraintSetListMod
+                      .getterForKey(csId)
+                      .get(props.constraintSetsWithObs.get.constraintSets)
+                      .map(_._1)
+                      .toRight(new Exception("Not found"))
+                    IO.fromEither(csEither)
+                  }
+
                   destination.droppableId match {
                     case UnassignedObsId           => set(none.some)
                     case ConstraintSet.Id(newCsId) =>
-                      expandedIds.mod(_ + newCsId) >> set(newCsId.some.some)
+                      getSummary(newCsId).flatMap(cs =>
+                        expandedIds.mod(_ + newCsId) >>
+                          set(cs.some.some)
+                      )
                     case _                         => IO.unit
                   }
-                case None        => IO.unit
-              })
+                case _                     => IO.unit
+              }
             )
             .orEmpty
         }
@@ -147,7 +160,7 @@ object ConstraintSetObsList {
 
     def render(props: Props, state: State): VdomElement = AppCtx.withCtx { implicit ctx =>
       val observations       = props.constraintSetsWithObs.get.obs
-      val obsByConstraintSet = observations.toList.groupBy(_.constraintSetId)
+      val obsByConstraintSet = observations.toList.groupBy(_.constraints.map(_.id))
 
       val constraintSets        = props.constraintSetsWithObs.get.constraintSets
       val constraintSetsWithIdx = constraintSets.toList.zipWithIndex
@@ -161,9 +174,9 @@ object ConstraintSetObsList {
                 provided.dragHandleProps,
                 props.getDraggedStyle(provided.draggableStyle, snapshot)
           )(
-            (Observation.Id.parse(rubric.draggableId) match {
-              case Some(obsId) => observations.getElement(obsId).map(props.renderObsBadge)
-              case _           => none
+            (rubric.draggableId match {
+              case Observation.Id(obsId) => observations.getElement(obsId).map(props.renderObsBadge)
+              case _                     => none
             }).getOrElse(<.span("ERROR"))
           )
         }
@@ -328,7 +341,7 @@ object ConstraintSetObsList {
           .collect { case FocusedObs(obsId) =>
             constraintSetsWithObs.obs
               .getElement(obsId)
-              .flatMap(_.constraintSetId.map(csId => expandedIds.mod(_ + csId)))
+              .flatMap(_.constraints.map(c => expandedIds.mod(_ + c.id)))
           }
           .flatten
           .orEmpty

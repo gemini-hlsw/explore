@@ -1,0 +1,16 @@
+{
+  "id" : "o-1",
+  "name" : "찓椤씟㯿넭꟤鐥弹鉈뗮塾ร䕦ꖗ㖋噠灒뾒ໍꑩ∀鏔鶱ㇶ㲧ꕑ㬌㜋鎳낀뷂鍊銰ﱙ효\u007fᰖ䩎婗䏷䟭᚞泥槄狴珙瀐䑑␲෾₈㻊옫ꑰ人趤躓当솲ꔍL査",
+  "constraintSet" : {
+    "name" : "⭂呗熱涰䏈댋쀐ᢏ꺞켣뒧ᔩ좱쑯ʹ큺誹⑒Ꞓ͎脻璘仺뀍ܘ孂媋뛮焁埤튂巕殦퇰࠵㯖Ѻ롱✒꒝㙴炤蟞枞㹭",
+    "id" : "c-1",
+    "imageQuality" : "TWO_POINT_ZERO",
+    "cloudExtinction" : "ONE_POINT_FIVE",
+    "skyBackground" : "GRAY",
+    "waterVapor" : "VERY_DRY"
+  },
+  "observationTarget" : {
+    "type" : "Asterism",
+    "asterism_id" : "a-7fffffffffffffff"
+  }
+}
