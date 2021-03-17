@@ -16,7 +16,6 @@ import io.circe.JsonObject
 import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.model.Asterism
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.macros.Lenses
@@ -26,27 +25,35 @@ import java.time.temporal.ChronoUnit
 
 @Lenses
 final case class ObsSummary(
-  id:              Observation.Id,
-  name:            Option[NonEmptyString],
-  status:          ObsStatus = ObsStatus.New,
-  conf:            String = "GMOS-N R831 1x300",
-  constraints:     String = "<0.7\" <0.3 mag Bright",
-  duration:        Duration = Duration.of(93, ChronoUnit.MINUTES),
-  pointingId:      Option[PointingId],
-  constraintSetId: Option[ConstraintSet.Id]
-)
+  id:          Observation.Id,
+  name:        Option[NonEmptyString],
+  status:      ObsStatus = ObsStatus.New,
+  constraints: Option[ConstraintsSummary],
+  conf:        String = "GMOS-N R831 1x300",
+  duration:    Duration = Duration.of(93, ChronoUnit.MINUTES),
+  pointingId:  Option[PointingId]
+) {
+  def constraintsSummary = constraints.map(_.summaryString).getOrElse("No constraints")
+}
 
 object ObsSummary {
+
   implicit val eqObsSummary: Eq[ObsSummary] =
-    Eq.by(x => (x.id, x.name, x.pointingId, x.constraintSetId))
+    Eq.by(x => (x.id, x.name, x.pointingId, x.constraints))
 
   implicit val obsSummaryEncoder: Encoder[ObsSummary] = new Encoder[ObsSummary] {
     final def apply(c: ObsSummary): Json = {
-      val common       = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
-      val withPointing = c.pointingId match {
-        case None    => common
+      val common = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
+
+      val withConstraints = c.constraints match {
+        case Some(cs) => common.add("constraints", cs.asJson)
+        case None     => common
+      }
+
+      (c.pointingId match {
+        case None    => withConstraints
         case Some(t) =>
-          common.add(
+          withConstraints.add(
             "observationTarget",
             t match {
               case Right(tid) =>
@@ -55,10 +62,6 @@ object ObsSummary {
                 Json.obj("type" -> PointingType.Asterism.asJson, "asterism_id" -> aid.asJson)
             }
           )
-      }
-      (c.constraintSetId match {
-        case None       => withPointing
-        case Some(csId) => withPointing.add("constraintSet", Json.obj("id" -> csId.asJson))
       }).asJson
     }
 
@@ -73,24 +76,13 @@ object ObsSummary {
         }
     }
 
-  private case class CS(id: ConstraintSet.Id)
-
-  private object CS {
-    implicit val csDecoder: Decoder[CS] = new Decoder[CS] {
-      final def apply(c: HCursor): Decoder.Result[CS] =
-        for {
-          id <- c.downField("id").as[ConstraintSet.Id]
-        } yield (CS(id))
-    }
-  }
-
   implicit val obsSummaryDecoder: Decoder[ObsSummary] = new Decoder[ObsSummary] {
     final def apply(c: HCursor): Decoder.Result[ObsSummary] =
       for {
         id         <- c.downField("id").as[Observation.Id]
         name       <- c.downField("name").as[Option[NonEmptyString]]
         pointingId <- c.downField("observationTarget").as[Option[PointingId]]
-        cs         <- c.downField("constraintSet").as[Option[CS]]
-      } yield ObsSummary(id, name, pointingId = pointingId, constraintSetId = cs.map(_.id))
+        cs         <- c.downField("constraints").as[Option[ConstraintsSummary]]
+      } yield ObsSummary(id, name, pointingId = pointingId, constraints = cs)
   }
 }

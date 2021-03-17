@@ -42,6 +42,11 @@ object ObsQueries {
             }
             constraintSet {
               id
+              name
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
             }
           }
         }

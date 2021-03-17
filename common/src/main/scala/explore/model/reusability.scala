@@ -29,7 +29,7 @@ object reusability {
     Reusability.by(_.toList)
   implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]              = Reusability.derive
   implicit def obsSummaryReuse: Reusability[ObsSummary]                              =
-    Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration))
+    Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration, x.pointingId))
   implicit def proposalDetailsReuse: Reusability[ProposalDetails]                    = Reusability.byEq
   implicit def partnerSplitReuse: Reusability[PartnerSplit]                          = Reusability.derive
 

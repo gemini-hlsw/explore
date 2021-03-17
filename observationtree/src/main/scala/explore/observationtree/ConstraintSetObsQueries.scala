@@ -7,17 +7,13 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import clue.GraphQLOperation
 import clue.macros.GraphQL
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.ObsSummary
+import explore.model.{ ConstraintsSummary, ObsSummary }
 import explore.model.reusability._
-import io.circe.Decoder
-import io.circe.refined._
-import io.circe.generic.semiauto._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.{ ConstraintSet, Observation }
@@ -27,14 +23,7 @@ import monocle.macros.Lenses
 
 object ConstraintSetObsQueries {
 
-  @Lenses
-  case class ConstraintSetIdName(id: ConstraintSet.Id, name: NonEmptyString)
-
-  object ConstraintSetIdName {
-    implicit val decoder: Decoder[ConstraintSetIdName] = deriveDecoder
-  }
-
-  type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintSetIdName]
+  type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintsSummary]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummary]
 
   @Lenses
@@ -48,6 +37,10 @@ object ConstraintSetObsQueries {
           nodes {
             id
             name
+            imageQuality
+            cloudExtinction
+            skyBackground
+            waterVapor
           }
         }
 
@@ -66,6 +59,11 @@ object ConstraintSetObsQueries {
             }
             constraintSet {
               id
+              name
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
             }            
           }
         }    
@@ -74,7 +72,7 @@ object ConstraintSetObsQueries {
 
     object Data {
       object ConstraintSets {
-        type Nodes = ConstraintSetIdName
+        type Nodes = ConstraintsSummary
       }
 
       object Observations {
@@ -83,7 +81,7 @@ object ConstraintSetObsQueries {
 
       val asConstraintSetsWithObs: Getter[Data, ConstraintSetsWithObs] = data => {
         ConstraintSetsWithObs(
-          KeyedIndexedList.fromList(data.constraintSets.nodes, ConstraintSetIdName.id.get),
+          KeyedIndexedList.fromList(data.constraintSets.nodes, ConstraintsSummary.id.get),
           KeyedIndexedList.fromList(data.observations.nodes, ObsSummary.id.get)
         )
       }
@@ -149,8 +147,6 @@ object ConstraintSetObsQueries {
     """
   }
 
-  implicit val constraintSetIdNameReusability: Reusability[ConstraintSetIdName]    =
-    Reusability.by(x => (x.id, x.name))
   implicit val constraintSetWithObsReusability: Reusability[ConstraintSetsWithObs] =
     Reusability.derive
 

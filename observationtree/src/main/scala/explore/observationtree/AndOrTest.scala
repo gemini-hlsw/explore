@@ -97,7 +97,7 @@ object AndOrTest {
           id = Observation.Id.parse(s"o-${obs.id.toString.filter(_.isDigit).take(4)}").get,
           name = obs.target.name.some,
           pointingId = None,
-          constraintSetId = None
+          constraints = None
         ),
         layout = ObsBadge.Layout.NameAndConf,
         selected = false

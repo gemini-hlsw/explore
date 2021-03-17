@@ -1,0 +1,16 @@
+{
+  "id" : "o-19f837aaa1cd313c",
+  "name" : "ꘟ妪뛚憊ᆻ抲諎쾥얩䩮▨욟쫏棃長㟌쪤⛪⬎崦쉄Ӣ촤屣ቔৌ麉⊇컺崹ⅇፅ㾅濇维㤥겹蕢欰谬Ｖ呀闍쐘",
+  "constraints" : {
+    "name" : "졵刹垜졥ޘꒃᇞ穘ᆊ怽ࢰ킓畎羾ᙺ퉊靳䔀ﲷ蘊稷⇙ᶜ몝慍钤鰨辑ᤞ佻넞礇핡⡲ℂ䶧撐噔敶륻궂㳾ꑍ尯ꕉ측牝鼇⠝᧬㹯헛ﯙ䋃莪副끢位灮瘖ꈉ穼앙₻鿹槟㪣麐쁆뼩ꇤ駎댸⏲",
+    "id" : "c-67675cbac2dce6d6",
+    "imageQuality" : "POINT_THREE",
+    "cloudExtinction" : "POINT_FIVE",
+    "skyBackground" : "DARK",
+    "waterVapor" : "MEDIAN"
+  },
+  "observationTarget" : {
+    "type" : "Asterism",
+    "asterism_id" : "a-23c2ea47358ea1c8"
+  }
+}
