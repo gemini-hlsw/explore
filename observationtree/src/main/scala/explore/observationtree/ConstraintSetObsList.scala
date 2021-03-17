@@ -282,14 +282,14 @@ object ConstraintSetObsList {
                         <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                       )
                     ),
-                    <.div(ExploreStyles.ObsTree)(
-                      <.div(ExploreStyles.ObsScrollTree) {
-                        Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                          <.div(
-                            provided.innerRef,
-                            provided.droppableProps,
-                            props.getListStyle(snapshot.isDraggingOver)
-                          )(
+                    Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                      <.div(
+                        provided.innerRef,
+                        provided.droppableProps,
+                        props.getListStyle(snapshot.isDraggingOver)
+                      )(
+                        <.div(ExploreStyles.ObsTree)(
+                          <.div(ExploreStyles.ObsScrollTree) {
                             Segment(
                               vertical = true,
                               clazz = ExploreStyles.ObsTreeGroup
@@ -299,10 +299,10 @@ object ConstraintSetObsList {
                               ),
                               provided.placeholder
                             )
-                          )
-                        }
-                      }
-                    )
+                          }
+                        )
+                      )
+                    }
                   ): VdomNode
                   // end of unassigned observations list
                 )
