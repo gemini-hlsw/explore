@@ -46,7 +46,7 @@ object ObsSummary {
       val common = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
 
       val withConstraints = c.constraints match {
-        case Some(cs) => common.add("constraints", cs.asJson)
+        case Some(cs) => common.add("constraintSet", cs.asJson)
         case None     => common
       }
 
@@ -82,7 +82,7 @@ object ObsSummary {
         id         <- c.downField("id").as[Observation.Id]
         name       <- c.downField("name").as[Option[NonEmptyString]]
         pointingId <- c.downField("observationTarget").as[Option[PointingId]]
-        cs         <- c.downField("constraints").as[Option[ConstraintsSummary]]
+        cs         <- c.downField("constraintSet").as[Option[ConstraintsSummary]]
       } yield ObsSummary(id, name, pointingId = pointingId, constraints = cs)
   }
 }

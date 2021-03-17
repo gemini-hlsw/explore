@@ -1,0 +1,16 @@
+{
+  "id" : "o-1",
+  "name" : "骎귎ṕ鴪美媴媊㭠꺈鸂씪豊䂄ᇪ㩉젱翨씜蠔吚軀鉬혞菘㇀갯흊ﲞ",
+  "constraintSet" : {
+    "name" : "㉂븨䥕⪅⌶褐貺굝蒥뒘솵ꀌ证덩ۂꏨ૫普羒휕ﰊ䭹섵킳쿅⣣룭藩",
+    "id" : "c-1",
+    "imageQuality" : "ONE_POINT_FIVE",
+    "cloudExtinction" : "POINT_ONE",
+    "skyBackground" : "DARK",
+    "waterVapor" : "DRY"
+  },
+  "observationTarget" : {
+    "type" : "Asterism",
+    "asterism_id" : "a-7fffffffffffffff"
+  }
+}

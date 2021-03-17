@@ -4,6 +4,7 @@
 package explore.model
 
 import cats._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.Encoder
@@ -34,5 +35,7 @@ object ConstraintsSummary {
   implicit val constraintSummaryDecoder: Decoder[ConstraintsSummary] = deriveDecoder
   implicit val constraintSummaryEncoder: Encoder[ConstraintsSummary] = deriveEncoder
 
-  implicit val eqConstraintSummary: Eq[ConstraintsSummary] = Eq.fromUniversalEquals
+  implicit val eqConstraintSummary: Eq[ConstraintsSummary] = Eq.by(cs =>
+    (cs.name, cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
+  )
 }
