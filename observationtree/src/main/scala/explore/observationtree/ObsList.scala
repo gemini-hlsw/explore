@@ -198,7 +198,7 @@ object ObsList {
                   )(
                     ObsBadge(
                       obs,
-                      ObsBadge.Layout.NameAndConf,
+                      ObsBadge.Layout.NameAndConfAndConstraints,
                       selected = selected,
                       (
                         (id: Observation.Id) => deleteObs(id, undoCtx.setter, focusOnDelete)

@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
@@ -33,8 +34,9 @@ object ObsBadge {
 
   sealed trait Layout
   object Layout {
-    final case object NameAndConf        extends Layout
-    final case object ConfAndConstraints extends Layout
+    final case object NameAndConf               extends Layout
+    final case object ConfAndConstraints        extends Layout
+    final case object NameAndConfAndConstraints extends Layout
 
     implicit val layoutReuse: Reusability[Layout] = Reusability.derive
   }
@@ -73,8 +75,9 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObservationCardHeader,
                   props.layout match {
-                    case NameAndConf        => obs.name.fold("--------")(_.value)
-                    case ConfAndConstraints => obs.conf
+                    case NameAndConf | NameAndConfAndConstraints =>
+                      obs.name.fold("--------")(_.value)
+                    case ConfAndConstraints                      => obs.conf
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
@@ -84,8 +87,10 @@ object ObsBadge {
               ),
               CardDescription(
                 props.layout match {
-                  case NameAndConf        => obs.conf
-                  case ConfAndConstraints => obs.constraintsSummary
+                  case NameAndConf               => ReactFragment(obs.conf)
+                  case ConfAndConstraints        => ReactFragment(obs.constraintsSummary)
+                  case NameAndConfAndConstraints =>
+                    ReactFragment(<.div(obs.conf), <.div(obs.constraintsSummary))
                 }
               ),
               CardExtra(
