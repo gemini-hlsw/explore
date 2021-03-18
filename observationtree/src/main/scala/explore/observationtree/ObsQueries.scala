@@ -85,7 +85,10 @@ object ObsQueries {
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
           ProgramObservationsQuery.query(),
           ProgramObservationsQuery.Data.asObservationList.get,
-          NonEmptyList.of(ProgramObservationsEditSubscription.subscribe[IO]())
+          NonEmptyList.of(
+            ProgramObservationsEditSubscription.subscribe[IO](),
+            ConstraintSetObsQueries.ConstraintSetEditSubscription.subscribe[IO]()
+          )
         )(render)
       }
 
