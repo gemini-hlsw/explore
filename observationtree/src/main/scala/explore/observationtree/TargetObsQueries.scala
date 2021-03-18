@@ -328,7 +328,8 @@ object TargetObsQueries {
           NonEmptyList.of(
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
-            ObsQueries.ProgramObservationsEditSubscription.subscribe[IO]()
+            ObsQueries.ProgramObservationsEditSubscription.subscribe[IO](),
+            ConstraintSetObsQueries.ConstraintSetEditSubscription.subscribe[IO]()
           )
         )(render)
       }
