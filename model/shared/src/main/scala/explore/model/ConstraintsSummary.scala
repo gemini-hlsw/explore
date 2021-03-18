@@ -31,6 +31,15 @@ final case class ConstraintsSummary(
 }
 
 object ConstraintsSummary {
+  def default(name: NonEmptyString, id: ConstraintSet.Id): ConstraintsSummary =
+    ConstraintsSummary(
+      id = id,
+      name = name,
+      imageQuality = ImageQuality.PointEight,
+      cloudExtinction = CloudExtinction.PointThree,
+      skyBackground = SkyBackground.Gray,
+      waterVapor = WaterVapor.Wet
+    )
 
   implicit val constraintSummaryDecoder: Decoder[ConstraintsSummary] = deriveDecoder
   implicit val constraintSummaryEncoder: Encoder[ConstraintsSummary] = deriveEncoder

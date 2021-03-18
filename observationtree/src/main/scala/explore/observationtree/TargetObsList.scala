@@ -248,7 +248,7 @@ object TargetObsList {
       focused:               View[Option[Focused]],
       targetId:              Target.Id,
       targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex],
-      nextToFoucs:           Option[TargetIdName]
+      nextToFocus:           Option[TargetIdName]
     )(implicit
       c:                     TransactionalClient[IO, ObservationDB]
     ): targetListMod.ElemWithIndex => IO[Unit] =
@@ -259,7 +259,7 @@ object TargetObsList {
           .mod(targetWithIndexSetter.set(targetWithIndex)) >>
           // 2) Send mutation & adjust focus
           targetWithIndex.fold(
-            focused.set(nextToFoucs.map(f => Focused.FocusedTarget(f.id))) >> removeTarget(targetId)
+            focused.set(nextToFocus.map(f => Focused.FocusedTarget(f.id))) >> removeTarget(targetId)
           ) { case (target, _) =>
             insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
           }

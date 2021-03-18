@@ -8,7 +8,6 @@ import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.ResizableSection
 import explore.model.SiderealTarget
-import explore.model.enum._
 import io.circe.refined._
 import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
@@ -63,6 +62,8 @@ object GraphQLSchemas {
 
   @GraphQLSchema(debug = false)
   object ExploreDB {
+    import explore.model.enum._
+
     object Scalars {
       type Cloudcover       = CloudCover
       type Imagequality     = ImageQuality

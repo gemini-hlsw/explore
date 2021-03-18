@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
+import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -22,6 +23,9 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -35,12 +39,15 @@ import react.beautifuldnd._
 import react.common._
 import react.common.implicits._
 import react.reflex._
+import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
+import scala.util.Random
 
 import ConstraintSetObsQueries._
 
@@ -76,6 +83,20 @@ object ConstraintSetObsList {
         case Some(csId) => ShareConstraintSetWithObs.execute(csId, obsId).void
         case None       => UnassignConstraintSet.execute(obsId).void
       }
+
+    def insertConstraintSet(cs: ConstraintsSummary)(implicit
+      c:                        TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = {
+      val create = ConstraintSetObsQueries.defaultCreateConstraintSet(cs)
+      AddConstraintSet
+        .execute(create)
+        .handleErrorWith(_ => UndeleteConstraintSet.execute(cs.id))
+        .void
+    }
+
+    def deleteConstraintSet(id: ConstraintSet.Id)(implicit
+      c:                        TransactionalClient[IO, ObservationDB]
+    ): IO[Unit] = DeleteConstraintSet.execute(id).void
 
     private def getConstraintSetForObsWithId(
       obsWithIndexGetter: Getter[ObsList, obsListMod.ElemWithIndex]
@@ -152,6 +173,83 @@ object ConstraintSetObsList {
             .orEmpty
         }
 
+    private def setConstraintSetWithIndex(
+      constraintSetsWithObs: View[ConstraintSetsWithObs],
+      focused:               View[Option[Focused]],
+      csId:                  ConstraintSet.Id,
+      csWithIndexSetter:     Adjuster[ConstraintSetList, constraintSetListMod.ElemWithIndex],
+      nextToFocus:           Option[ConstraintsSummary]
+    )(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
+    ): constraintSetListMod.ElemWithIndex => IO[Unit] =
+      csWithIndex =>
+        constraintSetsWithObs
+          .zoom(ConstraintSetsWithObs.constraintSets)
+          .mod(csWithIndexSetter.set(csWithIndex)) >>
+          csWithIndex.fold(
+            focused.set(
+              nextToFocus.map(cs => Focused.FocusedConstraintSet(cs.id))
+            ) >> deleteConstraintSet(csId)
+          ) { case (cs, _) =>
+            insertConstraintSet(cs) >> focused.set(FocusedConstraintSet(csId).some)
+          }
+
+    private def constraintSetMod(
+      setter:                Undoer.Setter[IO, ConstraintSetsWithObs],
+      constraintSetsWithObs: View[ConstraintSetsWithObs],
+      focused:               View[Option[Focused]],
+      csId:                  ConstraintSet.Id,
+      focusOnDelete:         Option[ConstraintsSummary]
+    )(implicit
+      c:                     TransactionalClient[IO, ObservationDB]
+    ): constraintSetListMod.Operation => IO[Unit] = {
+      val csWithId: GetAdjust[ConstraintSetList, constraintSetListMod.ElemWithIndex] =
+        constraintSetListMod.withKey(csId)
+
+      setter.mod[constraintSetListMod.ElemWithIndex](
+        constraintSetsWithObs.get,
+        ConstraintSetsWithObs.constraintSets.composeGetter(csWithId.getter).get,
+        setConstraintSetWithIndex(constraintSetsWithObs,
+                                  focused,
+                                  csId,
+                                  csWithId.adjuster,
+                                  focusOnDelete
+        )
+      )
+    }
+
+    def newConstraintSet(
+      setter: Undoer.Setter[IO, ConstraintSetsWithObs]
+    )(name:   NonEmptyString)(implicit c: TransactionalClient[IO, ObservationDB]): IO[Unit] = {
+      // Temporary measure until we have id pools.
+      val newCs = IO(Random.nextInt()).map(int =>
+        ConstraintsSummary.default(id = ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+                                   name = name
+        )
+      )
+
+      $.propsIn[IO] >>= { props =>
+        newCs >>= { cs =>
+          val mod =
+            constraintSetMod(setter, props.constraintSetsWithObs, props.focused, cs.id, none)
+          mod(
+            constraintSetListMod.upsert(cs, props.constraintSetsWithObs.get.constraintSets.length)
+          )
+        }
+      }
+    }
+
+    def deleteConstraintSet(
+      csId:          ConstraintSet.Id,
+      setter:        Undoer.Setter[IO, ConstraintSetsWithObs],
+      focusOnDelete: Option[ConstraintsSummary]
+    )(implicit c:    TransactionalClient[IO, ObservationDB]): IO[Unit] =
+      $.propsIn[IO] >>= { props =>
+        val mod =
+          constraintSetMod(setter, props.constraintSetsWithObs, props.focused, csId, focusOnDelete)
+        mod(constraintSetListMod.delete)
+      }
+
     def toggleExpanded(
       id:          ConstraintSet.Id,
       expandedIds: View[SortedSet[ConstraintSet.Id]]
@@ -192,7 +290,17 @@ object ConstraintSetObsList {
         )(
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
-              <.span(), // Add button goes here.
+              InputModal(
+                "Create new Constraint",
+                initialValue = None,
+                label = "Name",
+                placeholder = "Constraint name",
+                okLabel = "Create",
+                onComplete = s => newConstraintSet(undoCtx.setter)(s).runAsyncCB,
+                trigger = Button(size = Mini, compact = true)(
+                  Icons.New.size(Small).fitted(true)
+                )
+              ),
               UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)
             ),
             ReflexContainer()(
@@ -202,12 +310,11 @@ object ConstraintSetObsList {
                   Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("CONSTRAINTS"),
                   <.div(ExploreStyles.ObsTree)(
                     <.div(ExploreStyles.ObsScrollTree)(
-                      constraintSetsWithIdx.toTagMod { case (constraintSet, _) =>
-                        val csId = constraintSet.id
-                        // will be needed in the next PR
-                        // val nextToSelect  = constraintSetsWithIdx.find(_._2 === csIdx + 1).map(_._1)
-                        // val prevToSelect  = constraintSetsWithIdx.find(_._2 === csIdx - 1).map(_._1)
-                        // val focusOnDelete = nextToSelect.orElse(prevToSelect)
+                      constraintSetsWithIdx.toTagMod { case (constraintSet, csIdx) =>
+                        val csId          = constraintSet.id
+                        val nextToSelect  = constraintSetsWithIdx.find(_._2 === csIdx + 1).map(_._1)
+                        val prevToSelect  = constraintSetsWithIdx.find(_._2 === csIdx - 1).map(_._1)
+                        val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
                         val csObs = obsByConstraintSet.get(csId.some).orEmpty
 
@@ -237,7 +344,20 @@ object ConstraintSetObsList {
                               <.span(ExploreStyles.TargetLabelTitle)(
                                 opIcon,
                                 constraintSet.name.value
-                              ), // delete button goes here
+                              ),
+                              Button(
+                                size = Small,
+                                compact = true,
+                                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                  e.stopPropagationCB >>
+                                    deleteConstraintSet(csId,
+                                                        undoCtx.setter,
+                                                        focusOnDelete
+                                    ).runAsyncCB
+                              )(
+                                Icons.Trash
+                              ),
                               <.span(ExploreStyles.ObsCount, s"${csObs.length} Obs")
                             )
 
