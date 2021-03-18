@@ -6,9 +6,11 @@ package explore.observationtree
 import cats.data.NonEmptyList
 import cats.effect.IO
 import clue.GraphQLOperation
+import clue.data.Input
 import clue.macros.GraphQL
 import explore.AppCtx
 import explore.GraphQLSchemas._
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
@@ -26,6 +28,22 @@ object ConstraintSetObsQueries {
 
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintsSummary]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummary]
+
+  def defaultCreateConstraintSet(
+    cs: ConstraintsSummary
+  ): CreateConstraintSetInput =
+    CreateConstraintSetInput(
+      constraintSetId = Input(cs.id),
+      programId = "p-2",
+      name = cs.name,
+      imageQuality = cs.imageQuality,
+      cloudExtinction = cs.cloudExtinction,
+      skyBackground = cs.skyBackground,
+      waterVapor = cs.waterVapor,
+      elevationRange = CreateElevationRangeInput(airmassRange =
+        clue.data.Input(CreateAirmassRangeInput(min = 1.0, max = 1.5))
+      )
+    )
 
   @Lenses
   case class ConstraintSetsWithObs(constraintSets: ConstraintSetList, obs: ObsList)
@@ -101,10 +119,32 @@ object ConstraintSetObsQueries {
   }
 
   @GraphQL
-  object RemoveConstraintSet extends GraphQLOperation[ObservationDB] {
+  object AddConstraintSet extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: CreateConstraintSetInput!) {
+        createConstraintSet(input: $input) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  object DeleteConstraintSet extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($constraintSetId: ConstraintSetId!) {
         deleteConstraintSet(constraintSetId: $constraintSetId) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  object UndeleteConstraintSet extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($constraintSetId: ConstraintSetId!) {
+        undeleteContraintSet(constraintSetId: $constraintSetId) {
           id
         }
       }
