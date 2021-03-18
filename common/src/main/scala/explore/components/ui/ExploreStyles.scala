@@ -93,6 +93,7 @@ object ExploreStyles {
   val ObsTree: Css                 = Css("obs-tree")
   val ObsTreeWrapper: Css          = Css("obs-tree-wrapper")
   val ObsScrollTree: Css           = Css("obs-scroll-tree")
+  val ObsUnassigned: Css           = Css("obs-unassigned")
   val ObsTreeGroup: Css            = Css("obs-tree-group")
   val ObsTreeHeader: Css           = Css("obs-tree-header")
   val ObsTreeSection: Css          = Css("obs-tree-section")

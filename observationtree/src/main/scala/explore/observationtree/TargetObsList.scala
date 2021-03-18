@@ -184,7 +184,7 @@ object TargetObsList {
     ): (DropResult, ResponderProvided) => IO[Unit] =
       (result, _) =>
         $.propsIn[IO] >>= { props =>
-          println(scalajs.js.JSON.stringify(result))
+          // println(scalajs.js.JSON.stringify(result))
           // We can drag:
           //  - An observation from a target or an asterism to another target or asterism.
           //  - A target into an asterism.
@@ -682,7 +682,7 @@ object TargetObsList {
                                 TagMod
                                   .when(expandedTargetIds.get.contains(targetId))(
                                     targetObs.zipWithIndex.toTagMod(
-                                      (props.renderObsBadgeItem _).tupled
+                                      (props.renderObsBadgeItem(selectable = true) _).tupled
                                     )
                                   ),
                                 provided.placeholder
@@ -812,7 +812,7 @@ object TargetObsList {
                                       )
                                   ).when(asterismTargets.nonEmpty),
                                   asterismObs.zipWithIndex.toTagMod(
-                                    (props.renderObsBadgeItem _).tupled
+                                    (props.renderObsBadgeItem(selectable = true) _).tupled
                                   )
                                 )
                               ),
@@ -824,40 +824,46 @@ object TargetObsList {
                     )
                   )
                 ): VdomNode).some.filter(_ => asterisms.nonEmpty),
-                // ): VdomElement).when_(asterisms.nonEmpty),
                 (ReflexSplitter(propagate = true): VdomNode).some,
-                // End Asterism Tree - Start Unassigned Observations List
-                (ReflexElement(size = 36, minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  ReflexHandle()(
-                    Header(block = true,
-                           clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
-                    )(
-                      <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
-                      <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
-                    )
-                  ),
-                  Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                    <.div(
-                      provided.innerRef,
-                      provided.droppableProps,
-                      props.getListStyle(snapshot.isDraggingOver)
-                    )(
-                      <.div(ExploreStyles.ObsTree)(
-                        <.div(ExploreStyles.ObsScrollTree) {
-
-                          Segment(
-                            vertical = true,
-                            clazz = ExploreStyles.ObsTreeGroup
+                (ReflexElement(size = 36,
+                               minSize = 36,
+                               clazz = ExploreStyles.ObsTreeSection,
+                               withHandle = true
+                )(
+                  ReflexWithHandle(reflexProvided =>
+                    // End Asterism Tree - Start Unassigned Observations List
+                    Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                      <.div(ExploreStyles.ObsUnassigned,
+                            provided.innerRef,
+                            provided.droppableProps,
+                            props.getListStyle(snapshot.isDraggingOver)
+                      )(
+                        ReflexHandle(provided = reflexProvided)(
+                          Header(
+                            block = true,
+                            clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
                           )(
-                            unassignedObs.zipWithIndex.toTagMod(
-                              (props.renderObsBadgeItem _).tupled
-                            ),
-                            provided.placeholder
+                            <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
+                            <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                           )
-                        }
+                        ),
+                        <.div(ExploreStyles.ObsTree)(
+                          <.div(ExploreStyles.ObsScrollTree) {
+
+                            Segment(
+                              vertical = true,
+                              clazz = ExploreStyles.ObsTreeGroup
+                            )(
+                              unassignedObs.zipWithIndex.toTagMod(
+                                (props.renderObsBadgeItem(selectable = false) _).tupled
+                              ),
+                              provided.placeholder
+                            )
+                          }
+                        )
                       )
-                    )
-                  }
+                    }
+                  )
                 ): VdomNode).some
                 // End Unassigned Observations List
               ).flatten: _*

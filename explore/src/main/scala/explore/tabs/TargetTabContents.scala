@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.Icons
+import explore.UnderConstruction
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileButton
@@ -132,8 +133,9 @@ object TargetTabContents {
 
             val rightSide =
               Tile(s"Target", backButton.some)(
-                (props.userId.get, targetIdOpt).mapN { case (uid, tid) =>
-                  TargetEditor(uid, tid, props.searching).withKey(tid.show)
+                (props.userId.get, targetIdOpt).tupled match {
+                  case Some((uid, tid)) => TargetEditor(uid, tid, props.searching).withKey(tid.show)
+                  case None             => UnderConstruction()
                 }
               )
 

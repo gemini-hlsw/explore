@@ -545,6 +545,18 @@ tfoot {
   border: solid 1px var(--under-tab-border-color);
 }
 
+.obs-unassigned {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+
+  &.dragging-over {
+    .obs-tree-header {
+      background-color: rgba(0, 0, 0, 0); // transparent
+    }
+  }
+}
+
 .obs-item {
   margin: 0;
   padding: 0;
@@ -596,6 +608,11 @@ tfoot {
 .vertical.segment.selected-obs-tree-group {
   background-color: var(--tile-background);
 }
+
+.dragging-over .vertical.segment.selected-obs-tree-group {
+  background-color: rgba(0, 0, 0, 0);
+}
+
 
 .vertical.segment.unselected-obs-tree-group:hover {
   background-color: var(--explore-group-hover);
@@ -652,9 +669,7 @@ tfoot {
 }
 
 .dragging-over {
-  .vertical.segment {
-    background-color: var(--explore-group-dragging) !important;
-  }
+  background-color: var(--explore-group-dragging) !important;
 }
 
 .sky-plot {
