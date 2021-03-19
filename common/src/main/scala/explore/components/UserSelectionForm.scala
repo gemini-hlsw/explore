@@ -8,7 +8,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
-import explore.WebpackResources
+import explore.Resources
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.UserVault
@@ -75,7 +75,7 @@ object UserSelectionForm {
                 Button(
                   content =
                     <.div(ExploreStyles.LoginOrcidButton,
-                          Image(clazz = ExploreStyles.OrcidIcon, src = WebpackResources.OrcidLogo),
+                          Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
                           "Login with ORCID"
                     ),
                   clazz = ExploreStyles.LoginBoxButton,

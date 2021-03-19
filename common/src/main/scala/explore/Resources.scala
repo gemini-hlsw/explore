@@ -7,9 +7,9 @@ import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
-object WebpackResources {
+object Resources {
   @nowarn
   @js.native
-  @JSImport("resources/images/ORCID-iD_icon-vector.svg", JSImport.Default)
+  @JSImport("/images/ORCID-iD_icon-vector.svg", JSImport.Default)
   val OrcidLogo: String = js.native
 }

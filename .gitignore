@@ -33,3 +33,4 @@ metals.sbt
 .hydra/
 node_modules/
 vars.css
+static/

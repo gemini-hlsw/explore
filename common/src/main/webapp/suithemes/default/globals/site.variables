@@ -89,8 +89,8 @@
 /* Input Text Color */
 @inputColor: @textColor;
 // OVERRIDE FUI
-/* @inputPlaceholderColor: lighten(@inputColor, 75); */
-/* @inputPlaceholderFocusColor: lighten(@inputColor, 45); */
+@inputPlaceholderColor: var(--site-input-placeholder-color);
+@inputPlaceholderFocusColor: var(--site-input-placeholder-focus-color);
 
 /* Line Height Default For Inputs in Browser (Descenders are 17px at 14px base em) */
 @inputLineHeight: unit((17 / 14), em);

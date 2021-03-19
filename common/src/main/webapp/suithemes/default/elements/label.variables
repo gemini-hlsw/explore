@@ -154,7 +154,7 @@
 @rightRibbonTableOffset: e(%("calc(100%% + %d + %d)", @ribbonTableMargin, @ribbonTriangleSize));
 
 /* Inverted */
-// @invertedBackgroundColor: darken(@backgroundColor,20);
+@invertedBackgroundColor: var(--label-inverted-background-color);
 @invertedBackground: @black;
 @invertedBoxShadowSize: 2px;
 @invertedBorderSize: 1px;

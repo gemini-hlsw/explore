@@ -3,7 +3,7 @@
 Explore uses `SemanticUI` as the css framework. `SemanticUI` supports themes and comes with a 
 few predefined ones, whose settings can be further overridden for customization.
 
-The theme used in `explore` is based on `default`, existing at `common/src/main/resources/suithemes/default` overridden with values at `common/src/main/resources/theme`.
+The theme used in `explore` is based on `default`, existing at `common/src/main/webapp/suithemes/default` overridden with values at `common/src/main/webapp/theme`.
 
 The original themes are made in less but that limits the option to dynamically change the theme e.g.
 from dark/light. Thus the `explore` theme uses css-variables instead using the approach described

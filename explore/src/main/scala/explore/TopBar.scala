@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.Icons
-import explore.WebpackResources
+import explore.Resources
 import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
@@ -135,9 +135,7 @@ object TopBar {
                         onClick = appCtx.sso.switchToORCID.runAsyncCB
                       )(
                         <.div(ExploreStyles.OrcidMenu)(
-                          Image(clazz = ExploreStyles.OrcidIconMenu,
-                                src = WebpackResources.OrcidLogo
-                          ),
+                          Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
                           <.span(^.cls := "text", "Switch to ORCID")
                         )
                       ).when(role === GuestRole),

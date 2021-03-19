@@ -262,22 +262,22 @@
 @tertiaryBackgroundColor: none;
 
 /* Tertiary Hover */
-// @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
-// @tertiaryHoverLineColor: lighten(@tertiaryHoverColor, 20%);
+@tertiaryHoverColor: var(--button-tertiary-hover-color);
+@tertiaryHoverLineColor: var(--button-tertiary-line-color);
 @tertiaryHoverWithUnderline: true;
 @tertiaryHoverWithOverline: false;
 @tertiaryHoverBackgroundColor: none;
 
 /* Tertiary Focus */
-// @tertiaryFocusColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
-// @tertiaryFocusLineColor: lighten(@tertiaryHoverColor, 20%);
+@tertiaryFocusColor: var(--button-tertiary-focus-color);
+@tertiaryFocusLineColor: var(--button-tertiary-focus-line-color);
 @tertiaryFocusWithUnderline: true;
 @tertiaryFocusWithOverline: false;
 @tertiaryFocusBackgroundColor: none;
 
 /* Tertiary Active */
-// @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
-// @tertiaryActiveLineColor: lighten(@tertiaryActiveColor, 20%);
+@tertiaryActiveColor: var(--button-tertiary-active-color);
+@tertiaryActiveLineColor: var(--button-tertiary-active-line-color);
 @tertiaryActiveWithUnderline: true;
 @tertiaryActiveWithOverline: false;
 @tertiaryActiveBackgroundColor: none;
