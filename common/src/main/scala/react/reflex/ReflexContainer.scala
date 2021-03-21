@@ -5,11 +5,24 @@ package react.reflex
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.raw.JsNumber
+import japgolly.scalajs.react.vdom.TagMod
 import react.common._
 
 import scala.scalajs.js.annotation.JSImport
 
 import scalajs.js
+
+final case class ReflexContainer(
+  orientation:            js.UndefOr[Orientation] = js.undefined,
+  maxRecDepth:            js.UndefOr[JsNumber] = js.undefined,
+  windowResizeAware:      js.UndefOr[Boolean] = js.undefined,
+  clazz:                  js.UndefOr[Css] = js.undefined,
+  override val modifiers: Seq[TagMod] = Seq.empty
+) extends GenericComponentPAC[ReflexContainer.Props, ReflexContainer] {
+  override protected def cprops    = ReflexContainer.props(this)
+  override protected val component = ReflexContainer.component
+  override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
+}
 
 object ReflexContainer {
 
@@ -26,33 +39,22 @@ object ReflexContainer {
     var style: js.UndefOr[js.Object]
   }
 
-  object Props {
-    def apply(
-      orientation:       js.UndefOr[Orientation] = js.undefined,
-      maxRecDepth:       js.UndefOr[JsNumber] = js.undefined,
-      windowResizeAware: js.UndefOr[Boolean] = js.undefined,
-      clazz:             js.UndefOr[Css] = js.undefined,
-      style:             js.UndefOr[js.Object] = js.undefined // TODO Use GenericComponentPA mechanism
-    ): Props = {
-      val p = (new js.Object).asInstanceOf[Props]
-      orientation.foreach(v => p.orientation = v.toJs)
-      maxRecDepth.foreach(v => p.maxRecDepth = v)
-      windowResizeAware.foreach(v => p.windowResizeAware = v)
-      clazz.foreach(v => p.className = v.htmlClass)
-      style.foreach(v => p.style = v)
-      p
-    }
-  }
+  protected def props(p: ReflexContainer): Props =
+    rawprops(p.orientation, p.maxRecDepth, p.windowResizeAware, p.clazz)
 
-  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
-
-  def apply(
+  protected def rawprops(
     orientation:       js.UndefOr[Orientation] = js.undefined,
     maxRecDepth:       js.UndefOr[JsNumber] = js.undefined,
     windowResizeAware: js.UndefOr[Boolean] = js.undefined,
-    clazz:             js.UndefOr[Css] = js.undefined,
-    style:             js.UndefOr[js.Object] = js.undefined // TODO Use GenericComponentPA mechanism
-  )(children:          CtorType.ChildArg*) = component(
-    Props(orientation, maxRecDepth, windowResizeAware, clazz, style)
-  )(children: _*)
+    clazz:             js.UndefOr[Css] = js.undefined
+  ): Props = {
+    val p = (new js.Object).asInstanceOf[Props]
+    orientation.foreach(v => p.orientation = v.toJs)
+    maxRecDepth.foreach(v => p.maxRecDepth = v)
+    windowResizeAware.foreach(v => p.windowResizeAware = v)
+    clazz.foreach(v => p.className = v.htmlClass)
+    p
+  }
+
+  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
 }

@@ -7,6 +7,9 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
@@ -23,9 +26,6 @@ import explore.optics.GetAdjust
 import explore.optics._
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import eu.timepit.refined.auto._
-import eu.timepit.refined.types.numeric.PosLong
-import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -306,7 +306,7 @@ object ConstraintSetObsList {
             ReflexContainer()(
               // Start constraint sets tree
               ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("CONSTRAINTS"),
+                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Constraints"),
                 <.div(ExploreStyles.ObsTree)(
                   <.div(ExploreStyles.ObsScrollTree)(
                     constraintSetsWithIdx.toTagMod { case (constraintSet, csIdx) =>
@@ -339,8 +339,7 @@ object ConstraintSetObsList {
                       Droppable(csId.toString, renderClone = renderClone) {
                         case (provided, snapshot) =>
                           val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                            // TODO: Give it its own style?
-                            <.span(ExploreStyles.TargetLabelTitle)(
+                            <.span(ExploreStyles.ObsGroupTitle)(
                               opIcon,
                               constraintSet.name.value
                             ),
@@ -393,7 +392,7 @@ object ConstraintSetObsList {
                               csHeader,
                               TagMod.when(props.expandedIds.get.contains(csId))(
                                 csObs.zipWithIndex.toTagMod(
-                                  (props.renderObsBadgeItem _).tupled
+                                  (props.renderObsBadgeItem(selectable = true) _).tupled
                                 )
                               ),
                               <.span(provided.placeholder)
@@ -407,36 +406,44 @@ object ConstraintSetObsList {
               // end of constraint set tree
               ReflexSplitter(propagate = true),
               // start of unassigned observations list
-              ReflexElement(size = 36, minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                ReflexHandle()(
-                  Header(block = true,
-                         clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
-                  )(
-                    <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
-                    <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
-                  )
-                ),
-                Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                  <.div(
-                    provided.innerRef,
-                    provided.droppableProps,
-                    props.getListStyle(snapshot.isDraggingOver)
-                  )(
-                    <.div(ExploreStyles.ObsTree)(
-                      <.div(ExploreStyles.ObsScrollTree) {
-                        Segment(
-                          vertical = true,
-                          clazz = ExploreStyles.ObsTreeGroup
+              ReflexElement(size = 36,
+                            minSize = 36,
+                            clazz = ExploreStyles.ObsTreeSection,
+                            withHandle = true
+              )(
+                ReflexWithHandle(reflexProvided =>
+                  Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                    <.div(
+                      ExploreStyles.ObsUnassigned,
+                      provided.innerRef,
+                      provided.droppableProps,
+                      props.getListStyle(snapshot.isDraggingOver)
+                    )(
+                      ReflexHandle(provided = reflexProvided)(
+                        Header(block = true,
+                               clazz =
+                                 ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
                         )(
-                          unassignedObs.zipWithIndex.toTagMod(
-                            (props.renderObsBadgeItem _).tupled
-                          ),
-                          provided.placeholder
+                          <.span(ExploreStyles.ObsGroupTitle)("Unassigned observations"),
+                          <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                         )
-                      }
+                      ),
+                      <.div(ExploreStyles.ObsTree)(
+                        <.div(ExploreStyles.ObsScrollTree) {
+                          Segment(
+                            vertical = true,
+                            clazz = ExploreStyles.ObsTreeGroup
+                          )(
+                            unassignedObs.zipWithIndex.toTagMod(
+                              (props.renderObsBadgeItem(selectable = false) _).tupled
+                            ),
+                            provided.placeholder
+                          )
+                        }
+                      )
                     )
-                  )
-                }
+                  }
+                )
               )
               // end of unassigned observations list
             )

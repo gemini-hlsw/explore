@@ -184,7 +184,7 @@ object TargetObsList {
     ): (DropResult, ResponderProvided) => IO[Unit] =
       (result, _) =>
         $.propsIn[IO] >>= { props =>
-          println(scalajs.js.JSON.stringify(result))
+          // println(scalajs.js.JSON.stringify(result))
           // We can drag:
           //  - An observation from a target or an asterism to another target or asterism.
           //  - A target into an asterism.
@@ -569,7 +569,7 @@ object TargetObsList {
               List[Option[VdomNode]](
                 // Start Target Tree
                 (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("TARGETS"),
+                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Targets"),
                   <.div(ExploreStyles.ObsTree)(
                     <.div(ExploreStyles.ObsScrollTree)(
                       targetsWithIdx.toTagMod { case (target, targetIdx) =>
@@ -613,7 +613,7 @@ object TargetObsList {
 
                             val targetHeader =
                               <.span(ExploreStyles.ObsTreeGroupHeader)(
-                                <.span(ExploreStyles.TargetLabelTitle)(
+                                <.span(ExploreStyles.ObsGroupTitle)(
                                   opIcon,
                                   target.name.value
                                 ),
@@ -682,7 +682,7 @@ object TargetObsList {
                                 TagMod
                                   .when(expandedTargetIds.get.contains(targetId))(
                                     targetObs.zipWithIndex.toTagMod(
-                                      (props.renderObsBadgeItem _).tupled
+                                      (props.renderObsBadgeItem(selectable = true) _).tupled
                                     )
                                   ),
                                 provided.placeholder
@@ -696,7 +696,7 @@ object TargetObsList {
                 (ReflexSplitter(propagate = true): VdomNode).some.filter(_ => asterisms.nonEmpty),
                 (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
                   ReflexHandle()(
-                    Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("ASTERISMS")
+                    Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms")
                   ),
                   <.div(ExploreStyles.ObsTree)(
                     <.div(ExploreStyles.ObsScrollTree)(
@@ -762,7 +762,7 @@ object TargetObsList {
                                 <.span(
                                   opIcon,
                                   asterism.name.value,
-                                  ExploreStyles.TargetLabelTitle
+                                  ExploreStyles.ObsGroupTitle
                                 ),
                                 Button(
                                   size = Small,
@@ -791,9 +791,7 @@ object TargetObsList {
                                         Segment(basic = true,
                                                 clazz = ExploreStyles.ObsTreeGroupHeader
                                         )(
-                                          <.span(ExploreStyles.TargetLabelTitle)(
-                                            target.name.value
-                                          ),
+                                          <.span(ExploreStyles.ObsGroupTitle)(target.name.value),
                                           Button(
                                             size = Small,
                                             compact = true,
@@ -812,7 +810,7 @@ object TargetObsList {
                                       )
                                   ).when(asterismTargets.nonEmpty),
                                   asterismObs.zipWithIndex.toTagMod(
-                                    (props.renderObsBadgeItem _).tupled
+                                    (props.renderObsBadgeItem(selectable = true) _).tupled
                                   )
                                 )
                               ),
@@ -824,40 +822,46 @@ object TargetObsList {
                     )
                   )
                 ): VdomNode).some.filter(_ => asterisms.nonEmpty),
-                // ): VdomElement).when_(asterisms.nonEmpty),
                 (ReflexSplitter(propagate = true): VdomNode).some,
-                // End Asterism Tree - Start Unassigned Observations List
-                (ReflexElement(size = 36, minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  ReflexHandle()(
-                    Header(block = true,
-                           clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
-                    )(
-                      <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
-                      <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
-                    )
-                  ),
-                  Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                    <.div(
-                      provided.innerRef,
-                      provided.droppableProps,
-                      props.getListStyle(snapshot.isDraggingOver)
-                    )(
-                      <.div(ExploreStyles.ObsTree)(
-                        <.div(ExploreStyles.ObsScrollTree) {
-
-                          Segment(
-                            vertical = true,
-                            clazz = ExploreStyles.ObsTreeGroup
+                (ReflexElement(size = 36,
+                               minSize = 36,
+                               clazz = ExploreStyles.ObsTreeSection,
+                               withHandle = true
+                )(
+                  ReflexWithHandle(reflexProvided =>
+                    // End Asterism Tree - Start Unassigned Observations List
+                    Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                      <.div(ExploreStyles.ObsUnassigned,
+                            provided.innerRef,
+                            provided.droppableProps,
+                            props.getListStyle(snapshot.isDraggingOver)
+                      )(
+                        ReflexHandle(provided = reflexProvided)(
+                          Header(
+                            block = true,
+                            clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
                           )(
-                            unassignedObs.zipWithIndex.toTagMod(
-                              (props.renderObsBadgeItem _).tupled
-                            ),
-                            provided.placeholder
+                            <.span(ExploreStyles.ObsGroupTitle)("Unassigned Observations"),
+                            <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                           )
-                        }
+                        ),
+                        <.div(ExploreStyles.ObsTree)(
+                          <.div(ExploreStyles.ObsScrollTree) {
+
+                            Segment(
+                              vertical = true,
+                              clazz = ExploreStyles.ObsTreeGroup
+                            )(
+                              unassignedObs.zipWithIndex.toTagMod(
+                                (props.renderObsBadgeItem(selectable = false) _).tupled
+                              ),
+                              provided.placeholder
+                            )
+                          }
+                        )
                       )
-                    )
-                  }
+                    }
+                  )
                 ): VdomNode).some
                 // End Unassigned Observations List
               ).flatten: _*

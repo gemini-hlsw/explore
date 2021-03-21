@@ -28,16 +28,18 @@ trait ViewCommon {
       selected = focused.get.exists(_ === FocusedObs(obs.id))
     )
 
-  def renderObsBadgeItem(obs: ObsSummary, idx: Int)(implicit logger: Logger[IO]): TagMod =
+  def renderObsBadgeItem(selectable: Boolean)(obs: ObsSummary, idx: Int)(implicit
+    logger:                          Logger[IO]
+  ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(
           provided.innerRef,
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
-          ^.onClick ==> { e: ReactEvent =>
+          (^.onClick ==> { e: ReactEvent =>
             e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some).runAsyncCB
-          }
+          }).when(selectable)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs)))
       }
     )

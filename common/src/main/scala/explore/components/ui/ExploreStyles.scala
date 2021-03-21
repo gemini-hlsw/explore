@@ -65,7 +65,7 @@ object ExploreStyles {
   val TabSelector: Css      = Css("bottom-tab-selector")
   val BlendedButton: Css    = Css("blended-button")
   val JustifyRight: Css     = Css("justify-right")
-  val TargetLabelTitle: Css = Css("target-label-title")
+  val ObsGroupTitle: Css    = Css("obs-group-title")
   val DeleteButton: Css     = Css("delete-button")
 
   val ResizeHandle: Css         = Css("resize-handle")
@@ -93,6 +93,7 @@ object ExploreStyles {
   val ObsTree: Css                 = Css("obs-tree")
   val ObsTreeWrapper: Css          = Css("obs-tree-wrapper")
   val ObsScrollTree: Css           = Css("obs-scroll-tree")
+  val ObsUnassigned: Css           = Css("obs-unassigned")
   val ObsTreeGroup: Css            = Css("obs-tree-group")
   val ObsTreeHeader: Css           = Css("obs-tree-header")
   val ObsTreeSection: Css          = Css("obs-tree-section")

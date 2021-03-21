@@ -9,12 +9,13 @@ import clue.GraphQLOperation
 import clue.data.Input
 import clue.macros.GraphQL
 import explore.AppCtx
-import explore.GraphQLSchemas._
 import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.{ ConstraintsSummary, ObsSummary }
+import explore.model.ConstraintsSummary
+import explore.model.ObsSummary
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^._

@@ -16,6 +16,12 @@ trait ResizeEvent extends js.Object {
   val component: JsComponent.RawMounted[ReflexElement.Props, js.Object]
 }
 
+@js.native
+protected[reflex] trait HandleProps extends js.Object {
+  var index: js.UndefOr[Int]
+  var events: js.UndefOr[ReflexEvents]
+}
+
 sealed trait Orientation extends Product with Serializable
 
 object Orientation {
