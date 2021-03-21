@@ -613,7 +613,6 @@ tfoot {
   background-color: rgba(0, 0, 0, 0);
 }
 
-
 .vertical.segment.unselected-obs-tree-group:hover {
   background-color: var(--explore-group-hover);
 
@@ -629,6 +628,10 @@ tfoot {
   user-select: none;
   margin-top: 2px;
   margin-bottom: 0;
+
+  :not(.obs-count) {
+    text-transform: uppercase;
+  }
 }
 
 .vertical.segment.obs-tree-group {
@@ -647,7 +650,7 @@ tfoot {
   color: var(--negative-icon-color);
 }
 
-.target-label-title {
+.obs-group-title {
   flex-grow: 2;
   white-space: nowrap;
   overflow: hidden;

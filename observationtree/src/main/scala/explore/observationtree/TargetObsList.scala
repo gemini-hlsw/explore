@@ -569,7 +569,7 @@ object TargetObsList {
               List[Option[VdomNode]](
                 // Start Target Tree
                 (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("TARGETS"),
+                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Targets"),
                   <.div(ExploreStyles.ObsTree)(
                     <.div(ExploreStyles.ObsScrollTree)(
                       targetsWithIdx.toTagMod { case (target, targetIdx) =>
@@ -613,7 +613,7 @@ object TargetObsList {
 
                             val targetHeader =
                               <.span(ExploreStyles.ObsTreeGroupHeader)(
-                                <.span(ExploreStyles.TargetLabelTitle)(
+                                <.span(ExploreStyles.ObsGroupTitle)(
                                   opIcon,
                                   target.name.value
                                 ),
@@ -696,7 +696,7 @@ object TargetObsList {
                 (ReflexSplitter(propagate = true): VdomNode).some.filter(_ => asterisms.nonEmpty),
                 (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
                   ReflexHandle()(
-                    Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("ASTERISMS")
+                    Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms")
                   ),
                   <.div(ExploreStyles.ObsTree)(
                     <.div(ExploreStyles.ObsScrollTree)(
@@ -762,7 +762,7 @@ object TargetObsList {
                                 <.span(
                                   opIcon,
                                   asterism.name.value,
-                                  ExploreStyles.TargetLabelTitle
+                                  ExploreStyles.ObsGroupTitle
                                 ),
                                 Button(
                                   size = Small,
@@ -791,9 +791,7 @@ object TargetObsList {
                                         Segment(basic = true,
                                                 clazz = ExploreStyles.ObsTreeGroupHeader
                                         )(
-                                          <.span(ExploreStyles.TargetLabelTitle)(
-                                            target.name.value
-                                          ),
+                                          <.span(ExploreStyles.ObsGroupTitle)(target.name.value),
                                           Button(
                                             size = Small,
                                             compact = true,
@@ -843,7 +841,7 @@ object TargetObsList {
                             block = true,
                             clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
                           )(
-                            <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
+                            <.span(ExploreStyles.ObsGroupTitle)("Unassigned Observations"),
                             <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                           )
                         ),

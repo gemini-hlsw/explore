@@ -65,7 +65,7 @@ object ExploreStyles {
   val TabSelector: Css      = Css("bottom-tab-selector")
   val BlendedButton: Css    = Css("blended-button")
   val JustifyRight: Css     = Css("justify-right")
-  val TargetLabelTitle: Css = Css("target-label-title")
+  val ObsGroupTitle: Css    = Css("obs-group-title")
   val DeleteButton: Css     = Css("delete-button")
 
   val ResizeHandle: Css         = Css("resize-handle")

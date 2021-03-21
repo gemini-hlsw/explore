@@ -306,7 +306,7 @@ object ConstraintSetObsList {
             ReflexContainer()(
               // Start constraint sets tree
               ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("CONSTRAINTS"),
+                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Constraints"),
                 <.div(ExploreStyles.ObsTree)(
                   <.div(ExploreStyles.ObsScrollTree)(
                     constraintSetsWithIdx.toTagMod { case (constraintSet, csIdx) =>
@@ -339,8 +339,7 @@ object ConstraintSetObsList {
                       Droppable(csId.toString, renderClone = renderClone) {
                         case (provided, snapshot) =>
                           val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                            // TODO: Give it its own style?
-                            <.span(ExploreStyles.TargetLabelTitle)(
+                            <.span(ExploreStyles.ObsGroupTitle)(
                               opIcon,
                               constraintSet.name.value
                             ),
@@ -425,7 +424,7 @@ object ConstraintSetObsList {
                                clazz =
                                  ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
                         )(
-                          <.span(ExploreStyles.TargetLabelTitle)("UNASSIGNED OBSERVATIONS"),
+                          <.span(ExploreStyles.ObsGroupTitle)("Unassigned observations"),
                           <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
                         )
                       ),
