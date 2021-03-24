@@ -10,7 +10,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.schemas.ObservationDB.Types._
 import explore.View
 import explore.common.SimbadSearch
 import explore.common.TargetQueries

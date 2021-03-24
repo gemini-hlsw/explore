@@ -11,7 +11,7 @@ import clue._
 import coulomb.Quantity
 import crystal.ViewF
 import crystal.ViewOptF
-import explore.GraphQLSchemas._
+import explore.schemas._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._

@@ -11,7 +11,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
+import explore.schemas.ObservationDB
 import explore.Icons
 import explore.common.ConstraintSetObsQueries
 import explore.common.ConstraintSetObsQueries._

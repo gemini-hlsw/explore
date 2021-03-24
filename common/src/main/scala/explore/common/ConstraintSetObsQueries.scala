@@ -9,8 +9,8 @@ import clue.GraphQLOperation
 import clue.data.Input
 import clue.macros.GraphQL
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB.Types._
-import explore.GraphQLSchemas._
+import explore.schemas.ObservationDB
+import explore.schemas.ObservationDB.Types._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._

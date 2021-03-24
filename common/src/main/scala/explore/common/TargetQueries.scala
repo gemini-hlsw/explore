@@ -10,9 +10,9 @@ import clue.GraphQLOperation
 import clue.data.syntax._
 import clue.macros.GraphQL
 import eu.timepit.refined.auto._
-import explore.GraphQLSchemas.ObservationDB.Implicits._
-import explore.GraphQLSchemas.ObservationDB.Types._
-import explore.GraphQLSchemas._
+import explore.schemas._
+import explore.schemas.ObservationDB.Types._
+import explore.schemas.implicits._
 import explore.implicits._
 import explore.model.decoders._
 import explore.optics._

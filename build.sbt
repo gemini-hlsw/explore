@@ -34,11 +34,13 @@ inThisBuild(
   Seq(
     homepage := Some(url("https://github.com/gemini-hlsw/explore")),
     addCompilerPlugin(
-      ("org.typelevel" % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
+      ("org.typelevel"                    % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
     ),
     description := "Explore",
     scalacOptions += "-Ymacro-annotations",
-    Global / onChangedBuildSource := ReloadOnSourceChanges
+    Global / onChangedBuildSource := ReloadOnSourceChanges,
+    scalafixDependencies += "edu.gemini" %% "clue-generator" % Settings.LibraryVersions.clue,
+    scalafixScalaBinaryVersion := "2.13"
   ) ++ lucumaPublishSettings
 )
 
@@ -113,6 +115,30 @@ lazy val common = project
       else Seq(BuildInfoKey.action("buildTime")(System.currentTimeMillis))
     },
     buildInfoPackage := "explore"
+    // unmanagedSources / excludeFilter := new SimpleFileFilter(file =>
+    //   new File(file.getAbsolutePath.stripSuffix(".scala") + ".gql.scala").exists
+    // )
+    // sourceGenerators.in(Compile) += Def.taskDyn {
+    //   val root        = baseDirectory.in(ThisBuild).value.toURI.toString
+    //   val from        = sourceDirectory.in(Compile).value
+    //   val to          = sourceManaged.in(Compile).value
+    //   val outFrom     = from.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   val outTo       = to.toURI.toString.stripSuffix("/").stripPrefix(root)
+    //   val resources   = resourceDirectory.in(Compile).value
+    //   val resourceDir = resources.toURI.toString.stripSuffix("/")
+    //   val settings    = s"""{"GraphQLGen": {"schemaDirs": ["$resourceDir/graphql/schemas"]}}"""
+    //   Def.task {
+    //     scalafix
+    //       .in(Compile)
+    //       .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo") // --settings=$settings")
+    //       .value
+    //     (to ** "*.scala").get
+    //   }
+    // }.taskValue
+    // scalafix GraphQLGen --settings=GraphQLGen.schemaDirs=["/Users/rpiaggio/gemini/explore/common/src/main/resources/graphql/schemas"]
+    // scalafix GraphQLGen --settings={"GraphQLGen":{"schemaDirs":["gen/input/src/main/resources/graphql/schemas"]},"rules":["GraphQLGen"]}
+    // THIS ALMOST WORKS (IT WOULD IF IT WAS JUST A STRING): scalafix GraphQLGen --settings.schemaDirs=["gen/input/src/main/resources/graphql/schemas"]
+    // scalafix GraphQLGen --out-from=(.+).scala --out-to=$1.gql.scala
   )
   .enablePlugins(ScalaJSBundlerPlugin, BuildInfoPlugin)
   .dependsOn(model.js)

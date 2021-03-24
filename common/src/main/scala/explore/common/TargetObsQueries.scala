@@ -9,7 +9,7 @@ import clue.GraphQLOperation
 import clue.macros.GraphQL
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.GraphQLSchemas._
+import explore.schemas.ObservationDB
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._

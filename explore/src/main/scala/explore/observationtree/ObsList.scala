@@ -13,8 +13,8 @@ import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
-import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.schemas.ObservationDB
+import explore.schemas.ObservationDB.Types._
 import explore.Icons
 import explore.common.ObsQueries
 import explore.components.InputModal

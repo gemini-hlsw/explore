@@ -9,7 +9,7 @@ import cats.syntax.all._
 import clue._
 import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.GraphQLSchemas._
+import explore.schemas._
 import explore.common.SSOClient
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment

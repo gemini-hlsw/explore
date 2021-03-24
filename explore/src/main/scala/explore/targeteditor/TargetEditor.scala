@@ -8,7 +8,7 @@ import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
+import explore.schemas.ObservationDB
 import explore.common.TargetQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.graphql.LiveQueryRenderMod

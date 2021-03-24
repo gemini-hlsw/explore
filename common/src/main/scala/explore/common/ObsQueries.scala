@@ -8,7 +8,7 @@ import cats.effect.IO
 import clue.GraphQLOperation
 import clue.macros.GraphQL
 import explore.AppCtx
-import explore.GraphQLSchemas._
+import explore.schemas.ObservationDB
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._

@@ -11,7 +11,8 @@ import clue.GraphQLOperation
 import clue.TransactionalClient
 import clue.data.syntax._
 import clue.macros.GraphQL
-import explore.GraphQLSchemas.UserPreferencesDB
+import explore.schemas.UserPreferencesDB
+import explore.schemas.implicits._
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
 import explore.model.layout._

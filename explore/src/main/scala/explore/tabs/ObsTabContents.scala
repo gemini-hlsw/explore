@@ -11,7 +11,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
+import explore.schemas.ObservationDB
 import explore.Icons
 import explore.common.ObsQueries._
 import explore.common.TargetQueries._
