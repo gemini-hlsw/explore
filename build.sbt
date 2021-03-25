@@ -16,26 +16,6 @@ addCommandAlias(
 )
 
 addCommandAlias(
-  "constraintsWDS",
-  "; constraints/fastOptJS::stopWebpackDevServer; constraints/fastOptJS::startWebpackDevServer; ~constraints/fastOptJS"
-)
-
-addCommandAlias(
-  "targeteditorWDS",
-  "; stopWDS; targeteditor/fastOptJS::startWebpackDevServer; ~targeteditor/fastOptJS"
-)
-
-addCommandAlias(
-  "observationtreeWDS",
-  "; observationtree/fastOptJS::stopWebpackDevServer; observationtree/fastOptJS::startWebpackDevServer; ~observationtree/fastOptJS"
-)
-
-addCommandAlias(
-  "proposalWDS",
-  "; proposal/fastOptJS::stopWebpackDevServer; proposal/fastOptJS::startWebpackDevServer; ~proposal/fastOptJS"
-)
-
-addCommandAlias(
   "stopWDS",
   "fastOptJS::stopWebpackDevServer"
 )
@@ -97,10 +77,6 @@ lazy val root = project
   .aggregate(model.jvm,
              model.js,
              common,
-             constraints,
-             targeteditor,
-             observationtree,
-             proposal,
              explore
   )
 
@@ -141,54 +117,6 @@ lazy val common = project
   .enablePlugins(ScalaJSBundlerPlugin, BuildInfoPlugin)
   .dependsOn(model.js)
 
-lazy val targeteditor = project
-  .in(file("targeteditor"))
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .settings(commonWDS: _*)
-  .enablePlugins(ScalaJSBundlerPlugin)
-  .dependsOn(common)
-  .settings(
-    libraryDependencies ++=
-      GeminiLocales.value ++
-        ReactAladin.value ++
-        ReactDatepicker.value ++
-        ReactHighcharts.value
-  )
-
-lazy val constraints = project
-  .in(file("constraints"))
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .settings(commonWDS: _*)
-  .enablePlugins(ScalaJSBundlerPlugin)
-  .dependsOn(common)
-
-lazy val observationtree = project
-  .in(file("observationtree"))
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .settings(commonWDS: _*)
-  .enablePlugins(ScalaJSBundlerPlugin)
-  .dependsOn(common)
-  .settings(
-    libraryDependencies ++=
-      ReactAtlasKitTree.value,
-    npmDependencies in Compile ++= Seq(
-      "core-js" -> "2.6.11" // Without this, core-js 3 is used, which conflicts with @babel/runtime-corejs2
-    ),
-    scalaJSLinkerConfig in (Compile, fastOptJS) ~= { _.withSourceMap(false) },
-    scalaJSLinkerConfig in (Compile, fullOptJS) ~= { _.withSourceMap(false) }
-  )
-
-lazy val proposal = project
-  .in(file("proposal"))
-  .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .settings(commonWDS: _*)
-  .enablePlugins(ScalaJSBundlerPlugin)
-  .dependsOn(common)
-
 lazy val explore: Project = project
   .in(file("explore"))
   .settings(commonSettings: _*)
@@ -197,12 +125,16 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     libraryDependencies ++=
-      ReactCommon.value ++
+      GeminiLocales.value ++
+        ReactDatepicker.value ++
+        ReactAladin.value ++
+        ReactAtlasKitTree.value ++
+        ReactCommon.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value
   )
-  .dependsOn(constraints, targeteditor, observationtree, proposal)
+  .dependsOn(model.js, common)
 
 // ***** START: Move to plugin *****
 val depsResourceDirs = taskKey[Seq[File]](
