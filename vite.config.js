@@ -17,11 +17,12 @@ const fontImport = ViteFonts({
 
 // https://vitejs.dev/config/
 export default ({ command, mode }) => {
+  const scalaClassesDir = path.resolve(__dirname, "explore/target/scala-2.13");
   const sjs =
     mode == "production"
-      ? path.resolve(__dirname, "target/scala-2.13/explore-opt")
-      : path.resolve(__dirname, "target/scala-2.13/explore-fastopt/");
-  const common = path.resolve(__dirname, "../common/");
+      ? path.resolve(scalaClassesDir, "explore-opt")
+      : path.resolve(scalaClassesDir, "explore-fastopt");
+  const common = path.resolve(__dirname, "common/");
   const webappCommon = path.resolve(common, "src/main/webapp/");
   const imagesCommon = path.resolve(webappCommon, "images");
   const themeConfig = path.resolve(webappCommon, "theme/theme.config");
@@ -29,7 +30,7 @@ export default ({ command, mode }) => {
   const suithemes = path.resolve(webappCommon, "suithemes");
   const publicDir = path.resolve(common, "src/main/public");
   return {
-    root: "src/main/webapp",
+    root: "explore/src/main/webapp",
     publicDir: publicDir,
     resolve: {
       alias: [
@@ -90,7 +91,7 @@ export default ({ command, mode }) => {
       terserOptions: {
         sourceMap: false,
       },
-      outDir: path.resolve(__dirname, "../static"),
+      outDir: path.resolve(__dirname, "static"),
     },
     plugins: [reactRefresh(), fontImport],
   };

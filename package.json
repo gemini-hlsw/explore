@@ -3,6 +3,38 @@
     "node": "14.8.0",
     "yarn": "1.x"
   },
+  "dependencies": {
+    "react-dom": "16.13.1",
+    "react-semantic-toasts": "0.6.5",
+    "highcharts": "8.1.2",
+    "react-virtuoso": "1.4.0",
+    "react-reflex": "4.0.0",
+    "copy-to-clipboard": "3.3.1",
+    "@cquiroz/aladin-lite": "0.2.3",
+    "react-beautiful-dnd": "13.0.0",
+    "react-datepicker": "3.1.3",
+    "broadcast-channel": "3.3.0",
+    "react": "16.13.1",
+    "@types/react-dom": "16.9.10",
+    "react-moon": "2.0.1",
+    "@types/react-datepicker": "3.1.1",
+    "@types/react-table": "7.0.26",
+    "styled-components": "5.1.1",
+    "prop-types": "15.7.2",
+    "ua-parser-js": "0.7.23",
+    "@svgdotjs/svg.js": "3.0.16",
+    "react-draggable": "4.4.3",
+    "@atlaskit/tree": "8.2.0",
+    "fomantic-ui-less": "2.8.7",
+    "semantic-ui-react": "2.0.3",
+    "react-table": "7.6.2",
+    "@types/react": "16.9.56",
+    "react-resize-detector": "6.5.0",
+    "react-resizable": "1.11.0",
+    "react-is": "16.13.1",
+    "react-grid-layout": "1.0.0",
+    "loglevel": "1.7.1"
+  },
   "devDependencies": {
     "stylelint": "^13.8.0",
     "stylelint-color-format": "^1.1.0",
@@ -20,6 +52,7 @@
     "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;npx stylelint --fix common/src/main/webapp/less; rm vars.css",
     "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;npx stylelint common/src/main/webapp/less; rm vars.css",
     "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;npx stylelint --fix common/src/main/webapp/less; rm vars.css",
-    "build": "cd explore; npm install; npm run build;"
+    "build": "vite build",
+    "serve": "vite preview"
   }
 }
