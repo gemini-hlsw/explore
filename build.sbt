@@ -76,11 +76,7 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm,
-             model.js,
-             common,
-             explore
-  )
+  .aggregate(model.jvm, model.js, common, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
