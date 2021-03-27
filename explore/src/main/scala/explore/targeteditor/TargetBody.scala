@@ -14,6 +14,7 @@ import explore.View
 import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
+import explore.components.HelpIcon
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -41,6 +42,7 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
@@ -183,7 +185,7 @@ object TargetBody {
                     value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
                     validFormat = ValidFormatInput.truncatedRA,
                     changeAuditor = ChangeAuditor.truncatedRA,
-                    label = "RA",
+                    label = Label("RA", HelpIcon("target/main/coordinates.md")),
                     clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                     errorPointing = LabelPointing.Below,
                     errorClazz = ExploreStyles.InputErrorTooltip,
@@ -194,7 +196,7 @@ object TargetBody {
                     value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
                     validFormat = ValidFormatInput.truncatedDec,
                     changeAuditor = ChangeAuditor.truncatedDec,
-                    label = "Dec",
+                    label = Label("Dec", HelpIcon("target/main/coordinates.md")),
                     clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
                     errorPointing = LabelPointing.Below,
                     errorClazz = ExploreStyles.InputErrorTooltip,
@@ -218,7 +220,7 @@ object TargetBody {
                   ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
                   ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
                   id = "epoch",
-                  label = "Epoch",
+                  label = Label("Epoch", HelpIcon("target/main/epoch.md")),
                   units = "years",
                   disabled = disabled
                 ),

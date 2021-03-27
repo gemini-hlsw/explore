@@ -12,6 +12,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import japgolly.scalajs.react.MonocleReact._
@@ -26,6 +27,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
+import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
 
@@ -116,7 +118,7 @@ object SearchForm {
           id = "search",
           value = ViewF.fromState[IO]($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
-          label = "Name",
+          label = Label("Name", HelpIcon("target/main/search-target.md")),
           error = state.searchError.orUndefined,
           loading = disabled,
           disabled = disabled,

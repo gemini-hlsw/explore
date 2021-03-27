@@ -853,6 +853,7 @@ tfoot {
 
 .target-properties-form {
   grid-template-columns: [field] 6fr [units] auto;
+  align-self: start;
   justify-items: stretch;
 }
 
@@ -1309,4 +1310,47 @@ html {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+
+.explore-help-button {
+  padding-left: 0.5em;
+}
+
+.explore-help-sidebar {
+  display: flex;
+  flex-direction: column;
+  .full-height-width();
+}
+
+.explore-help-title {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--control-background-color);
+  padding-left: 0.6em;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
+}
+
+.explore-help-title-label {
+  margin-bottom: 0px;
+}
+
+.explore-help-body {
+  .full-height-width();
+  min-height: 100%;
+  background-color:white;
+}
+
+.markdown-body {
+  @backgroundC: white;
+  background-color: @backgroundC;
+  height: 100%;
+  padding: 1em;
+  * {
+    background-color: @backgroundC;
+    text-shadow: none;
+    color: black;
+  }
 }

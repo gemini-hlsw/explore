@@ -81,21 +81,7 @@ object TopBar {
                 MenuItem(
                   <.span(
                     ExploreStyles.MainTitle,
-                    "Explore",
-                    HelpCtx.usingView { help =>
-                      val helpMsg = help.zoom(HelpContext.msg)
-                      React.Fragment(
-                        helpMsg.get,
-                        react.semanticui.elements.button
-                          .Button(onClick =
-                            helpMsg
-                              .mod(_.fold(" - Hello!".some)(_ => none))
-                              .runAsyncCB
-                          )(
-                            "Help"
-                          )
-                      )
-                    }
+                    "Explore"
                   )
                 ),
                 Item(

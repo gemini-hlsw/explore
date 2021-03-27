@@ -15,6 +15,7 @@ import eu.timepit.refined.cats._
 import explore.AppCtx
 import explore.Icons
 import explore.components.FormStaticData
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui._
 import explore.implicits._
@@ -36,6 +37,7 @@ import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
+import react.semanticui.elements.label.Label
 import spire.std.any._
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
@@ -152,7 +154,7 @@ object ProposalDetailsEditor {
             value = details.zoom(lens).stripQuantity,
             validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
             changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100](),
-            label = "Minimum %",
+            label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md")),
             id = "minimum-pct"
           ).withMods(
             ExploreStyles.FlexShrink(0),
@@ -177,7 +179,7 @@ object ProposalDetailsEditor {
                     ).withMods(^.autoFocus := true),
                     EnumViewSelect(id = "proposal-class",
                                    value = details.zoom(ProposalDetails.proposalClass),
-                                   label = "Class"
+                                   label = Label("Class", HelpIcon("proposal/main/class.md"))
                     ),
                     <.div(
                       ExploreStyles.FlexContainer,
@@ -193,7 +195,9 @@ object ProposalDetailsEditor {
                     ),
                     EnumViewOptionalSelect(id = "category",
                                            value = details.zoom(ProposalDetails.category),
-                                           label = "Category"
+                                           label = Label("Category",
+                                                         HelpIcon("proposal/main/category.md")
+                                           )
                     ),
                     <.div(
                       ExploreStyles.FlexContainer,
@@ -230,7 +234,9 @@ object ProposalDetailsEditor {
                     <.span().unless(hasSecondTime),
                     EnumViewSelect(id = "too-activation",
                                    value = details.zoom(ProposalDetails.toOActivation),
-                                   label = "ToO Activation"
+                                   label = Label("ToO Activation",
+                                                 HelpIcon("proposal/main/too-activation.md")
+                                   )
                     )
                   ),
                   <.div(FomanticStyles.Divider),
