@@ -69,6 +69,7 @@
   --site-hovered-text-color: var(--text-alt);
   --site-input-color: var(--color-text-base);
   --site-border-color: rgba(34, 36, 38, 0.15);
+  --site-solid-border-color: hsl(240, 1%, 83%);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
   --site-input-placeholder-color: var(--color-text-light-75);
   --site-input-highlight-color: var(--site-text-color);
@@ -148,11 +149,9 @@
 }
 
 .popup-light() {
-  @borderColor: @solidBorderColor;
-
   --popup-background: @white;
   --popup-arrow-background: var(--popup-background);
-  --popup-arrow-color: darken(@borderColor, 10);
+  --popup-arrow-color: var(--site-solid-border-color);
 }
 
 .dropdown-light() {
@@ -190,6 +189,14 @@
   --dimmer-background-color: rgba(0, 0, 0, 0.15);
 }
 
+.reflex-light() {
+  --reflex-separator-color: @solidBorderColor;
+}
+
+.header-light() {
+  --header-block-background: @gray-light;
+}
+
 .light-theme() {
   // Values here come from the default SUI theme
   // COLORS
@@ -210,4 +217,6 @@
   .table-light();
   .modal-light();
   .dimmer-light();
+  .reflex-light();
+  .header-light();
 }

@@ -20,7 +20,7 @@
   border: 1px var(--site-border-color) solid;
 
   &:hover {
-    border-color: var(--form-input-hover-border-color);
+    border-color: var(--button-hover-border-color);
   }
 }
 

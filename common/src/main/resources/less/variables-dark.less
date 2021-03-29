@@ -79,6 +79,30 @@
         var(--color-background-base-l) + 20%
       )
     );
+  --color-background-light-25:
+    hsl(
+      var(--color-background-base-h),
+      var(--color-background-base-s),
+      calc(
+        var(--color-background-base-l) + 25%
+      )
+    );
+  --color-background-light-50:
+    hsl(
+      var(--color-background-base-h),
+      var(--color-background-base-s),
+      calc(
+        var(--color-background-base-l) + 50%
+      )
+    );
+  --color-background-light-75:
+    hsl(
+      var(--color-background-base-h),
+      var(--color-background-base-s),
+      calc(
+        var(--color-background-base-l) + 75%
+      )
+    );
   // Dark shades
   --color-background-dark-5:
     hsl(
@@ -203,6 +227,7 @@
   --site-hovered-text-color: var(--text-alt);
   --site-input-color: var(--input-color);
   --site-border-color: var(--gray);
+  --site-solid-border-color: var(--color-background-light-50);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
   --site-input-placeholder-color: var(--color-text-light-75);
   --site-input-highlight-color: var(--color-text-full);
@@ -230,6 +255,7 @@
   @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
 
   --button-hover-background-color: lighten(@color-gray-dark, 5%);
+  --button-hover-border-color: lighten(@color-gray-dark, 25%);
   --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
   --button-background-color: @color-gray-dark;
   --button-text-color: var(--text-color);
@@ -321,6 +347,14 @@
   --dimmer-background-color: rgba(0, 0, 0, 0.85);
 }
 
+.reflex-dark() {
+  --reflex-separator-color: var(--color-background-light-75);
+}
+
+.header-dark() {
+  --header-block-background: var(--color-background-light-10);
+}
+
 .dark-theme() {
   // Values defined based on slate theme
   // COLORS
@@ -341,4 +375,6 @@
   .table-dark();
   .modal-dark();
   .dimmer-dark();
+  .reflex-dark();
+  .header-dark();
 }
