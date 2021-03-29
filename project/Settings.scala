@@ -14,7 +14,7 @@ object Settings {
     val clue              = "0.11.3"
     val crystal           = "0.10.0"
     val discipline        = "1.1.4"
-    val disciplineMUnit   = "1.0.6"
+    val disciplineMUnit   = "1.0.7"
     val geminiLocales     = "0.5.1"
     val log4Cats          = "1.2.1"
     val log4CatsLogLevel  = "0.2.0"
