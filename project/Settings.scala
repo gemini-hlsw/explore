@@ -16,7 +16,7 @@ object Settings {
     val discipline        = "1.1.4"
     val disciplineMUnit   = "1.0.6"
     val geminiLocales     = "0.5.1"
-    val log4Cats          = "1.2.1"
+    val log4Cats          = "2.0.0"
     val log4CatsLogLevel  = "0.2.0"
     val lucumaCore        = "0.7.9"
     val lucumaCatalog     = "0.3.7"
