@@ -18,6 +18,7 @@ import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
 import explore.common.SimbadSearch
+import explore.common.TargetObsQueries._
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.InputModal
@@ -63,8 +64,6 @@ import react.semanticui.views.card.CardContent
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
-
-import TargetObsQueries._
 
 final case class TargetObsList(
   aimsWithObs: View[TargetsAndAsterismsWithObs],
