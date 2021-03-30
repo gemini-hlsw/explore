@@ -13,6 +13,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
+import explore.common.ConstraintSetObsQueries
+import explore.common.ConstraintSetObsQueries._
 import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -48,8 +50,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
-
-import ConstraintSetObsQueries._
 
 final case class ConstraintSetObsList(
   constraintSetsWithObs: View[ConstraintSetsWithObs],

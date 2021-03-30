@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.observationtree
+package explore.common
 
 import cats.data.NonEmptyList
 import cats.effect.IO
@@ -108,7 +108,7 @@ object TargetObsQueries {
               cloudExtinction
               skyBackground
               waterVapor
-            }            
+            }
           }
         }
       }
@@ -144,7 +144,7 @@ object TargetObsQueries {
         targetEdit(programId: "p-2") {
           id
         }
-      }    
+      }
     """
   }
 
@@ -155,7 +155,7 @@ object TargetObsQueries {
         asterismEdit(programId: "p-2") {
           id
         }
-      }    
+      }
     """
   }
 
@@ -166,7 +166,7 @@ object TargetObsQueries {
         updateObservation(input: $input) {
           id
         }
-      }    
+      }
     """
   }
 
@@ -205,7 +205,7 @@ object TargetObsQueries {
         undeleteTarget(targetId: $targetId) {
           id
         }
-      }    
+      }
     """
   }
 
@@ -242,7 +242,7 @@ object TargetObsQueries {
         undeleteAsterism(asterismId: $asterismId) {
           id
         }
-      }    
+      }
     """
   }
 
@@ -292,7 +292,7 @@ object TargetObsQueries {
         shareTargetWithAsterisms(input: { targetId: $targetId, asterismIds: [$asterismId] }) {
           id
         }
-      }    
+      }
     """
   }
 
@@ -303,7 +303,7 @@ object TargetObsQueries {
         unshareTargetWithAsterisms(input: { targetId: $targetId, asterismIds: [$asterismId] }) {
           id
         }
-      }    
+      }
     """
   }
 

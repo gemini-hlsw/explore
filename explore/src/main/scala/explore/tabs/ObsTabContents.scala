@@ -13,6 +13,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.Icons
+import explore.common.ObsQueries._
 import explore.common.TargetQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
@@ -28,7 +29,6 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
-import explore.observationtree.ObsQueries._
 import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._

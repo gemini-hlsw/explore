@@ -16,6 +16,7 @@ import explore.AppCtx
 import explore.GraphQLSchemas.ObservationDB
 import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.Icons
+import explore.common.ObsQueries
 import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons

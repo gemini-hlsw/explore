@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.Icons
 import explore.common.UserPreferencesQueries._
+import explore.common.ConstraintSetObsQueries._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
@@ -19,7 +20,6 @@ import explore.model.Focused._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintSetObsList
-import explore.observationtree.ConstraintSetObsQueries._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._

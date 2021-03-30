@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import explore.AppCtx
 import explore.Icons
 import explore.UnderConstruction
+import explore.common.TargetObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileButton
@@ -19,7 +20,6 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
-import explore.observationtree.TargetObsQueries._
 import explore.targeteditor.TargetEditor
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
