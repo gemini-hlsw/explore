@@ -168,6 +168,11 @@ object ExploreStyles {
   val TargetPropertiesForm: Css = Css("target-properties-form")
   val CatalogueForm: Css        = Css("catalogue-form")
 
+  // The Constraints tab contents
+  val ConstraintsGrid      = Css("constraints-grid")
+  val ElevationRangePicker = Css("elevation-range-picker")
+  val ElevationRangeEntry  = Css("elevation-range-entry")
+
   // styles for icons that acts as buttons
   val ButtonIcon: Css       = Css("explore-button-icon")
   val FormSectionLabel: Css = Css("explore-section-label")

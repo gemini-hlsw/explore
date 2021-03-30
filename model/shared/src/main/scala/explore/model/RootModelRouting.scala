@@ -10,6 +10,7 @@ import explore.model.Focused.FocusedTarget
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens
+import explore.model.Focused.FocusedConstraintSet
 
 object RootModelRouting {
 
@@ -33,7 +34,14 @@ object RootModelRouting {
           }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
-      case AppTab.Constraints    => ConstraintsPage
+      case AppTab.Constraints    =>
+        focused
+          .collect {
+            case FocusedConstraintSet(csId) =>
+              ConstraintsPage(csId)
+            case FocusedObs(obsId)          => ConstraintsObsPage(obsId)
+          }
+          .getOrElse(ConstraintsBasePage)
     }
 
   protected def setTab(tab: AppTab): RootModel => RootModel =
@@ -54,8 +62,12 @@ object RootModelRouting {
         setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedAsterism(asterismId).some)
       case TargetsObsPage(obsId)           =>
         setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedObs(obsId).some)
-      case ConstraintsPage                 =>
+      case ConstraintsBasePage             =>
         setTab(AppTab.Constraints)
+      case ConstraintsPage(csId)           =>
+        setTab(AppTab.Constraints) >>> RootModel.focused.set(FocusedConstraintSet(csId).some)
+      case ConstraintsObsPage(obsId)       =>
+        setTab(AppTab.Constraints) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case ConfigurationsPage              =>
         setTab(AppTab.Configurations)
       case HomePage                        =>

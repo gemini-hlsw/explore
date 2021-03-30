@@ -18,6 +18,7 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
@@ -104,7 +105,13 @@ object Routing {
             targetTab
           )
           | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
-          | staticRoute("/constraints", ConstraintsPage) ~> renderP(constraintSetTab))
+          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
+          | dynamicRouteCT(
+            ("/constraint" / id[ConstraintSet.Id]).xmapL(ConstraintsPage.csId)
+          ) ~> renderP(constraintSetTab)
+          | dynamicRouteCT(
+            ("/constraint/obs" / id[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
+          ) ~> renderP(constraintSetTab))
 
       val configuration =
         rules
@@ -138,7 +145,7 @@ object Routing {
             TargetPage(randomId(Target.Id.fromLong)),
             TargetsObsPage(randomId(Observation.Id.fromLong)),
             ConfigurationsPage,
-            ConstraintsPage
+            ConstraintsBasePage
           )
       }
 

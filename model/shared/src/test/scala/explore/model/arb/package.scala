@@ -16,3 +16,6 @@ object all
     with ArbKeyedIndexedTree
     with ArbUserVault
     with ArbObsSummary
+    with ArbConstraintSetModel
+    with ArbConstraintsSummary
+    with ArbElevationRange
