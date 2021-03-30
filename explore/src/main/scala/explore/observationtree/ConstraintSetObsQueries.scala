@@ -14,6 +14,7 @@ import explore.GraphQLSchemas._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
+import explore.model.AirMassRange
 import explore.model.ConstraintsSummary
 import explore.model.ObsSummary
 import explore.model.reusability._
@@ -42,7 +43,11 @@ object ConstraintSetObsQueries {
       skyBackground = cs.skyBackground,
       waterVapor = cs.waterVapor,
       elevationRange = CreateElevationRangeInput(airmassRange =
-        clue.data.Input(CreateAirmassRangeInput(min = 1.0, max = 1.5))
+        clue.data.Input(
+          CreateAirmassRangeInput(min = AirMassRange.DefaultMin.value,
+                                  max = AirMassRange.DefaultMax.value
+          )
+        )
       )
     )
 

@@ -8,13 +8,14 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.Icons
-import explore.UnderConstruction
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintSetEditor
 import explore.implicits._
 import explore.model._
+import explore.model.Focused._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintSetObsList
@@ -111,10 +112,18 @@ object ConstraintSetTabContents {
           )
 
           ConstraintSetObsLiveQuery { constraintSetsWithObs =>
+            val csIdOpt = props.focused.get.collect {
+              case FocusedConstraintSet(csId) => csId.some
+              case FocusedObs(obsId)          =>
+                constraintSetsWithObs.get.obs.getElement(obsId).flatMap(_.constraints).map(_.id)
+            }.flatten
+
             val coreWidth  = props.size.width.getOrElse(0) - treeWidth
             val coreHeight = props.size.height.getOrElse(0)
 
-            val rightSide = Tile("Constraints", backButton.some)(UnderConstruction())
+            val rightSide = Tile("Constraints", backButton.some)(
+              csIdOpt.map(csId => ConstraintSetEditor(csId).withKey(csId.show))
+            )
 
             if (window.innerWidth <= Constants.TwoPanelCutoff) {
               <.div(

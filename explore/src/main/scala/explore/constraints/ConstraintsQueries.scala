@@ -3,110 +3,135 @@
 
 package explore.constraints
 
-import cats.effect.ContextShift
+import cats.Endo
 import cats.effect.IO
 import clue.GraphQLOperation
 import clue.data.syntax._
 import clue.macros.GraphQL
-import crystal.ViewF
-import explore.GraphQLSchemas.ExploreDB.Types._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.GraphQLSchemas._
-import explore.components.graphql.SubscriptionRenderMod
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.implicits._
-import explore.model.Constraints
-import explore.model.decoders._
-import explore.model.enum.CloudCover
-import explore.model.enum.ImageQuality
-import explore.model.enum.SkyBackground
-import explore.model.enum.WaterVapor
+import explore.model.ConstraintSetModel
+import explore.model.ElevationRange
 import explore.model.reusability._
+import explore.undo.UndoableView
 import explore.undo.Undoer
-import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.enum._
+import lucuma.ui.reusability._
 import monocle.Lens
-import monocle.macros.Lenses
+import explore.model.AirMassRange
+import explore.model.HourAngleRange
 
 object ConstraintsQueries {
   @GraphQL
-  object Subscription extends GraphQLOperation[ExploreDB] {
+  object ConstraintSetQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      subscription ($id: uuid!) {
-        constraints(where: {id: {_eq: $id}}) {
+      query($id: ConstraintSetId!) {
+        constraintSet(constraintSetId: $id) {
           id
           name
-          cloud_cover
-          image_quality
-          sky_background
-          water_vapor
+          cloudExtinction
+          imageQuality
+          skyBackground
+          waterVapor
+          elevationRange {
+            type: __typename
+            ... on AirMassRange {
+              min
+              max
+            }
+            ... on HourAngleRange {
+              minHours
+              maxHours
+            }
+          }
         }
       }
       """
 
-    @Lenses
-    case class Data(constraints: List[Constraints])
+    object Data {
+      type ConstraintSet = ConstraintSetModel
+    }
   }
 
   @GraphQL
-  object Mutation extends GraphQLOperation[ExploreDB] {
+  object ConstraintSetEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($id: uuid!, $fields: constraints_set_input!){
-        update_constraints(_set: $fields, where: {id: {_eq: $id}}) {
-          affected_rows
+      subscription($id: ConstraintSetId!) {
+        constraintSetEdit(constraintSetId: $id) {
+          id
+        }
+      }
+    """
+  }
+  @GraphQL
+  object Mutation                      extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($input: EditConstraintSetInput!){
+        updateConstraintSet(input: $input) {
+          id
         }
       }
     """
   }
 
-  case class UndoViewZoom(
-    id:     Constraints.Id,
-    view:   View[Constraints],
-    setter: Undoer.Setter[IO, Constraints]
-  ) {
+  case class UndoView(
+    id:           ConstraintSet.Id,
+    view:         View[ConstraintSetModel],
+    setter:       Undoer.Setter[IO, ConstraintSetModel]
+  )(implicit ctx: AppContextIO) {
+    private val undoableView = UndoableView(view, setter)
+
     def apply[A](
-      lens:        Lens[Constraints, A],
-      fields:      A => ConstraintsSetInput
-    )(implicit cs: ContextShift[IO]): View[A] =
-      ViewF[IO, A](
-        lens.get(view.get),
-        setter.mod(
-          view.get,
-          lens.get,
-          { value: A =>
-            for {
-              _ <- view.mod.compose(lens.set)(value)
-              _ <- mutate(id, fields(value))
-            } yield ()
-          }
-        )
+      modelGet:  ConstraintSetModel => A,
+      modelMod:  (A => A) => ConstraintSetModel => ConstraintSetModel,
+      remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+    ): View[A] =
+      undoableView.apply(
+        modelGet,
+        modelMod,
+        value => Mutation.execute(remoteSet(value)(EditConstraintSetInput(id))).void
       )
+
+    def apply[A](
+      lens:      Lens[ConstraintSetModel, A],
+      remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+    ): View[A] =
+      apply(lens.get, lens.modify, remoteSet)
+
   }
 
-  def iqFields(iq: ImageQuality): ConstraintsSetInput =
-    ConstraintsSetInput(image_quality = iq.assign)
+  object UpdateConstraintSet {
+    def name(n: NonEmptyString): Endo[EditConstraintSetInput] =
+      EditConstraintSetInput.name.set(n.assign)
 
-  def ccFields(cc: CloudCover): ConstraintsSetInput =
-    ConstraintsSetInput(cloud_cover = cc.assign)
+    def imageQuality(iq: ImageQuality): Endo[EditConstraintSetInput] =
+      EditConstraintSetInput.imageQuality.set(iq.assign)
 
-  def wvFields(wv: WaterVapor): ConstraintsSetInput =
-    ConstraintsSetInput(water_vapor = wv.assign)
+    def cloudExtinction(ce: CloudExtinction): Endo[EditConstraintSetInput] =
+      EditConstraintSetInput.cloudExtinction.set(ce.assign)
 
-  def sbFields(sb: SkyBackground): ConstraintsSetInput =
-    ConstraintsSetInput(sky_background = sb.assign)
+    def skyBackground(sb: SkyBackground): Endo[EditConstraintSetInput] =
+      EditConstraintSetInput.skyBackground.set(sb.assign)
 
-  private def mutate(id: Constraints.Id, fields: ConstraintsSetInput): IO[Unit] = ???
-  // AppCtx.flatMap { implicit ctx =>
-  //   Mutation.execute(id, fields).void
-  // }
+    def waterVapor(wv: WaterVapor): Endo[EditConstraintSetInput] =
+      EditConstraintSetInput.waterVapor.set(wv.assign)
 
-  def ConstraintsSubscription(
-    id:     Constraints.Id
-  )(render: View[Constraints] => VdomNode): SubscriptionRenderMod[Subscription.Data, Constraints] =
-    ???
-  // AppCtx.runWithCtx { implicit appCtx =>
-  //   SubscriptionRenderMod[Subscription.Data, Constraints](
-  //     Subscription.subscribe(id),
-  //     _.map(
-  //       Subscription.Data.constraints.composeOptional(headOption).getOption _
-  //     ).unNone
-  //   )(render)
-  // }
+    def elevationRange(er: ElevationRange): Endo[EditConstraintSetInput] = {
+      val createER: CreateElevationRangeInput = er match {
+        case AirMassRange(min, max)   =>
+          CreateElevationRangeInput(airmassRange =
+            CreateAirmassRangeInput(min = min.value, max = max.value).assign
+          )
+        case HourAngleRange(min, max) =>
+          CreateElevationRangeInput(hourAngleRange =
+            CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
+          )
+      }
+      CreateElevationRangeInput()
+      EditConstraintSetInput.elevationRange.set(createER.assign)
+    }
+  }
 }

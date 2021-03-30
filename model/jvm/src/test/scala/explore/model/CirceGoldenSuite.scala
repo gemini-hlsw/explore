@@ -10,4 +10,5 @@ import munit.DisciplineSuite
 
 class CirceGoldenSuite extends DisciplineSuite with ArbitraryInstances {
   checkAll("GoldenCodec[ObsSummary]", GoldenCodecTests[ObsSummary](10).goldenCodec)
+  checkAll("GoldenCodec[ConstraintSetModel]", GoldenCodecTests[ConstraintSetModel](5).goldenCodec)
 }

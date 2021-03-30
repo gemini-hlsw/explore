@@ -1,0 +1,13 @@
+{
+  "id" : "c-4808b065b7cc7a61",
+  "name" : "鄏䙹ႄ瞲淄ꝭ撝타菳㊾䇏朎鄵㠁鴒⩜戌回ᵲ攁꾟羼㪊나䬣폱",
+  "imageQuality" : "TWO_POINT_ZERO",
+  "cloudExtinction" : "TWO_POINT_ZERO",
+  "skyBackground" : "BRIGHT",
+  "waterVapor" : "WET",
+  "elevationRange" : {
+    "type" : "HourAngleRange",
+    "minHours" : -4.5887253236966213966802861771807232,
+    "maxHours" : 0
+  }
+}

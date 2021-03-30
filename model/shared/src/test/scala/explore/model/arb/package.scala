@@ -4,8 +4,7 @@
 package explore.model.arb
 
 object all
-    extends ArbConstraints
-    with ArbTargetVisualOptions
+    extends ArbTargetVisualOptions
     with ArbSiderealTarget
     with ArbExploreSiderealTarget
     with ArbFocused
@@ -16,3 +15,6 @@ object all
     with ArbKeyedIndexedTree
     with ArbUserVault
     with ArbObsSummary
+    with ArbConstraintSetModel
+    with ArbConstraintsSummary
+    with ArbElevationRange

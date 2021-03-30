@@ -18,7 +18,6 @@ object reusability {
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                      = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                    = Reusability.derive
-  implicit val constraintsReuse: Reusability[Constraints]                            = Reusability.derive
   implicit val expObsReuse: Reusability[ExploreObservation]                          = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq
   implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                  = Reusability.byEq
@@ -27,9 +26,11 @@ object reusability {
   implicit def focusedReuse: Reusability[Focused]                                    = Reusability.derive
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
     Reusability.by(_.toList)
-  implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]              = Reusability.derive
-  implicit def obsSummaryReuse: Reusability[ObsSummary]                              =
-    Reusability.by(x => (x.id, x.name, x.status, x.conf, x.constraints, x.duration, x.pointingId))
+  implicit def AirMassRangeReuse: Reusability[AirMassRange]                          = Reusability.byEq
+  implicit def HourAngleRangeReuse: Reusability[HourAngleRange]                      = Reusability.byEq
+  implicit def constraintSetModelReuse: Reusability[ConstraintSetModel]              = Reusability.byEq
+  implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]              = Reusability.byEq
+  implicit def obsSummaryReuse: Reusability[ObsSummary]                              = Reusability.byEq
   implicit def proposalDetailsReuse: Reusability[ProposalDetails]                    = Reusability.byEq
   implicit def partnerSplitReuse: Reusability[PartnerSplit]                          = Reusability.derive
 
