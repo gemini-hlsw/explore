@@ -7,7 +7,6 @@ import clue.data._
 import clue.data.syntax._
 import clue.macros.GraphQLSchema
 import explore.model.ResizableSection
-import explore.model.SiderealTarget
 import io.circe.refined._
 import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
@@ -57,26 +56,6 @@ object GraphQLSchemas {
                          m.system.assign
           )
       }
-    }
-  }
-
-  @GraphQLSchema(debug = false)
-  object ExploreDB {
-    import explore.model.enum._
-
-    object Scalars {
-      type Cloudcover       = CloudCover
-      type Imagequality     = ImageQuality
-      type Skybackground    = SkyBackground
-      type Watervapor       = WaterVapor
-      type Obsstatus        = ObsStatus
-      type Targetobjecttype = TargetType
-    }
-
-    object Types {
-      type TargetsInsertInput = SiderealTarget
-      implicit final val jsonEncoderTargetsInsertInput: io.circe.Encoder[TargetsInsertInput] =
-        explore.model.encoders.siderealTargetEncoder
     }
   }
 

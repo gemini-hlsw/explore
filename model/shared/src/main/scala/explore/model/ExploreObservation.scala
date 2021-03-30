@@ -12,12 +12,11 @@ import java.util.UUID
 
 @Lenses
 final case class ExploreObservation(
-  id:          ExploreObservation.Id,
-  target:      SiderealTarget,
-  status:      ObsStatus,
-  conf:        String,
-  constraints: Constraints,
-  duration:    Duration
+  id:       ExploreObservation.Id,
+  target:   SiderealTarget,
+  status:   ObsStatus,
+  conf:     String,
+  duration: Duration
 )
 
 object ExploreObservation {

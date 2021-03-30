@@ -9,18 +9,6 @@ import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.util.Display
 
 object display {
-  implicit val displaySkyBackground: Display[SkyBackground] =
-    Display.byShortName(_.label)
-
-  implicit val displayWaterVapor: Display[WaterVapor] =
-    Display.byShortName(_.label)
-
-  implicit val displayCloudCover: Display[CloudCover] =
-    Display.byShortName(_.label)
-
-  implicit val displayImageQuality: Display[ImageQuality] =
-    Display.byShortName(_.label)
-
   implicit val displayProposalClass: Display[ProposalClass] =
     Display.byShortName(_.label)
 

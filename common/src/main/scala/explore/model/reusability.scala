@@ -18,7 +18,6 @@ object reusability {
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                      = Reusability.byEq
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.derive
   implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                    = Reusability.derive
-  implicit val constraintsReuse: Reusability[Constraints]                            = Reusability.derive
   implicit val expObsReuse: Reusability[ExploreObservation]                          = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq
   implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                  = Reusability.byEq
