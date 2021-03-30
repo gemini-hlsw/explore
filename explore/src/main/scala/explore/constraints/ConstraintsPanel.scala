@@ -5,20 +5,20 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.implicits._
 import crystal.ViewF
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
-import explore.GraphQLSchemas.ObservationDB.Types._
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.HourAngleRange
 import explore.model.ConstraintSetModel
+import explore.model.HourAngleRange
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -26,8 +26,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.ui.forms.FormInputEV
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec

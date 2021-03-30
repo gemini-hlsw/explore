@@ -26,7 +26,7 @@ import java.time.temporal.ChronoUnit
 @Lenses
 final case class ObsSummary(
   id:          Observation.Id,
-  name:        Option[NonEmptyString],
+  name:        NonEmptyString,
   status:      ObsStatus = ObsStatus.New,
   constraints: Option[ConstraintsSummary],
   conf:        String = "GMOS-N R831 1x300",
@@ -80,7 +80,7 @@ object ObsSummary {
     final def apply(c: HCursor): Decoder.Result[ObsSummary] =
       for {
         id         <- c.downField("id").as[Observation.Id]
-        name       <- c.downField("name").as[Option[NonEmptyString]]
+        name       <- c.downField("name").as[NonEmptyString]
         pointingId <- c.downField("observationTarget").as[Option[PointingId]]
         cs         <- c.downField("constraintSet").as[Option[ConstraintsSummary]]
       } yield ObsSummary(id, name, pointingId = pointingId, constraints = cs)

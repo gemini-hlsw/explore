@@ -9,20 +9,20 @@ import clue.GraphQLOperation
 import clue.data.syntax._
 import clue.macros.GraphQL
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.GraphQLSchemas._
 import explore.GraphQLSchemas.ObservationDB.Types._
+import explore.GraphQLSchemas._
 import explore.implicits._
+import explore.model.AirMassRange
 import explore.model.ConstraintSetModel
 import explore.model.ElevationRange
+import explore.model.HourAngleRange
 import explore.model.reusability._
 import explore.undo.UndoableView
 import explore.undo.Undoer
-import lucuma.core.model.ConstraintSet
 import lucuma.core.enum._
+import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
 import monocle.Lens
-import explore.model.AirMassRange
-import explore.model.HourAngleRange
 
 object ConstraintsQueries {
   @GraphQL

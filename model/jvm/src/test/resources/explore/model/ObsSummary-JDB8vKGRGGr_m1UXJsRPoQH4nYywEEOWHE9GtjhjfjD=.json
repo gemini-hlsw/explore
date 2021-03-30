@@ -1,0 +1,16 @@
+{
+  "id" : "o-7fffffffffffffff",
+  "name" : "쌹꩜㋘玆嗫莼䈆Წ鐱ᛯ煄뮃닕㯕釥罐ž樔",
+  "constraintSet" : {
+    "name" : "夨鸾龆冘鱪憦ﰽꋦ凞軐ꉓ鳄眐캛㏡㠄筤橘먜딣렃̽藴꯺㎪䅓탔㡙껫뻺偸忆뜳Ⱆ㜣ᮇ",
+    "id" : "c-1cac22e231226005",
+    "imageQuality" : "ONE_POINT_FIVE",
+    "cloudExtinction" : "ONE_POINT_FIVE",
+    "skyBackground" : "GRAY",
+    "waterVapor" : "MEDIAN"
+  },
+  "observationTarget" : {
+    "type" : "Target",
+    "target_id" : "t-7fffffffffffffff"
+  }
+}

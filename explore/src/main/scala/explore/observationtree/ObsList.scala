@@ -61,7 +61,7 @@ object ObsList {
 
     def createObservation[F[_]](
       obsId: Observation.Id,
-      name:  Option[NonEmptyString]
+      name:  NonEmptyString
     )(implicit
       F:     ApplicativeError[F, Throwable],
       c:     TransactionalClient[F, ObservationDB]
@@ -70,7 +70,7 @@ object ObsList {
         .execute[F](
           CreateObservationInput(programId = "p-2",
                                  observationId = obsId.assign,
-                                 name = name.orIgnore
+                                 name = name.assign
           )
         )
         .void
@@ -131,7 +131,7 @@ object ObsList {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt()).map(int =>
         ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                   name.some,
+                   name = name,
                    pointingId = none,
                    constraints = none
         )

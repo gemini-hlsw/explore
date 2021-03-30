@@ -23,15 +23,15 @@ trait ArbObsSummary {
   implicit val obsSummaryArb = Arbitrary[ObsSummary] {
     for {
       id  <- arbitrary[Observation.Id]
-      nm  <- arbitrary[Option[NonEmptyString]]
+      nm  <- arbitrary[NonEmptyString]
       aim <- arbitrary[Option[PointingId]]
       cs  <- arbitrary[Option[ConstraintsSummary]]
     } yield ObsSummary(id = id, name = nm, pointingId = aim, constraints = cs)
   }
 
   implicit val obsSummaryCogen: Cogen[ObsSummary] =
-    Cogen[(Observation.Id, Option[String], Option[PointingId], Option[ConstraintsSummary])]
-      .contramap(c => (c.id, c.name.map(_.value), c.pointingId, c.constraints))
+    Cogen[(Observation.Id, String, Option[PointingId], Option[ConstraintsSummary])]
+      .contramap(c => (c.id, c.name.value, c.pointingId, c.constraints))
 
 }
 
