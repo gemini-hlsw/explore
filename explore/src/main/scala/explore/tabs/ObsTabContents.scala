@@ -11,7 +11,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.AppCtx
-import explore.schemas.ObservationDB
 import explore.Icons
 import explore.common.ObsQueries._
 import explore.common.TargetQueries._
@@ -29,6 +28,8 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
+import explore.observationtree.ObsQueries._
+import explore.schemas.ObservationDB
 import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -150,7 +151,7 @@ object ObsTabContents {
       AppCtx.runWithCtx { implicit ctx =>
         ObsTabPreferencesQuery
           .queryWithDefault[IO](userId,
-                                GridLayoutSection.ObservationsLayout,
+                                // GridLayoutSection.ObservationsLayout,
                                 ResizableSection.ObservationsTree,
                                 (Constants.InitialTreeWidth.toInt, defaultLayout)
           )

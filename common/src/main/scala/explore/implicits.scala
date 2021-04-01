@@ -11,10 +11,10 @@ import clue._
 import coulomb.Quantity
 import crystal.ViewF
 import crystal.ViewOptF
-import explore.schemas._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._
+import explore.schemas._
 import lucuma.ui.utils._
 import org.typelevel.log4cats.Logger
 import shapeless._

@@ -10,7 +10,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
-import explore.schemas.ObservationDB.Types._
 import explore.View
 import explore.common.SimbadSearch
 import explore.common.TargetQueries
@@ -24,6 +23,7 @@ import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.utils._
+import explore.schemas.ObservationDB.Types._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._

@@ -13,8 +13,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
 import explore.Icons
 import explore.common.ObsQueries
 import explore.components.InputModal
@@ -30,6 +28,8 @@ import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
+import explore.schemas.ObservationDB
+import explore.schemas.ObservationDB.Types._
 import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react._

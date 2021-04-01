@@ -11,7 +11,6 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.schemas.ObservationDB
 import explore.Icons
 import explore.common.ConstraintSetObsQueries
 import explore.common.ConstraintSetObsQueries._
@@ -26,6 +25,7 @@ import explore.model.Focused._
 import explore.model.ObsSummary
 import explore.optics.GetAdjust
 import explore.optics._
+import explore.schemas.ObservationDB
 import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._

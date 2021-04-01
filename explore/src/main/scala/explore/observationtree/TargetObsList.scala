@@ -14,8 +14,6 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
 import explore.Icons
 import explore.common.SimbadSearch
 import explore.common.TargetObsQueries._
@@ -35,6 +33,8 @@ import explore.model.PointingId
 import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.optics._
+import explore.schemas.ObservationDB
+import explore.schemas.ObservationDB.Types._
 import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react.MonocleReact._

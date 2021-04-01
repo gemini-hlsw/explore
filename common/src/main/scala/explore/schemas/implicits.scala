@@ -2,8 +2,10 @@ package explore.schemas
 
 import clue.data.syntax._
 import lucuma.core.model.Magnitude
-import ObservationDB.Types.MagnitudeInput
+
 import java.math.MathContext
+
+import ObservationDB.Types.MagnitudeInput
 import UserPreferencesDB.Types.WidthUpsertInput
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
