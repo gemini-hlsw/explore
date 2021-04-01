@@ -8,15 +8,15 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.AppCtx
 import explore.Icons
-import explore.common.UserPreferencesQueries._
 import explore.common.ConstraintSetObsQueries._
+import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintSetEditor
 import explore.implicits._
-import explore.model._
 import explore.model.Focused._
+import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintSetObsList

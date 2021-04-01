@@ -79,7 +79,7 @@ object ObsQueries {
                 type: __typename
                 ... on Target {
                   target_id: id
-                }              
+                }
                 ... on Asterism {
                   asterism_id: id
                 }

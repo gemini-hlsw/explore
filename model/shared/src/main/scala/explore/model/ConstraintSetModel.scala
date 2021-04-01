@@ -8,6 +8,7 @@ import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
+import io.circe.DecodingFailure
 import io.circe.Encoder
 import io.circe.HCursor
 import io.circe.Json
@@ -16,7 +17,6 @@ import io.circe.refined._
 import io.circe.syntax._
 import lucuma.core.enum._
 import lucuma.core.model.ConstraintSet
-import io.circe.DecodingFailure
 import monocle.macros.Lenses
 
 @Lenses

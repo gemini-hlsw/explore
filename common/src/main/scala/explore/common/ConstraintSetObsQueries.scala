@@ -148,9 +148,9 @@ object ConstraintSetObsQueries {
                 cloudExtinction
                 skyBackground
                 waterVapor
-              }            
+              }
             }
-          }    
+          }
         }
       """
     object Data {

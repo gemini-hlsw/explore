@@ -28,7 +28,6 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
-import explore.observationtree.ObsQueries._
 import explore.schemas.ObservationDB
 import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._

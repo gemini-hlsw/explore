@@ -28,7 +28,7 @@
       ],
       "scripts" : {
         "test-setup": "npm install jsdom",
-        "test": "sbt -v scalafmtCheckAll headerCheck test:headerCheck compile test explore/fullOptJS::webpack"
+        "test": "sbt -v compile scalafmtCheckAll headerCheck test:headerCheck \"scalafix GraphQLGen --check\" test explore/fullOptJS::webpack"
       }
     }
   }

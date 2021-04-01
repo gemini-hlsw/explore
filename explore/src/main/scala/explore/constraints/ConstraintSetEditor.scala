@@ -6,11 +6,11 @@ package explore.constraints
 import cats.data.NonEmptyList
 import cats.effect.IO
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintSetModel
 import explore.model.reusability._
+import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
