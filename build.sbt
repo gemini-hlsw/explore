@@ -30,6 +30,16 @@ addCommandAlias(
   "; scalafix OrganizeImports"
 )
 
+addCommandAlias(
+  "graphQLGen",
+  "; scalafix GraphQLGen"
+)
+
+addCommandAlias(
+  "graphQLCheck",
+  "; scalafix GraphQLGen --check"
+)
+
 inThisBuild(
   Seq(
     homepage := Some(url("https://github.com/gemini-hlsw/explore")),
