@@ -43,33 +43,39 @@ object Routing {
 
   private def targetTab(model: View[RootModel]): VdomElement =
     withSize { size =>
-      TargetTabContents(
-        model.zoom(RootModel.userId),
-        model.zoom(RootModel.focused),
-        model.zoom(RootModel.searchingTarget),
-        model.zoom(RootModel.expandedIds),
-        size
+      AppCtx.using(implicit ctx =>
+        TargetTabContents(
+          model.zoom(RootModel.userId),
+          model.zoom(RootModel.focused),
+          model.zoom(RootModel.searchingTarget),
+          model.zoom(RootModel.expandedIds),
+          size
+        )
       )
     }
 
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
-      ObsTabContents(model.zoom(RootModel.userId),
-                     model.zoom(RootModel.focused),
-                     model.zoom(RootModel.searchingTarget),
-                     size
+      AppCtx.using(implicit ctx =>
+        ObsTabContents(model.zoom(RootModel.userId),
+                       model.zoom(RootModel.focused),
+                       model.zoom(RootModel.searchingTarget),
+                       size
+        )
       )
     )
 
   private def constraintSetTab(model: View[RootModel]): VdomElement =
     withSize(size =>
-      ConstraintSetTabContents(
-        model.zoom(RootModel.userId),
-        model.zoom(RootModel.focused),
-        model.zoom(
-          RootModel.expandedIds.composeLens(ExpandedIds.constraintSetIds)
-        ),
-        size
+      AppCtx.using(implicit ctx =>
+        ConstraintSetTabContents(
+          model.zoom(RootModel.userId),
+          model.zoom(RootModel.focused),
+          model.zoom(
+            RootModel.expandedIds.composeLens(ExpandedIds.constraintSetIds)
+          ),
+          size
+        )
       )
     )
 

@@ -25,10 +25,11 @@ import monocle.macros.Lenses
 import react.common._
 
 final case class TargetEditor(
-  uid:       User.Id,
-  tid:       Target.Id,
-  searching: View[Set[Target.Id]]
-) extends ReactProps[TargetEditor](TargetEditor.component)
+  uid:              User.Id,
+  tid:              Target.Id,
+  searching:        View[Set[Target.Id]]
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
   type Props = TargetEditor
@@ -45,7 +46,7 @@ object TargetEditor {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) =
-      AppCtx.runWithCtx { implicit appCtx =>
+      AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            TargetEditQuery.Data,
                            Option[TargetEditQuery.Data.Target]
@@ -73,14 +74,12 @@ object TargetEditor {
       .initialState(State(TargetVisualOptions.Default))
       .renderBackend[Backend]
       .componentDidMount { $ =>
-        val p = $.props
-        AppCtx
-          .runWithCtx { implicit ctx =>
-            UserTargetPreferencesQuery
-              .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
-              .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
-              .runAsyncAndForgetCB
-          }
+        val p            = $.props
+        implicit val ctx = p.ctx
+        UserTargetPreferencesQuery
+          .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
+          .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+          .runAsyncAndForgetCB
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

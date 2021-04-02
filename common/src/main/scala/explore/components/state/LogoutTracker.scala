@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.implicits._
 import explore.model.UserVault
 import explore.utils.ExploreEvent
@@ -21,7 +20,7 @@ import react.common.ReactProps
 final case class LogoutTracker(
   setVault:   Option[UserVault] => IO[Unit],
   setMessage: NonEmptyString => IO[Unit]
-)(val render: IO[Unit] => VdomNode)
+)(val render: IO[Unit] => VdomNode)(implicit val ctx: AppContextIO)
     extends ReactProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {
@@ -42,19 +41,18 @@ object LogoutTracker {
         )
       }
       .componentDidMount { $ =>
-        AppCtx.runWithCtx { implicit ctx =>
-          IO {
-            val bc = new BroadcastChannel[ExploreEvent]("explore")
-            bc.onmessage = (x: ExploreEvent) =>
-              // This is coming from the js world, we can't match the type
-              (x.event match {
-                case ExploreEvent.Logout.event =>
-                  $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
-                case _                         => IO.unit
-              })
-            bc
-          }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
-        }
+        implicit val ctx = $.props.ctx
+        IO {
+          val bc = new BroadcastChannel[ExploreEvent]("explore")
+          bc.onmessage = (x: ExploreEvent) =>
+            // This is coming from the js world, we can't match the type
+            (x.event match {
+              case ExploreEvent.Logout.event =>
+                $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
+              case _                         => IO.unit
+            })
+          bc
+        }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
       }
       .componentWillUnmount($ =>
         $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForgetCB

@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.implicits._
 import explore.model.Clients
 import io.circe.Json
@@ -22,7 +21,8 @@ import react.semanticui.sizes._
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
   val render:                                () => VdomNode
-) extends ReactProps[ConnectionManager](ConnectionManager.component)
+)(implicit val ctx:                          AppContextIO)
+    extends ReactProps[ConnectionManager](ConnectionManager.component)
 
 object ConnectionManager {
   type Props = ConnectionManager
@@ -55,24 +55,21 @@ object ConnectionManager {
     .builder[Props]
     .initialState(State())
     .renderBackend[Backend]
-    .componentDidMount($ =>
-      AppCtx.runWithCtx { implicit ctx =>
-        $.backend.onMount(ctx.clients).runAsyncCB
-      }
-    )
-    .componentDidUpdate($ =>
-      AppCtx.runWithCtx { implicit ctx =>
-        (Logger[IO].debug(s"[ConnectionManager] Token changed. Refreshing connections.") >>
-          $.backend.refresh(ctx.clients))
-          .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
-          .runAsyncCB
-      }
-    )
-    .componentWillUnmountConst(
-      AppCtx.runWithCtx { implicit ctx =>
-        (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
-          ctx.clients.close()).runAsyncCB
-      }
-    )
+    .componentDidMount { $ =>
+      implicit val ctx = $.props.ctx
+      $.backend.onMount(ctx.clients).runAsyncCB
+    }
+    .componentDidUpdate { $ =>
+      implicit val ctx = $.currentProps.ctx
+      (Logger[IO].debug(s"[ConnectionManager] Token changed. Refreshing connections.") >>
+        $.backend.refresh(ctx.clients))
+        .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
+        .runAsyncCB
+    }
+    .componentWillUnmount { $ =>
+      implicit val ctx = $.props.ctx
+      (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
+        ctx.clients.close()).runAsyncCB
+    }
     .build
 }

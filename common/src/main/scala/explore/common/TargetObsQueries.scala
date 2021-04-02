@@ -19,7 +19,7 @@ import io.circe.Decoder
 import io.circe.HCursor
 import io.circe.generic.semiauto._
 import io.circe.refined._
-import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
@@ -1186,14 +1186,9 @@ object TargetObsQueries {
   implicit val targetsWithObsReusability: Reusability[TargetsAndAsterismsWithObs] =
     Reusability.derive
 
-  type LiveQueryRenderer =
-    (
-      View[TargetsAndAsterismsWithObs] => VdomNode
-    ) => LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, TargetsAndAsterismsWithObs]
-
-  val TargetObsLiveQuery: LiveQueryRenderer =
-    render =>
-      AppCtx.runWithCtx { implicit appCtx =>
+  val TargetObsLiveQuery =
+    ScalaFnComponent[View[TargetsAndAsterismsWithObs] => VdomNode](render =>
+      AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, TargetsAndAsterismsWithObs](
           TargetsObsQuery.query(),
           TargetsObsQuery.Data.asTargetsWithObs.get,
@@ -1205,4 +1200,5 @@ object TargetObsQueries {
           )
         )(render)
       }
+    )
 }

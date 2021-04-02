@@ -30,14 +30,10 @@ final case class UserSelectionForm(
   vault:   View[Option[UserVault]],
   message: View[Option[NonEmptyString]]
 ) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
-  def guest: Callback =
-    AppCtx.runWithCtx { implicit ctx =>
-      ctx.sso.guest.flatMap(v => vault.set(v.some)).runAsyncCB
-    }
-  def login: Callback =
-    AppCtx.runWithCtx { implicit ctx =>
-      ctx.sso.redirectToLogin.runAsyncCB
-    }
+  def guest(implicit ctx: AppContextIO): Callback =
+    ctx.sso.guest.flatMap(v => vault.set(v.some)).runAsyncCB
+  def login(implicit ctx: AppContextIO): Callback =
+    ctx.sso.redirectToLogin.runAsyncCB
 
   def supportedOrcidBrowser: CallbackTo[(Boolean, Boolean)] = CallbackTo[(Boolean, Boolean)] {
     val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
@@ -68,7 +64,7 @@ object UserSelectionForm {
         p.supportedOrcidBrowser.map(Function.tupled(State.apply _))
       }
       .render_PS { (p, s) =>
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           Modal(
             size = ModalSize.Large,
             clazz = ExploreStyles.LoginBox,

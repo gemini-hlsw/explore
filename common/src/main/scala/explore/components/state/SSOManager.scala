@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.implicits._
 import explore.model.UserVault
 import japgolly.scalajs.react._
@@ -21,10 +20,11 @@ import react.common.ReactProps
 import java.time.Instant
 
 final case class SSOManager(
-  expiration: Instant,
-  setVault:   Option[UserVault] => IO[Unit],
-  setMessage: NonEmptyString => IO[Unit]
-) extends ReactProps[SSOManager](SSOManager.component)
+  expiration:       Instant,
+  setVault:         Option[UserVault] => IO[Unit],
+  setMessage:       NonEmptyString => IO[Unit]
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[SSOManager](SSOManager.component)
 
 object SSOManager {
   type Props = SSOManager
@@ -38,19 +38,17 @@ object SSOManager {
   final class Backend() {
 
     def tokenRefresher(
-      expiration: Instant,
-      setVault:   Option[UserVault] => IO[Unit],
-      setMessage: NonEmptyString => IO[Unit]
-    ): IO[Unit] =
-      AppCtx.flatMap(implicit ctx =>
-        for {
-          vaultOpt <- ctx.sso.refreshToken(expiration)
-          _        <- setVault(vaultOpt)
-          _        <- vaultOpt.fold(setMessage("Your session has expired"))(vault =>
-                        tokenRefresher(vault.expiration, setVault, setMessage)
-                      )
-        } yield ()
-      )
+      expiration:   Instant,
+      setVault:     Option[UserVault] => IO[Unit],
+      setMessage:   NonEmptyString => IO[Unit]
+    )(implicit ctx: AppContextIO): IO[Unit] =
+      for {
+        vaultOpt <- ctx.sso.refreshToken(expiration)
+        _        <- setVault(vaultOpt)
+        _        <- vaultOpt.fold(setMessage("Your session has expired"))(vault =>
+                      tokenRefresher(vault.expiration, setVault, setMessage)
+                    )
+      } yield ()
 
     // This is a "phantom" component. Doesn't render anything.
     def render(): VdomNode = React.Fragment()
@@ -61,20 +59,19 @@ object SSOManager {
     .initialState(State(none))
     .renderBackend[Backend]
     .componentDidMount { $ =>
-      AppCtx.runWithCtx { implicit ctx =>
-        $.backend
-          .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
-          .runCancelable {
-            case Left(t) =>
-              Logger[IO].error(t)("Error refreshing SSO token") >>
-                $.props.setVault(none) >>
-                $.props.setMessage("There was an error while checking the validity of your session")
-            case _       => IO.unit
-          }
-          .toIO
-          .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.some)))
-          .runAsyncCB
-      }
+      implicit val ctx = $.props.ctx
+      $.backend
+        .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
+        .runCancelable {
+          case Left(t) =>
+            Logger[IO].error(t)("Error refreshing SSO token") >>
+              $.props.setVault(none) >>
+              $.props.setMessage("There was an error while checking the validity of your session")
+          case _       => IO.unit
+        }
+        .toIO
+        .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.some)))
+        .runAsyncCB
     }
     .componentWillUnmount($ =>
       // Setting vault to none is defensive. This component should actually unmount when vault is none.

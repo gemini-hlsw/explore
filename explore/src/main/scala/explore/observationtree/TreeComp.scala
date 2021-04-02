@@ -122,7 +122,7 @@ object TreeComp {
       }
 
     def render(props: Props[K, A], state: State[K, A]): VdomElement =
-      AppCtx.runWithCtx { implicit ctx =>
+      AppCtx.using { implicit ctx =>
         UndoRegion[KeyedIndexedTree[K, A]] { undoCtx =>
           // println(state.tree)
 

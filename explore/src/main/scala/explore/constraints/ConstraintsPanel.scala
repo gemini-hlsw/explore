@@ -97,7 +97,7 @@ object ConstraintsPanel {
     }
 
   class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props, state: State) = AppCtx.runWithCtx { implicit appCtx =>
+    def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
       val stateView     = ViewF.fromState[IO]($)
       val constraintSet = props.constraintSet
 

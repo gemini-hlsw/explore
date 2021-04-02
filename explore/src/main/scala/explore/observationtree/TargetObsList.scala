@@ -493,7 +493,7 @@ object TargetObsList {
           .fold(expanded - id, expanded + id)
       }
 
-    def render(props: Props, state: State): VdomElement = AppCtx.runWithCtx { implicit ctx =>
+    def render(props: Props, state: State): VdomElement = AppCtx.using { implicit ctx =>
       val observations = props.aimsWithObs.get.observations
       val obsByAim     = observations.toList.groupBy(_.pointingId)
 

@@ -93,7 +93,7 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) =
-      AppCtx.runWithCtx { implicit ctx =>
+      AppCtx.using { implicit ctx =>
         val rvView = ViewF.fromState[IO]($).zoom(State.rvView)
         val input  = state.rvView match {
           case RVView.Z  =>

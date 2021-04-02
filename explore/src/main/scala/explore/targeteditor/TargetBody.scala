@@ -72,7 +72,7 @@ object TargetBody {
 
   class Backend() {
     def render(props: Props) =
-      AppCtx.runWithCtx { implicit appCtx =>
+      AppCtx.using { implicit appCtx =>
         val target = props.target.get
 
         UndoRegion[TargetResult] { undoCtx =>

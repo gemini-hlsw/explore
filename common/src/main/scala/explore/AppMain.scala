@@ -9,8 +9,6 @@ import cats.effect.IOApp
 import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
-import crystal.AppRootContext
-import crystal.react.AppRoot
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
@@ -42,11 +40,13 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-
-object AppCtx extends AppRootContext[AppContextIO]
+import japgolly.scalajs.react.Reusability
+import crystal.react._
 
 trait AppMain extends IOApp {
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
+
+  implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
@@ -136,19 +136,20 @@ trait AppMain extends IOApp {
       }
 
     (for {
-      _                       <- utils.setupScheme[IO](Theme.Dark)
-      appConfig               <- fetchConfig
-      _                       <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
-      _                       <- logger.info(s"Config: ${appConfig.show}")
-      ctx                     <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
-      r                       <- (ctx.sso.whoami,
-                                  setupDOM(),
-                                  showEnvironment(appConfig.environment),
-                                  AppCtx.initIn[IO](ctx)
-                                 ).parTupled
-      (vault, container, _, _) = r
+      _                    <- utils.setupScheme[IO](Theme.Dark)
+      appConfig            <- fetchConfig
+      _                    <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+      _                    <- logger.info(s"Config: ${appConfig.show}")
+      ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
+      r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
+      (vault, container, _) = r
     } yield {
-      val RootComponent = AppRoot[IO](initialModel(vault))(rootView => rootComponent(rootView))
+      val RootComponent =
+        ContextProvider[IO](AppCtx, ctx)(
+          ContextProvider[IO](HelpCtx, HelpContext(none))(
+            StateProvider[IO](initialModel(vault))(rootView => rootComponent(rootView))
+          )
+        )
 
       RootComponent().renderIntoDOM(container)
 
