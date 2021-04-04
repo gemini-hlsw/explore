@@ -31,14 +31,15 @@ object ObsQueries {
         observations(programId: "p-2", first: 2147483647) {
           nodes {
             id
-            name
             observationTarget {
               type: __typename
               ... on Target {
                 target_id: id
+                target_name: name
               }
               ... on Asterism {
                 asterism_id: id
+                asterism_name: name
               }
             }
             constraintSet {
@@ -75,14 +76,15 @@ object ObsQueries {
           observations(programId: "p-2", first: 2147483647) {
             nodes {
               id
-              name
               observationTarget {
                 type: __typename
                 ... on Target {
                   target_id: id
+                  target_name: name
                 }
                 ... on Asterism {
                   asterism_id: id
+                  asterism_name: name
                 }
               }
               constraintSet {

@@ -214,8 +214,7 @@ object ObsTabContents {
           }.flatten
 
           val targetId = obsSummaryOpt.collect {
-            case ObsSummary(_, _, _, _, _, _, Some(Right(tid))) =>
-              tid
+            case ObsSummary(_, _, _, _, _, Some(Right(tid)), _) => tid
           }
 
           val backButton = TileButton(
@@ -292,8 +291,13 @@ object ObsTabContents {
                           )
                         }
 
-                      }.withKey(s"target-$targetId")
+                      }.withKey(s"target-$targetId"): VdomNode
                     }
+                    .getOrElse(
+                      <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                            <.div("No target assigned")
+                      )
+                    )
                 )
               )
             )

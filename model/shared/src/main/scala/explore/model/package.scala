@@ -3,9 +3,11 @@
 
 package explore
 
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.model.Asterism
 import lucuma.core.model.Target
 
 package object model {
-  type PointingId = Either[Asterism.Id, Target.Id]
+  type PointingId   = Either[Asterism.Id, Target.Id]
+  type PointingName = Either[Option[NonEmptyString], NonEmptyString]
 }

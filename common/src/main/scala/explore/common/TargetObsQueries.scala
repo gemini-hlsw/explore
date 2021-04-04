@@ -96,9 +96,11 @@ object TargetObsQueries {
               type: __typename
               ... on Target {
                 target_id: id
+                target_name: name
               }
               ... on Asterism {
                 asterism_id: id
+                asterism_name: name
               }
             }
             constraintSet {
@@ -168,9 +170,11 @@ object TargetObsQueries {
                 type: __typename
                 ... on Target {
                   target_id: id
+                  target_name: name
                 }
                 ... on Asterism {
                   asterism_id: id
+                  asterism_name: name
                 }
               }
               constraintSet {

@@ -11,11 +11,9 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
 import eu.timepit.refined.types.numeric.PosLong
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.Icons
 import explore.common.ObsQueries
-import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -60,18 +58,14 @@ object ObsList {
   class Backend($ : BackendScope[Props, Unit]) {
 
     def createObservation[F[_]](
-      obsId: Observation.Id,
-      name:  Option[NonEmptyString]
+      obsId: Observation.Id
     )(implicit
       F:     ApplicativeError[F, Throwable],
       c:     TransactionalClient[F, ObservationDB]
     ): F[Unit] =
       ObsQueries.ProgramCreateObservation
         .execute[F](
-          CreateObservationInput(programId = "p-2",
-                                 observationId = obsId.assign,
-                                 name = name.orIgnore
-          )
+          CreateObservationInput(programId = "p-2", observationId = obsId.assign)
         )
         .void
         .handleErrorWith { _ =>
@@ -101,7 +95,7 @@ object ObsList {
             focused.set(nextToFocus.map(f => Focused.FocusedObs(f.id))) >>
               deleteObservation[IO](obsId)
           ) { case (obs, _) =>
-            createObservation[IO](obs.id, obs.name) >>
+            createObservation[IO](obs.id) >>
               focused.set(Focused.FocusedObs(obs.id).some)
           }
 
@@ -125,14 +119,14 @@ object ObsList {
         )
     }
 
-    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(name: NonEmptyString)(implicit
+    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(implicit
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt()).map(int =>
-        ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                   name.some,
+        ObsSummary(id = Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                    pointingId = none,
+                   pointingName = none,
                    constraints = none
         )
       )
@@ -170,18 +164,8 @@ object ObsList {
         UndoRegion[ObservationList] { undoCtx =>
           <.div(ExploreStyles.ObsTreeWrapper)(
             <.div(ExploreStyles.TreeToolbar)(
-              <.div(
-                InputModal(
-                  "Create new Observation",
-                  initialValue = None,
-                  label = "Name",
-                  placeholder = "Observation name",
-                  okLabel = "Create",
-                  onComplete = s => newObs(undoCtx.setter)(s).runAsyncCB,
-                  trigger = Button(size = Mini, compact = true)(
-                    Icons.New.size(Small).fitted(true)
-                  )
-                )
+              Button(size = Mini, compact = true, onClick = newObs(undoCtx.setter).runAsyncCB)(
+                Icons.New.size(Small).fitted(true)
               ),
               UndoButtons(props.observations.get, undoCtx, size = Mini)
             ),

@@ -21,6 +21,7 @@ import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import react.semanticui.views.card._
+import lucuma.core.util.Gid
 
 final case class ObsBadge(
   obs:      ObsSummary,
@@ -50,6 +51,7 @@ object ObsBadge {
   }
 
   import Layout._
+  val idIso = Gid[Observation.Id].isoPosLong
 
   protected val component =
     ScalaComponent
@@ -76,7 +78,16 @@ object ObsBadge {
                   ExploreStyles.ObservationCardHeader,
                   props.layout match {
                     case NameAndConf | NameAndConfAndConstraints =>
-                      obs.name.fold("--------")(_.value)
+                      val targetName: String = obs.pointingName match {
+                        case Some(Right(n)) => n.value
+                        case Some(Left(n))  => n.map(_.value).getOrElse("<Asterism>")
+                        case None           => "<No target>"
+                      }
+                      <.div(
+                        ExploreStyles.ObsBadgeTargetAndId,
+                        <.div(targetName),
+                        <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
+                      )
                     case ConfAndConstraints                      => obs.conf
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
