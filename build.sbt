@@ -6,18 +6,16 @@ val reactJS                   = "16.13.1"
 val FUILess                   = "2.8.7"
 lazy val kindProjectorVersion = "0.11.3"
 
-parallelExecution in (ThisBuild, Test) := false
-
 cancelable in Global := true
 
 addCommandAlias(
   "exploreWDS",
-  "; stopWDS; explore/fastOptJS::startWebpackDevServer; ~explore/fastOptJS"
+  "; stopWDS; explore / Compile / fastOptJS / startWebpackDevServer; ~explore / fastOptJS"
 )
 
 addCommandAlias(
   "stopWDS",
-  "fastOptJS::stopWebpackDevServer"
+  "explore / Compile / fastOptJS / stopWebpackDevServer"
 )
 
 addCommandAlias(
