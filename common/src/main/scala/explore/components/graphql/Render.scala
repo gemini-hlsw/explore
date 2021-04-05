@@ -186,7 +186,7 @@ object Render {
         $.state
           .map(state =>
             (state.cancelConnectionTracker >>
-              state.subscriptions.map(_.stop()).sequence.void).runAsyncCB
+              state.subscriptions.map(_.stop().handleError(_ => ())).sequence.void).runAsyncCB
           )
           .getOrEmpty
       }
