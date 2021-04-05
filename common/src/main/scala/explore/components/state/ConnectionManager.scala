@@ -68,8 +68,10 @@ object ConnectionManager {
     }
     .componentWillUnmount { $ =>
       implicit val ctx = $.props.ctx
-      (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
-        ctx.clients.close()).runAsyncCB
+      if ($.state.initialized)
+        (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
+          ctx.clients.close()).runAsyncCB
+      else Callback.empty
     }
     .build
 }
