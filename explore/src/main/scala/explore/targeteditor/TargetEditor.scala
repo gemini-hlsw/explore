@@ -8,7 +8,6 @@ import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import explore.AppCtx
-import explore.GraphQLSchemas.ObservationDB
 import explore.common.TargetQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.graphql.LiveQueryRenderMod
@@ -16,6 +15,7 @@ import explore.implicits._
 import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
+import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
