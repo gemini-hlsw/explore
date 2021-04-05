@@ -15,7 +15,7 @@ jobs:
           java-version: adopt@1.11
       - name: Build application
         run: |
-          sbt test stage
+          sbt -v compile scalafmtCheckAll headerCheck test:headerCheck graphQLCheck test stage
           cd explore
           npm install
           npm run build
