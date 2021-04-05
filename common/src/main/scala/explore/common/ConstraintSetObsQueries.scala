@@ -18,7 +18,7 @@ import explore.model.ObsSummary
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
-import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
