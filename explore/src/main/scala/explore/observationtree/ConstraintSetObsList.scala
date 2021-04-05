@@ -81,8 +81,8 @@ object ConstraintSetObsList {
       c:       TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       csIdOpt match {
-        case Some(csId) => ShareConstraintSetWithObs.execute(csId, obsId).void
-        case None       => UnassignConstraintSet.execute(obsId).void
+        case Some(csId) => AssignConstraintSetToObs.execute(csId, obsId).void
+        case None       => UnassignConstraintSetFromObs.execute(obsId).void
       }
 
     def insertConstraintSet(cs: ConstraintsSummary)(implicit

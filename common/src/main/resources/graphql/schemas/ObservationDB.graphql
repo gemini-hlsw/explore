@@ -177,6 +177,9 @@ enum CloudExtinction {
 interface Config {
   # Instrument type
   instrument: InstrumentType!
+
+  # Planned time for this configuration
+  plannedTime: PlannedTime!
 }
 
 type ConstraintSet {
@@ -252,12 +255,6 @@ type ConstraintSetEdit implements Event {
 
 # ConstraintSetId id formatted as `c-(0|[1-9a-f][0-9a-f]*)`
 scalar ConstraintSetId
-
-# ConstraintSet and the observations with which it is associated
-input ConstraintSetObservationLinks {
-  constraintSetId: ConstraintSetId!
-  observationIds: [ObservationId!]!
-}
 
 # A Constraint Set and its cursor
 type ContraintSetEdge {
@@ -337,6 +334,7 @@ input CreateObservationInput {
   name: NonEmptyString
   asterismId: AsterismId
   targetId: TargetId
+  constraintSetId: ConstraintSetId
   status: ObsStatus
 }
 
@@ -414,6 +412,7 @@ enum DeclinationUnits {
 # Target declination coordinate in format '[+/-]DD:MM:SS.sss'
 scalar DmsString
 
+# Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
 type Duration {
   # Duration in µs
   microseconds: Long!
@@ -471,6 +470,12 @@ input EditConstraintSetInput {
   elevationRange: CreateElevationRangeInput
 }
 
+# Edit the constraint set for a set of observations
+input EditObservationConstraintSetInput {
+  observationIds: [ObservationId!]!
+  constraintSetId: ConstraintSetId
+}
+
 # Edit observation
 input EditObservationInput {
   observationId: ObservationId!
@@ -489,6 +494,9 @@ input EditObservationInput {
 
   # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
   targetId: TargetId
+
+  # The constraintSetId field may be unset by assigning a null value, or ignored by skipping it altogether
+  constraintSetId: ConstraintSetId
 }
 
 # Edit the target or asterism for a set of observations
@@ -602,12 +610,6 @@ type Gcal implements StepConfig {
 
   # GCAL shutter
   shutter: GcalShutter!
-
-  # GCAL exposure time
-  exposure: Duration!
-
-  # GCAL coadds
-  coadds: Int!
 
   # Step type
   stepType: StepType!
@@ -838,9 +840,6 @@ enum GmosEOffsetting {
   OFF
 }
 
-# Either custom mask or builtin-FPU
-union GmosFpu = GmosCustomMask | GmosNorthBuiltinFpu
-
 type GmosNodAndShuffle {
   # Offset position A
   posA: Offset!
@@ -858,6 +857,15 @@ type GmosNodAndShuffle {
   shuffleCycles: Int!
 }
 
+# GmosNorth atom, a collection of steps that should be executed in their entirety
+type GmosNorthAtom {
+  # Individual steps that comprise the atom
+  steps: [GmosNorthBreakpointStep!]!
+
+  # Time estimate for this atom's execution, the sum of each step's time.
+  time: StepTime!
+}
+
 # GmosNorth step with potential breakpoint
 type GmosNorthBreakpointStep {
   # Whether to pause before the execution of this step
@@ -865,6 +873,9 @@ type GmosNorthBreakpointStep {
 
   # The sequence step itself
   step: GmosNorthStep!
+
+  # Time estimate for this step's execution
+  time: StepTime!
 }
 
 # GMOS North builtin-in FPU
@@ -875,11 +886,23 @@ type GmosNorthBuiltinFpu {
 
 # GMOS North Configuration
 type GmosNorthConfig implements Config {
-  # GMOS North manual sequence configuration
-  manual: GmosNorthSequence!
+  # Estimated setup time
+  setupTime: Duration!
+
+  # Static/unchanging configuration
+  static: GmosNorthStaticConfig!
+
+  # Acquisition sequence.
+  acquisition: GmosNorthSequence!
+
+  # Science sequence.
+  science: GmosNorthSequence!
 
   # Instrument type
   instrument: InstrumentType!
+
+  # Planned time for this configuration
+  plannedTime: PlannedTime!
 }
 
 # GMOS North Disperser
@@ -930,7 +953,7 @@ type GmosNorthDynamic {
   filter: GmosNorthFilter
 
   # GMOS North FPU
-  fpu: GmosFpu
+  fpu: GmosNorthFpuUnion
 }
 
 # GMOS North Filter
@@ -1065,6 +1088,9 @@ enum GmosNorthFpu {
   IFU3
 }
 
+# Either custom mask or builtin-FPU
+union GmosNorthFpuUnion = GmosCustomMask | GmosNorthBuiltinFpu
+
 # GMOS North Grating
 type GmosNorthGrating {
   # GMOS North Disperser
@@ -1077,16 +1103,13 @@ type GmosNorthGrating {
   wavelength: Wavelength!
 }
 
-# Instrument sequence
+# A series of GmosNorth atoms that comprise the sequence
 type GmosNorthSequence {
-  # Static/unchanging configuration
-  static: GmosNorthStaticConfig!
+  # Sequence atoms
+  atoms: [GmosNorthAtom!]!
 
-  # Acquisition sequence. Each inner list of steps comprise an unsplittable scheduling unit.
-  acquisition: [[GmosNorthBreakpointStep!]!]!
-
-  # Science sequence. Each inner list of steps comprise an unsplittable scheduling unit.
-  science: [[GmosNorthBreakpointStep!]!]!
+  # Time required for the full execution of this sequence
+  time: StepTime!
 }
 
 # GMOS North stage mode
@@ -1155,6 +1178,15 @@ enum GmosRoi {
   CUSTOM
 }
 
+# GmosSouth atom, a collection of steps that should be executed in their entirety
+type GmosSouthAtom {
+  # Individual steps that comprise the atom
+  steps: [GmosSouthBreakpointStep!]!
+
+  # Time estimate for this atom's execution, the sum of each step's time.
+  time: StepTime!
+}
+
 # GmosSouth step with potential breakpoint
 type GmosSouthBreakpointStep {
   # Whether to pause before the execution of this step
@@ -1162,15 +1194,36 @@ type GmosSouthBreakpointStep {
 
   # The sequence step itself
   step: GmosSouthStep!
+
+  # Time estimate for this step's execution
+  time: StepTime!
+}
+
+# GMOS South builtin-in FPU
+type GmosSouthBuiltinFpu {
+  # GMOS South builtin-fpu
+  builtin: GmosSouthFpu!
 }
 
 # GMOS South Configuration
 type GmosSouthConfig implements Config {
-  # GMOS South manual sequence configuration
-  manual: GmosSouthSequence!
+  # Estimated setup time
+  setupTime: Duration!
+
+  # Static/unchanging configuration
+  static: GmosSouthStaticConfig!
+
+  # Acquisition sequence.
+  acquisition: GmosSouthSequence!
+
+  # Science sequence.
+  science: GmosSouthSequence!
 
   # Instrument type
   instrument: InstrumentType!
+
+  # Planned time for this configuration
+  plannedTime: PlannedTime!
 }
 
 # GMOS South Disperser
@@ -1215,7 +1268,7 @@ type GmosSouthDynamic {
   filter: GmosSouthFilter
 
   # GMOS South FPU
-  fpu: GmosFpu
+  fpu: GmosSouthFpuUnion
 }
 
 # GMOS South Filter
@@ -1305,6 +1358,69 @@ enum GmosSouthFilter {
   LYA395
 }
 
+# GMOS South FPU
+enum GmosSouthFpu {
+  # GmosSouthFpu Bhros
+  BHROS
+
+  # GmosSouthFpu Ns1
+  NS1
+
+  # GmosSouthFpu Ns2
+  NS2
+
+  # GmosSouthFpu Ns3
+  NS3
+
+  # GmosSouthFpu Ns4
+  NS4
+
+  # GmosSouthFpu Ns5
+  NS5
+
+  # GmosSouthFpu LongSlit_0_25
+  LONG_SLIT_0_25
+
+  # GmosSouthFpu LongSlit_0_50
+  LONG_SLIT_0_50
+
+  # GmosSouthFpu LongSlit_0_75
+  LONG_SLIT_0_75
+
+  # GmosSouthFpu LongSlit_1_00
+  LONG_SLIT_1_00
+
+  # GmosSouthFpu LongSlit_1_50
+  LONG_SLIT_1_50
+
+  # GmosSouthFpu LongSlit_2_00
+  LONG_SLIT_2_00
+
+  # GmosSouthFpu LongSlit_5_00
+  LONG_SLIT_5_00
+
+  # GmosSouthFpu Ifu1
+  IFU1
+
+  # GmosSouthFpu Ifu2
+  IFU2
+
+  # GmosSouthFpu Ifu3
+  IFU3
+
+  # GmosSouthFpu IfuN
+  IFU_N
+
+  # GmosSouthFpu IfuNB
+  IFU_NB
+
+  # GmosSouthFpu IfuNR
+  IFU_NR
+}
+
+# Either custom mask or builtin-FPU
+union GmosSouthFpuUnion = GmosCustomMask | GmosSouthBuiltinFpu
+
 # GMOS South Grating
 type GmosSouthGrating {
   # GMOS South Disperser
@@ -1317,16 +1433,13 @@ type GmosSouthGrating {
   wavelength: Wavelength!
 }
 
-# Instrument sequence
+# A series of GmosSouth atoms that comprise the sequence
 type GmosSouthSequence {
-  # Static/unchanging configuration
-  static: GmosSouthStaticConfig!
+  # Sequence atoms
+  atoms: [GmosSouthAtom!]!
 
-  # Acquisition sequence. Each inner list of steps comprise an unsplittable scheduling unit.
-  acquisition: [[GmosSouthBreakpointStep!]!]!
-
-  # Science sequence. Each inner list of steps comprise an unsplittable scheduling unit.
-  science: [[GmosSouthBreakpointStep!]!]!
+  # Time required for the full execution of this sequence
+  time: StepTime!
 }
 
 # GMOS South stage mode
@@ -1639,15 +1752,15 @@ type Mutation {
     # Edit observation asterism / target
     input: EditObservationPointingInput!
   ): [Observation!]!
+  updateObservationConstraintSet(
+    # Edit observation constraint set
+    input: EditObservationConstraintSetInput!
+  ): [Observation!]!
   deleteObservation(
     # Observation ID
     observationId: ObservationId!
   ): Observation!
   undeleteObservation(
-    # Observation ID
-    observationId: ObservationId!
-  ): Observation!
-  unsetConstraintSet(
     # Observation ID
     observationId: ObservationId!
   ): Observation!
@@ -1703,14 +1816,6 @@ type Mutation {
     # Target / program links
     input: TargetProgramLinks!
   ): Target!
-  shareConstraintSetWithObservations(
-    # ConstraintSet / observation links
-    input: ConstraintSetObservationLinks!
-  ): ConstraintSet!
-  unshareConstraintSetWithObservations(
-    # ConstraintSet / observation links
-    input: ConstraintSetObservationLinks!
-  ): ConstraintSet!
 }
 
 # A String value that cannot be empty
@@ -1909,6 +2014,27 @@ enum ParallaxUnits {
 
   # ParallaxUnits Milliarcseconds
   MILLIARCSECONDS
+}
+
+# Time estimates for executing this configuration
+type PlannedTime {
+  # Estimated setup time
+  setup: Duration!
+
+  # Estimated acquisition time for each atom
+  acquisition: [StepTime!]!
+
+  # Total estimated acquisition time
+  acquisitionTotal: StepTime!
+
+  # Estimated science time for each atom
+  science: [StepTime!]!
+
+  # Total estimated science time
+  scienceTotal: StepTime!
+
+  # Total planned time across acquisition and science
+  total: Duration!
 }
 
 type PlannedTimeSummary {
@@ -2355,6 +2481,24 @@ enum SkyBackground {
 interface StepConfig {
   # Step type
   stepType: StepType!
+}
+
+# Time required for a step or steps, categorized according to use
+type StepTime {
+  # Time spent making configuration changes
+  configChange: Duration!
+
+  # Time spent collecting photons
+  exposure: Duration!
+
+  # Time spent reading out the detector
+  readout: Duration!
+
+  # Time spent writing the dataset file
+  write: Duration!
+
+  # Total time across all categories
+  total: Duration!
 }
 
 # Step type
