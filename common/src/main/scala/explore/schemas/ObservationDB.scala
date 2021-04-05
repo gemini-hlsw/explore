@@ -862,6 +862,76 @@ object ObservationDB {
         case "LYA395" => Lya395
       }))
     }
+    sealed trait GmosSouthFpu
+    object GmosSouthFpu {
+      case object Bhros extends GmosSouthFpu()
+      case object Ns1 extends GmosSouthFpu()
+      case object Ns2 extends GmosSouthFpu()
+      case object Ns3 extends GmosSouthFpu()
+      case object Ns4 extends GmosSouthFpu()
+      case object Ns5 extends GmosSouthFpu()
+      case object LongSlit025 extends GmosSouthFpu()
+      case object LongSlit050 extends GmosSouthFpu()
+      case object LongSlit075 extends GmosSouthFpu()
+      case object LongSlit100 extends GmosSouthFpu()
+      case object LongSlit150 extends GmosSouthFpu()
+      case object LongSlit200 extends GmosSouthFpu()
+      case object LongSlit500 extends GmosSouthFpu()
+      case object Ifu1 extends GmosSouthFpu()
+      case object Ifu2 extends GmosSouthFpu()
+      case object Ifu3 extends GmosSouthFpu()
+      case object IfuN extends GmosSouthFpu()
+      case object IfuNb extends GmosSouthFpu()
+      case object IfuNr extends GmosSouthFpu()
+      implicit val eqGmosSouthFpu: cats.Eq[GmosSouthFpu] = cats.Eq.fromUniversalEquals
+      implicit val showGmosSouthFpu: cats.Show[GmosSouthFpu] = cats.Show.fromToString
+      implicit val reuseGmosSouthFpu: japgolly.scalajs.react.Reusability[GmosSouthFpu] = {
+        import japgolly.scalajs.react.Reusability
+        japgolly.scalajs.react.Reusability.derive
+      }
+      implicit val jsonEncoderGmosSouthFpu: io.circe.Encoder[GmosSouthFpu] = io.circe.Encoder.encodeString.contramap[GmosSouthFpu]({
+        case Bhros => "BHROS"
+        case Ns1 => "NS1"
+        case Ns2 => "NS2"
+        case Ns3 => "NS3"
+        case Ns4 => "NS4"
+        case Ns5 => "NS5"
+        case LongSlit025 => "LONG_SLIT_0_25"
+        case LongSlit050 => "LONG_SLIT_0_50"
+        case LongSlit075 => "LONG_SLIT_0_75"
+        case LongSlit100 => "LONG_SLIT_1_00"
+        case LongSlit150 => "LONG_SLIT_1_50"
+        case LongSlit200 => "LONG_SLIT_2_00"
+        case LongSlit500 => "LONG_SLIT_5_00"
+        case Ifu1 => "IFU1"
+        case Ifu2 => "IFU2"
+        case Ifu3 => "IFU3"
+        case IfuN => "IFU_N"
+        case IfuNb => "IFU_NB"
+        case IfuNr => "IFU_NR"
+      })
+      implicit val jsonDecoderGmosSouthFpu: io.circe.Decoder[GmosSouthFpu] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
+        case "BHROS" => Bhros
+        case "NS1" => Ns1
+        case "NS2" => Ns2
+        case "NS3" => Ns3
+        case "NS4" => Ns4
+        case "NS5" => Ns5
+        case "LONG_SLIT_0_25" => LongSlit025
+        case "LONG_SLIT_0_50" => LongSlit050
+        case "LONG_SLIT_0_75" => LongSlit075
+        case "LONG_SLIT_1_00" => LongSlit100
+        case "LONG_SLIT_1_50" => LongSlit150
+        case "LONG_SLIT_2_00" => LongSlit200
+        case "LONG_SLIT_5_00" => LongSlit500
+        case "IFU1" => Ifu1
+        case "IFU2" => Ifu2
+        case "IFU3" => Ifu3
+        case "IFU_N" => IfuN
+        case "IFU_NB" => IfuNb
+        case "IFU_NR" => IfuNr
+      }))
+    }
     sealed trait GmosSouthStageMode
     object GmosSouthStageMode {
       case object NoFollow extends GmosSouthStageMode()
@@ -1189,14 +1259,6 @@ object ObservationDB {
       implicit val showCatalogIdInput: cats.Show[CatalogIdInput] = cats.Show.fromToString
       implicit val jsonEncoderCatalogIdInput: io.circe.Encoder[CatalogIdInput] = io.circe.generic.semiauto.deriveEncoder[CatalogIdInput].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
     }
-    case class ConstraintSetObservationLinks(val constraintSetId: ConstraintSetId, val observationIds: List[ObservationId])
-    object ConstraintSetObservationLinks {
-      implicit val constraintSetId: monocle.Lens[ConstraintSetObservationLinks, ConstraintSetId] = monocle.macros.GenLens[ConstraintSetObservationLinks](_.constraintSetId)
-      implicit val observationIds: monocle.Lens[ConstraintSetObservationLinks, List[ObservationId]] = monocle.macros.GenLens[ConstraintSetObservationLinks](_.observationIds)
-      implicit val eqConstraintSetObservationLinks: cats.Eq[ConstraintSetObservationLinks] = cats.Eq.fromUniversalEquals
-      implicit val showConstraintSetObservationLinks: cats.Show[ConstraintSetObservationLinks] = cats.Show.fromToString
-      implicit val jsonEncoderConstraintSetObservationLinks: io.circe.Encoder[ConstraintSetObservationLinks] = io.circe.generic.semiauto.deriveEncoder[ConstraintSetObservationLinks].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
-    }
     case class CoordinatesInput(val ra: RightAscensionInput, val dec: DeclinationInput)
     object CoordinatesInput {
       implicit val ra: monocle.Lens[CoordinatesInput, RightAscensionInput] = monocle.macros.GenLens[CoordinatesInput](_.ra)
@@ -1265,13 +1327,14 @@ object ObservationDB {
       implicit val showCreateNonsiderealInput: cats.Show[CreateNonsiderealInput] = cats.Show.fromToString
       implicit val jsonEncoderCreateNonsiderealInput: io.circe.Encoder[CreateNonsiderealInput] = io.circe.generic.semiauto.deriveEncoder[CreateNonsiderealInput].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
     }
-    case class CreateObservationInput(val observationId: clue.data.Input[ObservationId] = clue.data.Ignore, val programId: ProgramId, val name: clue.data.Input[NonEmptyString] = clue.data.Ignore, val asterismId: clue.data.Input[AsterismId] = clue.data.Ignore, val targetId: clue.data.Input[TargetId] = clue.data.Ignore, val status: clue.data.Input[ObsStatus] = clue.data.Ignore)
+    case class CreateObservationInput(val observationId: clue.data.Input[ObservationId] = clue.data.Ignore, val programId: ProgramId, val name: clue.data.Input[NonEmptyString] = clue.data.Ignore, val asterismId: clue.data.Input[AsterismId] = clue.data.Ignore, val targetId: clue.data.Input[TargetId] = clue.data.Ignore, val constraintSetId: clue.data.Input[ConstraintSetId] = clue.data.Ignore, val status: clue.data.Input[ObsStatus] = clue.data.Ignore)
     object CreateObservationInput {
       implicit val observationId: monocle.Lens[CreateObservationInput, clue.data.Input[ObservationId]] = monocle.macros.GenLens[CreateObservationInput](_.observationId)
       implicit val programId: monocle.Lens[CreateObservationInput, ProgramId] = monocle.macros.GenLens[CreateObservationInput](_.programId)
       implicit val name: monocle.Lens[CreateObservationInput, clue.data.Input[NonEmptyString]] = monocle.macros.GenLens[CreateObservationInput](_.name)
       implicit val asterismId: monocle.Lens[CreateObservationInput, clue.data.Input[AsterismId]] = monocle.macros.GenLens[CreateObservationInput](_.asterismId)
       implicit val targetId: monocle.Lens[CreateObservationInput, clue.data.Input[TargetId]] = monocle.macros.GenLens[CreateObservationInput](_.targetId)
+      implicit val constraintSetId: monocle.Lens[CreateObservationInput, clue.data.Input[ConstraintSetId]] = monocle.macros.GenLens[CreateObservationInput](_.constraintSetId)
       implicit val status: monocle.Lens[CreateObservationInput, clue.data.Input[ObsStatus]] = monocle.macros.GenLens[CreateObservationInput](_.status)
       implicit val eqCreateObservationInput: cats.Eq[CreateObservationInput] = cats.Eq.fromUniversalEquals
       implicit val showCreateObservationInput: cats.Show[CreateObservationInput] = cats.Show.fromToString
@@ -1345,7 +1408,15 @@ object ObservationDB {
       implicit val showEditConstraintSetInput: cats.Show[EditConstraintSetInput] = cats.Show.fromToString
       implicit val jsonEncoderEditConstraintSetInput: io.circe.Encoder[EditConstraintSetInput] = io.circe.generic.semiauto.deriveEncoder[EditConstraintSetInput].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
     }
-    case class EditObservationInput(val observationId: ObservationId, val existence: clue.data.Input[Existence] = clue.data.Ignore, val name: clue.data.Input[NonEmptyString] = clue.data.Ignore, val status: clue.data.Input[ObsStatus] = clue.data.Ignore, val asterismId: clue.data.Input[AsterismId] = clue.data.Ignore, val targetId: clue.data.Input[TargetId] = clue.data.Ignore)
+    case class EditObservationConstraintSetInput(val observationIds: List[ObservationId], val constraintSetId: clue.data.Input[ConstraintSetId] = clue.data.Ignore)
+    object EditObservationConstraintSetInput {
+      implicit val observationIds: monocle.Lens[EditObservationConstraintSetInput, List[ObservationId]] = monocle.macros.GenLens[EditObservationConstraintSetInput](_.observationIds)
+      implicit val constraintSetId: monocle.Lens[EditObservationConstraintSetInput, clue.data.Input[ConstraintSetId]] = monocle.macros.GenLens[EditObservationConstraintSetInput](_.constraintSetId)
+      implicit val eqEditObservationConstraintSetInput: cats.Eq[EditObservationConstraintSetInput] = cats.Eq.fromUniversalEquals
+      implicit val showEditObservationConstraintSetInput: cats.Show[EditObservationConstraintSetInput] = cats.Show.fromToString
+      implicit val jsonEncoderEditObservationConstraintSetInput: io.circe.Encoder[EditObservationConstraintSetInput] = io.circe.generic.semiauto.deriveEncoder[EditObservationConstraintSetInput].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
+    }
+    case class EditObservationInput(val observationId: ObservationId, val existence: clue.data.Input[Existence] = clue.data.Ignore, val name: clue.data.Input[NonEmptyString] = clue.data.Ignore, val status: clue.data.Input[ObsStatus] = clue.data.Ignore, val asterismId: clue.data.Input[AsterismId] = clue.data.Ignore, val targetId: clue.data.Input[TargetId] = clue.data.Ignore, val constraintSetId: clue.data.Input[ConstraintSetId] = clue.data.Ignore)
     object EditObservationInput {
       implicit val observationId: monocle.Lens[EditObservationInput, ObservationId] = monocle.macros.GenLens[EditObservationInput](_.observationId)
       implicit val existence: monocle.Lens[EditObservationInput, clue.data.Input[Existence]] = monocle.macros.GenLens[EditObservationInput](_.existence)
@@ -1353,6 +1424,7 @@ object ObservationDB {
       implicit val status: monocle.Lens[EditObservationInput, clue.data.Input[ObsStatus]] = monocle.macros.GenLens[EditObservationInput](_.status)
       implicit val asterismId: monocle.Lens[EditObservationInput, clue.data.Input[AsterismId]] = monocle.macros.GenLens[EditObservationInput](_.asterismId)
       implicit val targetId: monocle.Lens[EditObservationInput, clue.data.Input[TargetId]] = monocle.macros.GenLens[EditObservationInput](_.targetId)
+      implicit val constraintSetId: monocle.Lens[EditObservationInput, clue.data.Input[ConstraintSetId]] = monocle.macros.GenLens[EditObservationInput](_.constraintSetId)
       implicit val eqEditObservationInput: cats.Eq[EditObservationInput] = cats.Eq.fromUniversalEquals
       implicit val showEditObservationInput: cats.Show[EditObservationInput] = cats.Show.fromToString
       implicit val jsonEncoderEditObservationInput: io.circe.Encoder[EditObservationInput] = io.circe.generic.semiauto.deriveEncoder[EditObservationInput].mapJson(_.foldWith(clue.data.Input.dropIgnoreFolder))
