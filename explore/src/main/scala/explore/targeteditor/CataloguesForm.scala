@@ -57,7 +57,7 @@ object CataloguesForm {
     ScalaComponent
       .builder[Props]
       .render { $ =>
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           val optionsV = $.props.options
           val options  = optionsV.get
           Form(size = Small)(

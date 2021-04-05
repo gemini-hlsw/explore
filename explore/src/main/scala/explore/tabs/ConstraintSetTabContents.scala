@@ -41,11 +41,12 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
-  userId:      ViewOpt[User.Id],
-  focused:     View[Option[Focused]],
-  expandedIds: View[SortedSet[ConstraintSet.Id]],
-  size:        ResizeDetector.Dimensions
-) extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
+  userId:           ViewOpt[User.Id],
+  focused:          View[Option[Focused]],
+  expandedIds:      View[SortedSet[ConstraintSet.Id]],
+  size:             ResizeDetector.Dimensions
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
   def isCsSelected: Boolean = focused.get.collect { case Focused.FocusedConstraintSet(_) =>
     ()
   }.isDefined
@@ -57,13 +58,15 @@ object ConstraintSetTabContents {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback =
-    AppCtx.runWithCtx { implicit ctx =>
-      (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
-                                           ResizableSection.ConstraintSetsTree,
-                                           Constants.InitialTreeWidth.toInt
-      ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
-    }
+  def readWidthPreference(
+    $ : ComponentDidMount[Props, State, Unit]
+  ): Callback = {
+    implicit val ctx = $.props.ctx
+    (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+                                         ResizableSection.ConstraintSetsTree,
+                                         Constants.InitialTreeWidth.toInt
+    ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
+  }
 
   protected val component =
     ScalaComponent
@@ -77,7 +80,7 @@ object ConstraintSetTabContents {
         }
       )
       .renderPS { ($, props, state) =>
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           val treeResize =
             (_: ReactEvent, d: ResizeCallbackData) =>
               ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>

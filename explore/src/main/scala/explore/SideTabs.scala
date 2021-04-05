@@ -37,7 +37,7 @@ object SideTabs {
       .builder[Props]
       .stateless
       .render_P { p =>
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           val tabsL = p.tabs.get.toNel
           val focus = p.tabs.get.focus
 

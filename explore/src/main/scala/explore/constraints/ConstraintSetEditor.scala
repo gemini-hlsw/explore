@@ -31,7 +31,7 @@ object ConstraintSetEditor {
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        AppCtx.runWithCtx { implicit appCtx =>
+        AppCtx.using { implicit appCtx =>
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
             ConstraintSetQuery.query(props.csid),
             _.constraintSet,

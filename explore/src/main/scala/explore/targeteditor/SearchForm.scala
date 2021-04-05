@@ -66,7 +66,7 @@ object SearchForm {
 
   class Backend($ : BackendScope[Props, State]) {
 
-    def render(props: Props, state: State) = AppCtx.runWithCtx { implicit ctx =>
+    def render(props: Props, state: State) = AppCtx.using { implicit ctx =>
       val searchComplete: IO[Unit] = props.searching.mod(_ - props.id)
 
       val search: Callback =

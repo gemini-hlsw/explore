@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.AppCtx
 import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -64,15 +63,11 @@ object AladinContainer {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
-    def setRa(ra: RightAscension): Callback =
-      AppCtx.runWithCtx { implicit ctx =>
-        $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
-      }
+    def setRa(ra: RightAscension)(implicit ctx: AppContextIO): Callback =
+      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
 
-    def setDec(dec: Declination): Callback =
-      AppCtx.runWithCtx { implicit ctx =>
-        $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
-      }
+    def setDec(dec: Declination)(implicit ctx: AppContextIO): Callback =
+      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get
@@ -82,7 +77,9 @@ object AladinContainer {
         )
         .toCallback
 
-    def searchAndGo(modify: ((String, RightAscension, Declination)) => Callback)(search: String) =
+    def searchAndGo(
+      modify: ((String, RightAscension, Declination)) => Callback
+    )(search: String)(implicit ctx: AppContextIO) =
       aladinRef.get
         .flatMapCB(
           _.backend

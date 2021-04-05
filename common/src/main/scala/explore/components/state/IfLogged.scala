@@ -23,30 +23,30 @@ object IfLogged {
   type Props = IfLogged
 
   // Creates a "profile" for user preferences.
-  private def createUserPrefs(vault: UserVault): IO[Unit] =
-    AppCtx.flatMap(implicit ctx =>
-      UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
-    )
+  private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =
+    UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
 
   private val component =
     ScalaComponent
       .builder[IfLogged]
       .stateless
       .render_P { p =>
-        val vaultView   = p.view.zoom(RootModel.vault)
-        val messageView = p.view.zoom(RootModel.userSelectionMessage)
+        AppCtx.using { implicit ctx =>
+          val vaultView   = p.view.zoom(RootModel.vault)
+          val messageView = p.view.zoom(RootModel.userSelectionMessage)
 
-        vaultView.get.fold[VdomElement](
-          UserSelectionForm(vaultView, messageView)
-        ) { vault =>
-          React.Fragment(
-            SSOManager(vault.expiration, vaultView.set, messageView.set.compose(_.some)),
-            ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(() =>
-              LogoutTracker(vaultView.set, messageView.set.compose(_.some))(onLogout =>
-                p.render(vault, onLogout)
+          vaultView.get.fold[VdomElement](
+            UserSelectionForm(vaultView, messageView)
+          ) { vault =>
+            React.Fragment(
+              SSOManager(vault.expiration, vaultView.set, messageView.set.compose(_.some)),
+              ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(() =>
+                LogoutTracker(vaultView.set, messageView.set.compose(_.some))(onLogout =>
+                  p.render(vault, onLogout)
+                )
               )
             )
-          )
+          }
         }
       }
       .build

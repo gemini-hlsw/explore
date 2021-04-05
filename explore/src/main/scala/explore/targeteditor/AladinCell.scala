@@ -71,40 +71,41 @@ object AladinCell extends ModelOptics {
           .flatMapCB(_.backend.gotoRaDec(coords))
           .toCallback
 
-    def render(props: Props, state: State) = React.Fragment(
-      <.div(
-        ExploreStyles.TargetAladinCell,
-        <.div(
-          ExploreStyles.AladinContainerColumn,
-          AladinRef
-            .withRef(aladinRef) {
-              AladinContainer(
-                props.target,
-                props.options.get,
-                $.setStateL(State.current)(_),
-                fov =>
-                  AppCtx.runWithCtx { implicit ctx =>
-                    $.setStateL(State.fov)(fov) *> UserTargetPreferencesUpsert
-                      .updateFov[IO](props.uid, props.tid, fov.x)
-                      .runAsyncAndForgetCB
-                      .debounce(1.seconds)
-                  }
-              )
-            },
-          AladinToolbar(state.fov, state.current),
+    def render(props: Props, state: State) =
+      AppCtx.using(implicit ctx =>
+        React.Fragment(
           <.div(
-            ExploreStyles.AladinCenterButton,
-            Popup(
-              content = "Center on target",
-              position = PopupPosition.BottomLeft,
-              trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
-                Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
+            ExploreStyles.TargetAladinCell,
+            <.div(
+              ExploreStyles.AladinContainerColumn,
+              AladinRef
+                .withRef(aladinRef) {
+                  AladinContainer(
+                    props.target,
+                    props.options.get,
+                    $.setStateL(State.current)(_),
+                    fov =>
+                      $.setStateL(State.fov)(fov) *> UserTargetPreferencesUpsert
+                        .updateFov[IO](props.uid, props.tid, fov.x)
+                        .runAsyncAndForgetCB
+                        .debounce(1.seconds)
+                  )
+                },
+              AladinToolbar(state.fov, state.current),
+              <.div(
+                ExploreStyles.AladinCenterButton,
+                Popup(
+                  content = "Center on target",
+                  position = PopupPosition.BottomLeft,
+                  trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
+                    Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
+                  )
+                )
               )
             )
           )
         )
       )
-    )
 
     def newProps(currentProps: Props, nextProps: Props): Callback =
       gotoRaDec(nextProps.aladinCoords)

@@ -55,7 +55,8 @@ final case class ConstraintSetObsList(
   constraintSetsWithObs: View[ConstraintSetsWithObs],
   focused:               View[Option[Focused]],
   expandedIds:           View[SortedSet[ConstraintSet.Id]]
-) extends ReactProps[ConstraintSetObsList](ConstraintSetObsList.component)
+)(implicit val ctx:      AppContextIO)
+    extends ReactProps[ConstraintSetObsList](ConstraintSetObsList.component)
     with ViewCommon {
   override val obsBadgeLayout = ObsBadge.Layout.NameAndConf
 }
@@ -257,7 +258,7 @@ object ConstraintSetObsList {
       expandedIds
         .mod(expanded => expanded.exists(_ === id).fold(expanded - id, expanded + id))
 
-    def render(props: Props, state: State): VdomElement = AppCtx.runWithCtx { implicit ctx =>
+    def render(props: Props, state: State): VdomElement = AppCtx.using { implicit ctx =>
       val observations       = props.constraintSetsWithObs.get.obs
       val obsByConstraintSet = observations.toList.groupBy(_.constraints.map(_.id))
 
@@ -459,28 +460,27 @@ object ConstraintSetObsList {
       .initialState(State())
       .renderBackend[Backend]
       .componentDidMount { $ =>
-        AppCtx.runWithCtx { implicit ctx =>
-          val constraintSetsWithObs = $.props.constraintSetsWithObs.get
-          val expandedIds           = $.props.expandedIds
+        implicit val ctx          = $.props.ctx
+        val constraintSetsWithObs = $.props.constraintSetsWithObs.get
+        val expandedIds           = $.props.expandedIds
 
-          // expand constraint set with focused observation
-          val expandCs = $.props.focused.get
-            .collect { case FocusedObs(obsId) =>
-              constraintSetsWithObs.obs
-                .getElement(obsId)
-                .flatMap(_.constraints.map(c => expandedIds.mod(_ + c.id)))
-            }
-            .flatten
+        // expand constraint set with focused observation
+        val expandCs = $.props.focused.get
+          .collect { case FocusedObs(obsId) =>
+            constraintSetsWithObs.obs
+              .getElement(obsId)
+              .flatMap(_.constraints.map(c => expandedIds.mod(_ + c.id)))
+          }
+          .flatten
+          .orEmpty
+
+        // Remove contraint sets from expanded list which no longer exist.
+        val removeConstraintSets =
+          (expandedIds.get -- constraintSetsWithObs.constraintSets.toList.map(_.id)).toNes
+            .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
             .orEmpty
 
-          // Remove contraint sets from expanded list which no longer exist.
-          val removeConstraintSets =
-            (expandedIds.get -- constraintSetsWithObs.constraintSets.toList.map(_.id)).toNes
-              .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
-              .orEmpty
-
-          (expandCs >> removeConstraintSets).runAsyncCB
-        }
+        (expandCs >> removeConstraintSets).runAsyncCB
       }
       .build
 }

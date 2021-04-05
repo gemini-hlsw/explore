@@ -49,7 +49,7 @@ object InputModal {
       .builder[Props]
       .initialStateFromProps(p => State(p.initialValue.fold("")(_.value)))
       .renderPS { ($, props, state) =>
-        AppCtx.runWithCtx { implicit appCtx =>
+        AppCtx.using { implicit appCtx =>
           val valueView = ViewF.fromState[IO]($).zoom(State.inputValue)
 
           val cleanInput = $.setStateL(State.inputValue)("")

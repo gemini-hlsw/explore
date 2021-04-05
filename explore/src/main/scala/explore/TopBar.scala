@@ -64,7 +64,7 @@ object TopBar {
         val p            = $.props
         val currentTheme = $.state.theme
 
-        AppCtx.runWithCtx { implicit appCtx =>
+        AppCtx.using { implicit appCtx =>
           val role = p.user.role
 
           def logout: IO[Unit] =
@@ -75,14 +75,27 @@ object TopBar {
               ExploreStyles.MainHeader,
               Menu(
                 attached = MenuAttached.Top,
-                // compact = true,
                 borderless = true,
                 tabular = MenuTabular.Right
               )(
                 MenuItem(
                   <.span(
                     ExploreStyles.MainTitle,
-                    "Explore"
+                    "Explore",
+                    HelpCtx.usingView { help =>
+                      val helpMsg = help.zoom(HelpContext.msg)
+                      React.Fragment(
+                        helpMsg.get,
+                        react.semanticui.elements.button
+                          .Button(onClick =
+                            helpMsg
+                              .mod(_.fold(" - Hello!".some)(_ => none))
+                              .runAsyncCB
+                          )(
+                            "Help"
+                          )
+                      )
+                    }
                   )
                 ),
                 Item(

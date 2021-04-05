@@ -92,7 +92,7 @@ object PartnerSplitsEditor {
   private def total(p:       Props) = p.splits.get.map(_.percent.value.value).sum
   private def addsUpTo100(p: Props) = total(p) === 100
 
-  def render(p: Props): VdomNode = AppCtx.runWithCtx { implicit ctx =>
+  def render(p: Props): VdomNode = AppCtx.using { implicit ctx =>
     def save = if (addsUpTo100(p)) p.onSave(p.splits.get) else Callback.empty
 
     Modal(

@@ -18,7 +18,7 @@ import explore.model.ObsSummary
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
-import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -668,14 +668,9 @@ object ConstraintSetObsQueries {
   implicit val constraintSetWithObsReusability: Reusability[ConstraintSetsWithObs] =
     Reusability.derive
 
-  type LiveQueryRenderer =
-    (
-      View[ConstraintSetsWithObs] => VdomNode
-    ) => LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs]
-
-  val ConstraintSetObsLiveQuery: LiveQueryRenderer =
-    render =>
-      AppCtx.runWithCtx { implicit appCtx =>
+  val ConstraintSetObsLiveQuery =
+    ScalaFnComponent[View[ConstraintSetsWithObs] => VdomNode](render =>
+      AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),
           ConstraintSetsObsQuery.Data.asConstraintSetsWithObs.get,
@@ -685,5 +680,6 @@ object ConstraintSetObsQueries {
           )
         )(render)
       }
+    )
 
 }

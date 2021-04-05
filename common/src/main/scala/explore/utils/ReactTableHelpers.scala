@@ -43,7 +43,7 @@ object ReactTableHelpers {
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           FormInputEV(id = newId,
                       value = va.zoom(lens),
                       validFormat = validFormat,
@@ -77,7 +77,7 @@ object ReactTableHelpers {
       .render_P { va =>
         val excluded = excludeFn.fold(Set.empty[B])(_.apply(va))
 
-        AppCtx.runWithCtx { implicit ctx =>
+        AppCtx.using { implicit ctx =>
           EnumViewSelect(id = newId,
                          value = va.zoom(lens),
                          exclude = excluded,

@@ -52,11 +52,12 @@ import react.semanticui.sizes._
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
-  userId:    ViewOpt[User.Id],
-  focused:   View[Option[Focused]],
-  searching: View[Set[Target.Id]],
-  size:      ResizeDetector.Dimensions
-) extends ReactProps[ObsTabContents](ObsTabContents.component) {
+  userId:           ViewOpt[User.Id],
+  focused:          View[Option[Focused]],
+  searching:        View[Set[Target.Id]],
+  size:             ResizeDetector.Dimensions
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[ObsTabContents](ObsTabContents.component) {
   def isObsSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) => () }.isDefined
 }
 
@@ -146,36 +147,30 @@ object ObsTabContents {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def readTabPreference(userId: Option[User.Id]): Callback =
-      AppCtx.runWithCtx { implicit ctx =>
-        ObsTabPreferencesQuery
-          .queryWithDefault[IO](userId,
-                                // GridLayoutSection.ObservationsLayout,
-                                ResizableSection.ObservationsTree,
-                                (Constants.InitialTreeWidth.toInt, defaultLayout)
-          )
-          .runAsyncAndThenCB {
-            case Right((w, l)) =>
-              $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
-            case Left(_)       => Callback.empty
-          }
-      }
+    def readTabPreference(userId: Option[User.Id])(implicit ctx: AppContextIO): Callback =
+      ObsTabPreferencesQuery
+        .queryWithDefault[IO](userId,
+                              ResizableSection.ObservationsTree,
+                              (Constants.InitialTreeWidth.toInt, defaultLayout)
+        )
+        .runAsyncAndThenCB {
+          case Right((w, l)) =>
+            $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
+          case Left(_)       => Callback.empty
+        }
 
-    def readTargetPreferences(targetId: Target.Id): Callback =
+    def readTargetPreferences(targetId: Target.Id)(implicit ctx: AppContextIO): Callback =
       $.props.flatMap { p =>
         p.userId.get.map { uid =>
-          AppCtx
-            .runWithCtx { implicit ctx =>
-              UserTargetPreferencesQuery
-                .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
-                .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
-                .runAsyncAndForgetCB
-            }
+          UserTargetPreferencesQuery
+            .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
+            .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+            .runAsyncAndForgetCB
         }.getOrEmpty
       }
 
     def render(props: Props, state: State) = {
-      AppCtx.runWithCtx { implicit ctx =>
+      AppCtx.using { implicit ctx =>
         val treeResize =
           (_: ReactEvent, d: ResizeCallbackData) =>
             $.setStateL(State.panelsWidth)(d.size.width) *>
@@ -365,7 +360,7 @@ object ObsTabContents {
         }
       )
       .renderBackend[Backend]
-      .componentDidMount($ => $.backend.readTabPreference($.props.userId.get))
+      .componentDidMount($ => $.backend.readTabPreference($.props.userId.get)($.props.ctx))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

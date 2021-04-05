@@ -51,7 +51,7 @@ object ProposalTabContents {
     )
 
     def render() =
-      AppCtx.runWithCtx { implicit appCtx =>
+      AppCtx.using { implicit appCtx =>
         val ref: SignallingRef[IO, ProposalDetails] =
           SignallingRef.in[SyncIO, IO, ProposalDetails](proposalDetails).unsafeRunSync()
 
