@@ -75,6 +75,8 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJVMSettings)
 
+val curTime = System.currentTimeMillis()
+
 lazy val common = project
   .in(file("common"))
   .settings(commonSettings: _*)
@@ -95,8 +97,7 @@ lazy val common = project
       git.gitHeadCommit
     ),
     buildInfoKeys ++= {
-      if (sys.env.contains("SBT_IGNORE_BUILDTIME")) Seq(BuildInfoKey.action("buildTime")(0L))
-      else Seq(BuildInfoKey.action("buildTime")(System.currentTimeMillis))
+      Seq(BuildInfoKey.action("buildTime")(curTime))
     },
     buildInfoPackage := "explore"
   )
