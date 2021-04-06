@@ -27,8 +27,8 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
           list
             .removed(key)
             .map(_ match {
-              case (key, (a, i)) if i < idx => (key, (a, i))
-              case (key, (a, i)) if i > idx => (key, (a, i - 1))
+              case (key, (a, i)) if i < idx     => (key, (a, i))
+              case (key, (a, i)) /*if i > idx*/ => (key, (a, i - 1))
             })
         )
       )
