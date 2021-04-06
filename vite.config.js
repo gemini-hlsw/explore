@@ -28,7 +28,15 @@ export default ({ command, mode }) => {
   const themeConfig = path.resolve(webappCommon, "theme/theme.config");
   const themeSite = path.resolve(webappCommon, "theme");
   const suithemes = path.resolve(webappCommon, "suithemes");
-  const publicDir = path.resolve(common, "src/main/public");
+  const publicDirProd = path.resolve(common, "src/main/public");
+  const publicDirDev = path.resolve(common, "src/main/publicdev");
+  fs.mkdir(publicDirDev, (err) => {
+    fs.copyFileSync(path.resolve(publicDirProd, "development.conf.json"), path.resolve(publicDirDev, "conf.json"));
+  });
+  const publicDir = 
+    mode == "production"
+     ? publicDirProd
+     : publicDirDev
   return {
     root: "explore/src/main/webapp",
     publicDir: publicDir,
