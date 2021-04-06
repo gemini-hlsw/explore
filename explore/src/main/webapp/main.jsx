@@ -1,6 +1,10 @@
 import "/common/theme/semantic.less";
 import "/common/less/style.less";
-import "react-semantic-toasts/styles/react-semantic-alert.css";
+import "/common/less/components/visualization.less";
+import "/common/less/vendor/aladin.less";
+import "/common/sass/charts.scss";
+import "/common/sass/datepicker.scss";
+import "/common/less/vendor/react-reflex.less";
 
 import { Explore } from "@sjs/main.js";
 Explore.runIOApp();
