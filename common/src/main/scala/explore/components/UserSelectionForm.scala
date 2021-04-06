@@ -73,11 +73,10 @@ object UserSelectionForm {
                 ExploreStyles.LoginBoxLayout,
                 Logo(),
                 Button(
-                  content =
-                    <.div(ExploreStyles.LoginOrcidButton,
-                          Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
-                          "Login with ORCID"
-                    ),
+                  content = <.div(ExploreStyles.LoginOrcidButton,
+                                  Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
+                                  "Login with ORCID"
+                  ),
                   clazz = ExploreStyles.LoginBoxButton,
                   size = Big,
                   onClick = p.login >> p.message.set(none).runAsyncCB
