@@ -223,7 +223,7 @@ object ConstraintSetObsList {
       setter: Undoer.Setter[IO, ConstraintSetsWithObs]
     )(name:   NonEmptyString)(implicit c: TransactionalClient[IO, ObservationDB]): IO[Unit] = {
       // Temporary measure until we have id pools.
-      val newCs = IO(Random.nextInt()).map(int =>
+      val newCs = IO(Random.nextInt(0xfff)).map(int =>
         ConstraintsSummary.default(id = ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                                    name = name
         )

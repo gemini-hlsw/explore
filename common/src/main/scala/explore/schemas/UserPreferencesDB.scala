@@ -893,9 +893,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderExploreResizableWidthConstraint: io.circe.Encoder[ExploreResizableWidthConstraint] = io.circe.Encoder.encodeString.contramap[ExploreResizableWidthConstraint]({
         case ExploreResizableWidthPkey => "explore_resizable_width_pkey"
       })
-      implicit val jsonDecoderExploreResizableWidthConstraint: io.circe.Decoder[ExploreResizableWidthConstraint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "explore_resizable_width_pkey" => ExploreResizableWidthPkey
-      }))
+      implicit val jsonDecoderExploreResizableWidthConstraint: io.circe.Decoder[ExploreResizableWidthConstraint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "explore_resizable_width_pkey" =>
+          Right(ExploreResizableWidthPkey)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait ExploreResizableWidthSelectColumn
     object ExploreResizableWidthSelectColumn {
@@ -913,11 +916,16 @@ object UserPreferencesDB {
         case UserId => "user_id"
         case Width => "width"
       })
-      implicit val jsonDecoderExploreResizableWidthSelectColumn: io.circe.Decoder[ExploreResizableWidthSelectColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "section" => Section
-        case "user_id" => UserId
-        case "width" => Width
-      }))
+      implicit val jsonDecoderExploreResizableWidthSelectColumn: io.circe.Decoder[ExploreResizableWidthSelectColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "section" =>
+          Right(Section)
+        case "user_id" =>
+          Right(UserId)
+        case "width" =>
+          Right(Width)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait ExploreResizableWidthUpdateColumn
     object ExploreResizableWidthUpdateColumn {
@@ -935,11 +943,16 @@ object UserPreferencesDB {
         case UserId => "user_id"
         case Width => "width"
       })
-      implicit val jsonDecoderExploreResizableWidthUpdateColumn: io.circe.Decoder[ExploreResizableWidthUpdateColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "section" => Section
-        case "user_id" => UserId
-        case "width" => Width
-      }))
+      implicit val jsonDecoderExploreResizableWidthUpdateColumn: io.circe.Decoder[ExploreResizableWidthUpdateColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "section" =>
+          Right(Section)
+        case "user_id" =>
+          Right(UserId)
+        case "width" =>
+          Right(Width)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GridLayoutPositionsConstraint
     object GridLayoutPositionsConstraint {
@@ -953,9 +966,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderGridLayoutPositionsConstraint: io.circe.Encoder[GridLayoutPositionsConstraint] = io.circe.Encoder.encodeString.contramap[GridLayoutPositionsConstraint]({
         case GridLayoutPositionsPkey => "grid_layout_positions_pkey"
       })
-      implicit val jsonDecoderGridLayoutPositionsConstraint: io.circe.Decoder[GridLayoutPositionsConstraint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "grid_layout_positions_pkey" => GridLayoutPositionsPkey
-      }))
+      implicit val jsonDecoderGridLayoutPositionsConstraint: io.circe.Decoder[GridLayoutPositionsConstraint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "grid_layout_positions_pkey" =>
+          Right(GridLayoutPositionsPkey)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GridLayoutPositionsSelectColumn
     object GridLayoutPositionsSelectColumn {
@@ -983,16 +999,26 @@ object UserPreferencesDB {
         case X => "x"
         case Y => "y"
       })
-      implicit val jsonDecoderGridLayoutPositionsSelectColumn: io.circe.Decoder[GridLayoutPositionsSelectColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "breakpoint_name" => BreakpointName
-        case "height" => Height
-        case "section" => Section
-        case "tile" => Tile
-        case "user_id" => UserId
-        case "width" => Width
-        case "x" => X
-        case "y" => Y
-      }))
+      implicit val jsonDecoderGridLayoutPositionsSelectColumn: io.circe.Decoder[GridLayoutPositionsSelectColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "breakpoint_name" =>
+          Right(BreakpointName)
+        case "height" =>
+          Right(Height)
+        case "section" =>
+          Right(Section)
+        case "tile" =>
+          Right(Tile)
+        case "user_id" =>
+          Right(UserId)
+        case "width" =>
+          Right(Width)
+        case "x" =>
+          Right(X)
+        case "y" =>
+          Right(Y)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GridLayoutPositionsUpdateColumn
     object GridLayoutPositionsUpdateColumn {
@@ -1020,16 +1046,26 @@ object UserPreferencesDB {
         case X => "x"
         case Y => "y"
       })
-      implicit val jsonDecoderGridLayoutPositionsUpdateColumn: io.circe.Decoder[GridLayoutPositionsUpdateColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "breakpoint_name" => BreakpointName
-        case "height" => Height
-        case "section" => Section
-        case "tile" => Tile
-        case "user_id" => UserId
-        case "width" => Width
-        case "x" => X
-        case "y" => Y
-      }))
+      implicit val jsonDecoderGridLayoutPositionsUpdateColumn: io.circe.Decoder[GridLayoutPositionsUpdateColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "breakpoint_name" =>
+          Right(BreakpointName)
+        case "height" =>
+          Right(Height)
+        case "section" =>
+          Right(Section)
+        case "tile" =>
+          Right(Tile)
+        case "user_id" =>
+          Right(UserId)
+        case "width" =>
+          Right(Width)
+        case "x" =>
+          Right(X)
+        case "y" =>
+          Right(Y)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetConstraint
     object LucumaTargetConstraint {
@@ -1043,9 +1079,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaTargetConstraint: io.circe.Encoder[LucumaTargetConstraint] = io.circe.Encoder.encodeString.contramap[LucumaTargetConstraint]({
         case LucumaTargetPkey => "lucuma_target_pkey"
       })
-      implicit val jsonDecoderLucumaTargetConstraint: io.circe.Decoder[LucumaTargetConstraint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "lucuma_target_pkey" => LucumaTargetPkey
-      }))
+      implicit val jsonDecoderLucumaTargetConstraint: io.circe.Decoder[LucumaTargetConstraint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "lucuma_target_pkey" =>
+          Right(LucumaTargetPkey)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetPreferencesConstraint
     object LucumaTargetPreferencesConstraint {
@@ -1059,9 +1098,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaTargetPreferencesConstraint: io.circe.Encoder[LucumaTargetPreferencesConstraint] = io.circe.Encoder.encodeString.contramap[LucumaTargetPreferencesConstraint]({
         case LucumaTargetPreferencesPkey => "lucuma_target_preferences_pkey"
       })
-      implicit val jsonDecoderLucumaTargetPreferencesConstraint: io.circe.Decoder[LucumaTargetPreferencesConstraint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "lucuma_target_preferences_pkey" => LucumaTargetPreferencesPkey
-      }))
+      implicit val jsonDecoderLucumaTargetPreferencesConstraint: io.circe.Decoder[LucumaTargetPreferencesConstraint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "lucuma_target_preferences_pkey" =>
+          Right(LucumaTargetPreferencesPkey)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetPreferencesSelectColumn
     object LucumaTargetPreferencesSelectColumn {
@@ -1079,11 +1121,16 @@ object UserPreferencesDB {
         case TargetId => "target_id"
         case UserId => "user_id"
       })
-      implicit val jsonDecoderLucumaTargetPreferencesSelectColumn: io.circe.Decoder[LucumaTargetPreferencesSelectColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "fov" => Fov
-        case "target_id" => TargetId
-        case "user_id" => UserId
-      }))
+      implicit val jsonDecoderLucumaTargetPreferencesSelectColumn: io.circe.Decoder[LucumaTargetPreferencesSelectColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "fov" =>
+          Right(Fov)
+        case "target_id" =>
+          Right(TargetId)
+        case "user_id" =>
+          Right(UserId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetPreferencesUpdateColumn
     object LucumaTargetPreferencesUpdateColumn {
@@ -1101,11 +1148,16 @@ object UserPreferencesDB {
         case TargetId => "target_id"
         case UserId => "user_id"
       })
-      implicit val jsonDecoderLucumaTargetPreferencesUpdateColumn: io.circe.Decoder[LucumaTargetPreferencesUpdateColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "fov" => Fov
-        case "target_id" => TargetId
-        case "user_id" => UserId
-      }))
+      implicit val jsonDecoderLucumaTargetPreferencesUpdateColumn: io.circe.Decoder[LucumaTargetPreferencesUpdateColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "fov" =>
+          Right(Fov)
+        case "target_id" =>
+          Right(TargetId)
+        case "user_id" =>
+          Right(UserId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetSelectColumn
     object LucumaTargetSelectColumn {
@@ -1119,9 +1171,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaTargetSelectColumn: io.circe.Encoder[LucumaTargetSelectColumn] = io.circe.Encoder.encodeString.contramap[LucumaTargetSelectColumn]({
         case TargetId => "target_id"
       })
-      implicit val jsonDecoderLucumaTargetSelectColumn: io.circe.Decoder[LucumaTargetSelectColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "target_id" => TargetId
-      }))
+      implicit val jsonDecoderLucumaTargetSelectColumn: io.circe.Decoder[LucumaTargetSelectColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "target_id" =>
+          Right(TargetId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaTargetUpdateColumn
     object LucumaTargetUpdateColumn {
@@ -1135,9 +1190,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaTargetUpdateColumn: io.circe.Encoder[LucumaTargetUpdateColumn] = io.circe.Encoder.encodeString.contramap[LucumaTargetUpdateColumn]({
         case TargetId => "target_id"
       })
-      implicit val jsonDecoderLucumaTargetUpdateColumn: io.circe.Decoder[LucumaTargetUpdateColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "target_id" => TargetId
-      }))
+      implicit val jsonDecoderLucumaTargetUpdateColumn: io.circe.Decoder[LucumaTargetUpdateColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "target_id" =>
+          Right(TargetId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaUserConstraint
     object LucumaUserConstraint {
@@ -1151,9 +1209,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaUserConstraint: io.circe.Encoder[LucumaUserConstraint] = io.circe.Encoder.encodeString.contramap[LucumaUserConstraint]({
         case LucumaUserPkey => "lucuma_user_pkey"
       })
-      implicit val jsonDecoderLucumaUserConstraint: io.circe.Decoder[LucumaUserConstraint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "lucuma_user_pkey" => LucumaUserPkey
-      }))
+      implicit val jsonDecoderLucumaUserConstraint: io.circe.Decoder[LucumaUserConstraint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "lucuma_user_pkey" =>
+          Right(LucumaUserPkey)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaUserSelectColumn
     object LucumaUserSelectColumn {
@@ -1167,9 +1228,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaUserSelectColumn: io.circe.Encoder[LucumaUserSelectColumn] = io.circe.Encoder.encodeString.contramap[LucumaUserSelectColumn]({
         case UserId => "user_id"
       })
-      implicit val jsonDecoderLucumaUserSelectColumn: io.circe.Decoder[LucumaUserSelectColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "user_id" => UserId
-      }))
+      implicit val jsonDecoderLucumaUserSelectColumn: io.circe.Decoder[LucumaUserSelectColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "user_id" =>
+          Right(UserId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait LucumaUserUpdateColumn
     object LucumaUserUpdateColumn {
@@ -1183,9 +1247,12 @@ object UserPreferencesDB {
       implicit val jsonEncoderLucumaUserUpdateColumn: io.circe.Encoder[LucumaUserUpdateColumn] = io.circe.Encoder.encodeString.contramap[LucumaUserUpdateColumn]({
         case UserId => "user_id"
       })
-      implicit val jsonDecoderLucumaUserUpdateColumn: io.circe.Decoder[LucumaUserUpdateColumn] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "user_id" => UserId
-      }))
+      implicit val jsonDecoderLucumaUserUpdateColumn: io.circe.Decoder[LucumaUserUpdateColumn] = io.circe.Decoder.decodeString.emap(_ match {
+        case "user_id" =>
+          Right(UserId)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait OrderBy
     object OrderBy {
@@ -1209,14 +1276,22 @@ object UserPreferencesDB {
         case DescNullsFirst => "desc_nulls_first"
         case DescNullsLast => "desc_nulls_last"
       })
-      implicit val jsonDecoderOrderBy: io.circe.Decoder[OrderBy] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "asc" => Asc
-        case "asc_nulls_first" => AscNullsFirst
-        case "asc_nulls_last" => AscNullsLast
-        case "desc" => Desc
-        case "desc_nulls_first" => DescNullsFirst
-        case "desc_nulls_last" => DescNullsLast
-      }))
+      implicit val jsonDecoderOrderBy: io.circe.Decoder[OrderBy] = io.circe.Decoder.decodeString.emap(_ match {
+        case "asc" =>
+          Right(Asc)
+        case "asc_nulls_first" =>
+          Right(AscNullsFirst)
+        case "asc_nulls_last" =>
+          Right(AscNullsLast)
+        case "desc" =>
+          Right(Desc)
+        case "desc_nulls_first" =>
+          Right(DescNullsFirst)
+        case "desc_nulls_last" =>
+          Right(DescNullsLast)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
   }
 }

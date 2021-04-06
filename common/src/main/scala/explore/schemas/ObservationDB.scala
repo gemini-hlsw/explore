@@ -78,10 +78,14 @@ object ObservationDB {
         case Enabled => "ENABLED"
         case Disabled => "DISABLED"
       })
-      implicit val jsonDecoderBreakpoint: io.circe.Decoder[Breakpoint] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "ENABLED" => Enabled
-        case "DISABLED" => Disabled
-      }))
+      implicit val jsonDecoderBreakpoint: io.circe.Decoder[Breakpoint] = io.circe.Decoder.decodeString.emap(_ match {
+        case "ENABLED" =>
+          Right(Enabled)
+        case "DISABLED" =>
+          Right(Disabled)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait DeclinationUnits
     object DeclinationUnits {
@@ -97,10 +101,14 @@ object ObservationDB {
         case Microarcseconds => "MICROARCSECONDS"
         case Degrees => "DEGREES"
       })
-      implicit val jsonDecoderDeclinationUnits: io.circe.Decoder[DeclinationUnits] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "MICROARCSECONDS" => Microarcseconds
-        case "DEGREES" => Degrees
-      }))
+      implicit val jsonDecoderDeclinationUnits: io.circe.Decoder[DeclinationUnits] = io.circe.Decoder.decodeString.emap(_ match {
+        case "MICROARCSECONDS" =>
+          Right(Microarcseconds)
+        case "DEGREES" =>
+          Right(Degrees)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait EditType
     object EditType {
@@ -116,10 +124,14 @@ object ObservationDB {
         case Created => "CREATED"
         case Updated => "UPDATED"
       })
-      implicit val jsonDecoderEditType: io.circe.Decoder[EditType] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "CREATED" => Created
-        case "UPDATED" => Updated
-      }))
+      implicit val jsonDecoderEditType: io.circe.Decoder[EditType] = io.circe.Decoder.decodeString.emap(_ match {
+        case "CREATED" =>
+          Right(Created)
+        case "UPDATED" =>
+          Right(Updated)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait EphemerisKeyType
     object EphemerisKeyType {
@@ -141,13 +153,20 @@ object ObservationDB {
         case MajorBody => "MAJOR_BODY"
         case UserSupplied => "USER_SUPPLIED"
       })
-      implicit val jsonDecoderEphemerisKeyType: io.circe.Decoder[EphemerisKeyType] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "COMET" => Comet
-        case "ASTEROID_NEW" => AsteroidNew
-        case "ASTEROID_OLD" => AsteroidOld
-        case "MAJOR_BODY" => MajorBody
-        case "USER_SUPPLIED" => UserSupplied
-      }))
+      implicit val jsonDecoderEphemerisKeyType: io.circe.Decoder[EphemerisKeyType] = io.circe.Decoder.decodeString.emap(_ match {
+        case "COMET" =>
+          Right(Comet)
+        case "ASTEROID_NEW" =>
+          Right(AsteroidNew)
+        case "ASTEROID_OLD" =>
+          Right(AsteroidOld)
+        case "MAJOR_BODY" =>
+          Right(MajorBody)
+        case "USER_SUPPLIED" =>
+          Right(UserSupplied)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait Existence
     object Existence {
@@ -163,10 +182,14 @@ object ObservationDB {
         case Present => "PRESENT"
         case Deleted => "DELETED"
       })
-      implicit val jsonDecoderExistence: io.circe.Decoder[Existence] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "PRESENT" => Present
-        case "DELETED" => Deleted
-      }))
+      implicit val jsonDecoderExistence: io.circe.Decoder[Existence] = io.circe.Decoder.decodeString.emap(_ match {
+        case "PRESENT" =>
+          Right(Present)
+        case "DELETED" =>
+          Right(Deleted)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GcalArc
     object GcalArc {
@@ -186,12 +209,18 @@ object ObservationDB {
         case CuArArc => "CU_AR_ARC"
         case XeArc => "XE_ARC"
       })
-      implicit val jsonDecoderGcalArc: io.circe.Decoder[GcalArc] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "AR_ARC" => ArArc
-        case "TH_AR_ARC" => ThArArc
-        case "CU_AR_ARC" => CuArArc
-        case "XE_ARC" => XeArc
-      }))
+      implicit val jsonDecoderGcalArc: io.circe.Decoder[GcalArc] = io.circe.Decoder.decodeString.emap(_ match {
+        case "AR_ARC" =>
+          Right(ArArc)
+        case "TH_AR_ARC" =>
+          Right(ThArArc)
+        case "CU_AR_ARC" =>
+          Right(CuArArc)
+        case "XE_ARC" =>
+          Right(XeArc)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GcalContinuum
     object GcalContinuum {
@@ -209,11 +238,16 @@ object ObservationDB {
         case IrGreyBodyHigh => "IR_GREY_BODY_HIGH"
         case QuartzHalogen => "QUARTZ_HALOGEN"
       })
-      implicit val jsonDecoderGcalContinuum: io.circe.Decoder[GcalContinuum] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "IR_GREY_BODY_LOW" => IrGreyBodyLow
-        case "IR_GREY_BODY_HIGH" => IrGreyBodyHigh
-        case "QUARTZ_HALOGEN" => QuartzHalogen
-      }))
+      implicit val jsonDecoderGcalContinuum: io.circe.Decoder[GcalContinuum] = io.circe.Decoder.decodeString.emap(_ match {
+        case "IR_GREY_BODY_LOW" =>
+          Right(IrGreyBodyLow)
+        case "IR_GREY_BODY_HIGH" =>
+          Right(IrGreyBodyHigh)
+        case "QUARTZ_HALOGEN" =>
+          Right(QuartzHalogen)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GcalDiffuser
     object GcalDiffuser {
@@ -229,10 +263,14 @@ object ObservationDB {
         case Ir => "IR"
         case Visible => "VISIBLE"
       })
-      implicit val jsonDecoderGcalDiffuser: io.circe.Decoder[GcalDiffuser] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "IR" => Ir
-        case "VISIBLE" => Visible
-      }))
+      implicit val jsonDecoderGcalDiffuser: io.circe.Decoder[GcalDiffuser] = io.circe.Decoder.decodeString.emap(_ match {
+        case "IR" =>
+          Right(Ir)
+        case "VISIBLE" =>
+          Right(Visible)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GcalFilter
     object GcalFilter {
@@ -266,19 +304,32 @@ object ObservationDB {
         case Nd45 => "ND45"
         case Nd50 => "ND50"
       })
-      implicit val jsonDecoderGcalFilter: io.circe.Decoder[GcalFilter] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "NONE" => None
-        case "GMOS" => Gmos
-        case "HROS" => Hros
-        case "NIR" => Nir
-        case "ND10" => Nd10
-        case "ND16" => Nd16
-        case "ND20" => Nd20
-        case "ND30" => Nd30
-        case "ND40" => Nd40
-        case "ND45" => Nd45
-        case "ND50" => Nd50
-      }))
+      implicit val jsonDecoderGcalFilter: io.circe.Decoder[GcalFilter] = io.circe.Decoder.decodeString.emap(_ match {
+        case "NONE" =>
+          Right(None)
+        case "GMOS" =>
+          Right(Gmos)
+        case "HROS" =>
+          Right(Hros)
+        case "NIR" =>
+          Right(Nir)
+        case "ND10" =>
+          Right(Nd10)
+        case "ND16" =>
+          Right(Nd16)
+        case "ND20" =>
+          Right(Nd20)
+        case "ND30" =>
+          Right(Nd30)
+        case "ND40" =>
+          Right(Nd40)
+        case "ND45" =>
+          Right(Nd45)
+        case "ND50" =>
+          Right(Nd50)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GcalShutter
     object GcalShutter {
@@ -294,10 +345,14 @@ object ObservationDB {
         case Open => "OPEN"
         case Closed => "CLOSED"
       })
-      implicit val jsonDecoderGcalShutter: io.circe.Decoder[GcalShutter] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "OPEN" => Open
-        case "CLOSED" => Closed
-      }))
+      implicit val jsonDecoderGcalShutter: io.circe.Decoder[GcalShutter] = io.circe.Decoder.decodeString.emap(_ match {
+        case "OPEN" =>
+          Right(Open)
+        case "CLOSED" =>
+          Right(Closed)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosAmpCount
     object GmosAmpCount {
@@ -315,11 +370,16 @@ object ObservationDB {
         case Six => "SIX"
         case Twelve => "TWELVE"
       })
-      implicit val jsonDecoderGmosAmpCount: io.circe.Decoder[GmosAmpCount] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "THREE" => Three
-        case "SIX" => Six
-        case "TWELVE" => Twelve
-      }))
+      implicit val jsonDecoderGmosAmpCount: io.circe.Decoder[GmosAmpCount] = io.circe.Decoder.decodeString.emap(_ match {
+        case "THREE" =>
+          Right(Three)
+        case "SIX" =>
+          Right(Six)
+        case "TWELVE" =>
+          Right(Twelve)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosAmpReadMode
     object GmosAmpReadMode {
@@ -335,10 +395,14 @@ object ObservationDB {
         case Slow => "SLOW"
         case Fast => "FAST"
       })
-      implicit val jsonDecoderGmosAmpReadMode: io.circe.Decoder[GmosAmpReadMode] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "SLOW" => Slow
-        case "FAST" => Fast
-      }))
+      implicit val jsonDecoderGmosAmpReadMode: io.circe.Decoder[GmosAmpReadMode] = io.circe.Decoder.decodeString.emap(_ match {
+        case "SLOW" =>
+          Right(Slow)
+        case "FAST" =>
+          Right(Fast)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosCustomSlitWidth
     object GmosCustomSlitWidth {
@@ -364,15 +428,24 @@ object ObservationDB {
         case CustomWidth200 => "CUSTOM_WIDTH_2_00"
         case CustomWidth500 => "CUSTOM_WIDTH_5_00"
       })
-      implicit val jsonDecoderGmosCustomSlitWidth: io.circe.Decoder[GmosCustomSlitWidth] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "CUSTOM_WIDTH_0_25" => CustomWidth025
-        case "CUSTOM_WIDTH_0_50" => CustomWidth050
-        case "CUSTOM_WIDTH_0_75" => CustomWidth075
-        case "CUSTOM_WIDTH_1_00" => CustomWidth100
-        case "CUSTOM_WIDTH_1_50" => CustomWidth150
-        case "CUSTOM_WIDTH_2_00" => CustomWidth200
-        case "CUSTOM_WIDTH_5_00" => CustomWidth500
-      }))
+      implicit val jsonDecoderGmosCustomSlitWidth: io.circe.Decoder[GmosCustomSlitWidth] = io.circe.Decoder.decodeString.emap(_ match {
+        case "CUSTOM_WIDTH_0_25" =>
+          Right(CustomWidth025)
+        case "CUSTOM_WIDTH_0_50" =>
+          Right(CustomWidth050)
+        case "CUSTOM_WIDTH_0_75" =>
+          Right(CustomWidth075)
+        case "CUSTOM_WIDTH_1_00" =>
+          Right(CustomWidth100)
+        case "CUSTOM_WIDTH_1_50" =>
+          Right(CustomWidth150)
+        case "CUSTOM_WIDTH_2_00" =>
+          Right(CustomWidth200)
+        case "CUSTOM_WIDTH_5_00" =>
+          Right(CustomWidth500)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosDetector
     object GmosDetector {
@@ -388,10 +461,14 @@ object ObservationDB {
         case E2V => "E2_V"
         case Hamamatsu => "HAMAMATSU"
       })
-      implicit val jsonDecoderGmosDetector: io.circe.Decoder[GmosDetector] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "E2_V" => E2V
-        case "HAMAMATSU" => Hamamatsu
-      }))
+      implicit val jsonDecoderGmosDetector: io.circe.Decoder[GmosDetector] = io.circe.Decoder.decodeString.emap(_ match {
+        case "E2_V" =>
+          Right(E2V)
+        case "HAMAMATSU" =>
+          Right(Hamamatsu)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosDisperserOrder
     object GmosDisperserOrder {
@@ -409,11 +486,16 @@ object ObservationDB {
         case One => "ONE"
         case Two => "TWO"
       })
-      implicit val jsonDecoderGmosDisperserOrder: io.circe.Decoder[GmosDisperserOrder] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "ZERO" => Zero
-        case "ONE" => One
-        case "TWO" => Two
-      }))
+      implicit val jsonDecoderGmosDisperserOrder: io.circe.Decoder[GmosDisperserOrder] = io.circe.Decoder.decodeString.emap(_ match {
+        case "ZERO" =>
+          Right(Zero)
+        case "ONE" =>
+          Right(One)
+        case "TWO" =>
+          Right(Two)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosDtax
     object GmosDtax {
@@ -451,21 +533,36 @@ object ObservationDB {
         case Five => "FIVE"
         case Six => "SIX"
       })
-      implicit val jsonDecoderGmosDtax: io.circe.Decoder[GmosDtax] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "MINUS_SIX" => MinusSix
-        case "MINUS_FIVE" => MinusFive
-        case "MINUS_FOUR" => MinusFour
-        case "MINUS_THREE" => MinusThree
-        case "MINUS_TWO" => MinusTwo
-        case "MINUS_ONE" => MinusOne
-        case "ZERO" => Zero
-        case "ONE" => One
-        case "TWO" => Two
-        case "THREE" => Three
-        case "FOUR" => Four
-        case "FIVE" => Five
-        case "SIX" => Six
-      }))
+      implicit val jsonDecoderGmosDtax: io.circe.Decoder[GmosDtax] = io.circe.Decoder.decodeString.emap(_ match {
+        case "MINUS_SIX" =>
+          Right(MinusSix)
+        case "MINUS_FIVE" =>
+          Right(MinusFive)
+        case "MINUS_FOUR" =>
+          Right(MinusFour)
+        case "MINUS_THREE" =>
+          Right(MinusThree)
+        case "MINUS_TWO" =>
+          Right(MinusTwo)
+        case "MINUS_ONE" =>
+          Right(MinusOne)
+        case "ZERO" =>
+          Right(Zero)
+        case "ONE" =>
+          Right(One)
+        case "TWO" =>
+          Right(Two)
+        case "THREE" =>
+          Right(Three)
+        case "FOUR" =>
+          Right(Four)
+        case "FIVE" =>
+          Right(Five)
+        case "SIX" =>
+          Right(Six)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosEOffsetting
     object GmosEOffsetting {
@@ -481,10 +578,14 @@ object ObservationDB {
         case On => "ON"
         case Off => "OFF"
       })
-      implicit val jsonDecoderGmosEOffsetting: io.circe.Decoder[GmosEOffsetting] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "ON" => On
-        case "OFF" => Off
-      }))
+      implicit val jsonDecoderGmosEOffsetting: io.circe.Decoder[GmosEOffsetting] = io.circe.Decoder.decodeString.emap(_ match {
+        case "ON" =>
+          Right(On)
+        case "OFF" =>
+          Right(Off)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosNorthDisperser
     object GmosNorthDisperser {
@@ -512,16 +613,26 @@ object ObservationDB {
         case R150G5306 => "R150_G5306"
         case R150G5308 => "R150_G5308"
       })
-      implicit val jsonDecoderGmosNorthDisperser: io.circe.Decoder[GmosNorthDisperser] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "B1200_G5301" => B1200G5301
-        case "R831_G5302" => R831G5302
-        case "B600_G5303" => B600G5303
-        case "B600_G5307" => B600G5307
-        case "R600_G5304" => R600G5304
-        case "R400_G5305" => R400G5305
-        case "R150_G5306" => R150G5306
-        case "R150_G5308" => R150G5308
-      }))
+      implicit val jsonDecoderGmosNorthDisperser: io.circe.Decoder[GmosNorthDisperser] = io.circe.Decoder.decodeString.emap(_ match {
+        case "B1200_G5301" =>
+          Right(B1200G5301)
+        case "R831_G5302" =>
+          Right(R831G5302)
+        case "B600_G5303" =>
+          Right(B600G5303)
+        case "B600_G5307" =>
+          Right(B600G5307)
+        case "R600_G5304" =>
+          Right(R600G5304)
+        case "R400_G5305" =>
+          Right(R400G5305)
+        case "R150_G5306" =>
+          Right(R150G5306)
+        case "R150_G5308" =>
+          Right(R150G5308)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosNorthFilter
     object GmosNorthFilter {
@@ -585,34 +696,62 @@ object ObservationDB {
         case ZPrimeCaT => "Z_PRIME_CA_T"
         case UPrime => "U_PRIME"
       })
-      implicit val jsonDecoderGmosNorthFilter: io.circe.Decoder[GmosNorthFilter] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "G_PRIME" => GPrime
-        case "R_PRIME" => RPrime
-        case "I_PRIME" => IPrime
-        case "Z_PRIME" => ZPrime
-        case "Z" => Z
-        case "Y" => Y
-        case "GG455" => Gg455
-        case "OG515" => Og515
-        case "RG610" => Rg610
-        case "CA_T" => CaT
-        case "HA" => Ha
-        case "HA_C" => HaC
-        case "DS920" => Ds920
-        case "SII" => Sii
-        case "OIII" => Oiii
-        case "OIIIC" => Oiiic
-        case "HE_II" => HeIi
-        case "HE_IIC" => HeIic
-        case "HARTMANN_A_R_PRIME" => HartmannARPrime
-        case "HARTMANN_B_R_PRIME" => HartmannBRPrime
-        case "G_PRIME_GG455" => GPrimeGg455
-        case "G_PRIME_OG515" => GPrimeOg515
-        case "R_PRIME_RG610" => RPrimeRg610
-        case "I_PRIME_CA_T" => IPrimeCaT
-        case "Z_PRIME_CA_T" => ZPrimeCaT
-        case "U_PRIME" => UPrime
-      }))
+      implicit val jsonDecoderGmosNorthFilter: io.circe.Decoder[GmosNorthFilter] = io.circe.Decoder.decodeString.emap(_ match {
+        case "G_PRIME" =>
+          Right(GPrime)
+        case "R_PRIME" =>
+          Right(RPrime)
+        case "I_PRIME" =>
+          Right(IPrime)
+        case "Z_PRIME" =>
+          Right(ZPrime)
+        case "Z" =>
+          Right(Z)
+        case "Y" =>
+          Right(Y)
+        case "GG455" =>
+          Right(Gg455)
+        case "OG515" =>
+          Right(Og515)
+        case "RG610" =>
+          Right(Rg610)
+        case "CA_T" =>
+          Right(CaT)
+        case "HA" =>
+          Right(Ha)
+        case "HA_C" =>
+          Right(HaC)
+        case "DS920" =>
+          Right(Ds920)
+        case "SII" =>
+          Right(Sii)
+        case "OIII" =>
+          Right(Oiii)
+        case "OIIIC" =>
+          Right(Oiiic)
+        case "HE_II" =>
+          Right(HeIi)
+        case "HE_IIC" =>
+          Right(HeIic)
+        case "HARTMANN_A_R_PRIME" =>
+          Right(HartmannARPrime)
+        case "HARTMANN_B_R_PRIME" =>
+          Right(HartmannBRPrime)
+        case "G_PRIME_GG455" =>
+          Right(GPrimeGg455)
+        case "G_PRIME_OG515" =>
+          Right(GPrimeOg515)
+        case "R_PRIME_RG610" =>
+          Right(RPrimeRg610)
+        case "I_PRIME_CA_T" =>
+          Right(IPrimeCaT)
+        case "Z_PRIME_CA_T" =>
+          Right(ZPrimeCaT)
+        case "U_PRIME" =>
+          Right(UPrime)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosNorthFpu
     object GmosNorthFpu {
@@ -656,24 +795,42 @@ object ObservationDB {
         case Ifu2 => "IFU2"
         case Ifu3 => "IFU3"
       })
-      implicit val jsonDecoderGmosNorthFpu: io.circe.Decoder[GmosNorthFpu] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "NS0" => Ns0
-        case "NS1" => Ns1
-        case "NS2" => Ns2
-        case "NS3" => Ns3
-        case "NS4" => Ns4
-        case "NS5" => Ns5
-        case "LONG_SLIT_0_25" => LongSlit025
-        case "LONG_SLIT_0_50" => LongSlit050
-        case "LONG_SLIT_0_75" => LongSlit075
-        case "LONG_SLIT_1_00" => LongSlit100
-        case "LONG_SLIT_1_50" => LongSlit150
-        case "LONG_SLIT_2_00" => LongSlit200
-        case "LONG_SLIT_5_00" => LongSlit500
-        case "IFU1" => Ifu1
-        case "IFU2" => Ifu2
-        case "IFU3" => Ifu3
-      }))
+      implicit val jsonDecoderGmosNorthFpu: io.circe.Decoder[GmosNorthFpu] = io.circe.Decoder.decodeString.emap(_ match {
+        case "NS0" =>
+          Right(Ns0)
+        case "NS1" =>
+          Right(Ns1)
+        case "NS2" =>
+          Right(Ns2)
+        case "NS3" =>
+          Right(Ns3)
+        case "NS4" =>
+          Right(Ns4)
+        case "NS5" =>
+          Right(Ns5)
+        case "LONG_SLIT_0_25" =>
+          Right(LongSlit025)
+        case "LONG_SLIT_0_50" =>
+          Right(LongSlit050)
+        case "LONG_SLIT_0_75" =>
+          Right(LongSlit075)
+        case "LONG_SLIT_1_00" =>
+          Right(LongSlit100)
+        case "LONG_SLIT_1_50" =>
+          Right(LongSlit150)
+        case "LONG_SLIT_2_00" =>
+          Right(LongSlit200)
+        case "LONG_SLIT_5_00" =>
+          Right(LongSlit500)
+        case "IFU1" =>
+          Right(Ifu1)
+        case "IFU2" =>
+          Right(Ifu2)
+        case "IFU3" =>
+          Right(Ifu3)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosNorthStageMode
     object GmosNorthStageMode {
@@ -693,12 +850,18 @@ object ObservationDB {
         case FollowXy => "FOLLOW_XY"
         case FollowZ => "FOLLOW_Z"
       })
-      implicit val jsonDecoderGmosNorthStageMode: io.circe.Decoder[GmosNorthStageMode] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "NO_FOLLOW" => NoFollow
-        case "FOLLOW_XYZ" => FollowXyz
-        case "FOLLOW_XY" => FollowXy
-        case "FOLLOW_Z" => FollowZ
-      }))
+      implicit val jsonDecoderGmosNorthStageMode: io.circe.Decoder[GmosNorthStageMode] = io.circe.Decoder.decodeString.emap(_ match {
+        case "NO_FOLLOW" =>
+          Right(NoFollow)
+        case "FOLLOW_XYZ" =>
+          Right(FollowXyz)
+        case "FOLLOW_XY" =>
+          Right(FollowXy)
+        case "FOLLOW_Z" =>
+          Right(FollowZ)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosRoi
     object GmosRoi {
@@ -724,15 +887,24 @@ object ObservationDB {
         case BottomSpectrum => "BOTTOM_SPECTRUM"
         case Custom => "CUSTOM"
       })
-      implicit val jsonDecoderGmosRoi: io.circe.Decoder[GmosRoi] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "FULL_FRAME" => FullFrame
-        case "CCD2" => Ccd2
-        case "CENTRAL_SPECTRUM" => CentralSpectrum
-        case "CENTRAL_STAMP" => CentralStamp
-        case "TOP_SPECTRUM" => TopSpectrum
-        case "BOTTOM_SPECTRUM" => BottomSpectrum
-        case "CUSTOM" => Custom
-      }))
+      implicit val jsonDecoderGmosRoi: io.circe.Decoder[GmosRoi] = io.circe.Decoder.decodeString.emap(_ match {
+        case "FULL_FRAME" =>
+          Right(FullFrame)
+        case "CCD2" =>
+          Right(Ccd2)
+        case "CENTRAL_SPECTRUM" =>
+          Right(CentralSpectrum)
+        case "CENTRAL_STAMP" =>
+          Right(CentralStamp)
+        case "TOP_SPECTRUM" =>
+          Right(TopSpectrum)
+        case "BOTTOM_SPECTRUM" =>
+          Right(BottomSpectrum)
+        case "CUSTOM" =>
+          Right(Custom)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosSouthDisperser
     object GmosSouthDisperser {
@@ -756,14 +928,22 @@ object ObservationDB {
         case R400G5325 => "R400_G5325"
         case R150G5326 => "R150_G5326"
       })
-      implicit val jsonDecoderGmosSouthDisperser: io.circe.Decoder[GmosSouthDisperser] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "B1200_G5321" => B1200G5321
-        case "R831_G5322" => R831G5322
-        case "B600_G5323" => B600G5323
-        case "R600_G5324" => R600G5324
-        case "R400_G5325" => R400G5325
-        case "R150_G5326" => R150G5326
-      }))
+      implicit val jsonDecoderGmosSouthDisperser: io.circe.Decoder[GmosSouthDisperser] = io.circe.Decoder.decodeString.emap(_ match {
+        case "B1200_G5321" =>
+          Right(B1200G5321)
+        case "R831_G5322" =>
+          Right(R831G5322)
+        case "B600_G5323" =>
+          Right(B600G5323)
+        case "R600_G5324" =>
+          Right(R600G5324)
+        case "R400_G5325" =>
+          Right(R400G5325)
+        case "R150_G5326" =>
+          Right(R150G5326)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosSouthFilter
     object GmosSouthFilter {
@@ -831,36 +1011,66 @@ object ObservationDB {
         case HeIic => "HE_IIC"
         case Lya395 => "LYA395"
       })
-      implicit val jsonDecoderGmosSouthFilter: io.circe.Decoder[GmosSouthFilter] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "U_PRIME" => UPrime
-        case "G_PRIME" => GPrime
-        case "R_PRIME" => RPrime
-        case "I_PRIME" => IPrime
-        case "Z_PRIME" => ZPrime
-        case "Z" => Z
-        case "Y" => Y
-        case "GG455" => Gg455
-        case "OG515" => Og515
-        case "RG610" => Rg610
-        case "RG780" => Rg780
-        case "CA_T" => CaT
-        case "HARTMANN_A_R_PRIME" => HartmannARPrime
-        case "HARTMANN_B_R_PRIME" => HartmannBRPrime
-        case "G_PRIME_GG455" => GPrimeGg455
-        case "G_PRIME_OG515" => GPrimeOg515
-        case "R_PRIME_RG610" => RPrimeRg610
-        case "I_PRIME_RG780" => IPrimeRg780
-        case "I_PRIME_CA_T" => IPrimeCaT
-        case "Z_PRIME_CA_T" => ZPrimeCaT
-        case "HA" => Ha
-        case "SII" => Sii
-        case "HA_C" => HaC
-        case "OIII" => Oiii
-        case "OIIIC" => Oiiic
-        case "HE_II" => HeIi
-        case "HE_IIC" => HeIic
-        case "LYA395" => Lya395
-      }))
+      implicit val jsonDecoderGmosSouthFilter: io.circe.Decoder[GmosSouthFilter] = io.circe.Decoder.decodeString.emap(_ match {
+        case "U_PRIME" =>
+          Right(UPrime)
+        case "G_PRIME" =>
+          Right(GPrime)
+        case "R_PRIME" =>
+          Right(RPrime)
+        case "I_PRIME" =>
+          Right(IPrime)
+        case "Z_PRIME" =>
+          Right(ZPrime)
+        case "Z" =>
+          Right(Z)
+        case "Y" =>
+          Right(Y)
+        case "GG455" =>
+          Right(Gg455)
+        case "OG515" =>
+          Right(Og515)
+        case "RG610" =>
+          Right(Rg610)
+        case "RG780" =>
+          Right(Rg780)
+        case "CA_T" =>
+          Right(CaT)
+        case "HARTMANN_A_R_PRIME" =>
+          Right(HartmannARPrime)
+        case "HARTMANN_B_R_PRIME" =>
+          Right(HartmannBRPrime)
+        case "G_PRIME_GG455" =>
+          Right(GPrimeGg455)
+        case "G_PRIME_OG515" =>
+          Right(GPrimeOg515)
+        case "R_PRIME_RG610" =>
+          Right(RPrimeRg610)
+        case "I_PRIME_RG780" =>
+          Right(IPrimeRg780)
+        case "I_PRIME_CA_T" =>
+          Right(IPrimeCaT)
+        case "Z_PRIME_CA_T" =>
+          Right(ZPrimeCaT)
+        case "HA" =>
+          Right(Ha)
+        case "SII" =>
+          Right(Sii)
+        case "HA_C" =>
+          Right(HaC)
+        case "OIII" =>
+          Right(Oiii)
+        case "OIIIC" =>
+          Right(Oiiic)
+        case "HE_II" =>
+          Right(HeIi)
+        case "HE_IIC" =>
+          Right(HeIic)
+        case "LYA395" =>
+          Right(Lya395)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosSouthFpu
     object GmosSouthFpu {
@@ -910,27 +1120,48 @@ object ObservationDB {
         case IfuNb => "IFU_NB"
         case IfuNr => "IFU_NR"
       })
-      implicit val jsonDecoderGmosSouthFpu: io.circe.Decoder[GmosSouthFpu] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "BHROS" => Bhros
-        case "NS1" => Ns1
-        case "NS2" => Ns2
-        case "NS3" => Ns3
-        case "NS4" => Ns4
-        case "NS5" => Ns5
-        case "LONG_SLIT_0_25" => LongSlit025
-        case "LONG_SLIT_0_50" => LongSlit050
-        case "LONG_SLIT_0_75" => LongSlit075
-        case "LONG_SLIT_1_00" => LongSlit100
-        case "LONG_SLIT_1_50" => LongSlit150
-        case "LONG_SLIT_2_00" => LongSlit200
-        case "LONG_SLIT_5_00" => LongSlit500
-        case "IFU1" => Ifu1
-        case "IFU2" => Ifu2
-        case "IFU3" => Ifu3
-        case "IFU_N" => IfuN
-        case "IFU_NB" => IfuNb
-        case "IFU_NR" => IfuNr
-      }))
+      implicit val jsonDecoderGmosSouthFpu: io.circe.Decoder[GmosSouthFpu] = io.circe.Decoder.decodeString.emap(_ match {
+        case "BHROS" =>
+          Right(Bhros)
+        case "NS1" =>
+          Right(Ns1)
+        case "NS2" =>
+          Right(Ns2)
+        case "NS3" =>
+          Right(Ns3)
+        case "NS4" =>
+          Right(Ns4)
+        case "NS5" =>
+          Right(Ns5)
+        case "LONG_SLIT_0_25" =>
+          Right(LongSlit025)
+        case "LONG_SLIT_0_50" =>
+          Right(LongSlit050)
+        case "LONG_SLIT_0_75" =>
+          Right(LongSlit075)
+        case "LONG_SLIT_1_00" =>
+          Right(LongSlit100)
+        case "LONG_SLIT_1_50" =>
+          Right(LongSlit150)
+        case "LONG_SLIT_2_00" =>
+          Right(LongSlit200)
+        case "LONG_SLIT_5_00" =>
+          Right(LongSlit500)
+        case "IFU1" =>
+          Right(Ifu1)
+        case "IFU2" =>
+          Right(Ifu2)
+        case "IFU3" =>
+          Right(Ifu3)
+        case "IFU_N" =>
+          Right(IfuN)
+        case "IFU_NB" =>
+          Right(IfuNb)
+        case "IFU_NR" =>
+          Right(IfuNr)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosSouthStageMode
     object GmosSouthStageMode {
@@ -950,12 +1181,18 @@ object ObservationDB {
         case FollowXy => "FOLLOW_XY"
         case FollowZ => "FOLLOW_Z"
       })
-      implicit val jsonDecoderGmosSouthStageMode: io.circe.Decoder[GmosSouthStageMode] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "NO_FOLLOW" => NoFollow
-        case "FOLLOW_XYZ" => FollowXyz
-        case "FOLLOW_XY" => FollowXy
-        case "FOLLOW_Z" => FollowZ
-      }))
+      implicit val jsonDecoderGmosSouthStageMode: io.circe.Decoder[GmosSouthStageMode] = io.circe.Decoder.decodeString.emap(_ match {
+        case "NO_FOLLOW" =>
+          Right(NoFollow)
+        case "FOLLOW_XYZ" =>
+          Right(FollowXyz)
+        case "FOLLOW_XY" =>
+          Right(FollowXy)
+        case "FOLLOW_Z" =>
+          Right(FollowZ)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosXBinning
     object GmosXBinning {
@@ -973,11 +1210,16 @@ object ObservationDB {
         case Two => "TWO"
         case Four => "FOUR"
       })
-      implicit val jsonDecoderGmosXBinning: io.circe.Decoder[GmosXBinning] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "ONE" => One
-        case "TWO" => Two
-        case "FOUR" => Four
-      }))
+      implicit val jsonDecoderGmosXBinning: io.circe.Decoder[GmosXBinning] = io.circe.Decoder.decodeString.emap(_ match {
+        case "ONE" =>
+          Right(One)
+        case "TWO" =>
+          Right(Two)
+        case "FOUR" =>
+          Right(Four)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait GmosYBinning
     object GmosYBinning {
@@ -995,11 +1237,16 @@ object ObservationDB {
         case Two => "TWO"
         case Four => "FOUR"
       })
-      implicit val jsonDecoderGmosYBinning: io.circe.Decoder[GmosYBinning] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "ONE" => One
-        case "TWO" => Two
-        case "FOUR" => Four
-      }))
+      implicit val jsonDecoderGmosYBinning: io.circe.Decoder[GmosYBinning] = io.circe.Decoder.decodeString.emap(_ match {
+        case "ONE" =>
+          Right(One)
+        case "TWO" =>
+          Right(Two)
+        case "FOUR" =>
+          Right(Four)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait InstrumentType
     object InstrumentType {
@@ -1043,24 +1290,42 @@ object ObservationDB {
         case Flamingos2 => "FLAMINGOS2"
         case Ghost => "GHOST"
       })
-      implicit val jsonDecoderInstrumentType: io.circe.Decoder[InstrumentType] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "PHOENIX" => Phoenix
-        case "MICHELLE" => Michelle
-        case "GNIRS" => Gnirs
-        case "NIRI" => Niri
-        case "TRECS" => Trecs
-        case "NICI" => Nici
-        case "NIFS" => Nifs
-        case "GPI" => Gpi
-        case "GSAOI" => Gsaoi
-        case "GMOS_S" => GmosS
-        case "ACQ_CAM" => AcqCam
-        case "GMOS_N" => GmosN
-        case "BHROS" => Bhros
-        case "VISITOR" => Visitor
-        case "FLAMINGOS2" => Flamingos2
-        case "GHOST" => Ghost
-      }))
+      implicit val jsonDecoderInstrumentType: io.circe.Decoder[InstrumentType] = io.circe.Decoder.decodeString.emap(_ match {
+        case "PHOENIX" =>
+          Right(Phoenix)
+        case "MICHELLE" =>
+          Right(Michelle)
+        case "GNIRS" =>
+          Right(Gnirs)
+        case "NIRI" =>
+          Right(Niri)
+        case "TRECS" =>
+          Right(Trecs)
+        case "NICI" =>
+          Right(Nici)
+        case "NIFS" =>
+          Right(Nifs)
+        case "GPI" =>
+          Right(Gpi)
+        case "GSAOI" =>
+          Right(Gsaoi)
+        case "GMOS_S" =>
+          Right(GmosS)
+        case "ACQ_CAM" =>
+          Right(AcqCam)
+        case "GMOS_N" =>
+          Right(GmosN)
+        case "BHROS" =>
+          Right(Bhros)
+        case "VISITOR" =>
+          Right(Visitor)
+        case "FLAMINGOS2" =>
+          Right(Flamingos2)
+        case "GHOST" =>
+          Right(Ghost)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait MosPreImaging
     object MosPreImaging {
@@ -1076,10 +1341,14 @@ object ObservationDB {
         case IsMosPreImaging => "IS_MOS_PRE_IMAGING"
         case IsNotMosPreImaging => "IS_NOT_MOS_PRE_IMAGING"
       })
-      implicit val jsonDecoderMosPreImaging: io.circe.Decoder[MosPreImaging] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "IS_MOS_PRE_IMAGING" => IsMosPreImaging
-        case "IS_NOT_MOS_PRE_IMAGING" => IsNotMosPreImaging
-      }))
+      implicit val jsonDecoderMosPreImaging: io.circe.Decoder[MosPreImaging] = io.circe.Decoder.decodeString.emap(_ match {
+        case "IS_MOS_PRE_IMAGING" =>
+          Right(IsMosPreImaging)
+        case "IS_NOT_MOS_PRE_IMAGING" =>
+          Right(IsNotMosPreImaging)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait ObsStatus
     object ObsStatus {
@@ -1107,16 +1376,26 @@ object ObservationDB {
         case Ongoing => "ONGOING"
         case Observed => "OBSERVED"
       })
-      implicit val jsonDecoderObsStatus: io.circe.Decoder[ObsStatus] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "NEW" => New
-        case "INCLUDED" => Included
-        case "PROPOSED" => Proposed
-        case "APPROVED" => Approved
-        case "FOR_REVIEW" => ForReview
-        case "READY" => Ready
-        case "ONGOING" => Ongoing
-        case "OBSERVED" => Observed
-      }))
+      implicit val jsonDecoderObsStatus: io.circe.Decoder[ObsStatus] = io.circe.Decoder.decodeString.emap(_ match {
+        case "NEW" =>
+          Right(New)
+        case "INCLUDED" =>
+          Right(Included)
+        case "PROPOSED" =>
+          Right(Proposed)
+        case "APPROVED" =>
+          Right(Approved)
+        case "FOR_REVIEW" =>
+          Right(ForReview)
+        case "READY" =>
+          Right(Ready)
+        case "ONGOING" =>
+          Right(Ongoing)
+        case "OBSERVED" =>
+          Right(Observed)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait ParallaxUnits
     object ParallaxUnits {
@@ -1132,10 +1411,14 @@ object ObservationDB {
         case Microarcseconds => "MICROARCSECONDS"
         case Milliarcseconds => "MILLIARCSECONDS"
       })
-      implicit val jsonDecoderParallaxUnits: io.circe.Decoder[ParallaxUnits] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "MICROARCSECONDS" => Microarcseconds
-        case "MILLIARCSECONDS" => Milliarcseconds
-      }))
+      implicit val jsonDecoderParallaxUnits: io.circe.Decoder[ParallaxUnits] = io.circe.Decoder.decodeString.emap(_ match {
+        case "MICROARCSECONDS" =>
+          Right(Microarcseconds)
+        case "MILLIARCSECONDS" =>
+          Right(Milliarcseconds)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait ProperMotionComponentUnits
     object ProperMotionComponentUnits {
@@ -1151,10 +1434,14 @@ object ObservationDB {
         case MicroarcsecondsPerYear => "MICROARCSECONDS_PER_YEAR"
         case MilliarcsecondsPerYear => "MILLIARCSECONDS_PER_YEAR"
       })
-      implicit val jsonDecoderProperMotionComponentUnits: io.circe.Decoder[ProperMotionComponentUnits] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "MICROARCSECONDS_PER_YEAR" => MicroarcsecondsPerYear
-        case "MILLIARCSECONDS_PER_YEAR" => MilliarcsecondsPerYear
-      }))
+      implicit val jsonDecoderProperMotionComponentUnits: io.circe.Decoder[ProperMotionComponentUnits] = io.circe.Decoder.decodeString.emap(_ match {
+        case "MICROARCSECONDS_PER_YEAR" =>
+          Right(MicroarcsecondsPerYear)
+        case "MILLIARCSECONDS_PER_YEAR" =>
+          Right(MilliarcsecondsPerYear)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait RadialVelocityUnits
     object RadialVelocityUnits {
@@ -1172,11 +1459,16 @@ object ObservationDB {
         case MetersPerSecond => "METERS_PER_SECOND"
         case KilometersPerSecond => "KILOMETERS_PER_SECOND"
       })
-      implicit val jsonDecoderRadialVelocityUnits: io.circe.Decoder[RadialVelocityUnits] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "CENTIMETERS_PER_SECOND" => CentimetersPerSecond
-        case "METERS_PER_SECOND" => MetersPerSecond
-        case "KILOMETERS_PER_SECOND" => KilometersPerSecond
-      }))
+      implicit val jsonDecoderRadialVelocityUnits: io.circe.Decoder[RadialVelocityUnits] = io.circe.Decoder.decodeString.emap(_ match {
+        case "CENTIMETERS_PER_SECOND" =>
+          Right(CentimetersPerSecond)
+        case "METERS_PER_SECOND" =>
+          Right(MetersPerSecond)
+        case "KILOMETERS_PER_SECOND" =>
+          Right(KilometersPerSecond)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait RightAscensionUnits
     object RightAscensionUnits {
@@ -1194,11 +1486,16 @@ object ObservationDB {
         case Degrees => "DEGREES"
         case Hours => "HOURS"
       })
-      implicit val jsonDecoderRightAscensionUnits: io.circe.Decoder[RightAscensionUnits] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "MICROARCSECONDS" => Microarcseconds
-        case "DEGREES" => Degrees
-        case "HOURS" => Hours
-      }))
+      implicit val jsonDecoderRightAscensionUnits: io.circe.Decoder[RightAscensionUnits] = io.circe.Decoder.decodeString.emap(_ match {
+        case "MICROARCSECONDS" =>
+          Right(Microarcseconds)
+        case "DEGREES" =>
+          Right(Degrees)
+        case "HOURS" =>
+          Right(Hours)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
     sealed trait StepType
     object StepType {
@@ -1220,13 +1517,20 @@ object ObservationDB {
         case Science => "SCIENCE"
         case SmartGcal => "SMART_GCAL"
       })
-      implicit val jsonDecoderStepType: io.circe.Decoder[StepType] = io.circe.Decoder.decodeString.emapTry(s => scala.util.Try(s match {
-        case "BIAS" => Bias
-        case "DARK" => Dark
-        case "GCAL" => Gcal
-        case "SCIENCE" => Science
-        case "SMART_GCAL" => SmartGcal
-      }))
+      implicit val jsonDecoderStepType: io.circe.Decoder[StepType] = io.circe.Decoder.decodeString.emap(_ match {
+        case "BIAS" =>
+          Right(Bias)
+        case "DARK" =>
+          Right(Dark)
+        case "GCAL" =>
+          Right(Gcal)
+        case "SCIENCE" =>
+          Right(Science)
+        case "SMART_GCAL" =>
+          Right(SmartGcal)
+        case other =>
+          Left(s"Invalid value [$other]")
+      })
     }
   }
   object Types {
