@@ -129,7 +129,7 @@ object ObsList {
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
-      val newObs = IO(Random.nextInt()).map(int =>
+      val newObs = IO(Random.nextInt(0xfff)).map(int =>
         ObsSummary(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                    name.some,
                    pointingId = none,

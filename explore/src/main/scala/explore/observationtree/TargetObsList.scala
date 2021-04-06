@@ -291,8 +291,8 @@ object TargetObsList {
       c:      TransactionalClient[IO, ObservationDB],
       cs:     ContextShift[IO]
     ): IO[Unit] =
-      ($.propsIn[IO], IO(PosLong.unsafeFrom(Random.nextInt().abs.toLong + 1))).parTupled.flatMap {
-        case (props, posLong) =>
+      ($.propsIn[IO], IO(PosLong.unsafeFrom(Random.nextInt(0xfff).abs.toLong + 1))).parTupled
+        .flatMap { case (props, posLong) =>
           val newTarget = TargetIdName(Target.Id(posLong), name)
           val mod       = targetMod(setter, props.aimsWithObs, props.focused, newTarget.id, none)
           (
@@ -310,7 +310,7 @@ object TargetObsList {
             case _                                         =>
               IO.unit
           }
-      }
+        }
 
     protected def deleteTarget(
       targetId:      Target.Id,

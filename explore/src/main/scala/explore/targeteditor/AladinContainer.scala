@@ -96,10 +96,13 @@ object AladinContainer {
         .toCallback
 
     def toggleVisibility(g: Element, selector: String, option: Display): Unit =
-      g.querySelectorAll(selector).foreach { case e: Element =>
-        option.fold(e.classList.remove("visualization-display"),
-                    e.classList.add("visualization-display")
-        )
+      g.querySelectorAll(selector).foreach {
+        case e: Element =>
+          option.fold(
+            e.classList.remove("visualization-display"),
+            e.classList.add("visualization-display")
+          )
+        case _          => ()
       }
 
     /**
