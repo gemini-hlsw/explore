@@ -9,6 +9,7 @@ import cats.effect.IOApp
 import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
+import crystal.react._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
@@ -20,6 +21,7 @@ import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -40,8 +42,6 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-import japgolly.scalajs.react.Reusability
-import crystal.react._
 
 trait AppMain extends IOApp {
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
