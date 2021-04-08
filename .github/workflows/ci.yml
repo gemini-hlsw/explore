@@ -1,0 +1,19 @@
+name: scala
+
+on:
+  push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: coursier/cache-action@v6
+      - name: Set up Scala
+        uses: olafurpg/setup-scala@v10
+        with:
+          java-version: adopt@1.11
+      - name: Build application
+        run: |
+          sbt -v compile scalafmtCheckAll headerCheck test:headerCheck graphQLCheck test

@@ -4,7 +4,7 @@
   "clean_urls": false,
   "redirects": {
     "/conf.json": {
-      "url": "\" /conf/${ENVIRONMENT}.conf.json\""
+      "url": "\" /${ENVIRONMENT}.conf.json\""
     }
   },
   "routes": {

@@ -1,0 +1,67 @@
+@use "highcharts/css/highcharts.scss";
+
+/* Using custom classes for series works, but messes up tooltip border colors.
+See https://github.com/highcharts/highcharts/issues/13320 */
+
+/* Target Elevation */
+.highcharts-color-0 {
+  fill: #f45b5b;
+  stroke: #f45b5b;
+}
+
+/* Parallactic angle */
+.highcharts-color-1 {
+  fill: #8bbc21;
+  stroke: #8bbc21;
+}
+
+/* Sky Brightness */
+.highcharts-color-2 {
+  fill: #7cb5ec;
+  stroke: #7cb5ec;
+}
+
+/* Lunar Elevation */
+.highcharts-color-3 {
+  fill: #f7a35c;
+  stroke: #f7a35c;
+}
+
+.plot-axis-parallactic-angle {
+  stroke-width: 0;
+  fill: #8bbc21;
+}
+
+.plot-axis-parallactic-angle text {
+  fill: #8bbc21;
+}
+
+.plot-axis-sky-brightness {
+  stroke-width: 0;
+  fill: #7cb5ec;
+}
+
+.plot-axis-sky-brightness text {
+    fill: #7cb5ec;
+}
+
+.plot-band-twilight-nautical {
+  fill-opacity: 0.05;
+}
+
+.plot-band-twilight-nautical-end {
+  fill-opacity: 0;
+}
+
+.highcharts-plot-band-label {
+  fill: #666666;
+}
+
+.highcharts-xaxis-grid .highcharts-grid-line {
+	stroke-width: 1px;
+}
+
+.highcharts-minor-grid-line {
+  stroke: #e6e6e6;
+  stroke-dasharray: 2, 2;
+}

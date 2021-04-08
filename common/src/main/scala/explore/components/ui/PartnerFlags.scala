@@ -12,31 +12,31 @@ import scala.scalajs.js.annotation.JSImport
 @nowarn
 object PartnerFlags {
   @js.native
-  @JSImport("resources/images/flags/argentina-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/argentina-flag-icon-32.png", JSImport.Default)
   val arSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/brazil-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/brazil-flag-icon-32.png", JSImport.Default)
   val brSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/canada-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/canada-flag-icon-32.png", JSImport.Default)
   val caSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/chile-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/chile-flag-icon-32.png", JSImport.Default)
   val clSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/south-korea-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/south-korea-flag-icon-32.png", JSImport.Default)
   val krSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/uh.png", JSImport.Default)
+  @JSImport("/images/flags/uh.png", JSImport.Default)
   val uhSmall: String = js.native
 
   @js.native
-  @JSImport("resources/images/flags/united-states-of-america-flag-icon-32.png", JSImport.Default)
+  @JSImport("/images/flags/united-states-of-america-flag-icon-32.png", JSImport.Default)
   val usSmall: String = js.native
 
   def smallFlag(partner: Partner): String = partner match {
