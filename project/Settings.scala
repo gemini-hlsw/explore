@@ -263,7 +263,8 @@ object Settings {
     val Sttp = Def.setting(
       deps(
         "com.softwaremill.sttp.client3" %%% "core",
-        "com.softwaremill.sttp.client3" %%% "circe"
+        "com.softwaremill.sttp.client3" %%% "circe",
+        "com.softwaremill.sttp.client3" %%% "cats"
       )(sttp)
     )
   }

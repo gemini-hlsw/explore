@@ -21,11 +21,11 @@ import retry.RetryDetails._
 import retry.RetryPolicies._
 import retry._
 import sttp.client3._
+import sttp.client3.impl.cats.FetchCatsBackend
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.{ util => ju }
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import ju.concurrent.TimeUnit
@@ -36,19 +36,16 @@ object JwtOrcidProfile {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
-object SSOClient {
-  type FromFuture[F[_], A] = F[Future[A]] => F[A]
-}
-
-case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
-  config:     SSOConfig,
-  fromFuture: SSOClient.FromFuture[F, Response[Either[String, String]]]
+case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(implicit
+  cs:                                                               ContextShift[F]
 ) {
   private val retryPolicy =
     capDelay(
       FiniteDuration.apply(5, TimeUnit.SECONDS),
       fullJitter[F](FiniteDuration.apply(10, TimeUnit.MILLISECONDS))
     ).join(limitRetries[F](12))
+
+  private val backend = FetchCatsBackend(FetchOptions(RequestCredentials.include.some, none))
 
   def logError(msg: String)(err: Throwable, details: RetryDetails): F[Unit] = details match {
     case WillDelayAndRetry(_, retriesSoFar, _) =>
@@ -65,17 +62,11 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
       window.location.href = uri"${config.uri}/auth/v1/stage1?state=$returnUrl".toString
     }
 
-  val guest: F[UserVault] = {
-    val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
-    def httpCall =
-      Sync[F].delay(
-        basicRequest
-          .post(uri"${config.uri}/api/v1/auth-as-guest")
-          .readTimeout(config.readTimeout)
-          .send(backend)
-      )
-
-    fromFuture(httpCall)
+  val guest: F[UserVault] =
+    basicRequest
+      .post(uri"${config.uri}/api/v1/auth-as-guest")
+      .readTimeout(config.readTimeout)
+      .send(backend)
       .flatMap {
         case Response(Right(body), _, _, _, _, _) =>
           Sync[F].delay {
@@ -93,21 +84,13 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
         case Response(Left(e), _, _, _, _, _)     =>
           throw new RuntimeException(e)
       }
-  }
 
   val whoami: F[Option[UserVault]] =
     retryingOnAllErrors(retryPolicy, logError("Calling whoami")) {
-      val backend = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
-
-      val httpCall =
-        Sync[F].delay(
-          basicRequest
-            .post(uri"${config.uri}/api/v1/refresh-token")
-            .readTimeout(config.readTimeout)
-            .send(backend)
-        )
-
-      fromFuture(httpCall)
+      basicRequest
+        .post(uri"${config.uri}/api/v1/refresh-token")
+        .readTimeout(config.readTimeout)
+        .send(backend)
         .flatMap {
           case Response(Right(body), _, _, _, _, _) =>
             Sync[F].delay {
@@ -137,18 +120,12 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](
       Timer[F].sleep(sleepTime / config.refreshIntervalFactor)
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
-  val logout: F[Unit] = {
-    val backend  = FetchBackend(FetchOptions(RequestCredentials.include.some, none))
-    val httpCall =
-      Sync[F].delay(
-        basicRequest
-          .post(uri"${config.uri}/api/v1/logout")
-          .readTimeout(config.readTimeout)
-          .send(backend)
-      )
-
-    fromFuture(httpCall).void
-  }
+  val logout: F[Unit] =
+    basicRequest
+      .post(uri"${config.uri}/api/v1/logout")
+      .readTimeout(config.readTimeout)
+      .send(backend)
+      .void
 
   val switchToORCID: F[Unit] =
     logout.attempt >> redirectToLogin

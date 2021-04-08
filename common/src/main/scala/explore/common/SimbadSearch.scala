@@ -12,23 +12,22 @@ import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Target
 import sttp.client3._
+import sttp.client3.impl.cats.FetchCatsBackend
 
 import scala.concurrent.duration._
 
 object SimbadSearch {
   def search(term: NonEmptyString)(implicit cs: ContextShift[IO]): IO[Option[Target]] = {
-    val backend  = FetchBackend()
+    val backend  = FetchCatsBackend[IO]()
     def httpCall =
-      IO(
-        basicRequest
-          .post(
-            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
-          )
-          .readTimeout(5.seconds)
-          .send(backend)
-      )
+      basicRequest
+        .post(
+          uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
+        )
+        .readTimeout(5.seconds)
+        .send(backend)
 
-    IO.fromFuture(httpCall)
+    httpCall
       .flatMap {
         _.body
           .traverse(

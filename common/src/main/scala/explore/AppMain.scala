@@ -9,6 +9,7 @@ import cats.effect.IOApp
 import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
+import crystal.react._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
@@ -20,6 +21,7 @@ import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.VdomElement
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
@@ -32,6 +34,7 @@ import org.typelevel.log4cats.Logger
 import react.common.implicits._
 import sttp.client3._
 import sttp.client3.circe._
+import sttp.client3.impl.cats.FetchCatsBackend
 import sttp.model.Uri
 
 import java.util.concurrent.TimeUnit
@@ -40,8 +43,6 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-import japgolly.scalajs.react.Reusability
-import crystal.react._
 
 trait AppMain extends IOApp {
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
@@ -72,7 +73,7 @@ trait AppMain extends IOApp {
     val fetchConfig: IO[AppConfig] = {
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
       val backend =
-        FetchBackend(customizeRequest = { request =>
+        FetchCatsBackend[IO](customizeRequest = { request =>
           new FetchRequest(request,
                            new RequestInit() {
                              cache = RequestCache.`no-store`
@@ -88,16 +89,12 @@ trait AppMain extends IOApp {
         Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, path)
       )(port => Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, port, path))
 
-      def httpCall =
-        IO(
-          basicRequest
-            .get(uri)
-            .readTimeout(5.seconds)
-            .response(asJson[AppConfig].getRight)
-            .send(backend)
-        )
-
-      IO.fromFuture(httpCall).map(_.body)
+      basicRequest
+        .get(uri)
+        .readTimeout(5.seconds)
+        .response(asJson[AppConfig].getRight)
+        .send(backend)
+        .map(_.body)
     }.adaptError { case t =>
       new Exception("Could not retrieve configuration.", t)
     }
@@ -140,7 +137,7 @@ trait AppMain extends IOApp {
       appConfig            <- fetchConfig
       _                    <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
       _                    <- logger.info(s"Config: ${appConfig.show}")
-      ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, IO.fromFuture)
+      ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl)
       r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
       (vault, container, _) = r
     } yield {
