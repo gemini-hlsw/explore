@@ -17,7 +17,6 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import org.typelevel.log4cats.Logger
-import sttp.client3.Response
 import sttp.model.Uri
 
 case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
@@ -77,8 +76,7 @@ object AppContext {
   def from[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: ContextShift: Timer: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[Focused]) => String,
-    fromFuture:           SSOClient.FromFuture[F, Response[Either[String, String]]]
+    pageUrl:              (AppTab, Option[Focused]) => String
   ): F[AppContext[F]] =
     for {
       clients <- buildClients(config.odbURI, config.preferencesDBURI, reconnectionStrategy)
@@ -87,7 +85,7 @@ object AppContext {
     } yield AppContext[F](version,
                           clients,
                           actions,
-                          SSOClient(config.sso, fromFuture),
+                          SSOClient(config.sso),
                           pageUrl,
                           config.environment
     )
