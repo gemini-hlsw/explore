@@ -94,12 +94,12 @@ object TargetTabContents {
           val treeWidth = state.treeWidth.toInt
 
           // Tree area
-          def tree(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
+          def tree(objectsWithObs: View[PointingsWithObs]) =
             <.div(^.width := treeWidth.px,
                   ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
             )(treeInner(objectsWithObs))
 
-          def treeInner(objectsWithObs: View[TargetsAndAsterismsWithObs]) =
+          def treeInner(objectsWithObs: View[PointingsWithObs]) =
             <.div(ExploreStyles.TreeBody)(
               TargetObsList(
                 objectsWithObs,
@@ -126,7 +126,7 @@ object TargetTabContents {
               case FocusedObs(obsId)       =>
                 objectsWithObs.get.observations
                   .getElement(obsId)
-                  .flatMap(_.pointingId.flatMap(_.toOption))
+                  .flatMap(_.pointing.collect { case PointingTargetResult(targetId) => targetId })
             }.flatten
 
             val coreWidth  = props.size.width.getOrElse(0) - treeWidth

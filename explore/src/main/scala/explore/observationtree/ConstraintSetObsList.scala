@@ -22,7 +22,7 @@ import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.Focused
 import explore.model.Focused._
-import explore.model.ObsSummary
+import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.schemas.ObservationDB
@@ -57,17 +57,17 @@ final case class ConstraintSetObsList(
   expandedIds:           View[SortedSet[ConstraintSet.Id]]
 )(implicit val ctx:      AppContextIO)
     extends ReactProps[ConstraintSetObsList](ConstraintSetObsList.component)
-    with ViewCommon {
-  override val obsBadgeLayout = ObsBadge.Layout.NameAndConf
-}
-
+    with ViewCommon
 object ConstraintSetObsList {
   type Props = ConstraintSetObsList
 
   @Lenses
   case class State(dragging: Boolean = false)
 
-  val obsListMod           = new KIListMod[IO, ObsSummary, Observation.Id](ObsSummary.id)
+  val obsListMod           =
+    new KIListMod[IO, ObsSummaryWithPointingAndConstraints, Observation.Id](
+      ObsSummaryWithPointingAndConstraints.id
+    )
   val constraintSetListMod =
     new KIListMod[IO, ConstraintsSummary, ConstraintSet.Id](ConstraintsSummary.id)
 
@@ -105,7 +105,7 @@ object ConstraintSetObsList {
       ConstraintSetsWithObs.obs.composeGetter(
         obsWithIndexGetter
           .composeOptionLens(first)
-          .composeOptionLens(ObsSummary.constraints)
+          .composeOptionLens(ObsSummaryWithPointingAndConstraints.constraints)
       )
 
     private def setConstraintSetForObsWithId(
@@ -117,7 +117,7 @@ object ConstraintSetObsList {
     ): Option[Option[ConstraintsSummary]] => IO[Unit] = { csOpt =>
       val obsCsAdjuster = obsWithIndexGetAdjust
         .composeOptionLens(first)
-        .composeOptionLens(ObsSummary.constraints)
+        .composeOptionLens(ObsSummaryWithPointingAndConstraints.constraints)
 
       val observationsView = constraintSetsWithObs.zoom(ConstraintSetsWithObs.obs)
 
@@ -275,7 +275,8 @@ object ConstraintSetObsList {
                 props.getDraggedStyle(provided.draggableStyle, snapshot)
           )(
             (rubric.draggableId match {
-              case Observation.Id(obsId) => observations.getElement(obsId).map(props.renderObsBadge)
+              case Observation.Id(obsId) =>
+                observations.getElement(obsId).map(props.renderObsBadge)
               case _                     => none
             }).getOrElse(<.span("ERROR"))
           )

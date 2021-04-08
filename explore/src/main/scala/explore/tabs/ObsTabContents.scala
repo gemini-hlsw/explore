@@ -208,13 +208,18 @@ object ObsTabContents {
             .debounce(1.second)
 
         ObsLiveQuery { observations =>
-          val obsSummaryOpt: Option[ObsSummary] = props.focused.get.collect {
-            case FocusedObs(obsId) =>
+          val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
+            props.focused.get.collect { case FocusedObs(obsId) =>
               observations.get.getElement(obsId)
-          }.flatten
+            }.flatten
 
           val targetId = obsSummaryOpt.collect {
-            case ObsSummary(_, _, _, _, _, _, Some(Right(tid))) =>
+            case ObsSummaryWithPointingAndConstraints(_,
+                                                      Some(Pointing.PointingTarget(tid, _)),
+                                                      _,
+                                                      _,
+                                                      _
+                ) =>
               tid
           }
 
@@ -273,7 +278,7 @@ object ObsTabContents {
                 ^.key := "target",
                 Tile("Target")(
                   targetId
-                    .map { targetId =>
+                    .map[VdomNode] { targetId =>
                       LiveQueryRenderMod[ObservationDB,
                                          TargetEditQuery.Data,
                                          Option[TargetEditQuery.Data.Target]
@@ -294,6 +299,11 @@ object ObsTabContents {
 
                       }.withKey(s"target-$targetId")
                     }
+                    .getOrElse(
+                      <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                            <.div("No target assigned")
+                      )
+                    )
                 )
               )
             )

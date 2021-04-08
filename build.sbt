@@ -3,14 +3,13 @@ import sbtcrossproject.crossProject
 import sbtcrossproject.CrossType
 import Settings.Libraries._
 
-val reactJS                   = "16.13.1"
-val FUILess                   = "2.8.7"
+val reactJS              = "16.13.1"
+val FUILess              = "2.8.7"
 val kindProjectorVersion = "0.11.3"
-
 
 addCommandAlias(
   "quickTest",
-  "modelJVM/test"
+  "modelTestsJVM/test"
 )
 
 addCommandAlias(
@@ -63,7 +62,7 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, common, explore)
+  .aggregate(model.jvm, model.js, modelTests.jvm, modelTests.js, common, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
@@ -77,8 +76,32 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
 
 val curTime = System.currentTimeMillis()
 
+lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
+  .in(file("model-testkit"))
+  .dependsOn(model)
+  .settings(commonSettings: _*)
+  .settings(commonLibSettings: _*)
+  .settings(testkitLibSettings: _*)
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(commonJVMSettings)
+
+lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
+  .in(file("model-tests"))
+  .dependsOn(modelTestkit)
+  .settings(commonSettings: _*)
+  .settings(commonLibSettings: _*)
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(commonJVMSettings)
+
 lazy val common = project
   .in(file("common"))
+  .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
@@ -153,6 +176,12 @@ lazy val commonLibSettings = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
+lazy val testkitLibSettings = Seq(
+  libraryDependencies ++= Discipline.value ++
+    MonocleLaw.value ++
+    LucumaCoreTestKit.value
+)
+
 lazy val commonJVMSettings = Seq(
   libraryDependencies ++=
     In(Test)(
@@ -177,6 +206,10 @@ lazy val commonES = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
-  Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(ModuleSplitStyle.SmallestModules)),
-  Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(ModuleSplitStyle.FewestModules)),
+  Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
+    ModuleSplitStyle.SmallestModules
+  )),
+  Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
+    ModuleSplitStyle.FewestModules
+  ))
 )

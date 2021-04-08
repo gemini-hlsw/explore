@@ -91,6 +91,11 @@ package object optics {
       Getter(
         getter.composePrism(some).composeLens(other).headOption
       )
+
+    def composeOptionGetter[B](other: Getter[A, B]): Getter[S, Option[B]] =
+      Getter(
+        getter.composePrism(some).composeGetter(other).headOption
+      )
   }
 
   implicit class AdjusterOptionOps[S, A](val setter: Adjuster[S, Option[A]]) extends AnyVal {
@@ -143,4 +148,6 @@ package object optics {
   // Iso for coulumb quantities
   def coulombIso[N, U] = Iso[Quantity[N, U], N](_.value)(_.withUnit[U])
 
+  def optionIso[A, B](iso: Iso[A, B]): Iso[Option[A], Option[B]] =
+    Iso[Option[A], Option[B]](_.map(iso.get))(_.map(iso.reverseGet))
 }

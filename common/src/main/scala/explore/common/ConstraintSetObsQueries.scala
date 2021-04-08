@@ -14,10 +14,12 @@ import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintsSummary
-import explore.model.ObsSummary
+import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.Pointing
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
+import io.circe.refined._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
@@ -27,9 +29,8 @@ import monocle.Getter
 import monocle.macros.Lenses
 
 object ConstraintSetObsQueries {
-
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintsSummary]
-  type ObsList           = KeyedIndexedList[Observation.Id, ObsSummary]
+  type ObsList           = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
 
   def defaultCreateConstraintSet(
     cs: ConstraintsSummary
@@ -72,14 +73,15 @@ object ConstraintSetObsQueries {
         observations(programId: "p-2", first: 2147483647) {
           nodes {
             id
-            name
             observationTarget {
               type: __typename
               ... on Target {
-                target_id: id
+                targetId: id
+                targetName: name
               }
               ... on Asterism {
-                asterism_id: id
+                asterismId: id
+                asterismName: name
               }
             }
             constraintSet {
@@ -101,7 +103,9 @@ object ConstraintSetObsQueries {
       }
 
       object Observations {
-        type Nodes = ObsSummary
+        object Nodes {
+          type ConstraintSet = ConstraintsSummary
+        }
       }
     }
   }
@@ -131,14 +135,15 @@ object ConstraintSetObsQueries {
           observations(programId: "p-2", first: 2147483647) {
             nodes {
               id
-              name
               observationTarget {
                 type: __typename
                 ... on Target {
-                  target_id: id
+                  targetId: id
+                  targetName: name
                 }
                 ... on Asterism {
-                  asterism_id: id
+                  asterismId: id
+                  asterismName: name
                 }
               }
               constraintSet {
@@ -166,7 +171,55 @@ object ConstraintSetObsQueries {
         implicit val jsonDecoderConstraintSets: io.circe.Decoder[Data.ConstraintSets] = io.circe.generic.semiauto.deriveDecoder[Data.ConstraintSets]
       }
       object Observations {
-        type Nodes = ObsSummary
+        object Nodes {
+          type ConstraintSet = ConstraintsSummary
+          sealed trait ObservationTarget
+          object ObservationTarget {
+            case class Target(val targetId: TargetId, val targetName: NonEmptyString) extends ObservationTarget()
+            object Target {
+              implicit val targetId: monocle.Lens[Data.Observations.Nodes.ObservationTarget.Target, TargetId] = monocle.macros.GenLens[Data.Observations.Nodes.ObservationTarget.Target](_.targetId)
+              implicit val targetName: monocle.Lens[Data.Observations.Nodes.ObservationTarget.Target, NonEmptyString] = monocle.macros.GenLens[Data.Observations.Nodes.ObservationTarget.Target](_.targetName)
+              implicit val eqTarget: cats.Eq[Data.Observations.Nodes.ObservationTarget.Target] = cats.Eq.fromUniversalEquals
+              implicit val showTarget: cats.Show[Data.Observations.Nodes.ObservationTarget.Target] = cats.Show.fromToString
+              implicit val reuseTarget: japgolly.scalajs.react.Reusability[Data.Observations.Nodes.ObservationTarget.Target] = {
+                import japgolly.scalajs.react.Reusability
+                japgolly.scalajs.react.Reusability.derive
+              }
+              implicit val jsonDecoderTarget: io.circe.Decoder[Data.Observations.Nodes.ObservationTarget.Target] = io.circe.generic.semiauto.deriveDecoder[Data.Observations.Nodes.ObservationTarget.Target]
+            }
+            case class Asterism(val asterismId: AsterismId, val asterismName: Option[NonEmptyString] = None) extends ObservationTarget()
+            object Asterism {
+              implicit val asterismId: monocle.Lens[Data.Observations.Nodes.ObservationTarget.Asterism, AsterismId] = monocle.macros.GenLens[Data.Observations.Nodes.ObservationTarget.Asterism](_.asterismId)
+              implicit val asterismName: monocle.Lens[Data.Observations.Nodes.ObservationTarget.Asterism, Option[NonEmptyString]] = monocle.macros.GenLens[Data.Observations.Nodes.ObservationTarget.Asterism](_.asterismName)
+              implicit val eqAsterism: cats.Eq[Data.Observations.Nodes.ObservationTarget.Asterism] = cats.Eq.fromUniversalEquals
+              implicit val showAsterism: cats.Show[Data.Observations.Nodes.ObservationTarget.Asterism] = cats.Show.fromToString
+              implicit val reuseAsterism: japgolly.scalajs.react.Reusability[Data.Observations.Nodes.ObservationTarget.Asterism] = {
+                import japgolly.scalajs.react.Reusability
+                japgolly.scalajs.react.Reusability.derive
+              }
+              implicit val jsonDecoderAsterism: io.circe.Decoder[Data.Observations.Nodes.ObservationTarget.Asterism] = io.circe.generic.semiauto.deriveDecoder[Data.Observations.Nodes.ObservationTarget.Asterism]
+            }
+            implicit val eqObservationTarget: cats.Eq[Data.Observations.Nodes.ObservationTarget] = cats.Eq.fromUniversalEquals
+            implicit val showObservationTarget: cats.Show[Data.Observations.Nodes.ObservationTarget] = cats.Show.fromToString
+            implicit val reuseObservationTarget: japgolly.scalajs.react.Reusability[Data.Observations.Nodes.ObservationTarget] = {
+              import japgolly.scalajs.react.Reusability
+              japgolly.scalajs.react.Reusability.derive
+            }
+            implicit protected val jsonConfiguration: io.circe.generic.extras.Configuration = io.circe.generic.extras.Configuration.default.withDiscriminator("type")
+            implicit val jsonDecoderObservationTarget: io.circe.Decoder[Data.Observations.Nodes.ObservationTarget] = io.circe.generic.extras.semiauto.deriveConfiguredDecoder[Data.Observations.Nodes.ObservationTarget]
+          }
+          implicit val id: monocle.Lens[Data.Observations.Nodes, ObservationId] = monocle.macros.GenLens[Data.Observations.Nodes](_.id)
+          implicit val observationTarget: monocle.Lens[Data.Observations.Nodes, Option[Data.Observations.Nodes.ObservationTarget]] = monocle.macros.GenLens[Data.Observations.Nodes](_.observationTarget)
+          implicit val constraintSet: monocle.Lens[Data.Observations.Nodes, Option[Data.Observations.Nodes.ConstraintSet]] = monocle.macros.GenLens[Data.Observations.Nodes](_.constraintSet)
+          implicit val eqNodes: cats.Eq[Data.Observations.Nodes] = cats.Eq.fromUniversalEquals
+          implicit val showNodes: cats.Show[Data.Observations.Nodes] = cats.Show.fromToString
+          implicit val reuseNodes: japgolly.scalajs.react.Reusability[Data.Observations.Nodes] = {
+            import japgolly.scalajs.react.Reusability
+            japgolly.scalajs.react.Reusability.derive
+          }
+          implicit val jsonDecoderNodes: io.circe.Decoder[Data.Observations.Nodes] = io.circe.generic.semiauto.deriveDecoder[Data.Observations.Nodes]
+        }
+        case class Nodes(val id: ObservationId, val observationTarget: Option[Data.Observations.Nodes.ObservationTarget] = None, val constraintSet: Option[Data.Observations.Nodes.ConstraintSet] = None)
         implicit val nodes: monocle.Lens[Data.Observations, List[Data.Observations.Nodes]] = monocle.macros.GenLens[Data.Observations](_.nodes)
         implicit val eqObservations: cats.Eq[Data.Observations] = cats.Eq.fromUniversalEquals
         implicit val showObservations: cats.Show[Data.Observations] = cats.Show.fromToString
@@ -202,11 +255,29 @@ object ConstraintSetObsQueries {
   // format: on
   /* END: Generated by clue. Will be replaced when regenerating. */
 
+  private def convertPointing(
+    pointing: ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget
+  ): Pointing =
+    pointing match {
+      case ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name)   =>
+        Pointing.PointingTarget(id, name)
+      case ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget.Asterism(id, name) =>
+        Pointing.PointingAsterism(id, name, Nil)
+    }
+
   private val constraintSetsObsQueryConstraintSetsWithObsGetter
     : Getter[ConstraintSetsObsQuery.Data, ConstraintSetsWithObs] = data => {
     ConstraintSetsWithObs(
       KeyedIndexedList.fromList(data.constraintSets.nodes, ConstraintsSummary.id.get),
-      KeyedIndexedList.fromList(data.observations.nodes, ObsSummary.id.get)
+      KeyedIndexedList.fromList(
+        data.observations.nodes.map(node =>
+          ObsSummaryWithPointingAndConstraints(node.id,
+                                               node.observationTarget.map(convertPointing),
+                                               node.constraintSet
+          )
+        ),
+        ObsSummaryWithPointingAndConstraints.id.get
+      )
     )
   }
 
