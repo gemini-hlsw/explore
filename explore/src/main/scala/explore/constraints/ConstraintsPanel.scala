@@ -28,7 +28,9 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.TruncatedRefinedBigDecimal
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
@@ -171,12 +173,20 @@ object ConstraintsPanel {
                 value = stateView
                   .zoom(State.airMass)
                   .zoom(AirMassRange.min)
-                  .withOnMod(min => erView.set(state.airMass.copy(min = min))),
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                  )
+                  .withOnMod(min => erView.set(state.airMass.copy(min = min.value))),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedBigDecimal[AirMassRange.Value](airMassErrorMsg)
-                  .composeValidFormat(ValidFormatNec.lte(state.airMass.max, "Must be <= Max")),
+                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
+                  .composeValidFormat(
+                    ValidFormatNec.lte(
+                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](state.airMass.max).get,
+                      "Must be <= Max"
+                    )
+                  ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
@@ -186,13 +196,19 @@ object ConstraintsPanel {
                 value = stateView
                   .zoom(State.airMass)
                   .zoom(AirMassRange.max)
-                  .withOnMod(max => erView.set(state.airMass.copy(max = max))),
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                  )
+                  .withOnMod(max => erView.set(state.airMass.copy(max = max.value))),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedBigDecimal[AirMassRange.Value](airMassErrorMsg)
+                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
                   .composeValidFormat(
-                    ValidFormatNec.gte(state.airMass.min, "Must be >= Min")
+                    ValidFormatNec.gte(
+                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](state.airMass.max).get,
+                      "Must be >= Min"
+                    )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
@@ -205,13 +221,20 @@ object ConstraintsPanel {
                 value = stateView
                   .zoom(State.hourAngle)
                   .zoom(HourAngleRange.minHours)
-                  .withOnMod(min => erView.set(state.hourAngle.copy(minHours = min))),
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                  )
+                  .withOnMod(min => erView.set(state.hourAngle.copy(minHours = min.value))),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedBigDecimal[HourAngleRange.Hour](hourAngleErrorMsg)
+                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
                   .composeValidFormat(
-                    ValidFormatNec.lte(state.hourAngle.maxHours, "Must be <= Max")
+                    ValidFormatNec.lte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                                         state.hourAngle.maxHours
+                                       ).get,
+                                       "Must be <= Max"
+                    )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
@@ -222,13 +245,20 @@ object ConstraintsPanel {
                 value = stateView
                   .zoom(State.hourAngle)
                   .zoom(HourAngleRange.maxHours)
-                  .withOnMod(max => erView.set(state.hourAngle.copy(maxHours = max))),
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                  )
+                  .withOnMod(max => erView.set(state.hourAngle.copy(maxHours = max.value))),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedBigDecimal[HourAngleRange.Hour](hourAngleErrorMsg)
+                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
                   .composeValidFormat(
-                    ValidFormatNec.gte(state.hourAngle.minHours, "Must be >= Min")
+                    ValidFormatNec.gte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                                         state.hourAngle.minHours
+                                       ).get,
+                                       "Must be >= Min"
+                    )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
