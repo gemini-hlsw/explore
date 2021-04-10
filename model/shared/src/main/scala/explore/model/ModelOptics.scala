@@ -25,19 +25,6 @@ trait ModelOptics {
    */
   val properMotionDec: Lens[SiderealTracking, Declination] =
     SiderealTracking.baseCoordinates ^|-> Coordinates.declination
-
-  /**
-   * Lens to the RightAscension of a sidereal target
-   */
-  val targetRA: Lens[SiderealTarget, RightAscension] =
-    SiderealTarget.track ^|-> properMotionRA
-
-  /**
-   * Lens to the Declination of a sidereal target
-   */
-  val targetDec: Lens[SiderealTarget, Declination] =
-    SiderealTarget.track ^|-> properMotionDec
-
 }
 
 object ModelOptics extends ModelOptics

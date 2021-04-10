@@ -3,86 +3,86 @@
 
 package explore.model
 
-import cats._
+import cats.Eq
 import cats.syntax.all._
-import eu.timepit.refined.cats._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.enum.ObsStatus
-import io.circe.Decoder
-import io.circe.Encoder
-import io.circe.HCursor
-import io.circe.Json
-import io.circe.JsonObject
-import io.circe.refined._
-import io.circe.syntax._
-import lucuma.core.model.Asterism
+import io.chrisdavenport.cats.time._
+import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
-import lucuma.core.model.Target
 import monocle.macros.Lenses
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
-@Lenses
-final case class ObsSummary(
-  id:          Observation.Id,
-  name:        Option[NonEmptyString],
-  status:      ObsStatus = ObsStatus.New,
-  constraints: Option[ConstraintsSummary],
-  conf:        String = "GMOS-N R831 1x300",
-  duration:    Duration = Duration.of(93, ChronoUnit.MINUTES),
-  pointingId:  Option[PointingId]
-) {
-  def constraintsSummary = constraints.map(_.summaryString).getOrElse("No constraints")
+trait ObsSummary {
+  val id: Observation.Id
+  val status: ObsStatus  = ObsStatus.New
+  val duration: Duration = Duration.of(93, ChronoUnit.MINUTES)
 }
 
 object ObsSummary {
+  implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                       =>
+      a === b
+    case (a: ObsSummaryWithPointingAndConstraints, b: ObsSummaryWithPointingAndConstraints) =>
+      a === b
+    case _                                                                                  =>
+      false
+  })
+}
 
-  implicit val eqObsSummary: Eq[ObsSummary] =
-    Eq.by(x => (x.id, x.name, x.pointingId, x.constraints))
+trait ObsWithConstraints extends ObsSummary {
+  val constraints: Option[ConstraintsSummary]
 
-  implicit val obsSummaryEncoder: Encoder[ObsSummary] = new Encoder[ObsSummary] {
-    final def apply(c: ObsSummary): Json = {
-      val common = JsonObject(("id", c.id.asJson), ("name", c.name.asJson))
+  lazy val constraintsSummary = constraints.map(_.summaryString).getOrElse("No constraints")
+}
 
-      val withConstraints = c.constraints match {
-        case Some(cs) => common.add("constraintSet", cs.asJson)
-        case None     => common
-      }
+trait ObsWithConf extends ObsSummary {
+  val conf: String = "GMOS-N R831 1x300"
+}
 
-      (c.pointingId match {
-        case None    => withConstraints
-        case Some(t) =>
-          withConstraints.add(
-            "observationTarget",
-            t match {
-              case Right(tid) =>
-                Json.obj("type" -> PointingType.Target.asJson, "target_id" -> tid.asJson)
-              case Left(aid)  =>
-                Json.obj("type" -> PointingType.Asterism.asJson, "asterism_id" -> aid.asJson)
-            }
-          )
-      }).asJson
-    }
+trait ObsWithPointing extends ObsSummary {
+  val pointing: Option[Pointing]
 
-  }
-
-  implicit val obsTargetDecoder: Decoder[PointingId] =
-    new Decoder[PointingId] {
-      final def apply(c: HCursor): Decoder.Result[PointingId] =
-        c.downField("type").as[PointingType].flatMap {
-          case PointingType.Target   => c.downField("target_id").as[Target.Id].map(_.asRight)
-          case PointingType.Asterism => c.downField("asterism_id").as[Asterism.Id].map(_.asLeft)
+  lazy val pointingName: NonEmptyString =
+    pointing match {
+      case None                                              => "<No Target>"
+      case Some(Pointing.PointingTarget(_, name))            => name
+      case Some(Pointing.PointingAsterism(_, name, targets)) =>
+        name match {
+          case Some(aname) => aname
+          case None        => NonEmptyString.unsafeFrom(targets.map(_.name).mkString("-"))
         }
     }
+}
 
-  implicit val obsSummaryDecoder: Decoder[ObsSummary] = new Decoder[ObsSummary] {
-    final def apply(c: HCursor): Decoder.Result[ObsSummary] =
-      for {
-        id         <- c.downField("id").as[Observation.Id]
-        name       <- c.downField("name").as[Option[NonEmptyString]]
-        pointingId <- c.downField("observationTarget").as[Option[PointingId]]
-        cs         <- c.downField("constraintSet").as[Option[ConstraintsSummary]]
-      } yield ObsSummary(id, name, pointingId = pointingId, constraints = cs)
-  }
+@Lenses
+case class ObsSummaryWithConstraints(
+  override val id:          Observation.Id,
+  override val constraints: Option[ConstraintsSummary],
+  override val status:      ObsStatus = ObsStatus.New,
+  override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
+) extends ObsSummary
+    with ObsWithConstraints
+
+object ObsSummaryWithConstraints {
+  implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
+    Eq.by(o => (o.id, o.constraints, o.status, o.duration))
+}
+
+@Lenses
+case class ObsSummaryWithPointingAndConstraints(
+  override val id:          Observation.Id,
+  override val pointing:    Option[Pointing],
+  override val constraints: Option[ConstraintsSummary],
+  override val status:      ObsStatus = ObsStatus.New,
+  override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
+) extends ObsSummary
+    with ObsWithPointing
+    with ObsWithConstraints
+
+object ObsSummaryWithPointingAndConstraints {
+  implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
+    Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.duration))
 }

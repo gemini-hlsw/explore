@@ -3,7 +3,7 @@
 
 package explore.observationtree
 
-import explore.model.ExploreObservation
+import explore.model.ObsSummary
 import monocle.Lens
 import monocle.macros.Lenses
 
@@ -14,7 +14,7 @@ sealed trait ObsNode {
 }
 object ObsNode       {
   @Lenses
-  final case class Obs(id: UUID, value: ExploreObservation) extends ObsNode
+  final case class Obs(id: UUID, value: ObsSummary) extends ObsNode
   @Lenses
   final case class And(id: UUID, andParams: String) extends ObsNode
   @Lenses

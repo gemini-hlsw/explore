@@ -19,12 +19,10 @@ import react.beautifuldnd._
 
 trait ViewCommon {
   def focused: View[Option[Focused]]
-  def obsBadgeLayout: ObsBadge.Layout
 
   def renderObsBadge(obs: ObsSummary): TagMod =
     ObsBadge(
       obs,
-      obsBadgeLayout,
       selected = focused.get.exists(_ === FocusedObs(obs.id))
     )
 

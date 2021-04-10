@@ -9,12 +9,16 @@ import crystal.react.implicits._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
+import explore.model.ObsWithConf
+import explore.model.ObsWithConstraints
+import explore.model.ObsWithPointing
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
+import lucuma.core.util.Gid
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -23,8 +27,7 @@ import react.semanticui.sizes._
 import react.semanticui.views.card._
 
 final case class ObsBadge(
-  obs:      ObsSummary,
-  layout:   ObsBadge.Layout,
+  obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected: Boolean = false,
   deleteCB: Option[Observation.Id => IO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
@@ -32,30 +35,31 @@ final case class ObsBadge(
 object ObsBadge {
   type Props = ObsBadge
 
-  sealed trait Layout
-  object Layout {
-    final case object NameAndConf               extends Layout
-    final case object ConfAndConstraints        extends Layout
-    final case object NameAndConfAndConstraints extends Layout
-
-    implicit val layoutReuse: Reusability[Layout] = Reusability.derive
-  }
-
   protected implicit val propsReuse: Reusability[Props] = Reusability.caseClassExcept("deleteCB")
 
   // TODO Make this a component similar to the one in the docs.
-  def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
+  private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {
     val all = implicitly[Enumerated[A]].all
     <.progress(^.width := "100%", ^.max := all.length - 1, ^.value := all.indexOf(value))
   }
 
-  import Layout._
+  private val idIso = Gid[Observation.Id].isoPosLong
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        val obs          = props.obs
+        val obs         = props.obs
+        val conf        = obs match {
+          case withConf: ObsWithConf => (withConf.conf: VdomNode).some
+          case _                     => none
+        }
+        val constraints = obs match {
+          case withConstraints: ObsWithConstraints =>
+            (withConstraints.constraintsSummary: VdomNode).some
+          case _                                   => none
+        }
+
         val deleteButton = Button(
           size = Small,
           compact = true,
@@ -68,16 +72,24 @@ object ObsBadge {
           Icons.Trash
         )
 
+        def nameAndId(name: String) =
+          <.div(
+            ExploreStyles.ObsBadgeTargetAndId,
+            <.div(name),
+            <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
+          )
+
         <.small(
           Card(raised = props.selected)(ExploreStyles.ObsBadge)(
             CardContent(
               CardHeader(
                 <.div(
                   ExploreStyles.ObservationCardHeader,
-                  props.layout match {
-                    case NameAndConf | NameAndConfAndConstraints =>
-                      obs.name.fold("--------")(_.value)
-                    case ConfAndConstraints                      => obs.conf
+                  obs match {
+                    case withPointing: ObsWithPointing =>
+                      nameAndId(withPointing.pointingName.toString)
+                    case withConf: ObsWithConf         => withConf.conf
+                    case _                             => nameAndId("")
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
@@ -86,11 +98,13 @@ object ObsBadge {
                 renderEnumProgress(obs.status)
               ),
               CardDescription(
-                props.layout match {
-                  case NameAndConf               => ReactFragment(obs.conf)
-                  case ConfAndConstraints        => ReactFragment(obs.constraintsSummary)
-                  case NameAndConfAndConstraints =>
-                    ReactFragment(<.div(obs.conf), <.div(obs.constraintsSummary))
+                obs match {
+                  case _: ObsWithPointing                  =>
+                    ReactFragment(List(conf, constraints).flatten: _*)
+                  case withConstraints: ObsWithConstraints =>
+                    ReactFragment(withConstraints.constraintsSummary)
+                  case _                                   =>
+                    ReactFragment(obs.id.toString)
                 }
               ),
               CardExtra(

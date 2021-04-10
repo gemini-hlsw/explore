@@ -14,24 +14,25 @@ import react.common.Size
  * Reusability instances for model classes
  */
 object reusability {
-  implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.derive
-  implicit val siderealTargetReuse: Reusability[SiderealTarget]                      = Reusability.byEq
-  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.derive
-  implicit val expTargetReuse: Reusability[ExploreSiderealTarget]                    = Reusability.derive
-  implicit val expObsReuse: Reusability[ExploreObservation]                          = Reusability.derive
-  implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.byEq
-  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                  = Reusability.byEq
-  implicit val rootModelReuse: Reusability[RootModel]                                = Reusability.byEq
-  implicit def sizeReuse: Reusability[Size]                                          = Reusability.by(x => (x.height, x.width))
-  implicit def focusedReuse: Reusability[Focused]                                    = Reusability.derive
-  implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =
+  implicit val statusReuse: Reusability[PersistentClientStatus]                       = Reusability.derive
+  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                   = Reusability.derive
+  implicit val userVaultReuse: Reusability[UserVault]                                 = Reusability.byEq
+  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                   = Reusability.byEq
+  implicit val rootModelReuse: Reusability[RootModel]                                 = Reusability.byEq
+  implicit val sizeReuse: Reusability[Size]                                           = Reusability.by(x => (x.height, x.width))
+  implicit val focusedReuse: Reusability[Focused]                                     = Reusability.derive
+  implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]  =
     Reusability.by(_.toList)
-  implicit def AirMassRangeReuse: Reusability[AirMassRange]                          = Reusability.byEq
-  implicit def HourAngleRangeReuse: Reusability[HourAngleRange]                      = Reusability.byEq
-  implicit def constraintSetModelReuse: Reusability[ConstraintSetModel]              = Reusability.byEq
-  implicit def constraintsSummaryReuse: Reusability[ConstraintsSummary]              = Reusability.byEq
-  implicit def obsSummaryReuse: Reusability[ObsSummary]                              = Reusability.byEq
-  implicit def proposalDetailsReuse: Reusability[ProposalDetails]                    = Reusability.byEq
-  implicit def partnerSplitReuse: Reusability[PartnerSplit]                          = Reusability.derive
-
+  implicit val airMassRangeReuse: Reusability[AirMassRange]                           = Reusability.byEq
+  implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                       = Reusability.byEq
+  implicit val constraintSetModelReuse: Reusability[ConstraintSetModel]               = Reusability.byEq
+  implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
+  implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
+  implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.derive
+  implicit val pointingReuse: Reusability[Pointing]                                   = Reusability.byEq
+  implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
+  implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
+    Reusability.byEq
+  implicit val obsSummaryWithPointingAndConstraintsReuse
+    : Reusability[ObsSummaryWithPointingAndConstraints]                               = Reusability.byEq
 }
