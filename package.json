@@ -8,7 +8,7 @@
     "@cquiroz/aladin-lite": "0.2.3",
     "@svgdotjs/svg.js": "3.0.16",
     "@types/react": "16.9.56",
-    "@types/react-datepicker": "3.1.1",
+    "@types/react-datepicker": "3.1.8",
     "@types/react-dom": "16.9.10",
     "@types/react-table": "7.0.26",
     "broadcast-channel": "3.3.0",
