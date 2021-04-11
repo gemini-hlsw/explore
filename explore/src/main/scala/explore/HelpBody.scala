@@ -98,14 +98,14 @@ object HelpBody {
                 <.div(
                   ExploreStyles.HelpBody,
                   s.content match {
-                    case Ready(a)         =>
+                    case Ready(a)                                         =>
                       ReactMarkdown(content = a,
                                     clazz = ExploreStyles.HelpMarkdownBody,
                                     linkTarget = "_blank",
                                     imageConv
                       ): VdomNode
-                    case Pending(_)       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                    case crystal.Error(o) if o.getMessage.contains("405")=>
+                    case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+                    case crystal.Error(o) if o.getMessage.contains("405") =>
                       <.div(
                         ExploreStyles.HelpMarkdownBody,
                         "Not found, maybe you want to create it ",
@@ -114,7 +114,7 @@ object HelpBody {
                             Icons.Edit.link(true)
                         )
                       )
-                    case crystal.Error(_) =>
+                    case crystal.Error(_)                                 =>
                       <.div(
                         ExploreStyles.HelpMarkdownBody,
                         "We encountered an error trying to read the help file"
