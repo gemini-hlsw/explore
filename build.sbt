@@ -14,7 +14,7 @@ addCommandAlias(
 
 addCommandAlias(
   "fixImports",
-  "; scalafix OrganizeImports"
+  "; scalafix OrganizeImports; scalafmtAll"
 )
 
 addCommandAlias(
