@@ -105,7 +105,7 @@ object HelpBody {
                                     imageConv
                       ): VdomNode
                     case Pending(_)       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                    case crystal.Error(_) =>
+                    case crystal.Error(o) if o.getMessage.contains("405")=>
                       <.div(
                         ExploreStyles.HelpMarkdownBody,
                         "Not found, maybe you want to create it ",
@@ -113,6 +113,11 @@ object HelpBody {
                             ^.target := "_blank",
                             Icons.Edit.link(true)
                         )
+                      )
+                    case crystal.Error(_) =>
+                      <.div(
+                        ExploreStyles.HelpMarkdownBody,
+                        "We encountered an error trying to read the help file"
                       )
                   }
                 )

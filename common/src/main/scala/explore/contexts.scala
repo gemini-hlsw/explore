@@ -20,8 +20,8 @@ object AppCtx extends Ctx[IO, AppContextIO]
 case class HelpContext(
   rawUrl:        Uri,
   editUrl:       Uri,
-  user:          String Refined MatchesRegex["[\\w-_]*"],
-  project:       String Refined MatchesRegex["[\\w-_]*"],
+  user:          String Refined MatchesRegex["[\\w-_]+"],
+  project:       String Refined MatchesRegex["[\\w-_]+"],
   displayedHelp: Option[Help.Id] = none
 )
 

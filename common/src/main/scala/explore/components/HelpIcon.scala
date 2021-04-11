@@ -17,7 +17,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
-final case class HelpIcon(id: Help.Id) extends ReactProps[HelpIcon](HelpIcon.component) {}
+final case class HelpIcon(id: Help.Id) extends ReactProps[HelpIcon](HelpIcon.component)
 
 object HelpIcon {
   type Props = HelpIcon
