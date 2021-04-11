@@ -4,16 +4,32 @@
 package explore
 
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.react.Ctx
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.string._
+import explore.model.Help
 import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.Reusability._
 import monocle.macros.Lenses
+import sttp.model.Uri
 
 object AppCtx extends Ctx[IO, AppContextIO]
 
 @Lenses
-case class HelpContext(msg: Option[String])
+case class HelpContext(
+  rawUrl:        Uri,
+  editUrl:       Uri,
+  user:          String Refined MatchesRegex["[\\w-_]+"],
+  project:       String Refined MatchesRegex["[\\w-_]+"],
+  displayedHelp: Option[Help.Id] = none
+)
+
 object HelpContext {
-  implicit val helpContextReuse: Reusability[HelpContext] = Reusability.derive
+  implicit val helpIdReuse: Reusability[Help.Id]          = Reusability.by(_.value)
+  implicit val uriReuse: Reusability[Uri]                 = Reusability.by(_.toString)
+  implicit val helpContextReuse: Reusability[HelpContext] =
+    Reusability.by(x => (x.rawUrl, x.editUrl, x.user.value, x.project.value, x.displayedHelp))
 }
 
 object HelpCtx extends Ctx[IO, HelpContext]

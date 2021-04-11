@@ -208,4 +208,12 @@ object ExploreStyles {
 
   // This is rendered without React, so we include SUI classes.
   val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))
+
+  // Help styles
+  val HelpIcon: Css         = Css("explore-help-button")
+  val HelpSidebar: Css      = Css("explore-help-sidebar")
+  val HelpTitle: Css        = Css("explore-help-title")
+  val HelpTitleLabel: Css   = Css("explore-help-title-label")
+  val HelpBody: Css         = Css("explore-help-body")
+  val HelpMarkdownBody: Css = Css("markdown-body")
 }

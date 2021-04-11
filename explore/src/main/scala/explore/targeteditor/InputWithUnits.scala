@@ -17,6 +17,8 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import react.common._
+import react.semanticui._
+import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 
 final case class InputWithUnits[F[_], A](
@@ -24,7 +26,7 @@ final case class InputWithUnits[F[_], A](
   validFormat:     ValidFormatInput[A],
   changeAuditor:   ChangeAuditor[A],
   id:              NonEmptyString,
-  label:           String,
+  label:           ShorthandS[Label],
   units:           String,
   disabled:        Boolean,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2

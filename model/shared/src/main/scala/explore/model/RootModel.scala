@@ -3,7 +3,7 @@
 
 package explore.model
 
-import cats.kernel.Eq
+import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString

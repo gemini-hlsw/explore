@@ -11,12 +11,14 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintSetModel
+import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._
 import explore.schemas.ObservationDB.Types._
@@ -38,6 +40,7 @@ import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 
 import ConstraintsQueries._
@@ -113,11 +116,15 @@ object ConstraintsPanel {
 
         def selectEnum[A: Enumerated: Display](
           label:     String,
+          helpId:    Help.Id,
           lens:      Lens[ConstraintSetModel, A],
           remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
         ) = {
           val id = label.toLowerCase().replaceAll(" ", "-")
-          EnumViewSelect(id = id, value = undoViewSet(lens, remoteSet), label = label)
+          EnumViewSelect(id = id,
+                         value = undoViewSet(lens, remoteSet),
+                         label = Label(label, HelpIcon(helpId))
+          )
         }
 
         def updateElevationRange(ert: ElevationRangeType) =
@@ -140,18 +147,22 @@ object ConstraintsPanel {
           <.div(
             ExploreStyles.TwoColumnGrid,
             selectEnum("Image Quality",
+                       "constraints/main/iq.md",
                        ConstraintSetModel.imageQuality,
                        UpdateConstraintSet.imageQuality
             ),
             selectEnum("Cloud Extinction",
+                       "constraints/main/ce.md",
                        ConstraintSetModel.cloudExtinction,
                        UpdateConstraintSet.cloudExtinction
             ),
             selectEnum("Water Vapor",
+                       "constraints/main/wv.md",
                        ConstraintSetModel.waterVapor,
                        UpdateConstraintSet.waterVapor
             ),
             selectEnum("Sky Background",
+                       "constraints/main/sb.md",
                        ConstraintSetModel.skyBackground,
                        UpdateConstraintSet.skyBackground
             )
@@ -160,7 +171,7 @@ object ConstraintsPanel {
             ExploreStyles.FlexContainer,
             EnumViewSelect(
               id = "ertype",
-              label = "Elevation Range",
+              label = Label("Elevation Range", HelpIcon("constraints/main/er.md")),
               value = stateView
                 .zoom(State.rangeType)
                 .withOnMod(updateElevationRange),
@@ -169,7 +180,7 @@ object ConstraintsPanel {
             ReactFragment(
               FormInputEV(
                 id = "minam",
-                label = "Min",
+                label = Label("Min", HelpIcon("constraints/main/minam.md")),
                 value = stateView
                   .zoom(State.airMass)
                   .zoom(AirMassRange.min)
@@ -192,7 +203,7 @@ object ConstraintsPanel {
               ),
               FormInputEV(
                 id = "maxam",
-                label = "Max",
+                label = Label("Max", HelpIcon("constraints/main/maxam.md")),
                 value = stateView
                   .zoom(State.airMass)
                   .zoom(AirMassRange.max)
@@ -217,7 +228,7 @@ object ConstraintsPanel {
             ReactFragment(
               FormInputEV(
                 id = "minha",
-                label = "Min",
+                label = Label("Min", HelpIcon("constraints/main/minha.md")),
                 value = stateView
                   .zoom(State.hourAngle)
                   .zoom(HourAngleRange.minHours)
@@ -241,7 +252,7 @@ object ConstraintsPanel {
               ),
               FormInputEV(
                 id = "maxha",
-                label = "Max",
+                label = Label("Max", HelpIcon("constraints/main/maxha.md")),
                 value = stateView
                   .zoom(State.hourAngle)
                   .zoom(HourAngleRange.maxHours)

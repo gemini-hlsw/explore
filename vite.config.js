@@ -33,6 +33,7 @@ export default ({ command, mode }) => {
   fs.mkdir(publicDirDev, (err) => {
     fs.copyFileSync(path.resolve(publicDirProd, "development.conf.json"), path.resolve(publicDirDev, "conf.json"));
   });
+
   const publicDir = 
     mode == "production"
      ? publicDirProd

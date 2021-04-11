@@ -10,6 +10,7 @@ import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
 import crystal.react._
+import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
@@ -143,7 +144,16 @@ trait AppMain extends IOApp {
     } yield {
       val RootComponent =
         ContextProvider[IO](AppCtx, ctx)(
-          ContextProvider[IO](HelpCtx, HelpContext(none))(
+          ContextProvider[IO](
+            HelpCtx,
+            HelpContext(
+              rawUrl = uri"https://raw.githubusercontent.com",
+              editUrl = uri"https://github.com",
+              user = "gemini-hlsw",
+              project = "explore-help-docs",
+              displayedHelp = none
+            )
+          )(
             StateProvider[IO](initialModel(vault))(rootView => rootComponent(rootView))
           )
         )
