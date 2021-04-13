@@ -217,7 +217,7 @@ object ConstraintsPanel {
                   .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
                   .composeValidFormat(
                     ValidFormatNec.gte(
-                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](state.airMass.max).get,
+                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](state.airMass.min).get,
                       "Must be >= Min"
                     )
                   ),
