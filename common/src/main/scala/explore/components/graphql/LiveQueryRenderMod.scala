@@ -6,9 +6,7 @@ package explore.components.graphql
 import cats.data.NonEmptyList
 import cats.effect.CancelToken
 import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
 import cats.effect.IO
-import cats.effect.Timer
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
@@ -27,6 +25,7 @@ import react.semanticui.sizes._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import cats.effect.Temporal
 
 final case class LiveQueryRenderMod[S, D, A](
   query:               IO[D],
@@ -39,7 +38,7 @@ final case class LiveQueryRenderMod[S, D, A](
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
   val F:               ConcurrentEffect[IO],
-  val timer:           Timer[IO],
+  val timer:           Temporal[IO],
   val cs:              ContextShift[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
@@ -49,7 +48,7 @@ final case class LiveQueryRenderMod[S, D, A](
 
 object LiveQueryRenderMod {
   trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ViewF[F, *], S, D, A] {
-    implicit val timer: Timer[F]
+    implicit val timer: Temporal[F]
     implicit val cs: ContextShift[F]
   }
 

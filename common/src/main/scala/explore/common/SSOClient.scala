@@ -29,6 +29,7 @@ import java.{ util => ju }
 import scala.concurrent.duration._
 
 import ju.concurrent.TimeUnit
+import cats.effect.Temporal
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
@@ -36,7 +37,7 @@ object JwtOrcidProfile {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
-case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(implicit
+case class SSOClient[F[_]: ConcurrentEffect: Temporal: Logger](config: SSOConfig)(implicit
   cs:                                                               ContextShift[F]
 ) {
   private val retryPolicy =
@@ -117,7 +118,7 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(i
       val sleepTime = config.refreshTimeoutDelta.max(
         (n.until(expiration, ChronoUnit.SECONDS).seconds - config.refreshTimeoutDelta)
       )
-      Timer[F].sleep(sleepTime / config.refreshIntervalFactor)
+      Temporal[F].sleep(sleepTime / config.refreshIntervalFactor)
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
   val logout: F[Unit] =

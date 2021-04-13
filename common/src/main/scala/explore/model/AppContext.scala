@@ -18,6 +18,7 @@ import explore.utils
 import io.circe.Json
 import org.typelevel.log4cats.Logger
 import sttp.model.Uri
+import cats.effect.Temporal
 
 case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
   odb:           WebSocketClient[F, ObservationDB],
@@ -56,12 +57,12 @@ case class AppContext[F[_]](
 )(implicit
   val F:       Applicative[F],
   val cs:      ContextShift[F],
-  val timer:   Timer[F],
+  val timer:   Temporal[F],
   val logger:  Logger[F]
 )
 
 object AppContext {
-  private def buildClients[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: Timer: Logger](
+  private def buildClients[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: Temporal: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     reconnectionStrategy: WebSocketReconnectionStrategy
@@ -73,7 +74,7 @@ object AppContext {
         ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
     } yield Clients(odbClient, prefsClient)
 
-  def from[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: ContextShift: Timer: Logger](
+  def from[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: ContextShift: Temporal: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String

@@ -5,11 +5,11 @@ package explore.undo
 
 import cats.FlatMap
 import cats.effect.Sync
-import cats.effect.concurrent.Ref
 import cats.syntax.all._
 import explore.optics.GetAdjust
 import explore.undo.Undoer
 import monocle.macros.Lenses
+import cats.effect.Ref
 
 @Lenses
 case class TestStacks[F[_], A](

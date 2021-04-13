@@ -4,9 +4,7 @@
 package explore.components.graphql
 
 import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
 import cats.effect.IO
-import cats.effect.Timer
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.Pot
@@ -24,6 +22,7 @@ import react.semanticui.sizes._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import cats.effect.Temporal
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
@@ -35,7 +34,7 @@ final case class SubscriptionRenderMod[D, A](
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
   val F:             ConcurrentEffect[IO],
-  val timer:         Timer[IO],
+  val timer:         Temporal[IO],
   val cs:            ContextShift[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
@@ -44,7 +43,7 @@ final case class SubscriptionRenderMod[D, A](
 
 object SubscriptionRenderMod {
   trait Props[F[_], D, A] extends Render.Subscription.Props[F, ViewF[F, *], D, A] {
-    implicit val timer: Timer[F]
+    implicit val timer: Temporal[F]
     implicit val cs: ContextShift[F]
   }
 

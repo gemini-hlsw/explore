@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats._
-import cats.effect.ContextShift
 import cats.effect.IO
 import cats.instances.order._
 import cats.syntax.all._
@@ -296,9 +295,7 @@ object TargetObsList {
     protected def newTarget(
       setter: Undoer.Setter[IO, PointingsWithObs]
     )(name:   NonEmptyString)(implicit
-      c:      TransactionalClient[IO, ObservationDB],
-      cs:     ContextShift[IO]
-    ): IO[Unit] =
+      c:      TransactionalClient[IO, ObservationDB]): IO[Unit] =
       ($.propsIn[IO], IO(PosLong.unsafeFrom(Random.nextInt(0xfff).abs.toLong + 1))).parTupled
         .flatMap { case (props, posLong) =>
           val newTarget = TargetResult(Target.Id(posLong), name)

@@ -4,8 +4,6 @@
 package explore
 
 import cats._
-import cats.effect.ContextShift
-import cats.effect.Timer
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
@@ -20,6 +18,7 @@ import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused
+import cats.effect.Temporal
 
 trait ListImplicits {
 
@@ -81,7 +80,7 @@ trait OpticsImplicits {
 
 object implicits extends ShorthandTypes with ListImplicits with OpticsImplicits {
   implicit def appContext2ContextShift[F[_]](implicit ctx: AppContext[F]): ContextShift[F] = ctx.cs
-  implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Timer[F]        = ctx.timer
+  implicit def appContext2Timer[F[_]](implicit ctx:        AppContext[F]): Temporal[F]        = ctx.timer
   implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]       = ctx.logger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
     ctx:                                                   AppContext[F]

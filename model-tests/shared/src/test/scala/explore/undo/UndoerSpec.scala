@@ -4,7 +4,6 @@
 package explore.undo
 
 import cats.effect.IO
-import cats.effect.concurrent.Ref
 import cats.syntax.all._
 import cats.kernel.Eq
 import explore.data.KeyedIndexedList
@@ -16,6 +15,7 @@ import explore.undo._
 import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
+import cats.effect.Ref
 
 class UndoerSpec extends munit.FunSuite {
 
