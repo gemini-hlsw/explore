@@ -11,6 +11,7 @@ import explore.AppCtx
 import explore.Icons
 import explore.View
 import explore.common.UserPreferencesQueries._
+import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelOptics

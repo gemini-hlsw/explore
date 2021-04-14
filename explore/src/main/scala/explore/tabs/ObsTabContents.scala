@@ -13,8 +13,9 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.AppCtx
 import explore.Icons
 import explore.common.ObsQueries._
-import explore.common.TargetQueries._
+import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
+import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileButton
 import explore.components.graphql.LiveQueryRenderMod

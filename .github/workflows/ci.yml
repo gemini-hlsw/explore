@@ -16,4 +16,4 @@ jobs:
           java-version: adopt@1.11
       - name: Running tests
         run: |
-          sbt -v compile scalafmtCheckAll headerCheck test:headerCheck graphQLCheck test
+          sbt -v compile scalafmtCheckAll headerCheck test:headerCheck test

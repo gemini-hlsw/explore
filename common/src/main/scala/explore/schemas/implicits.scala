@@ -9,7 +9,6 @@ import lucuma.core.model.Magnitude
 import java.math.MathContext
 
 import ObservationDB.Types.MagnitudeInput
-import UserPreferencesDB.Types.WidthUpsertInput
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 object implicits {
