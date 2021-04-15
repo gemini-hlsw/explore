@@ -17,4 +17,4 @@ jobs:
       - name: Running tests
         run: |
           npm install
-          sbt -v compile scalafmtCheckAll headerCheck test:headerCheck test
+          sbt -v -J-Xmx4g compile scalafmtCheckAll headerCheck test:headerCheck test
