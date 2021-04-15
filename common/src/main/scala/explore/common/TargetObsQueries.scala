@@ -37,7 +37,6 @@ object TargetObsQueries {
 
   type ObsResult = TargetsObsQuery.Data.Observations.Nodes
   val ObsResult = TargetsObsQuery.Data.Observations.Nodes
-  // import TargetsObsQuery.Data.Observations.Nodes._
 
   type PointingTargetResult = ObsResult.Pointing.Target
   val PointingTargetResult = ObsResult.Pointing.Target
