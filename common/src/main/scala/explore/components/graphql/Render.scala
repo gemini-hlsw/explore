@@ -14,6 +14,7 @@ import clue.PersistentClientStatus
 import clue.WebSocketClient
 import crystal.Pot
 import crystal.react.implicits._
+import explore.utils._
 import fs2.concurrent.Queue
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Generic.UnmountedWithRoot
@@ -25,9 +26,9 @@ import org.typelevel.log4cats.Logger
 
 object Render {
   trait Props[F[_], G[_], A] {
-    val valueRender: G[A] ~=> VdomNode
-    val pendingRender: Long ~=> VdomNode
-    val errorRender: Throwable ~=> VdomNode
+    val valueRender: G[A] ==> VdomNode
+    val pendingRender: Long ==> VdomNode
+    val errorRender: Throwable ==> VdomNode
     val onNewData: F[Unit]
 
     implicit val F: ConcurrentEffect[F]

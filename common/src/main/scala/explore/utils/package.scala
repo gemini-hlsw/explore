@@ -45,6 +45,10 @@ package object utils {
           .orEmpty
     )
   }
+
+  implicit class AnyReuseOps[A](val a: A) extends AnyVal {
+    def reuse: Reuse.Applied[A] = Reuse(a)
+  }
 }
 
 package utils {

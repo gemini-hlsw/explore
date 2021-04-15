@@ -14,6 +14,7 @@ import crystal.ViewF
 import crystal.react._
 import crystal.react.implicits._
 import explore.View
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
@@ -29,11 +30,10 @@ final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender:   View[A] ~=> VdomNode,
-  val pendingRender: Long ~=> VdomNode =
-    Reusable.always(_ => Icon(name = "spinner", loading = true, size = Large)),
-  val errorRender:   Throwable ~=> VdomNode =
-    Reusable.always(t => Message(error = true)(t.getMessage)),
+  val valueRender:   View[A] ==> VdomNode,
+  val pendingRender: Long ==> VdomNode =
+    Reuse.always(_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
   val F:             ConcurrentEffect[IO],

@@ -21,6 +21,7 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintSetObsList
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -159,8 +160,6 @@ object ConstraintSetTabContents {
 
   protected implicit val innerWidthReuse = Reusability.double(2.0)
 
-  protected val reusableRender = Reusable.fn(renderFn _)
-
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -175,7 +174,7 @@ object ConstraintSetTabContents {
       .render { $ =>
         implicit val ctx = $.props.ctx
         ConstraintSetObsLiveQuery(
-          reusableRender($.props)(ViewF.fromState[IO]($))(window.innerWidth)
+          (renderFn _).reuse($.props, ViewF.fromState[IO]($), window.innerWidth)
         )
       }
       .componentDidMount(readWidthPreference)

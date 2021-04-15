@@ -14,6 +14,7 @@ import explore.model.PointingId
 import explore.model.reusability._
 import explore.optics._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -107,7 +108,7 @@ object TargetObsQueries {
     Reusability.derive
 
   val TargetObsLiveQuery =
-    ScalaFnComponent[View[PointingsWithObs] ~=> VdomNode](render =>
+    ScalaFnComponent[View[PointingsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, PointingsWithObs](
           TargetsObsQuery.query(),

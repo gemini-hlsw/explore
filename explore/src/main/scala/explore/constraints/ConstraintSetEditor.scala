@@ -18,6 +18,7 @@ import lucuma.ui.reusability._
 import react.common._
 
 import ConstraintsQueries._
+import explore.utils._
 
 final case class ConstraintSetEditor(csid: ConstraintSet.Id)
     extends ReactProps[ConstraintSetEditor](ConstraintSetEditor.component)
@@ -35,8 +36,6 @@ object ConstraintSetEditor {
       ConstraintsPanel(csid, csOpt.zoom(_.get)(f => _.map(f)))
     }
 
-  protected val reusableRender = Reusable.fn(renderFn _)
-
   val component =
     ScalaComponent
       .builder[Props]
@@ -46,7 +45,7 @@ object ConstraintSetEditor {
             ConstraintSetQuery.query(props.csid),
             _.constraintSet,
             NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](props.csid))
-          )(reusableRender(props.csid))
+          )((renderFn _).reuse(props.csid))
         }
       }
       .configure(Reusability.shouldComponentUpdate)

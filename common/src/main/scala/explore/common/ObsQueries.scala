@@ -12,6 +12,7 @@ import explore.implicits._
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
+import explore.utils._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -51,7 +52,7 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[ObservationList] ~=> VdomNode](render =>
+    ScalaFnComponent[View[ObservationList] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
           ProgramObservationsQuery.query(),

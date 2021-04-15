@@ -17,6 +17,7 @@ import explore.model.Pointing
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
@@ -90,7 +91,7 @@ object ConstraintSetObsQueries {
     Reusability.derive
 
   val ConstraintSetObsLiveQuery =
-    ScalaFnComponent[View[ConstraintSetsWithObs] ~=> VdomNode](render =>
+    ScalaFnComponent[View[ConstraintSetsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),

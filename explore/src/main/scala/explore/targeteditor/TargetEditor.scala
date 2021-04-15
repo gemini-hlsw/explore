@@ -16,6 +16,7 @@ import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -58,8 +59,6 @@ object TargetEditor {
       )
     }
 
-  protected val reusableRender = Reusable.fn(renderFn _)
-
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
@@ -67,7 +66,7 @@ object TargetEditor {
         TargetEditQuery.query(props.tid),
         _.target,
         NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
-      )(reusableRender(props)(ViewF.fromState[IO]($)))
+      )((renderFn _).reuse(props, ViewF.fromState[IO]($)))
     }
   }
 

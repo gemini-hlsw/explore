@@ -21,6 +21,7 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.targeteditor.TargetEditor
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -170,8 +171,6 @@ object TargetTabContents {
     }
   }
 
-  protected val reusableRender = Reusable.fn(renderFn _)
-
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -186,7 +185,7 @@ object TargetTabContents {
       )
       .render { $ =>
         implicit val ctx = $.props.ctx
-        TargetObsLiveQuery(reusableRender($.props)(ViewF.fromState($)))
+        TargetObsLiveQuery((renderFn _).reuse($.props, ViewF.fromState($)))
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

@@ -16,6 +16,7 @@ import crystal.Pot
 import crystal.ViewF
 import crystal.react._
 import explore._
+import explore.utils._
 import fs2.concurrent.Queue
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -33,11 +34,10 @@ final case class LiveQueryRenderMod[S, D, A](
   extract:             D => A,
   changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
 )(
-  val valueRender:     View[A] ~=> VdomNode,
-  val pendingRender:   Long ~=> VdomNode =
-    Reusable.always(_ => Icon(name = "spinner", loading = true, size = Large)),
-  val errorRender:     Throwable ~=> VdomNode =
-    Reusable.always(t => Message(error = true)(t.getMessage)),
+  val valueRender:     View[A] ==> VdomNode,
+  val pendingRender:   Long ==> VdomNode =
+    Reuse.always(_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:     Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
   val F:               ConcurrentEffect[IO],

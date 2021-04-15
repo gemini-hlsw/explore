@@ -30,6 +30,7 @@ import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.schemas.ObservationDB
 import explore.targeteditor.TargetBody
+import explore.utils._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -258,8 +259,6 @@ object ObsTabContents {
           )
         }
 
-      val reusableTargetRender = Reusable.fn(targetRenderFn _)
-
       val rightSideRGL =
         ResponsiveReactGridLayout(
           width = coreWidth,
@@ -305,7 +304,7 @@ object ObsTabContents {
                     TargetEditQuery.query(targetId),
                     _.target,
                     NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                  )(reusableTargetRender(targetId)).withKey(s"target-$targetId")
+                  )((targetRenderFn _).reuse(targetId)).withKey(s"target-$targetId")
                 }
                 .getOrElse(
                   <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
@@ -358,11 +357,9 @@ object ObsTabContents {
       }
     }
 
-    protected val reusableRender = Reusable.fn(renderFn _)
-
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery(reusableRender(props)(ViewF.fromState[IO]($)))
+      ObsLiveQuery((renderFn _).reuse(props, ViewF.fromState[IO]($)))
     }
   }
 
