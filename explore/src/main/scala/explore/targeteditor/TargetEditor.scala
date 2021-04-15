@@ -7,7 +7,6 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
-import explore.AppCtx
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -45,28 +44,31 @@ object TargetEditor {
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props) =
-      AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB,
-                           TargetEditQuery.Data,
-                           Option[TargetEditQuery.Data.Target]
-        ](
-          TargetEditQuery.query(props.tid),
-          _.target,
-          NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
-        ) { targetOpt =>
-          targetOpt.get.map { _ =>
-            val stateView = ViewF.fromState[IO]($).zoom(State.options)
-            TargetBody(props.uid,
-                       props.tid,
-                       targetOpt.zoom(_.get)(f => _.map(f)),
-                       props.searching,
-                       stateView
-            )
-          }
-        }
-      }
+  protected def renderFn(
+    props:     Props,
+    state:     View[State],
+    targetOpt: View[Option[TargetEditQuery.Data.Target]]
+  ): VdomNode =
+    targetOpt.get.map { _ =>
+      TargetBody(props.uid,
+                 props.tid,
+                 targetOpt.zoom(_.get)(f => _.map(f)),
+                 props.searching,
+                 state.zoom(State.options)
+      )
+    }
+
+  protected val reusableRender = Reusable.fn(renderFn _)
+
+  protected class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
+        TargetEditQuery.query(props.tid),
+        _.target,
+        NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
+      )(reusableRender(props)(ViewF.fromState[IO]($)))
+    }
   }
 
   val component =
