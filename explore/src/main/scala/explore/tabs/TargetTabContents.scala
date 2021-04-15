@@ -5,8 +5,8 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
-import explore.AppCtx
 import explore.Icons
 import explore.UnderConstruction
 import explore.common.TargetObsQueries._
@@ -68,6 +68,108 @@ object TargetTabContents {
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
+  protected def renderFn(
+    props:            Props,
+    state:            View[State],
+    pointingsWithObs: View[PointingsWithObs]
+  ): VdomNode = {
+    implicit val ctx = props.ctx
+
+    val treeResize =
+      (_: ReactEvent, d: ResizeCallbackData) =>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
+          UserWidthsCreation
+            .storeWidthPreference[IO](props.userId.get,
+                                      ResizableSection.TargetsTree,
+                                      d.size.width
+            )).runAsyncCB
+          .debounce(1.second)
+
+    val treeWidth = state.get.treeWidth.toInt
+
+    // Tree area
+    def tree(objectsWithObs: View[PointingsWithObs]) =
+      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
+        treeInner(objectsWithObs)
+      )
+
+    def treeInner(objectsWithObs: View[PointingsWithObs]) =
+      <.div(ExploreStyles.TreeBody)(
+        TargetObsList(
+          objectsWithObs,
+          props.focused,
+          props.expandedIds,
+          props.searching
+        )
+      )
+
+    val backButton = TileButton(
+      Button(
+        as = <.a,
+        size = Mini,
+        compact = true,
+        basic = true,
+        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+        onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+      )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
+    )
+
+    val targetIdOpt = props.focused.get.collect {
+      case FocusedTarget(targetId) => targetId.some
+      case FocusedObs(obsId)       =>
+        pointingsWithObs.get.observations
+          .getElement(obsId)
+          .flatMap(_.pointing.collect { case PointingTargetResult(targetId) => targetId })
+    }.flatten
+
+    val coreWidth  = props.size.width.getOrElse(0) - treeWidth
+    val coreHeight = props.size.height.getOrElse(0)
+
+    val rightSide =
+      Tile(s"Target", backButton.some)(
+        (props.userId.get, targetIdOpt).tupled match {
+          case Some((uid, tid)) => TargetEditor(uid, tid, props.searching).withKey(tid.show)
+          case None             => UnderConstruction()
+        }
+      )
+
+    // It would be nice to make a single component here but it gets hard when you
+    // have the resizable element. Instead we have either two panels with a resizable
+    // or only one panel at a time (Mobile)
+    if (window.innerWidth <= Constants.TwoPanelCutoff) {
+      <.div(
+        ExploreStyles.TreeRGL,
+        <.div(ExploreStyles.Tree, treeInner(pointingsWithObs))
+          .when(state.get.leftPanelVisible),
+        <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
+          rightSide
+        ).when(state.get.rightPanelVisible)
+      )
+    } else {
+      <.div(
+        ExploreStyles.TreeRGL,
+        Resizable(
+          axis = Axis.X,
+          width = treeWidth,
+          height = coreHeight,
+          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+          maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
+          onResize = treeResize,
+          resizeHandles = List(ResizeHandleAxis.East),
+          content = tree(pointingsWithObs),
+          clazz = ExploreStyles.ResizableSeparator
+        ),
+        <.div(^.key := "target-right-side",
+              ExploreStyles.SinglePanelTile,
+              ^.width := coreWidth.px,
+              ^.left := treeWidth.px
+        )(
+          rightSide
+        )
+      )
+    }
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -80,104 +182,9 @@ object TargetTabContents {
             else s
         }
       )
-      .renderPS { ($, props, state) =>
-        AppCtx.using { implicit ctx =>
-          val treeResize =
-            (_: ReactEvent, d: ResizeCallbackData) =>
-              ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>
-                UserWidthsCreation
-                  .storeWidthPreference[IO](props.userId.get,
-                                            ResizableSection.TargetsTree,
-                                            d.size.width
-                  )).runAsyncCB
-                .debounce(1.second)
-
-          val treeWidth = state.treeWidth.toInt
-
-          // Tree area
-          def tree(objectsWithObs: View[PointingsWithObs]) =
-            <.div(^.width := treeWidth.px,
-                  ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
-            )(treeInner(objectsWithObs))
-
-          def treeInner(objectsWithObs: View[PointingsWithObs]) =
-            <.div(ExploreStyles.TreeBody)(
-              TargetObsList(
-                objectsWithObs,
-                props.focused,
-                props.expandedIds,
-                props.searching
-              )
-            )
-
-          val backButton = TileButton(
-            Button(
-              as = <.a,
-              size = Mini,
-              compact = true,
-              basic = true,
-              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
-            )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
-          )
-
-          TargetObsLiveQuery { objectsWithObs =>
-            val targetIdOpt = props.focused.get.collect {
-              case FocusedTarget(targetId) => targetId.some
-              case FocusedObs(obsId)       =>
-                objectsWithObs.get.observations
-                  .getElement(obsId)
-                  .flatMap(_.pointing.collect { case PointingTargetResult(targetId) => targetId })
-            }.flatten
-
-            val coreWidth  = props.size.width.getOrElse(0) - treeWidth
-            val coreHeight = props.size.height.getOrElse(0)
-
-            val rightSide =
-              Tile(s"Target", backButton.some)(
-                (props.userId.get, targetIdOpt).tupled match {
-                  case Some((uid, tid)) => TargetEditor(uid, tid, props.searching).withKey(tid.show)
-                  case None             => UnderConstruction()
-                }
-              )
-
-            // It would be nice to make a single component here but it gets hard when you
-            // have the resizable element. Instead we have either two panels with a resizable
-            // or only one panel at a time (Mobile)
-            if (window.innerWidth <= Constants.TwoPanelCutoff) {
-              <.div(
-                ExploreStyles.TreeRGL,
-                <.div(ExploreStyles.Tree, treeInner(objectsWithObs))
-                  .when(state.leftPanelVisible),
-                <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
-                  rightSide
-                ).when(state.rightPanelVisible)
-              )
-            } else {
-              <.div(
-                ExploreStyles.TreeRGL,
-                Resizable(
-                  axis = Axis.X,
-                  width = treeWidth,
-                  height = coreHeight,
-                  minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-                  maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
-                  onResize = treeResize,
-                  resizeHandles = List(ResizeHandleAxis.East),
-                  content = tree(objectsWithObs),
-                  clazz = ExploreStyles.ResizableSeparator
-                ),
-                <.div(^.key := "target-right-side",
-                      ExploreStyles.SinglePanelTile,
-                      ^.width := coreWidth.px,
-                      ^.left := treeWidth.px
-                )(
-                  rightSide
-                )
-              )
-            }
-          }
-        }
+      .render { $ =>
+        implicit val ctx = $.props.ctx
+        TargetObsLiveQuery((renderFn _).reusable($.props, ViewF.fromState($)))
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

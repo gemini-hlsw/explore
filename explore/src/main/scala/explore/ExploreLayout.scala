@@ -3,11 +3,14 @@
 
 package explore
 
+import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.implicits._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -26,46 +29,56 @@ final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, 
 object ExploreLayout {
   type Props = ExploreLayout
 
+  implicit val resolutionWithPropsReuse: Reusability[ResolutionWithProps[Page, View[RootModel]]] =
+    Reusability.byRefOr_==
+  implicit val propsReuse: Reusability[Props]                                                    =
+    Reusability.by(p => (p.r, p.view))
+
+  private def renderFn(
+    props:    Props,
+    vault:    UserVault,
+    onLogout: IO[Unit]
+  ): VdomNode =
+    AppCtx.using { implicit ctx =>
+      HelpCtx.usingView { helpCtx =>
+        val helpView = helpCtx.zoom(HelpContext.displayedHelp)
+        SidebarPushable(
+          Sidebar(
+            width = SidebarWidth.Wide,
+            direction = SidebarDirection.Right,
+            animation = SidebarAnimation.Overlay,
+            visible = helpView.get.isDefined
+          )(
+            helpView.get
+              .map { h =>
+                HelpBody(helpCtx.get, h): VdomNode
+              }
+              .when(helpView.get.isDefined)
+          ),
+          SidebarPusher(dimmed = helpView.get.isDefined)(
+            <.div(
+              ExploreStyles.MainGrid,
+              TopBar(vault.user, onLogout >> props.view.zoom(RootModel.vault).set(none)),
+              <.div(
+                ExploreStyles.SideTabs,
+                SideTabs(props.view.zoom(RootModel.tabs))
+              ),
+              <.div(
+                ExploreStyles.MainBody,
+                props.r.renderP(props.view)
+              )
+            )
+          )
+        )
+      }
+    }
+
   private val component =
     ScalaComponent
       .builder[Props]
       .stateless
       .render_P { p =>
-        AppCtx.using { implicit ctx =>
-          IfLogged(p.view) { (vault, onLogout) =>
-            HelpCtx.usingView { helpCtx =>
-              val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-              SidebarPushable(
-                Sidebar(
-                  width = SidebarWidth.Wide,
-                  direction = SidebarDirection.Right,
-                  animation = SidebarAnimation.Overlay,
-                  visible = helpView.get.isDefined
-                )(
-                  helpView.get
-                    .map { h =>
-                      HelpBody(helpCtx.get, h): VdomNode
-                    }
-                    .when(helpView.get.isDefined)
-                ),
-                SidebarPusher(dimmed = helpView.get.isDefined)(
-                  <.div(
-                    ExploreStyles.MainGrid,
-                    TopBar(vault.user, onLogout >> p.view.zoom(RootModel.vault).set(none)),
-                    <.div(
-                      ExploreStyles.SideTabs,
-                      SideTabs(p.view.zoom(RootModel.tabs))
-                    ),
-                    <.div(
-                      ExploreStyles.MainBody,
-                      p.r.renderP(p.view)
-                    )
-                  )
-                )
-              )
-            }
-          }
-        }
+        IfLogged(p.view)((renderFn _).reusable(p))
       }
       .build
 

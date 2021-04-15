@@ -33,8 +33,8 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 View[Coordinates],
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Coordinates => Callback,
-  updateFov:              Fov => Callback
+  updateMouseCoordinates: Coordinates ~=> Callback,
+  updateFov:              Fov ~=> Callback
 ) extends ReactProps[AladinContainer](AladinContainer.component) {
   val aladinCoords: Coordinates = target.get
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)

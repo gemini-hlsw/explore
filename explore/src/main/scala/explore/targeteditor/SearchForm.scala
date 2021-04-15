@@ -37,7 +37,7 @@ final case class SearchForm(
   id:          Target.Id,
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
-  searchAndGo: SearchCallback => Callback
+  searchAndGo: SearchCallback ~=> Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
     searchTerm: String,
