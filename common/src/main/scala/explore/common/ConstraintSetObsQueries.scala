@@ -32,16 +32,6 @@ object ConstraintSetObsQueries {
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintsSummary]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
 
-  sealed trait A
-  object A {
-    case class B(b: Int) extends A
-    case class C(c: String) extends A
-  }
-  implicit val reuseA: japgolly.scalajs.react.Reusability[A] = {
-    import japgolly.scalajs.react._
-    japgolly.scalajs.react.Reusability.derive[A]
-  }
-
   def defaultCreateConstraintSet(
     cs: ConstraintsSummary
   ): CreateConstraintSetInput =
