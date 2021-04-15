@@ -29,9 +29,11 @@ final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender:   View[A] => VdomNode,
-  val pendingRender: Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
-  val errorRender:   Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
+  val valueRender:   View[A] ~=> VdomNode,
+  val pendingRender: Long ~=> VdomNode =
+    Reusable.always(_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:   Throwable ~=> VdomNode =
+    Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
   val F:             ConcurrentEffect[IO],

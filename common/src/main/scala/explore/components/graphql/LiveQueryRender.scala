@@ -26,9 +26,11 @@ final case class LiveQueryRender[S, D, A](
   extract:             D => A,
   changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
 )(
-  val valueRender:     A => VdomNode,
-  val pendingRender:   Long => VdomNode = (_ => Icon(name = "spinner", loading = true, size = Large)),
-  val errorRender:     Throwable => VdomNode = (t => Message(error = true)(t.getMessage)),
+  val valueRender:     A ~=> VdomNode,
+  val pendingRender:   Long ~=> VdomNode =
+    Reusable.always(_ => Icon(name = "spinner", loading = true, size = Large)),
+  val errorRender:     Throwable ~=> VdomNode =
+    Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
   val F:               ConcurrentEffect[IO],

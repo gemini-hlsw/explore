@@ -90,7 +90,7 @@ object ConstraintSetObsQueries {
     Reusability.derive
 
   val ConstraintSetObsLiveQuery =
-    ScalaFnComponent[View[ConstraintSetsWithObs] => VdomNode](render =>
+    ScalaFnComponent[View[ConstraintSetsWithObs] ~=> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),
