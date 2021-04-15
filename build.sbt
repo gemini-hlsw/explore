@@ -55,9 +55,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModule: _*)
   .jvmSettings(commonJVMSettings)
 
 val curTime = System.currentTimeMillis()
@@ -69,9 +67,7 @@ lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .settings(testkitLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModule: _*)
   .jvmSettings(commonJVMSettings)
 
 lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
@@ -80,9 +76,7 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(modelTestkit)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModule: _*)
   .jvmSettings(commonJVMSettings)
 
 lazy val graphql = project
@@ -90,16 +84,6 @@ lazy val graphql = project
   .dependsOn(model.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
-  .settings(
-    libraryDependencies ++=
-      LucumaSSO.value ++
-        LucumaBC.value ++
-        LucumaCatalog.value ++
-        ReactGridLayout.value ++
-        ReactClipboard.value ++
-        ReactCommon.value ++
-        ReactTable.value
-  )
   .enablePlugins(ScalaJSPlugin)
 
 lazy val common = project
@@ -107,8 +91,8 @@ lazy val common = project
   .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(commonModule: _*)
   .settings(
-    // Test / test := {},
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
@@ -147,7 +131,7 @@ lazy val explore: Project = project
   .dependsOn(model.js, common)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
-  .settings(commonES: _*)
+  .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
   .settings(
     Test / test := {},
@@ -217,7 +201,11 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   dependencyOverrides ++= ScalaJSReact.value
 )
 
-lazy val commonES = Seq(
+lazy val commonModule = Seq(
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+)
+
+lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
