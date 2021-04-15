@@ -6,6 +6,8 @@ package explore.utils
 import japgolly.scalajs.react.Reusability
 
 import scala.reflect.runtime.universe._
+// import japgolly.scalajs.react.Reusable
+// import scala.reflect.ClassTag
 
 trait ReuseSyntax {
   implicit class AnyReuseOps[A]( /*val*/ a: A) { //extends AnyVal {
@@ -58,8 +60,6 @@ trait ReuseSyntax {
 
 object ReuseSyntax extends ReuseSyntax
 
-// TODO Convert into Reusable ?? Is it possible?
-
 trait Reuse[A] {
   type B
 
@@ -98,6 +98,11 @@ object Reuse {
         reuseB.reusability.test(reuseA.reuseBy.asInstanceOf[reuseB.B], reuseB.reuseBy)
       else false
     )
+
+  // Convert to scalajs-react's Reusable.
+  // Unfortunately, Reusable's general constructor is private.
+  // implicit def toReusable[A: ClassTag](a: Reuse[A]): Reusable[A] =
+  //   new Reusable[A](a.value, a.reuseBy, a.reusability.test)
 
   def by[A, R](
     reuseByR: R
