@@ -18,7 +18,9 @@ import explore.AppCtx
 import explore.Icons
 import explore.common.SimbadSearch
 import explore.common.TargetObsQueries._
+import explore.common.TargetObsQueriesGQL._
 import explore.common.TargetQueries
+import explore.common.TargetQueriesGQL
 import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -314,7 +316,7 @@ object TargetObsList {
             case (_, Right(Some(Target(_, Right(st), m)))) =>
               val update = TargetQueries.UpdateSiderealTracking(st) >>>
                 TargetQueries.updateMagnitudes(m.values.toList)
-              TargetQueries.TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
+              TargetQueriesGQL.TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
             case _                                         =>
               IO.unit
           }

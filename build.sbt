@@ -17,16 +17,6 @@ addCommandAlias(
   "; scalafix OrganizeImports; scalafmtAll"
 )
 
-addCommandAlias(
-  "graphQLGen",
-  "; scalafix GraphQLGen"
-)
-
-addCommandAlias(
-  "graphQLCheck",
-  "; scalafix GraphQLGen --check"
-)
-
 inThisBuild(
   Seq(
     homepage := Some(url("https://github.com/gemini-hlsw/explore")),
@@ -48,10 +38,6 @@ stage := {
   val jsFiles = (explore / Compile / fullLinkJS).value
   if (sys.env.getOrElse("POST_STAGE_CLEAN", "false").equals("true")) {
     println("Cleaning up...")
-    // Remove sbt-scalajs-bundler directory, which includes node_modules.
-    // val bundlerDir       =
-    //   (explore / Compile / fullOptJS / artifactPath).value.getParentFile.getParentFile
-    // sbt.IO.delete(bundlerDir)
     // Remove coursier cache
     val coursierCacheDir = csrCacheDirectory.value
     sbt.IO.delete(coursierCacheDir)
@@ -62,16 +48,14 @@ lazy val root = project
   .in(file("."))
   .settings(name := "explore-root")
   .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, modelTests.jvm, modelTests.js, common, explore)
+  .aggregate(model.jvm, model.js, modelTests.jvm, modelTests.js, graphql, common, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
 val curTime = System.currentTimeMillis()
@@ -83,9 +67,7 @@ lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .settings(testkitLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
 lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
@@ -94,18 +76,23 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(modelTestkit)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
+
+lazy val graphql = project
+  .in(file("common-graphql"))
+  .dependsOn(model.js)
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .enablePlugins(ScalaJSPlugin)
 
 lazy val common = project
   .in(file("common"))
   .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(commonModuleTest: _*)
   .settings(
-    Test / test := {},
     libraryDependencies ++=
       LucumaSSO.value ++
         LucumaBC.value ++
@@ -122,16 +109,29 @@ lazy val common = project
     buildInfoKeys ++= {
       Seq(BuildInfoKey.action("buildTime")(curTime))
     },
-    buildInfoPackage := "explore"
+    buildInfoPackage := "explore",
+    Compile / sourceGenerators += Def.taskDyn {
+      val root    = (ThisBuild / baseDirectory).value.toURI.toString
+      val from    = (graphql / Compile / sourceDirectory).value
+      val to      = (Compile / sourceManaged).value
+      val outFrom = from.toURI.toString.stripSuffix("/").stripPrefix(root)
+      val outTo   = to.toURI.toString.stripSuffix("/").stripPrefix(root)
+      Def.task {
+        (graphql / Compile / scalafix)
+          .toTask(s" GraphQLGen --out-from=$outFrom --out-to=$outTo")
+          .value
+        (to ** "*.scala").get
+      }
+    }.taskValue
   )
   .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
-  .dependsOn(model.js)
 
 lazy val explore: Project = project
   .in(file("explore"))
+  .dependsOn(model.js, common)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
-  .settings(commonES: _*)
+  .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
   .settings(
     Test / test := {},
@@ -145,7 +145,6 @@ lazy val explore: Project = project
         ReactHighcharts.value ++
         ReactResizable.value
   )
-  .dependsOn(model.js, common)
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   // don't publish anything
@@ -202,7 +201,11 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   dependencyOverrides ++= ScalaJSReact.value
 )
 
-lazy val commonES = Seq(
+lazy val commonModuleTest = Seq(
+  Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+)
+
+lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },

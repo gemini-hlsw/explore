@@ -14,6 +14,7 @@ import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
 import explore.Icons
 import explore.common.ObsQueries
+import explore.common.ObsQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -64,7 +65,7 @@ object ObsList {
       F:                               ApplicativeError[F, Throwable],
       c:                               TransactionalClient[F, ObservationDB]
     ): F[Unit] =
-      ObsQueries.ProgramCreateObservation
+      ProgramCreateObservation
         .execute[F](
           CreateObservationInput(programId = "p-2",
                                  observationId = obsId.assign
@@ -79,7 +80,7 @@ object ObsList {
     def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
       c:                                         TransactionalClient[F, ObservationDB]
     ): F[Unit] =
-      ObsQueries.ProgramDeleteObservation.execute[F](id).void
+      ProgramDeleteObservation.execute[F](id).void
 
     private def setObsWithIndex(
       observations:       View[ObservationList],

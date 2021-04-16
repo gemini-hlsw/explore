@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
 import explore.AppCtx
-import explore.common.UserPreferencesQueries._
+import explore.common.UserPreferencesQueriesGQL._
 import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel

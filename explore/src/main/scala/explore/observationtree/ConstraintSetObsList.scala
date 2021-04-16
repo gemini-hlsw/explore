@@ -14,6 +14,7 @@ import explore.AppCtx
 import explore.Icons
 import explore.common.ConstraintSetObsQueries
 import explore.common.ConstraintSetObsQueries._
+import explore.common.ConstraintSetObsQueriesGQL._
 import explore.components.InputModal
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
