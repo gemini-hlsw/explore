@@ -55,7 +55,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(commonModule: _*)
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
 val curTime = System.currentTimeMillis()
@@ -67,7 +67,7 @@ lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .settings(testkitLibSettings: _*)
-  .jsSettings(commonModule: _*)
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
 lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
@@ -76,7 +76,7 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(modelTestkit)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(commonModule: _*)
+  .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
 lazy val graphql = project
@@ -91,7 +91,7 @@ lazy val common = project
   .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
-  .settings(commonModule: _*)
+  .settings(commonModuleTest: _*)
   .settings(
     libraryDependencies ++=
       LucumaSSO.value ++
@@ -201,8 +201,8 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   dependencyOverrides ++= ScalaJSReact.value
 )
 
-lazy val commonModule = Seq(
-  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+lazy val commonModuleTest = Seq(
+  Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
 )
 
 lazy val esModule = Seq(
