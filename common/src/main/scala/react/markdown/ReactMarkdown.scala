@@ -25,10 +25,9 @@ final case class ReactMarkdown(
 object ReactMarkdown {
 
   @js.native
-  @JSImport("react-markdown", JSImport.Namespace)
-  private object RawComponent extends js.Function1[js.Any, js.Any] {
-    def apply(i: js.Any): js.Any = js.native
-    def renderers: js.Object = js.native
+  @JSImport("/react-markdown/react-markdown", JSImport.Default)
+  object ReactMarkdown extends js.Function1[js.Any, js.Any] {
+    def apply(arg: js.Any): js.Any = js.native
   }
 
   @js.native
@@ -59,5 +58,5 @@ object ReactMarkdown {
     p
   }
 
-  private val component = JsFnComponent[Props, Children.None](RawComponent)
+  private val component = JsFnComponent[Props, Children.None](ReactMarkdown)
 }
