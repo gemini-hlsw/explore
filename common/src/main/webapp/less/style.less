@@ -27,7 +27,9 @@ body {
 body {
   overflow: hidden;
   position: fixed;
-  height: 100vh;
+  min-height: 100vh;
+  /* mobile viewport bug fix */
+  min-height: -webkit-fill-available;
   width: 100vw;
 }
 
@@ -160,7 +162,7 @@ tfoot {
 
   display: grid;
   height: 100vh;
-  min-height: 100vh;
+
   width: 100%;
   overflow: hidden;
   grid-template-columns: 1fr;
@@ -183,7 +185,7 @@ tfoot {
 @supports (-webkit-touch-callout: none) {
   .main-grid {
     /* The hack for Safari */
-    min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
   }
 }
 
@@ -191,6 +193,7 @@ tfoot {
   grid-area: body;
   max-width: 100vw;
   overflow: hidden;
+  justify-content: stretch;
 }
 
 .main-title {
@@ -1399,3 +1402,4 @@ html {
 .ui.wide.right.sidebar {
   max-width: 100%;
 }
+
