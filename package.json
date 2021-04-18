@@ -39,7 +39,7 @@
     "semantic-ui-react": "2.0.3",
     "space-separated-tokens": "^2.0.0",
     "style-to-object": "^0.3.0",
-    "styled-components": "5.1.1",
+    "styled-components": "5.2.3",
     "ua-parser-js": "0.7.23",
     "unified": "^9.2.1"
   },
