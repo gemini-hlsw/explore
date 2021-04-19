@@ -11,6 +11,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -43,8 +44,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
-
-import ConstraintsQueries._
 
 final case class ConstraintsPanel(
   id:            ConstraintSet.Id,

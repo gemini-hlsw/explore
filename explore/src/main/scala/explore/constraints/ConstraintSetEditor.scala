@@ -6,6 +6,7 @@ package explore.constraints
 import cats.data.NonEmptyList
 import cats.effect.IO
 import explore.AppCtx
+import explore.common.ConstraintsQueriesGQL._
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintSetModel
@@ -16,8 +17,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
 import react.common._
-
-import ConstraintsQueries._
 
 final case class ConstraintSetEditor(csid: ConstraintSet.Id)
     extends ReactProps[ConstraintSetEditor](ConstraintSetEditor.component)
