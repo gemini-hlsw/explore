@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
-import explore.AppCtx
 import explore.Icons
 import explore.View
 import explore.common.UserPreferencesQueries._
@@ -36,11 +35,12 @@ import react.semanticui.sizes._
 import scala.concurrent.duration._
 
 final case class AladinCell(
-  uid:     User.Id,
-  tid:     Target.Id,
-  target:  View[Coordinates],
-  options: View[TargetVisualOptions]
-) extends ReactProps[AladinCell](AladinCell.component) {
+  uid:              User.Id,
+  tid:              Target.Id,
+  target:           View[Coordinates],
+  options:          View[TargetVisualOptions]
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get
 }
 
@@ -72,35 +72,40 @@ object AladinCell extends ModelOptics {
           .flatMapCB(_.backend.gotoRaDec(coords))
           .toCallback
 
+    val coordinatesSetter = Reusable.fn.state($.zoomStateL(State.current)).set
+
+    def fovSetter(props: Props, fov: Fov): Callback = {
+      implicit val ctx = props.ctx
+      $.setStateL(State.fov)(fov) >>
+        UserTargetPreferencesUpsert
+          .updateFov[IO](props.uid, props.tid, fov.x)
+          .runAsyncAndForgetCB
+          .debounce(1.seconds)
+    }
+
     def render(props: Props, state: State) =
-      AppCtx.using(implicit ctx =>
-        React.Fragment(
+      React.Fragment(
+        <.div(
+          ExploreStyles.TargetAladinCell,
           <.div(
-            ExploreStyles.TargetAladinCell,
+            ExploreStyles.AladinContainerColumn,
+            AladinRef
+              .withRef(aladinRef) {
+                AladinContainer(
+                  props.target,
+                  props.options.get,
+                  coordinatesSetter,
+                  (fovSetter _).reusable(props)
+                )
+              },
+            AladinToolbar(state.fov, state.current),
             <.div(
-              ExploreStyles.AladinContainerColumn,
-              AladinRef
-                .withRef(aladinRef) {
-                  AladinContainer(
-                    props.target,
-                    props.options.get,
-                    $.setStateL(State.current)(_),
-                    fov =>
-                      $.setStateL(State.fov)(fov) *> UserTargetPreferencesUpsert
-                        .updateFov[IO](props.uid, props.tid, fov.x)
-                        .runAsyncAndForgetCB
-                        .debounce(1.seconds)
-                  )
-                },
-              AladinToolbar(state.fov, state.current),
-              <.div(
-                ExploreStyles.AladinCenterButton,
-                Popup(
-                  content = "Center on target",
-                  position = PopupPosition.BottomLeft,
-                  trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
-                    Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
-                  )
+              ExploreStyles.AladinCenterButton,
+              Popup(
+                content = "Center on target",
+                position = PopupPosition.BottomLeft,
+                trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
+                  Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
                 )
               )
             )

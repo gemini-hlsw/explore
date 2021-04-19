@@ -27,6 +27,14 @@ object ConstraintSetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  protected def renderFn(
+    csid:  ConstraintSet.Id,
+    csOpt: View[Option[ConstraintSetModel]]
+  ): VdomNode =
+    csOpt.get.map { _ =>
+      ConstraintsPanel(csid, csOpt.zoom(_.get)(f => _.map(f)))
+    }
+
   val component =
     ScalaComponent
       .builder[Props]
@@ -36,11 +44,7 @@ object ConstraintSetEditor {
             ConstraintSetQuery.query(props.csid),
             _.constraintSet,
             NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](props.csid))
-          ) { csOpt =>
-            csOpt.get.map { _ =>
-              ConstraintsPanel(props.csid, csOpt.zoom(_.get)(f => _.map(f)))
-            }
-          }
+          )((renderFn _).reusable(props.csid))
         }
       }
       .configure(Reusability.shouldComponentUpdate)

@@ -10,11 +10,11 @@ import cats.instances.order._
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.Icons
 import explore.common.SimbadSearch
 import explore.common.TargetObsQueries._
@@ -32,13 +32,13 @@ import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummaryWithConstraints
 import explore.model.PointingId
+import explore.model.reusability._
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
@@ -71,7 +71,8 @@ final case class TargetObsList(
   focused:          View[Option[Focused]],
   expandedIds:      View[ExpandedIds],
   searching:        View[Set[Target.Id]]
-) extends ReactProps[TargetObsList](TargetObsList.component)
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[TargetObsList](TargetObsList.component)
     with ViewCommon
 
 object TargetObsList {
@@ -79,6 +80,9 @@ object TargetObsList {
 
   @Lenses
   case class State(dragging: Boolean = false)
+
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   val obsListMod      = new KIListMod[IO, ObsResult, Observation.Id](ObsResult.id)
   val targetListMod   = new KIListMod[IO, TargetResult, Target.Id](TargetResult.id)
@@ -506,7 +510,13 @@ object TargetObsList {
     private def obsResultToObsSummary(obs: ObsResult): ObsSummaryWithConstraints =
       ObsSummaryWithConstraints(obs.id, obs.constraintSet)
 
-    def render(props: Props, state: State): VdomElement = AppCtx.using { implicit ctx =>
+    def renderFn(
+      props:   Props,
+      state:   View[State],
+      undoCtx: Undoer.Context[IO, PointingsWithObs]
+    ): VdomElement = {
+      implicit val ctx = props.ctx
+
       val observations  = props.pointingsWithObs.get.observations
       val obsByPointing = observations.toList.groupBy(_.pointing)
 
@@ -542,232 +552,135 @@ object TargetObsList {
           )
         }
 
-      UndoRegion[PointingsWithObs] { undoCtx =>
-        val handleDragEnd = onDragEnd(undoCtx.setter, props.expandedIds)
+      val handleDragEnd = onDragEnd(undoCtx.setter, props.expandedIds)
 
-        DragDropContext(
-          onDragStart = (_: DragStart, _: ResponderProvided) => $.setStateL(State.dragging)(true),
-          onDragEnd = (result, provided) =>
-            $.setStateL(State.dragging)(false) >> handleDragEnd(result, provided).runAsyncCB
-        )(
-          <.div(ExploreStyles.ObsTreeWrapper)(
-            <.div(ExploreStyles.TreeToolbar)(
-              <.div(
-                InputModal(
-                  "Create new Target",
-                  initialValue = None,
-                  label = "Name",
-                  placeholder = "Target name",
-                  okLabel = "Create",
-                  onComplete = s => newTarget(undoCtx.setter)(s).runAsyncCB, // TODO Set coordinates
-                  trigger = Button(size = Mini, compact = true)(
-                    Icons.New.size(Small).fitted(true),
-                    " Target"
-                  )
-                ),
-                InputModal(
-                  "Create new Asterism",
-                  initialValue = None,
-                  label = "Name",
-                  placeholder = "Asterism name",
-                  okLabel = "Create",
-                  onComplete = s => newAsterism(undoCtx.setter)(s).runAsyncCB,
-                  trigger = Button(size = Mini, compact = true)(
-                    Icons.New.size(Small).fitted(true),
-                    " Asterism"
-                  )
+      def createTarget(name: NonEmptyString): Callback =
+        newTarget(undoCtx.setter)(name).runAsyncCB
+
+      def createAsterism(name: NonEmptyString): Callback =
+        newAsterism(undoCtx.setter)(name).runAsyncCB
+
+      DragDropContext(
+        onDragStart =
+          (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).runAsyncCB,
+        onDragEnd = (result, provided) =>
+          (state.zoom(State.dragging).set(false) >> handleDragEnd(result, provided)).runAsyncCB
+      )(
+        <.div(ExploreStyles.ObsTreeWrapper)(
+          <.div(ExploreStyles.TreeToolbar)(
+            <.div(
+              InputModal(
+                "Create new Target",
+                initialValue = None,
+                label = "Name",
+                placeholder = "Target name",
+                okLabel = "Create",
+                onComplete = (createTarget _).reusable, // TODO Set coordinates
+                trigger = Button(size = Mini, compact = true)(
+                  Icons.New.size(Small).fitted(true),
+                  " Target"
                 )
               ),
-              UndoButtons(props.pointingsWithObs.get, undoCtx, size = Mini)
+              InputModal(
+                "Create new Asterism",
+                initialValue = None,
+                label = "Name",
+                placeholder = "Asterism name",
+                okLabel = "Create",
+                onComplete = (createAsterism _).reusable,
+                trigger = Button(size = Mini, compact = true)(
+                  Icons.New.size(Small).fitted(true),
+                  " Asterism"
+                )
+              )
             ),
-            ReflexContainer()(
-              List[Option[VdomNode]](
-                // Start Target Tree
-                (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Targets"),
-                  <.div(ExploreStyles.ObsTree)(
-                    <.div(ExploreStyles.ObsScrollTree)(
-                      targetsWithIdx.toTagMod { case (target, targetIdx) =>
-                        val targetId      = target.id
-                        val nextToSelect  = targetsWithIdx.find(_._2 === targetIdx + 1).map(_._1)
-                        val prevToSelect  = targetsWithIdx.find(_._2 === targetIdx - 1).map(_._1)
-                        val focusOnDelete = nextToSelect.orElse(prevToSelect)
+            UndoButtons(props.pointingsWithObs.get, undoCtx, size = Mini)
+          ),
+          ReflexContainer()(
+            List[Option[VdomNode]](
+              // Start Target Tree
+              (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
+                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Targets"),
+                <.div(ExploreStyles.ObsTree)(
+                  <.div(ExploreStyles.ObsScrollTree)(
+                    targetsWithIdx.toTagMod { case (target, targetIdx) =>
+                      val targetId      = target.id
+                      val nextToSelect  = targetsWithIdx.find(_._2 === targetIdx + 1).map(_._1)
+                      val prevToSelect  = targetsWithIdx.find(_._2 === targetIdx - 1).map(_._1)
+                      val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
-                        val targetObs =
-                          obsByPointing.get(PointingTargetResult(targetId).some).orEmpty
+                      val targetObs =
+                        obsByPointing.get(PointingTargetResult(targetId).some).orEmpty
 
-                        val expandedTargetIds =
-                          props.expandedIds.zoom(ExpandedIds.targetIds)
-                        val opIcon            =
-                          targetObs.nonEmpty.fold(
-                            Icon(
-                              "chevron " + expandedTargetIds.get
-                                .exists(_ === targetId)
-                                .fold("down", "right")
-                            )(^.cursor.pointer,
-                              ^.onClick ==> { e: ReactEvent =>
-                                e.stopPropagationCB >>
-                                  toggleExpanded(targetId, expandedTargetIds).runAsyncCB
-                                    .asEventDefault(e)
-                                    .void
-                              }
-                            ),
-                            Icons.ChevronRight
-                          )
+                      val expandedTargetIds =
+                        props.expandedIds.zoom(ExpandedIds.targetIds)
+                      val opIcon            =
+                        targetObs.nonEmpty.fold(
+                          Icon(
+                            "chevron " + expandedTargetIds.get
+                              .exists(_ === targetId)
+                              .fold("down", "right")
+                          )(^.cursor.pointer,
+                            ^.onClick ==> { e: ReactEvent =>
+                              e.stopPropagationCB >>
+                                toggleExpanded(targetId, expandedTargetIds).runAsyncCB
+                                  .asEventDefault(e)
+                                  .void
+                            }
+                          ),
+                          Icons.ChevronRight
+                        )
 
-                        val memberObsSelected = props.focused.get
-                          .exists(f => targetObs.map(obs => FocusedObs(obs.id)).exists(f === _))
+                      val memberObsSelected = props.focused.get
+                        .exists(f => targetObs.map(obs => FocusedObs(obs.id)).exists(f === _))
 
-                        Droppable(targetId.toString, renderClone = renderClone) {
-                          case (provided, snapshot) =>
-                            // To implement "copy-drag", we use suggestion from
-                            // https://github.com/atlassian/react-beautiful-dnd/issues/216#issuecomment-586266295
-                            val shouldRenderClone =
-                              snapshot.draggingFromThisWith.exists(
-                                _ === targetId.toString
-                              )
-
-                            val targetHeader =
-                              <.span(ExploreStyles.ObsTreeGroupHeader)(
-                                <.span(ExploreStyles.ObsGroupTitle)(
-                                  opIcon,
-                                  target.name.value
-                                ),
-                                Button(
-                                  size = Small,
-                                  compact = true,
-                                  clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                                  onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                    e.stopPropagationCB >>
-                                      deleteTarget(targetId,
-                                                   undoCtx.setter,
-                                                   focusOnDelete
-                                      ).runAsyncCB
-                                )(
-                                  Icons.Trash
-                                ),
-                                <.span(ExploreStyles.ObsCount, s"${targetObs.length} Obs")
-                              )
-
-                            <.div(
-                              provided.innerRef,
-                              provided.droppableProps,
-                              props.getListStyle(
-                                snapshot.draggingOverWith.exists(id =>
-                                  Observation.Id.parse(id).isDefined
-                                )
-                              )
-                            )(
-                              Segment(
-                                vertical = true,
-                                clazz = ExploreStyles.ObsTreeGroup
-                                  |+| Option
-                                    .when(
-                                      memberObsSelected || props.focused.get
-                                        .exists(_ === FocusedTarget(targetId))
-                                    )(ExploreStyles.SelectedObsTreeGroup)
-                                    .orElse(
-                                      Option.when(!state.dragging)(
-                                        ExploreStyles.UnselectedObsTreeGroup
-                                      )
-                                    )
-                                    .orEmpty
-                              )(
-                                ^.cursor.pointer,
-                                ^.onClick --> props.focused
-                                  .set(FocusedTarget(targetId).some)
-                                  .runAsyncCB
-                              )(
-                                // Drag without removing from list.
-                                if (asterisms.isEmpty || shouldRenderClone)
-                                  targetHeader
-                                else
-                                  Draggable(targetId.toString, -1) {
-                                    case (targetProvided, targetSnapshot, _) =>
-                                      <.span(
-                                        targetProvided.innerRef,
-                                        targetProvided.draggableProps,
-                                        props.getDraggedStyle(targetProvided.draggableStyle,
-                                                              targetSnapshot
-                                        ),
-                                        targetProvided.dragHandleProps
-                                      )(
-                                        targetHeader
-                                      )
-                                  },
-                                TagMod
-                                  .when(expandedTargetIds.get.contains(targetId))(
-                                    targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                                      props.renderObsBadgeItem(selectable = true)(
-                                        obsResultToObsSummary(obs),
-                                        idx
-                                      )
-                                    }
-                                  ),
-                                provided.placeholder
-                              )
+                      Droppable(targetId.toString, renderClone = renderClone) {
+                        case (provided, snapshot) =>
+                          // To implement "copy-drag", we use suggestion from
+                          // https://github.com/atlassian/react-beautiful-dnd/issues/216#issuecomment-586266295
+                          val shouldRenderClone =
+                            snapshot.draggingFromThisWith.exists(
+                              _ === targetId.toString
                             )
-                        }
-                      }
-                    )
-                  )
-                ): VdomNode).some,
-                (ReflexSplitter(propagate = true): VdomNode).some.filter(_ => asterisms.nonEmpty),
-                (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                  ReflexHandle()(
-                    Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms")
-                  ),
-                  <.div(ExploreStyles.ObsTree)(
-                    <.div(ExploreStyles.ObsScrollTree)(
-                      asterisms.toTagMod { asterism =>
-                        val asterismId    = asterism.id
-                        val currIdx       = asterismIds.indexOf(asterismId)
-                        val nextToSelect  = asterismIdxs.find(_._2 === currIdx + 1).map(_._1)
-                        val prevToSelect  = asterismIdxs.find(_._2 === currIdx - 1).map(_._1)
-                        val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
-                        val asterismTargets = asterism.targets.toList
-                        val asterismObs     =
-                          obsByPointing.get(PointingAsterismResult(asterismId).some).orEmpty
+                          val targetHeader =
+                            <.span(ExploreStyles.ObsTreeGroupHeader)(
+                              <.span(ExploreStyles.ObsGroupTitle)(
+                                opIcon,
+                                target.name.value
+                              ),
+                              Button(
+                                size = Small,
+                                compact = true,
+                                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                  e.stopPropagationCB >>
+                                    deleteTarget(targetId, undoCtx.setter, focusOnDelete).runAsyncCB
+                              )(
+                                Icons.Trash
+                              ),
+                              <.span(ExploreStyles.ObsCount, s"${targetObs.length} Obs")
+                            )
 
-                        val expandedAsterismIds =
-                          props.expandedIds.zoom(ExpandedIds.asterismIds)
-                        val opIcon              =
-                          (asterismObs.nonEmpty || asterismTargets.nonEmpty).fold(
-                            Icon(
-                              "chevron " + expandedAsterismIds.get
-                                .exists(_ === asterismId)
-                                .fold("down", "right")
-                            )(^.cursor.pointer,
-                              ^.onClick ==> { e: ReactEvent =>
-                                e.stopPropagationCB >>
-                                  toggleExpanded(asterismId, expandedAsterismIds).runAsyncCB
-                                    .asEventDefault(e)
-                                    .void
-                              }
-                            ),
-                            Icons.ChevronRight
-                          )
-
-                        val memberObsSelected = props.focused.get
-                          .exists(f => asterismObs.map(obs => FocusedObs(obs.id)).exists(f === _))
-
-                        Droppable(asterismId.toString) { case (provided, snapshot) =>
                           <.div(
                             provided.innerRef,
                             provided.droppableProps,
-                            props.getListStyle(snapshot.isDraggingOver)
+                            props.getListStyle(
+                              snapshot.draggingOverWith.exists(id =>
+                                Observation.Id.parse(id).isDefined
+                              )
+                            )
                           )(
                             Segment(
                               vertical = true,
-                              clazz = ExploreStyles.ObsTreeGroup |+|
-                                Option
+                              clazz = ExploreStyles.ObsTreeGroup
+                                |+| Option
                                   .when(
                                     memberObsSelected || props.focused.get
-                                      .exists(_ === FocusedAsterism(asterismId))
+                                      .exists(_ === FocusedTarget(targetId))
                                   )(ExploreStyles.SelectedObsTreeGroup)
                                   .orElse(
-                                    Option.when(!state.dragging)(
+                                    Option.when(!state.get.dragging)(
                                       ExploreStyles.UnselectedObsTreeGroup
                                     )
                                   )
@@ -775,126 +688,230 @@ object TargetObsList {
                             )(
                               ^.cursor.pointer,
                               ^.onClick --> props.focused
-                                .set(FocusedAsterism(asterismId).some)
+                                .set(FocusedTarget(targetId).some)
                                 .runAsyncCB
                             )(
-                              <.span(ExploreStyles.ObsTreeGroupHeader)(
-                                <.span(
-                                  opIcon,
-                                  asterism.name.map(_.value),
-                                  ExploreStyles.ObsGroupTitle
-                                ),
-                                Button(
-                                  size = Small,
-                                  compact = true,
-                                  clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                                  onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                    e.stopPropagationCB >>
-                                      deleteAsterism(asterismId,
-                                                     undoCtx.setter,
-                                                     focusOnDelete
-                                      ).runAsyncCB
-                                )(
-                                  Icons.Trash
-                                ),
-                                <.span(
-                                  ExploreStyles.ObsCount,
-                                  s"${asterismTargets.length} Tgts - ${asterismObs.length} Obs"
-                                )
-                              ),
-                              TagMod.when(expandedAsterismIds.get.contains(asterismId))(
-                                <.div(ExploreStyles.ObsTreeItem)(
-                                  SegmentGroup(
-                                    asterismTargets
-                                      .sortBy(_.name)
-                                      .toTagMod(target =>
-                                        Segment(basic = true,
-                                                clazz = ExploreStyles.ObsTreeGroupHeader
-                                        )(
-                                          <.span(ExploreStyles.ObsGroupTitle)(target.name.value),
-                                          Button(
-                                            size = Small,
-                                            compact = true,
-                                            clazz =
-                                              ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                                            onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                              e.stopPropagationCB >>
-                                                deleteTargetFromAsterism(target.id,
-                                                                         asterismId,
-                                                                         undoCtx.setter
-                                                ).runAsyncCB
-                                          )(
-                                            Icons.Trash
-                                          )
-                                        )
-                                      )
-                                  ).when(asterismTargets.nonEmpty),
-                                  asterismObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                              // Drag without removing from list.
+                              if (asterisms.isEmpty || shouldRenderClone)
+                                targetHeader
+                              else
+                                Draggable(targetId.toString, -1) {
+                                  case (targetProvided, targetSnapshot, _) =>
+                                    <.span(
+                                      targetProvided.innerRef,
+                                      targetProvided.draggableProps,
+                                      props.getDraggedStyle(targetProvided.draggableStyle,
+                                                            targetSnapshot
+                                      ),
+                                      targetProvided.dragHandleProps
+                                    )(
+                                      targetHeader
+                                    )
+                                },
+                              TagMod
+                                .when(expandedTargetIds.get.contains(targetId))(
+                                  targetObs.zipWithIndex.toTagMod { case (obs, idx) =>
                                     props.renderObsBadgeItem(selectable = true)(
                                       obsResultToObsSummary(obs),
                                       idx
                                     )
                                   }
-                                )
-                              ),
+                                ),
                               provided.placeholder
                             )
                           )
-                        }
                       }
-                    )
-                  )
-                ): VdomNode).some.filter(_ => asterisms.nonEmpty),
-                (ReflexSplitter(propagate = true): VdomNode).some,
-                (ReflexElement(size = 36,
-                               minSize = 36,
-                               clazz = ExploreStyles.ObsTreeSection,
-                               withHandle = true
-                )(
-                  ReflexWithHandle(reflexProvided =>
-                    // End Asterism Tree - Start Unassigned Observations List
-                    Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                      <.div(ExploreStyles.ObsUnassigned,
-                            provided.innerRef,
-                            provided.droppableProps,
-                            props.getListStyle(snapshot.isDraggingOver)
-                      )(
-                        ReflexHandle(provided = reflexProvided)(
-                          Header(
-                            block = true,
-                            clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
-                          )(
-                            <.span(ExploreStyles.ObsGroupTitle)("Unassigned Observations"),
-                            <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
-                          )
-                        ),
-                        <.div(ExploreStyles.ObsTree)(
-                          <.div(ExploreStyles.ObsScrollTree) {
-
-                            Segment(
-                              vertical = true,
-                              clazz = ExploreStyles.ObsTreeGroup
-                            )(
-                              unassignedObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                                props.renderObsBadgeItem(selectable = false)(
-                                  obsResultToObsSummary(obs),
-                                  idx
-                                )
-                              },
-                              provided.placeholder
-                            )
-                          }
-                        )
-                      )
                     }
                   )
-                ): VdomNode).some
-                // End Unassigned Observations List
-              ).flatten: _*
-            )
+                )
+              ): VdomNode).some,
+              (ReflexSplitter(propagate = true): VdomNode).some.filter(_ => asterisms.nonEmpty),
+              (ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
+                ReflexHandle()(
+                  Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms")
+                ),
+                <.div(ExploreStyles.ObsTree)(
+                  <.div(ExploreStyles.ObsScrollTree)(
+                    asterisms.toTagMod { asterism =>
+                      val asterismId    = asterism.id
+                      val currIdx       = asterismIds.indexOf(asterismId)
+                      val nextToSelect  = asterismIdxs.find(_._2 === currIdx + 1).map(_._1)
+                      val prevToSelect  = asterismIdxs.find(_._2 === currIdx - 1).map(_._1)
+                      val focusOnDelete = nextToSelect.orElse(prevToSelect)
+
+                      val asterismTargets = asterism.targets.toList
+                      val asterismObs     =
+                        obsByPointing.get(PointingAsterismResult(asterismId).some).orEmpty
+
+                      val expandedAsterismIds =
+                        props.expandedIds.zoom(ExpandedIds.asterismIds)
+                      val opIcon              =
+                        (asterismObs.nonEmpty || asterismTargets.nonEmpty).fold(
+                          Icon(
+                            "chevron " + expandedAsterismIds.get
+                              .exists(_ === asterismId)
+                              .fold("down", "right")
+                          )(^.cursor.pointer,
+                            ^.onClick ==> { e: ReactEvent =>
+                              e.stopPropagationCB >>
+                                toggleExpanded(asterismId, expandedAsterismIds).runAsyncCB
+                                  .asEventDefault(e)
+                                  .void
+                            }
+                          ),
+                          Icons.ChevronRight
+                        )
+
+                      val memberObsSelected = props.focused.get
+                        .exists(f => asterismObs.map(obs => FocusedObs(obs.id)).exists(f === _))
+
+                      Droppable(asterismId.toString) { case (provided, snapshot) =>
+                        <.div(
+                          provided.innerRef,
+                          provided.droppableProps,
+                          props.getListStyle(snapshot.isDraggingOver)
+                        )(
+                          Segment(
+                            vertical = true,
+                            clazz = ExploreStyles.ObsTreeGroup |+|
+                              Option
+                                .when(
+                                  memberObsSelected || props.focused.get
+                                    .exists(_ === FocusedAsterism(asterismId))
+                                )(ExploreStyles.SelectedObsTreeGroup)
+                                .orElse(
+                                  Option.when(!state.get.dragging)(
+                                    ExploreStyles.UnselectedObsTreeGroup
+                                  )
+                                )
+                                .orEmpty
+                          )(
+                            ^.cursor.pointer,
+                            ^.onClick --> props.focused
+                              .set(FocusedAsterism(asterismId).some)
+                              .runAsyncCB
+                          )(
+                            <.span(ExploreStyles.ObsTreeGroupHeader)(
+                              <.span(
+                                opIcon,
+                                asterism.name.map(_.value),
+                                ExploreStyles.ObsGroupTitle
+                              ),
+                              Button(
+                                size = Small,
+                                compact = true,
+                                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                  e.stopPropagationCB >>
+                                    deleteAsterism(asterismId,
+                                                   undoCtx.setter,
+                                                   focusOnDelete
+                                    ).runAsyncCB
+                              )(
+                                Icons.Trash
+                              ),
+                              <.span(
+                                ExploreStyles.ObsCount,
+                                s"${asterismTargets.length} Tgts - ${asterismObs.length} Obs"
+                              )
+                            ),
+                            TagMod.when(expandedAsterismIds.get.contains(asterismId))(
+                              <.div(ExploreStyles.ObsTreeItem)(
+                                SegmentGroup(
+                                  asterismTargets
+                                    .sortBy(_.name)
+                                    .toTagMod(target =>
+                                      Segment(basic = true,
+                                              clazz = ExploreStyles.ObsTreeGroupHeader
+                                      )(
+                                        <.span(ExploreStyles.ObsGroupTitle)(target.name.value),
+                                        Button(
+                                          size = Small,
+                                          compact = true,
+                                          clazz =
+                                            ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                                          onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                                            e.stopPropagationCB >>
+                                              deleteTargetFromAsterism(target.id,
+                                                                       asterismId,
+                                                                       undoCtx.setter
+                                              ).runAsyncCB
+                                        )(
+                                          Icons.Trash
+                                        )
+                                      )
+                                    )
+                                ).when(asterismTargets.nonEmpty),
+                                asterismObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                                  props.renderObsBadgeItem(selectable = true)(
+                                    obsResultToObsSummary(obs),
+                                    idx
+                                  )
+                                }
+                              )
+                            ),
+                            provided.placeholder
+                          )
+                        )
+                      }
+                    }
+                  )
+                )
+              ): VdomNode).some.filter(_ => asterisms.nonEmpty),
+              (ReflexSplitter(propagate = true): VdomNode).some,
+              (ReflexElement(size = 36,
+                             minSize = 36,
+                             clazz = ExploreStyles.ObsTreeSection,
+                             withHandle = true
+              )(
+                ReflexWithHandle(reflexProvided =>
+                  // End Asterism Tree - Start Unassigned Observations List
+                  Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                    <.div(ExploreStyles.ObsUnassigned,
+                          provided.innerRef,
+                          provided.droppableProps,
+                          props.getListStyle(snapshot.isDraggingOver)
+                    )(
+                      ReflexHandle(provided = reflexProvided)(
+                        Header(
+                          block = true,
+                          clazz = ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
+                        )(
+                          <.span(ExploreStyles.ObsGroupTitle)("Unassigned Observations"),
+                          <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
+                        )
+                      ),
+                      <.div(ExploreStyles.ObsTree)(
+                        <.div(ExploreStyles.ObsScrollTree) {
+
+                          Segment(
+                            vertical = true,
+                            clazz = ExploreStyles.ObsTreeGroup
+                          )(
+                            unassignedObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                              props.renderObsBadgeItem(selectable = false)(
+                                obsResultToObsSummary(obs),
+                                idx
+                              )
+                            },
+                            provided.placeholder
+                          )
+                        }
+                      )
+                    )
+                  }
+                )
+              ): VdomNode).some
+              // End Unassigned Observations List
+            ).flatten: _*
           )
         )
-      }
+      )
+    }
+
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      UndoRegion[PointingsWithObs]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
     }
   }
 
@@ -937,5 +954,6 @@ object TargetObsList {
 
         (expandObservationObject >> removeTargets >> removeAsterisms).runAsyncAndForgetCB
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

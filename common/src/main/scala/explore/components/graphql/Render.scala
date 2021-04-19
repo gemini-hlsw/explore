@@ -25,9 +25,9 @@ import org.typelevel.log4cats.Logger
 
 object Render {
   trait Props[F[_], G[_], A] {
-    val valueRender: G[A] => VdomNode
-    val pendingRender: Long => VdomNode
-    val errorRender: Throwable => VdomNode
+    val valueRender: G[A] ~=> VdomNode
+    val pendingRender: Long ~=> VdomNode
+    val errorRender: Throwable ~=> VdomNode
     val onNewData: F[Unit]
 
     implicit val F: ConcurrentEffect[F]

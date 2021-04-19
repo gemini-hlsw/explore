@@ -6,11 +6,11 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
+import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.Icons
 import explore.common.ConstraintSetObsQueries
 import explore.common.ConstraintSetObsQueries._
@@ -24,16 +24,17 @@ import explore.model.ConstraintsSummary
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.reusability._
 import explore.optics.GetAdjust
 import explore.optics._
 import explore.schemas.ObservationDB
 import explore.undo.KIListMod
 import explore.undo.Undoer
-import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
@@ -64,6 +65,9 @@ object ConstraintSetObsList {
 
   @Lenses
   case class State(dragging: Boolean = false)
+
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
   val obsListMod           =
     new KIListMod[IO, ObsSummaryWithPointingAndConstraints, Observation.Id](
@@ -259,7 +263,13 @@ object ConstraintSetObsList {
       expandedIds
         .mod(expanded => expanded.exists(_ === id).fold(expanded - id, expanded + id))
 
-    def render(props: Props, state: State): VdomElement = AppCtx.using { implicit ctx =>
+    def renderFn(
+      props:   Props,
+      state:   View[State],
+      undoCtx: Undoer.Context[IO, ConstraintSetsWithObs]
+    ): VdomNode = {
+      implicit val ctx = props.ctx
+
       val observations       = props.constraintSetsWithObs.get.obs
       val obsByConstraintSet = observations.toList.groupBy(_.constraints.map(_.id))
 
@@ -283,176 +293,180 @@ object ConstraintSetObsList {
           )
         }
 
-      UndoRegion[ConstraintSetsWithObs] { undoCtx =>
-        val handleDragEnd = onDragEnd(undoCtx.setter, props.expandedIds)
+      val handleDragEnd = onDragEnd(undoCtx.setter, props.expandedIds)
 
-        DragDropContext(
-          onDragStart = (_: DragStart, _: ResponderProvided) => $.setStateL(State.dragging)(true),
-          onDragEnd = (result, provided) =>
-            $.setStateL(State.dragging)(false) >> handleDragEnd(result, provided).runAsyncCB
-        )(
-          <.div(ExploreStyles.ObsTreeWrapper)(
-            <.div(ExploreStyles.TreeToolbar)(
-              InputModal(
-                "Create new Constraint",
-                initialValue = None,
-                label = "Name",
-                placeholder = "Constraint name",
-                okLabel = "Create",
-                onComplete = s => newConstraintSet(undoCtx.setter)(s).runAsyncCB,
-                trigger = Button(size = Mini, compact = true)(
-                  Icons.New.size(Small).fitted(true)
-                )
-              ),
-              UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)
+      def createConstraintSet(name: NonEmptyString): Callback =
+        newConstraintSet(undoCtx.setter)(name).runAsyncCB
+
+      DragDropContext(
+        onDragStart =
+          (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).runAsyncCB,
+        onDragEnd = (result, provided) =>
+          (state.zoom(State.dragging).set(false) >> handleDragEnd(result, provided)).runAsyncCB
+      )(
+        <.div(ExploreStyles.ObsTreeWrapper)(
+          <.div(ExploreStyles.TreeToolbar)(
+            InputModal(
+              "Create new Constraint",
+              initialValue = None,
+              label = "Name",
+              placeholder = "Constraint name",
+              okLabel = "Create",
+              onComplete = (createConstraintSet _).reusable,
+              trigger = Button(size = Mini, compact = true)(
+                Icons.New.size(Small).fitted(true)
+              )
             ),
-            ReflexContainer()(
-              // Start constraint sets tree
-              ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
-                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Constraints"),
-                <.div(ExploreStyles.ObsTree)(
-                  <.div(ExploreStyles.ObsScrollTree)(
-                    constraintSetsWithIdx.toTagMod { case (constraintSet, csIdx) =>
-                      val csId          = constraintSet.id
-                      val nextToSelect  = constraintSetsWithIdx.find(_._2 === csIdx + 1).map(_._1)
-                      val prevToSelect  = constraintSetsWithIdx.find(_._2 === csIdx - 1).map(_._1)
-                      val focusOnDelete = nextToSelect.orElse(prevToSelect)
+            UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)
+          ),
+          ReflexContainer()(
+            // Start constraint sets tree
+            ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
+              Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Constraints"),
+              <.div(ExploreStyles.ObsTree)(
+                <.div(ExploreStyles.ObsScrollTree)(
+                  constraintSetsWithIdx.toTagMod { case (constraintSet, csIdx) =>
+                    val csId          = constraintSet.id
+                    val nextToSelect  = constraintSetsWithIdx.find(_._2 === csIdx + 1).map(_._1)
+                    val prevToSelect  = constraintSetsWithIdx.find(_._2 === csIdx - 1).map(_._1)
+                    val focusOnDelete = nextToSelect.orElse(prevToSelect)
 
-                      val csObs = obsByConstraintSet.get(csId.some).orEmpty
+                    val csObs = obsByConstraintSet.get(csId.some).orEmpty
 
-                      val opIcon = csObs.nonEmpty.fold(
-                        Icon(
-                          "chevron " + props.expandedIds.get
-                            .exists(_ === csId)
-                            .fold("down", "right")
-                        )(^.cursor.pointer,
-                          ^.onClick ==> { e: ReactEvent =>
-                            e.stopPropagationCB >>
-                              toggleExpanded(csId, props.expandedIds).runAsyncCB
-                                .asEventDefault(e)
-                                .void
-                          }
-                        ),
-                        Icons.ChevronRight
-                      )
-
-                      val obsSelected = props.focused.get
-                        .exists(f => csObs.map(obs => FocusedObs(obs.id)).exists(f === _))
-
-                      Droppable(csId.toString, renderClone = renderClone) {
-                        case (provided, snapshot) =>
-                          val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                            <.span(ExploreStyles.ObsGroupTitle)(
-                              opIcon,
-                              constraintSet.name.value
-                            ),
-                            Button(
-                              size = Small,
-                              compact = true,
-                              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
-                              onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
-                                e.stopPropagationCB >>
-                                  deleteConstraintSet(csId,
-                                                      undoCtx.setter,
-                                                      focusOnDelete
-                                  ).runAsyncCB
-                            )(
-                              Icons.Trash
-                            ),
-                            <.span(ExploreStyles.ObsCount, s"${csObs.length} Obs")
-                          )
-
-                          <.div(
-                            provided.innerRef,
-                            provided.droppableProps,
-                            props.getListStyle(
-                              snapshot.draggingOverWith.exists(id =>
-                                Observation.Id.parse(id).isDefined
-                              )
-                            )
-                          )(
-                            Segment(
-                              vertical = true,
-                              clazz = ExploreStyles.ObsTreeGroup
-                                |+| Option
-                                  .when(
-                                    obsSelected || props.focused.get
-                                      .exists(_ === FocusedConstraintSet(csId))
-                                  )(ExploreStyles.SelectedObsTreeGroup)
-                                  .orElse(
-                                    Option
-                                      .when(!state.dragging)(
-                                        ExploreStyles.UnselectedObsTreeGroup
-                                      )
-                                  )
-                                  .orEmpty
-                            )(
-                              ^.cursor.pointer,
-                              ^.onClick --> props.focused
-                                .set(FocusedConstraintSet(csId).some)
-                                .runAsyncCB
-                            )(
-                              csHeader,
-                              TagMod.when(props.expandedIds.get.contains(csId))(
-                                csObs.zipWithIndex.toTagMod(
-                                  (props.renderObsBadgeItem(selectable = true) _).tupled
-                                )
-                              ),
-                              <.span(provided.placeholder)
-                            )
-                          )
-                      }
-                    }
-                  )
-                )
-              ),
-              // end of constraint set tree
-              ReflexSplitter(propagate = true),
-              // start of unassigned observations list
-              ReflexElement(size = 36,
-                            minSize = 36,
-                            clazz = ExploreStyles.ObsTreeSection,
-                            withHandle = true
-              )(
-                ReflexWithHandle(reflexProvided =>
-                  Droppable(UnassignedObsId) { case (provided, snapshot) =>
-                    <.div(
-                      ExploreStyles.ObsUnassigned,
-                      provided.innerRef,
-                      provided.droppableProps,
-                      props.getListStyle(snapshot.isDraggingOver)
-                    )(
-                      ReflexHandle(provided = reflexProvided)(
-                        Header(block = true,
-                               clazz =
-                                 ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
-                        )(
-                          <.span(ExploreStyles.ObsGroupTitle)("Unassigned observations"),
-                          <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
-                        )
+                    val opIcon = csObs.nonEmpty.fold(
+                      Icon(
+                        "chevron " + props.expandedIds.get
+                          .exists(_ === csId)
+                          .fold("down", "right")
+                      )(^.cursor.pointer,
+                        ^.onClick ==> { e: ReactEvent =>
+                          e.stopPropagationCB >>
+                            toggleExpanded(csId, props.expandedIds).runAsyncCB
+                              .asEventDefault(e)
+                              .void
+                        }
                       ),
-                      <.div(ExploreStyles.ObsTree)(
-                        <.div(ExploreStyles.ObsScrollTree) {
+                      Icons.ChevronRight
+                    )
+
+                    val obsSelected = props.focused.get
+                      .exists(f => csObs.map(obs => FocusedObs(obs.id)).exists(f === _))
+
+                    Droppable(csId.toString, renderClone = renderClone) {
+                      case (provided, snapshot) =>
+                        val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+                          <.span(ExploreStyles.ObsGroupTitle)(
+                            opIcon,
+                            constraintSet.name.value
+                          ),
+                          Button(
+                            size = Small,
+                            compact = true,
+                            clazz = ExploreStyles.DeleteButton |+| ExploreStyles.JustifyRight,
+                            onClickE = (e: ReactMouseEvent, _: ButtonProps) =>
+                              e.stopPropagationCB >>
+                                deleteConstraintSet(csId, undoCtx.setter, focusOnDelete).runAsyncCB
+                          )(
+                            Icons.Trash
+                          ),
+                          <.span(ExploreStyles.ObsCount, s"${csObs.length} Obs")
+                        )
+
+                        <.div(
+                          provided.innerRef,
+                          provided.droppableProps,
+                          props.getListStyle(
+                            snapshot.draggingOverWith.exists(id =>
+                              Observation.Id.parse(id).isDefined
+                            )
+                          )
+                        )(
                           Segment(
                             vertical = true,
                             clazz = ExploreStyles.ObsTreeGroup
+                              |+| Option
+                                .when(
+                                  obsSelected || props.focused.get
+                                    .exists(_ === FocusedConstraintSet(csId))
+                                )(ExploreStyles.SelectedObsTreeGroup)
+                                .orElse(
+                                  Option
+                                    .when(!state.get.dragging)(
+                                      ExploreStyles.UnselectedObsTreeGroup
+                                    )
+                                )
+                                .orEmpty
                           )(
-                            unassignedObs.zipWithIndex.toTagMod(
-                              (props.renderObsBadgeItem(selectable = false) _).tupled
+                            ^.cursor.pointer,
+                            ^.onClick --> props.focused
+                              .set(FocusedConstraintSet(csId).some)
+                              .runAsyncCB
+                          )(
+                            csHeader,
+                            TagMod.when(props.expandedIds.get.contains(csId))(
+                              csObs.zipWithIndex.toTagMod(
+                                (props.renderObsBadgeItem(selectable = true) _).tupled
+                              )
                             ),
-                            provided.placeholder
+                            <.span(provided.placeholder)
                           )
-                        }
-                      )
-                    )
+                        )
+                    }
                   }
                 )
               )
-              // end of unassigned observations list
+            ),
+            // end of constraint set tree
+            ReflexSplitter(propagate = true),
+            // start of unassigned observations list
+            ReflexElement(size = 36,
+                          minSize = 36,
+                          clazz = ExploreStyles.ObsTreeSection,
+                          withHandle = true
+            )(
+              ReflexWithHandle(reflexProvided =>
+                Droppable(UnassignedObsId) { case (provided, snapshot) =>
+                  <.div(
+                    ExploreStyles.ObsUnassigned,
+                    provided.innerRef,
+                    provided.droppableProps,
+                    props.getListStyle(snapshot.isDraggingOver)
+                  )(
+                    ReflexHandle(provided = reflexProvided)(
+                      Header(block = true,
+                             clazz =
+                               ExploreStyles.ObsTreeHeader |+| ExploreStyles.ObsTreeGroupHeader
+                      )(
+                        <.span(ExploreStyles.ObsGroupTitle)("Unassigned observations"),
+                        <.span(ExploreStyles.ObsCount, s"${unassignedObs.length} Obs")
+                      )
+                    ),
+                    <.div(ExploreStyles.ObsTree)(
+                      <.div(ExploreStyles.ObsScrollTree) {
+                        Segment(
+                          vertical = true,
+                          clazz = ExploreStyles.ObsTreeGroup
+                        )(
+                          unassignedObs.zipWithIndex.toTagMod(
+                            (props.renderObsBadgeItem(selectable = false) _).tupled
+                          ),
+                          provided.placeholder
+                        )
+                      }
+                    )
+                  )
+                }
+              )
             )
+            // end of unassigned observations list
           )
         )
-      }
+      )
+    }
+
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      UndoRegion[ConstraintSetsWithObs]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
     }
   }
 
@@ -484,5 +498,6 @@ object ConstraintSetObsList {
 
         (expandCs >> removeConstraintSets).runAsyncCB
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

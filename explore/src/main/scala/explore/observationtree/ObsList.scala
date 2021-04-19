@@ -143,17 +143,7 @@ object ObsList {
       }
     }
 
-    protected def deleteObs(
-      obsId:         Observation.Id,
-      setter:        Undoer.Setter[IO, ObservationList],
-      focusOnDelete: Option[ObsSummaryWithPointingAndConstraints]
-    )(implicit c:    TransactionalClient[IO, ObservationDB]): IO[Unit] =
-      $.propsIn[IO] >>= { props =>
-        val mod = obsMod(setter, props.observations, props.focused, obsId, focusOnDelete)
-        mod(obsListMod.delete)
-      }
-
-    def render(props: Props) =
+    private def renderFn(props: Props, undoCtx: Undoer.Context[IO, ObservationList]): VdomNode =
       AppCtx.using { implicit ctx =>
         val focused       = props.focused.get
         val observations  = props.observations.get.toList
@@ -165,40 +155,44 @@ object ObsList {
         val prevToSelect  = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
         val focusOnDelete = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
 
-        UndoRegion[ObservationList] { undoCtx =>
-          <.div(ExploreStyles.ObsTreeWrapper)(
-            <.div(ExploreStyles.TreeToolbar)(
-              Button(size = Mini, compact = true, onClick = newObs(undoCtx.setter).runAsyncCB)(
-                Icons.New.size(Small).fitted(true)
-              ),
-              UndoButtons(props.observations.get, undoCtx, size = Mini)
+        def deleteObs(obsId: Observation.Id): IO[Unit] = {
+          val mod = obsMod(undoCtx.setter, props.observations, props.focused, obsId, focusOnDelete)
+          mod(obsListMod.delete)
+        }
+
+        <.div(ExploreStyles.ObsTreeWrapper)(
+          <.div(ExploreStyles.TreeToolbar)(
+            Button(size = Mini, compact = true, onClick = newObs(undoCtx.setter).runAsyncCB)(
+              Icons.New.size(Small).fitted(true)
             ),
-            <.div(ExploreStyles.ObsTree)(
-              <.div(ExploreStyles.ObsScrollTree)(
-                observations.toTagMod { obs =>
-                  val focusedObs = FocusedObs(obs.id)
-                  val selected   = props.focused.get.exists(_ === focusedObs)
-                  <.a(
-                    ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
-                    ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                    ^.onClick ==> linkOverride(
-                      props.focused.set(focusedObs.some)
-                    )
-                  )(
-                    ObsBadge(
-                      obs,
-                      selected = selected,
-                      (
-                        (id: Observation.Id) => deleteObs(id, undoCtx.setter, focusOnDelete)
-                      ).some
-                    )
+            UndoButtons(props.observations.get, undoCtx, size = Mini)
+          ),
+          <.div(ExploreStyles.ObsTree)(
+            <.div(ExploreStyles.ObsScrollTree)(
+              observations.toTagMod { obs =>
+                val focusedObs = FocusedObs(obs.id)
+                val selected   = props.focused.get.exists(_ === focusedObs)
+                <.a(
+                  ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
+                  ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
+                  ^.onClick ==> linkOverride(
+                    props.focused.set(focusedObs.some)
                   )
-                }
-              )
+                )(
+                  ObsBadge(
+                    obs,
+                    selected = selected,
+                    deleteCB = (deleteObs _).reusable.some
+                  )
+                )
+              }
             )
           )
-        }
+        )
       }
+
+    def render(props: Props) =
+      UndoRegion[ObservationList]((renderFn _).reusable(props))
   }
 
   protected val component =

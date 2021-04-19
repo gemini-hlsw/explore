@@ -29,13 +29,13 @@ import react.semanticui.views.card._
 final case class ObsBadge(
   obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected: Boolean = false,
-  deleteCB: Option[Observation.Id => IO[Unit]] = None
+  deleteCB: Option[Observation.Id ~=> IO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
   type Props = ObsBadge
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.caseClassExcept("deleteCB")
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   // TODO Make this a component similar to the one in the docs.
   private def renderEnumProgress[A: Enumerated](value: A): VdomNode = {

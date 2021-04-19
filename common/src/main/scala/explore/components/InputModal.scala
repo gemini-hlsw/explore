@@ -32,7 +32,7 @@ final case class InputModal(
   placeholder:  String,
   okLabel:      String,
   trigger:      VdomNode,
-  onComplete:   NonEmptyString => Callback
+  onComplete:   NonEmptyString ~=> Callback
 ) extends ReactProps[InputModal](InputModal.component)
 
 object InputModal {

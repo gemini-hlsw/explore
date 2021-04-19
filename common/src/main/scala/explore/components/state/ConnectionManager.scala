@@ -20,7 +20,7 @@ import react.semanticui.elements.icon.Icon
 import react.semanticui.sizes._
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
-  val render:                                () => VdomNode
+  val render:                                Reusable[VdomNode]
 )(implicit val ctx:                          AppContextIO)
     extends ReactProps[ConnectionManager](ConnectionManager.component)
 
@@ -46,7 +46,7 @@ object ConnectionManager {
 
     def render(props: Props, state: State): VdomNode =
       if (state.initialized)
-        props.render()
+        props.render
       else
         Icon(name = "spinner", loading = true, size = Large)
   }

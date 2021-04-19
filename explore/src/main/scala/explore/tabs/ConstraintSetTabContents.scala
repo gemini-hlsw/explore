@@ -5,8 +5,8 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
-import explore.AppCtx
 import explore.Icons
 import explore.common.ConstraintSetObsQueries._
 import explore.common.UserPreferencesQueries._
@@ -69,6 +69,96 @@ object ConstraintSetTabContents {
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
+  protected def renderFn(
+    props:                 Props,
+    state:                 View[State],
+    innerWidth:            Double,
+    constraintSetsWithObs: View[ConstraintSetsWithObs]
+  ): VdomNode = {
+    implicit val ctx = props.ctx
+
+    val treeResize =
+      (_: ReactEvent, d: ResizeCallbackData) =>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
+          UserWidthsCreation
+            .storeWidthPreference[IO](props.userId.get,
+                                      ResizableSection.ConstraintSetsTree,
+                                      d.size.width
+            )).runAsyncCB
+          .debounce(1.second)
+
+    val treeWidth = state.get.treeWidth.toInt
+
+    def tree(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
+      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
+        treeInner(constraintSetsWithObs)
+      )
+
+    def treeInner(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
+      <.div(ExploreStyles.TreeBody)(
+        ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
+      )
+
+    val backButton = TileButton(
+      Button(
+        as = <.a,
+        size = Mini,
+        compact = true,
+        basic = true,
+        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+        onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+      )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
+    )
+
+    val csIdOpt = props.focused.get.collect {
+      case FocusedConstraintSet(csId) => csId.some
+      case FocusedObs(obsId)          =>
+        constraintSetsWithObs.get.obs.getElement(obsId).flatMap(_.constraints).map(_.id)
+    }.flatten
+
+    val coreWidth  = props.size.width.getOrElse(0) - treeWidth
+    val coreHeight = props.size.height.getOrElse(0)
+
+    val rightSide = Tile("Constraints", backButton.some)(
+      csIdOpt.map(csId => ConstraintSetEditor(csId).withKey(csId.show))
+    )
+
+    if (innerWidth <= Constants.TwoPanelCutoff) {
+      <.div(
+        ExploreStyles.TreeRGL,
+        <.div(ExploreStyles.Tree, treeInner(constraintSetsWithObs))
+          .when(state.get.leftPanelVisible),
+        <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
+          rightSide
+        ).when(state.get.rightPanelVisible)
+      )
+    } else {
+      <.div(
+        ExploreStyles.TreeRGL,
+        Resizable(
+          axis = Axis.X,
+          width = treeWidth,
+          height = coreHeight,
+          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+          maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
+          onResize = treeResize,
+          resizeHandles = List(ResizeHandleAxis.East),
+          content = tree(constraintSetsWithObs),
+          clazz = ExploreStyles.ResizableSeparator
+        ),
+        <.div(^.key := "constraintset-right-side",
+              ExploreStyles.SinglePanelTile,
+              ^.width := coreWidth.px,
+              ^.left := treeWidth.px
+        )(
+          rightSide
+        )
+      )
+    }
+  }
+
+  protected implicit val innerWidthReuse = Reusability.double(2.0)
+
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -80,89 +170,11 @@ object ConstraintSetTabContents {
             else s
         }
       )
-      .renderPS { ($, props, state) =>
-        AppCtx.using { implicit ctx =>
-          val treeResize =
-            (_: ReactEvent, d: ResizeCallbackData) =>
-              ($.setStateLIn[IO](TwoPanelState.treeWidth)(d.size.width) *>
-                UserWidthsCreation
-                  .storeWidthPreference[IO](props.userId.get,
-                                            ResizableSection.ConstraintSetsTree,
-                                            d.size.width
-                  )).runAsyncCB
-                .debounce(1.second)
-
-          val treeWidth = state.treeWidth.toInt
-
-          def tree(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-            <.div(^.width := treeWidth.px,
-                  ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel
-            )(treeInner(constraintSetsWithObs))
-
-          def treeInner(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-            <.div(ExploreStyles.TreeBody)(
-              ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
-            )
-
-          val backButton = TileButton(
-            Button(
-              as = <.a,
-              size = Mini,
-              compact = true,
-              basic = true,
-              clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-              onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
-            )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
-          )
-
-          ConstraintSetObsLiveQuery { constraintSetsWithObs =>
-            val csIdOpt = props.focused.get.collect {
-              case FocusedConstraintSet(csId) => csId.some
-              case FocusedObs(obsId)          =>
-                constraintSetsWithObs.get.obs.getElement(obsId).flatMap(_.constraints).map(_.id)
-            }.flatten
-
-            val coreWidth  = props.size.width.getOrElse(0) - treeWidth
-            val coreHeight = props.size.height.getOrElse(0)
-
-            val rightSide = Tile("Constraints", backButton.some)(
-              csIdOpt.map(csId => ConstraintSetEditor(csId).withKey(csId.show))
-            )
-
-            if (window.innerWidth <= Constants.TwoPanelCutoff) {
-              <.div(
-                ExploreStyles.TreeRGL,
-                <.div(ExploreStyles.Tree, treeInner(constraintSetsWithObs))
-                  .when(state.leftPanelVisible),
-                <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
-                  rightSide
-                ).when(state.rightPanelVisible)
-              )
-            } else {
-              <.div(
-                ExploreStyles.TreeRGL,
-                Resizable(
-                  axis = Axis.X,
-                  width = treeWidth,
-                  height = coreHeight,
-                  minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-                  maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
-                  onResize = treeResize,
-                  resizeHandles = List(ResizeHandleAxis.East),
-                  content = tree(constraintSetsWithObs),
-                  clazz = ExploreStyles.ResizableSeparator
-                ),
-                <.div(^.key := "constraintset-right-side",
-                      ExploreStyles.SinglePanelTile,
-                      ^.width := coreWidth.px,
-                      ^.left := treeWidth.px
-                )(
-                  rightSide
-                )
-              )
-            }
-          }
-        }
+      .render { $ =>
+        implicit val ctx = $.props.ctx
+        ConstraintSetObsLiveQuery(
+          (renderFn _).reusable($.props, ViewF.fromState[IO]($), window.innerWidth)
+        )
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

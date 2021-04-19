@@ -133,7 +133,7 @@ object ProposalDetailsEditor {
         def closePartnerSplitsEditor: Callback =
           $.modState(State.showPartnerSplitsModal.set(false))
 
-        def saveStateSplits(splits: List[PartnerSplit]): Callback =
+        def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
           details
             .zoom(ProposalDetails.partnerSplits)
             .set(splits.filter(_.percent.value.value > 0))
@@ -263,7 +263,7 @@ object ProposalDetailsEditor {
               PartnerSplitsEditor(state.showPartnerSplitsModal,
                                   splitsZoom,
                                   closePartnerSplitsEditor,
-                                  saveStateSplits
+                                  (saveStateSplits _).reusable(details)
               )
             )
           )
