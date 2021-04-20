@@ -16,8 +16,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        observations(programId: "p-2", first: 2147483647) {
+      query($first: Int = 2147483647) {
+        observations(programId: "p-2", first: $first) {
           nodes {
             id
             observationTarget {
