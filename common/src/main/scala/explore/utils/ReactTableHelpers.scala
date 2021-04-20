@@ -17,7 +17,7 @@ import lucuma.ui.optics._
 import monocle.Lens
 import react.common.style.Css
 import react.semanticui.elements.button.Button
-import reactST.reactTable.mod._
+import reactST.reactTable.mod.{ ^ => _, _ }
 
 import scalajs.js
 

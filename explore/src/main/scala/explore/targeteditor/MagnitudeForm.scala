@@ -37,7 +37,7 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
 import reactST.reactTable.TableMaker
-import reactST.reactTable.mod._
+import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.HashSet
 
