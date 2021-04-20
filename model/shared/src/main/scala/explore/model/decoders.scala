@@ -5,10 +5,12 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb._
+import eu.timepit.refined.types.numeric.PosInt
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.HCursor
 import io.circe.generic.semiauto
+import io.circe.refined._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.math.Angle
@@ -20,9 +22,12 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
+import lucuma.core.math.Wavelength
 import lucuma.core.math.units.CentimetersPerSecond
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import sttp.model.Uri
 
 object decoders {
@@ -123,5 +128,15 @@ object decoders {
         s <- c.downField("system").as[MagnitudeSystem]
       } yield Magnitude(v, b, s)
   }
+
+  implicit val durationDecoder: Decoder[Duration] = Decoder.instance(
+    _.downField("microseconds")
+      .as[Long]
+      .map(l => Duration.of(l, ChronoUnit.MICROS))
+  )
+
+  implicit val wavelengthDecoder: Decoder[Wavelength] = Decoder.instance(
+    _.downField("picometers").as[PosInt].map(Wavelength.apply)
+  )
 
 }

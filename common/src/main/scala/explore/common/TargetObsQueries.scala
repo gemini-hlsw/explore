@@ -3,7 +3,6 @@
 
 package explore.common
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -112,7 +111,7 @@ object TargetObsQueries {
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, PointingsWithObs](
           TargetsObsQuery.query(),
           TargetsObsQuery.Data.asTargetsWithObs.get,
-          NonEmptyList.of(
+          List(
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),

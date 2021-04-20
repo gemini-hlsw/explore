@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
@@ -67,7 +66,7 @@ object TargetEditor {
       LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
         TargetEditQuery.query(props.tid),
         _.target,
-        NonEmptyList.of(TargetEditSubscription.subscribe[IO](props.tid))
+        List(TargetEditSubscription.subscribe[IO](props.tid))
       )((renderFn _).reusable(props, ViewF.fromState[IO]($)))
     }
   }

@@ -3,7 +3,6 @@
 
 package explore.components.graphql
 
-import cats.data.NonEmptyList
 import cats.effect._
 import cats.effect.std.Dispatcher
 import cats.effect.std.Queue
@@ -91,14 +90,14 @@ object Render {
     trait Props[F[_], G[_], S, D, A] extends Render.Props[F, G, A] {
       val query: F[D]
       val extract: D => A
-      val changeSubscriptions: NonEmptyList[F[GraphQLSubscription[F, _]]]
+      val changeSubscriptions: List[F[GraphQLSubscription[F, _]]]
 
       implicit val client: WebSocketClient[F, S]
     }
 
     trait State[F[_], G[_], S, D, A] extends Render.State[G, A] {
       val queue: Queue[F, A]
-      val subscriptions: NonEmptyList[GraphQLSubscription[F, _]]
+      val subscriptions: List[GraphQLSubscription[F, _]]
       val cancelConnectionTracker: F[Unit]
     }
 
@@ -108,7 +107,7 @@ object Render {
         buildRenderer: (fs2.Stream[F, A], P) => StreamRendererComponent[G, A],
         buildState:    (
           Queue[F, A],
-          NonEmptyList[GraphQLSubscription[F, _]],
+          List[GraphQLSubscription[F, _]],
           F[Unit],
           StreamRendererComponent[G, A]
         ) => ST
@@ -126,15 +125,19 @@ object Render {
 
         // Once run, this effect will end when all subscriptions end.
         def trackChanges(
-          subscriptions: NonEmptyList[GraphQLSubscription[F, _]],
+          subscriptions: List[GraphQLSubscription[F, _]],
           queue:         Queue[F, A]
         ): F[Unit] =
-          subscriptions
-            .map(_.stream)
-            .reduceLeft(_ merge _)
-            .evalTap(_ => queryAndEnqueue(queue))
-            .compile
-            .drain
+          subscriptions match {
+            case Nil => F.unit
+            case _   =>
+              subscriptions
+                .map(_.stream)
+                .reduceLeft(_ merge _)
+                .evalTap(_ => queryAndEnqueue(queue))
+                .compile
+                .drain
+          }
 
         // Once run, this effect has to be cancelled manually.
         def trackConnection(queue: Queue[F, A]): F[Unit] =

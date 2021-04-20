@@ -4,7 +4,6 @@
 package explore.components.graphql
 
 import cats.Id
-import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.std.Dispatcher
@@ -24,7 +23,7 @@ import react.semanticui.sizes._
 final case class LiveQueryRender[S, D, A](
   query:               IO[D],
   extract:             D => A,
-  changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
+  changeSubscriptions: List[IO[GraphQLSubscription[IO, _]]]
 )(
   val valueRender:     A ~=> VdomNode,
   val pendingRender:   Long ~=> VdomNode =
@@ -46,7 +45,7 @@ object LiveQueryRender {
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
-    subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
+    subscriptions:           List[GraphQLSubscription[F, _]],
     cancelConnectionTracker: F[Unit],
     renderer:                StreamRenderer.Component[A]
   ) extends Render.LiveQuery.State[F, Id, S, D, A]

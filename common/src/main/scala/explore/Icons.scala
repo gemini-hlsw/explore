@@ -16,6 +16,7 @@ object Icons {
   val New                 = Icon("plus")
   val Delete              = Icon("trash alternate outline")
   val Bullseye            = Icon("bullseye")
+  val Crosshairs          = Icon("crosshairs")
   val UserCircle          = Icon("user circle")
   val Lock                = Icon("lock")
   val User                = Icon("user")

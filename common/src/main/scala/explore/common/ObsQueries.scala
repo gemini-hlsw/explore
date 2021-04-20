@@ -3,7 +3,6 @@
 
 package explore.common
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -64,7 +63,7 @@ object ObsQueries {
         ](
           ProgramObservationsQuery.query(),
           ProgramObservationsQuery.Data.asObservationList.get,
-          NonEmptyList.of(
+          List(
             ProgramObservationsEditSubscription.subscribe[IO](),
             ConstraintSetObsQueriesGQL.ConstraintSetEditSubscription.subscribe[IO]()
           )
