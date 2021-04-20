@@ -16,15 +16,15 @@ object TargetObsQueriesGQL {
   @GraphQL
   trait TargetsObsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        targets(programId: "p-2", first: 2147483647) {
+      query($first: Int = 2147483647) {
+        targets(programId: "p-2", first: $first) {
           nodes {
             id
             name
           }
         }
 
-        asterisms(programId: "p-2", first: 2147483647) {
+        asterisms(programId: "p-2", first: $first) {
           nodes {
             id
             name
@@ -37,7 +37,7 @@ object TargetObsQueriesGQL {
           }
         }
 
-        observations(programId: "p-2", first: 2147483647) {
+        observations(programId: "p-2", first: $first) {
           nodes {
             id
             pointing: observationTarget {

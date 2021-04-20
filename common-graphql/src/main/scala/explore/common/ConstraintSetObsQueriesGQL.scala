@@ -15,8 +15,8 @@ object ConstraintSetObsQueriesGQL {
   @GraphQL
   trait ConstraintSetsObsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        constraintSets(programId: "p-2", first: 2147483647) {
+      query($first: Int = 2147483647) {
+        constraintSets(programId: "p-2", first: $first) {
           nodes {
             id
             name
@@ -27,7 +27,7 @@ object ConstraintSetObsQueriesGQL {
           }
         }
 
-        observations(programId: "p-2", first: 2147483647) {
+        observations(programId: "p-2", first: $first) {
           nodes {
             id
             observationTarget {
