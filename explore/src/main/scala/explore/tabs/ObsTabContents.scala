@@ -13,12 +13,16 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.common.ObsQueries._
 import explore.common.TargetQueriesGQL._
+import explore.common.ConstraintsQueriesGQL._
+import lucuma.core.model.ConstraintSet
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileButton
+// import explore.components.TileControl
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model._
@@ -62,21 +66,37 @@ final case class ObsTabContents(
 }
 
 object ObsTabContents {
-  val NotesIndex: NonNegInt     = 0
-  val NotesMaxHeight: NonNegInt = 3
-  val NotesMinHeight: NonNegInt = 1
+  val NotesIndex: NonNegInt           = 0
+  val NotesMaxHeight: NonNegInt       = 3
+  val NotesMinHeight: NonNegInt       = 1
+  val TargetMinHeight: NonNegInt      = 12
+  val ConstraintsMaxHeight: NonNegInt = 3
+  val ConstraintsMinHeight: NonNegInt = 1
+  val DefaultWidth: NonNegInt         = 12
 
   private val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = 4,
+                 i = "constraints",
+                 isResizable = false
+      )
     )
   )
 
@@ -84,13 +104,25 @@ object ObsTabContents {
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = 4,
+                 i = "constraints",
+                 isResizable = false
+      )
     )
   )
 
@@ -98,13 +130,25 @@ object ObsTabContents {
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
                  resizeHandles = List("")
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = 4,
+                 i = "constraints",
+                 isResizable = false
+      )
     )
   )
 
@@ -217,7 +261,10 @@ object ObsTabContents {
           observations.get.getElement(obsId)
         }.flatten
 
-      val targetId = obsSummaryOpt.collect {
+      val constrainstSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
+      // val constrainstObsCount = obsSummaryOpt.flatMap(_.constraints.map(_.obsCount))
+      // println(constrainstObsCount)
+      val targetId         = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
                                                   Some(Pointing.PointingTarget(tid, _)),
                                                   _,
@@ -288,6 +335,37 @@ object ObsTabContents {
             )
           )
 
+      def renderConstraintsFn(
+        csId:          ConstraintSet.Id,
+        renderInTitle: Tile.RenderInTitle,
+        csOpt:         View[Option[ConstraintSetModel]]
+      ): VdomNode =
+        csOpt.get.map { _ =>
+          <.div(
+            ExploreStyles.ConstraintsObsTile,
+            ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
+          )
+        }
+
+      def renderConstraints(
+        constraintsSetId: Option[ConstraintSet.Id],
+        renderInTitle:    Tile.RenderInTitle
+      ): VdomNode =
+        constraintsSetId
+          .map[VdomNode] { csId =>
+            LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
+              ConstraintSetQuery.query(csId),
+              _.constraintSet,
+              NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](csId))
+            )((renderConstraintsFn _).reusable(csId, renderInTitle))
+              .withKey(s"constraint-$targetId")
+          }
+          .getOrElse(
+            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                  <.div("No constraints assigned")
+            )
+          )
+
       val rightSideRGL =
         ResponsiveReactGridLayout(
           width = coreWidth,
@@ -322,6 +400,10 @@ object ObsTabContents {
           <.div(
             ^.key := "target",
             Tile("Target")((renderTarget _).reusable(targetId))
+          ),
+          <.div(
+            ^.key := "constraints",
+            Tile("Constraints")((renderConstraints _).reusable(constrainstSetId))
           )
         )
 

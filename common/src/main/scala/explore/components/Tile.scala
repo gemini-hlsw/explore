@@ -20,10 +20,12 @@ import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
 final case class TileButton(body: VdomNode)
+final case class TileControl(body: VdomNode)
 
 final case class Tile(
   title:             String,
   back:              Option[TileButton] = None,
+  control:           Option[TileControl] = None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,

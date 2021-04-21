@@ -144,6 +144,7 @@ object ConstraintsPanel {
           ExploreStyles.ConstraintsGrid,
           FormInputEV(
             id = "name",
+            clazz = ExploreStyles.ConstraintsNameField,
             label = Label("Name", HelpIcon("constraints/main/name.md")),
             value = nameView,
             validFormat = ValidFormatInput.nonEmptyValidFormat,

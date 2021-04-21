@@ -62,10 +62,14 @@ type Asterism {
 
 # Asterisms in the current page
 type AsterismConnection {
+  # The nodes in all the edges from the current page
   nodes: [Asterism!]!
 
   # Edges in the current page
   edges: [AsterismEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
 
   # Paging information
   pageInfo: PageInfo!
@@ -234,10 +238,14 @@ type ConstraintSet {
 
 # Constraint Sets in the current page
 type ConstraintSetConnection {
+  # The nodes in all the edges from the current page
   nodes: [ConstraintSet!]!
 
   # Edges in the current page
   edges: [ContraintSetEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
 
   # Paging information
   pageInfo: PageInfo!
@@ -1881,10 +1889,14 @@ type Observation {
 
 # Matching observations
 type ObservationConnection {
+  # The nodes in all the edges from the current page
   nodes: [Observation!]!
 
   # Edges in the current page
   edges: [ObservationEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
 
   # Paging information
   pageInfo: PageInfo!
@@ -2103,10 +2115,14 @@ type Program {
 
 # Programs in the current page
 type ProgramConnection {
+  # The nodes in all the edges from the current page
   nodes: [Program!]!
 
   # Edges in the current page
   edges: [ProgramEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
 
   # Paging information
   pageInfo: PageInfo!
@@ -2658,10 +2674,14 @@ input TargetAsterismLinks {
 
 # Targets in the current page
 type TargetConnection {
+  # The nodes in all the edges from the current page
   nodes: [Target!]!
 
   # Edges in the current page
   edges: [TargetEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
 
   # Paging information
   pageInfo: PageInfo!
