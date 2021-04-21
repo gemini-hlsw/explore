@@ -38,6 +38,9 @@ object ObsQueriesGQL {
               cloudExtinction
               skyBackground
               waterVapor
+              obsCount: observations(first: 0) { 
+                totalCount
+              }
             }
           }
         }

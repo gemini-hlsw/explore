@@ -24,6 +24,9 @@ object ConstraintSetObsQueriesGQL {
             cloudExtinction
             skyBackground
             waterVapor
+            obsCount: observations(first: 0) { 
+              totalCount
+            }
           }
         }
 
@@ -48,6 +51,9 @@ object ConstraintSetObsQueriesGQL {
               cloudExtinction
               skyBackground
               waterVapor
+              obsCount: observations(first: 0) { 
+                totalCount
+              }
             }
           }
         }

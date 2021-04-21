@@ -14,7 +14,9 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.util.arb.ArbGid._
 // these need to be at the end to avoid diverging implicit expansion problems
 import eu.timepit.refined.scalacheck.string._
+import eu.timepit.refined.scalacheck.numeric._
 import eu.timepit.refined.types.string._
+import eu.timepit.refined.types.numeric._
 
 trait ArbConstraintsSummary {
   implicit val constraintsSummaryArb = Arbitrary[ConstraintsSummary] {
@@ -25,19 +27,21 @@ trait ArbConstraintsSummary {
       ce   <- arbitrary[CloudExtinction]
       sb   <- arbitrary[SkyBackground]
       wv   <- arbitrary[WaterVapor]
+      oc   <- arbitrary[NonNegInt]
     } yield ConstraintsSummary(id = id,
                                name = name,
                                imageQuality = iq,
                                cloudExtinction = ce,
                                skyBackground = sb,
-                               waterVapor = wv
+                               waterVapor = wv,
+                               obsCount = oc
     )
   }
 
   implicit val constraintsSummaryCogen: Cogen[ConstraintsSummary] =
-    Cogen[(ConstraintSet.Id, String, ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
+    Cogen[(ConstraintSet.Id, String, ImageQuality, CloudExtinction, SkyBackground, WaterVapor, Int)]
       .contramap(cs =>
-        (cs.id, cs.name.value, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
+        (cs.id, cs.name.value, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor, cs.obsCount.value)
       )
 }
 
