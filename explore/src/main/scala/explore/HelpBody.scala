@@ -37,7 +37,7 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
   private val rootEditUrl = base.editUrl.addPath(List(base.user.value, base.project.value))
   private val newPage     = rootEditUrl
     .addPath(List("new", "main") ++ (path.path.init :+ "/"))
-    .addParam("filename", path.path.last)
+    .addParam("filename", path.path.mkString("/"))
     .addParam("value", s"# Title")
     .addParam("message", s"Create $helpId")
   private val editPage    = rootEditUrl
@@ -59,6 +59,9 @@ object HelpBody {
       .send(backend)
       .map {
         _.body.leftMap(s => new RuntimeException(s)).toTry
+      }
+      .handleError { case x =>
+        scala.util.Failure(x)
       }
   }
 
@@ -105,7 +108,7 @@ object HelpBody {
                                     imageConv
                       ): VdomNode
                     case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                    case crystal.Error(o) if o.getMessage.contains("405") =>
+                    case crystal.Error(o) if o.getMessage.contains("404") =>
                       <.div(
                         ExploreStyles.HelpMarkdownBody,
                         "Not found, maybe you want to create it ",
