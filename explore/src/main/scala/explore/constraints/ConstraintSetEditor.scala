@@ -7,6 +7,7 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import explore.AppCtx
 import explore.common.ConstraintsQueriesGQL._
+import explore.components.Tile
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintSetModel
@@ -18,8 +19,10 @@ import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
 import react.common._
 
-final case class ConstraintSetEditor(csid: ConstraintSet.Id)
-    extends ReactProps[ConstraintSetEditor](ConstraintSetEditor.component)
+final case class ConstraintSetEditor(
+  csId:          ConstraintSet.Id,
+  renderInTitle: Tile.RenderInTitle
+) extends ReactProps[ConstraintSetEditor](ConstraintSetEditor.component)
 
 object ConstraintSetEditor {
   type Props = ConstraintSetEditor
@@ -27,11 +30,12 @@ object ConstraintSetEditor {
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected def renderFn(
-    csid:  ConstraintSet.Id,
-    csOpt: View[Option[ConstraintSetModel]]
+    csId:          ConstraintSet.Id,
+    renderInTitle: Tile.RenderInTitle,
+    csOpt:         View[Option[ConstraintSetModel]]
   ): VdomNode =
     csOpt.get.map { _ =>
-      ConstraintsPanel(csid, csOpt.zoom(_.get)(f => _.map(f)))
+      ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
     }
 
   val component =
@@ -40,10 +44,10 @@ object ConstraintSetEditor {
       .render_P { props =>
         AppCtx.using { implicit appCtx =>
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
-            ConstraintSetQuery.query(props.csid),
+            ConstraintSetQuery.query(props.csId),
             _.constraintSet,
-            NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](props.csid))
-          )((renderFn _).reusable(props.csid))
+            NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](props.csId))
+          )((renderFn _).reusable(props.csId, props.renderInTitle))
         }
       }
       .configure(Reusability.shouldComponentUpdate)

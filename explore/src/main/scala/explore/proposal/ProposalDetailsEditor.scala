@@ -40,6 +40,8 @@ import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import spire.std.any._
 
+import scala.annotation.unused
+
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
     extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)
 
@@ -113,22 +115,135 @@ object ProposalDetailsEditor {
 
   class Backend($ : BackendScope[Props, State]) {
 
+    def renderDetails(appCtx: AppContextIO)(
+      details:                View[ProposalDetails],
+      @unused renderInTitle:  Tile.RenderInTitle
+    ): VdomNode = {
+      implicit val ctx = appCtx
+
+      val requestTime1 = details.zoom(ProposalDetails.requestTime1).get
+      val requestTime2 = details.zoom(ProposalDetails.requestTime2).get
+      val minimumPct1  = details.zoom(ProposalDetails.minimumPct1).get
+      val minimumPct2  = details.zoom(ProposalDetails.minimumPct1).get
+
+      val (time1Label, time2Label, hasSecondTime, has2Minimums) =
+        details.get.proposalClass match {
+          case Queue                    => ("Band 1 & 2", "Band 3", true, false)
+          case LargeProgram | Intensive => ("1st Semester", "Total", true, true)
+          case _                        => ("Time", "", false, false)
+        }
+
+      def makeMinimumPctInput[A](lens: Lens[ProposalDetails, IntPercent]) =
+        FormInputEV(
+          value = details.zoom(lens).stripQuantity,
+          validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
+          changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100](),
+          label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md")),
+          id = "minimum-pct"
+        ).withMods(
+          ExploreStyles.FlexShrink(0),
+          ExploreStyles.MinimumPercent
+        )
+
+      def openPartnerSplitsEditor: Callback = {
+        val splits      = details.get.partnerSplits
+        val allPartners = Partner.EnumeratedPartner.all.map(p =>
+          splits
+            .find(_.partner === p)
+            .getOrElse(PartnerSplit(p, 0.withRefinedUnit[ZeroTo100, Percent]))
+        )
+        $.setState(State(true, allPartners))
+      }
+
+      Form(
+        <.div(
+          ExploreStyles.TwoColumnGrid,
+          ExploreStyles.ProposalDetailsGrid,
+          FormInputEV(
+            id = "title",
+            className = "inverse",
+            value = details.zoom(ProposalDetails.title),
+            label = "Title"
+          ).withMods(^.autoFocus := true),
+          EnumViewSelect(id = "proposal-class",
+                         value = details.zoom(ProposalDetails.proposalClass),
+                         label = Label("Class", HelpIcon("proposal/main/class.md"))
+          ),
+          <.div(
+            ExploreStyles.FlexContainer,
+            FormButton(
+              icon = Icons.Edit,
+              label = "Partners",
+              tpe = "button",
+              clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
+              onClick = openPartnerSplitsEditor
+            ),
+            partnerSplits(details.zoom(ProposalDetails.partnerSplits).get),
+            makeMinimumPctInput(ProposalDetails.minimumPct1).unless(has2Minimums)
+          ),
+          EnumViewOptionalSelect(id = "category",
+                                 value = details.zoom(ProposalDetails.category),
+                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
+          ),
+          <.div(
+            ExploreStyles.FlexContainer,
+            FormStaticData(value = formatTime(requestTime1.value.value),
+                           label = time1Label,
+                           id = "time1"
+            )(
+              ExploreStyles.FlexShrink(0),
+              ExploreStyles.PartnerSplitTotal
+            ),
+            timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime1),
+            minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
+            makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
+          ),
+          EnumViewMultipleSelect(
+            id = "keywords",
+            value = details.zoom(ProposalDetails.keywords),
+            label = "Keywords",
+            search = true
+          ),
+          <.div(
+            ExploreStyles.FlexContainer,
+            FormStaticData(value = formatTime(requestTime2.value.value),
+                           label = time2Label,
+                           id = "time2"
+            )(
+              ExploreStyles.FlexShrink(0),
+              ExploreStyles.PartnerSplitTotal
+            ),
+            timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime2),
+            minimumTime(minimumPct2, requestTime2).unless(has2Minimums),
+            makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
+          ).when(hasSecondTime),
+          <.span().unless(hasSecondTime),
+          EnumViewSelect(id = "too-activation",
+                         value = details.zoom(ProposalDetails.toOActivation),
+                         label =
+                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
+          )
+        ),
+        <.div(FomanticStyles.Divider),
+        FormTextArea(
+          label = "Abstract",
+          rows = 10,
+          value = details.zoom(ProposalDetails.abstrakt).get,
+          onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
+            details
+              .zoom(ProposalDetails.abstrakt)
+              .set(tap.value.asInstanceOf[String])
+              .runAsyncCB
+          }
+        ).addModifiers(Seq(^.id := "abstract"))
+      )
+    }
+
     def render(props: Props, state: State) =
       AppCtx.using { implicit appCtx =>
         val splitsZoom = ViewF.fromState[IO]($).zoom(State.splits)
 
-        val details      = props.proposalDetails
-        val requestTime1 = details.zoom(ProposalDetails.requestTime1).get
-        val requestTime2 = details.zoom(ProposalDetails.requestTime2).get
-        val minimumPct1  = details.zoom(ProposalDetails.minimumPct1).get
-        val minimumPct2  = details.zoom(ProposalDetails.minimumPct1).get
-
-        val (time1Label, time2Label, hasSecondTime, has2Minimums) =
-          details.get.proposalClass match {
-            case Queue                    => ("Band 1 & 2", "Band 3", true, false)
-            case LargeProgram | Intensive => ("1st Semester", "Total", true, true)
-            case _                        => ("Time", "", false, false)
-          }
+        val details = props.proposalDetails
 
         def closePartnerSplitsEditor: Callback =
           $.modState(State.showPartnerSplitsModal.set(false))
@@ -139,133 +254,21 @@ object ProposalDetailsEditor {
             .set(splits.filter(_.percent.value.value > 0))
             .runAsyncCB *> closePartnerSplitsEditor
 
-        def openPartnerSplitsEditor: Callback = {
-          val splits      = details.get.partnerSplits
-          val allPartners = Partner.EnumeratedPartner.all.map(p =>
-            splits
-              .find(_.partner === p)
-              .getOrElse(PartnerSplit(p, 0.withRefinedUnit[ZeroTo100, Percent]))
-          )
-          $.setState(State(true, allPartners))
-        }
-
-        def makeMinimumPctInput[A](lens: Lens[ProposalDetails, IntPercent]) =
-          FormInputEV(
-            value = details.zoom(lens).stripQuantity,
-            validFormat = ValidFormatInput.forRefinedInt[ZeroTo100](),
-            changeAuditor = ChangeAuditor.forRefinedInt[ZeroTo100](),
-            label = Label("Minimum %", HelpIcon("proposal/main/minimum-pct.md")),
-            id = "minimum-pct"
-          ).withMods(
-            ExploreStyles.FlexShrink(0),
-            ExploreStyles.MinimumPercent
-          )
-
         <.div(
           <.div(
-            <.div(
-              ^.key := "details",
-              ExploreStyles.ProposalTile,
-              Tile("Details")(
-                Form(
-                  <.div(
-                    ExploreStyles.TwoColumnGrid,
-                    ExploreStyles.ProposalDetailsGrid,
-                    FormInputEV(
-                      id = "title",
-                      className = "inverse",
-                      value = details.zoom(ProposalDetails.title),
-                      label = "Title"
-                    ).withMods(^.autoFocus := true),
-                    EnumViewSelect(id = "proposal-class",
-                                   value = details.zoom(ProposalDetails.proposalClass),
-                                   label = Label("Class", HelpIcon("proposal/main/class.md"))
-                    ),
-                    <.div(
-                      ExploreStyles.FlexContainer,
-                      FormButton(
-                        icon = Icons.Edit,
-                        label = "Partners",
-                        tpe = "button",
-                        clazz = ExploreStyles.FlexShrink(0) |+| ExploreStyles.PartnerSplitTotal,
-                        onClick = openPartnerSplitsEditor
-                      ),
-                      partnerSplits(details.zoom(ProposalDetails.partnerSplits).get),
-                      makeMinimumPctInput(ProposalDetails.minimumPct1).unless(has2Minimums)
-                    ),
-                    EnumViewOptionalSelect(id = "category",
-                                           value = details.zoom(ProposalDetails.category),
-                                           label = Label("Category",
-                                                         HelpIcon("proposal/main/category.md")
-                                           )
-                    ),
-                    <.div(
-                      ExploreStyles.FlexContainer,
-                      FormStaticData(value = formatTime(requestTime1.value.value),
-                                     label = time1Label,
-                                     id = "time1"
-                      )(
-                        ExploreStyles.FlexShrink(0),
-                        ExploreStyles.PartnerSplitTotal
-                      ),
-                      timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime1),
-                      minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
-                      makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
-                    ),
-                    EnumViewMultipleSelect(
-                      id = "keywords",
-                      value = details.zoom(ProposalDetails.keywords),
-                      label = "Keywords",
-                      search = true
-                    ),
-                    <.div(
-                      ExploreStyles.FlexContainer,
-                      FormStaticData(value = formatTime(requestTime2.value.value),
-                                     label = time2Label,
-                                     id = "time2"
-                      )(
-                        ExploreStyles.FlexShrink(0),
-                        ExploreStyles.PartnerSplitTotal
-                      ),
-                      timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime2),
-                      minimumTime(minimumPct2, requestTime2).unless(has2Minimums),
-                      makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
-                    ).when(hasSecondTime),
-                    <.span().unless(hasSecondTime),
-                    EnumViewSelect(id = "too-activation",
-                                   value = details.zoom(ProposalDetails.toOActivation),
-                                   label = Label("ToO Activation",
-                                                 HelpIcon("proposal/main/too-activation.md")
-                                   )
-                    )
-                  ),
-                  <.div(FomanticStyles.Divider),
-                  FormTextArea(
-                    label = "Abstract",
-                    rows = 10,
-                    value = details.zoom(ProposalDetails.abstrakt).get,
-                    onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
-                      details
-                        .zoom(ProposalDetails.abstrakt)
-                        .set(tap.value.asInstanceOf[String])
-                        .runAsyncCB
-                    }
-                  ).addModifiers(Seq(^.id := "abstract"))
-                )
-              ),
-              <.div(
-                ^.key := "preview",
-                ExploreStyles.ProposalTile,
-                Tile("Preview")(
-                  <.span("Placeholder for PDF preview.")
-                )
-              ),
-              PartnerSplitsEditor(state.showPartnerSplitsModal,
-                                  splitsZoom,
-                                  closePartnerSplitsEditor,
-                                  (saveStateSplits _).reusable(details)
-              )
-            )
+            ^.key := "details",
+            ExploreStyles.ProposalTile,
+            Tile("Details")((renderDetails(appCtx) _).reusable(details))
+          ),
+          <.div(
+            ^.key := "preview",
+            ExploreStyles.ProposalTile,
+            Tile("Preview")(Reusable.fn(_ => <.span("Placeholder for PDF preview.")))
+          ),
+          PartnerSplitsEditor(state.showPartnerSplitsModal,
+                              splitsZoom,
+                              closePartnerSplitsEditor,
+                              (saveStateSplits _).reusable(details)
           )
         )
       }

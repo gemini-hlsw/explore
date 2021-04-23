@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
+import explore.components.Tile
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.Constants
@@ -27,7 +28,8 @@ import react.common._
 final case class TargetEditor(
   uid:              User.Id,
   tid:              Target.Id,
-  searching:        View[Set[Target.Id]]
+  searching:        View[Set[Target.Id]],
+  renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactProps[TargetEditor](TargetEditor.component)
 
@@ -54,7 +56,8 @@ object TargetEditor {
                  props.tid,
                  targetOpt.zoom(_.get)(f => _.map(f)),
                  props.searching,
-                 state.zoom(State.options)
+                 state.zoom(State.options),
+                 props.renderInTitle
       )
     }
 

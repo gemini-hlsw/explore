@@ -13,6 +13,7 @@ object ExploreStyles {
   val Tile: Css            = Css("explore-tile")
   val TileTitle: Css       = Css("explore-tile-title")
   val TileTitleMenu: Css   = Css("explore-tile-title-menu")
+  val TileTitleInfo: Css   = Css("explore-tile-title-info")
   val TileBackButton: Css  = Css("tile-back-button")
   val TileBody: Css        = Css("explore-tile-body")
   val TileButton: Css      = Css("explore-tile-button")
@@ -216,4 +217,6 @@ object ExploreStyles {
   val HelpTitleLabel: Css   = Css("explore-help-title-label")
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
+
+  val TitleUndoButtons: Css = Css("title-undo-buttons")
 }

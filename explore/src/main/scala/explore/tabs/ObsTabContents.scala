@@ -246,15 +246,17 @@ object ObsTabContents {
         }
 
       def targetRenderFn(
-        targetId:  Target.Id,
-        targetOpt: View[Option[TargetEditQuery.Data.Target]]
+        targetId:      Target.Id,
+        renderInTitle: Tile.RenderInTitle,
+        targetOpt:     View[Option[TargetEditQuery.Data.Target]]
       ): VdomNode =
         (props.userId.get, targetOpt.get).mapN { case (uid, _) =>
           TargetBody(uid,
                      targetId,
                      targetOpt.zoom(_.get)(f => _.map(f)),
                      props.searching,
-                     state.zoom(State.options)
+                     state.zoom(State.options),
+                     renderInTitle
           )
         }
 
@@ -263,6 +265,28 @@ object ObsTabContents {
           case TileSizeState.Minimized => 1
           case _                       => 3
         })
+
+      def renderTarget(
+        targetId:      Option[Target.Id],
+        renderInTitle: Tile.RenderInTitle
+      ): VdomNode =
+        targetId
+          .map[VdomNode] { targetId =>
+            LiveQueryRenderMod[ObservationDB,
+                               TargetEditQuery.Data,
+                               Option[TargetEditQuery.Data.Target]
+            ](
+              TargetEditQuery.query(targetId),
+              _.target,
+              NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+            )((targetRenderFn _).reusable(targetId, renderInTitle))
+              .withKey(s"target-$targetId")
+          }
+          .getOrElse(
+            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                  <.div("No target assigned")
+            )
+          )
 
       val rightSideRGL =
         ResponsiveReactGridLayout(
@@ -284,36 +308,20 @@ object ObsTabContents {
               state = State.notesHeightState(state.get),
               sizeStateCallback = (sizeState _).reusable
             )(
-              <.div(
-                ExploreStyles.NotesWrapper,
+              Reusable.fn(_ =>
                 <.div(
-                  ExploreStyles.ObserverNotes,
-                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+                  ExploreStyles.NotesWrapper,
+                  <.div(
+                    ExploreStyles.ObserverNotes,
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+                  )
                 )
               )
             )
           ),
           <.div(
             ^.key := "target",
-            Tile("Target")(
-              targetId
-                .map[VdomNode] { targetId =>
-                  LiveQueryRenderMod[ObservationDB,
-                                     TargetEditQuery.Data,
-                                     Option[TargetEditQuery.Data.Target]
-                  ](
-                    TargetEditQuery.query(targetId),
-                    _.target,
-                    NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
-                  )((targetRenderFn _).reusable(targetId))
-                    .withKey(s"target-$targetId")
-                }
-                .getOrElse(
-                  <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-                        <.div("No target assigned")
-                  )
-                )
-            )
+            Tile("Target")((renderTarget _).reusable(targetId))
           )
         )
 
