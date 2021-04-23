@@ -69,6 +69,12 @@ object ConstraintSetTabContents {
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
+  protected def renderEditor(
+    csIdOpt:       Option[ConstraintSet.Id],
+    renderInTitle: Tile.RenderInTitle
+  ): VdomNode =
+    csIdOpt.map(csId => ConstraintSetEditor(csId, renderInTitle).withKey(csId.show))
+
   protected def renderFn(
     props:                 Props,
     state:                 View[State],
@@ -119,9 +125,7 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = Tile("Constraints", backButton.some)(
-      csIdOpt.map(csId => ConstraintSetEditor(csId).withKey(csId.show))
-    )
+    val rightSide = Tile("Constraints", backButton.some)((renderEditor _).reusable(csIdOpt))
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(

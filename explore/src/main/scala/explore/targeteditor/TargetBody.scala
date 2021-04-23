@@ -15,6 +15,7 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
+import explore.components.Tile
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -56,11 +57,12 @@ final case class SearchCallback(
 }
 
 final case class TargetBody(
-  uid:       User.Id,
-  id:        Target.Id,
-  target:    View[TargetResult],
-  searching: View[Set[Target.Id]],
-  options:   View[TargetVisualOptions]
+  uid:           User.Id,
+  id:            Target.Id,
+  target:        View[TargetResult],
+  searching:     View[Set[Target.Id]],
+  options:       View[TargetVisualOptions],
+  renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[TargetBody](TargetBody.component) {
   val baseCoordinates: Coordinates =
     target.zoom(TargetQueries.baseCoordinates).get
@@ -256,7 +258,11 @@ object TargetBody {
               RVInput(radialVelocityView, disabled)
             ),
             MagnitudeForm(target.id, magnitudesView, disabled = disabled),
-            UndoButtons(target, undoCtx, disabled = disabled),
+            props.renderInTitle(
+              <.span(ExploreStyles.TitleUndoButtons,
+                     UndoButtons(target, undoCtx, disabled = disabled)
+              )
+            ),
             <.div(
               ExploreStyles.TargetSkyplotCell,
               WIP(

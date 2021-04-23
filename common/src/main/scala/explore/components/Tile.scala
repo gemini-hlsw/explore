@@ -7,10 +7,13 @@ import cats.syntax.all._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
+import explore.implicits._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.internal.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.menu._
@@ -25,13 +28,18 @@ final case class Tile(
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
   sizeStateCallback: TileSizeState ~=> Callback = Reusable.always(_ => Callback.empty)
-) extends ReactPropsWithChildren[Tile](Tile.component) {
+)(val render:        Tile.RenderInTitle ~=> VdomNode)
+    extends ReactProps[Tile](Tile.component) {
   def showMaximize: Boolean = canMaximize && state === TileSizeState.Minimized
   def showMinimize: Boolean = canMinimize && state === TileSizeState.Normal
 }
 
 object Tile {
   type Props = Tile
+
+  type RenderInTitle = VdomNode ~=> VdomNode
+
+  val infoRef = Ref.toVdom[html.Element]
 
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
@@ -45,11 +53,16 @@ object Tile {
          (1024                           -> TileLGW)
     )
 
+  def renderPortal(mountNode: Option[raw.ReactDOM.Container], info: VdomNode): VdomNode =
+    mountNode.map(node => ReactPortal(info, node))
+
+  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
+
   val component =
     ScalaComponent
       .builder[Props]
       .stateless
-      .render_PC { (p, c) =>
+      .render_P { p =>
         val maximizeButton =
           Button(
             as = <.a,
@@ -82,11 +95,18 @@ object Tile {
             )(
               MenuItem(as = <.a)(p.title)
             ),
+            <.span(ExploreStyles.TileTitleInfo, ^.untypedRef := infoRef, <.span),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
           ),
           ResponsiveComponent(widthBreakpoints, heightBreakpoints, clazz = ExploreStyles.TileBody)(
-            c
+            p.render(
+              (renderPortal _).reusable(
+                JsUtil
+                  .jsNullToOption(infoRef.raw.current)
+                  .map(_.asInstanceOf[raw.ReactDOM.Container])
+              )
+            )
           ).when(p.state =!= TileSizeState.Minimized)
         )
       }

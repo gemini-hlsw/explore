@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.Icons
 import explore.UnderConstruction
 import explore.common.TargetObsQueries._
@@ -68,6 +69,20 @@ object TargetTabContents {
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
+  def renderContents(
+    userIdOpt:     Option[User.Id],
+    targetIdOpt:   Option[Target.Id],
+    searching:     View[Set[Target.Id]],
+    renderInTitle: Tile.RenderInTitle
+  ): VdomNode =
+    (userIdOpt, targetIdOpt).tupled match {
+      case Some((uid, tid)) =>
+        AppCtx.using(implicit ctx =>
+          TargetEditor(uid, tid, searching, renderInTitle).withKey(tid.show)
+        )
+      case None             => UnderConstruction()
+    }
+
   protected def renderFn(
     props:            Props,
     state:            View[State],
@@ -127,10 +142,7 @@ object TargetTabContents {
 
     val rightSide =
       Tile(s"Target", backButton.some)(
-        (props.userId.get, targetIdOpt).tupled match {
-          case Some((uid, tid)) => TargetEditor(uid, tid, props.searching).withKey(tid.show)
-          case None             => UnderConstruction()
-        }
+        (renderContents _).reusable(props.userId.get, targetIdOpt, props.searching)
       )
 
     // It would be nice to make a single component here but it gets hard when you

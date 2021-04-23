@@ -13,6 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
@@ -47,7 +48,8 @@ import react.semanticui.elements.label.LabelPointing
 
 final case class ConstraintsPanel(
   id:            ConstraintSet.Id,
-  constraintSet: View[ConstraintSetModel]
+  constraintSet: View[ConstraintSetModel],
+  renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -281,7 +283,9 @@ object ConstraintsPanel {
               <.div(ExploreStyles.UnitsLabel, "hours")
             ).when(state.get.rangeType === HourAngle)
           ),
-          UndoButtons(constraintSet.get, undoCtx)
+          props.renderInTitle(
+            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx))
+          )
         )
       }
 
