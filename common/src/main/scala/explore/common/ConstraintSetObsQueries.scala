@@ -6,12 +6,12 @@ package explore.common
 import cats.data.NonEmptyList
 import cats.effect.IO
 import clue.data.Input
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
@@ -19,6 +19,10 @@ import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.CloudExtinction
+import lucuma.core.enum.ImageQuality
+import lucuma.core.enum.SkyBackground
+import lucuma.core.enum.WaterVapor
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
@@ -28,13 +32,26 @@ import monocle.macros.Lenses
 import ConstraintSetObsQueriesGQL._
 
 object ConstraintSetObsQueries {
+  type ConstraintSetResult = ConstraintSetsObsQuery.Data.ConstraintSets.Nodes
+  val ConstraintSetResult = ConstraintSetsObsQuery.Data.ConstraintSets.Nodes
 
-  type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintsSummary]
+  type PointingResult = ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget
+  val PointingResult = ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget
+
+  type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintSetResult]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
 
-  def defaultCreateConstraintSet(
-    cs: ConstraintsSummary
-  ): CreateConstraintSetInput =
+  def defaultConstraintSetResult(name: NonEmptyString, id: ConstraintSet.Id): ConstraintSetResult =
+    ConstraintSetResult(
+      id = id,
+      name = name,
+      imageQuality = ImageQuality.PointEight,
+      cloudExtinction = CloudExtinction.PointThree,
+      skyBackground = SkyBackground.Gray,
+      waterVapor = WaterVapor.Wet
+    )
+
+  def defaultCreateConstraintSet(cs: ConstraintSetResult): CreateConstraintSetInput =
     CreateConstraintSetInput(
       constraintSetId = Input(cs.id),
       programId = "p-2",
@@ -56,19 +73,17 @@ object ConstraintSetObsQueries {
   case class ConstraintSetsWithObs(constraintSets: ConstraintSetList, obs: ObsList)
 
   private def convertPointing(
-    pointing: ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget
+    pointing: PointingResult
   ): Pointing =
     pointing match {
-      case ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name)   =>
-        Pointing.PointingTarget(id, name)
-      case ConstraintSetsObsQuery.Data.Observations.Nodes.ObservationTarget.Asterism(id, name) =>
-        Pointing.PointingAsterism(id, name, Nil)
+      case PointingResult.Target(id, name)   => Pointing.PointingTarget(id, name)
+      case PointingResult.Asterism(id, name) => Pointing.PointingAsterism(id, name, Nil)
     }
 
   private val constraintSetsObsQueryConstraintSetsWithObsGetter
     : Getter[ConstraintSetsObsQuery.Data, ConstraintSetsWithObs] = data => {
     ConstraintSetsWithObs(
-      KeyedIndexedList.fromList(data.constraintSets.nodes, ConstraintsSummary.id.get),
+      KeyedIndexedList.fromList(data.constraintSets.nodes, ConstraintSetResult.id.get),
       KeyedIndexedList.fromList(
         data.observations.nodes.map(node =>
           ObsSummaryWithPointingAndConstraints(node.id,
