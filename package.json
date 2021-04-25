@@ -28,7 +28,7 @@
     "react-resizable": "1.11.0",
     "react-resize-detector": "6.5.0",
     "react-table": "7.6.3",
-    "react-virtuoso": "1.8.1",
+    "react-virtuoso": "1.8.5",
     "remark-parse": "^9.0.0",
     "remark-rehype": "^8.1.0",
     "semantic-ui-react": "2.0.3",
