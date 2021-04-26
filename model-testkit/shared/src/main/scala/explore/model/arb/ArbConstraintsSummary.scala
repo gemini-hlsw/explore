@@ -10,34 +10,36 @@ import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 import explore.model.ConstraintsSummary
 import lucuma.core.enum._
-import lucuma.core.model.ConstraintSet
 import lucuma.core.util.arb.ArbGid._
-// these need to be at the end to avoid diverging implicit expansion problems
-import eu.timepit.refined.scalacheck.string._
-import eu.timepit.refined.types.string._
+import lucuma.core.model.ConstraintSet
 
 trait ArbConstraintsSummary {
-  implicit val constraintsSummaryArb = Arbitrary[ConstraintsSummary] {
+  def buildConstraintsSummaryArb[A <: ConstraintsSummary](
+    build: (ConstraintSet.Id, ImageQuality, CloudExtinction, SkyBackground, WaterVapor) => A
+  ) = Arbitrary[A] {
     for {
-      id   <- arbitrary[ConstraintSet.Id]
-      name <- arbitrary[NonEmptyString]
-      iq   <- arbitrary[ImageQuality]
-      ce   <- arbitrary[CloudExtinction]
-      sb   <- arbitrary[SkyBackground]
-      wv   <- arbitrary[WaterVapor]
-    } yield ConstraintsSummary(id = id,
-                               name = name,
-                               imageQuality = iq,
-                               cloudExtinction = ce,
-                               skyBackground = sb,
-                               waterVapor = wv
-    )
+      id <- arbitrary[ConstraintSet.Id]
+      iq <- arbitrary[ImageQuality]
+      ce <- arbitrary[CloudExtinction]
+      sb <- arbitrary[SkyBackground]
+      wv <- arbitrary[WaterVapor]
+    } yield build(id, iq, ce, sb, wv)
   }
 
+  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((i, iq, ce, sb, wv) =>
+    new ConstraintsSummary {
+      val id              = i
+      val imageQuality    = iq
+      val cloudExtinction = ce
+      val skyBackground   = sb
+      val waterVapor      = wv
+    }
+  )
+
   implicit val constraintsSummaryCogen: Cogen[ConstraintsSummary] =
-    Cogen[(ConstraintSet.Id, String, ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
+    Cogen[(ConstraintSet.Id, ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
       .contramap(cs =>
-        (cs.id, cs.name.value, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
+        (cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
       )
 }
 

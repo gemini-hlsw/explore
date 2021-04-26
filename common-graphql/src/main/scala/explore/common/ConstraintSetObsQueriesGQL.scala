@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model.ConstraintsSummary
 import explore.schemas.ObservationDB
-// gql: import explore.model.reusability._
 // gql: import io.circe.refined._
 // gql: import lucuma.ui.reusability._
 
@@ -43,7 +42,6 @@ object ConstraintSetObsQueriesGQL {
             }
             constraintSet {
               id
-              name
               imageQuality
               cloudExtinction
               skyBackground
@@ -56,12 +54,12 @@ object ConstraintSetObsQueriesGQL {
 
     object Data {
       object ConstraintSets {
-        type Nodes = ConstraintsSummary
+        trait Nodes extends ConstraintsSummary
       }
 
       object Observations {
         object Nodes {
-          type ConstraintSet = ConstraintsSummary
+          trait ConstraintSet extends ConstraintsSummary
         }
       }
     }

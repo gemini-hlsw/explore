@@ -4,47 +4,24 @@
 package explore.model
 
 import cats._
-import eu.timepit.refined.cats._
-import eu.timepit.refined.types.string.NonEmptyString
-import io.circe.Decoder
-import io.circe.Encoder
-import io.circe.generic.semiauto._
-import io.circe.refined._
 import lucuma.core.enum.CloudExtinction
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.SkyBackground
 import lucuma.core.enum.WaterVapor
 import lucuma.core.model.ConstraintSet
-import monocle.macros.Lenses
 
-@Lenses
-final case class ConstraintsSummary(
-  name:            NonEmptyString,
-  id:              ConstraintSet.Id,
-  imageQuality:    ImageQuality,
-  cloudExtinction: CloudExtinction,
-  skyBackground:   SkyBackground,
-  waterVapor:      WaterVapor
-) {
+trait ConstraintsSummary {
+  val id: ConstraintSet.Id
+  val imageQuality: ImageQuality
+  val cloudExtinction: CloudExtinction
+  val skyBackground: SkyBackground
+  val waterVapor: WaterVapor
+
   def summaryString: String =
     s"${imageQuality.label} ${cloudExtinction.label} ${skyBackground.label} ${waterVapor.label}"
 }
 
 object ConstraintsSummary {
-  def default(name: NonEmptyString, id: ConstraintSet.Id): ConstraintsSummary =
-    ConstraintsSummary(
-      id = id,
-      name = name,
-      imageQuality = ImageQuality.PointEight,
-      cloudExtinction = CloudExtinction.PointThree,
-      skyBackground = SkyBackground.Gray,
-      waterVapor = WaterVapor.Wet
-    )
-
-  implicit val constraintSummaryDecoder: Decoder[ConstraintsSummary] = deriveDecoder
-  implicit val constraintSummaryEncoder: Encoder[ConstraintsSummary] = deriveEncoder
-
-  implicit val eqConstraintSummary: Eq[ConstraintsSummary] = Eq.by(cs =>
-    (cs.name, cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
-  )
+  implicit val eqConstraintSummary: Eq[ConstraintsSummary] =
+    Eq.by(cs => (cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
 }

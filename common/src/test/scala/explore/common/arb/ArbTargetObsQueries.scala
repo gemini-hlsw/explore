@@ -15,11 +15,14 @@ import lucuma.core.model.Target
 import lucuma.core.model.Asterism
 import explore.common.TargetObsQueries._
 import lucuma.core.model.Observation
-import explore.model.ConstraintsSummary
 import explore.model.arb.ArbConstraintsSummary
+import explore.common.TargetObsQueriesGQL
 
 trait ArbTargetObsQueries {
   import ArbConstraintsSummary._
+
+  type ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
+  val ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
 
   implicit val arbObsResultPointing =
     Arbitrary[ObsResult.Pointing] {
@@ -28,19 +31,21 @@ trait ArbTargetObsQueries {
       )
     }
 
-  implicit val cogenbsResultPointing: Cogen[ObsResult.Pointing] =
+  implicit val cogenObsResultPointing: Cogen[ObsResult.Pointing] =
     Cogen[Either[Asterism.Id, Target.Id]]
       .contramap {
         case ObsResult.Pointing.Target(id)   => id.asRight
         case ObsResult.Pointing.Asterism(id) => id.asLeft
       }
 
+  implicit val arbConstraintSet = buildConstraintsSummaryArb(ConstraintSet.apply)
+
   implicit val arbObsResult =
     Arbitrary[ObsResult] {
       for {
         id            <- arbitrary[Observation.Id]
         pointing      <- arbitrary[Option[ObsResult.Pointing]]
-        constraintSet <- arbitrary[Option[ConstraintsSummary]]
+        constraintSet <- arbitrary[Option[ConstraintSet]]
       } yield ObsResult(id, pointing, constraintSet)
     }
 }

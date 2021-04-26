@@ -74,7 +74,7 @@ object ConstraintSetObsList {
       ObsSummaryWithPointingAndConstraints.id
     )
   val constraintSetListMod =
-    new KIListMod[IO, ConstraintsSummary, ConstraintSet.Id](ConstraintsSummary.id)
+    new KIListMod[IO, ConstraintSetResult, ConstraintSet.Id](ConstraintSetResult.id)
 
   class Backend($ : BackendScope[Props, State]) {
     private val UnassignedObsId = "unassignedObs"
@@ -90,7 +90,7 @@ object ConstraintSetObsList {
         case None       => UnassignConstraintSetFromObs.execute(obsId).void
       }
 
-    def insertConstraintSet(cs: ConstraintsSummary)(implicit
+    def insertConstraintSet(cs: ConstraintSetResult)(implicit
       c:                        TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       val create = ConstraintSetObsQueries.defaultCreateConstraintSet(cs)
@@ -229,7 +229,7 @@ object ConstraintSetObsList {
     )(name:   NonEmptyString)(implicit c: TransactionalClient[IO, ObservationDB]): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newCs = IO(Random.nextInt(0xfff)).map(int =>
-        ConstraintsSummary.default(id = ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+        defaultConstraintSetResult(id = ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                                    name = name
         )
       )
@@ -481,7 +481,7 @@ object ConstraintSetObsList {
         val expandedIds           = $.props.expandedIds
 
         // expand constraint set with focused observation
-        val expandCs = $.props.focused.get
+        val expandConstraintSets = $.props.focused.get
           .collect { case FocusedObs(obsId) =>
             constraintSetsWithObs.obs
               .getElement(obsId)
@@ -496,7 +496,7 @@ object ConstraintSetObsList {
             .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
             .orEmpty
 
-        (expandCs >> removeConstraintSets).runAsyncCB
+        (expandConstraintSets >> removeConstraintSets).runAsyncCB
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

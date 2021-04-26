@@ -17,6 +17,11 @@ addCommandAlias(
   "; scalafix OrganizeImports; scalafmtAll"
 )
 
+addCommandAlias(
+  "fix",
+  "; headerCreateAll; fixImports; scalafmtAll"
+)
+
 inThisBuild(
   Seq(
     homepage := Some(url("https://github.com/gemini-hlsw/explore")),
