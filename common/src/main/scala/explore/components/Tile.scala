@@ -39,8 +39,6 @@ object Tile {
 
   type RenderInTitle = VdomNode ~=> VdomNode
 
-  val infoRef = Ref.toVdom[html.Element]
-
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
   val heightBreakpoints                      =
@@ -58,58 +56,69 @@ object Tile {
 
   implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
 
+  class Backend() {
+
+    private val infoRef = Ref.toVdom[html.Element]
+
+    def render(p: Props) = {
+      val maximizeButton =
+        Button(
+          as = <.a,
+          basic = true,
+          compact = true,
+          clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+          onClick = p.sizeStateCallback(TileSizeState.Maximized)
+        )(Icons.Maximize.fitted(true))
+
+      val minimizeButton =
+        Button(
+          as = <.a,
+          basic = true,
+          compact = true,
+          clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
+          onClick = p.sizeStateCallback(TileSizeState.Minimized)
+        )(Icons.Minimize.fitted(true))
+
+      <.div(ExploreStyles.Tile)(
+        <.div(
+          ExploreStyles.TileTitle,
+          p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
+          Menu(
+            attached = MenuAttached.Top,
+            compact = true,
+            borderless = true,
+            secondary = true,
+            clazz = ExploreStyles.TileTitleMenu,
+            tabular = MenuTabular.Right
+          )(
+            MenuItem(as = <.a)(p.title)
+          ),
+          <.span(ExploreStyles.TileTitleInfo,
+                 ^.untypedRef := infoRef,
+                 ^.key := s"tile-info-${p.title}",
+                 <.span
+          ),
+          minimizeButton.when(p.showMinimize),
+          maximizeButton.when(p.showMaximize)
+        ),
+        ResponsiveComponent(widthBreakpoints, heightBreakpoints, clazz = ExploreStyles.TileBody)(
+          p.render(
+            (renderPortal _).reusable(
+              JsUtil
+                .jsNullToOption(infoRef.raw.current)
+                .map(_.asInstanceOf[raw.ReactDOM.Container])
+            )
+          )
+        ).when(p.state =!= TileSizeState.Minimized)
+      )
+    }
+  }
+
   val component =
     ScalaComponent
       .builder[Props]
       .stateless
-      .render_P { p =>
-        val maximizeButton =
-          Button(
-            as = <.a,
-            basic = true,
-            compact = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-            onClick = p.sizeStateCallback(TileSizeState.Maximized)
-          )(Icons.Maximize.fitted(true))
-
-        val minimizeButton =
-          Button(
-            as = <.a,
-            basic = true,
-            compact = true,
-            clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-            onClick = p.sizeStateCallback(TileSizeState.Minimized)
-          )(Icons.Minimize.fitted(true))
-
-        <.div(ExploreStyles.Tile)(
-          <.div(
-            ExploreStyles.TileTitle,
-            p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
-            Menu(
-              attached = MenuAttached.Top,
-              compact = true,
-              borderless = true,
-              secondary = true,
-              clazz = ExploreStyles.TileTitleMenu,
-              tabular = MenuTabular.Right
-            )(
-              MenuItem(as = <.a)(p.title)
-            ),
-            <.span(ExploreStyles.TileTitleInfo, ^.untypedRef := infoRef, <.span),
-            minimizeButton.when(p.showMinimize),
-            maximizeButton.when(p.showMaximize)
-          ),
-          ResponsiveComponent(widthBreakpoints, heightBreakpoints, clazz = ExploreStyles.TileBody)(
-            p.render(
-              (renderPortal _).reusable(
-                JsUtil
-                  .jsNullToOption(infoRef.raw.current)
-                  .map(_.asInstanceOf[raw.ReactDOM.Container])
-              )
-            )
-          ).when(p.state =!= TileSizeState.Minimized)
-        )
-      }
+      .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 
