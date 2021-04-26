@@ -43,10 +43,11 @@ object Tile {
 
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
-  val heightBreakpoints                      =
+
+  val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
 
-  val widthBreakpoints                       =
+  val widthBreakpoints  =
     List((300                            -> TileXSW),
          (Constants.TwoPanelCutoff.toInt -> TileSMW),
          (768                            -> TileMDW),
@@ -97,8 +98,7 @@ object Tile {
           ),
           <.span(ExploreStyles.TileTitleInfo,
                  ^.untypedRef := infoRef,
-                 ^.key := s"tile-info-${p.title}",
-                 <.span
+                 ^.key := s"tile-info-${p.title}"
           ),
           minimizeButton.when(p.showMinimize),
           maximizeButton.when(p.showMaximize)

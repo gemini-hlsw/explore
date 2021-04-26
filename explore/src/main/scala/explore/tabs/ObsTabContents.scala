@@ -70,7 +70,7 @@ object ObsTabContents {
   val NotesMaxHeight: NonNegInt       = 3
   val NotesMinHeight: NonNegInt       = 1
   val TargetMinHeight: NonNegInt      = 12
-  val ConstraintsMaxHeight: NonNegInt = 3
+  val ConstraintsMaxHeight: NonNegInt = 6
   val ConstraintsMinHeight: NonNegInt = 1
   val DefaultWidth: NonNegInt         = 12
 
@@ -82,7 +82,6 @@ object ObsTabContents {
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
-                 resizeHandles = List("")
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -93,9 +92,8 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
-                 h = 4,
+                 h = ConstraintsMaxHeight.value,
                  i = "constraints",
-                 isResizable = false
       )
     )
   )
@@ -108,7 +106,6 @@ object ObsTabContents {
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
-                 resizeHandles = List("")
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -119,9 +116,8 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
-                 h = 4,
+                 h = ConstraintsMaxHeight.value,
                  i = "constraints",
-                 isResizable = false
       )
     )
   )
@@ -134,7 +130,6 @@ object ObsTabContents {
                  h = NotesMaxHeight.value,
                  i = "notes",
                  isResizable = false,
-                 resizeHandles = List("")
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -145,9 +140,8 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
-                 h = 4,
+                 h = ConstraintsMaxHeight.value,
                  i = "constraints",
-                 isResizable = false
       )
     )
   )

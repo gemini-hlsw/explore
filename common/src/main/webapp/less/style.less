@@ -973,8 +973,19 @@ tfoot {
   }
 }
 
+.tile-xxs-width,
+.tile-xs-width {
+  .constraints-grid {
+    --column-count: 1;
+    --column-wide-span: 1;
+  }
+}
+
 .constraints-grid {
   padding: 0.5em;
+  --column-count: 2;
+  --column-wide-span: 2;
+  grid-template-columns: repeat(var(--column-count), minmax(40ch, 1fr));
 
   .elevation-range-picker {
     width: 9em;
@@ -983,11 +994,20 @@ tfoot {
   .elevation-range-entry {
     width: 8em;
   }
+
+  .constraints-elevation-range,
+  .constraints-name-field {
+    grid-column: 1 / span var(--column-wide-span);
+  }
+
 }
 
+
 .constraints-obs-tile {
-  .constraints-name-field {
-    display: none;
+  .constraints-grid {
+    .constraints-name-field {
+      display: none;
+    }
   }
 }
 

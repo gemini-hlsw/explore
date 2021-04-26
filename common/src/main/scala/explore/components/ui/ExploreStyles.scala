@@ -173,11 +173,12 @@ object ExploreStyles {
   val CatalogueForm: Css        = Css("catalogue-form")
 
   // The Constraints tab contents
-  val ConstraintsGrid      = Css("constraints-grid")
-  val ConstraintsNameField = Css("constraints-name-field")
-  val ConstraintsObsTile   = Css("constraints-obs-tile")
-  val ElevationRangePicker = Css("elevation-range-picker")
-  val ElevationRangeEntry  = Css("elevation-range-entry")
+  val ConstraintsGrid                = Css("constraints-grid")
+  val ConstraintsNameField           = Css("constraints-name-field")
+  val ConstraintsObsTile             = Css("constraints-obs-tile")
+  val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
+  val ElevationRangePicker           = Css("elevation-range-picker")
+  val ElevationRangeEntry            = Css("elevation-range-entry")
 
   // styles for icons that acts as buttons
   val ButtonIcon: Css       = Css("explore-button-icon")

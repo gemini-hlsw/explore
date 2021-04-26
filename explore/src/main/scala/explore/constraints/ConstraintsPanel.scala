@@ -151,31 +151,29 @@ object ConstraintsPanel {
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below
           ),
-          <.div(
-            ExploreStyles.TwoColumnGrid,
-            selectEnum("Image Quality",
-                       "constraints/main/iq.md",
-                       ConstraintSetModel.imageQuality,
-                       UpdateConstraintSet.imageQuality
-            ),
-            selectEnum("Cloud Extinction",
-                       "constraints/main/ce.md",
-                       ConstraintSetModel.cloudExtinction,
-                       UpdateConstraintSet.cloudExtinction
-            ),
-            selectEnum("Water Vapor",
-                       "constraints/main/wv.md",
-                       ConstraintSetModel.waterVapor,
-                       UpdateConstraintSet.waterVapor
-            ),
-            selectEnum("Sky Background",
-                       "constraints/main/sb.md",
-                       ConstraintSetModel.skyBackground,
-                       UpdateConstraintSet.skyBackground
-            )
+          selectEnum("Image Quality",
+                     "constraints/main/iq.md",
+                     ConstraintSetModel.imageQuality,
+                     UpdateConstraintSet.imageQuality
+          ),
+          selectEnum("Cloud Extinction",
+                     "constraints/main/ce.md",
+                     ConstraintSetModel.cloudExtinction,
+                     UpdateConstraintSet.cloudExtinction
+          ),
+          selectEnum("Water Vapor",
+                     "constraints/main/wv.md",
+                     ConstraintSetModel.waterVapor,
+                     UpdateConstraintSet.waterVapor
+          ),
+          selectEnum("Sky Background",
+                     "constraints/main/sb.md",
+                     ConstraintSetModel.skyBackground,
+                     UpdateConstraintSet.skyBackground
           ),
           <.div(
             ExploreStyles.FlexContainer,
+            ExploreStyles.ConstraintsElevationRangeGroup,
             EnumViewSelect(
               id = "ertype",
               label = Label("Elevation Range", HelpIcon("constraints/main/er.md")),
