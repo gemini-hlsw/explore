@@ -44,9 +44,18 @@ final case class ReactMarkdown(
 
 object ReactMarkdown {
 
+  val ReactMarkdown =
+    if (scala.scalajs.runtime.linkingInfo.productionMode) ReactMarkdownProd else ReactMarkdownDev
+
   @js.native
-  @JSImport("/react-markdown/react-markdown", JSImport.Default)
-  object ReactMarkdown extends js.Function1[js.Any, js.Any] {
+  @JSImport("react-markdown", JSImport.Default)
+  object ReactMarkdownProd extends js.Function1[js.Any, js.Any] {
+    def apply(arg: js.Any): js.Any = js.native
+  }
+
+  @js.native
+  @JSImport("react-markdown", JSImport.Namespace)
+  object ReactMarkdownDev extends js.Function1[js.Any, js.Any] {
     def apply(arg: js.Any): js.Any = js.native
   }
 

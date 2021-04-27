@@ -17,6 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
 import react.markdown.ReactMarkdown
+import react.markdown.ReactMarkdownPlugin
 import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -26,7 +27,6 @@ import sttp.model.Uri
 
 import scala.concurrent.duration._
 import scala.util.Try
-import react.markdown.ReactMarkdownPlugin
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactProps[HelpBody](HelpBody.component) {
