@@ -17,6 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
 import react.markdown.ReactMarkdown
+import react.markdown.ReactMarkdownPlugin
 import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -105,7 +106,8 @@ object HelpBody {
                       ReactMarkdown(content = a,
                                     clazz = ExploreStyles.HelpMarkdownBody,
                                     linkTarget = "_blank",
-                                    imageConv
+                                    imageConv,
+                                    plugins = List(ReactMarkdownPlugin.RemarkGFM)
                       ): VdomNode
                     case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
                     case crystal.Error(o) if o.getMessage.contains("404") =>
