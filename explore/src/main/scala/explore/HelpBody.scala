@@ -26,6 +26,7 @@ import sttp.model.Uri
 
 import scala.concurrent.duration._
 import scala.util.Try
+import react.markdown.ReactMarkdownPlugin
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactProps[HelpBody](HelpBody.component) {
@@ -105,7 +106,8 @@ object HelpBody {
                       ReactMarkdown(content = a,
                                     clazz = ExploreStyles.HelpMarkdownBody,
                                     linkTarget = "_blank",
-                                    imageConv
+                                    imageConv,
+                                    plugins = List(ReactMarkdownPlugin.RemarkGFM)
                       ): VdomNode
                     case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
                     case crystal.Error(o) if o.getMessage.contains("404") =>

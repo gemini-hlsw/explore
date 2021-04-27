@@ -29,6 +29,7 @@
     "react-resize-detector": "6.5.0",
     "react-table": "7.6.3",
     "react-virtuoso": "1.8.1",
+    "remark-gfm": "^1.0.0",
     "remark-parse": "^9.0.0",
     "remark-rehype": "^8.1.0",
     "semantic-ui-react": "2.0.3",
