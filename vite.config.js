@@ -31,13 +31,13 @@ export default ({ command, mode }) => {
   const publicDirProd = path.resolve(common, "src/main/public");
   const publicDirDev = path.resolve(common, "src/main/publicdev");
   fs.mkdir(publicDirDev, (err) => {
-    fs.copyFileSync(path.resolve(publicDirProd, "development.conf.json"), path.resolve(publicDirDev, "conf.json"));
+    fs.copyFileSync(
+      path.resolve(publicDirProd, "development.conf.json"),
+      path.resolve(publicDirDev, "conf.json")
+    );
   });
 
-  const publicDir = 
-    mode == "production"
-     ? publicDirProd
-     : publicDirDev
+  const publicDir = mode == "production" ? publicDirProd : publicDirDev;
   return {
     root: "explore/src/main/webapp",
     publicDir: publicDir,
@@ -72,10 +72,13 @@ export default ({ command, mode }) => {
     server: {
       strictPort: true,
       port: 8080,
-      https: {
-        key: fs.readFileSync("server.key"),
-        cert: fs.readFileSync("server.cert"),
-      },
+      https:
+        mode == "production"
+          ? {}
+          : {
+              key: fs.readFileSync("server.key"),
+              cert: fs.readFileSync("server.cert"),
+            },
       watch: {
         ignored: [
           function ignoreThisPath(_path) {
