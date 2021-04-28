@@ -87,15 +87,14 @@ object Tile {
           ExploreStyles.TileTitle,
           p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
           Menu(
-            attached = MenuAttached.Top,
             compact = true,
             borderless = true,
             secondary = true,
-            clazz = ExploreStyles.TileTitleMenu,
-            tabular = MenuTabular.Right
+            clazz = ExploreStyles.TileTitleMenu
           )(
             MenuItem(as = <.a)(p.title)
           ),
+          p.control.map(b => <.div(ExploreStyles.TileControl, b.body)),
           <.span(ExploreStyles.TileTitleInfo,
                  ^.untypedRef := infoRef,
                  ^.key := s"tile-info-${p.title}"

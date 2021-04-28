@@ -21,3 +21,5 @@
 @itemVerticalPadding: @tightVerticalPadding;
 @itemHorizontalPadding: @tightHorizontalPadding;
 
+@selectionHoverBorderColor: var(--button-hover-border-color);
+@selectionVisibleTextColor: var(--text-color);

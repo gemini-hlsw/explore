@@ -50,6 +50,7 @@ object TargetObsQueriesGQL {
             }
             constraintSet {
               id
+              name
               imageQuality
               cloudExtinction
               skyBackground

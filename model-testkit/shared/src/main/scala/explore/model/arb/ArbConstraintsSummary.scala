@@ -12,23 +12,34 @@ import explore.model.ConstraintsSummary
 import lucuma.core.enum._
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.model.ConstraintSet
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.scalacheck.string._
 
 trait ArbConstraintsSummary {
   def buildConstraintsSummaryArb[A <: ConstraintsSummary](
-    build: (ConstraintSet.Id, ImageQuality, CloudExtinction, SkyBackground, WaterVapor) => A
+    build: (
+      ConstraintSet.Id,
+      NonEmptyString,
+      ImageQuality,
+      CloudExtinction,
+      SkyBackground,
+      WaterVapor
+    ) => A
   ) = Arbitrary[A] {
     for {
       id <- arbitrary[ConstraintSet.Id]
+      nm <- arbitrary[NonEmptyString]
       iq <- arbitrary[ImageQuality]
       ce <- arbitrary[CloudExtinction]
       sb <- arbitrary[SkyBackground]
       wv <- arbitrary[WaterVapor]
-    } yield build(id, iq, ce, sb, wv)
+    } yield build(id, nm, iq, ce, sb, wv)
   }
 
-  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((i, iq, ce, sb, wv) =>
+  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((i, nm, iq, ce, sb, wv) =>
     new ConstraintsSummary {
       val id              = i
+      val name            = nm
       val imageQuality    = iq
       val cloudExtinction = ce
       val skyBackground   = sb

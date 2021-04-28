@@ -11,15 +11,15 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
+import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
+import explore.common.ConstraintsQueriesGQL._
 import explore.common.ObsQueries._
 import explore.common.TargetQueriesGQL._
-import explore.common.ConstraintsQueriesGQL._
-import lucuma.core.model.ConstraintSet
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileButton
-// import explore.components.TileControl
+import explore.components.TileControl
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
@@ -37,10 +37,12 @@ import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
+import monocle.function.Field2.second
 import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
@@ -49,11 +51,15 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.resizeDetector.ResizeDetector
+import react.semanticui.addons.select.Select
+import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import scala.scalajs.js.JSConverters._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -81,7 +87,7 @@ object ObsTabContents {
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
+                 isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -93,7 +99,7 @@ object ObsTabContents {
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints",
+                 i = "constraints"
       )
     )
   )
@@ -105,7 +111,7 @@ object ObsTabContents {
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
+                 isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -117,7 +123,7 @@ object ObsTabContents {
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints",
+                 i = "constraints"
       )
     )
   )
@@ -129,7 +135,7 @@ object ObsTabContents {
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
+                 isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
@@ -141,7 +147,7 @@ object ObsTabContents {
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints",
+                 i = "constraints"
       )
     )
   )
@@ -210,7 +216,7 @@ object ObsTabContents {
     protected def renderFn(
       props:        Props,
       state:        View[State],
-      observations: View[ObservationList]
+      observations: View[(List[ConstraintsSummary], ObservationList)]
     ): VdomNode = {
       implicit val ctx = props.ctx
 
@@ -252,13 +258,25 @@ object ObsTabContents {
 
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
         props.focused.get.collect { case FocusedObs(obsId) =>
-          observations.get.getElement(obsId)
+          observations.get._2.getElement(obsId)
         }.flatten
 
-      val constrainstSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
-      // val constrainstObsCount = obsSummaryOpt.flatMap(_.constraints.map(_.obsCount))
-      // println(constrainstObsCount)
-      val targetId         = obsSummaryOpt.collect {
+      val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
+
+      val constraintsSelector =
+        Select(
+          value = constraintsSetId.map(_.show).orUndefined,
+          placeholder = "Select a constraint set",
+          onChange = (a: Dropdown.DropdownProps) =>
+            (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
+              AssignConstraintSetToObs
+                .execute(csId, obsId.id)
+                .runAsyncAndForgetCB
+            }.getOrEmpty,
+          options =
+            observations.get._1.map(s => new SelectItem(value = s.id.show, text = s.name.value))
+        )
+      val targetId            = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
                                                   Some(Pointing.PointingTarget(tid, _)),
                                                   _,
@@ -397,7 +415,9 @@ object ObsTabContents {
           ),
           <.div(
             ^.key := "constraints",
-            Tile("Constraints")((renderConstraints _).reusable(constrainstSetId))
+            Tile("Constraints", control = TileControl(constraintsSelector).some)(
+              (renderConstraints _).reusable(constraintsSetId)
+            )
           )
         )
 
@@ -413,7 +433,7 @@ object ObsTabContents {
       if (window.innerWidth <= Constants.TwoPanelCutoff) {
         <.div(
           ExploreStyles.TreeRGL,
-          <.div(ExploreStyles.Tree, treeInner(observations))
+          <.div(ExploreStyles.Tree, treeInner(observations.zoom(second)))
             .when(state.get.panels.leftPanelVisible),
           <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
             rightSide
@@ -430,7 +450,7 @@ object ObsTabContents {
             maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
             onResize = treeResize,
             resizeHandles = List(ResizeHandleAxis.East),
-            content = tree(observations)
+            content = tree(observations.zoom(second))
           ),
           <.div(^.key := "obs-right-side",
                 ^.width := coreWidth.px,
