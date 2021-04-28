@@ -35,3 +35,7 @@ node_modules/
 vars.css
 static/
 common/src/main/publicdev/
+
+# vite
+server.cert
+server.key
