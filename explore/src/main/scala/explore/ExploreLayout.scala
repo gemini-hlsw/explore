@@ -12,6 +12,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -34,16 +35,22 @@ object ExploreLayout {
   implicit val propsReuse: Reusability[Props]                                                    =
     Reusability.by(p => (p.r, p.view))
 
-  private def renderFn(
-    props:    Props,
-    vault:    UserVault,
-    onLogout: IO[Unit]
+  final case class State(helpVisible: Boolean)
+  implicit val stateReuse: Reusability[State] =
+    Reusability.derive
+
+  private def renderFn($ : RenderScope[Props, State, Unit])(
+    props:                Props,
+    vault:                UserVault,
+    onLogout:             IO[Unit]
   ): VdomNode =
     AppCtx.using { implicit ctx =>
       HelpCtx.usingView { helpCtx =>
         val helpView = helpCtx.zoom(HelpContext.displayedHelp)
         SidebarPushable(
           Sidebar(
+            onShow = $.setState(State(true)),
+            onHidden = $.setState(State(false)),
             width = SidebarWidth.Wide,
             direction = SidebarDirection.Right,
             animation = SidebarAnimation.Overlay,
@@ -68,6 +75,9 @@ object ExploreLayout {
                 props.r.renderP(props.view)
               )
             )
+          )(
+            ^.onClick -->
+              helpView.set(none).runAsyncAndForgetCB.when_($.state.helpVisible)
           )
         )
       }
@@ -76,10 +86,11 @@ object ExploreLayout {
   private val component =
     ScalaComponent
       .builder[Props]
-      .stateless
-      .render_P { p =>
-        IfLogged(p.view)((renderFn _).reusable(p))
+      .initialState(State(false))
+      .renderP { ($, p) =>
+        IfLogged(p.view)((renderFn($) _).reusable(p))
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

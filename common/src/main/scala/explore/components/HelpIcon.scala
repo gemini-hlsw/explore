@@ -32,7 +32,9 @@ object HelpIcon {
         AppCtx.using { implicit ctx =>
           val helpMsg = help.zoom(HelpContext.displayedHelp)
           <.span(
-            ^.onClick --> helpMsg.set(p.id.some).runAsyncCB,
+            ^.onClick ==> { (e: ReactMouseEvent) =>
+              e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some).runAsyncCB
+            },
             Icons.Info
               .link(true)
               .inverted(true)
