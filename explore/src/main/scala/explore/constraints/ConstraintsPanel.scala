@@ -189,7 +189,7 @@ object ConstraintsPanel {
               ReactFragment(
                 FormInputEV(
                   id = "minam",
-                  label = Label("Min", HelpIcon("constraints/main/minam.md")),
+                  label = "Min",
                   value = state
                     .zoom(State.airMass)
                     .zoom(AirMassRange.min)
@@ -214,7 +214,7 @@ object ConstraintsPanel {
                 ),
                 FormInputEV(
                   id = "maxam",
-                  label = Label("Max", HelpIcon("constraints/main/maxam.md")),
+                  label = "Max",
                   value = state
                     .zoom(State.airMass)
                     .zoom(AirMassRange.max)
@@ -241,7 +241,7 @@ object ConstraintsPanel {
               ReactFragment(
                 FormInputEV(
                   id = "minha",
-                  label = Label("Min", HelpIcon("constraints/main/minha.md")),
+                  label = "Min",
                   value = state
                     .zoom(State.hourAngle)
                     .zoom(HourAngleRange.minHours)
@@ -265,7 +265,7 @@ object ConstraintsPanel {
                 ),
                 FormInputEV(
                   id = "maxha",
-                  label = Label("Max", HelpIcon("constraints/main/maxha.md")),
+                  label = "Max",
                   value = state
                     .zoom(State.hourAngle)
                     .zoom(HourAngleRange.maxHours)
