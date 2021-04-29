@@ -9,7 +9,6 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
@@ -24,6 +23,7 @@ import ObsQueriesGQL._
 object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
+  type ConstraintsInfo = List[ProgramObservationsQuery.Data.ConstraintSets.Nodes]
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
@@ -35,23 +35,9 @@ object ObsQueries {
         Pointing.PointingAsterism(id, name, Nil)
     }
 
-  implicit class ConstraintSetsObsQueryDataOps(
-    val self: ProgramObservationsQuery.Data.ConstraintSets.Nodes
-  ) extends AnyVal {
-    def asConstraintSummary: ConstraintsSummary =
-      new ConstraintsSummary {
-        val id              = self.id
-        val name            = self.name
-        val imageQuality    = self.imageQuality
-        val cloudExtinction = self.cloudExtinction
-        val skyBackground   = self.skyBackground
-        val waterVapor      = self.waterVapor
-      }
-  }
-
   private val programObservationsQueryoObservationListGetter
-    : Getter[ProgramObservationsQuery.Data, (List[ConstraintsSummary], ObservationList)] = data => {
-    val cs  = data.constraintSets.nodes.map(_.asConstraintSummary)
+    : Getter[ProgramObservationsQuery.Data, (ConstraintsInfo, ObservationList)] = data => {
+    val cs  = data.constraintSets.nodes
     val obs = KeyedIndexedList.fromList(
       data.observations.nodes.map(node =>
         ObsSummaryWithPointingAndConstraints(node.id,
@@ -70,11 +56,11 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[(List[ConstraintsSummary], ObservationList)] ~=> VdomNode](render =>
+    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ~=> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ProgramObservationsQuery.Data,
-                           (List[ConstraintsSummary], ObservationList)
+                           (ConstraintsInfo, ObservationList)
         ](
           ProgramObservationsQuery.query(),
           ProgramObservationsQuery.Data.asObservationList.get,

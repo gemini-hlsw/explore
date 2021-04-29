@@ -20,10 +20,6 @@ object ObsQueriesGQL {
           nodes {
             id
             name
-            imageQuality
-            cloudExtinction
-            skyBackground
-            waterVapor
           }
         }
 
@@ -43,7 +39,6 @@ object ObsQueriesGQL {
             }
             constraintSet {
               id
-              name
               imageQuality
               cloudExtinction
               skyBackground

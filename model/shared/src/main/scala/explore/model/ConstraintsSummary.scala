@@ -4,7 +4,6 @@
 package explore.model
 
 import cats._
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.CloudExtinction
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.SkyBackground
@@ -13,7 +12,6 @@ import lucuma.core.model.ConstraintSet
 
 trait ConstraintsSummary {
   val id: ConstraintSet.Id
-  val name: NonEmptyString
   val imageQuality: ImageQuality
   val cloudExtinction: CloudExtinction
   val skyBackground: SkyBackground
@@ -25,7 +23,5 @@ trait ConstraintsSummary {
 
 object ConstraintsSummary {
   implicit val eqConstraintSummary: Eq[ConstraintsSummary] =
-    Eq.by(cs =>
-      (cs.id, cs.name.value, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
-    )
+    Eq.by(cs => (cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
 }

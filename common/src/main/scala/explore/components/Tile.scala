@@ -57,7 +57,7 @@ object Tile {
   def renderPortal(mountNode: Option[raw.ReactDOM.Container], info: VdomNode): VdomNode =
     mountNode.map(node => ReactPortal(info, node))
 
-  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
+  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.never
 
   class Backend() {
 

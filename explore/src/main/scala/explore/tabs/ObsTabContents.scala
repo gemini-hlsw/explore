@@ -59,7 +59,6 @@ import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import scala.scalajs.js.JSConverters._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -216,7 +215,7 @@ object ObsTabContents {
     protected def renderFn(
       props:        Props,
       state:        View[State],
-      observations: View[(List[ConstraintsSummary], ObservationList)]
+      observations: View[(ConstraintsInfo, ObservationList)]
     ): VdomNode = {
       implicit val ctx = props.ctx
 
@@ -263,20 +262,20 @@ object ObsTabContents {
 
       val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
 
-      val constraintsSelector =
+      def constraintsSelector =
         Select(
-          value = constraintsSetId.map(_.show).orUndefined,
+          value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
           placeholder = "Select a constraint set",
           onChange = (a: Dropdown.DropdownProps) =>
             (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
               AssignConstraintSetToObs
                 .execute(csId, obsId.id)
-                .runAsyncAndForgetCB
+                .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
             }.getOrEmpty,
           options =
             observations.get._1.map(s => new SelectItem(value = s.id.show, text = s.name.value))
         )
-      val targetId            = obsSummaryOpt.collect {
+      val targetId = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
                                                   Some(Pointing.PointingTarget(tid, _)),
                                                   _,
