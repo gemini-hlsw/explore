@@ -12,7 +12,6 @@ import explore.common.ConstraintSetObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
-import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintSetEditor
 import explore.implicits._
@@ -103,7 +102,7 @@ object ConstraintSetTabContents {
         ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
       )
 
-    val backButton = TileButton(
+    val backButton = Reusable.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,
