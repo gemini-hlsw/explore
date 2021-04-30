@@ -511,12 +511,10 @@ object TargetObsList {
       ObsSummaryWithConstraints(obs.id, obs.constraintSet)
 
     def renderFn(
-      props:   Props,
-      state:   View[State],
-      undoCtx: Undoer.Context[IO, PointingsWithObs]
-    ): VdomElement = {
-      implicit val ctx = props.ctx
-
+      props:        Props,
+      state:        View[State],
+      undoCtx:      Undoer.Context[IO, PointingsWithObs]
+    )(implicit ctx: AppContextIO): VdomElement = {
       val observations  = props.pointingsWithObs.get.observations
       val obsByPointing = observations.toList.groupBy(_.pointing)
 

@@ -264,12 +264,10 @@ object ConstraintSetObsList {
         .mod(expanded => expanded.exists(_ === id).fold(expanded - id, expanded + id))
 
     def renderFn(
-      props:   Props,
-      state:   View[State],
-      undoCtx: Undoer.Context[IO, ConstraintSetsWithObs]
-    ): VdomNode = {
-      implicit val ctx = props.ctx
-
+      props:        Props,
+      state:        View[State],
+      undoCtx:      Undoer.Context[IO, ConstraintSetsWithObs]
+    )(implicit ctx: AppContextIO): VdomNode = {
       val observations       = props.constraintSetsWithObs.get.obs
       val obsByConstraintSet = observations.toList.groupBy(_.constraints.map(_.id))
 

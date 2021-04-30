@@ -216,9 +216,7 @@ object ObsTabContents {
       props:        Props,
       state:        View[State],
       observations: View[(ConstraintsInfo, ObservationList)]
-    ): VdomNode = {
-      implicit val ctx = props.ctx
-
+    )(implicit ctx: AppContextIO): VdomNode = {
       val treeResize =
         (_: ReactEvent, d: ResizeCallbackData) =>
           $.setStateL(State.panelsWidth)(d.size.width) *>

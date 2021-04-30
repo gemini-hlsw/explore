@@ -106,193 +106,192 @@ object ConstraintsPanel {
   class Backend($ : BackendScope[Props, State]) {
 
     private def renderFn(
-      props:   Props,
-      state:   View[State],
-      undoCtx: Undoer.Context[IO, ConstraintSetModel]
-    ): VdomNode =
-      AppCtx.using { implicit appCtx =>
-        val constraintSet = props.constraintSet
+      props:        Props,
+      state:        View[State],
+      undoCtx:      Undoer.Context[IO, ConstraintSetModel]
+    )(implicit ctx: AppContextIO): VdomNode = {
+      val constraintSet = props.constraintSet
 
-        val undoViewSet =
-          UndoView(props.id, constraintSet, undoCtx.setter)
+      val undoViewSet =
+        UndoView(props.id, constraintSet, undoCtx.setter)
 
-        def nameView = undoViewSet(ConstraintSetModel.name, UpdateConstraintSet.name)
-        def erView   =
-          undoViewSet(ConstraintSetModel.elevationRange, UpdateConstraintSet.elevationRange)
+      def nameView = undoViewSet(ConstraintSetModel.name, UpdateConstraintSet.name)
+      def erView   =
+        undoViewSet(ConstraintSetModel.elevationRange, UpdateConstraintSet.elevationRange)
 
-        def selectEnum[A: Enumerated: Display](
-          label:     String,
-          helpId:    Help.Id,
-          lens:      Lens[ConstraintSetModel, A],
-          remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
-        ) = {
-          val id = label.toLowerCase().replaceAll(" ", "-")
-          EnumViewSelect(id = id,
-                         value = undoViewSet(lens, remoteSet),
-                         label = Label(label, HelpIcon(helpId))
-          )
-        }
-
-        def updateElevationRange(ert: ElevationRangeType) =
-          ert match {
-            case AirMass   => erView.set(state.get.airMass)
-            case HourAngle => erView.set(state.get.hourAngle)
-          }
-
-        ReactFragment(
-          props.renderInTitle(
-            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx))
-          ),
-          Form(as = <.div)(
-            ExploreStyles.Grid,
-            ExploreStyles.ConstraintsGrid,
-            FormInputEV(
-              id = "name",
-              label = Label("Name", HelpIcon("constraints/main/name.md")),
-              clazz = ExploreStyles.ConstraintsNameField,
-              value = nameView,
-              validFormat = ValidFormatInput.nonEmptyValidFormat,
-              errorClazz = ExploreStyles.InputErrorTooltip,
-              errorPointing = LabelPointing.Below
-            ),
-            selectEnum("Image Quality",
-                       "constraints/main/iq.md",
-                       ConstraintSetModel.imageQuality,
-                       UpdateConstraintSet.imageQuality
-            ),
-            selectEnum("Cloud Extinction",
-                       "constraints/main/ce.md",
-                       ConstraintSetModel.cloudExtinction,
-                       UpdateConstraintSet.cloudExtinction
-            ),
-            selectEnum("Water Vapor",
-                       "constraints/main/wv.md",
-                       ConstraintSetModel.waterVapor,
-                       UpdateConstraintSet.waterVapor
-            ),
-            selectEnum("Sky Background",
-                       "constraints/main/sb.md",
-                       ConstraintSetModel.skyBackground,
-                       UpdateConstraintSet.skyBackground
-            ),
-            <.div(
-              ExploreStyles.FlexContainer,
-              ExploreStyles.ConstraintsElevationRangeGroup,
-              EnumViewSelect(
-                id = "ertype",
-                label = Label("Elevation Range", HelpIcon("constraints/main/er.md")),
-                value = state
-                  .zoom(State.rangeType)
-                  .withOnMod(updateElevationRange),
-                clazz = ExploreStyles.ElevationRangePicker
-              ),
-              ReactFragment(
-                FormInputEV(
-                  id = "minam",
-                  label = "Min",
-                  value = state
-                    .zoom(State.airMass)
-                    .zoom(AirMassRange.min)
-                    .zoomSplitEpi(
-                      TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
-                    )
-                    .withOnMod(min => erView.set(state.get.airMass.copy(min = min.value))),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ValidFormatInput
-                    .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
-                    .composeValidFormat(
-                      ValidFormatNec.lte(
-                        TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
-                          state.get.airMass.max
-                        ).get,
-                        "Must be <= Max"
-                      )
-                    ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                FormInputEV(
-                  id = "maxam",
-                  label = "Max",
-                  value = state
-                    .zoom(State.airMass)
-                    .zoom(AirMassRange.max)
-                    .zoomSplitEpi(
-                      TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
-                    )
-                    .withOnMod(max => erView.set(state.get.airMass.copy(max = max.value))),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ValidFormatInput
-                    .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
-                    .composeValidFormat(
-                      ValidFormatNec.gte(
-                        TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
-                          state.get.airMass.min
-                        ).get,
-                        "Must be >= Min"
-                      )
-                    ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                )
-              ).when(state.get.rangeType === AirMass),
-              ReactFragment(
-                FormInputEV(
-                  id = "minha",
-                  label = "Min",
-                  value = state
-                    .zoom(State.hourAngle)
-                    .zoom(HourAngleRange.minHours)
-                    .zoomSplitEpi(
-                      TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
-                    )
-                    .withOnMod(min => erView.set(state.get.hourAngle.copy(minHours = min.value))),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ValidFormatInput
-                    .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
-                    .composeValidFormat(
-                      ValidFormatNec.lte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
-                                           state.get.hourAngle.maxHours
-                                         ).get,
-                                         "Must be <= Max"
-                      )
-                    ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                FormInputEV(
-                  id = "maxha",
-                  label = "Max",
-                  value = state
-                    .zoom(State.hourAngle)
-                    .zoom(HourAngleRange.maxHours)
-                    .zoomSplitEpi(
-                      TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
-                    )
-                    .withOnMod(max => erView.set(state.get.hourAngle.copy(maxHours = max.value))),
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  errorPointing = LabelPointing.Below,
-                  validFormat = ValidFormatInput
-                    .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
-                    .composeValidFormat(
-                      ValidFormatNec.gte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
-                                           state.get.hourAngle.minHours
-                                         ).get,
-                                         "Must be >= Min"
-                      )
-                    ),
-                  changeAuditor = ChangeAuditor.accept.decimal(1),
-                  clazz = ExploreStyles.ElevationRangeEntry
-                ),
-                <.div(ExploreStyles.UnitsLabel, "hours")
-              ).when(state.get.rangeType === HourAngle)
-            )
-          )
+      def selectEnum[A: Enumerated: Display](
+        label:     String,
+        helpId:    Help.Id,
+        lens:      Lens[ConstraintSetModel, A],
+        remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+      ) = {
+        val id = label.toLowerCase().replaceAll(" ", "-")
+        EnumViewSelect(id = id,
+                       value = undoViewSet(lens, remoteSet),
+                       label = Label(label, HelpIcon(helpId))
         )
       }
+
+      def updateElevationRange(ert: ElevationRangeType) =
+        ert match {
+          case AirMass   => erView.set(state.get.airMass)
+          case HourAngle => erView.set(state.get.hourAngle)
+        }
+
+      ReactFragment(
+        props.renderInTitle(
+          <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx))
+        ),
+        Form(as = <.div)(
+          ExploreStyles.Grid,
+          ExploreStyles.ConstraintsGrid,
+          FormInputEV(
+            id = "name",
+            label = Label("Name", HelpIcon("constraints/main/name.md")),
+            clazz = ExploreStyles.ConstraintsNameField,
+            value = nameView,
+            validFormat = ValidFormatInput.nonEmptyValidFormat,
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below
+          ),
+          selectEnum("Image Quality",
+                     "constraints/main/iq.md",
+                     ConstraintSetModel.imageQuality,
+                     UpdateConstraintSet.imageQuality
+          ),
+          selectEnum("Cloud Extinction",
+                     "constraints/main/ce.md",
+                     ConstraintSetModel.cloudExtinction,
+                     UpdateConstraintSet.cloudExtinction
+          ),
+          selectEnum("Water Vapor",
+                     "constraints/main/wv.md",
+                     ConstraintSetModel.waterVapor,
+                     UpdateConstraintSet.waterVapor
+          ),
+          selectEnum("Sky Background",
+                     "constraints/main/sb.md",
+                     ConstraintSetModel.skyBackground,
+                     UpdateConstraintSet.skyBackground
+          ),
+          <.div(
+            ExploreStyles.FlexContainer,
+            ExploreStyles.ConstraintsElevationRangeGroup,
+            EnumViewSelect(
+              id = "ertype",
+              label = Label("Elevation Range", HelpIcon("constraints/main/er.md")),
+              value = state
+                .zoom(State.rangeType)
+                .withOnMod(updateElevationRange),
+              clazz = ExploreStyles.ElevationRangePicker
+            ),
+            ReactFragment(
+              FormInputEV(
+                id = "minam",
+                label = "Min",
+                value = state
+                  .zoom(State.airMass)
+                  .zoom(AirMassRange.min)
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                  )
+                  .withOnMod(min => erView.set(state.get.airMass.copy(min = min.value))),
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                errorPointing = LabelPointing.Below,
+                validFormat = ValidFormatInput
+                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
+                  .composeValidFormat(
+                    ValidFormatNec.lte(
+                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
+                        state.get.airMass.max
+                      ).get,
+                      "Must be <= Max"
+                    )
+                  ),
+                changeAuditor = ChangeAuditor.accept.decimal(1),
+                clazz = ExploreStyles.ElevationRangeEntry
+              ),
+              FormInputEV(
+                id = "maxam",
+                label = "Max",
+                value = state
+                  .zoom(State.airMass)
+                  .zoom(AirMassRange.max)
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                  )
+                  .withOnMod(max => erView.set(state.get.airMass.copy(max = max.value))),
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                errorPointing = LabelPointing.Below,
+                validFormat = ValidFormatInput
+                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
+                  .composeValidFormat(
+                    ValidFormatNec.gte(
+                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
+                        state.get.airMass.min
+                      ).get,
+                      "Must be >= Min"
+                    )
+                  ),
+                changeAuditor = ChangeAuditor.accept.decimal(1),
+                clazz = ExploreStyles.ElevationRangeEntry
+              )
+            ).when(state.get.rangeType === AirMass),
+            ReactFragment(
+              FormInputEV(
+                id = "minha",
+                label = "Min",
+                value = state
+                  .zoom(State.hourAngle)
+                  .zoom(HourAngleRange.minHours)
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                  )
+                  .withOnMod(min => erView.set(state.get.hourAngle.copy(minHours = min.value))),
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                errorPointing = LabelPointing.Below,
+                validFormat = ValidFormatInput
+                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
+                  .composeValidFormat(
+                    ValidFormatNec.lte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                                         state.get.hourAngle.maxHours
+                                       ).get,
+                                       "Must be <= Max"
+                    )
+                  ),
+                changeAuditor = ChangeAuditor.accept.decimal(1),
+                clazz = ExploreStyles.ElevationRangeEntry
+              ),
+              FormInputEV(
+                id = "maxha",
+                label = "Max",
+                value = state
+                  .zoom(State.hourAngle)
+                  .zoom(HourAngleRange.maxHours)
+                  .zoomSplitEpi(
+                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                  )
+                  .withOnMod(max => erView.set(state.get.hourAngle.copy(maxHours = max.value))),
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                errorPointing = LabelPointing.Below,
+                validFormat = ValidFormatInput
+                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
+                  .composeValidFormat(
+                    ValidFormatNec.gte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                                         state.get.hourAngle.minHours
+                                       ).get,
+                                       "Must be >= Min"
+                    )
+                  ),
+                changeAuditor = ChangeAuditor.accept.decimal(1),
+                clazz = ExploreStyles.ElevationRangeEntry
+              ),
+              <.div(ExploreStyles.UnitsLabel, "hours")
+            ).when(state.get.rangeType === HourAngle)
+          )
+        )
+      )
+    }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
       UndoRegion[ConstraintSetModel]((renderFn _).reusable(props, ViewF.fromState[IO]($)))

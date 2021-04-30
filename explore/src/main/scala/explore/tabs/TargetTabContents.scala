@@ -87,9 +87,7 @@ object TargetTabContents {
     props:            Props,
     state:            View[State],
     pointingsWithObs: View[PointingsWithObs]
-  ): VdomNode = {
-    implicit val ctx = props.ctx
-
+  )(implicit ctx:     AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
