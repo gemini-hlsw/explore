@@ -39,7 +39,7 @@ object Tile {
 
   type RenderInTitle = VdomNode ~=> VdomNode
 
-  implicit val propsReuse: Reusability[Tile] = Reusability.derive
+  implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
