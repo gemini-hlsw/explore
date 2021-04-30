@@ -21,6 +21,7 @@ import react.semanticui.modules.sidebar.SidebarDirection
 import react.semanticui.modules.sidebar.SidebarPushable
 import react.semanticui.modules.sidebar.SidebarPusher
 import react.semanticui.modules.sidebar.SidebarWidth
+import scala.scalajs.js
 
 final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
   val view:                       View[RootModel]
@@ -51,7 +52,11 @@ object ExploreLayout {
           )(
             helpView.get
               .map { h =>
-                HelpBody(helpCtx.get, h): VdomNode
+                // Lazy load the React component for help
+                val prom = js.dynamicImport {
+                  new HelpLoader().loadHelp(helpCtx.get, h)
+                }
+                React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
               }
               .when(helpView.get.isDefined)
           ),

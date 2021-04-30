@@ -39,3 +39,4 @@ common/src/main/publicdev/
 # vite
 server.cert
 server.key
+stats.html

@@ -46,6 +46,13 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
     .addParam("message", s"Update $helpId")
 }
 
+// This is a sort of facade to get dynamic loading boundaries right
+// You'd be tempted to put this inside HelpBody but it will make it load HelpBody as part of the main bundle
+class HelpLoader {
+  def loadHelp(helpCtx: HelpContext, h: Help.Id)(implicit ctx: AppContextIO): VdomElement =
+    HelpBody(helpCtx, h)
+}
+
 object HelpBody {
   type Props = HelpBody
 
