@@ -1,5 +1,5 @@
 import reactRefresh from "@vitejs/plugin-react-refresh";
-// import pluginRewriteConf from "./rewriteconf";
+import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
 import fs from "fs";
 import ViteFonts from "vite-plugin-fonts";
@@ -42,6 +42,7 @@ export default ({ command, mode }) => {
     root: "explore/src/main/webapp",
     publicDir: publicDir,
     resolve: {
+      dedupe: ["react-is"],
       alias: [
         {
           find: "@sjs",
@@ -93,13 +94,15 @@ export default ({ command, mode }) => {
       proxy: {
         "conf.json": {
           rewrite: (path) => {
-            console.log(path);
             path.replace(/^\/conf.json$/, "/conf/development.conf.json");
           },
         },
       },
     },
     build: {
+      rollupOptions: {
+        plugins: [visualizer()],
+      },
       terserOptions: {
         sourceMap: false,
       },
