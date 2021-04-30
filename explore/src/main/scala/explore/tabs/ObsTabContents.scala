@@ -18,8 +18,6 @@ import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
-import explore.components.TileButton
-import explore.components.TileControl
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
@@ -212,6 +210,25 @@ object ObsTabContents {
         }.getOrEmpty
       }
 
+    def constraintsSelectorFn(
+      constraintsSetId: Option[ConstraintSet.Id],
+      obsSummaryOpt:    Option[ObsSummary],
+      observations:     ConstraintsInfo
+    )(implicit
+      client:           clue.TransactionalClient[IO, explore.schemas.ObservationDB]
+    ): VdomNode =
+      Select(
+        value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
+        placeholder = "Select a constraint set",
+        onChange = (a: Dropdown.DropdownProps) =>
+          (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
+            AssignConstraintSetToObs
+              .execute(csId, obsId.id)
+              .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
+          }.getOrEmpty,
+        options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
+      )
+
     protected def renderFn(
       props:        Props,
       state:        View[State],
@@ -262,19 +279,6 @@ object ObsTabContents {
 
       val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
 
-      def constraintsSelector =
-        Select(
-          value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
-          placeholder = "Select a constraint set",
-          onChange = (a: Dropdown.DropdownProps) =>
-            (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
-              AssignConstraintSetToObs
-                .execute(csId, obsId.id)
-                .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
-            }.getOrEmpty,
-          options =
-            observations.get._1.map(s => new SelectItem(value = s.id.show, text = s.name.value))
-        )
       val targetId = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
                                                   Some(Pointing.PointingTarget(tid, _)),
@@ -285,7 +289,7 @@ object ObsTabContents {
           tid
       }
 
-      val backButton = TileButton(
+      val backButton = Reusable.always[VdomNode](
         Button(
           as = <.a,
           basic = true,
@@ -414,7 +418,11 @@ object ObsTabContents {
           ),
           <.div(
             ^.key := "constraints",
-            Tile("Constraints", control = TileControl(constraintsSelector).some)(
+            Tile("Constraints",
+                 control = ((constraintsSelectorFn _)
+                   .reusable(constraintsSetId, obsSummaryOpt, observations.get._1))
+                   .some
+            )(
               (renderConstraints _).reusable(constraintsSetId)
             )
           )

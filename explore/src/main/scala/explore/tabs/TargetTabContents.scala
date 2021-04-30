@@ -14,7 +14,6 @@ import explore.common.TargetObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
-import explore.components.TileButton
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Focused._
@@ -118,7 +117,7 @@ object TargetTabContents {
         )
       )
 
-    val backButton = TileButton(
+    val backButton = Reusable.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,

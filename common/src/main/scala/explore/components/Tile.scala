@@ -13,19 +13,17 @@ import explore.model.enum.TileSizeState
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.internal.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reusability._
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
-final case class TileButton(body: VdomNode)
-final case class TileControl(body: VdomNode)
-
 final case class Tile(
   title:             String,
-  back:              Option[TileButton] = None,
-  control:           Option[TileControl] = None,
+  back:              Option[Reusable[VdomNode]] = None,
+  control:           Option[Reusable[VdomNode]] = None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
@@ -41,8 +39,7 @@ object Tile {
 
   type RenderInTitle = VdomNode ~=> VdomNode
 
-  // Explicitly never reuse as we are not considering the content
-  implicit val propsReuse: Reusability[Tile] = Reusability.never
+  implicit val propsReuse: Reusability[Tile] = Reusability.derive
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -57,7 +54,7 @@ object Tile {
   def renderPortal(mountNode: Option[raw.ReactDOM.Container], info: VdomNode): VdomNode =
     mountNode.map(node => ReactPortal(info, node))
 
-  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.never
+  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
 
   class Backend() {
 
@@ -85,7 +82,7 @@ object Tile {
       <.div(ExploreStyles.Tile)(
         <.div(
           ExploreStyles.TileTitle,
-          p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
+          p.back.map(b => <.div(ExploreStyles.TileButton, b)),
           Menu(
             compact = true,
             borderless = true,
@@ -94,7 +91,7 @@ object Tile {
           )(
             MenuItem(as = <.a)(p.title)
           ),
-          p.control.map(b => <.div(ExploreStyles.TileControl, b.body)),
+          p.control.map(b => <.div(ExploreStyles.TileControl, b)),
           <.span(ExploreStyles.TileTitleInfo,
                  ^.untypedRef := infoRef,
                  ^.key := s"tile-info-${p.title}"
