@@ -17,6 +17,7 @@ object ExploreStyles {
   val TileBackButton: Css  = Css("tile-back-button")
   val TileBody: Css        = Css("explore-tile-body")
   val TileButton: Css      = Css("explore-tile-button")
+  val TileControl: Css     = Css("explore-tile-control")
   val TileStateButton: Css = Css("explore-tile-state-button")
   val TileXSW: Css         = Css("tile-xs-width")
   val TileSMW: Css         = Css("tile-sm-width")
@@ -172,9 +173,12 @@ object ExploreStyles {
   val CatalogueForm: Css        = Css("catalogue-form")
 
   // The Constraints tab contents
-  val ConstraintsGrid      = Css("constraints-grid")
-  val ElevationRangePicker = Css("elevation-range-picker")
-  val ElevationRangeEntry  = Css("elevation-range-entry")
+  val ConstraintsGrid                = Css("constraints-grid")
+  val ConstraintsNameField           = Css("constraints-name-field")
+  val ConstraintsObsTile             = Css("constraints-obs-tile")
+  val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
+  val ElevationRangePicker           = Css("elevation-range-picker")
+  val ElevationRangeEntry            = Css("elevation-range-entry")
 
   // styles for icons that acts as buttons
   val ButtonIcon: Css       = Css("explore-button-icon")

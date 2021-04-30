@@ -18,6 +18,9 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
 
   def toList: List[A] = elements.toList
 
+  def collect[B](pf: PartialFunction[(K, (A, Int)), B]): List[B] =
+    list.collect(pf).toList
+
   def length: Int = list.size
 
   def removed(key: K): KeyedIndexedList[K, A] =

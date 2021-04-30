@@ -11,14 +11,18 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
+import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
+import explore.common.ConstraintsQueriesGQL._
 import explore.common.ObsQueries._
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileButton
+import explore.components.TileControl
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model._
@@ -33,10 +37,12 @@ import explore.targeteditor.TargetBody
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
+import monocle.function.Field2.second
 import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
@@ -45,8 +51,11 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.resizeDetector.ResizeDetector
+import react.semanticui.addons.select.Select
+import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
@@ -62,21 +71,35 @@ final case class ObsTabContents(
 }
 
 object ObsTabContents {
-  val NotesIndex: NonNegInt     = 0
-  val NotesMaxHeight: NonNegInt = 3
-  val NotesMinHeight: NonNegInt = 1
+  val NotesIndex: NonNegInt           = 0
+  val NotesMaxHeight: NonNegInt       = 3
+  val NotesMinHeight: NonNegInt       = 1
+  val TargetMinHeight: NonNegInt      = 12
+  val ConstraintsMaxHeight: NonNegInt = 6
+  val ConstraintsMinHeight: NonNegInt = 1
+  val DefaultWidth: NonNegInt         = 12
 
   private val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
-                 resizeHandles = List("")
+                 isResizable = false
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = ConstraintsMaxHeight.value,
+                 i = "constraints"
+      )
     )
   )
 
@@ -84,13 +107,23 @@ object ObsTabContents {
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
-                 resizeHandles = List("")
+                 isResizable = false
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = ConstraintsMaxHeight.value,
+                 i = "constraints"
+      )
     )
   )
 
@@ -98,13 +131,23 @@ object ObsTabContents {
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = 12,
+                 w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
                  i = "notes",
-                 isResizable = false,
-                 resizeHandles = List("")
+                 isResizable = false
       ),
-      LayoutItem(x = 0, y = NotesMaxHeight.value, w = 12, h = 12, i = "target")
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = "target"
+      ),
+      LayoutItem(x = 0,
+                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 w = DefaultWidth.value,
+                 h = ConstraintsMaxHeight.value,
+                 i = "constraints"
+      )
     )
   )
 
@@ -172,7 +215,7 @@ object ObsTabContents {
     protected def renderFn(
       props:        Props,
       state:        View[State],
-      observations: View[ObservationList]
+      observations: View[(ConstraintsInfo, ObservationList)]
     ): VdomNode = {
       implicit val ctx = props.ctx
 
@@ -214,9 +257,24 @@ object ObsTabContents {
 
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
         props.focused.get.collect { case FocusedObs(obsId) =>
-          observations.get.getElement(obsId)
+          observations.get._2.getElement(obsId)
         }.flatten
 
+      val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
+
+      def constraintsSelector =
+        Select(
+          value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
+          placeholder = "Select a constraint set",
+          onChange = (a: Dropdown.DropdownProps) =>
+            (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
+              AssignConstraintSetToObs
+                .execute(csId, obsId.id)
+                .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
+            }.getOrEmpty,
+          options =
+            observations.get._1.map(s => new SelectItem(value = s.id.show, text = s.name.value))
+        )
       val targetId = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
                                                   Some(Pointing.PointingTarget(tid, _)),
@@ -288,6 +346,37 @@ object ObsTabContents {
             )
           )
 
+      def renderConstraintsFn(
+        csId:          ConstraintSet.Id,
+        renderInTitle: Tile.RenderInTitle,
+        csOpt:         View[Option[ConstraintSetModel]]
+      ): VdomNode =
+        csOpt.get.map { _ =>
+          <.div(
+            ExploreStyles.ConstraintsObsTile,
+            ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
+          )
+        }
+
+      def renderConstraints(
+        constraintsSetId: Option[ConstraintSet.Id],
+        renderInTitle:    Tile.RenderInTitle
+      ): VdomNode =
+        constraintsSetId
+          .map[VdomNode] { csId =>
+            LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
+              ConstraintSetQuery.query(csId),
+              _.constraintSet,
+              NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](csId))
+            )((renderConstraintsFn _).reusable(csId, renderInTitle))
+              .withKey(s"constraint-$targetId")
+          }
+          .getOrElse(
+            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                  <.div("No constraints assigned")
+            )
+          )
+
       val rightSideRGL =
         ResponsiveReactGridLayout(
           width = coreWidth,
@@ -322,6 +411,12 @@ object ObsTabContents {
           <.div(
             ^.key := "target",
             Tile("Target")((renderTarget _).reusable(targetId))
+          ),
+          <.div(
+            ^.key := "constraints",
+            Tile("Constraints", control = TileControl(constraintsSelector).some)(
+              (renderConstraints _).reusable(constraintsSetId)
+            )
           )
         )
 
@@ -337,7 +432,7 @@ object ObsTabContents {
       if (window.innerWidth <= Constants.TwoPanelCutoff) {
         <.div(
           ExploreStyles.TreeRGL,
-          <.div(ExploreStyles.Tree, treeInner(observations))
+          <.div(ExploreStyles.Tree, treeInner(observations.zoom(second)))
             .when(state.get.panels.leftPanelVisible),
           <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
             rightSide
@@ -354,7 +449,7 @@ object ObsTabContents {
             maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
             onResize = treeResize,
             resizeHandles = List(ResizeHandleAxis.East),
-            content = tree(observations)
+            content = tree(observations.zoom(second))
           ),
           <.div(^.key := "obs-right-side",
                 ^.width := coreWidth.px,

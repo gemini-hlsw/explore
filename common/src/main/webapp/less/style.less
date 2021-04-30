@@ -248,7 +248,7 @@ tfoot {
 }
 
 .explore-tile-title-info {
-  width: 100%;
+  margin-left: auto;
 }
 
 .ui.menu.explore-tile-title-menu {
@@ -273,6 +273,10 @@ tfoot {
   @media (min-width: @target-grid-responsive-cutoff) {
     display: none;
   }
+}
+
+.explore-tile-control {
+  margin-right: auto;
 }
 
 .main-header > .ui.tabular.menu .item {
@@ -972,12 +976,38 @@ tfoot {
 .constraints-grid {
   padding: 0.5em;
 
+  --column-count: 2;
+  --column-wide-span: 2;
+
+  grid-template-columns: repeat(var(--column-count), minmax(40ch, 1fr));
+
   .elevation-range-picker {
     width: 9em;
   }
 
   .elevation-range-entry {
     width: 8em;
+  }
+
+  .constraints-elevation-range,
+  .constraints-name-field {
+    grid-column: 1 / span var(--column-wide-span);
+  }
+}
+
+.tile-xxs-width,
+.tile-xs-width {
+  .constraints-grid {
+    --column-count: 1;
+    --column-wide-span: 1;
+  }
+}
+
+.constraints-obs-tile {
+  .constraints-grid {
+    .constraints-name-field {
+      display: none;
+    }
   }
 }
 

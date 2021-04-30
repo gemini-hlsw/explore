@@ -23,6 +23,7 @@ import ObsQueriesGQL._
 object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
+  type ConstraintsInfo = List[ProgramObservationsQuery.Data.ConstraintSets.Nodes]
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
@@ -35,8 +36,9 @@ object ObsQueries {
     }
 
   private val programObservationsQueryoObservationListGetter
-    : Getter[ProgramObservationsQuery.Data, ObservationList] = data =>
-    KeyedIndexedList.fromList(
+    : Getter[ProgramObservationsQuery.Data, (ConstraintsInfo, ObservationList)] = data => {
+    val cs  = data.constraintSets.nodes
+    val obs = KeyedIndexedList.fromList(
       data.observations.nodes.map(node =>
         ObsSummaryWithPointingAndConstraints(node.id,
                                              node.observationTarget.map(convertPointing),
@@ -45,15 +47,21 @@ object ObsQueries {
       ),
       ObsSummaryWithPointingAndConstraints.id.get
     )
+    (cs, obs)
+  }
+
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
     def asObservationList = programObservationsQueryoObservationListGetter
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[ObservationList] ~=> VdomNode](render =>
+    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ~=> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
+        LiveQueryRenderMod[ObservationDB,
+                           ProgramObservationsQuery.Data,
+                           (ConstraintsInfo, ObservationList)
+        ](
           ProgramObservationsQuery.query(),
           ProgramObservationsQuery.Data.asObservationList.get,
           NonEmptyList.of(

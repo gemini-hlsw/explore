@@ -15,7 +15,13 @@ import lucuma.core.model.ConstraintSet
 
 trait ArbConstraintsSummary {
   def buildConstraintsSummaryArb[A <: ConstraintsSummary](
-    build: (ConstraintSet.Id, ImageQuality, CloudExtinction, SkyBackground, WaterVapor) => A
+    build: (
+      ConstraintSet.Id,
+      ImageQuality,
+      CloudExtinction,
+      SkyBackground,
+      WaterVapor
+    ) => A
   ) = Arbitrary[A] {
     for {
       id <- arbitrary[ConstraintSet.Id]

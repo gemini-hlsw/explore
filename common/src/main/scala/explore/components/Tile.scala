@@ -20,10 +20,12 @@ import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
 final case class TileButton(body: VdomNode)
+final case class TileControl(body: VdomNode)
 
 final case class Tile(
   title:             String,
   back:              Option[TileButton] = None,
+  control:           Option[TileControl] = None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
@@ -41,10 +43,11 @@ object Tile {
 
   // Explicitly never reuse as we are not considering the content
   implicit val propsReuse: Reusability[Tile] = Reusability.never
-  val heightBreakpoints                      =
+
+  val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
 
-  val widthBreakpoints                       =
+  val widthBreakpoints  =
     List((300                            -> TileXSW),
          (Constants.TwoPanelCutoff.toInt -> TileSMW),
          (768                            -> TileMDW),
@@ -54,7 +57,7 @@ object Tile {
   def renderPortal(mountNode: Option[raw.ReactDOM.Container], info: VdomNode): VdomNode =
     mountNode.map(node => ReactPortal(info, node))
 
-  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
+  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.never
 
   class Backend() {
 
@@ -84,19 +87,17 @@ object Tile {
           ExploreStyles.TileTitle,
           p.back.map(b => <.div(ExploreStyles.TileButton, b.body)),
           Menu(
-            attached = MenuAttached.Top,
             compact = true,
             borderless = true,
             secondary = true,
-            clazz = ExploreStyles.TileTitleMenu,
-            tabular = MenuTabular.Right
+            clazz = ExploreStyles.TileTitleMenu
           )(
             MenuItem(as = <.a)(p.title)
           ),
+          p.control.map(b => <.div(ExploreStyles.TileControl, b.body)),
           <.span(ExploreStyles.TileTitleInfo,
                  ^.untypedRef := infoRef,
-                 ^.key := s"tile-info-${p.title}",
-                 <.span
+                 ^.key := s"tile-info-${p.title}"
           ),
           minimizeButton.when(p.showMinimize),
           maximizeButton.when(p.showMaximize)
