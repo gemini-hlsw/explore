@@ -80,9 +80,7 @@ object ConstraintSetTabContents {
     state:                 View[State],
     innerWidth:            Double,
     constraintSetsWithObs: View[ConstraintSetsWithObs]
-  ): VdomNode = {
-    implicit val ctx = props.ctx
-
+  )(implicit ctx:          AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>

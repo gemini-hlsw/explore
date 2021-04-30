@@ -28,14 +28,11 @@ object IfLogged {
     UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
 
   private def renderFn(
-    vaultSet:   Option[UserVault] ~=> IO[Unit],
-    messageSet: NonEmptyString ~=> IO[Unit],
-    render:     IO[Unit] ~=> VdomNode,
-    appCtx:     AppContextIO
-  ): VdomNode = {
-    implicit val ctx = appCtx
+    vaultSet:     Option[UserVault] ~=> IO[Unit],
+    messageSet:   NonEmptyString ~=> IO[Unit],
+    render:       IO[Unit] ~=> VdomNode
+  )(implicit ctx: AppContextIO): VdomNode =
     LogoutTracker(vaultSet, messageSet)(render)
-  }
 
   private val component =
     ScalaComponent
@@ -56,7 +53,7 @@ object IfLogged {
             React.Fragment(
               SSOManager(vault.expiration, vaultSet, messageSet),
               ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(
-                (renderFn _).reusable(vaultSet, messageSet, p.render(vault), ctx)
+                (renderFn _).reusable(vaultSet, messageSet, p.render(vault))
               )
             )
           }
