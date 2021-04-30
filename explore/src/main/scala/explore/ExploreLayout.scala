@@ -68,6 +68,9 @@ object ExploreLayout {
                 props.r.renderP(props.view)
               )
             )
+          )(
+            ^.onClick -->
+              helpView.set(none).runAsyncAndForgetCB
           )
         )
       }
@@ -80,6 +83,7 @@ object ExploreLayout {
       .render_P { p =>
         IfLogged(p.view)((renderFn _).reusable(p))
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
