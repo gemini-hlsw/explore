@@ -17,7 +17,7 @@ import scala.concurrent.duration.FiniteDuration
 
 case class SSOConfig(
   uri:                        Uri,
-  readTimeoutSeconds:         Long = 10,
+  readTimeoutSeconds:         Long = 3,
   refreshTimeoutDeltaSeconds: Long = 10, // time before expiration to renew
   refreshIntervalFactor:      Long = 1
 ) {
