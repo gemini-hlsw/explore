@@ -36,7 +36,7 @@ final case class UserSelectionForm(
     ctx.sso.redirectToLogin.runAsyncCB
 
   def supportedOrcidBrowser: CallbackTo[(Boolean, Boolean)] = CallbackTo[(Boolean, Boolean)] {
-    val browser  = new UAParser(dom.window.navigator.userAgent).getBrowser()
+    val browser  = UAParser(dom.window.navigator.userAgent).getBrowser()
     val verRegex = raw"(\d{0,3}).(\d{0,3})\.?(.*)?".r
     (browser.name, browser.version) match {
       case ("Safari", verRegex(major, _, _)) if major.toInt <= 13 => (false, false)
