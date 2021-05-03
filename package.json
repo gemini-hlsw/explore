@@ -28,7 +28,9 @@
     "react-resize-detector": "6.5.0",
     "react-table": "7.6.3",
     "react-virtuoso": "1.8.1",
+    "rehype-katex": "^5.0.0",
     "remark-gfm": "^1.0.0",
+    "remark-math": "^4.0.0",
     "semantic-ui-react": "2.0.3",
     "styled-components": "5.1.1",
     "ua-parser-js": "0.7.23"
