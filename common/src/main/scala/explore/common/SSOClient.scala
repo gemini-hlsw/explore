@@ -121,11 +121,13 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(i
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
   val logout: F[Unit] =
-    basicRequest
-      .post(uri"${config.uri}/api/v1/logout")
-      .readTimeout(config.readTimeout)
-      .send(backend)
-      .void
+    retryingOnAllErrors(retryPolicy, logError("Calling logout")) {
+      basicRequest
+        .post(uri"${config.uri}/api/v1/logout")
+        .readTimeout(config.readTimeout)
+        .send(backend)
+        .void
+    }
 
   val switchToORCID: F[Unit] =
     logout.attempt >> redirectToLogin
