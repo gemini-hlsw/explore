@@ -4,6 +4,7 @@
 package explore.proposal
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -55,7 +56,9 @@ object PartnerSplitsEditor {
       )
     )
 
-  private def makeTableRows(p: Props)(implicit logger: Logger[IO]): TagMod =
+  private def makeTableRows(
+    p:                   Props
+  )(implicit dispatcher: Dispatcher[IO], logger: Logger[IO]): TagMod =
     p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
       val splitView: ViewOpt[PartnerSplit] =
         p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))

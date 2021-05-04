@@ -5,6 +5,7 @@ package explore.model
 
 import cats._
 import cats.effect._
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
 import crystal.react.StreamRenderer
@@ -19,7 +20,7 @@ import io.circe.Json
 import org.typelevel.log4cats.Logger
 import sttp.model.Uri
 
-case class Clients[F[_]: ConcurrentEffect: Parallel: Logger](
+case class Clients[F[_]: Async: Parallel: Dispatcher: Logger](
   odb:           WebSocketClient[F, ObservationDB],
   preferencesDB: WebSocketClient[F, UserPreferencesDB]
 ) {
@@ -47,21 +48,20 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  version:     NonEmptyString,
-  clients:     Clients[F],
-  actions:     Actions[F],
-  sso:         SSOClient[F],
-  pageUrl:     (AppTab, Option[Focused]) => String,
-  environment: ExecutionEnvironment
+  version:        NonEmptyString,
+  clients:        Clients[F],
+  actions:        Actions[F],
+  sso:            SSOClient[F],
+  pageUrl:        (AppTab, Option[Focused]) => String,
+  environment:    ExecutionEnvironment
 )(implicit
-  val F:       Applicative[F],
-  val cs:      ContextShift[F],
-  val timer:   Timer[F],
-  val logger:  Logger[F]
+  val F:          Applicative[F],
+  val dispatcher: Dispatcher[F],
+  val logger:     Logger[F]
 )
 
 object AppContext {
-  private def buildClients[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: Timer: Logger](
+  private def buildClients[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     reconnectionStrategy: WebSocketReconnectionStrategy
@@ -73,7 +73,7 @@ object AppContext {
         ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
     } yield Clients(odbClient, prefsClient)
 
-  def from[F[_]: ConcurrentEffect: WebSocketBackend: Parallel: ContextShift: Timer: Logger](
+  def from[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String

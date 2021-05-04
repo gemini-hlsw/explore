@@ -4,7 +4,6 @@
 package explore.undo
 
 import cats.effect.Async
-import cats.effect.ContextShift
 import cats.syntax.all._
 import crystal.ViewF
 import monocle.Lens
@@ -21,7 +20,7 @@ import monocle.Lens
  * the value is directly `set`/`mod`, or when an `undo` or `redo` is executed. This
  * side effect could be, for example, setting the value on a remote DB.
  */
-case class UndoableView[F[_]: Async: ContextShift, T](
+case class UndoableView[F[_]: Async, T](
   view:   ViewF[F, T],
   setter: Undoer.Setter[F, T]
 ) {

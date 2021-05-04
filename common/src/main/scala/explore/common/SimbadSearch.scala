@@ -17,7 +17,7 @@ import sttp.client3.impl.cats.FetchCatsBackend
 import scala.concurrent.duration._
 
 object SimbadSearch {
-  def search(term: NonEmptyString)(implicit cs: ContextShift[IO]): IO[Option[Target]] = {
+  def search(term: NonEmptyString): IO[Option[Target]] = {
     val backend  = FetchCatsBackend[IO]()
     def httpCall =
       basicRequest

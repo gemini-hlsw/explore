@@ -60,7 +60,7 @@ object HelpBody {
   @Lenses
   final case class State(content: Pot[String])
 
-  def load(uri: Uri)(implicit cs: ContextShift[IO]): IO[Try[String]] = {
+  def load(uri: Uri): IO[Try[String]] = {
     val backend = FetchCatsBackend[IO]()
     basicRequest
       .get(uri)

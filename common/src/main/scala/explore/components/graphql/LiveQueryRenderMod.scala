@@ -4,11 +4,10 @@
 package explore.components.graphql
 
 import cats.data.NonEmptyList
-import cats.effect.CancelToken
-import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
+import cats.effect.Async
 import cats.effect.IO
-import cats.effect.Timer
+import cats.effect.std.Dispatcher
+import cats.effect.std.Queue
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
@@ -16,7 +15,6 @@ import crystal.Pot
 import crystal.ViewF
 import crystal.react._
 import explore._
-import fs2.concurrent.Queue
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
@@ -40,9 +38,8 @@ final case class LiveQueryRenderMod[S, D, A](
     Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
-  val F:               ConcurrentEffect[IO],
-  val timer:           Timer[IO],
-  val cs:              ContextShift[IO],
+  val F:               Async[IO],
+  val dispatcher:      Dispatcher[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
   val client:          WebSocketClient[IO, S]
@@ -50,15 +47,12 @@ final case class LiveQueryRenderMod[S, D, A](
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
 object LiveQueryRenderMod {
-  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ViewF[F, *], S, D, A] {
-    implicit val timer: Timer[F]
-    implicit val cs: ContextShift[F]
-  }
+  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ViewF[F, *], S, D, A]
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
     subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
-    cancelConnectionTracker: CancelToken[F],
+    cancelConnectionTracker: F[Unit],
     renderer:                StreamRendererMod.Component[F, A]
   ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]
 
@@ -78,11 +72,10 @@ object LiveQueryRenderMod {
           .didMountFn[F, ViewF[F, *], S, D, A][Props[F, S, D, A], State[F, S, D, A]](
             "LiveQueryRenderMod",
             (stream, props) => {
-              implicit val F      = props.F
-              implicit val logger = props.logger
-              implicit val reuse  = props.reuse
-              implicit val timer  = props.timer
-              implicit val cs     = props.cs
+              implicit val F          = props.F
+              implicit val dispatcher = props.dispatcher
+              implicit val logger     = props.logger
+              implicit val reuse      = props.reuse
 
               StreamRendererMod.build(stream, holdAfterMod = (2 seconds).some)
             },

@@ -171,6 +171,7 @@ lazy val commonLibSettings = Seq(
       PPrint.value ++
       In(Test)(
         MUnit.value ++
+          MUnitCatsEffect.value ++
           Discipline.value ++
           MonocleLaw.value ++
           LucumaCoreTestKit.value

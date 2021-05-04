@@ -4,17 +4,16 @@
 package explore.components.graphql
 
 import cats.data.NonEmptyList
-import cats.effect.CancelToken
-import cats.effect.ConcurrentEffect
-import cats.effect.IO
-import cats.effect.SyncIO
+import cats.effect._
+import cats.effect.std.Dispatcher
+import cats.effect.std.Queue
+import cats.effect.syntax.all._
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.PersistentClientStatus
 import clue.WebSocketClient
 import crystal.Pot
 import crystal.react.implicits._
-import fs2.concurrent.Queue
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Generic.UnmountedWithRoot
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
@@ -30,7 +29,8 @@ object Render {
     val errorRender: Throwable ~=> VdomNode
     val onNewData: F[Unit]
 
-    implicit val F: ConcurrentEffect[F]
+    implicit val F: Async[F]
+    implicit val dispatcher: Dispatcher[F]
     implicit val logger: Logger[F]
     implicit val reuse: Reusability[A]
   }
@@ -75,8 +75,9 @@ object Render {
       def apply[P <: Props[F, G, D, A], S <: State[F, G, D, A]](
         $ : ComponentWillUnmount[P, Option[S], Unit]
       ): Callback = {
-        implicit val F      = $.props.F
-        implicit val logger = $.props.logger
+        implicit val F          = $.props.F
+        implicit val dispatcher = $.props.dispatcher
+        implicit val logger     = $.props.logger
 
         $.state.map(_.subscription.stop().runAsyncCB).getOrEmpty
       }
@@ -98,7 +99,7 @@ object Render {
     trait State[F[_], G[_], S, D, A] extends Render.State[G, A] {
       val queue: Queue[F, A]
       val subscriptions: NonEmptyList[GraphQLSubscription[F, _]]
-      val cancelConnectionTracker: CancelToken[F]
+      val cancelConnectionTracker: F[Unit]
     }
 
     class DidMountApplied[F[_], G[_], S, D, A] {
@@ -108,17 +109,18 @@ object Render {
         buildState:    (
           Queue[F, A],
           NonEmptyList[GraphQLSubscription[F, _]],
-          CancelToken[F],
+          F[Unit],
           StreamRendererComponent[G, A]
         ) => ST
       )($             : ComponentDidMount[P, Option[ST], Unit]): Callback = {
-        implicit val F      = $.props.F
-        implicit val logger = $.props.logger
+        implicit val F          = $.props.F
+        implicit val dispatcher = $.props.dispatcher
+        implicit val logger     = $.props.logger
 
         def queryAndEnqueue(queue: Queue[F, A]): F[Unit] =
           for {
             result <- $.props.query.map($.props.extract)
-            _      <- queue.enqueue1(result)
+            _      <- queue.offer(result)
             _      <- $.props.onNewData
           } yield ()
 
@@ -142,29 +144,23 @@ object Render {
             .compile
             .drain
 
-        def deferRun[B, C](unhandledRun: (Either[Throwable, C] => IO[Unit]) => SyncIO[B]): F[B] =
-          F.liftIO(unhandledRun {
-            case Left(t) => F.toIO(logger.error(t)(s"Error in deferRun of $componentName"))
-            case _       => IO.unit
-          }.toIO)
+        def runCancelableWithLog(f: F[Unit]): F[F[Unit]] =
+          f.onError(t => logger.error(t)(s"Error in runCancelableWithLog of $componentName"))
+            .start
+            .map(_.cancel)
 
         val init =
           for {
             queue                   <- Queue.unbounded[F, A]
             subscriptions           <- $.props.changeSubscriptions.sequence
-            cancelConnectionTracker <- deferRun(F.runCancelable(trackConnection(queue)))
-            renderer                 = buildRenderer(queue.dequeue, $.props)
+            cancelConnectionTracker <- runCancelableWithLog(trackConnection(queue))
+            renderer                 = buildRenderer(fs2.Stream.fromQueueUnterminated(queue), $.props)
             _                       <-
               $.setStateIn[F](
                 buildState(queue, subscriptions, cancelConnectionTracker, renderer).some
               )
             _                       <- queryAndEnqueue(queue)
-            _                       <- deferRun(
-                                         F.runAsync(
-                                           trackChanges(subscriptions, queue)
-                                             .handleErrorWith(t => logger.error(t)(s"Error updating $componentName"))
-                                         )
-                                       )
+            _                       <- runCancelableWithLog(trackChanges(subscriptions, queue))
           } yield ()
 
         init
@@ -180,8 +176,9 @@ object Render {
       def apply[P <: Props[F, G, S, D, A], ST <: State[F, G, S, D, A]](
         $ : ComponentWillUnmount[P, Option[ST], Unit]
       ): Callback = {
-        implicit val F      = $.props.F
-        implicit val logger = $.props.logger
+        implicit val F          = $.props.F
+        implicit val dispatcher = $.props.dispatcher
+        implicit val logger     = $.props.logger
 
         $.state
           .map(state =>

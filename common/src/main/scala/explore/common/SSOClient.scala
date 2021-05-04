@@ -36,9 +36,7 @@ object JwtOrcidProfile {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
-case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(implicit
-  cs:                                                               ContextShift[F]
-) {
+case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
   private val retryPolicy =
     capDelay(
       FiniteDuration.apply(5, TimeUnit.SECONDS),
@@ -119,7 +117,7 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(i
       val sleepTime = config.refreshTimeoutDelta.max(
         (n.until(expiration, ChronoUnit.SECONDS).seconds - config.refreshTimeoutDelta)
       )
-      Timer[F].sleep(sleepTime / config.refreshIntervalFactor)
+      Temporal[F].sleep(sleepTime / config.refreshIntervalFactor)
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
   val logout: F[Unit] =
