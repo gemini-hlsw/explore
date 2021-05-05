@@ -63,27 +63,29 @@ case class SSOClient[F[_]: ConcurrentEffect: Timer: Logger](config: SSOConfig)(i
     }
 
   val guest: F[UserVault] =
-    basicRequest
-      .post(uri"${config.uri}/api/v1/auth-as-guest")
-      .readTimeout(config.readTimeout)
-      .send(backend)
-      .flatMap {
-        case Response(Right(body), _, _, _, _, _) =>
-          Sync[F].delay {
-            (for {
-              k <- Either.catchNonFatal(
-                     ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
-                   )
-              j  = new String(k)
-              p <- parse(j)
-              u <- p.as[JwtOrcidProfile]
-              t <- refineV[NonEmpty](body)
-            } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
-              .getOrElse(throw new RuntimeException("Error decoding the token"))
-          }
-        case Response(Left(e), _, _, _, _, _)     =>
-          throw new RuntimeException(e)
-      }
+    retryingOnAllErrors(retryPolicy, logError("Switching to guest")) {
+      basicRequest
+        .post(uri"${config.uri}/api/v1/auth-as-guest")
+        .readTimeout(config.readTimeout)
+        .send(backend)
+        .flatMap {
+          case Response(Right(body), _, _, _, _, _) =>
+            Sync[F].delay {
+              (for {
+                k <- Either.catchNonFatal(
+                       ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
+                     )
+                j  = new String(k)
+                p <- parse(j)
+                u <- p.as[JwtOrcidProfile]
+                t <- refineV[NonEmpty](body)
+              } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
+                .getOrElse(throw new RuntimeException("Error decoding the token"))
+            }
+          case Response(Left(e), _, _, _, _, _)     =>
+            throw new RuntimeException(e)
+        }
+    }
 
   val whoami: F[Option[UserVault]] =
     retryingOnAllErrors(retryPolicy, logError("Calling whoami")) {
