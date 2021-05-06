@@ -40,7 +40,7 @@
     "chokidar": "3.5.1",
     "less": "3.9.0",
     "less-watch-compiler": "1.14.6",
-    "rollup-plugin-visualizer": "^5.4.1",
+    "rollup-plugin-visualizer": "^5.5.0",
     "sass": "^1.32.12",
     "stylelint": "^13.13.1",
     "stylelint-color-format": "^1.1.0",
