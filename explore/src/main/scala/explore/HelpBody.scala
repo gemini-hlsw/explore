@@ -17,7 +17,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
 import react.markdown.ReactMarkdown
-import react.markdown.ReactMarkdownPlugin
+import react.markdown.RehypePlugin
+import react.markdown.RemarkPlugin
 import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -110,11 +111,13 @@ object HelpBody {
                   ExploreStyles.HelpBody,
                   s.content match {
                     case Ready(a)                                         =>
-                      ReactMarkdown(content = a,
-                                    clazz = ExploreStyles.HelpMarkdownBody,
-                                    linkTarget = "_blank",
-                                    imageConv,
-                                    plugins = List(ReactMarkdownPlugin.RemarkGFM)
+                      ReactMarkdown(
+                        content = a,
+                        clazz = ExploreStyles.HelpMarkdownBody,
+                        linkTarget = "_blank",
+                        imageConv,
+                        remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
+                        rehypePlugins = List(RehypePlugin.RehypeKatex)
                       ): VdomNode
                     case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
                     case crystal.Error(o) if o.getMessage.contains("404") =>

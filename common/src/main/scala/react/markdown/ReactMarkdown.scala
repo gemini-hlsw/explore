@@ -12,21 +12,47 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.annotation._
 
-sealed trait ReactMarkdownPlugin extends js.Object
+sealed trait RemarkPlugin extends js.Object
 
-object ReactMarkdownPlugin {
+object RemarkPlugin {
 
   val RemarkGFM =
     if (scala.scalajs.runtime.linkingInfo.productionMode) RemarkGFMProd else RemarkGFMDev
 
   @js.native
   @JSImport("remark-gfm", JSImport.Namespace)
-  object RemarkGFMDev extends js.Object with ReactMarkdownPlugin
+  object RemarkGFMDev extends js.Object with RemarkPlugin
 
   @js.native
   @JSImport("remark-gfm", JSImport.Default)
-  object RemarkGFMProd extends js.Object with ReactMarkdownPlugin
+  object RemarkGFMProd extends js.Object with RemarkPlugin
 
+  val RemarkMath =
+    if (scala.scalajs.runtime.linkingInfo.productionMode) RemarkMathProd else RemarkMathDev
+
+  @js.native
+  @JSImport("remark-math", JSImport.Namespace)
+  object RemarkMathDev extends js.Object with RemarkPlugin
+
+  @js.native
+  @JSImport("remark-math", JSImport.Default)
+  object RemarkMathProd extends js.Object with RemarkPlugin
+
+}
+
+sealed trait RehypePlugin extends js.Object
+
+object RehypePlugin {
+  val RehypeKatex =
+    if (scala.scalajs.runtime.linkingInfo.productionMode) RehypeKatexProd else RehypeKatexDev
+
+  @js.native
+  @JSImport("rehype-katex", JSImport.Namespace)
+  object RehypeKatexDev extends js.Object with RehypePlugin
+
+  @js.native
+  @JSImport("rehype-katex", JSImport.Default)
+  object RehypeKatexProd extends js.Object with RehypePlugin
 }
 
 final case class ReactMarkdown(
@@ -34,7 +60,8 @@ final case class ReactMarkdown(
   clazz:                  js.UndefOr[Css] = js.undefined,
   linkTarget:             js.UndefOr[String] = js.undefined,
   transformImageUri:      js.UndefOr[Uri => Uri] = js.undefined,
-  plugins:                js.UndefOr[List[ReactMarkdownPlugin]] = js.undefined,
+  remarkPlugins:          js.UndefOr[List[RemarkPlugin]] = js.undefined,
+  rehypePlugins:          js.UndefOr[List[RehypePlugin]] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
 ) extends GenericFnComponentPA[ReactMarkdown.Props, ReactMarkdown] {
   override protected def cprops    = ReactMarkdown.props(this)
@@ -65,18 +92,26 @@ object ReactMarkdown {
     var className: js.UndefOr[String]
     var linkTarget: js.UndefOr[String]
     var transformImageUri: js.UndefOr[js.Function1[String, String]]
-    var plugins: js.UndefOr[js.Array[js.Object]]
+    var remarkPlugins: js.UndefOr[js.Array[js.Object]]
+    var rehypePlugins: js.UndefOr[js.Array[js.Object]]
   }
 
   protected def props(p: ReactMarkdown): Props =
-    rawprops(p.content, p.clazz, p.linkTarget, p.transformImageUri, p.plugins)
+    rawprops(p.content,
+             p.clazz,
+             p.linkTarget,
+             p.transformImageUri,
+             p.remarkPlugins,
+             p.rehypePlugins
+    )
 
   protected def rawprops(
     content:           js.UndefOr[String],
     clazz:             js.UndefOr[Css],
     linkTarget:        js.UndefOr[String],
     transformImageUri: js.UndefOr[Uri => Uri],
-    plugins:           js.UndefOr[List[ReactMarkdownPlugin]]
+    remarkPlugins:     js.UndefOr[List[RemarkPlugin]],
+    rehypePlugins:     js.UndefOr[List[RehypePlugin]]
   ): Props = {
     val p = (new js.Object).asInstanceOf[Props]
     content.foreach(v => p.children = v)
@@ -86,7 +121,8 @@ object ReactMarkdown {
       p.transformImageUri =
         ((u: String) => v(Uri.unsafeParse(u)).toString()): js.Function1[String, String]
     )
-    plugins.foreach(l => p.plugins = l.map(_.asInstanceOf[js.Object]).toJSArray)
+    remarkPlugins.foreach(l => p.remarkPlugins = l.map(_.asInstanceOf[js.Object]).toJSArray)
+    rehypePlugins.foreach(l => p.rehypePlugins = l.map(_.asInstanceOf[js.Object]).toJSArray)
     p
   }
 
