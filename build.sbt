@@ -63,8 +63,6 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
-val curTime = System.currentTimeMillis()
-
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("model-testkit"))
@@ -109,11 +107,10 @@ lazy val common = project
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,
-      git.gitHeadCommit
+      git.gitHeadCommit,
+      "herokuSourceVersion" -> sys.env.get("SOURCE_VERSION")
     ),
-    buildInfoKeys ++= {
-      Seq(BuildInfoKey.action("buildTime")(curTime))
-    },
+    buildInfoOptions += BuildInfoOption.BuildTime,
     buildInfoPackage := "explore",
     Compile / sourceGenerators += Def.taskDyn {
       val root    = (ThisBuild / baseDirectory).value.toURI.toString
