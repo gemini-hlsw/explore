@@ -22,7 +22,7 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
 import react.highcharts.Chart
-import reactmoon.MoonPhase
+import react.moon.MoonPhase
 import shapeless._
 
 import java.time.Duration

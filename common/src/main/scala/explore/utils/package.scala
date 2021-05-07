@@ -29,13 +29,16 @@ package object utils {
     }
 
   def version(environment: ExecutionEnvironment): NonEmptyString = {
-    val instant = Instant.ofEpochMilli(BuildInfo.buildTime)
+    val instant = Instant.ofEpochMilli(BuildInfo.builtAtMillis)
     NonEmptyString.unsafeFrom(
       (environment match {
         case Development => versionDateTimeFormatter.format(instant)
         case _           =>
           versionDateFormatter.format(instant) +
-            "-" + BuildInfo.gitHeadCommit.map(_.take(7)).getOrElse("NONE")
+            "-" + BuildInfo.gitHeadCommit
+              .orElse(BuildInfo.herokuSourceVersion)
+              .map(_.take(7))
+              .getOrElse("NONE")
       })
         + environment.suffix
           .map(suffix => s"-$suffix")
