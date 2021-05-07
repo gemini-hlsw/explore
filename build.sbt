@@ -168,6 +168,7 @@ lazy val commonLibSettings = Seq(
       Crystal.value ++
       Sttp.value ++
       Clue.value ++
+      PPrint.value ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++

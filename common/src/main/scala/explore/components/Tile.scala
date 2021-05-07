@@ -4,6 +4,7 @@
 package explore.components
 
 import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
@@ -21,6 +22,7 @@ import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
 final case class Tile(
+  id:                Tile.TileId,
   title:             String,
   back:              Option[Reusable[VdomNode]] = None,
   control:           Option[Reusable[VdomNode]] = None,
@@ -30,12 +32,17 @@ final case class Tile(
   sizeStateCallback: TileSizeState ~=> Callback = Reusable.always(_ => Callback.empty)
 )(val render:        Tile.RenderInTitle ~=> VdomNode)
     extends ReactProps[Tile](Tile.component) {
-  def showMaximize: Boolean = canMaximize && state === TileSizeState.Minimized
-  def showMinimize: Boolean = canMinimize && state === TileSizeState.Normal
+  def showMaximize: Boolean =
+    state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)
+  def showMinimize: Boolean =
+    state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
+  def withState(state: TileSizeState, sizeStateCallback: TileSizeState ~=> Callback): Tile =
+    copy(state = state, sizeStateCallback = sizeStateCallback)(render)
 }
 
 object Tile {
-  type Props = Tile
+  type Props  = Tile
+  type TileId = NonEmptyString
 
   type RenderInTitle = VdomNode ~=> VdomNode
 
@@ -67,7 +74,11 @@ object Tile {
           basic = true,
           compact = true,
           clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-          onClick = p.sizeStateCallback(TileSizeState.Maximized)
+          onClick = p
+            .sizeStateCallback(TileSizeState.Normal)
+            .when_(p.state === TileSizeState.Minimized) *> p
+            .sizeStateCallback(TileSizeState.Maximized)
+            .when_(p.state === TileSizeState.Normal)
         )(Icons.Maximize.fitted(true))
 
       val minimizeButton =
@@ -76,7 +87,11 @@ object Tile {
           basic = true,
           compact = true,
           clazz = ExploreStyles.TileStateButton |+| ExploreStyles.BlendedButton,
-          onClick = p.sizeStateCallback(TileSizeState.Minimized)
+          onClick = p
+            .sizeStateCallback(TileSizeState.Normal)
+            .when_(p.state === TileSizeState.Maximized) *> p
+            .sizeStateCallback(TileSizeState.Minimized)
+            .when_(p.state === TileSizeState.Normal)
         )(Icons.Minimize.fitted(true))
 
       <.div(ExploreStyles.Tile)(

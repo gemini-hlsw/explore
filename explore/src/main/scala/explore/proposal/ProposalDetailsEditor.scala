@@ -258,12 +258,12 @@ object ProposalDetailsEditor {
           <.div(
             ^.key := "details",
             ExploreStyles.ProposalTile,
-            Tile("Details")((renderDetails(appCtx) _).reusable(details))
+            Tile("details", "Details")((renderDetails(appCtx) _).reusable(details))
           ),
           <.div(
             ^.key := "preview",
             ExploreStyles.ProposalTile,
-            Tile("Preview")(Reusable.fn(_ => <.span("Placeholder for PDF preview.")))
+            Tile("preview", "Preview")(Reusable.fn(_ => <.span("Placeholder for PDF preview.")))
           ),
           PartnerSplitsEditor(state.showPartnerSplitsModal,
                               splitsZoom,

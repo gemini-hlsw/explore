@@ -9,7 +9,9 @@ import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
 import explore.common.ConstraintsQueriesGQL._
@@ -18,6 +20,7 @@ import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
@@ -25,7 +28,6 @@ import explore.implicits._
 import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.AppTab
-import explore.model.enum.TileSizeState
 import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
@@ -69,7 +71,9 @@ final case class ObsTabContents(
 }
 
 object ObsTabContents {
-  val NotesIndex: NonNegInt           = 0
+  val NotesId: NonEmptyString         = "notes"
+  val TargetId: NonEmptyString        = "target"
+  val ConstraintsId: NonEmptyString   = "constraints"
   val NotesMaxHeight: NonNegInt       = 3
   val NotesMinHeight: NonNegInt       = 1
   val TargetMinHeight: NonNegInt      = 12
@@ -83,20 +87,20 @@ object ObsTabContents {
                  y = 0,
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
-                 i = "notes",
+                 i = NotesId.value,
                  isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
                  w = DefaultWidth.value,
                  h = TargetMinHeight.value,
-                 i = "target"
+                 i = TargetId.value
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints"
+                 i = ConstraintsId.value
       )
     )
   )
@@ -107,20 +111,20 @@ object ObsTabContents {
                  y = 0,
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
-                 i = "notes",
+                 i = NotesId.value,
                  isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
                  w = DefaultWidth.value,
                  h = TargetMinHeight.value,
-                 i = "target"
+                 i = TargetId.value
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints"
+                 i = ConstraintsId.value
       )
     )
   )
@@ -131,20 +135,20 @@ object ObsTabContents {
                  y = 0,
                  w = DefaultWidth.value,
                  h = NotesMaxHeight.value,
-                 i = "notes",
+                 i = NotesId.value,
                  isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
                  w = DefaultWidth.value,
                  h = TargetMinHeight.value,
-                 i = "target"
+                 i = TargetId.value
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value + TargetMinHeight.value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
-                 i = "constraints"
+                 i = ConstraintsId.value
       )
     )
   )
@@ -172,15 +176,6 @@ object ObsTabContents {
     val panelsWidth   = State.panels.composeLens(TwoPanelState.treeWidth)
     val panelSelected = State.panels.composeLens(TwoPanelState.elementSelected)
     val fovAngle      = State.options.composeLens(TargetVisualOptions.fovAngle)
-
-    def breakPointNote(n: BreakpointName) =
-      layouts.breakPointLayout(n, NotesIndex)
-    def notesHeight =
-      breakPointNote(BreakpointName.sm).composeLens(layoutItemHeight)
-    def notesHeightState(s: State): TileSizeState = notesHeight.getOption(s) match {
-      case Some(x) if x === NotesMinHeight.value => TileSizeState.Minimized
-      case _                                     => TileSizeState.Normal
-    }
   }
 
   type Props = ObsTabContents
@@ -200,6 +195,7 @@ object ObsTabContents {
           case Left(_)       => Callback.empty
         }
 
+    // TODO Use this method
     def readTargetPreferences(targetId: Target.Id)(implicit ctx: AppContextIO): Callback =
       $.props.flatMap { p =>
         p.userId.get.map { uid =>
@@ -210,7 +206,7 @@ object ObsTabContents {
         }.getOrEmpty
       }
 
-    def constraintsSelectorFn(
+    private def constraintsSelectorFn(
       constraintsSetId: Option[ConstraintSet.Id],
       obsSummaryOpt:    Option[ObsSummary],
       observations:     ConstraintsInfo
@@ -234,6 +230,7 @@ object ObsTabContents {
       state:        View[State],
       observations: View[(ConstraintsInfo, ObservationList)]
     )(implicit ctx: AppContextIO): VdomNode = {
+
       val treeResize =
         (_: ReactEvent, d: ResizeCallbackData) =>
           $.setStateL(State.panelsWidth)(d.size.width) *>
@@ -260,15 +257,6 @@ object ObsTabContents {
             props.focused
           )
         )
-
-      def storeLayouts(layouts: Layouts): Callback =
-        UserGridLayoutUpsert
-          .storeLayoutsPreference[IO](props.userId.get,
-                                      GridLayoutSection.ObservationsLayout,
-                                      layouts
-          )
-          .runAsyncAndForgetCB
-          .debounce(1.second)
 
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
         props.focused.get.collect { case FocusedObs(obsId) =>
@@ -320,12 +308,6 @@ object ObsTabContents {
           )
         }
 
-      def sizeState(s: TileSizeState): Callback =
-        $.setStateL(State.notesHeight)(s match {
-          case TileSizeState.Minimized => 1
-          case _                       => 3
-        })
-
       def renderTarget(
         targetId:      Option[Target.Id],
         renderInTitle: Tile.RenderInTitle
@@ -347,6 +329,9 @@ object ObsTabContents {
                   <.div("No target assigned")
             )
           )
+
+      val targetTile =
+        Tile(TargetId, "Target")((renderTarget _).reusable(targetId))
 
       def renderConstraintsFn(
         csId:          ConstraintSet.Id,
@@ -379,51 +364,44 @@ object ObsTabContents {
             )
           )
 
-      val rightSideRGL =
-        ResponsiveReactGridLayout(
-          width = coreWidth,
-          margin = (5, 5),
-          containerPadding = (5, 0),
-          rowHeight = Constants.GridRowHeight,
-          draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-          onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(b),
-          layouts = state.get.layouts
+      val constraintsTile =
+        Tile(ConstraintsId,
+             "Constraints",
+             canMinimize = true,
+             control = ((constraintsSelectorFn _)
+               .reusable(constraintsSetId, obsSummaryOpt, observations.get._1))
+               .some
         )(
-          <.div(
-            ^.key := "notes",
-            Tile(
-              s"Note for Observer",
-              backButton.some,
-              canMinimize = true,
-              canMaximize = true,
-              state = State.notesHeightState(state.get),
-              sizeStateCallback = (sizeState _).reusable
-            )(
-              Reusable.fn(_ =>
-                <.div(
-                  ExploreStyles.NotesWrapper,
-                  <.div(
-                    ExploreStyles.ObserverNotes,
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-                  )
-                )
+          (renderConstraints _).reusable(constraintsSetId)
+        )
+
+      val notesTile =
+        Tile(
+          NotesId,
+          s"Note for Observer",
+          backButton.some,
+          canMinimize = true
+        )(
+          Reusable.fn(_ =>
+            <.div(
+              ExploreStyles.NotesWrapper,
+              <.div(
+                ExploreStyles.ObserverNotes,
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
               )
             )
-          ),
-          <.div(
-            ^.key := "target",
-            Tile("Target")((renderTarget _).reusable(targetId))
-          ),
-          <.div(
-            ^.key := "constraints",
-            Tile("Constraints",
-                 control = ((constraintsSelectorFn _)
-                   .reusable(constraintsSetId, obsSummaryOpt, observations.get._1))
-                   .some
-            )(
-              (renderConstraints _).reusable(constraintsSetId)
-            )
           )
+        )
+
+      val layouts = ViewF.fromState[IO]($).zoom(State.layouts)
+
+      val rightSideRGL =
+        TileController(
+          props.userId.get,
+          coreWidth,
+          defaultLayout,
+          layouts,
+          List(notesTile, targetTile, constraintsTile)
         )
 
       val rightSide =
