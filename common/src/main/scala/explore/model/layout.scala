@@ -6,6 +6,7 @@ package explore.model
 import cats._
 import cats.syntax.all._
 import eu.timepit.refined.types.numeric.NonNegInt
+import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability._
 import monocle.Lens
@@ -58,7 +59,7 @@ object layout {
   }
 
   implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.by(_.name)
-  implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.derive
+  implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
   implicit val layoutReuse: Reusability[Layout]                 = Reusability.by(_.l)
   implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.by(_.toList)
   implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
