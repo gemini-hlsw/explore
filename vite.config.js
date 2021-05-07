@@ -86,7 +86,8 @@ export default ({ command, mode }) => {
             const sjsIgnored =
               _path.includes("/target/stream") ||
               _path.includes("/zinc/") ||
-              _path.includes("/classes");
+              _path.includes("/classes") ||
+              _path.endsWith(".tmp");
             return sjsIgnored;
           },
         ],

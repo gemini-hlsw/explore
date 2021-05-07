@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
 import explore.UnderConstruction
@@ -138,7 +139,7 @@ object TargetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide =
-      Tile(s"Target", backButton.some)(
+      Tile("target", s"Target", backButton.some)(
         (renderContents _).reusable(props.userId.get, targetIdOpt, props.searching)
       )
 

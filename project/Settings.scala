@@ -38,6 +38,7 @@ object Settings {
     val reactTable        = "0.0.3"
     val scalaJsReact      = "1.7.7"
     val sttp              = "3.2.3"
+    val pprint            = "0.6.5"
   }
 
   object Libraries {
@@ -160,7 +161,8 @@ object Settings {
       deps(
         "com.github.julien-truffaut" %%% "monocle-core",
         "com.github.julien-truffaut" %%% "monocle-state",
-        "com.github.julien-truffaut" %%% "monocle-macro"
+        "com.github.julien-truffaut" %%% "monocle-macro",
+        "com.github.julien-truffaut" %%% "monocle-unsafe"
       )(monocle)
     )
 
@@ -266,6 +268,12 @@ object Settings {
         "com.softwaremill.sttp.client3" %%% "circe",
         "com.softwaremill.sttp.client3" %%% "cats"
       )(sttp)
+    )
+
+    val PPrint = Def.setting(
+      deps(
+        "com.lihaoyi" %%% "pprint"
+      )(pprint)
     )
   }
 }

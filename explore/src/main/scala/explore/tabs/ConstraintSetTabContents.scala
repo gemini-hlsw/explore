@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintSetObsQueries._
 import explore.common.UserPreferencesQueries._
@@ -122,7 +123,8 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = Tile("Constraints", backButton.some)((renderEditor _).reusable(csIdOpt))
+    val rightSide =
+      Tile("constraints", "Constraints", backButton.some)((renderEditor _).reusable(csIdOpt))
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(

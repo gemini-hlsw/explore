@@ -5,14 +5,14 @@ package explore.model
 
 import cats._
 import cats.syntax.all._
-import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
-import lucuma.ui.reusability._
 import monocle.Lens
-import monocle.Optional
+import monocle.Traversal
+import monocle.function.Each._
 import monocle.function.Field3._
-import monocle.function.Index._
 import monocle.macros.GenLens
 import react.gridlayout._
 
@@ -46,24 +46,23 @@ object layout {
   def breakpointCols(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._2)
 
-  val layoutItem       = GenLens[Layout](_.l)
-  val layoutItemHeight = GenLens[LayoutItem](_.h)
-  val layoutItemWidth  = GenLens[LayoutItem](_.w)
-  val layoutItemX      = GenLens[LayoutItem](_.x)
-  val layoutItemY      = GenLens[LayoutItem](_.y)
-
-  implicit class LayoutsOps[A](val layouts: Lens[A, LayoutsMap]) extends AnyVal {
-    def breakPoint(n:       BreakpointName): Optional[A, LayoutEntry] = layouts.composeOptional(index(n))
-    def breakPointLayout(n: BreakpointName, pos: NonNegInt): Optional[A, LayoutItem] =
-      breakPoint(n).composeLens(third).composeLens(layoutItem).composeOptional(index(pos.value))
-  }
-
-  implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.by(_.name)
-  implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
-  implicit val layoutReuse: Reusability[Layout]                 = Reusability.by(_.l)
-  implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.by(_.toList)
+  implicit val nes: Ordering[NonEmptyString]                    = Order[NonEmptyString].toOrdering
   implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
   implicit val breakpointNameOrdering: Ordering[BreakpointName] = breakpointNameOrder.toOrdering
+  val allLayouts: Traversal[LayoutsMap, Layout]                 =
+    each[LayoutsMap, LayoutEntry].composeLens(third)
+  val layoutItem: Lens[Layout, List[LayoutItem]]                = GenLens[Layout](_.l)
+  val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.composeTraversal(each)
+  val layoutItemName                                            = GenLens[LayoutItem](_.i)
+  val layoutItemHeight                                          = GenLens[LayoutItem](_.h)
+  val layoutItemWidth                                           = GenLens[LayoutItem](_.w)
+  val layoutItemX                                               = GenLens[LayoutItem](_.x)
+  val layoutItemY                                               = GenLens[LayoutItem](_.y)
+
+  implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
+  implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
+  implicit val layoutReuse: Reusability[Layout]                 = Reusability.byEq
+  implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.byEq
 
   object unsafe {
     implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
