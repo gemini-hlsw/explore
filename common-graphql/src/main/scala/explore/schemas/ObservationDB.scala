@@ -9,6 +9,8 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.Atom
+import lucuma.core.model.Step
 // gql: import io.circe.refined._
 
 @GraphQLSchema
@@ -16,11 +18,11 @@ trait ObservationDB {
   object Scalars {
     // Ids
     type AsterismId      = Asterism.Id
-    type AtomId          = String
+    type AtomId          = Atom.Id
     type ConstraintSetId = ConstraintSet.Id
     type ObservationId   = Observation.Id
     type ProgramId       = String
-    type StepId          = String
+    type StepId          = Step.Id
     type TargetId        = Target.Id
     // Basic types
     type BigDecimal      = scala.BigDecimal

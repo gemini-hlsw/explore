@@ -54,6 +54,8 @@ object RootModelRouting {
         setTab(AppTab.Observations) >>> RootModel.focused.set(none)
       case ObsPage(obsId)                  =>
         setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
+      case ObsAdvancedConfPage(obsId)      =>
+        setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case TargetsBasePage                 =>
         setTab(AppTab.Targets) >>> RootModel.focused.set(none)
       case TargetPage(targetId)            =>
