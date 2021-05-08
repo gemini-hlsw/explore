@@ -29,7 +29,7 @@ package object utils {
     }
 
   def version(environment: ExecutionEnvironment): NonEmptyString = {
-    val instant = Instant.ofEpochMilli(BuildInfo.builtAtMillis)
+    val instant = Instant.ofEpochMilli(BuildInfo.buildDateTime)
     NonEmptyString.unsafeFrom(
       (environment match {
         case Development => versionDateTimeFormatter.format(instant)
