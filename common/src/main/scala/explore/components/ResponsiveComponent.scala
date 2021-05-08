@@ -19,9 +19,6 @@ final case class ResponsiveComponent(
 object ResponsiveComponent {
   type Props = ResponsiveComponent
 
-  // Explicitly never reuse as we are not considering the content
-  implicit val propsReuse: Reusability[ResponsiveComponent] = Reusability.never
-
   val component =
     ScalaComponent
       .builder[Props]
@@ -35,7 +32,6 @@ object ResponsiveComponent {
           <.div(p.clazz |+| widthClass |+| heightClass, s.targetRef, c)
         }
       }
-      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
