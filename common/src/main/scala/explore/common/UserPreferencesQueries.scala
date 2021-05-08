@@ -3,9 +3,9 @@
 
 package explore.common
 
+import cats.ApplicativeError
 import cats.MonadError
 import cats.data.OptionT
-import cats.effect.Effect
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
@@ -30,7 +30,7 @@ object UserPreferencesQueries {
   implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
     import self._
 
-    def storeWidthPreference[F[_]: Effect](
+    def storeWidthPreference[F[_]: ApplicativeError[*[_], Throwable]](
       userId:  Option[User.Id],
       section: ResizableSection,
       width:   Int
@@ -118,7 +118,7 @@ object UserPreferencesQueries {
   implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
     import self._
 
-    def storeLayoutsPreference[F[_]: Effect](
+    def storeLayoutsPreference[F[_]: ApplicativeError[*[_], Throwable]](
       userId:  Option[User.Id],
       section: GridLayoutSection,
       layouts: Layouts
@@ -153,7 +153,7 @@ object UserPreferencesQueries {
     // Gets the layout of a section.
     // This is coded to return a default in case
     // there is no data or errors
-    def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
+    def queryWithDefault[F[_]: ApplicativeError[*[_], Throwable]](
       uid:         User.Id,
       tid:         Target.Id,
       defaultFov:  Angle
@@ -173,7 +173,7 @@ object UserPreferencesQueries {
     import self._
     import UserPreferencesDB.Enums._
 
-    def updateFov[F[_]: Effect](
+    def updateFov[F[_]: ApplicativeError[*[_], Throwable]](
       uid:      User.Id,
       targetId: Target.Id,
       fov:      Angle

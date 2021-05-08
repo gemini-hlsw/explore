@@ -4,7 +4,7 @@
 package explore.undo
 
 import cats.effect.IO
-import cats.effect.concurrent.Ref
+import cats.effect.Ref
 import cats.syntax.all._
 import cats.kernel.Eq
 import explore.data.KeyedIndexedList
@@ -17,7 +17,7 @@ import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
 
-class UndoerSpec extends munit.FunSuite {
+class UndoerSpec extends munit.CatsEffectSuite {
 
   def idLens[A] = Lens.id[A]
 
@@ -34,7 +34,7 @@ class UndoerSpec extends munit.FunSuite {
   def kiIntList(i: Int*) = kiList(i: _*)(idLens.get)
 
   test("UndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(0)
       undoable <- TestUndoable(model)
       _        <- undoable.set(id[Int], 1)
@@ -49,11 +49,11 @@ class UndoerSpec extends munit.FunSuite {
       _        <- undoable.get.map(v => assertEquals(v, 2))
       _        <- undoable.redo
       _        <- undoable.get.map(v => assertEquals(v, 3))
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   test("ListModPosUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
       _        <- undoable.mod(listIntMod.pos.withKey(3), listIntMod.pos.set(8))
@@ -62,11 +62,11 @@ class UndoerSpec extends munit.FunSuite {
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 4, 5)))
       _        <- undoable.redo
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5, 3)))
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   test("ListDeleteUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
       _        <- undoable.mod(listIntMod.withKey(3), listIntMod.delete)
@@ -75,11 +75,11 @@ class UndoerSpec extends munit.FunSuite {
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 4, 5)))
       _        <- undoable.redo
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5)))
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   test("ListInsertUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
       undoable <- TestUndoable(model)
       _        <- undoable.mod(listIntMod.withKey(8), listIntMod.upsert(8, 3))
@@ -88,7 +88,7 @@ class UndoerSpec extends munit.FunSuite {
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 4, 5)))
       _        <- undoable.redo
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 8, 4, 5)))
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   // @Lenses
@@ -113,7 +113,7 @@ class UndoerSpec extends munit.FunSuite {
       .composeLens(V.s)
 
   test("ListObjModPosUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(kiVList(V(1), V(2), V(3), V(4), V(5)))
       undoable <- TestUndoable(model)
       _        <- undoable.mod(vListMod.pos.withKey(3), vListMod.pos.set(8))
@@ -141,7 +141,7 @@ class UndoerSpec extends munit.FunSuite {
       _        <- undoable.get.map(v =>
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "tres")))
                   )
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   class TreeModByIdEq[F[_], A, K](keyLens: Lens[A, K]) extends KITreeMod[F, A, K](keyLens)
@@ -155,7 +155,7 @@ class UndoerSpec extends munit.FunSuite {
   def kiIntTree(tree: Tree[Int]) = kiTree(tree)(idLens.get)
 
   test("TreeModPosUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(
                     kiIntTree(
                       Tree(
@@ -200,11 +200,11 @@ class UndoerSpec extends munit.FunSuite {
                                  )
                     )
                   )
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   test("TreeDeleteUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(
                     kiIntTree(
                       Tree(
@@ -247,11 +247,11 @@ class UndoerSpec extends munit.FunSuite {
                                  )
                     )
                   )
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   test("TreeInsertUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(
                     kiIntTree(
                       Tree(
@@ -294,7 +294,7 @@ class UndoerSpec extends munit.FunSuite {
                                  )
                     )
                   )
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 
   val vTreeMod = new TreeModByIdEq[IO, V, Int](V.id)
@@ -311,7 +311,7 @@ class UndoerSpec extends munit.FunSuite {
       .composeLens(V.s)
 
   test("TreeObjModPosUndoRedo") {
-    (for {
+    for {
       model    <- Ref[IO].of(
                     kiVTree(
                       Tree(
@@ -389,6 +389,6 @@ class UndoerSpec extends munit.FunSuite {
                                    )
                       )
                     )
-    } yield ()).unsafeToFuture()
+    } yield ()
   }
 }

@@ -210,9 +210,7 @@ object ObsTabContents {
       constraintsSetId: Option[ConstraintSet.Id],
       obsSummaryOpt:    Option[ObsSummary],
       observations:     ConstraintsInfo
-    )(implicit
-      client:           clue.TransactionalClient[IO, explore.schemas.ObservationDB]
-    ): VdomNode =
+    )(implicit ctx:     AppContextIO): VdomNode =
       Select(
         value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
         placeholder = "Select a constraint set",

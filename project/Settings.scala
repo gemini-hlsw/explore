@@ -7,25 +7,26 @@ object Settings {
 
   object LibraryVersions {
     val cats              = "2.6.0"
-    val catsEffect        = "2.5.0"
-    val catsRetry         = "2.1.0"
+    val catsEffect        = "3.1.0"
+    val catsRetry         = "3.0.0"
     val circe             = "0.13.0"
     val circeGolden       = "0.3.0"
-    val clue              = "0.14.1"
-    val crystal           = "0.11.0"
+    val clue              = "0.15.1"
+    val crystal           = "0.12.1"
     val discipline        = "1.1.4"
     val disciplineMUnit   = "1.0.8"
     val geminiLocales     = "0.6.0"
-    val log4Cats          = "1.3.0"
-    val log4CatsLogLevel  = "0.2.0"
+    val log4Cats          = "2.1.0"
+    val log4CatsLogLevel  = "0.3.0"
     val lucumaCore        = "0.7.10"
-    val lucumaCatalog     = "0.3.7"
-    val lucumaUI          = "0.12.3"
+    val lucumaCatalog     = "0.4.0"
+    val lucumaUI          = "0.13.1"
     val lucumaSSO         = "0.0.9"
-    val lucumaBC          = "0.1.0"
+    val lucumaBC          = "0.2.1"
     val monocle           = "2.1.0"
     val mouse             = "1.0.2"
     val mUnit             = "0.7.25"
+    val mUnitCatsEffect   = "1.0.2"
     val reactAladin       = "0.5.0"
     val reactAtlasKitTree = "0.4.0"
     val reactClipboard    = "1.4.3"
@@ -37,7 +38,7 @@ object Settings {
     val reactSemanticUI   = "0.10.6"
     val reactTable        = "0.0.3"
     val scalaJsReact      = "1.7.7"
-    val sttp              = "3.2.3"
+    val sttp              = "3.3.0"
     val pprint            = "0.6.5"
   }
 
@@ -185,6 +186,12 @@ object Settings {
       )(mUnit)
     )
 
+    val MUnitCatsEffect = Def.setting(
+      deps(
+        "org.typelevel" %%% "munit-cats-effect-3"
+      )(mUnitCatsEffect)
+    )
+
     val ReactAladin = Def.setting(
       deps(
         "edu.gemini" %%% "react-aladin"
@@ -251,8 +258,7 @@ object Settings {
         "com.github.japgolly.scalajs-react" %%% "core",
         "com.github.japgolly.scalajs-react" %%% "extra",
         "com.github.japgolly.scalajs-react" %%% "ext-monocle-cats",
-        "com.github.japgolly.scalajs-react" %%% "ext-cats",
-        "com.github.japgolly.scalajs-react" %%% "ext-cats-effect"
+        "com.github.japgolly.scalajs-react" %%% "ext-cats"
       )(scalaJsReact)
     )
 

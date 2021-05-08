@@ -5,14 +5,14 @@ package explore.components.graphql
 
 import cats.Id
 import cats.data.NonEmptyList
-import cats.effect.CancelToken
-import cats.effect.ConcurrentEffect
+import cats.effect.Async
 import cats.effect.IO
+import cats.effect.std.Dispatcher
+import cats.effect.std.Queue
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
 import crystal.react._
-import fs2.concurrent.Queue
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
@@ -33,7 +33,8 @@ final case class LiveQueryRender[S, D, A](
     Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
-  val F:               ConcurrentEffect[IO],
+  val F:               Async[IO],
+  val dispatcher:      Dispatcher[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
   val client:          WebSocketClient[IO, S]
@@ -46,7 +47,7 @@ object LiveQueryRender {
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
     subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
-    cancelConnectionTracker: CancelToken[F],
+    cancelConnectionTracker: F[Unit],
     renderer:                StreamRenderer.Component[A]
   ) extends Render.LiveQuery.State[F, Id, S, D, A]
 
@@ -64,9 +65,11 @@ object LiveQueryRender {
           .didMountFn[F, Id, S, D, A][Props[F, S, D, A], State[F, S, D, A]](
             "LiveQueryRender",
             (stream, props) => {
-              implicit val F      = props.F
-              implicit val logger = props.logger
-              implicit val reuse  = props.reuse
+              implicit val F          = props.F
+              implicit val dispatcher = props.dispatcher
+              implicit val logger     = props.logger
+              implicit val reuse      = props.reuse
+
               StreamRenderer.build(stream)
             },
             State.apply

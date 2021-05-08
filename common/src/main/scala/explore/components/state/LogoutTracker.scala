@@ -54,9 +54,10 @@ object LogoutTracker {
           bc
         }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
       }
-      .componentWillUnmount($ =>
+      .componentWillUnmount { $ =>
+        implicit val ctx = $.props.ctx
         $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForgetCB
-      )
+      }
       .build
 
 }

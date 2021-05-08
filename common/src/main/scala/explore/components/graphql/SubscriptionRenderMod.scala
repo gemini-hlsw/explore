@@ -3,10 +3,9 @@
 
 package explore.components.graphql
 
-import cats.effect.ConcurrentEffect
-import cats.effect.ContextShift
+import cats.effect.Async
 import cats.effect.IO
-import cats.effect.Timer
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.Pot
@@ -36,19 +35,15 @@ final case class SubscriptionRenderMod[D, A](
     Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val F:             ConcurrentEffect[IO],
-  val timer:         Timer[IO],
-  val cs:            ContextShift[IO],
+  val F:             Async[IO],
+  val dispatcher:    Dispatcher[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
 ) extends ReactProps(SubscriptionRenderMod.component)
     with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
-  trait Props[F[_], D, A] extends Render.Subscription.Props[F, ViewF[F, *], D, A] {
-    implicit val timer: Timer[F]
-    implicit val cs: ContextShift[F]
-  }
+  trait Props[F[_], D, A] extends Render.Subscription.Props[F, ViewF[F, *], D, A] {}
 
   protected final case class State[F[_], D, A](
     subscription: GraphQLSubscription[F, D],
@@ -69,11 +64,10 @@ object SubscriptionRenderMod {
       .initialState[Option[State[F, D, A]]](none)
       .render(Render.renderFn[F, ViewF[F, *], D, A](_))
       .componentDidMount { $ =>
-        implicit val F      = $.props.F
-        implicit val timer  = $.props.timer
-        implicit val cs     = $.props.cs
-        implicit val logger = $.props.logger
-        implicit val reuse  = $.props.reuse
+        implicit val F          = $.props.F
+        implicit val dispatcher = $.props.dispatcher
+        implicit val logger     = $.props.logger
+        implicit val reuse      = $.props.reuse
 
         $.props.subscribe
           .flatMap { subscription =>

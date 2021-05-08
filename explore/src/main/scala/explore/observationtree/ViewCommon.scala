@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
@@ -27,6 +28,7 @@ trait ViewCommon {
     )
 
   def renderObsBadgeItem(selectable: Boolean)(obs: ObsSummary, idx: Int)(implicit
+    dispatcher:                      Dispatcher[IO],
     logger:                          Logger[IO]
   ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(

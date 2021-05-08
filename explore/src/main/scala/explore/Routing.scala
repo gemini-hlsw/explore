@@ -4,6 +4,7 @@
 package explore
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
@@ -79,7 +80,10 @@ object Routing {
       )
     )
 
-  def config(implicit logger: Logger[IO]): RouterWithPropsConfig[Page, View[RootModel]] =
+  def config(implicit
+    dispatcher: Dispatcher[IO],
+    logger:     Logger[IO]
+  ): RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 
@@ -89,8 +93,8 @@ object Routing {
       val rules =
         (emptyRule
           | staticRoute(root, HomePage) ~> render(UnderConstruction())
-          | staticRoute("/proposal", ProposalPage) ~> renderP(view =>
-            ProposalTabContents(view.zoom(RootModel.focused))
+          | staticRoute("/proposal", ProposalPage) ~> render(
+            AppCtx.using(implicit ctx => ProposalTabContents())
           )
           | staticRoute("/observations", ObservationsBasePage) ~> renderP(obsTab)
           | dynamicRouteCT(("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(

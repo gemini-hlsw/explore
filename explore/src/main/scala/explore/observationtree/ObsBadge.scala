@@ -6,8 +6,10 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
@@ -60,17 +62,20 @@ object ObsBadge {
           case _                                   => none
         }
 
-        val deleteButton = Button(
-          size = Small,
-          compact = true,
-          clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
-          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-            e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-              .map(cb => cb(props.obs.id).runAsyncAndForgetCB)
-              .getOrEmpty
-        )(
-          Icons.Trash
-        )
+        val deleteButton =
+          AppCtx.using(implicit ctx =>
+            Button(
+              size = Small,
+              compact = true,
+              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
+              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
+                  .map(cb => cb(props.obs.id).runAsyncAndForgetCB)
+                  .getOrEmpty
+            )(
+              Icons.Trash
+            )
+          )
 
         def nameAndId(name: String) =
           <.div(

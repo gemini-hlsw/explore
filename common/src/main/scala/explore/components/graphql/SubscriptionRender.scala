@@ -4,8 +4,9 @@
 package explore.components.graphql
 
 import cats.Id
-import cats.effect.ConcurrentEffect
+import cats.effect.Async
 import cats.effect.IO
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.react._
@@ -29,7 +30,8 @@ final case class SubscriptionRender[D, A](
     Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
-  val F:             ConcurrentEffect[IO],
+  val F:             Async[IO],
+  val dispatcher:    Dispatcher[IO],
   val logger:        Logger[IO],
   val reuse:         Reusability[A]
 ) extends ReactProps(SubscriptionRender.component)
@@ -53,9 +55,10 @@ object SubscriptionRender {
       .initialState[Option[State[F, D, A]]](none)
       .render(Render.renderFn[F, Id, D, A](_))
       .componentDidMount { $ =>
-        implicit val F      = $.props.F
-        implicit val logger = $.props.logger
-        implicit val reuse  = $.props.reuse
+        implicit val F          = $.props.F
+        implicit val dispatcher = $.props.dispatcher
+        implicit val logger     = $.props.logger
+        implicit val reuse      = $.props.reuse
 
         $.props.subscribe
           .flatMap { subscription =>

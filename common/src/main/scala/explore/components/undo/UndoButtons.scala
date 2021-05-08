@@ -3,7 +3,8 @@
 
 package explore.components.undo
 
-import cats.effect.Effect
+import cats.MonadError
+import cats.effect.std.Dispatcher
 import crystal.react.implicits._
 import explore.Icons
 import explore.components.WIP
@@ -16,14 +17,15 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
 final case class UndoButtons[F[_], A](
-  value:      A,
-  undoCtx:    Undoer.Context[F, A],
-  size:       SemanticSize = Small,
-  iconSize:   SemanticSize = Small,
-  disabled:   Boolean = false
+  value:          A,
+  undoCtx:        Undoer.Context[F, A],
+  size:           SemanticSize = Small,
+  iconSize:       SemanticSize = Small,
+  disabled:       Boolean = false
 )(implicit
-  val effect: Effect[F],
-  val logger: Logger[F]
+  val F:          MonadError[F, Throwable],
+  val dispatcher: Dispatcher[F],
+  val logger:     Logger[F]
 ) extends ReactProps[UndoButtons[Any, Any]](UndoButtons.component)
 
 object UndoButtons {
@@ -33,8 +35,9 @@ object UndoButtons {
     ScalaComponent
       .builder[Props[F, A]]
       .render_P { p =>
-        implicit val effect = p.effect
-        implicit val logger = p.logger
+        implicit val F          = p.F
+        implicit val dispatcher = p.dispatcher
+        implicit val logger     = p.logger
 
         WIP(
           <.div(
