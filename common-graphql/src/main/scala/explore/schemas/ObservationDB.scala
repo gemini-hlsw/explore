@@ -6,11 +6,11 @@ package explore.schemas
 import clue.annotation.GraphQLSchema
 import lucuma.core.enum
 import lucuma.core.model.Asterism
+import lucuma.core.model.Atom
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
-import lucuma.core.model.Target
-import lucuma.core.model.Atom
 import lucuma.core.model.Step
+import lucuma.core.model.Target
 // gql: import io.circe.refined._
 
 @GraphQLSchema

@@ -4,31 +4,32 @@
 package explore.config
 
 import cats.syntax.all._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.vdom.all.svg._
-import react.common._
-import explore.common.SequenceStepsGQL.SequenceSteps._
+import explore.Icons
 import explore.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
-
-import scalajs.js.JSConverters._
-import react.semanticui.elements.segment.Segment
+import explore.common.SequenceStepsGQL.SequenceSteps._
 import explore.components.ui.ExploreStyles
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.all.svg._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthFilter
+import lucuma.core.enum.GmosNorthFpu
+import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GmosSouthFilter
+import lucuma.core.enum.GmosSouthFpu
+import lucuma.core.enum.StepType
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import explore.Icons
-import lucuma.core.enum.StepType
-import java.text.DecimalFormat
+import lucuma.core.model.Atom
+import react.common._
 import react.semanticui.collections.table._
 import react.semanticui.elements.header.Header
-import lucuma.core.enum.GmosSouthFpu
-import lucuma.core.model.Atom
-import lucuma.core.enum.GmosNorthDisperser
-import lucuma.core.enum.GmosSouthDisperser
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosSouthFilter
-import lucuma.core.enum.GmosNorthFpu
+import react.semanticui.elements.segment.Segment
+
+import java.text.DecimalFormat
+
+import scalajs.js.JSConverters._
 
 final case class SequenceTable(config: Config)
     extends ReactProps[SequenceTable](SequenceTable.component)

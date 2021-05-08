@@ -7,10 +7,10 @@ import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
-import lucuma.ui.reusability._
-import react.common.Size
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
+import lucuma.ui.reusability._
+import react.common.Size
 
 /**
  * Reusability instances for model classes

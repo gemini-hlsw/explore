@@ -5,12 +5,12 @@ package explore.config
 
 import explore.AppCtx
 import explore.common.SequenceStepsGQL._
+import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
-import explore.components.graphql.LiveQueryRender
 
 final case class SequenceEditor() extends ReactProps[SequenceEditor](SequenceEditor.component)
 

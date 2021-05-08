@@ -7,13 +7,14 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.schemas.ObservationDB
 import io.circe.Decoder
-import java.time
+import lucuma.core.enum
 import lucuma.core.math
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.enum
 import lucuma.core.model.Atom
 import lucuma.core.model.Step
+
+import java.time
 // gql: import explore.model.decoders._
 // gql: import explore.model.reusability._
 // gql: import io.circe.refined._

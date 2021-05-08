@@ -8,6 +8,7 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
+import explore.config.SequenceEditor
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
@@ -28,7 +29,6 @@ import react.resizeDetector.ResizeDetector
 
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import explore.config.SequenceEditor
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem

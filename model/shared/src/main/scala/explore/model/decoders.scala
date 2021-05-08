@@ -26,9 +26,10 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.units.CentimetersPerSecond
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
+import sttp.model.Uri
+
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import sttp.model.Uri
 
 object decoders {
   implicit val uriDecoder: Decoder[Uri] = Decoder.decodeString.emap(Uri.parse)
