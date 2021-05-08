@@ -108,9 +108,9 @@ lazy val common = project
       scalaVersion,
       sbtVersion,
       git.gitHeadCommit,
-      "herokuSourceVersion" -> sys.env.get("SOURCE_VERSION")
+      "herokuSourceVersion" -> sys.env.get("SOURCE_VERSION"),
+      "buildDateTime"       -> System.currentTimeMillis()
     ),
-    buildInfoOptions += BuildInfoOption.BuildTime,
     buildInfoPackage := "explore",
     Compile / sourceGenerators += Def.taskDyn {
       val root    = (ThisBuild / baseDirectory).value.toURI.toString
