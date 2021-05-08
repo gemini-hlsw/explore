@@ -77,6 +77,8 @@ object TileController {
       .builder[Props]
       .stateless
       .render_P { p =>
+        implicit val ctx = p.ctx
+
         def sizeState(id: Tile.TileId)(st: TileSizeState): Callback =
           p.layoutMap
             .zoom(allTiles)
@@ -92,6 +94,7 @@ object TileController {
               case l                               => l
             }
             .runAsyncAndForgetCB
+
         ResponsiveReactGridLayout(
           width = p.coreWidth,
           margin = (5, 5),

@@ -155,7 +155,7 @@ object ExploreMain extends IOApp.Simple {
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)
           appConfig            <- fetchConfig
-          _                    <- logger.info(s"Git Commit: [${BuildInfo.gitHeadCommit.getOrElse("NONE")}]")
+          _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
           ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled

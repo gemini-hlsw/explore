@@ -8,7 +8,7 @@ object Settings {
   object LibraryVersions {
     val cats              = "2.6.0"
     val catsEffect        = "3.1.0"
-    val catsRetry         = "2.1.0+14-65562e6a-SNAPSHOT"
+    val catsRetry         = "3.0.0"
     val circe             = "0.13.0"
     val circeGolden       = "0.3.0"
     val clue              = "0.15.1"

@@ -28,6 +28,9 @@ package object utils {
       }
     }
 
+  val gitHash = BuildInfo.gitHeadCommit
+    .orElse(BuildInfo.herokuSourceVersion)
+
   def version(environment: ExecutionEnvironment): NonEmptyString = {
     val instant = Instant.ofEpochMilli(BuildInfo.builtAtMillis)
     NonEmptyString.unsafeFrom(
@@ -35,10 +38,7 @@ package object utils {
         case Development => versionDateTimeFormatter.format(instant)
         case _           =>
           versionDateFormatter.format(instant) +
-            "-" + BuildInfo.gitHeadCommit
-              .orElse(BuildInfo.herokuSourceVersion)
-              .map(_.take(7))
-              .getOrElse("NONE")
+            "-" + gitHash.map(_.take(7)).getOrElse("NONE")
       })
         + environment.suffix
           .map(suffix => s"-$suffix")
