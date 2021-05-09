@@ -21,7 +21,7 @@
     "react-draggable": "4.4.3",
     "react-grid-layout": "1.2.4",
     "react-is": "16.13.1",
-    "react-markdown": "^6.0.1",
+    "react-markdown": "^6.0.2",
     "react-moon": "2.0.2",
     "react-reflex": "4.0.0",
     "react-resizable": "1.11.1",
@@ -32,7 +32,7 @@
     "remark-gfm": "^1.0.0",
     "remark-math": "^4.0.0",
     "semantic-ui-react": "2.0.3",
-    "styled-components": "5.1.1",
+    "styled-components": "5.3.0",
     "ua-parser-js": "0.7.23"
   },
   "devDependencies": {
