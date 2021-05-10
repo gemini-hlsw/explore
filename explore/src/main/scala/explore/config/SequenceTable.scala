@@ -30,6 +30,7 @@ import react.semanticui.elements.segment.Segment
 import java.text.DecimalFormat
 
 import scalajs.js.JSConverters._
+import reactST.reactTable.TableMaker
 
 final case class SequenceTable(config: Config)
     extends ReactProps[SequenceTable](SequenceTable.component)
@@ -84,8 +85,11 @@ object SequenceTable {
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val tableMaker =
-    SUITableMaker[StepLine[_]](
+  private val tableMaker = TableMaker[StepLine[_]]
+
+  private val tableComponent =
+    SUITableBuilder.buildComponent(
+      tableMaker,
       Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
       header = TableHeader(),
       headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
@@ -202,9 +206,9 @@ object SequenceTable {
               case Config.GmosSouthConfig(_, _, acquisition, science) =>
                 <.div(
                   Header("Acquisition"),
-                  tableMaker.component((options, buildLines(acquisition.atoms).toJSArray)),
+                  tableComponent((options, buildLines(acquisition.atoms).toJSArray)),
                   Header("Science"),
-                  tableMaker.component((options, buildLines(science.atoms).toJSArray))
+                  tableComponent((options, buildLines(science.atoms).toJSArray))
                 )
               case _                                                  => "North config!"
             }
