@@ -5,7 +5,10 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb._
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.optics._
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
@@ -84,6 +87,20 @@ trait formats {
 
   val formatCZ: Format[String, ApparentRadialVelocity] =
     formatBigDecimalCZ.composeIso(fromKilometersPerSecondCZ)
+
+  val formatWavelength: Format[String, Wavelength] =
+    Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalNanometers.getOption),
+           _.nanometer.to[BigDecimal, Nanometer].value.toString
+    )
+
+  val formatPosInt: Format[String, PosInt] =
+    Format(_.parseIntOption.flatMap(refineV[Positive](_).toOption), _.value.toString)
+
+  val formatPosBigDecimal: Format[String, PosBigDecimal] =
+    Format(_.parseBigDecimalOption.flatMap(refineV[Positive](_).toOption), _.value.toString)
+
+  val formatArcsec: Format[String, Angle] =
+    Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
 }
 
 object formats extends formats

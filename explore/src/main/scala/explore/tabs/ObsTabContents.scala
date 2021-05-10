@@ -66,12 +66,14 @@ object ObsTabTiles {
 }
 
 object ObsTabContents {
-  val NotesMaxHeight: NonNegInt       = 3
-  val NotesMinHeight: NonNegInt       = 1
-  val TargetMinHeight: NonNegInt      = 12
-  val ConstraintsMaxHeight: NonNegInt = 6
-  val ConstraintsMinHeight: NonNegInt = 1
-  val DefaultWidth: NonNegInt         = 12
+  val NotesMaxHeight: NonNegInt         = 3
+  val NotesMinHeight: NonNegInt         = 1
+  val TargetMinHeight: NonNegInt        = 12
+  val ConstraintsMaxHeight: NonNegInt   = 6
+  val ConstraintsMinHeight: NonNegInt   = 1
+  val ConfigurationMaxHeight: NonNegInt = 8
+  val ConfigurationMinHeight: NonNegInt = 1
+  val DefaultWidth: NonNegInt           = 12
 
   private val layoutLarge: Layout = Layout(
     List(
@@ -89,10 +91,17 @@ object ObsTabContents {
                  i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
-                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
                  i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ConfigurationMaxHeight.value,
+        i = ObsTabTiles.ConfigurationId.value
       )
     )
   )
@@ -113,10 +122,17 @@ object ObsTabContents {
                  i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
-                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
                  i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ConfigurationMaxHeight.value,
+        i = ObsTabTiles.ConfigurationId.value
       )
     )
   )
@@ -137,10 +153,17 @@ object ObsTabContents {
                  i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
-                 y = NotesMaxHeight.value + TargetMinHeight.value,
+                 y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
                  h = ConstraintsMaxHeight.value,
                  i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ConfigurationMaxHeight.value,
+        i = ObsTabTiles.ConfigurationId.value
       )
     )
   )
@@ -300,7 +323,8 @@ object ObsTabContents {
                                   state.zoom(State.options)
             ),
             ConstraintsTile
-              .constraintsTile(constraintsSetId, obsSummaryOpt, observations.get._1)
+              .constraintsTile(constraintsSetId, obsSummaryOpt, observations.get._1),
+            ConfigurationTile.configurationTile(obsSummaryOpt.map(_.id))
           )
         )
 

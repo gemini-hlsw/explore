@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.Eq
-import crystal.ViewF
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Interval
@@ -21,16 +20,21 @@ import react.semanticui._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 
-final case class InputWithUnits[F[_], A](
-  value:           ViewF[F, A],
+import scala.scalajs.js
+
+final case class InputWithUnits[EV[_], A](
+  value:           EV[A],
   validFormat:     ValidFormatInput[A],
   changeAuditor:   ChangeAuditor[A],
   id:              NonEmptyString,
-  label:           ShorthandS[Label],
+  label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
   units:           String,
-  disabled:        Boolean,
-  columnSpam:      Int Refined Interval.Closed[1, 16] = 2
-)(implicit val ev: ExternalValue[ViewF[F, *]], val eq: Eq[A])
+  clazz:           Css = ExploreStyles.Grow(1),
+  disabled:        Boolean = false,
+  columnSpam:      Int Refined Interval.Closed[1, 16] = 2,
+  inline:          js.UndefOr[Boolean] = js.undefined,
+  size:            js.UndefOr[SemanticSize] = js.undefined
+)(implicit val ev: ExternalValue[EV], val eq: Eq[A])
     extends ReactProps[InputWithUnits[Any, Any]](InputWithUnits.component) {}
 
 object InputWithUnits {
@@ -49,12 +53,14 @@ object InputWithUnits {
             value = p.value,
             validFormat = p.validFormat,
             changeAuditor = p.changeAuditor,
-            clazz = ExploreStyles.Grow(1),
+            clazz = p.clazz,
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,
-            disabled = p.disabled
+            disabled = p.disabled,
+            size = p.size,
+            inline = p.inline
           )(p.ev, p.eq),
-          <.div(
+          <.span(
             ExploreStyles.UnitsLabel,
             p.units
           )

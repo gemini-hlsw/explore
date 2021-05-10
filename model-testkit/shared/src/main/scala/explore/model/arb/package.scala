@@ -18,3 +18,4 @@ object all
     with ArbElevationRange
     with ArbPointingId
     with ArbPointing
+    with ArbSpectroscopyConfigurationOptions

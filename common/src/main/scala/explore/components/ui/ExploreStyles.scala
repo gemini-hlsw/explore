@@ -226,4 +226,10 @@ object ExploreStyles {
 
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
+
+  val ConfigurationForm: Css         = Css("explore-configuration-form")
+  val ConfigurationGrid: Css         = Css("explore-configuration-grid")
+  val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
+  val SkipToNext: Css                = Css("explore-skip-to-next")
+  val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")
 }

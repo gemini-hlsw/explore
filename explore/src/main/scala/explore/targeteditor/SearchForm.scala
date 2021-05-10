@@ -127,7 +127,7 @@ object SearchForm {
           onTextChange = _ => $.setStateL(State.searchError)(none),
           onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
           icon = searchIcon
-        ).withMods(^.autoFocus := true, ^.placeholder := "Name"),
+        ).withMods(^.placeholder := "Name"),
         // We need this hidden control to submit when pressing enter
         <.input(^.`type` := "submit", ^.hidden := true)
       )

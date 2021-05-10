@@ -246,7 +246,7 @@ object TargetBody {
                 units = "mas/y",
                 disabled = disabled
               ),
-              InputWithUnits[IO, Option[Parallax]](
+              InputWithUnits(
                 parallaxView,
                 ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                 ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
