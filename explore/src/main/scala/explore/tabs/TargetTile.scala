@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.auto._
@@ -56,7 +55,7 @@ object TargetTile {
           ](
             TargetEditQuery.query(targetId),
             _.target,
-            NonEmptyList.of(TargetEditSubscription.subscribe[IO](targetId))
+            List(TargetEditSubscription.subscribe[IO](targetId))
           )((targetRenderFn _).reusable(targetId, renderInTitle))
             .withKey(s"target-$targetId")
         }
