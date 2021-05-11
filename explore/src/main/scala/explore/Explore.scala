@@ -58,7 +58,7 @@ object ExploreMain {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  implicit val ioRuntume: IORuntime = cats.effect.unsafe.IORuntime.global
+  implicit val ioRuntume: IORuntime = cats.effect.unsafe.implicits.global
 
   private var releaseOldDispatcher: Option[IO[Unit]] = none
 
