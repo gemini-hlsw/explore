@@ -4,8 +4,8 @@
 package explore
 
 import cats.effect.IO
-import cats.effect.IOApp
 import cats.effect.std.Dispatcher
+import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
@@ -49,7 +49,8 @@ import scala.scalajs.js
 import js.annotation._
 
 @JSExportTopLevel("Explore")
-object ExploreMain extends IOApp.Simple {
+object ExploreMain {
+  japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
 
@@ -57,11 +58,17 @@ object ExploreMain extends IOApp.Simple {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  @JSExport
-  def runIOApp(): Unit = main(Array.empty)
+  implicit val ioRuntume: IORuntime = cats.effect.unsafe.IORuntime.global
 
-  override final def run: IO[Unit] = {
-    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+  private var releaseOldDispatcher: Option[IO[Unit]] = none
+
+  @JSExport
+  def runIOApp(): Unit =
+    (releaseOldDispatcher.orEmpty >>
+      start.map(releaseDispatcher => releaseOldDispatcher = releaseDispatcher.some))
+      .unsafeRunAndForget()
+
+  final def start: IO[IO[Unit]] = {
 
     def initialModel(vault: Option[UserVault]) = RootModel(
       vault = vault,
@@ -131,8 +138,9 @@ object ExploreMain extends IOApp.Simple {
       }
 
     Dispatcher[IO].allocated
-      .map(_._1)
-      .flatMap { implicit dispatcher =>
+      .flatMap { case (dispatcher, releaseDispatcher) =>
+        implicit val d = dispatcher
+
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 
@@ -178,14 +186,13 @@ object ExploreMain extends IOApp.Simple {
             )
 
           RootComponent().renderIntoDOM(container)
+
+          releaseDispatcher
         }
       }
-      .void
-      .handleErrorWith { t =>
+      .onError { t =>
         logger.error(t)("Error initializing") >>
           crash(s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
   }
-
-  // TODO Release dispatcher on stop.
 }
