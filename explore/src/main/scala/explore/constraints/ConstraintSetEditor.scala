@@ -3,7 +3,6 @@
 
 package explore.constraints
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import explore.AppCtx
 import explore.common.ConstraintsQueriesGQL._
@@ -46,7 +45,7 @@ object ConstraintSetEditor {
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
             ConstraintSetQuery.query(props.csId),
             _.constraintSet,
-            NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](props.csId))
+            List(ConstraintSetEditSubscription.subscribe[IO](props.csId))
           )((renderFn _).reusable(props.csId, props.renderInTitle))
         }
       }

@@ -26,12 +26,9 @@ import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import monocle.std.option.some
-import react.common.Css
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
-import react.semanticui.collections.table.TableFooter
-import react.semanticui.collections.table.TableHeaderCell
-import react.semanticui.collections.table.TableRow
+import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentAttached
@@ -42,6 +39,7 @@ import reactST.reactTable.mod.SortingRule
 import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
+import explore.config.SUITable
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
@@ -57,6 +55,12 @@ object MagnitudeForm {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
+
+  private val MagTable = TableMaker[View[Magnitude]].withSort
+
+  import MagTable.syntax._
+
+  private val MagTableComponent = new SUITable(MagTable)
 
   val component =
     ScalaComponent
@@ -131,13 +135,10 @@ object MagnitudeForm {
             )
           )
 
-          val tableMaker = TableMaker[View[Magnitude]].withSort
-          import tableMaker.syntax._
-
-          val columns = tableMaker.columnArray(
-            tableMaker
-              .componentColumn(
-                "value",
+          val columns = List(
+            MagTable
+              .Column("value")
+              .setCell(
                 ReactTableHelpers
                   .editableViewColumn(
                     Magnitude.value,
@@ -151,37 +152,37 @@ object MagnitudeForm {
                   )
               )
               .setHeader("Value"),
-            tableMaker
-              .componentColumn("band",
-                               ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
-                                 disabled = props.disabled,
-                                 excludeFn = Some(excludeFn)
-                               )
+            MagTable
+              .Column("band")
+              .setCell(
+                ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
+                  disabled = props.disabled,
+                  excludeFn = Some(excludeFn)
+                )
               )
               .setSortByFn(_.get.band)
               .setHeader("Band"),
-            tableMaker
-              .componentColumn("system",
-                               ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
-                                 disabled = props.disabled
-                               )
+            MagTable
+              .Column("system")
+              .setCell(
+                ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
+                  disabled = props.disabled
+                )
               )
               .setHeader("System"),
-            tableMaker.componentColumn(
-              "delete",
-              ReactTableHelpers.buttonViewColumn(button = deleteButton,
-                                                 onClick = deleteFn,
-                                                 disabled = props.disabled,
-                                                 wrapperClass =
-                                                   ExploreStyles.MagnitudesTableDeletButtonWrapper
+            MagTable
+              .Column("delete")
+              .setCell(
+                ReactTableHelpers.buttonViewColumn(button = deleteButton,
+                                                   onClick = deleteFn,
+                                                   disabled = props.disabled,
+                                                   wrapperClass =
+                                                     ExploreStyles.MagnitudesTableDeletButtonWrapper
+                )
               )
-            )
-          )
+          ).toJSArray
 
-          val tableState = tableMaker.emptyState.setSortByVarargs(SortingRule("band"))
-          val options    = tableMaker
-            .options(rowIdFn = _.get.band.tag, columns = columns)
-            .setInitialStateFull(tableState)
+          val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
 
           // Put it inside a form to get the SUI styles right
           Form(as = <.div, size = Small)(
@@ -192,15 +193,19 @@ object MagnitudeForm {
                       compact = true,
                       clazz = ExploreStyles.MagnitudesTableContainer
               )(
-                tableMaker.makeTable(
-                  options = options,
-                  data = props.magnitudes.toListOfViews(_.band).toJSArray,
-                  headerCellFn = Some(c =>
-                    TableMaker
-                      .basicHeaderCellFn(Css.Empty)(c)
+                MagTableComponent(
+                  Table(celled = true,
+                        selectable = true,
+                        striped = true,
+                        compact = TableCompact.Very
                   ),
-                  tableClass = Css("ui very celled selectable  striped compact table"),
-                  footer = footer
+                  header = TableHeader(),
+                  footer = footer.vdomElement
+                )(
+                  MagTable
+                    .Options(columns, props.magnitudes.toListOfViews(_.band).toJSArray)
+                    .setRowIdFn(_.get.band.tag)
+                    .setInitialStateFull(tableState)
                 )
               )
             )

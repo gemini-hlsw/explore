@@ -223,4 +223,7 @@ object ExploreStyles {
   val HelpMarkdownBody: Css = Css("markdown-body")
 
   val TitleUndoButtons: Css = Css("title-undo-buttons")
+
+  val StepTableHeader: Css = Css("step-table-header")
+  val StepGuided: Css      = Css("step-guided")
 }

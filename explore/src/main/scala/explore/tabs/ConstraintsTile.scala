@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
@@ -73,7 +72,7 @@ object ConstraintsTile {
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
             ConstraintSetQuery.query(csId),
             _.constraintSet,
-            NonEmptyList.of(ConstraintSetEditSubscription.subscribe[IO](csId))
+            List(ConstraintSetEditSubscription.subscribe[IO](csId))
           )((renderConstraintsFn _).reusable(csId, renderInTitle))
             .withKey(s"constraint-${constraintsSetId.foldMap(_.show)}")
         }

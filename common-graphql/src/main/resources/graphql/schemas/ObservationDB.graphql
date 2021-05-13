@@ -109,6 +109,9 @@ input AsterismTargetLinks {
   targetIds: [TargetId!]!
 }
 
+# AtomId id formatted as `m-(0|[1-9a-f][0-9a-f]*)`
+scalar AtomId
+
 # Bias calibration step
 type Bias implements StepConfig {
   # Step type
@@ -184,6 +187,9 @@ interface Config {
 
   # Planned time for this configuration
   plannedTime: PlannedTime!
+
+  # Estimated setup time
+  setupTime: Duration!
 }
 
 type ConstraintSet {
@@ -867,22 +873,13 @@ type GmosNodAndShuffle {
 
 # GmosNorth atom, a collection of steps that should be executed in their entirety
 type GmosNorthAtom {
+  # Atom id
+  id: AtomId!
+
   # Individual steps that comprise the atom
-  steps: [GmosNorthBreakpointStep!]!
+  steps: [GmosNorthStep!]!
 
   # Time estimate for this atom's execution, the sum of each step's time.
-  time: StepTime!
-}
-
-# GmosNorth step with potential breakpoint
-type GmosNorthBreakpointStep {
-  # Whether to pause before the execution of this step
-  breakpoint: Breakpoint!
-
-  # The sequence step itself
-  step: GmosNorthStep!
-
-  # Time estimate for this step's execution
   time: StepTime!
 }
 
@@ -894,9 +891,6 @@ type GmosNorthBuiltinFpu {
 
 # GMOS North Configuration
 type GmosNorthConfig implements Config {
-  # Estimated setup time
-  setupTime: Duration!
-
   # Static/unchanging configuration
   static: GmosNorthStaticConfig!
 
@@ -911,6 +905,9 @@ type GmosNorthConfig implements Config {
 
   # Planned time for this configuration
   plannedTime: PlannedTime!
+
+  # Estimated setup time
+  setupTime: Duration!
 }
 
 # GMOS North Disperser
@@ -1150,16 +1147,25 @@ type GmosNorthStaticConfig {
   nodAndShuffle: GmosNodAndShuffle
 }
 
-# Step (bias, dark, science, etc.)
-type GmosNorthStep {
+# GmosNorth step with potential breakpoint
+type GmosNorthStep implements Step {
+  # Instrument configuration for this step
+  instrumentConfig: GmosNorthDynamic!
+
+  # Step id
+  id: StepId!
+
+  # Whether to pause before the execution of this step
+  breakpoint: Breakpoint!
+
   # Step type
   stepType: StepType!
 
-  # Instrument configuration
-  instrumentConfig: GmosNorthDynamic!
-
-  # Step configuration
+  # The sequence step itself
   stepConfig: StepConfig!
+
+  # Time estimate for this step's execution
+  time: StepTime!
 }
 
 # GMOS Region Of Interest
@@ -1188,22 +1194,13 @@ enum GmosRoi {
 
 # GmosSouth atom, a collection of steps that should be executed in their entirety
 type GmosSouthAtom {
+  # Atom id
+  id: AtomId!
+
   # Individual steps that comprise the atom
-  steps: [GmosSouthBreakpointStep!]!
+  steps: [GmosSouthStep!]!
 
   # Time estimate for this atom's execution, the sum of each step's time.
-  time: StepTime!
-}
-
-# GmosSouth step with potential breakpoint
-type GmosSouthBreakpointStep {
-  # Whether to pause before the execution of this step
-  breakpoint: Breakpoint!
-
-  # The sequence step itself
-  step: GmosSouthStep!
-
-  # Time estimate for this step's execution
   time: StepTime!
 }
 
@@ -1215,9 +1212,6 @@ type GmosSouthBuiltinFpu {
 
 # GMOS South Configuration
 type GmosSouthConfig implements Config {
-  # Estimated setup time
-  setupTime: Duration!
-
   # Static/unchanging configuration
   static: GmosSouthStaticConfig!
 
@@ -1232,6 +1226,9 @@ type GmosSouthConfig implements Config {
 
   # Planned time for this configuration
   plannedTime: PlannedTime!
+
+  # Estimated setup time
+  setupTime: Duration!
 }
 
 # GMOS South Disperser
@@ -1480,16 +1477,25 @@ type GmosSouthStaticConfig {
   nodAndShuffle: GmosNodAndShuffle
 }
 
-# Step (bias, dark, science, etc.)
-type GmosSouthStep {
+# GmosSouth step with potential breakpoint
+type GmosSouthStep implements Step {
+  # Instrument configuration for this step
+  instrumentConfig: GmosSouthDynamic!
+
+  # Step id
+  id: StepId!
+
+  # Whether to pause before the execution of this step
+  breakpoint: Breakpoint!
+
   # Step type
   stepType: StepType!
 
-  # Instrument configuration
-  instrumentConfig: GmosSouthDynamic!
-
-  # Step configuration
+  # The sequence step itself
   stepConfig: StepConfig!
+
+  # Time estimate for this step's execution
+  time: StepTime!
 }
 
 # GMOS X Binning
@@ -2493,11 +2499,32 @@ enum SkyBackground {
   BRIGHT
 }
 
-# Step (bias, dark, science, etc.)
+# Sequence step
+interface Step {
+  # Step id
+  id: StepId!
+
+  # Whether to pause before the execution of this step
+  breakpoint: Breakpoint!
+
+  # Step type
+  stepType: StepType!
+
+  # The sequence step itself
+  stepConfig: StepConfig!
+
+  # Time estimate for this step's execution
+  time: StepTime!
+}
+
+# Step (bias, dark, gcal, science, etc.)
 interface StepConfig {
   # Step type
   stepType: StepType!
 }
+
+# StepId id formatted as `s-(0|[1-9a-f][0-9a-f]*)`
+scalar StepId
 
 # Time required for a step or steps, categorized according to use
 type StepTime {

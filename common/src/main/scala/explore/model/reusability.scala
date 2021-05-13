@@ -7,6 +7,8 @@ import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Reusability
+import lucuma.core.math.Offset
+import lucuma.core.math.Wavelength
 import lucuma.ui.reusability._
 import react.common.Size
 
@@ -35,4 +37,8 @@ object reusability {
     Reusability.byEq
   implicit val obsSummaryWithPointingAndConstraintsReuse
     : Reusability[ObsSummaryWithPointingAndConstraints]                               = Reusability.byEq
+  // Move to lucuma-ui
+  // implicit val bigDecimalReuse: Reusability[BigDecimal]                               = Reusability.byEq
+  implicit val offsetReuse: Reusability[Offset]                                       = Reusability.byEq
+  implicit val wavelengthReuse: Reusability[Wavelength]                               = Reusability.byEq
 }

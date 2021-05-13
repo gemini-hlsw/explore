@@ -3,7 +3,6 @@
 
 package explore.components.graphql
 
-import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.std.Dispatcher
@@ -29,7 +28,7 @@ import scala.language.postfixOps
 final case class LiveQueryRenderMod[S, D, A](
   query:               IO[D],
   extract:             D => A,
-  changeSubscriptions: NonEmptyList[IO[GraphQLSubscription[IO, _]]]
+  changeSubscriptions: List[IO[GraphQLSubscription[IO, _]]]
 )(
   val valueRender:     View[A] ~=> VdomNode,
   val pendingRender:   Long ~=> VdomNode =
@@ -51,7 +50,7 @@ object LiveQueryRenderMod {
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
-    subscriptions:           NonEmptyList[GraphQLSubscription[F, _]],
+    subscriptions:           List[GraphQLSubscription[F, _]],
     cancelConnectionTracker: F[Unit],
     renderer:                StreamRendererMod.Component[F, A]
   ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]

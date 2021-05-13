@@ -8,6 +8,7 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
+import explore.config.SequenceEditor
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
@@ -114,7 +115,7 @@ object Routing {
           ) ~> renderP(
             targetTab
           )
-          | staticRoute("/configurations", ConfigurationsPage) ~> render(UnderConstruction())
+          | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
           | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
           | dynamicRouteCT(
             ("/constraint" / id[ConstraintSet.Id]).xmapL(ConstraintsPage.csId)
