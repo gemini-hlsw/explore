@@ -11,7 +11,6 @@ import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.config.SUITable
 import explore.implicits._
 import explore.model.display._
 import explore.utils.ReactTableHelpers
@@ -34,6 +33,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
+import reactST.reactTable.SUITable
 import reactST.reactTable.TableMaker
 import reactST.reactTable.mod.SortingRule
 
