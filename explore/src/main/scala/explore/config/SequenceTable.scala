@@ -85,15 +85,9 @@ object SequenceTable {
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val tableMaker = TableMaker[StepLine[_]]
+  private val StepTable = TableMaker[StepLine[_]]
 
-  private val tableComponent =
-    SUITableBuilder.buildComponent(
-      tableMaker,
-      Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-      header = TableHeader(),
-      headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
-    )
+  private val StepTableComponent = new SUITable(StepTable)
 
   val component =
     ScalaComponent
@@ -123,70 +117,63 @@ object SequenceTable {
         def rightAligned(value: Any) =
           <.div(^.textAlign.right)(value.toString).rawElement
 
-        val columns = tableMaker.columnArray(
-          tableMaker
-            .accessorColumn(
+        val columns = List(
+          StepTable
+            .Column(
               "atomSteps",
               _.firstOf.map((drawBracket _).andThen(_.rawElement)).orNull
             )
             .setHeader(" "),
-          tableMaker
-            .accessorColumn("stepType", _.step.stepType.toString)
+          StepTable
+            .Column("stepType", _.step.stepType.toString)
             .setHeader("Type"),
-          tableMaker
-            .accessorColumn("exposure", s => rightAligned(s.exposureSecs))
+          StepTable
+            .Column("exposure", s => rightAligned(s.exposureSecs))
             .setHeader(rightAligned("Exp (sec)")),
-          tableMaker
-            .accessorColumn(
+          StepTable
+            .Column(
               "guide",
               s =>
                 if (s.guided) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided).raw else null
             )
             .setHeader(""),
-          tableMaker
-            .accessorColumn("p", s => rightAligned(offsetFormat.format(s.p)))
+          StepTable
+            .Column("p", s => rightAligned(offsetFormat.format(s.p)))
             .setHeader(rightAligned("p")),
-          tableMaker
-            .accessorColumn("q", s => rightAligned(offsetFormat.format(s.q)))
+          StepTable
+            .Column("q", s => rightAligned(offsetFormat.format(s.q)))
             .setHeader(rightAligned("q")),
-          tableMaker
-            .accessorColumn(
+          StepTable
+            .Column(
               "lambda",
               _.wavelength.map((rightAligned _).compose(_.toInt)).orNull
             )
             .setHeader(rightAligned("λ (nm)")),
-          tableMaker
-            .accessorColumn(
+          StepTable
+            .Column(
               "fpu",
               _.fpuName.map(rightAligned).orNull
             )
             .setHeader(rightAligned("FPU")),
-          tableMaker
-            .accessorColumn("disperser", _.disperserName.orNull)
+          StepTable
+            .Column("disperser", _.disperserName.orNull)
             .setHeader("Disperser"),
-          tableMaker
-            .accessorColumn("filter", _.filterName.orNull)
+          StepTable
+            .Column("filter", _.filterName.orNull)
             .setHeader("Filter"),
-          tableMaker
-            .accessorColumn("xbin",
-                            s => rightAligned(s.step.instrumentConfig.readout.xBin.shortName)
-            )
+          StepTable
+            .Column("xbin", s => rightAligned(s.step.instrumentConfig.readout.xBin.shortName))
             .setHeader(rightAligned("Xbin")),
-          tableMaker
-            .accessorColumn("ybin",
-                            s => rightAligned(s.step.instrumentConfig.readout.yBin.shortName)
-            )
+          StepTable
+            .Column("ybin", s => rightAligned(s.step.instrumentConfig.readout.yBin.shortName))
             .setHeader(rightAligned("Ybin")),
-          tableMaker
-            .accessorColumn("roi", _.step.instrumentConfig.roi.shortName)
+          StepTable
+            .Column("roi", _.step.instrumentConfig.roi.shortName)
             .setHeader("ROI"),
-          tableMaker
-            .accessorColumn("sn", _ => "")
+          StepTable
+            .Column("sn", _ => "")
             .setHeader("S/N")
-        )
-
-        val options = tableMaker
-          .options(rowIdFn = _.id.toString, columns = columns)
+        ).toJSArray
 
         def buildLines[Site <: SeqSite: SiteResolver](
           atoms: List[SeqAtom[Site]]
@@ -199,6 +186,12 @@ object SequenceTable {
             )
             .flatten
 
+        val FormattedTable = StepTableComponent(
+          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
+          header = true,
+          headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
+        ) _
+
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment()(
             bracketDef,
@@ -206,9 +199,13 @@ object SequenceTable {
               case Config.GmosSouthConfig(_, _, acquisition, science) =>
                 <.div(
                   Header("Acquisition"),
-                  tableComponent((options, buildLines(acquisition.atoms).toJSArray)),
+                  FormattedTable(
+                    StepTable.Options(columns, buildLines(acquisition.atoms).toJSArray)
+                  ),
                   Header("Science"),
-                  tableComponent((options, buildLines(science.atoms).toJSArray))
+                  FormattedTable(
+                    StepTable.Options(columns, buildLines(science.atoms).toJSArray)
+                  )
                 )
               case _                                                  => "North config!"
             }
