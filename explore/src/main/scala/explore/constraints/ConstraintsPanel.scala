@@ -19,7 +19,6 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.ConstraintSetModel
 import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._

@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
+import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
 import explore.common.ObsQueries._
 import explore.components.Tile

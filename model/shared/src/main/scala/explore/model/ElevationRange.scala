@@ -4,16 +4,38 @@
 package explore.model
 
 import cats._
+import cats.syntax.all._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
 import io.circe.Decoder
 import io.circe.Encoder
+import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.refined._
 import lucuma.core.optics.SplitEpi
 import monocle.Prism
 import monocle.macros.GenPrism
 import monocle.macros.Lenses
+
+private sealed abstract class ElevationRangeType(val typeName: String) { self =>
+  implicit val elevationRangeTypeEncoder: Encoder[self.type] =
+    Encoder.encodeString.contramap(_.typeName)
+}
+
+private object ElevationRangeType {
+  case object AirMassRange   extends ElevationRangeType("AirMassRange")
+  case object HourAngleRange extends ElevationRangeType("HourAngleRange")
+
+  implicit val elevationRangeTypeDecoder: Decoder[ElevationRangeType] =
+    Decoder.instance { c =>
+      c.as[String]
+        .flatMap(_ match {
+          case AirMassRange.typeName   => AirMassRange.asRight
+          case HourAngleRange.typeName => HourAngleRange.asRight
+          case _                       => DecodingFailure("Unsupported elevation range type", c.history).asLeft
+        })
+    }
+}
 
 sealed trait ElevationRange extends Product with Serializable
 
@@ -25,6 +47,22 @@ object ElevationRange {
     GenPrism[ElevationRange, HourAngleRange]
 
   implicit val ElevationRangeEq: Eq[ElevationRange] = Eq.fromUniversalEquals
+
+  implicit val elevationRangeDecoder: Decoder[ElevationRange] = new Decoder[ElevationRange] {
+    final def apply(c: HCursor): Decoder.Result[ElevationRange] =
+      c.downField("type").as[ElevationRangeType].flatMap {
+        case ElevationRangeType.AirMassRange   =>
+          for {
+            min <- c.downField("min").as[AirMassRange.DecimalValue]
+            max <- c.downField("max").as[AirMassRange.DecimalValue]
+          } yield AirMassRange.fromDecimalValues.get((min, max))
+        case ElevationRangeType.HourAngleRange =>
+          for {
+            min <- c.downField("minHours").as[HourAngleRange.DecimalHour]
+            max <- c.downField("maxHours").as[HourAngleRange.DecimalHour]
+          } yield HourAngleRange.fromDecimalHours.get((min, max))
+      }
+  }
 }
 
 @Lenses

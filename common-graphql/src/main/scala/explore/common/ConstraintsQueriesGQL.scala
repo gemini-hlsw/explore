@@ -5,10 +5,11 @@ package explore.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import explore.model.ConstraintSetModel
+import explore.model
 import explore.schemas._
 // gql: import explore.model.reusability._
 // gql: import lucuma.ui.reusability._
+// gql: import io.circe.refined._
 
 object ConstraintsQueriesGQL {
 
@@ -39,7 +40,9 @@ object ConstraintsQueriesGQL {
       """
 
     object Data {
-      type ConstraintSet = ConstraintSetModel
+      object ConstraintSet {
+        type ElevationRange = model.ElevationRange
+      }
     }
   }
 

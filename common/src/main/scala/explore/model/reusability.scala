@@ -27,7 +27,7 @@ object reusability {
     Reusability.by(_.toList)
   implicit val airMassRangeReuse: Reusability[AirMassRange]                           = Reusability.byEq
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                       = Reusability.byEq
-  implicit val constraintSetModelReuse: Reusability[ConstraintSetModel]               = Reusability.byEq
+  implicit val elevationRangeReuse: Reusability[ElevationRange]                       = Reusability.byEq
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.derive

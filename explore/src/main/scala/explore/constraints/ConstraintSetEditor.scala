@@ -5,12 +5,11 @@ package explore.constraints
 
 import cats.effect.IO
 import explore.AppCtx
+import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
 import explore.components.Tile
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
-import explore.model.ConstraintSetModel
-import explore.model.reusability._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
