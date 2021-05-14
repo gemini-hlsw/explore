@@ -644,19 +644,6 @@ tfoot {
   }
 }
 
-.block.header.obs-tree-header {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-right: 5px;
-  user-select: none;
-  margin-top: 2px;
-  margin-bottom: 0;
-
-  :not(.obs-count) {
-    text-transform: uppercase;
-  }
-}
-
 .vertical.segment.obs-tree-group {
   padding-top: 0;
   padding-bottom: 0;
@@ -1404,4 +1391,71 @@ html {
 
 .step-guided {
   color: lightgreen;
+}
+
+.explore-configuration-grid {
+  padding: 0.5em;
+  display: grid;
+  grid-template-columns: 350px 1fr;
+}
+
+.explore-configuration-form {
+  display: grid;
+  justify-items: start;
+  align-items: baseline;
+  grid-template-columns: [label] 1fr [field] 2fr [units] auto;
+
+  .field {
+    justify-self: stretch;
+  }
+
+  .explore-units-label {
+    justify-self: start;
+  }
+
+  .field .ui.input,
+  .field .ui.selection.dropdown {
+    min-width: 100%;
+  }
+}
+
+.explore-skip-to-next {
+  grid-column: 1;
+}
+
+.explore-configuration-signal-to-noise-at {
+  display: flex;
+  margin-left: 0.25em;
+  align-items: baseline;
+
+  .explore-units-label {
+    align-self: baseline;
+    margin-bottom: unset;
+  }
+
+  :first-child {
+    margin-right: 0.25em;
+  }
+
+  .field {
+    width: 5ch;
+  }
+}
+
+.explore-configuration-capabilities {
+  grid-column: span 2;
+  min-width: 100%;
+}
+
+.block.header.obs-tree-header {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-right: 5px;
+  user-select: none;
+  margin-top: 2px;
+  margin-bottom: 0;
+
+  :not(.obs-count) {
+    text-transform: uppercase;
+  }
 }

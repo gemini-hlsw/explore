@@ -1,3 +1,10 @@
 .ui.active.search.dropdown input.search:focus + .text {
   color: @gray-dark !important;
 }
+
+// Fix clearable dropdown
+// See https://github.com/fomantic/Fomantic-UI/issues/1259
+.ui.dropdown > .clear.icon:before {
+  content: "\f00d";
+  font-family: "Icons";
+}

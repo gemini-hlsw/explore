@@ -9,8 +9,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.collections.table._
 import reactST.reactTable._
 import reactST.reactTable.mod.{ ^ => _, _ }
-import reactST.reactTable.util
 import reactST.reactTable.syntax._
+import reactST.reactTable.util
 
 import scalajs.js
 import scalajs.js.|

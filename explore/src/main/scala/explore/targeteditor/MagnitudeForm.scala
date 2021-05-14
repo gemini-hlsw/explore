@@ -11,6 +11,7 @@ import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.config.SUITable
 import explore.implicits._
 import explore.model.display._
 import explore.utils.ReactTableHelpers
@@ -39,7 +40,6 @@ import reactST.reactTable.mod.SortingRule
 import scala.collection.immutable.HashSet
 
 import scalajs.js.JSConverters._
-import explore.config.SUITable
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
