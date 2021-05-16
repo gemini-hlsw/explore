@@ -7,6 +7,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.AppCtx
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.SpectroscopyConfigurationOptions
@@ -20,7 +21,6 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewOptionalSelect
-import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
@@ -50,13 +50,16 @@ object SpectroscopyConfigurationPanel {
           val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
           val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAt)
           val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRange)
-          val slitMode                 = p.options.zoom(SpectroscopyConfigurationOptions.slitMode)
+          val focalPlane               = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
           val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
           val spectroscopyCapabilities =
             p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
 
           ReactFragment(
-            <.label("Wavelength", ExploreStyles.SkipToNext),
+            <.label("Wavelength",
+                    HelpIcon("configuration/simple/wavelength.md"),
+                    ExploreStyles.SkipToNext
+            ),
             InputWithUnits(
               id = "configuration-wavelength",
               clazz = Css.Empty,
@@ -67,14 +70,20 @@ object SpectroscopyConfigurationPanel {
               changeAuditor = ChangeAuditor.fromFormat(formatWavelength).decimal(3).optional,
               disabled = false
             ),
-            <.label("λ / Δλ", ExploreStyles.SkipToNext),
+            <.label("λ / Δλ",
+                    HelpIcon("configuration/simple/spectral-resolution.md"),
+                    ExploreStyles.SkipToNext
+            ),
             FormInputEV(
               id = "configuration-resolution-power",
               value = resolutionPower,
               validFormat = ValidFormatInput.fromFormatOptional(formatPosInt),
               changeAuditor = ChangeAuditor.fromFormat(formatPosInt).optional
             ),
-            <.label("S / N", ExploreStyles.SkipToNext),
+            <.label("S / N",
+                    HelpIcon("configuration/simple/signal_to_noise.md"),
+                    ExploreStyles.SkipToNext
+            ),
             FormInputEV(id = "signal-to-noise",
                         value = signalToNoise,
                         validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal)
@@ -92,7 +101,10 @@ object SpectroscopyConfigurationPanel {
                 disabled = false
               )
             ),
-            <.label("λ Range", ExploreStyles.SkipToNext),
+            <.label("λ Range",
+                    HelpIcon("configuration/simple/frequency_range.md"),
+                    ExploreStyles.SkipToNext
+            ),
             InputWithUnits(
               id = "wavelength-range",
               clazz = Css.Empty,
@@ -103,8 +115,16 @@ object SpectroscopyConfigurationPanel {
               changeAuditor = ChangeAuditor.fromFormat(formatWavelength).decimal(3).optional,
               disabled = false
             ),
-            <.label("Focal Plane", ExploreStyles.SkipToNext),
-            EnumViewSelect(id = "focal-plane", upward = true, value = slitMode),
+            <.label("Focal Plane",
+                    HelpIcon("configuration/simple/focal_plane.md"),
+                    ExploreStyles.SkipToNext
+            ),
+            EnumViewOptionalSelect(id = "focal-plane",
+                                   placeholder = "Focal plane",
+                                   upward = true,
+                                   value = focalPlane,
+                                   clearable = true
+            ),
             <.div(
               ExploreStyles.SignalToNoiseAt,
               InputWithUnits(
@@ -117,7 +137,10 @@ object SpectroscopyConfigurationPanel {
                 disabled = false
               )
             ),
-            <.label("Capabilities", ExploreStyles.SkipToNext),
+            <.label("Capabilities",
+                    HelpIcon("configuration/simple/capabilities.md"),
+                    ExploreStyles.SkipToNext
+            ),
             EnumViewOptionalSelect(
               id = "spectroscopy-capabilities",
               clazz = ExploreStyles.ConfigurationCapabilities,

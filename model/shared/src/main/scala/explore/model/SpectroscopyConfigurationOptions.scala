@@ -4,14 +4,15 @@
 package explore.model
 
 import cats.Eq
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.cats._
 import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import monocle.macros.Lenses
+
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 
 @Lenses
 final case class SpectroscopyConfigurationOptions(
@@ -20,21 +21,13 @@ final case class SpectroscopyConfigurationOptions(
   signalToNoise:   Option[PosBigDecimal],
   signalToNoiseAt: Option[Wavelength],
   wavelengthRange: Option[Wavelength],
-  slitMode:        FocalPlaneOptions,
+  focalPlane:      Option[FocalPlaneOptions],
   focalPlaneAngle: Option[Angle],
   capabilities:    Option[SpectroscopyCapabilities]
 )
 
 object SpectroscopyConfigurationOptions {
-  val Default = SpectroscopyConfigurationOptions(None,
-                                                 None,
-                                                 None,
-                                                 None,
-                                                 None,
-                                                 FocalPlaneOptions.SingleSlit,
-                                                 None,
-                                                 None
-  )
+  val Default = SpectroscopyConfigurationOptions(None, None, None, None, None, None, None, None)
 
   implicit val eqSpectroscopyConfigurationOptions: Eq[SpectroscopyConfigurationOptions] = Eq.by(x =>
     (x.wavelength,
@@ -42,7 +35,7 @@ object SpectroscopyConfigurationOptions {
      x.signalToNoise,
      x.signalToNoiseAt,
      x.wavelengthRange,
-     x.slitMode,
+     x.focalPlane,
      x.focalPlaneAngle,
      x.capabilities
     )

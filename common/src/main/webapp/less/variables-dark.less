@@ -171,10 +171,16 @@
     1;
   --color-text-alt: hsla(var(--color-text-alt-hsla));
   // dark shades
-  --color-text-dark-10-hsla:
+  --color-text-dark-8-hsla:
     var(--color-text-base-h),
     var(--color-text-base-s),
     calc(var(--color-text-base-l) - 8%),
+    calc(var(--color-text-base-a) - 0.1);
+  --color-text-dark-8: hsla(var(--color-text-dark-8-hsla));
+  --color-text-dark-10-hsla:
+    var(--color-text-base-h),
+    var(--color-text-base-s),
+    calc(var(--color-text-base-l) - 10%),
     calc(var(--color-text-base-a) - 0.3);
   --color-text-dark-10: hsla(var(--color-text-dark-10-hsla));
   --gray-h: 210;
@@ -233,7 +239,7 @@
   --site-text-color: var(--text-color);
   --site-dark-text-color: var(--dark-text-color);
   --site-hovered-text-color: var(--text-alt);
-  --site-input-color: var(--input-color);
+  --site-input-color: var(--color-text-dark-8);
   --site-border-color: var(--gray);
   --site-solid-border-color: var(--color-background-light-50);
   --site-input-placeholder-focus-color: var(--color-text-light-45);
@@ -246,7 +252,7 @@
 
 .form-dark() {
   --input-color: var(--color-text-full);
-  --form-input-color: var(--color-text-dark-10);
+  --form-input-color: var(--site-input-color);
   --form-input-focus-color: var(--color-text-base);
   --form-input-background: var(--control-background-color);
   --form-input-focus-border-color: transparent;
@@ -324,6 +330,7 @@
 .dropdown-dark() {
   --dropdown-selection-background: var(--control-background-color);
   --dropdown-selection-visible-color: @gray-darker;
+  --dropdown-item-color: var(--site-input-color);
 }
 
 .checkbox-dark() {

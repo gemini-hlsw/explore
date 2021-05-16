@@ -65,7 +65,7 @@ object TargetTile {
           )
         )
 
-    Tile(ObsTabTiles.TargetId, "Target")((renderTarget _).reusable(targetId))
+    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)((renderTarget _).reusable(targetId))
   }
 
 }

@@ -1,5 +1,5 @@
 @menuBackground: @gray-dark;
-@itemColor: @textColor;
+@itemColor: var(--dropdown-item-color);
 @hoveredItemColor: #fff;
 @hoveredItemBackground: @gray-darker;
 @activeItemColor: #fff;
