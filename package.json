@@ -20,6 +20,7 @@
     "react-dom": "16.13.1",
     "react-draggable": "4.4.3",
     "react-grid-layout": "1.2.4",
+    "react-hotkeys": "^2.0.0",
     "react-is": "16.13.1",
     "react-markdown": "^6.0.2",
     "react-moon": "2.0.2",
