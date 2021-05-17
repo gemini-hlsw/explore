@@ -72,6 +72,10 @@ export default ({ command, mode }) => {
     },
     server: {
       strictPort: true,
+      fsServe: {
+        strict: true
+      },
+      host: "0.0.0.0",
       port: 8080,
       https:
         mode == "production"
