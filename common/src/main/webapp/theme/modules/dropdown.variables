@@ -23,3 +23,7 @@
 
 @selectionHoverBorderColor: var(--button-hover-border-color);
 @selectionVisibleTextColor: var(--text-color);
+
+@menuHeaderMargin: 0.25em;
+// @menuHeaderPadding: 7px;
+
