@@ -34,7 +34,7 @@ trait ArbSpectroscopyConfigurationOptions {
       sn  <- arbitrary[Option[PosDouble]]
       sna <- arbitrary[Option[Wavelength]]
       wr  <- arbitrary[Option[Wavelength]]
-      sm  <- arbitrary[FocalPlaneOptions]
+      sm  <- arbitrary[Option[FocalPlaneOptions]]
       fa  <- arbitrary[Option[Angle]]
       sc  <- arbitrary[Option[SpectroscopyCapabilities]]
     } yield SpectroscopyConfigurationOptions(
@@ -57,7 +57,7 @@ trait ArbSpectroscopyConfigurationOptions {
         Option[BigDecimal],
         Option[Wavelength],
         Option[Wavelength],
-        FocalPlaneOptions,
+        Option[FocalPlaneOptions],
         Option[Angle],
         Option[SpectroscopyCapabilities]
       )
@@ -68,7 +68,7 @@ trait ArbSpectroscopyConfigurationOptions {
          cs.signalToNoise.map(_.value),
          cs.signalToNoiseAt,
          cs.wavelengthRange,
-         cs.slitMode,
+         cs.focalPlane,
          cs.focalPlaneAngle,
          cs.capabilities
         )

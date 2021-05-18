@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.UnderConstruction
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -67,7 +68,7 @@ object ConfigurationPanel {
               ExploreStyles.Grid,
               ExploreStyles.Compact,
               ExploreStyles.ConfigurationForm,
-              <.label("Mode"),
+              <.label("Mode", HelpIcon("configuration/simple/mode.md")),
               EnumViewSelect(id = "configuration-mode", value = mode),
               SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy)
             ),
