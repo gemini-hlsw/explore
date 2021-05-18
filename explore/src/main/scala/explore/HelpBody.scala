@@ -38,7 +38,7 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
   private val url         = rootUrl.addPath("main" :: path.path.toList)
   private val rootEditUrl = base.editUrl.addPath(List(base.user.value, base.project.value))
   private val newPage     = rootEditUrl
-    .addPath(List("new", "main") ++ (path.path.init :+ "/"))
+    .addPath(List("new", "main"))
     .addParam("filename", path.path.mkString("/"))
     .addParam("value", s"# Title")
     .addParam("message", s"Create $helpId")
