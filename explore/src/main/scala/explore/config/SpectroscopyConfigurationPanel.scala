@@ -57,7 +57,7 @@ object SpectroscopyConfigurationPanel {
 
           ReactFragment(
             <.label("Wavelength",
-                    HelpIcon("configuration/simple/wavelength.md"),
+                    HelpIcon("configuration/wavelength.md"),
                     ExploreStyles.SkipToNext
             ),
             InputWithUnits(
@@ -71,7 +71,7 @@ object SpectroscopyConfigurationPanel {
               disabled = false
             ),
             <.label("λ / Δλ",
-                    HelpIcon("configuration/simple/spectral-resolution.md"),
+                    HelpIcon("configuration/spectral_resolution.md"),
                     ExploreStyles.SkipToNext
             ),
             FormInputEV(
@@ -81,7 +81,7 @@ object SpectroscopyConfigurationPanel {
               changeAuditor = ChangeAuditor.fromFormat(formatPosInt).optional
             ),
             <.label("S / N",
-                    HelpIcon("configuration/simple/signal_to_noise.md"),
+                    HelpIcon("configuration/signal_to_noise.md"),
                     ExploreStyles.SkipToNext
             ),
             FormInputEV(id = "signal-to-noise",
@@ -102,7 +102,7 @@ object SpectroscopyConfigurationPanel {
               )
             ),
             <.label("λ Range",
-                    HelpIcon("configuration/simple/frequency_range.md"),
+                    HelpIcon("configuration/wavelength_range.md"),
                     ExploreStyles.SkipToNext
             ),
             InputWithUnits(
@@ -116,7 +116,7 @@ object SpectroscopyConfigurationPanel {
               disabled = false
             ),
             <.label("Focal Plane",
-                    HelpIcon("configuration/simple/focal_plane.md"),
+                    HelpIcon("configuration/focal_plane.md"),
                     ExploreStyles.SkipToNext
             ),
             EnumViewOptionalSelect(id = "focal-plane",
@@ -138,7 +138,7 @@ object SpectroscopyConfigurationPanel {
               )
             ),
             <.label("Capabilities",
-                    HelpIcon("configuration/simple/capabilities.md"),
+                    HelpIcon("configuration/capabilities.md"),
                     ExploreStyles.SkipToNext
             ),
             EnumViewOptionalSelect(

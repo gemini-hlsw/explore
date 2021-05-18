@@ -68,7 +68,7 @@ object ConfigurationPanel {
               ExploreStyles.Grid,
               ExploreStyles.Compact,
               ExploreStyles.ConfigurationForm,
-              <.label("Mode", HelpIcon("configuration/simple/mode.md")),
+              <.label("Mode", HelpIcon("configuration/mode.md")),
               EnumViewSelect(id = "configuration-mode", value = mode),
               SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy)
             ),
