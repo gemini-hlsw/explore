@@ -145,8 +145,7 @@ lazy val explore: Project = project
         ReactCommon.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
-        ReactResizable.value ++
-        ReactHotkeys.value
+        ReactResizable.value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(

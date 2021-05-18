@@ -16,7 +16,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common._
-import react.hotkeys._
 import react.markdown.ReactMarkdown
 import react.markdown.RehypePlugin
 import react.markdown.RemarkPlugin
@@ -90,10 +89,6 @@ object HelpBody {
             }
             <.div(
               ExploreStyles.HelpSidebar,
-              GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                            handlers =
-                              Handlers("CLOSE_HELP" -> helpView.set(none).runAsyncAndForgetCB)
-              ),
               <.div(
                 ExploreStyles.HelpTitle,
                 <.h4(ExploreStyles.HelpTitleLabel, "Help"),
