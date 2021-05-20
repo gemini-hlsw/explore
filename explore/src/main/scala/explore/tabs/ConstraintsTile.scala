@@ -30,21 +30,19 @@ import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
 
-import scalajs.js.JSConverters._
-
 object ConstraintsTile {
   def constraintsTile(
-    constraintsSetId: Option[ConstraintSet.Id],
+    constraintSetId: Option[ConstraintSet.Id],
     obsSummaryOpt:    Option[ObsSummary],
     constraintsInfo:  ConstraintsInfo
   )(implicit ctx:     AppContextIO): Tile = {
     def constraintsSelectorFn(
-      constraintsSetId: Option[ConstraintSet.Id],
+      constraintSetId: Option[ConstraintSet.Id],
       obsSummaryOpt:    Option[ObsSummary],
       observations:     ConstraintsInfo
     ): VdomNode =
       Select(
-        value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
+        value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
         placeholder = "Select a constraint set",
         onChange = (a: Dropdown.DropdownProps) =>
           (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
@@ -79,17 +77,17 @@ object ConstraintsTile {
       }
 
     def renderConstraints(
-      constraintsSetId: Option[ConstraintSet.Id],
+      constraintSetId: Option[ConstraintSet.Id],
       renderInTitle:    Tile.RenderInTitle
     ): VdomNode =
-      constraintsSetId
+      constraintSetId
         .map[VdomNode] { csId =>
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
             ConstraintSetQuery.query(csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](csId))
           )((renderConstraintsFn _).reusable(csId, renderInTitle))
-            .withKey(s"constraint-${constraintsSetId.foldMap(_.show)}")
+            .withKey(s"constraint-${constraintSetId.foldMap(_.show)}")
         }
         .getOrElse(
           <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
@@ -102,11 +100,11 @@ object ConstraintsTile {
       "Constraints",
       canMinimize = true,
       control = ((constraintsSelectorFn _)
-        .reusable(constraintsSetId, obsSummaryOpt, constraintsInfo))
+        .reusable(constraintSetId, obsSummaryOpt, constraintsInfo))
         .some,
-      key = obsSummaryOpt.map(_.id.toString).orUndefined
+      key = s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
     )(
-      (renderConstraints _).reusable(constraintsSetId)
+      (renderConstraints _).reusable(constraintSetId)
     )
   }
 
