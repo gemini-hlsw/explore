@@ -19,8 +19,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
-import react.semanticui.elements.icon.Icon
-import react.semanticui.sizes._
+import react.semanticui.elements.loader.Loader
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -31,8 +30,7 @@ final case class LiveQueryRenderMod[S, D, A](
   changeSubscriptions: List[IO[GraphQLSubscription[IO, _]]]
 )(
   val valueRender:     View[A] ~=> VdomNode,
-  val pendingRender:   Long ~=> VdomNode =
-    Reusable.always(_ => Icon(name = "spinner", loading = true, size = Large)),
+  val pendingRender:   Long ~=> VdomNode = Reusable.always(_ => Loader(active = true)),
   val errorRender:     Throwable ~=> VdomNode =
     Reusable.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit

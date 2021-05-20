@@ -16,8 +16,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
-import react.semanticui.elements.icon.Icon
-import react.semanticui.sizes._
+import react.semanticui.elements.loader.Loader
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
   val render:                                Reusable[VdomNode]
@@ -48,7 +47,7 @@ object ConnectionManager {
       if (state.initialized)
         props.render
       else
-        Icon(name = "spinner", loading = true, size = Large)
+        Loader(active = true)
   }
 
   val component = ScalaComponent

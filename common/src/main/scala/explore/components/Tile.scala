@@ -11,6 +11,8 @@ import explore.components.ui.ExploreStyles._
 import explore.implicits._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
+import explore.model.reusability._
+import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.internal.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
@@ -21,6 +23,8 @@ import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
+import scalajs.js
+
 final case class Tile(
   id:                Tile.TileId,
   title:             String,
@@ -29,7 +33,8 @@ final case class Tile(
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState ~=> Callback = Reusable.always(_ => Callback.empty)
+  sizeStateCallback: TileSizeState ~=> Callback = Reusable.always(_ => Callback.empty),
+  key:               js.UndefOr[Key] = js.undefined
 )(val render:        Tile.RenderInTitle ~=> VdomNode)
     extends ReactProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -94,7 +99,7 @@ object Tile {
             .when_(p.state === TileSizeState.Normal)
         )(Icons.Minimize.fitted(true))
 
-      <.div(ExploreStyles.Tile)(
+      <.div(ExploreStyles.Tile, p.key.whenDefined(^.key := _))(
         <.div(
           ExploreStyles.TileTitle,
           p.back.map(b => <.div(ExploreStyles.TileButton, b)),

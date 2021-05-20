@@ -43,4 +43,5 @@ object Icons {
   val Checkmark           = Icon("checkmark")
   val Remove              = Icon("remove")
   val Trash               = Delete.size(Small).fitted(true).clazz(ExploreStyles.TrashIcon)
+  val Copy                = Icon("copy")
 }

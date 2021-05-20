@@ -4,12 +4,16 @@
 package explore.constraints
 
 import cats.effect.IO
+import cats.syntax.all._
+import crystal.react.implicits._
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
 import explore.components.Tile
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
+import explore.model.Focused
+import explore.model.reusability._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -19,6 +23,7 @@ import react.common._
 
 final case class ConstraintSetEditor(
   csId:          ConstraintSet.Id,
+  focused:       View[Option[Focused]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintSetEditor](ConstraintSetEditor.component)
 
@@ -28,12 +33,20 @@ object ConstraintSetEditor {
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected def renderFn(
-    csId:          ConstraintSet.Id,
-    renderInTitle: Tile.RenderInTitle,
-    csOpt:         View[Option[ConstraintSetModel]]
+    props: Props,
+    csOpt: View[Option[ConstraintSetModel]]
   ): VdomNode =
     csOpt.get.map { _ =>
-      ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
+      ConstraintsPanel(
+        props.csId,
+        csOpt.zoom(_.get)(f => _.map(f)),
+        props.renderInTitle,
+        multiEditWarnings = false,
+        copyButton = true,
+        onCopy = (
+          (id: ConstraintSet.Id) => props.focused.set(Focused.FocusedConstraintSet(id).some)
+        ).reusable
+      )
     }
 
   val component =
@@ -45,7 +58,7 @@ object ConstraintSetEditor {
             ConstraintSetQuery.query(props.csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](props.csId))
-          )((renderFn _).reusable(props.csId, props.renderInTitle))
+          )((renderFn _).reusable(props))
         }
       }
       .configure(Reusability.shouldComponentUpdate)

@@ -35,6 +35,9 @@ object ConstraintsQueriesGQL {
               maxHours
             }
           }
+          observations(first: 2147483647) {
+            totalCount
+          }
         }
       }
       """

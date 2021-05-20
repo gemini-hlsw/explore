@@ -15,11 +15,14 @@ import explore.model.RootModel
 import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom._
 import lucuma.ui.utils._
+import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused
+import scala.concurrent.duration
 
 trait ListImplicits {
 
@@ -189,5 +192,19 @@ object implicits
       f.value(a).value(b).value(c).value(d).value(e)
     def apply(a: A, b: B, c: C, d: D, e: E, y: Y): Reusable[Z] =
       f.value(a).value(b).value(c).value(d).value(e).map(_(y))
+  }
+
+  // React implicits
+  implicit class HtmlAttrsOps(val a: HtmlAttrs) extends AnyVal {
+    // Generalize https://gist.github.com/pstoica/4323d3e6e37e8a23dd59
+    def onComponentBlur(handler: Callback): TagMod =
+      a.onBlur ==> { (e: ReactFocusEvent) =>
+        val currentTarget = e.currentTarget
+
+        handler
+          .when_(!currentTarget.contains(dom.document.activeElement))
+          .setTimeout(duration.Duration.Zero)
+          .void
+      }
   }
 }

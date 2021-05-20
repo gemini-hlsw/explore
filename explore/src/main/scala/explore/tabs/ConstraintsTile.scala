@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.common.ConstraintSetObsQueriesGQL
 import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
 import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
@@ -29,12 +30,14 @@ import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.modules.dropdown.Dropdown
 
+import scalajs.js.JSConverters._
+
 object ConstraintsTile {
   def constraintsTile(
     constraintsSetId: Option[ConstraintSet.Id],
     obsSummaryOpt:    Option[ObsSummary],
     constraintsInfo:  ConstraintsInfo
-  )(implicit ctx:     AppContextIO) = {
+  )(implicit ctx:     AppContextIO): Tile = {
     def constraintsSelectorFn(
       constraintsSetId: Option[ConstraintSet.Id],
       obsSummaryOpt:    Option[ObsSummary],
@@ -52,6 +55,11 @@ object ConstraintsTile {
         options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
       )
 
+    def onCopy(newId: ConstraintSet.Id): IO[Unit] =
+      obsSummaryOpt
+        .map(obs => ConstraintSetObsQueriesGQL.AssignConstraintSetToObs.execute(newId, obs.id).void)
+        .orEmpty
+
     def renderConstraintsFn(
       csId:          ConstraintSet.Id,
       renderInTitle: Tile.RenderInTitle,
@@ -60,7 +68,13 @@ object ConstraintsTile {
       csOpt.get.map { _ =>
         <.div(
           ExploreStyles.ConstraintsObsTile,
-          ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
+          ConstraintsPanel(csId,
+                           csOpt.zoom(_.get)(f => _.map(f)),
+                           renderInTitle,
+                           multiEditWarnings = true,
+                           copyButton = false,
+                           (onCopy _).reusable
+          )
         )
       }
 
@@ -89,7 +103,8 @@ object ConstraintsTile {
       canMinimize = true,
       control = ((constraintsSelectorFn _)
         .reusable(constraintsSetId, obsSummaryOpt, constraintsInfo))
-        .some
+        .some,
+      key = obsSummaryOpt.map(_.id.toString).orUndefined
     )(
       (renderConstraints _).reusable(constraintsSetId)
     )
