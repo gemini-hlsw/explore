@@ -1,0 +1,123 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
+package explore.config
+
+import cats.effect.IO
+import cats.implicits._
+import coulomb.Quantity
+import crystal.react.implicits._
+import eu.timepit.refined.auto._
+import explore.AppCtx
+import explore.components.HelpIcon
+import explore.components.ui.ExploreStyles
+import explore.implicits._
+import explore.model.AvailableFilter
+import explore.model.ImagingConfigurationOptions
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.FilterType
+import lucuma.core.math.units._
+import lucuma.ui.reusability._
+import react.common._
+import react.semanticui.collections.menu.MenuHeader
+import react.semanticui.modules.dropdown._
+import spire.math.Rational
+
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
+
+final case class ImagingConfigurationPanel(
+  options: View[ImagingConfigurationOptions]
+) extends ReactProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
+
+object ImagingConfigurationPanel {
+  type Props         = ImagingConfigurationPanel
+  type SectionHeader = String
+
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
+  implicit val propsReuse: Reusability[Props]                         = Reusability.derive
+
+  val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
+  val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
+  val narrowBand   = byFilterType.getOrElse(FilterType.NarrowBand, Nil).sortBy(_.centralWavelength)
+  val combination  = byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
+
+  def valuesToFilters(v: js.Array[String]): Set[AvailableFilter] =
+    v.map { t =>
+      ImagingConfigurationOptions.availableOptions.find(_.tag === t)
+    }.collect { case Some(x) =>
+      x
+    }.toSet
+
+  def formatCentral(r: Quantity[Int, Nanometer]): String =
+    if (r.value > 1000)
+      f"${r.to[Rational, Micrometer].value.toDouble}%.3f μm"
+    else
+      s"${r.value.toInt} nm"
+
+  def formatRange(r: Quantity[Int, Nanometer]): String =
+    s"${r.value.toInt} nm"
+
+  def filterItem(f: Either[SectionHeader, AvailableFilter]) =
+    DropdownItem(
+      value = f.fold(identity, _.tag),
+      text = f.fold(identity, _.shortName),
+      content = f match {
+        case Left(f)  =>
+          MenuHeader(f): VdomNode
+        case Right(f) =>
+          <.div(
+            ExploreStyles.ConfigurationFilterItem,
+            <.span(f.shortName),
+            <.span(formatCentral(f.centralWavelength.nanometer)),
+            <.span(f.range.map(formatRange))
+          )
+      },
+      selected = false
+    )
+
+  val options: List[Option[Either[SectionHeader, AvailableFilter]]] =
+    "Broad band".asLeft.some ::
+      broadBand.map(f => f.asRight.some) :::
+      ("Narrow band".asLeft.some ::
+        narrowBand.map(f => f.asRight.some)) :::
+      ("Combination".asLeft.some ::
+        combination.map(f => f.asRight.some))
+
+  protected val component =
+    ScalaComponent
+      .builder[Props]
+      .stateless
+      .render_P { p =>
+        AppCtx.using { implicit appCtx =>
+          val filters = p.options.zoom(ImagingConfigurationOptions.filters)
+
+          ReactFragment(
+            <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+            Dropdown(
+              placeholder = "Filters",
+              clazz = ExploreStyles.ConfigurationFilter,
+              selection = true,
+              multiple = true,
+              search = true,
+              value = filters.get.toList.map(_.tag).toJSArray,
+              options = options.collect { case Some(x) => filterItem(x) },
+              onChange = (ddp: Dropdown.DropdownProps) =>
+                ddp.value
+                  .map(r =>
+                    ((r: Any) match {
+                      case v: js.Array[_] =>
+                        filters.set(valuesToFilters(v.collect { case s: String => s }))
+                      case _              => IO.unit
+                    }).runAsyncAndForgetCB
+                  )
+                  .getOrElse(Callback.empty)
+            )
+          )
+        }
+      }
+      .configure(Reusability.shouldComponentUpdate)
+      .build
+}

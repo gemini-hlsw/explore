@@ -14,6 +14,7 @@ import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
@@ -28,7 +29,6 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import explore.model.ImagingConfigurationOptions
 
 final case class ConfigurationPanel(
   id:            Option[Observation.Id],
