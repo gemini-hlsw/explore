@@ -140,9 +140,9 @@ object SkyPlot {
 
       val tickFormatter: AxisLabelsFormatterCallbackFunction =
         (
-          labelValue: AxisLabelsFormatterContextObject[Double],
-          _:          AxisLabelsFormatterContextObject[String]
-        ) => timeFormat(labelValue.value)
+          labelValue: AxisLabelsFormatterContextObject,
+          _:          AxisLabelsFormatterContextObject
+        ) => timeFormat(labelValue.value.asInstanceOf[Double])
 
       val tooltipFormatter: TooltipFormatterCallbackFunction = {
         (ctx: TooltipFormatterContextObject, _: Tooltip) =>

@@ -33,7 +33,7 @@ object Settings {
     val reactCommon       = "0.11.3"
     val reactDatepicker   = "0.2.1"
     val reactGridLayout   = "0.12.0"
-    val reactHighcharts   = "0.3.0"
+    val reactHighcharts   = "0.3.1"
     val reactResizable    = "0.4.3"
     val reactSemanticUI   = "0.10.6"
     val reactTable        = "0.1.0"
