@@ -9,7 +9,6 @@ import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.ConstraintSetModel
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
 import explore.schemas.ObservationDB.Types._
@@ -22,6 +21,8 @@ import monocle.Lens
 import ConstraintsQueriesGQL._
 
 object ConstraintsQueries {
+  type ConstraintSetModel = ConstraintSetQuery.Data.ConstraintSet
+  val ConstraintSetModel = ConstraintSetQuery.Data.ConstraintSet
 
   case class UndoView(
     id:           ConstraintSet.Id,

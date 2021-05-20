@@ -26,6 +26,7 @@ import react.common._
 import react.semanticui.collections.table._
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
+import reactST.reactTable.SUITable
 import reactST.reactTable.TableMaker
 
 import java.text.DecimalFormat

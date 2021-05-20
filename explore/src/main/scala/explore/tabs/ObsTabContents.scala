@@ -29,6 +29,7 @@ import explore.observationtree.ObsList
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -254,10 +255,12 @@ object ObsTabContents {
           )
         )
 
+      val obsId: Option[Observation.Id] = props.focused.get.collect { case FocusedObs(obsId) =>
+        obsId
+      }
+
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
-        props.focused.get.collect { case FocusedObs(obsId) =>
-          observations.get._2.getElement(obsId)
-        }.flatten
+        obsId.flatMap(observations.get._2.getElement)
 
       val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
 

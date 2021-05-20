@@ -806,6 +806,13 @@ tfoot {
   visibility: visible;
 }
 
+.edit-warning {
+  padding: 5px !important; // important to override SUI's style.
+  position: absolute !important; // important to override SUI's style.
+  z-index: 99999;
+  width: 100%;
+}
+
 // The Target Position layout
 @target-grid-responsive-cutoff: 992px;
 @mobile-responsive-cutoff: 670;
@@ -1381,6 +1388,11 @@ html {
   float: right;
 }
 
+.title-button-strip {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
 .ui.wide.right.sidebar {
   max-width: 100%;
 }
@@ -1457,4 +1469,12 @@ html {
   :not(.obs-count) {
     text-transform: uppercase;
   }
+}
+
+.explore-button-copy {
+  border: 0 !important; // important to override SUI's style.
+}
+
+.explore-button-dismiss {
+  border: 0 !important; // important to override SUI's style.
 }

@@ -154,7 +154,7 @@ lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   publishLocal := {},
   publishArtifact := false,
   Keys.`package` := file(""),
-  scalacOptions --= Seq("-Xfatal-warnings").filter(_ => insideCI.value)
+  scalacOptions --= Seq("-Xfatal-warnings").filterNot(_ => insideCI.value)
 )
 
 lazy val commonLibSettings = Seq(

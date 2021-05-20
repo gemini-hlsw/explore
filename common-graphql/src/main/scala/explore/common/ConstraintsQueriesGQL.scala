@@ -5,10 +5,11 @@ package explore.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import explore.model.ConstraintSetModel
+import explore.model
 import explore.schemas._
 // gql: import explore.model.reusability._
 // gql: import lucuma.ui.reusability._
+// gql: import io.circe.refined._
 
 object ConstraintsQueriesGQL {
 
@@ -34,12 +35,17 @@ object ConstraintsQueriesGQL {
               maxHours
             }
           }
+          observations(first: 2147483647) {
+            totalCount
+          }
         }
       }
       """
 
     object Data {
-      type ConstraintSet = ConstraintSetModel
+      object ConstraintSet {
+        type ElevationRange = model.ElevationRange
+      }
     }
   }
 

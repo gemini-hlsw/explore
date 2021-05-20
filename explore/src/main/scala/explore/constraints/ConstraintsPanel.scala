@@ -5,12 +5,16 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
+import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.numeric
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.Icons
+import explore.common.ConstraintSetObsQueriesGQL
 import explore.common.ConstraintsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
@@ -19,7 +23,6 @@ import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.ConstraintSetModel
 import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._
@@ -41,15 +44,28 @@ import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
 import monocle.Lens
 import monocle.macros.Lenses
+import monocle.std.option.some
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.colors._
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
+import react.semanticui.elements.segment.Segment
+import react.semanticui.modules.popup.Popup
+import react.semanticui.sizes._
+import react.semanticui.textalignment
+import react.semanticui.floats
+
+import scala.util.Random
 
 final case class ConstraintsPanel(
-  id:            ConstraintSet.Id,
-  constraintSet: View[ConstraintSetModel],
-  renderInTitle: Tile.RenderInTitle
+  id:                ConstraintSet.Id,
+  constraintSet:     View[ConstraintSetModel],
+  renderInTitle:     Tile.RenderInTitle,
+  multiEditWarnings: Boolean,
+  copyButton:        Boolean,
+  onCopy:            ConstraintSet.Id ~=> IO[Unit] = Reusable.always(_ => IO.unit)
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -79,9 +95,11 @@ object ConstraintsPanel {
 
   @Lenses
   final case class State(
-    rangeType: ElevationRangeType,
-    airMass:   AirMassRange,
-    hourAngle: HourAngleRange
+    rangeType:            ElevationRangeType,
+    airMass:              AirMassRange,
+    hourAngle:            HourAngleRange,
+    showMultiEditWarning: Option[Boolean] = false.some,
+    copying:              Boolean = false
   )
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
@@ -138,13 +156,106 @@ object ConstraintsPanel {
           case HourAngle => erView.set(state.get.hourAngle)
         }
 
-      ReactFragment(
+      val obsCount        = props.constraintSet.get.observations.totalCount
+      val showWarningView = state.zoom(State.showMultiEditWarning.composePrism(some))
+
+      val makeCopy =
+        for {
+          _  <- state.zoom(State.copying).set(true)
+          _  <- showWarningView.set(false)
+          id <- IO(Random.nextInt(0xfff)).map(int =>
+                  ConstraintSet.Id(numeric.PosLong.unsafeFrom(int.abs.toLong + 1))
+                )
+          _  <-
+            ConstraintSetObsQueriesGQL.AddConstraintSet.execute(
+              CreateConstraintSetInput(
+                constraintSetId = id.assign,
+                // programId = constraintSet.get.programId,
+                programId = "p-2",
+                name = NonEmptyString.unsafeFrom(constraintSet.get.name + " - Copy"),
+                imageQuality = constraintSet.get.imageQuality,
+                cloudExtinction = constraintSet.get.cloudExtinction,
+                skyBackground = constraintSet.get.skyBackground,
+                waterVapor = constraintSet.get.waterVapor,
+                elevationRange = constraintSet.get.elevationRange match {
+                  case AirMassRange(min, max)             =>
+                    CreateElevationRangeInput(airmassRange =
+                      CreateAirmassRangeInput(min, max).assign
+                    )
+                  case HourAngleRange(minHours, maxHours) =>
+                    CreateElevationRangeInput(hourAngleRange =
+                      CreateHourAngleRangeInput(minHours, maxHours).assign
+                    )
+                }
+              )
+            )
+          _  <- props.onCopy(id)
+          _  <- state.zoom(State.copying).set(false)
+        } yield ()
+
+      val editWarning =
+        state.get.showMultiEditWarning
+          .whenDefined(shown =>
+            Segment(inverted = true,
+                    color = Yellow,
+                    textAlign = textalignment.Center,
+                    size = Small,
+                    clazz = ExploreStyles.EditWarning
+            )(
+              // If we actually render this when shown, it will trigger a rerender, which will remove focus from selected input.
+              ^.hidden := !shown
+            )(
+              s"These constraints are shared by $obsCount observations and editing will modify all of them.",
+              <.br,
+              "To modify only this observation, you can ",
+              Button(compact = true,
+                     size = Small,
+                     basic = true,
+                     circular = true,
+                     inverted = true,
+                     clazz = ExploreStyles.ButtonCopy,
+                     onClick = makeCopy.runAsyncCB
+              )(
+                "make a copy"
+              ),
+              ".",
+              Button(
+                compact = true,
+                size = Small,
+                basic = true,
+                circular = true,
+                inverted = true,
+                floated = floats.Right,
+                clazz = ExploreStyles.ButtonDismiss,
+                onClick = state.zoom(State.showMultiEditWarning).set(none).runAsyncCB
+              )("Dismiss")
+            )
+          )
+          .when(props.multiEditWarnings)
+
+      <.div(
+        ^.onFocus ==> (_ => showWarningView.set(obsCount > 1).runAsyncCB),
+        ^.onComponentBlur(showWarningView.set(false).runAsyncCB)
+      )(
+        editWarning,
         props.renderInTitle(
-          <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx))
+          <.span(
+            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx)),
+            <.span(ExploreStyles.TitleButtonStrip)(
+              Popup(
+                trigger = Button(onClick = makeCopy.runAsyncCB,
+                                 size = Small,
+                                 compact = true,
+                                 disabled = state.get.copying
+                )(Icons.Copy.fitted(true)),
+                content = "Copy"
+              ).when(props.copyButton)
+            )
+          )
         ),
-        Form(as = <.div)(
-          ExploreStyles.Grid,
-          ExploreStyles.ConstraintsGrid,
+        Form(as = <.div, loading = state.get.copying)(ExploreStyles.Grid,
+                                                      ExploreStyles.ConstraintsGrid
+        )(
           FormInputEV(
             id = "name",
             label = Label("Name", HelpIcon("constraints/main/name.md")),

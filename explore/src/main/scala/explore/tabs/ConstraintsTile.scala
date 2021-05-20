@@ -7,7 +7,9 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import explore.common.ConstraintSetObsQueriesGQL
 import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
+import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
 import explore.common.ObsQueries._
 import explore.components.Tile
@@ -30,17 +32,17 @@ import react.semanticui.modules.dropdown.Dropdown
 
 object ConstraintsTile {
   def constraintsTile(
-    constraintsSetId: Option[ConstraintSet.Id],
+    constraintSetId: Option[ConstraintSet.Id],
     obsSummaryOpt:    Option[ObsSummary],
     constraintsInfo:  ConstraintsInfo
-  )(implicit ctx:     AppContextIO) = {
+  )(implicit ctx:     AppContextIO): Tile = {
     def constraintsSelectorFn(
-      constraintsSetId: Option[ConstraintSet.Id],
+      constraintSetId: Option[ConstraintSet.Id],
       obsSummaryOpt:    Option[ObsSummary],
       observations:     ConstraintsInfo
     ): VdomNode =
       Select(
-        value = constraintsSetId.map(_.show).orEmpty, // Set to empty string to clear
+        value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
         placeholder = "Select a constraint set",
         onChange = (a: Dropdown.DropdownProps) =>
           (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
@@ -51,6 +53,11 @@ object ConstraintsTile {
         options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
       )
 
+    def onCopy(newId: ConstraintSet.Id): IO[Unit] =
+      obsSummaryOpt
+        .map(obs => ConstraintSetObsQueriesGQL.AssignConstraintSetToObs.execute(newId, obs.id).void)
+        .orEmpty
+
     def renderConstraintsFn(
       csId:          ConstraintSet.Id,
       renderInTitle: Tile.RenderInTitle,
@@ -59,22 +66,28 @@ object ConstraintsTile {
       csOpt.get.map { _ =>
         <.div(
           ExploreStyles.ConstraintsObsTile,
-          ConstraintsPanel(csId, csOpt.zoom(_.get)(f => _.map(f)), renderInTitle)
+          ConstraintsPanel(csId,
+                           csOpt.zoom(_.get)(f => _.map(f)),
+                           renderInTitle,
+                           multiEditWarnings = true,
+                           copyButton = false,
+                           (onCopy _).reusable
+          )
         )
       }
 
     def renderConstraints(
-      constraintsSetId: Option[ConstraintSet.Id],
+      constraintSetId: Option[ConstraintSet.Id],
       renderInTitle:    Tile.RenderInTitle
     ): VdomNode =
-      constraintsSetId
+      constraintSetId
         .map[VdomNode] { csId =>
           LiveQueryRenderMod[ObservationDB, ConstraintSetQuery.Data, Option[ConstraintSetModel]](
             ConstraintSetQuery.query(csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](csId))
           )((renderConstraintsFn _).reusable(csId, renderInTitle))
-            .withKey(s"constraint-${constraintsSetId.foldMap(_.show)}")
+            .withKey(s"constraint-${constraintSetId.foldMap(_.show)}")
         }
         .getOrElse(
           <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
@@ -87,10 +100,11 @@ object ConstraintsTile {
       "Constraints",
       canMinimize = true,
       control = ((constraintsSelectorFn _)
-        .reusable(constraintsSetId, obsSummaryOpt, constraintsInfo))
-        .some
+        .reusable(constraintSetId, obsSummaryOpt, constraintsInfo))
+        .some,
+      key = s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
     )(
-      (renderConstraints _).reusable(constraintsSetId)
+      (renderConstraints _).reusable(constraintSetId)
     )
   }
 

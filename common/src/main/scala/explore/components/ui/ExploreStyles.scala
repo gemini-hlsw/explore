@@ -163,6 +163,9 @@ object ExploreStyles {
   val WIP: Css        = Css("wip")
   val WIPWarning: Css = Css("wip-warning")
 
+  // Edit Warning
+  val EditWarning: Css = Css("edit-warning")
+
   // The Target tab contents
   val TargetGrid: Css           = Css("target-grid")
   val TargetAladinCell: Css     = Css("target-aladin-cell")
@@ -223,6 +226,7 @@ object ExploreStyles {
   val HelpMarkdownBody: Css = Css("markdown-body")
 
   val TitleUndoButtons: Css = Css("title-undo-buttons")
+  val TitleButtonStrip: Css = Css("title-button-strip")
 
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
@@ -232,4 +236,7 @@ object ExploreStyles {
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
   val SkipToNext: Css                = Css("explore-skip-to-next")
   val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")
+
+  val ButtonCopy: Css    = Css("explore-button-copy")
+  val ButtonDismiss: Css = Css("explore-button-dismiss")
 }

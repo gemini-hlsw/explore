@@ -71,9 +71,10 @@ object ConstraintSetTabContents {
 
   protected def renderEditor(
     csIdOpt:       Option[ConstraintSet.Id],
+    focused:       View[Option[Focused]],
     renderInTitle: Tile.RenderInTitle
   ): VdomNode =
-    csIdOpt.map(csId => ConstraintSetEditor(csId, renderInTitle).withKey(csId.show))
+    csIdOpt.map(csId => ConstraintSetEditor(csId, focused, renderInTitle).withKey(csId.show))
 
   protected def renderFn(
     props:                 Props,
@@ -124,7 +125,9 @@ object ConstraintSetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide =
-      Tile("constraints", "Constraints", backButton.some)((renderEditor _).reusable(csIdOpt))
+      Tile("constraints", "Constraints", backButton.some)(
+        (renderEditor _).reusable(csIdOpt, props.focused)
+      )
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(

@@ -6,6 +6,7 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import japgolly.scalajs.react.CatsReact._
+import japgolly.scalajs.react.Key
 import japgolly.scalajs.react.Reusability
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
@@ -27,7 +28,7 @@ object reusability {
     Reusability.by(_.toList)
   implicit val airMassRangeReuse: Reusability[AirMassRange]                           = Reusability.byEq
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                       = Reusability.byEq
-  implicit val constraintSetModelReuse: Reusability[ConstraintSetModel]               = Reusability.byEq
+  implicit val elevationRangeReuse: Reusability[ElevationRange]                       = Reusability.byEq
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.derive
@@ -41,4 +42,5 @@ object reusability {
   implicit val bigDecimalReuse: Reusability[BigDecimal]                               = Reusability.byEq
   implicit val offsetReuse: Reusability[Offset]                                       = Reusability.byEq
   implicit val wavelengthReuse: Reusability[Wavelength]                               = Reusability.byEq
+  implicit val keyReuse: Reusability[Key]                                             = Reusability.by_==
 }
