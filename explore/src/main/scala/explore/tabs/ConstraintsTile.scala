@@ -33,13 +33,13 @@ import react.semanticui.modules.dropdown.Dropdown
 object ConstraintsTile {
   def constraintsTile(
     constraintSetId: Option[ConstraintSet.Id],
-    obsSummaryOpt:    Option[ObsSummary],
-    constraintsInfo:  ConstraintsInfo
-  )(implicit ctx:     AppContextIO): Tile = {
+    obsSummaryOpt:   Option[ObsSummary],
+    constraintsInfo: ConstraintsInfo
+  )(implicit ctx:    AppContextIO): Tile = {
     def constraintsSelectorFn(
       constraintSetId: Option[ConstraintSet.Id],
-      obsSummaryOpt:    Option[ObsSummary],
-      observations:     ConstraintsInfo
+      obsSummaryOpt:   Option[ObsSummary],
+      observations:    ConstraintsInfo
     ): VdomNode =
       Select(
         value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
@@ -78,7 +78,7 @@ object ConstraintsTile {
 
     def renderConstraints(
       constraintSetId: Option[ConstraintSet.Id],
-      renderInTitle:    Tile.RenderInTitle
+      renderInTitle:   Tile.RenderInTitle
     ): VdomNode =
       constraintSetId
         .map[VdomNode] { csId =>
@@ -102,7 +102,8 @@ object ConstraintsTile {
       control = ((constraintsSelectorFn _)
         .reusable(constraintSetId, obsSummaryOpt, constraintsInfo))
         .some,
-      key = s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
+      key =
+        s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
     )(
       (renderConstraints _).reusable(constraintSetId)
     )

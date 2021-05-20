@@ -52,10 +52,10 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.elements.segment.Segment
+import react.semanticui.floats
 import react.semanticui.modules.popup.Popup
 import react.semanticui.sizes._
 import react.semanticui.textalignment
-import react.semanticui.floats
 
 import scala.util.Random
 
