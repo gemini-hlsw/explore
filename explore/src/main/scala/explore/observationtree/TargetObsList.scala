@@ -593,7 +593,9 @@ object TargetObsList {
             UndoButtons(props.pointingsWithObs.get, undoCtx, size = Mini)
           ),
           <.div(
-            Button(onClick = props.focused.set(none).runAsyncCB, clazz = ExploreStyles.ButtonSummary)(
+            Button(onClick = props.focused.set(none).runAsyncCB,
+                   clazz = ExploreStyles.ButtonSummary
+            )(
               Icons.List,
               "Targets Summary"
             )

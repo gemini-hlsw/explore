@@ -170,11 +170,13 @@ object ObsList {
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
               <.div(
-                Button(onClick = props.focused.set(none).runAsyncCB, clazz = ExploreStyles.ButtonSummary)(
+                Button(onClick = props.focused.set(none).runAsyncCB,
+                       clazz = ExploreStyles.ButtonSummary
+                )(
                   Icons.List,
                   "Observations Summary"
                 )
-              ),              
+              ),
               observations.toTagMod { obs =>
                 val focusedObs = FocusedObs(obs.id)
                 val selected   = props.focused.get.exists(_ === focusedObs)
