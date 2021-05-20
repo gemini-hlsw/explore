@@ -317,6 +317,12 @@ object ConstraintSetObsList {
             ),
             UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)
           ),
+          <.div(
+            Button(onClick = props.focused.set(none).runAsyncCB, clazz = ExploreStyles.ButtonSummary)(
+              Icons.List,
+              "Constraints Summary"
+            )
+          ),          
           ReflexContainer()(
             // Start constraint sets tree
             ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
