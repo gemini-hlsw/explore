@@ -13,7 +13,6 @@ import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
-
 import monocle.macros.Lenses
 import spire.math.interval.ValueBound
 

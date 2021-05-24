@@ -144,9 +144,11 @@ object ImagingConfigurationPanel {
                     HelpIcon("configuration/signal_to_noise.md"),
                     ExploreStyles.SkipToNext
             ),
-            FormInputEV(id = "signal-to-noise",
-                        value = signalToNoise,
-                        validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal)
+            FormInputEV(
+              id = "signal-to-noise",
+              value = signalToNoise,
+              validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
+              changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
             ),
             <.label("Capabilities",
                     HelpIcon("configuration/capabilities.md"),
