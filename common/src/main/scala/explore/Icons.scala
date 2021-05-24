@@ -44,4 +44,5 @@ object Icons {
   val Remove              = Icon("remove")
   val Trash               = Delete.size(Small).fitted(true).clazz(ExploreStyles.TrashIcon)
   val Copy                = Icon("copy")
+  val List                = Icon("list alternate outline")
 }

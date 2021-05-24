@@ -241,4 +241,5 @@ object ExploreStyles {
 
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonDismiss: Css = Css("explore-button-dismiss")
+  val ButtonSummary: Css = Css("explore-button-summary")
 }
