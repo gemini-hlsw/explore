@@ -236,6 +236,8 @@ object ExploreStyles {
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
   val SkipToNext: Css                = Css("explore-skip-to-next")
   val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")
+  val ConfigurationFilter: Css       = Css("explore-configuration-filter")
+  val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
 
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonDismiss: Css = Css("explore-button-dismiss")

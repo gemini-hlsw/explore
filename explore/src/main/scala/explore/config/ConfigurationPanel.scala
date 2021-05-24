@@ -14,6 +14,7 @@ import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
@@ -46,14 +47,18 @@ object ConfigurationPanel {
   @Lenses
   final case class State(
     mode:                ConfigurationMode,
-    spectroscopyOptions: SpectroscopyConfigurationOptions
+    spectroscopyOptions: SpectroscopyConfigurationOptions,
+    imagingOptions:      ImagingConfigurationOptions
   )
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .initialState(
-        State(ConfigurationMode.Spectroscopy, SpectroscopyConfigurationOptions.Default)
+        State(ConfigurationMode.Imaging,
+              SpectroscopyConfigurationOptions.Default,
+              ImagingConfigurationOptions.Default
+        )
       )
       .render { $ =>
         AppCtx.using { implicit appCtx =>
@@ -61,6 +66,7 @@ object ConfigurationPanel {
           val isSpectroscopy = mode.get === ConfigurationMode.Spectroscopy
 
           val spectroscopy = ViewF.fromState[IO]($).zoom(State.spectroscopyOptions)
+          val imaging      = ViewF.fromState[IO]($).zoom(State.imagingOptions)
 
           <.div(
             ExploreStyles.ConfigurationGrid,
@@ -70,7 +76,8 @@ object ConfigurationPanel {
               ExploreStyles.ConfigurationForm,
               <.label("Mode", HelpIcon("configuration/mode.md")),
               EnumViewSelect(id = "configuration-mode", value = mode),
-              SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy)
+              SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
+              ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
             ),
             UnderConstruction()
           )

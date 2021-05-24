@@ -1415,6 +1415,7 @@ html {
   display: grid;
   justify-items: start;
   align-items: baseline;
+  align-self: start;
   grid-template-columns: [label] 1fr [field] 2fr [units] auto;
 
   .field {
@@ -1468,6 +1469,34 @@ html {
 
   :not(.obs-count) {
     text-transform: uppercase;
+  }
+}
+
+.ui.dropdown.explore-configuration-filter {
+  min-width: 100%;
+
+  .menu > .item > .header {
+    text-align: center;
+    text-transform: uppercase;
+    text-decoration: underline;
+    font-size: smaller;
+    pointer-events: none;
+    cursor: unset;
+  }
+}
+
+.explore-configuration-filter-item {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: end;
+
+  span:first-child {
+    justify-self: start;
+  }
+
+  span:not(:first-child) {
+    color: var(--site-input-placeholder-focus-color);
+    font-size: smaller;
   }
 }
 
