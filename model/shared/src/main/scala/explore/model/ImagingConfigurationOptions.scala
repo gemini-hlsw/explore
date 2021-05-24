@@ -5,9 +5,12 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb.Quantity
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.model.enum.ImagingCapabilities
 import lucuma.core.enum.FilterType
 import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosSouthFilter
+import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import monocle.macros.Lenses
@@ -23,11 +26,14 @@ sealed abstract class AvailableFilter {
 
 @Lenses
 final case class ImagingConfigurationOptions(
-  filters: Set[AvailableFilter]
+  filters:       Set[AvailableFilter],
+  fov:           Option[Angle],
+  signalToNoise: Option[PosBigDecimal],
+  capabilities:  Option[ImagingCapabilities]
 )
 
 object ImagingConfigurationOptions {
-  val Default = ImagingConfigurationOptions(Set.empty)
+  val Default = ImagingConfigurationOptions(Set.empty, none, none, none)
 
   val gmosNorthFilters = GmosNorthFilter.all
     .filterNot(f =>

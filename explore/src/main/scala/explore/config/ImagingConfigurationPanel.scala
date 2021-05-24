@@ -8,17 +8,27 @@ import cats.implicits._
 import coulomb.Quantity
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
 import explore.AppCtx
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
+import explore.model.enum.ImagingCapabilities
+import explore.model.formats._
+import explore.model.reusability._
+import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FilterType
 import lucuma.core.math.units._
+import lucuma.core.util.Display
+import lucuma.ui.forms.EnumViewOptionalSelect
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
 import react.semanticui.collections.menu.MenuHeader
@@ -36,6 +46,7 @@ object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
+  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
   implicit val propsReuse: Reusability[Props]                         = Reusability.derive
 
@@ -92,7 +103,10 @@ object ImagingConfigurationPanel {
       .stateless
       .render_P { p =>
         AppCtx.using { implicit appCtx =>
-          val filters = p.options.zoom(ImagingConfigurationOptions.filters)
+          val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
+          val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
+          val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
+          val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
           ReactFragment(
             <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
@@ -114,6 +128,39 @@ object ImagingConfigurationPanel {
                     }).runAsyncAndForgetCB
                   )
                   .getOrElse(Callback.empty)
+            ),
+            <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
+            InputWithUnits(
+              id = "configuration-fov",
+              clazz = Css.Empty,
+              inline = true,
+              value = fov,
+              units = "arcsec",
+              validFormat = ValidFormatInput.fromFormatOptional(formatArcsec),
+              changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+              disabled = false
+            ),
+            <.label("S / N",
+                    HelpIcon("configuration/signal_to_noise.md"),
+                    ExploreStyles.SkipToNext
+            ),
+            FormInputEV(
+              id = "signal-to-noise",
+              value = signalToNoise,
+              validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
+              changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
+            ),
+            <.label("Capabilities",
+                    HelpIcon("configuration/capabilities.md"),
+                    ExploreStyles.SkipToNext
+            ),
+            EnumViewOptionalSelect(
+              id = "imaging-capabilities",
+              clazz = ExploreStyles.ConfigurationCapabilities,
+              clearable = true,
+              upward = true,
+              placeholder = "Extra capablities",
+              value = capabilities
             )
           )
         }
