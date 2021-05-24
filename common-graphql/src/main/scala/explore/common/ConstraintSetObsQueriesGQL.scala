@@ -66,7 +66,7 @@ object ConstraintSetObsQueriesGQL {
   }
 
   @GraphQL
-  trait ConstraintSetEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait ConstraintSetsEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {
         constraintSetEdit(programId: "p-2") {

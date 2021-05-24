@@ -41,8 +41,7 @@ object ConstraintSetEditor {
         props.csId,
         csOpt.zoom(_.get)(f => _.map(f)),
         props.renderInTitle,
-        multiEditWarnings = false,
-        copyButton = true,
+        allowMultiEdit = true,
         onCopy = (
           (id: ConstraintSet.Id) => props.focused.set(Focused.FocusedConstraintSet(id).some)
         ).reusable

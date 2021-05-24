@@ -5,10 +5,15 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import clue.TransactionalClient
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
+import explore.common.ConstraintSetObsQueries._
 import explore.common.ConstraintSetObsQueriesGQL
-import explore.common.ConstraintSetObsQueriesGQL.AssignConstraintSetToObs
+import explore.common.ConstraintSetObsQueriesGQL._
 import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
 import explore.common.ObsQueries._
@@ -18,19 +23,43 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model._
-import explore.model.reusability._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
+import react.semanticui.elements.button.Button
 import react.semanticui.modules.dropdown.Dropdown
+import react.semanticui.sizes
+
+import scala.util.Random
 
 object ConstraintsTile {
+
+  private def newConstraintSet(
+    obsId:           Observation.Id
+  )(implicit client: TransactionalClient[IO, ObservationDB]): IO[Unit] =
+    for {
+      id <-
+        IO(Random.nextInt(0xfff)).map(int =>
+          ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1))
+        )
+      _  <-
+        AddConstraintSet
+          .execute(
+            defaultCreateConstraintSet(
+              defaultConstraintSetResult(id, NonEmptyString.unsafeFrom(s"New Constraints [$id]"))
+            )
+          )
+          .void
+      _  <- AssignConstraintSetToObs.execute(id, obsId)
+    } yield ()
+
   def constraintsTile(
     constraintSetId: Option[ConstraintSet.Id],
     obsSummaryOpt:   Option[ObsSummary],
@@ -38,19 +67,33 @@ object ConstraintsTile {
   )(implicit ctx:    AppContextIO): Tile = {
     def constraintsSelectorFn(
       constraintSetId: Option[ConstraintSet.Id],
-      obsSummaryOpt:   Option[ObsSummary],
+      obsId:           Observation.Id,
       observations:    ConstraintsInfo
     ): VdomNode =
-      Select(
-        value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
-        placeholder = "Select a constraint set",
-        onChange = (a: Dropdown.DropdownProps) =>
-          (obsSummaryOpt, ConstraintSet.Id.parse(a.value.toString)).mapN { (obsId, csId) =>
-            AssignConstraintSetToObs
-              .execute(csId, obsId.id)
-              .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
-          }.getOrEmpty,
-        options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
+      <.span(
+        Select(
+          value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
+          placeholder = "Select a constraint set",
+          // size = sizes.Small,
+          className = "small",                         // Not exposed in React component properties but works in SUI.
+          onChange = (a: Dropdown.DropdownProps) =>
+            ConstraintSet.Id
+              .parse(a.value.toString)
+              .map(csId =>
+                AssignConstraintSetToObs
+                  .execute(csId, obsId)
+                  .runAsyncAndForgetCB *> Callback.log(s"Set to $csId")
+              )
+              .getOrEmpty,
+          options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
+        ),
+        Button(size = sizes.Tiny,
+               compact = true,
+               clazz = ExploreStyles.TitleButtonNew,
+               icon = Icons.New,
+               content = "New",
+               onClick = newConstraintSet(obsId).runAsyncCB
+        )
       )
 
     def onCopy(newId: ConstraintSet.Id): IO[Unit] =
@@ -69,8 +112,7 @@ object ConstraintsTile {
           ConstraintsPanel(csId,
                            csOpt.zoom(_.get)(f => _.map(f)),
                            renderInTitle,
-                           multiEditWarnings = true,
-                           copyButton = false,
+                           allowMultiEdit = false,
                            (onCopy _).reusable
           )
         )
@@ -99,9 +141,9 @@ object ConstraintsTile {
       ObsTabTiles.ConstraintsId,
       "Constraints",
       canMinimize = true,
-      control = ((constraintsSelectorFn _)
-        .reusable(constraintSetId, obsSummaryOpt, constraintsInfo))
-        .some,
+      control = obsSummaryOpt.map(obsSummary =>
+        ((constraintsSelectorFn _).reusable(constraintSetId, obsSummary.id, constraintsInfo))
+      ),
       key =
         s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
     )(

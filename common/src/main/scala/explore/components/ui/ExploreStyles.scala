@@ -225,8 +225,9 @@ object ExploreStyles {
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
-  val TitleUndoButtons: Css = Css("title-undo-buttons")
-  val TitleButtonStrip: Css = Css("title-button-strip")
+  val TitleStrip: Css        = Css("title-strip")
+  val TitleStripElement: Css = Css("title-strip-element")
+  val TitleButtonNew: Css    = Css("explore-tile-title-button-new")
 
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
@@ -240,5 +241,5 @@ object ExploreStyles {
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
 
   val ButtonCopy: Css    = Css("explore-button-copy")
-  val ButtonDismiss: Css = Css("explore-button-dismiss")
+  val ButtonSummary: Css = Css("explore-button-summary")
 }

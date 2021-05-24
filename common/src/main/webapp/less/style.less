@@ -705,8 +705,8 @@ tfoot {
 }
 
 .plot-toggle {
-  margin-left: 10;
-  margin-right: 10;
+  margin-left: 10px;
+  margin-right: 10px;
   padding-top: 6px;
 }
 
@@ -1384,13 +1384,11 @@ html {
   }
 }
 
-.title-undo-buttons {
-  float: right;
-}
-
-.title-button-strip {
-  margin-left: 1em;
-  margin-right: 1em;
+.title-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
 }
 
 .ui.wide.right.sidebar {
@@ -1504,6 +1502,16 @@ html {
   border: 0 !important; // important to override SUI's style.
 }
 
-.explore-button-dismiss {
-  border: 0 !important; // important to override SUI's style.
+.explore-button-summary {
+  width: 100%;
+}
+
+.explore-tile-title-button-new {
+  margin-left: 1em !important; // important to override SUI's style.
+}
+
+// This fixes what seems to be a bug in SUI (React?), where compact button groups are still very wide.
+.ui.compact.labeled.icon.buttons .button, .ui.labeled.icon.button {
+  padding-left: 2.3em !important;
+  padding-right: 0.5em !important;
 }

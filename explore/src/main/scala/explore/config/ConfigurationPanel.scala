@@ -19,9 +19,7 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
@@ -29,6 +27,9 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+
+import japgolly.scalajs.react._
+import lucuma.core.model.Observation
 
 final case class ConfigurationPanel(
   id:            Option[Observation.Id],

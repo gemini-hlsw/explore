@@ -259,9 +259,7 @@ object TargetBody {
             ),
             MagnitudeForm(target.id, magnitudesView, disabled = disabled),
             props.renderInTitle(
-              <.span(ExploreStyles.TitleUndoButtons,
-                     UndoButtons(target, undoCtx, disabled = disabled)
-              )
+              <.span(ExploreStyles.TitleStrip, UndoButtons(target, undoCtx, disabled = disabled))
             ),
             <.div(
               ExploreStyles.TargetSkyplotCell,

@@ -14,13 +14,13 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.sizes._
 
 final case class UndoButtons[F[_], A](
   value:          A,
   undoCtx:        Undoer.Context[F, A],
-  size:           SemanticSize = Small,
-  iconSize:       SemanticSize = Small,
+  size:           SemanticSize = Tiny,
   disabled:       Boolean = false
 )(implicit
   val F:          MonadError[F, Throwable],
@@ -40,20 +40,20 @@ object UndoButtons {
         implicit val logger     = p.logger
 
         WIP(
-          <.div(
-            Button(onClick = p.undoCtx.undo(p.value).runAsyncCB,
-                   size = p.size,
-                   compact = true,
-                   disabled = p.undoCtx.undoEmpty || p.disabled
-            )(
-              Icons.Undo.size(p.iconSize).fitted(true)
+          ButtonGroup(labeled = true, icon = true, compact = true, size = p.size)(
+            Button(
+              onClick = p.undoCtx.undo(p.value).runAsyncCB,
+              size = p.size,
+              disabled = p.undoCtx.undoEmpty || p.disabled,
+              icon = Icons.Undo,
+              content = "Undo"
             ),
-            Button(onClick = p.undoCtx.redo(p.value).runAsyncCB,
-                   size = p.size,
-                   compact = true,
-                   disabled = p.undoCtx.redoEmpty || p.disabled
-            )(
-              Icons.Redo.size(p.iconSize).fitted(true)
+            Button(
+              onClick = p.undoCtx.redo(p.value).runAsyncCB,
+              size = p.size,
+              disabled = p.undoCtx.redoEmpty || p.disabled,
+              icon = Icons.Redo,
+              content = "Redo"
             )
           )
         )
