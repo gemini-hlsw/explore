@@ -10,7 +10,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
-import explore.UnderConstruction
 import explore.common.TargetObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -41,6 +40,7 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import explore.targeteditor.TargetSummaryTable
 
 final case class TargetTabContents(
   userId:           ViewOpt[User.Id],
@@ -70,18 +70,14 @@ object TargetTabContents {
   }
 
   def renderContents(
-    userIdOpt:     Option[User.Id],
-    targetIdOpt:   Option[Target.Id],
+    userId:        User.Id,
+    targetId:      Target.Id,
     searching:     View[Set[Target.Id]],
     renderInTitle: Tile.RenderInTitle
   ): VdomNode =
-    (userIdOpt, targetIdOpt).tupled match {
-      case Some((uid, tid)) =>
-        AppCtx.using(implicit ctx =>
-          TargetEditor(uid, tid, searching, renderInTitle).withKey(tid.show)
-        )
-      case None             => UnderConstruction()
-    }
+    AppCtx.using(implicit ctx =>
+      TargetEditor(userId, targetId, searching, renderInTitle).withKey(targetId.show)
+    )
 
   protected def renderFn(
     props:            Props,
@@ -139,9 +135,20 @@ object TargetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide =
-      Tile("target", s"Target", backButton.some)(
-        (renderContents _).reusable(props.userId.get, targetIdOpt, props.searching)
-      )
+      (props.userId.get, targetIdOpt).tupled match {
+        case Some((uid, tid)) =>
+          Tile("target", s"Target", backButton.some)(
+            (renderContents _).reusable(uid, tid, props.searching)
+          )
+        case None             =>
+          import TargetSummaryTable._
+          Tile("target", s"Target Summary", backButton.some)(
+            (
+              (_: Tile.RenderInTitle) =>
+                render(TargetSummaryTable(pointingsWithObs.get, props.focused))
+            ).reusable
+          )
+      }
 
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable
