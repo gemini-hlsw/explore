@@ -199,7 +199,7 @@ object ConstraintsPanel {
               ),
             content = PopupContent(
               content = <.div(
-                s"These constraints are shared by $obsCount observations and editing will modify all of them.",
+                s"These constraints are shared by $obsCount observations and therefore cannot be modified here.",
                 <.br,
                 "Please edit in Constraints View, create a New one or a Copy."
               )
