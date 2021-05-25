@@ -74,7 +74,6 @@ object ConstraintsTile {
         Select(
           value = constraintSetId.map(_.show).orEmpty, // Set to empty string to clear
           placeholder = "Select a constraint set",
-          // size = sizes.Small,
           className = "small",                         // Not exposed in React component properties but works in SUI.
           onChange = (a: Dropdown.DropdownProps) =>
             ConstraintSet.Id
@@ -87,12 +86,13 @@ object ConstraintsTile {
               .getOrEmpty,
           options = observations.map(s => new SelectItem(value = s.id.show, text = s.name.value))
         ),
-        Button(size = sizes.Tiny,
-               compact = true,
-               clazz = ExploreStyles.TitleButtonNew,
-               icon = Icons.New,
-               content = "New",
-               onClick = newConstraintSet(obsId).runAsyncCB
+        Button(
+          size = sizes.Tiny,
+          compact = true,
+          clazz = ExploreStyles.TitleButtonNew |+| ExploreStyles.VeryCompact,
+          icon = Icons.New,
+          content = "New",
+          onClick = newConstraintSet(obsId).runAsyncCB
         )
       )
 
@@ -143,9 +143,7 @@ object ConstraintsTile {
       canMinimize = true,
       control = obsSummaryOpt.map(obsSummary =>
         ((constraintsSelectorFn _).reusable(constraintSetId, obsSummary.id, constraintsInfo))
-      ),
-      key =
-        s"${obsSummaryOpt.map(_.id.toString).orEmpty}-${constraintSetId.map(_.toString).orEmpty}"
+      )
     )(
       (renderConstraints _).reusable(constraintSetId)
     )

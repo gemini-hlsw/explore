@@ -309,8 +309,12 @@ object ConstraintSetObsList {
               placeholder = "Constraint name",
               okLabel = "Create",
               onComplete = (createConstraintSet _).reusable,
-              trigger =
-                Button(size = Mini, compact = true, icon = Icons.New, content = "Constraints")
+              trigger = Button(size = Mini,
+                               compact = true,
+                               clazz = ExploreStyles.VeryCompact,
+                               icon = Icons.New,
+                               content = "Constraints"
+              )
             ),
             UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)
           ),

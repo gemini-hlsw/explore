@@ -572,7 +572,12 @@ object TargetObsList {
                 placeholder = "Target name",
                 okLabel = "Create",
                 onComplete = (createTarget _).reusable, // TODO Set coordinates
-                trigger = Button(size = Mini, compact = true, icon = Icons.New, content = "Target")
+                trigger = Button(size = Mini,
+                                 compact = true,
+                                 clazz = ExploreStyles.VeryCompact,
+                                 icon = Icons.New,
+                                 content = "Target"
+                )
               ),
               InputModal(
                 "Create new Asterism",
@@ -581,8 +586,12 @@ object TargetObsList {
                 placeholder = "Asterism name",
                 okLabel = "Create",
                 onComplete = (createAsterism _).reusable,
-                trigger =
-                  Button(size = Mini, compact = true, icon = Icons.New, content = "Asterism")
+                trigger = Button(size = Mini,
+                                 compact = true,
+                                 clazz = ExploreStyles.VeryCompact,
+                                 icon = Icons.New,
+                                 content = "Asterism"
+                )
               )
             ),
             UndoButtons(props.pointingsWithObs.get, undoCtx, size = Mini)

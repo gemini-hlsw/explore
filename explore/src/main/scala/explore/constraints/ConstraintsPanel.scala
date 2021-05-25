@@ -47,7 +47,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.colors
-import react.semanticui.elements.button.Button
+import react.semanticui.elements.button._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.modules.popup.Popup
@@ -135,7 +135,7 @@ object ConstraintsPanel {
         undoViewSet(ConstraintSetModel.elevationRange, UpdateConstraintSet.elevationRange)
 
       val obsCount = props.constraintSet.get.observations.totalCount
-      val readonly = !props.allowMultiEdit && obsCount > 1
+      val readOnly = !props.allowMultiEdit && obsCount > 1
 
       def selectEnum[A: Enumerated: Display](
         label:     String,
@@ -147,7 +147,7 @@ object ConstraintsPanel {
         EnumViewSelect(id = id,
                        value = undoViewSet(lens, remoteSet),
                        label = Label(label, HelpIcon(helpId)),
-                       disabled = readonly
+                       disabled = readOnly
         )
       }
 
@@ -205,9 +205,9 @@ object ConstraintsPanel {
               )
             ),
             wide = PopupWide.Very,
-            position = PopupPosition.TopCenter
+            position = PopupPosition.TopRight
           )
-        ).when(!props.allowMultiEdit)
+        ).unless(props.allowMultiEdit)
 
       <.div(
         props.renderInTitle(
@@ -217,11 +217,13 @@ object ConstraintsPanel {
               onClick = makeCopy.runAsyncCB,
               size = Tiny,
               compact = true,
+              clazz = ExploreStyles.VeryCompact,
               disabled = state.get.copying,
               icon = Icons.Copy,
-              content = "Copy"
+              content = "Copy",
+              labelPosition = LabelPosition.Left
             ),
-            UndoButtons(constraintSet.get, undoCtx)
+            UndoButtons(constraintSet.get, undoCtx).unless(readOnly)
           )
         ),
         Form(loading = state.get.copying)(ExploreStyles.Grid, ExploreStyles.ConstraintsGrid)(
@@ -233,7 +235,7 @@ object ConstraintsPanel {
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below,
-            disabled = readonly
+            disabled = readOnly
           ),
           selectEnum("Image Quality",
                      "constraints/main/iq.md",
@@ -265,7 +267,7 @@ object ConstraintsPanel {
                 .zoom(State.rangeType)
                 .withOnMod(updateElevationRange),
               clazz = ExploreStyles.ElevationRangePicker,
-              disabled = readonly
+              disabled = readOnly
             ),
             ReactFragment(
               FormInputEV(
@@ -292,7 +294,7 @@ object ConstraintsPanel {
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readonly
+                disabled = readOnly
               ),
               FormInputEV(
                 id = "maxam",
@@ -318,7 +320,7 @@ object ConstraintsPanel {
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readonly
+                disabled = readOnly
               )
             ).when(state.get.rangeType === AirMass),
             ReactFragment(
@@ -345,7 +347,7 @@ object ConstraintsPanel {
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readonly
+                disabled = readOnly
               ),
               FormInputEV(
                 id = "maxha",
@@ -370,7 +372,7 @@ object ConstraintsPanel {
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readonly
+                disabled = readOnly
               ),
               <.div(ExploreStyles.UnitsLabel, "hours")
             ).when(state.get.rangeType === HourAngle)
