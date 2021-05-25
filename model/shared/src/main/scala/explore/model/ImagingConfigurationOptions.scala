@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Order
-import cats.syntax.all._
+import cats.implicits._
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.enum.ImagingCapabilities
@@ -28,8 +28,7 @@ sealed abstract class AvailableFilter {
 }
 
 object AvailableFilter {
-  implicit val order: Order[AvailableFilter]       = Order.by(x => (x.centralWavelength, x.tag))
-  implicit val ordering: Ordering[AvailableFilter] = order.toOrdering
+  implicit val order: Order[AvailableFilter] = Order.by(x => (x.centralWavelength, x.tag))
 }
 
 @Lenses
