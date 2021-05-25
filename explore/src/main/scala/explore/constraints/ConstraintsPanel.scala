@@ -198,8 +198,8 @@ object ConstraintsPanel {
                                                                    Icons.Question.fitted(true)
               ),
             content = PopupContent(
-              content = <.div(
-                s"These constraints are shared by $obsCount observations and therefore cannot be modified here.",
+              content = <.div(ExploreStyles.SharedEditWarning)(
+                s"These constraints cannot be modified because they are shared by $obsCount observations.",
                 <.br,
                 "Please edit in Constraints View, create a New one or a Copy."
               )

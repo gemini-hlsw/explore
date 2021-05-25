@@ -242,4 +242,6 @@ object ExploreStyles {
 
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonSummary: Css = Css("explore-button-summary")
+
+  val SharedEditWarning: Css = Css("explore-shared-edit-warning")
 }
