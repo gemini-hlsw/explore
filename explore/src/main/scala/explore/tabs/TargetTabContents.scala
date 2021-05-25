@@ -142,10 +142,10 @@ object TargetTabContents {
           )
         case None             =>
           import TargetSummaryTable._
-          Tile("target", s"Target Summary", backButton.some)(
+          Tile("target", s"Targets Summary", backButton.some)(
             (
               (_: Tile.RenderInTitle) =>
-                render(TargetSummaryTable(pointingsWithObs.get, props.focused))
+                render(TargetSummaryTable(pointingsWithObs.get, props.focused, props.expandedIds))
             ).reusable
           )
       }

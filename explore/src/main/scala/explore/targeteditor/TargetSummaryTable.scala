@@ -9,6 +9,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import explore.common.TargetObsQueries._
 import reactST.reactTable._
 import explore.model.Focused
+import explore.model.ExpandedIds
 import crystal.react.implicits._
 import react.semanticui.collections.table._
 import lucuma.core.model.Target
@@ -17,7 +18,8 @@ import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
-  focused:          View[Option[Focused]]
+  focused:          View[Option[Focused]],
+  expandedIds:      View[ExpandedIds]
 )(implicit val ctx: AppContextIO)
 // extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
@@ -97,13 +99,12 @@ object TargetSummaryTable {
               <.span(
                 targetObservations(target.id)
                   .map(obs =>
-                    <.a(^.onClick ==> (_ =>
-                          (props.focused.set(Focused.FocusedObs(obs.id).some) >> cats.effect.IO
-                            .println(
-                              "EXPAND TARGET!"
-                            )).runAsyncCB
-                        ),
-                        obs.id.toString()
+                    <.a(
+                      ^.onClick ==> (_ =>
+                        (props.focused.set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
+                          .mod(ExpandedIds.targetIds.modify(_ + target.id))).runAsyncCB
+                      ),
+                      obs.id.toString()
                     )
                   )
                   .mkReactFragment(", ")
