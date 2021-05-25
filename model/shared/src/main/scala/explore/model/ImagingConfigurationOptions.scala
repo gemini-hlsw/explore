@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.Order
 import cats.syntax.all._
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -16,6 +17,8 @@ import lucuma.core.math.units._
 import monocle.macros.Lenses
 import spire.math.interval.ValueBound
 
+import scala.collection.SortedSet
+
 sealed abstract class AvailableFilter {
   val tag: String
   val filterType: FilterType
@@ -24,16 +27,21 @@ sealed abstract class AvailableFilter {
   val range: Option[Quantity[Int, Nanometer]]
 }
 
+object AvailableFilter {
+  implicit val order: Order[AvailableFilter]       = Order.by(x => (x.centralWavelength, x.tag))
+  implicit val ordering: Ordering[AvailableFilter] = order.toOrdering
+}
+
 @Lenses
 final case class ImagingConfigurationOptions(
-  filters:       Set[AvailableFilter],
+  filters:       SortedSet[AvailableFilter],
   fov:           Option[Angle],
   signalToNoise: Option[PosBigDecimal],
   capabilities:  Option[ImagingCapabilities]
 )
 
 object ImagingConfigurationOptions {
-  val Default = ImagingConfigurationOptions(Set.empty, none, none, none)
+  val Default = ImagingConfigurationOptions(SortedSet.empty, none, none, none)
 
   val gmosNorthFilters = GmosNorthFilter.all
     .filterNot(f =>
