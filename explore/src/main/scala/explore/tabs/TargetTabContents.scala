@@ -10,7 +10,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
-import explore.UnderConstruction
 import explore.common.TargetObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -23,6 +22,7 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.targeteditor.TargetEditor
+import explore.targeteditor.TargetSummaryTable
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -70,18 +70,14 @@ object TargetTabContents {
   }
 
   def renderContents(
-    userIdOpt:     Option[User.Id],
-    targetIdOpt:   Option[Target.Id],
+    userId:        User.Id,
+    targetId:      Target.Id,
     searching:     View[Set[Target.Id]],
     renderInTitle: Tile.RenderInTitle
   ): VdomNode =
-    (userIdOpt, targetIdOpt).tupled match {
-      case Some((uid, tid)) =>
-        AppCtx.using(implicit ctx =>
-          TargetEditor(uid, tid, searching, renderInTitle).withKey(tid.show)
-        )
-      case None             => UnderConstruction()
-    }
+    AppCtx.using(implicit ctx =>
+      TargetEditor(userId, targetId, searching, renderInTitle).withKey(targetId.show)
+    )
 
   protected def renderFn(
     props:            Props,
@@ -139,9 +135,19 @@ object TargetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide =
-      Tile("target", s"Target", backButton.some)(
-        (renderContents _).reusable(props.userId.get, targetIdOpt, props.searching)
-      )
+      (props.userId.get, targetIdOpt).tupled match {
+        case Some((uid, tid)) =>
+          Tile("target", s"Target", backButton.some)(
+            (renderContents _).reusable(uid, tid, props.searching)
+          )
+        case None             =>
+          Tile("target", s"Targets Summary", backButton.some)(
+            (
+              (_: Tile.RenderInTitle) =>
+                TargetSummaryTable(pointingsWithObs.get, props.focused, props.expandedIds): VdomNode
+            ).reusable
+          )
+      }
 
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable

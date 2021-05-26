@@ -40,8 +40,10 @@ import explore.undo.KIListMod
 import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.Getter
 import monocle.function.Field1.first
@@ -83,9 +85,11 @@ object TargetObsList {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  val obsListMod      = new KIListMod[IO, ObsResult, Observation.Id](ObsResult.id)
-  val targetListMod   = new KIListMod[IO, TargetResult, Target.Id](TargetResult.id)
-  val asterismListMod = new KIListMod[IO, AsterismIdName, Asterism.Id](AsterismIdName.id)
+  val obsListMod            = new KIListMod[IO, ObsResult, Observation.Id](ObsResult.id)
+  val targetListMod         = new KIListMod[IO, TargetResult, Target.Id](TargetResult.id)
+  val asterismListMod       = new KIListMod[IO, AsterismIdName, Asterism.Id](AsterismIdName.id)
+  val asterismTargetListMod =
+    new KIListMod[IO, AsterismResultTarget, Target.Id](AsterismResultTarget.id)
 
   class Backend($ : BackendScope[Props, State]) {
     private val UnassignedObsId = "unassignedObs"
@@ -268,7 +272,7 @@ object TargetObsList {
           targetWithIndex.fold(
             focused.set(nextToFocus.map(f => Focused.FocusedTarget(f.id))) >> removeTarget(targetId)
           ) { case (target, _) =>
-            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
+            insertTarget(target) >> focused.set(nextToFocus.map(_ => FocusedTarget(targetId)))
           }
 
     private def targetMod(
@@ -305,7 +309,12 @@ object TargetObsList {
     ): IO[Unit] =
       ($.propsIn[IO], IO(PosLong.unsafeFrom(Random.nextInt(0xfff).abs.toLong + 1))).parTupled
         .flatMap { case (props, posLong) =>
-          val newTarget = TargetResult(Target.Id(posLong), name)
+          val newTarget =
+            TargetResult(Target.Id(posLong),
+                         name,
+                         SiderealTracking.const(Coordinates.Zero),
+                         List.empty
+            )
           val mod       = targetMod(setter, props.pointingsWithObs, props.focused, newTarget.id, none)
           (
             mod(targetListMod.upsert(newTarget, props.pointingsWithObs.get.targets.length)),
@@ -424,10 +433,10 @@ object TargetObsList {
       pointingsWithObs:      View[PointingsWithObs],
       targetId:              Target.Id,
       asterismId:            Asterism.Id,
-      targetWithIndexSetter: Adjuster[TargetList, targetListMod.ElemWithIndex]
+      targetWithIndexSetter: Adjuster[AsterismTargetList, asterismTargetListMod.ElemWithIndex]
     )(implicit
       c:                     TransactionalClient[IO, ObservationDB]
-    ): targetListMod.ElemWithIndex => IO[Unit] =
+    ): asterismTargetListMod.ElemWithIndex => IO[Unit] =
       targetWithIndex =>
         // 1) Update internal model
         pointingsWithObs
@@ -451,12 +460,12 @@ object TargetObsList {
       asterismId:       Asterism.Id
     )(implicit
       c:                TransactionalClient[IO, ObservationDB]
-    ): targetListMod.Operation => IO[Unit] = {
-      val targetWithId: GetAdjust[TargetList, targetListMod.ElemWithIndex] =
-        targetListMod.withKey(targetId)
+    ): asterismTargetListMod.Operation => IO[Unit] = {
+      val targetWithId: GetAdjust[AsterismTargetList, asterismTargetListMod.ElemWithIndex] =
+        asterismTargetListMod.withKey(targetId)
 
       setter
-        .mod[targetListMod.ElemWithIndex](
+        .mod[asterismTargetListMod.ElemWithIndex](
           pointingsWithObs.get,
           PointingsWithObs.asterisms
             .composeGetter(asterismListMod.withKey(asterismId).getter)
@@ -476,8 +485,8 @@ object TargetObsList {
     ): IO[Unit] = {
       val mod = asterismTargetMod(setter, pointingsWithObs, target.id, asterismId)
       mod(
-        targetListMod.upsert(
-          target,
+        asterismTargetListMod.upsert(
+          AsterismResultTarget(target.id, target.name),
           pointingsWithObs.get.asterisms.getElement(asterismId).foldMap(_.targets.length)
         )
       )
@@ -492,7 +501,7 @@ object TargetObsList {
     ): IO[Unit] =
       $.propsIn[IO] >>= { props =>
         val mod = asterismTargetMod(setter, props.pointingsWithObs, targetId, asterismId)
-        mod(targetListMod.delete)
+        mod(asterismTargetListMod.delete)
       }
 
     def toggleExpanded[A: Eq](
@@ -615,7 +624,10 @@ object TargetObsList {
                       val targetId      = target.id
                       val nextToSelect  = targetsWithIdx.find(_._2 === targetIdx + 1).map(_._1)
                       val prevToSelect  = targetsWithIdx.find(_._2 === targetIdx - 1).map(_._1)
-                      val focusOnDelete = nextToSelect.orElse(prevToSelect)
+                      val focusOnDelete = props.focused.get.collectFirst {
+                        case FocusedTarget(tid) if tid === targetId =>
+                          nextToSelect.orElse(prevToSelect)
+                      }.flatten
 
                       val targetObs =
                         obsByPointing.get(PointingTargetResult(targetId).some).orEmpty
