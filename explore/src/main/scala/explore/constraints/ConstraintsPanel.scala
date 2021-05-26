@@ -212,16 +212,18 @@ object ConstraintsPanel {
       <.div(
         props.renderInTitle(
           <.span(ExploreStyles.TitleStrip)(
-            editWarning.when(obsCount > 1),
-            Button(
-              onClick = makeCopy.runAsyncCB,
-              size = Tiny,
-              compact = true,
-              clazz = ExploreStyles.VeryCompact,
-              disabled = state.get.copying,
-              icon = Icons.Copy,
-              content = "Copy",
-              labelPosition = LabelPosition.Left
+            <.span(
+              Button(
+                onClick = makeCopy.runAsyncCB,
+                size = Tiny,
+                compact = true,
+                clazz = ExploreStyles.VeryCompact,
+                disabled = state.get.copying,
+                icon = Icons.Copy,
+                content = "Copy",
+                labelPosition = LabelPosition.Left
+              ),
+              editWarning.when(obsCount > 1)
             ),
             UndoButtons(constraintSet.get, undoCtx).unless(readOnly)
           )

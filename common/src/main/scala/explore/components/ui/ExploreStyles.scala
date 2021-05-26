@@ -241,6 +241,7 @@ object ExploreStyles {
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
 
   val ButtonCopy: Css    = Css("explore-button-copy")
+  val ButtonsUndo: Css   = Css("explore-buttons-undo")
   val ButtonSummary: Css = Css("explore-button-summary")
 
   val VeryCompact: Css = Css("verycompact")

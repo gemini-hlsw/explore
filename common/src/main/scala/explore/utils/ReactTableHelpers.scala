@@ -18,6 +18,7 @@ import monocle.Lens
 import react.common.style.Css
 import react.semanticui.elements.button.Button
 import reactST.reactTable.mod.{ ^ => _, _ }
+
 import scalajs.js
 
 object ReactTableHelpers {
