@@ -10,6 +10,7 @@ import explore.common.TargetObsQueries._
 import explore.implicits._
 import explore.model.ExpandedIds
 import explore.model.Focused
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
@@ -19,6 +20,7 @@ import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
+import react.common._
 import react.semanticui.collections.table._
 import reactST.reactTable._
 
@@ -29,7 +31,7 @@ final case class TargetSummaryTable(
   focused:          View[Option[Focused]],
   expandedIds:      View[ExpandedIds]
 )(implicit val ctx: AppContextIO)
-// extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
+    extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
@@ -38,12 +40,10 @@ object TargetSummaryTable {
 
   private val TargetTableComponent = new SUITable(TargetTable)
 
-  // TODO Move this to a trait in React Common
-  implicit def render(props: TargetSummaryTable): VdomElement =
-    component(props).vdomElement
+  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
+  protected class Backend {
 
-  val component =
-    ScalaFnComponent[Props] { props =>
+    def render(props: Props) = {
       implicit val ctx = props.ctx
 
       def targetObservations(id: Target.Id): List[ObsResult] =
@@ -133,14 +133,12 @@ object TargetSummaryTable {
         header = true
       )(TargetTable.Options(columns, props.pointingsWithObs.targets.toList.toJSArray))
     }
-  // .builder[Props]
-  // .initialState(State())
-  // .renderBackend[Backend]
-  // .componentDidMount { $ =>
-  //   implicit val ctx = $.props.ctx
+  }
 
-  //   <.div
-  // }
-  // .configure(Reusability.shouldComponentUpdate)
-  // .build
+  val component =
+    ScalaComponent
+      .builder[Props]
+      .renderBackend[Backend]
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 }

@@ -141,11 +141,10 @@ object TargetTabContents {
             (renderContents _).reusable(uid, tid, props.searching)
           )
         case None             =>
-          import TargetSummaryTable._
           Tile("target", s"Targets Summary", backButton.some)(
             (
               (_: Tile.RenderInTitle) =>
-                render(TargetSummaryTable(pointingsWithObs.get, props.focused, props.expandedIds))
+                TargetSummaryTable(pointingsWithObs.get, props.focused, props.expandedIds): VdomNode
             ).reusable
           )
       }
