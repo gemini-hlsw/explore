@@ -7,6 +7,7 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model.ConstraintsSummary
 import explore.schemas.ObservationDB
+// gql: import explore.model.decoders._
 // gql: import io.circe.refined._
 // gql: import lucuma.ui.reusability._
 
@@ -20,6 +21,24 @@ object TargetObsQueriesGQL {
           nodes {
             id
             name
+            tracking {
+              ... on Sidereal {
+                coordinates {
+                  ra {
+                    microarcseconds
+                  }
+                  dec {
+                    microarcseconds
+                  }
+                }
+                epoch
+              }
+            }
+            magnitudes {
+              value
+              band
+              system
+            }
           }
         }
 
@@ -61,6 +80,12 @@ object TargetObsQueriesGQL {
     """
 
     object Data {
+      object Targets      {
+        object Nodes {
+          type Tracking   = lucuma.core.model.SiderealTracking
+          type Magnitudes = lucuma.core.model.Magnitude
+        }
+      }
       object Observations {
         object Nodes {
           trait ConstraintSet extends ConstraintsSummary

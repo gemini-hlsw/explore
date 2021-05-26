@@ -15,8 +15,12 @@ import explore.optics._
 import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import monocle.Getter
@@ -34,6 +38,9 @@ object TargetObsQueries {
   type AsterismResult = TargetsObsQuery.Data.Asterisms.Nodes
   val AsterismResult = TargetsObsQuery.Data.Asterisms.Nodes
 
+  type AsterismResultTarget = AsterismResult.Targets.Nodes
+  val AsterismResultTarget = AsterismResult.Targets.Nodes
+
   type ObsResult = TargetsObsQuery.Data.Observations.Nodes
   val ObsResult = TargetsObsQuery.Data.Observations.Nodes
 
@@ -42,26 +49,37 @@ object TargetObsQueries {
   type PointingAsterismResult = ObsResult.Pointing.Asterism
   val PointingAsterismResult = ObsResult.Pointing.Asterism
 
+  /**
+   * Lens for the base coordinates of TargetResult.Tracking
+   */
+  val baseCoordinates: Lens[TargetResult, Coordinates] =
+    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
+
+  val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
+    baseCoordinates ^|-> Coordinates.rightAscension
+
+  val baseCoordinatesDec: Lens[TargetResult, Declination] =
+    baseCoordinates ^|-> Coordinates.declination
+
+  type TargetList         = KeyedIndexedList[Target.Id, TargetResult]
+  type AsterismList       = KeyedIndexedList[Asterism.Id, AsterismIdName]
+  type ObsList            = KeyedIndexedList[Observation.Id, ObsResult]
+  type AsterismTargetList = KeyedIndexedList[Target.Id, AsterismResultTarget]
+
   @Lenses
   case class AsterismIdName(
     id:      Asterism.Id,
     name:    Option[NonEmptyString],
-    targets: TargetList
+    targets: AsterismTargetList
   )
   object AsterismIdName {
     def fromAsterismResult(asterism: AsterismResult): AsterismIdName =
       AsterismIdName(
         asterism.id,
         asterism.name,
-        KeyedIndexedList.fromList(asterism.targets.nodes.map(t => TargetResult(t.id, t.name)),
-                                  TargetResult.id.get
-        )
+        KeyedIndexedList.fromList(asterism.targets.nodes, AsterismResultTarget.id.get)
       )
   }
-
-  type TargetList   = KeyedIndexedList[Target.Id, TargetResult]
-  type AsterismList = KeyedIndexedList[Asterism.Id, AsterismIdName]
-  type ObsList      = KeyedIndexedList[Observation.Id, ObsResult]
 
   @Lenses
   case class PointingsWithObs(
@@ -85,7 +103,7 @@ object TargetObsQueries {
   private val targetsObsQueryTargetsWithObs: Getter[TargetsObsQuery.Data, PointingsWithObs] =
     data => {
       PointingsWithObs(
-        KeyedIndexedList.fromList(data.targets.nodes, TargetResult.id.get),
+        KeyedIndexedList.fromList(data.targets.nodes, _.id),
         KeyedIndexedList.fromList(data.asterisms.nodes.map(AsterismIdName.fromAsterismResult),
                                   AsterismIdName.id.get
         ),

@@ -22,6 +22,7 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
 import explore.targeteditor.TargetEditor
+import explore.targeteditor.TargetSummaryTable
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -40,7 +41,6 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import explore.targeteditor.TargetSummaryTable
 
 final case class TargetTabContents(
   userId:           ViewOpt[User.Id],

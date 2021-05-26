@@ -1,18 +1,26 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targeteditor
 
 import cats.syntax.all._
+import crystal.react.implicits._
+import explore.common.TargetObsQueries
+import explore.common.TargetObsQueries._
 import explore.implicits._
-// import react.common._
-// import react.common.implicits._
+import explore.model.ExpandedIds
+import explore.model.Focused
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.common.TargetObsQueries._
-import reactST.reactTable._
-import explore.model.Focused
-import explore.model.ExpandedIds
-import crystal.react.implicits._
-import react.semanticui.collections.table._
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.model.Magnitude
 import lucuma.core.model.Target
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
+import lucuma.ui.optics.ValidFormatInput
+import react.semanticui.collections.table._
+import reactST.reactTable._
 
 import scalajs.js.JSConverters._
 
@@ -65,13 +73,17 @@ object TargetSummaryTable {
         TargetTable
           .Column(
             "ra",
-            _ => ""
+            (TargetObsQueries.baseCoordinatesRa.get _)
+              .andThen(TruncatedRA.rightAscension.get)
+              .andThen(ValidFormatInput.truncatedRA.reverseGet)
           )
           .setHeader("RA"),
         TargetTable
           .Column(
             "dec",
-            _ => ""
+            (TargetObsQueries.baseCoordinatesDec.get _)
+              .andThen(TruncatedDec.declination.get)
+              .andThen(ValidFormatInput.truncatedDec.reverseGet)
           )
           .setHeader("Dec"),
         TargetTable
@@ -83,7 +95,10 @@ object TargetSummaryTable {
         TargetTable
           .Column(
             "vmag",
-            _ => ""
+            _.magnitudes.collectFirst {
+              case Magnitude(value, band, _, _) if band === MagnitudeBand.V =>
+                MagnitudeValue.fromString.reverseGet(value)
+            }.orEmpty
           )
           .setHeader("Vmag"),
         TargetTable
