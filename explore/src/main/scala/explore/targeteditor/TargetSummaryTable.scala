@@ -7,10 +7,11 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
+import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExpandedIds
 import explore.model.Focused
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
@@ -20,127 +21,159 @@ import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
-import react.common._
 import react.semanticui.collections.table._
+import react.semanticui.modules.checkbox.Checkbox
+import react.semanticui.modules.dropdown.DropdownItem
+import react.semanticui.modules.dropdown._
 import reactST.reactTable._
 
+import scalajs.js
 import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
   focused:          View[Option[Focused]],
-  expandedIds:      View[ExpandedIds]
+  expandedIds:      View[ExpandedIds],
+  renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
 
-  private val TargetTable = TableMaker[TargetResult]
+  private val TargetTable = TableMaker[(TargetResult, List[ObsResult])]
 
   private val TargetTableComponent = new SUITable(TargetTable)
 
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
-  protected class Backend {
+  // TODO How does reusability work in functional components?
+  // implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-    def render(props: Props) = {
-      implicit val ctx = props.ctx
+  // TODO Generalize and move this logic to react-common (ReactProps receiving a FnComponent as parameter)
+  implicit def render(props: TargetSummaryTable): VdomElement = component(props).vdomElement
 
-      def targetObservations(id: Target.Id): List[ObsResult] =
-        props.pointingsWithObs.observations.toList.filter(_.pointing match {
-          case Some(PointingTargetResult(tid)) => tid === id
-          case _                               => false
-        })
+  val component = ScalaFnComponent[Props] { props =>
+    implicit val ctx = props.ctx
 
-      val columns = List(
-        TargetTable
-          .Column(
-            "icon",
-            _ => ""
-          )
-          .setHeader(" "),
-        TargetTable
-          .Column(
-            "name",
-            target =>
-              <.a(^.onClick ==> (_ =>
-                    props.focused.set(Focused.FocusedTarget(target.id).some).runAsyncCB
-                  ),
-                  target.name.value
-              ).rawElement
-          )
-          .setHeader("Name"),
-        TargetTable
-          .Column(
-            "ra",
-            (TargetObsQueries.baseCoordinatesRa.get _)
-              .andThen(TruncatedRA.rightAscension.get)
-              .andThen(ValidFormatInput.truncatedRA.reverseGet)
-          )
-          .setHeader("RA"),
-        TargetTable
-          .Column(
-            "dec",
-            (TargetObsQueries.baseCoordinatesDec.get _)
-              .andThen(TruncatedDec.declination.get)
-              .andThen(ValidFormatInput.truncatedDec.reverseGet)
-          )
-          .setHeader("Dec"),
-        TargetTable
-          .Column(
-            "priority",
-            _ => ""
-          )
-          .setHeader("Priority"),
-        TargetTable
-          .Column(
-            "vmag",
-            _.magnitudes.collectFirst {
-              case Magnitude(value, band, _, _) if band === MagnitudeBand.V =>
-                MagnitudeValue.fromString.reverseGet(value)
-            }.orEmpty
-          )
-          .setHeader("Vmag"),
-        TargetTable
-          .Column(
-            "count",
-            target => targetObservations(target.id).length
-          )
-          .setHeader("Count"),
-        TargetTable
-          .Column(
-            "observations",
-            target =>
-              <.span(
-                targetObservations(target.id)
-                  .map(obs =>
-                    <.a(
-                      ^.onClick ==> (_ =>
-                        (props.focused.set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
-                          .mod(ExpandedIds.targetIds.modify(_ + target.id))).runAsyncCB
-                      ),
-                      obs.id.toString()
+    def targetObservations(id: Target.Id, obs: List[ObsResult]): List[ObsResult] =
+      obs.filter(_.pointing match {
+        case Some(PointingTargetResult(tid)) => tid === id
+        case _                               => false
+      })
+
+    val columnNames = Map("icon" -> " ",
+                          "name"         -> "Name",
+                          "ra"           -> "RA",
+                          "dec"          -> "Dec",
+                          "priority"     -> "Priority",
+                          "vmag"         -> "Vmag",
+                          "count"        -> "Count",
+                          "observations" -> "Observations"
+    )
+
+    def column[V](id:        String, accessor: TargetResult => V)                    =
+      TargetTable.Column(id, { case (t, _) => accessor(t) }).setHeader(columnNames(id))
+
+    def columnWithObs[V](id: String, accessor: (TargetResult, List[ObsResult]) => V) =
+      TargetTable.Column(id, { case (t, obs) => accessor(t, obs) }).setHeader(columnNames(id))
+
+    val columns = React.raw
+      .asInstanceOf[js.Dynamic]
+      .useMemo(
+        () =>
+          List(
+            column("icon", _ => ""),
+            column(
+              "name",
+              target =>
+                <.a(^.onClick ==> (_ =>
+                      props.focused.set(Focused.FocusedTarget(target.id).some).runAsyncCB
+                    ),
+                    target.name.value
+                ).rawElement
+            ),
+            column(
+              "ra",
+              (TargetObsQueries.baseCoordinatesRa.get _)
+                .andThen(TruncatedRA.rightAscension.get)
+                .andThen(ValidFormatInput.truncatedRA.reverseGet)
+            ),
+            column(
+              "dec",
+              (TargetObsQueries.baseCoordinatesDec.get _)
+                .andThen(TruncatedDec.declination.get)
+                .andThen(ValidFormatInput.truncatedDec.reverseGet)
+            ),
+            column("priority", _ => ""),
+            column(
+              "vmag",
+              _.magnitudes.collectFirst {
+                case Magnitude(value, band, _, _) if band === MagnitudeBand.V =>
+                  MagnitudeValue.fromString.reverseGet(value)
+              }.orEmpty
+            ),
+            columnWithObs(
+              "count",
+              (target, observations) => targetObservations(target.id, observations).length
+            ),
+            columnWithObs(
+              "observations",
+              (target, observations) =>
+                <.span(
+                  targetObservations(target.id, observations)
+                    .map(obs =>
+                      <.a(
+                        ^.onClick ==> (_ =>
+                          (props.focused
+                            .set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
+                            .mod(ExpandedIds.targetIds.modify(_ + target.id))).runAsyncCB
+                        ),
+                        obs.id.toString()
+                      )
+                    )
+                    .mkReactFragment(", ")
+                ).rawElement
+            )
+          ).toJSArray,
+        js.Array()
+      )
+      .asInstanceOf[js.Array[TargetTable.ColumnOptionsType]]
+
+    val tableInstance = TargetTable.use(columns,
+                                        props.pointingsWithObs.targets.toList
+                                          .map(t => (t, props.pointingsWithObs.observations.toList))
+                                          .toJSArray
+    )
+
+    <.div(
+      props.renderInTitle(
+        <.span(ExploreStyles.TitleStrip)(
+          Dropdown(item = true,
+                   simple = true,
+                   pointing = Pointing.TopRight,
+                   text = "Columns",
+                   clazz = ExploreStyles.SelectColumns
+          )(
+            DropdownMenu()(
+              tableInstance.allColumns
+                .drop(2)
+                .toTagMod(column =>
+                  DropdownItem()(^.key := column.id.toString)(
+                    <.div(
+                      Checkbox(label = columnNames(column.id.toString),
+                               checked = column.isVisible,
+                               onChange = (_: Boolean) => Callback(column.toggleHidden())
+                      )
                     )
                   )
-                  .mkReactFragment(", ")
-              ).rawElement
+                )
+            )
           )
-          .setHeader("Observations")
-      ).toJSArray
-
-      <.div(
-        TargetTableComponent(
-          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-          header = true
-        )(columns, props.pointingsWithObs.targets.toList.toJSArray)
-      )
-    }
+        )
+      ),
+      TargetTableComponent(
+        Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
+        header = true
+      )(tableInstance)
+    )
   }
 
-  val component =
-    ScalaComponent
-      .builder[Props]
-      .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 }

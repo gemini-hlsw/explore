@@ -108,7 +108,7 @@ class SUITable[
 
   private type Component = JsFn.UnmountedWithRoot[Props, Unit, Box[Props]]
 
-  protected case class Applied(builder: TableInstanceD => Component) {
+  case class Applied(builder: TableInstanceD => Component) {
     def apply(instance: TableInstanceD): Component = builder(instance)
 
     def apply(options: TableOptsD): Component = builder(tableMaker.use(options))
