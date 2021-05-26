@@ -487,6 +487,18 @@ object ConstraintSetObsList {
         val constraintSetsWithObs = $.props.constraintSetsWithObs.get
         val expandedIds           = $.props.expandedIds
 
+        // Unfocus if focused element is not in list.
+        val unfocus =
+          $.props.focused.get.map { focused =>
+            $.props.focused
+              .set(none)
+              .whenA(focused match {
+                case FocusedConstraintSet(csid) =>
+                  !constraintSetsWithObs.constraintSets.contains(csid)
+                case _                          => true // If focused on something else, unfocus too.
+              })
+          }.orEmpty
+
         // expand constraint set with focused observation
         val expandConstraintSets = $.props.focused.get
           .collect { case FocusedObs(obsId) =>
@@ -503,7 +515,7 @@ object ConstraintSetObsList {
             .map(missingIds => expandedIds.mod(_ -- missingIds.toSortedSet))
             .orEmpty
 
-        (expandConstraintSets >> removeConstraintSets).runAsyncCB
+        (unfocus >> expandConstraintSets >> removeConstraintSets).runAsyncCB
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
