@@ -65,7 +65,7 @@ object ObsQueries {
           ProgramObservationsQuery.Data.asObservationList.get,
           List(
             ProgramObservationsEditSubscription.subscribe[IO](),
-            ConstraintSetObsQueriesGQL.ConstraintSetEditSubscription.subscribe[IO]()
+            ConstraintSetObsQueriesGQL.ConstraintSetsEditSubscription.subscribe[IO]()
           )
         )(render)
       }

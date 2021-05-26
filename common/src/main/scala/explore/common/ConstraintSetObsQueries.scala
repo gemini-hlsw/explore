@@ -40,7 +40,7 @@ object ConstraintSetObsQueries {
   type ConstraintSetList = KeyedIndexedList[ConstraintSet.Id, ConstraintSetResult]
   type ObsList           = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
 
-  def defaultConstraintSetResult(name: NonEmptyString, id: ConstraintSet.Id): ConstraintSetResult =
+  def defaultConstraintSetResult(id: ConstraintSet.Id, name: NonEmptyString): ConstraintSetResult =
     ConstraintSetResult(
       id = id,
       name = name,
@@ -110,7 +110,7 @@ object ConstraintSetObsQueries {
           ConstraintSetsObsQuery.query(),
           ConstraintSetsObsQuery.Data.asConstraintSetsWithObs.get,
           List(
-            ConstraintSetEditSubscription.subscribe[IO](),
+            ConstraintSetsEditSubscription.subscribe[IO](),
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO]()
           )
         )(render)

@@ -44,28 +44,26 @@ import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
 import monocle.Lens
 import monocle.macros.Lenses
-import monocle.std.option.some
 import react.common._
 import react.semanticui.collections.form.Form
-import react.semanticui.colors._
-import react.semanticui.elements.button.Button
+import react.semanticui.colors
+import react.semanticui.elements.button._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
-import react.semanticui.elements.segment.Segment
-import react.semanticui.floats
 import react.semanticui.modules.popup.Popup
+import react.semanticui.modules.popup.PopupContent
+import react.semanticui.modules.popup.PopupPosition
+import react.semanticui.modules.popup.PopupWide
 import react.semanticui.sizes._
-import react.semanticui.textalignment
 
 import scala.util.Random
 
 final case class ConstraintsPanel(
-  id:                ConstraintSet.Id,
-  constraintSet:     View[ConstraintSetModel],
-  renderInTitle:     Tile.RenderInTitle,
-  multiEditWarnings: Boolean,
-  copyButton:        Boolean,
-  onCopy:            ConstraintSet.Id ~=> IO[Unit] = Reusable.always(_ => IO.unit)
+  id:             ConstraintSet.Id,
+  constraintSet:  View[ConstraintSetModel],
+  renderInTitle:  Tile.RenderInTitle,
+  allowMultiEdit: Boolean,
+  onCopy:         ConstraintSet.Id ~=> IO[Unit] = Reusable.always(_ => IO.unit)
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -95,11 +93,10 @@ object ConstraintsPanel {
 
   @Lenses
   final case class State(
-    rangeType:            ElevationRangeType,
-    airMass:              AirMassRange,
-    hourAngle:            HourAngleRange,
-    showMultiEditWarning: Option[Boolean] = false.some,
-    copying:              Boolean = false
+    rangeType: ElevationRangeType,
+    airMass:   AirMassRange,
+    hourAngle: HourAngleRange,
+    copying:   Boolean = false
   )
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
@@ -137,6 +134,9 @@ object ConstraintsPanel {
       def erView   =
         undoViewSet(ConstraintSetModel.elevationRange, UpdateConstraintSet.elevationRange)
 
+      val obsCount = props.constraintSet.get.observations.totalCount
+      val readOnly = !props.allowMultiEdit && obsCount > 1
+
       def selectEnum[A: Enumerated: Display](
         label:     String,
         helpId:    Help.Id,
@@ -146,7 +146,8 @@ object ConstraintsPanel {
         val id = label.toLowerCase().replaceAll(" ", "-")
         EnumViewSelect(id = id,
                        value = undoViewSet(lens, remoteSet),
-                       label = Label(label, HelpIcon(helpId))
+                       label = Label(label, HelpIcon(helpId)),
+                       disabled = readOnly
         )
       }
 
@@ -156,13 +157,9 @@ object ConstraintsPanel {
           case HourAngle => erView.set(state.get.hourAngle)
         }
 
-      val obsCount        = props.constraintSet.get.observations.totalCount
-      val showWarningView = state.zoom(State.showMultiEditWarning.composePrism(some))
-
       val makeCopy =
         for {
           _  <- state.zoom(State.copying).set(true)
-          _  <- showWarningView.set(false)
           id <- IO(Random.nextInt(0xfff)).map(int =>
                   ConstraintSet.Id(numeric.PosLong.unsafeFrom(int.abs.toLong + 1))
                 )
@@ -172,7 +169,7 @@ object ConstraintsPanel {
                 constraintSetId = id.assign,
                 // programId = constraintSet.get.programId,
                 programId = "p-2",
-                name = NonEmptyString.unsafeFrom(constraintSet.get.name + " - Copy"),
+                name = NonEmptyString.unsafeFrom(s"${constraintSet.get.name} [$id]"),
                 imageQuality = constraintSet.get.imageQuality,
                 cloudExtinction = constraintSet.get.cloudExtinction,
                 skyBackground = constraintSet.get.skyBackground,
@@ -194,68 +191,42 @@ object ConstraintsPanel {
         } yield ()
 
       val editWarning =
-        state.get.showMultiEditWarning
-          .whenDefined(shown =>
-            Segment(inverted = true,
-                    color = Yellow,
-                    textAlign = textalignment.Center,
-                    size = Small,
-                    clazz = ExploreStyles.EditWarning
-            )(
-              // If we actually render this when shown, it will trigger a rerender, which will remove focus from selected input.
-              ^.hidden := !shown
-            )(
-              s"These constraints are shared by $obsCount observations and editing will modify all of them.",
-              <.br,
-              "To modify only this observation, you can ",
-              Button(compact = true,
-                     size = Small,
-                     basic = true,
-                     circular = true,
-                     inverted = true,
-                     clazz = ExploreStyles.ButtonCopy,
-                     onClick = makeCopy.runAsyncCB
-              )(
-                "make a copy"
+        <.span(
+          Popup(
+            trigger =
+              Label(as = <.a, circular = true, color = colors.Red)("Shared ",
+                                                                   Icons.Question.fitted(true)
               ),
-              ".",
-              Button(
-                compact = true,
-                size = Small,
-                basic = true,
-                circular = true,
-                inverted = true,
-                floated = floats.Right,
-                clazz = ExploreStyles.ButtonDismiss,
-                onClick = state.zoom(State.showMultiEditWarning).set(none).runAsyncCB
-              )("Dismiss")
-            )
+            content = PopupContent(
+              content = <.div(ExploreStyles.SharedEditWarning)(
+                s"These constraints cannot be modified because they are shared by $obsCount observations.",
+                <.br,
+                "Please edit in Constraints View, create a New one or a Copy."
+              )
+            ),
+            wide = PopupWide.Very,
+            position = PopupPosition.TopRight
           )
-          .when(props.multiEditWarnings)
+        ).unless(props.allowMultiEdit)
 
       <.div(
-        ^.onFocus ==> (_ => showWarningView.set(obsCount > 1).runAsyncCB),
-        ^.onComponentBlur(showWarningView.set(false).runAsyncCB)
-      )(
-        editWarning,
         props.renderInTitle(
-          <.span(
-            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(constraintSet.get, undoCtx)),
-            <.span(ExploreStyles.TitleButtonStrip)(
-              Popup(
-                trigger = Button(onClick = makeCopy.runAsyncCB,
-                                 size = Small,
-                                 compact = true,
-                                 disabled = state.get.copying
-                )(Icons.Copy.fitted(true)),
-                content = "Copy"
-              ).when(props.copyButton)
-            )
+          <.span(ExploreStyles.TitleStrip)(
+            editWarning.when(obsCount > 1),
+            Button(
+              onClick = makeCopy.runAsyncCB,
+              size = Tiny,
+              compact = true,
+              clazz = ExploreStyles.VeryCompact,
+              disabled = state.get.copying,
+              icon = Icons.Copy,
+              content = "Copy",
+              labelPosition = LabelPosition.Left
+            ),
+            UndoButtons(constraintSet.get, undoCtx).unless(readOnly)
           )
         ),
-        Form(as = <.div, loading = state.get.copying)(ExploreStyles.Grid,
-                                                      ExploreStyles.ConstraintsGrid
-        )(
+        Form(loading = state.get.copying)(ExploreStyles.Grid, ExploreStyles.ConstraintsGrid)(
           FormInputEV(
             id = "name",
             label = Label("Name", HelpIcon("constraints/main/name.md")),
@@ -263,7 +234,8 @@ object ConstraintsPanel {
             value = nameView,
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below
+            errorPointing = LabelPointing.Below,
+            disabled = readOnly
           ),
           selectEnum("Image Quality",
                      "constraints/main/iq.md",
@@ -294,7 +266,8 @@ object ConstraintsPanel {
               value = state
                 .zoom(State.rangeType)
                 .withOnMod(updateElevationRange),
-              clazz = ExploreStyles.ElevationRangePicker
+              clazz = ExploreStyles.ElevationRangePicker,
+              disabled = readOnly
             ),
             ReactFragment(
               FormInputEV(
@@ -320,7 +293,8 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry
+                clazz = ExploreStyles.ElevationRangeEntry,
+                disabled = readOnly
               ),
               FormInputEV(
                 id = "maxam",
@@ -345,7 +319,8 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry
+                clazz = ExploreStyles.ElevationRangeEntry,
+                disabled = readOnly
               )
             ).when(state.get.rangeType === AirMass),
             ReactFragment(
@@ -371,7 +346,8 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry
+                clazz = ExploreStyles.ElevationRangeEntry,
+                disabled = readOnly
               ),
               FormInputEV(
                 id = "maxha",
@@ -395,7 +371,8 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry
+                clazz = ExploreStyles.ElevationRangeEntry,
+                disabled = readOnly
               ),
               <.div(ExploreStyles.UnitsLabel, "hours")
             ).when(state.get.rangeType === HourAngle)

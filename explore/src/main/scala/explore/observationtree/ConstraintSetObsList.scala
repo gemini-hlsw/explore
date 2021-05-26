@@ -229,9 +229,7 @@ object ConstraintSetObsList {
     )(name:   NonEmptyString)(implicit c: TransactionalClient[IO, ObservationDB]): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newCs = IO(Random.nextInt(0xfff)).map(int =>
-        defaultConstraintSetResult(id = ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                                   name = name
-        )
+        defaultConstraintSetResult(ConstraintSet.Id(PosLong.unsafeFrom(int.abs.toLong + 1)), name)
       )
 
       $.propsIn[IO] >>= { props =>
@@ -311,8 +309,11 @@ object ConstraintSetObsList {
               placeholder = "Constraint name",
               okLabel = "Create",
               onComplete = (createConstraintSet _).reusable,
-              trigger = Button(size = Mini, compact = true)(
-                Icons.New.size(Small).fitted(true)
+              trigger = Button(size = Mini,
+                               compact = true,
+                               clazz = ExploreStyles.VeryCompact,
+                               icon = Icons.New,
+                               content = "Constraints"
               )
             ),
             UndoButtons(props.constraintSetsWithObs.get, undoCtx, size = Mini)

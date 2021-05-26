@@ -162,8 +162,11 @@ object ObsList {
 
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
-            Button(size = Mini, compact = true, onClick = newObs(undoCtx.setter).runAsyncCB)(
-              Icons.New.size(Small).fitted(true)
+            Button(size = Mini,
+                   compact = true,
+                   icon = Icons.New,
+                   content = "Obs",
+                   onClick = newObs(undoCtx.setter).runAsyncCB
             ),
             UndoButtons(props.observations.get, undoCtx, size = Mini)
           ),

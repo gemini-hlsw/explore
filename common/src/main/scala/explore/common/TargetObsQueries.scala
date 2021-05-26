@@ -115,7 +115,7 @@ object TargetObsQueries {
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
             ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),
-            ConstraintSetObsQueriesGQL.ConstraintSetEditSubscription.subscribe[IO]()
+            ConstraintSetObsQueriesGQL.ConstraintSetsEditSubscription.subscribe[IO]()
           )
         )(render)
       }
