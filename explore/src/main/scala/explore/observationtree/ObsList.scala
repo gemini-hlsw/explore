@@ -45,9 +45,10 @@ import scala.util.Random
 import ObsQueries._
 
 final case class ObsList(
-  observations: View[ObservationList],
-  focused:      View[Option[Focused]]
-) extends ReactProps[ObsList](ObsList.component)
+  observations:     View[ObservationList],
+  focused:          View[Option[Focused]]
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[ObsList](ObsList.component)
 
 object ObsList {
   type Props = ObsList
@@ -210,6 +211,23 @@ object ObsList {
     ScalaComponent
       .builder[Props]
       .renderBackend[Backend]
+      .componentDidMount { $ =>
+        implicit val ctx = $.props.ctx
+        val observations = $.props.observations.get
+
+        // Unfocus if focused element is not in list.
+        val unfocus =
+          $.props.focused.get.map { focused =>
+            $.props.focused
+              .set(none)
+              .whenA(focused match {
+                case FocusedObs(oid) => !observations.contains(oid)
+                case _               => true // If focused on something else, unfocus too.
+              })
+          }.orEmpty
+
+        unfocus.runAsyncAndForgetCB
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

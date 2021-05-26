@@ -272,7 +272,7 @@ object TargetObsList {
           targetWithIndex.fold(
             focused.set(nextToFocus.map(f => Focused.FocusedTarget(f.id))) >> removeTarget(targetId)
           ) { case (target, _) =>
-            insertTarget(target) >> focused.set(nextToFocus.map(_ => FocusedTarget(targetId)))
+            insertTarget(target) >> focused.set(FocusedTarget(targetId).some)
           }
 
     private def targetMod(
@@ -947,6 +947,19 @@ object TargetObsList {
         val expandedTargetIds   = $.props.expandedIds.zoom(ExpandedIds.targetIds)
         val expandedAsterismIds = $.props.expandedIds.zoom(ExpandedIds.asterismIds)
 
+        // Unfocus if focused element is not in list.
+        val unfocus =
+          $.props.focused.get.map { focused =>
+            $.props.focused
+              .set(none)
+              .whenA(focused match {
+                case FocusedObs(oid)      => !pointingsWithObs.observations.contains(oid)
+                case FocusedTarget(tid)   => !pointingsWithObs.targets.contains(tid)
+                case FocusedAsterism(aid) => !pointingsWithObs.asterisms.contains(aid)
+                case _                    => true // If focused on something else, unfocus too.
+              })
+          }.orEmpty
+
         // Expand target or asterism with focused observation
         val expandObservationObject =
           $.props.focused.get
@@ -974,7 +987,7 @@ object TargetObsList {
             .map(removedAsterismIds => expandedAsterismIds.mod(_ -- removedAsterismIds.toSortedSet))
             .orEmpty
 
-        (expandObservationObject >> removeTargets >> removeAsterisms).runAsyncAndForgetCB
+        (unfocus >> expandObservationObject >> removeTargets >> removeAsterisms).runAsyncAndForgetCB
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
