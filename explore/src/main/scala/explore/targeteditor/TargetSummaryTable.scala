@@ -128,10 +128,12 @@ object TargetSummaryTable {
           .setHeader("Observations")
       ).toJSArray
 
-      TargetTableComponent(
-        Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-        header = true
-      )(TargetTable.Options(columns, props.pointingsWithObs.targets.toList.toJSArray))
+      <.div(
+        TargetTableComponent(
+          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
+          header = true
+        )(columns, props.pointingsWithObs.targets.toList.toJSArray)
+      )
     }
   }
 

@@ -191,7 +191,7 @@ object SequenceTable {
           Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
           header = true,
           headerCell = TableHeaderCell(clazz = ExploreStyles.StepTableHeader)
-        ) _
+        )
 
         <.div(^.height := "100%", ^.overflow.auto)(
           Segment()(
@@ -200,13 +200,9 @@ object SequenceTable {
               case Config.GmosSouthConfig(_, _, acquisition, science) =>
                 <.div(
                   Header("Acquisition"),
-                  FormattedTable(
-                    StepTable.Options(columns, buildLines(acquisition.atoms).toJSArray)
-                  ),
+                  FormattedTable(columns, buildLines(acquisition.atoms).toJSArray),
                   Header("Science"),
-                  FormattedTable(
-                    StepTable.Options(columns, buildLines(science.atoms).toJSArray)
-                  )
+                  FormattedTable(columns, buildLines(science.atoms).toJSArray)
                 )
               case _                                                  => "North config!"
             }
