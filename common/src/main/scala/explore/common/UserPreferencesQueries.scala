@@ -3,6 +3,7 @@
 
 package explore.common
 
+import UserPreferencesQueriesGQL._
 import cats.ApplicativeError
 import cats.MonadError
 import cats.data.OptionT
@@ -22,8 +23,6 @@ import lucuma.core.model.User
 import react.gridlayout.{ BreakpointName => _, _ }
 
 import scala.collection.immutable.SortedMap
-
-import UserPreferencesQueriesGQL._
 
 object UserPreferencesQueries {
 

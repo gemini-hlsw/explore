@@ -40,6 +40,7 @@ object UndoButtons {
         implicit val logger     = p.logger
 
         WIP(
+          ExploreStyles.ButtonsUndo,
           ButtonGroup(labeled = true, icon = true, compact = true, size = p.size)(
             Button(
               onClick = p.undoCtx.undo(p.value).runAsyncCB,
