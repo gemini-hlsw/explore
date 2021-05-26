@@ -95,11 +95,7 @@ object ConfigurationPanel {
       val imaging      = undoViewSet(State.imagingOptions)
 
       ReactFragment(
-        props.renderInTitle(
-          <.span(
-            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(state, undoCtx))
-          )
-        ),
+        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(state, undoCtx))),
         <.div(
           ExploreStyles.ConfigurationGrid,
           Form(size = Small)(
