@@ -26,6 +26,8 @@ object Icons {
   val ChevronRight        = Icon("chevron right")
   val ChevronLeft         = Icon("chevron left")
   val Sort                = Icon("sort")
+  val SortDown            = Icon("sort down")
+  val SortUp              = Icon("sort up")
   val ExclamationTriangle = Icon("exclamation triangle")
   val Ban                 = Icon("ban")
   val UserAstronaut       = Icon(className = "user-astronaut")

@@ -218,7 +218,9 @@ object MagnitudeForm {
       .configure(Reusability.shouldComponentUpdate)
       .build
 
-  // Horrible hack while we can't use useState from functional components.
+  // Horrible hack while we don't fully have hooks.
+  // Reusability is handled in class component, instead of the need to useMemo.
+  // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
   private val tableComponent =
     ScalaFnComponent[(MagTableComponent.Applied, MagTable.OptionsType)] { props =>
       props._1(props._2)

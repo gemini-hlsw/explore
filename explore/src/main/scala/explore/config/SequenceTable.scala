@@ -199,13 +199,27 @@ object SequenceTable {
             case Config.GmosSouthConfig(_, _, acquisition, science) =>
               <.div(
                 Header("Acquisition"),
-                FormattedTable(columns, buildLines(acquisition.atoms).toJSArray),
+                tableComponent(
+                  (FormattedTable,
+                   StepTable.Options(columns, buildLines(acquisition.atoms).toJSArray)
+                  )
+                ),
                 Header("Science"),
-                FormattedTable(columns, buildLines(science.atoms).toJSArray)
+                tableComponent(
+                  (FormattedTable, StepTable.Options(columns, buildLines(science.atoms).toJSArray))
+                )
               )
             case _                                                  => "North config!"
           }
         )
       )
+    }
+
+  // Horrible hack while we don't fully have hooks.
+  // Reusability is handled in class component, instead of the need to useMemo.
+  // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
+  private val tableComponent =
+    ScalaFnComponent[(StepTableComponent.Applied, StepTable.OptionsType)] { props =>
+      props._1(props._2)
     }
 }
