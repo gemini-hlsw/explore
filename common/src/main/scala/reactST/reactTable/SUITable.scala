@@ -23,10 +23,13 @@ object definitions {
   type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
     TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
 
+  type BodyCellRender[D] = Cell[D, _] => TableCell
+  type BodyCell[D]       = TableCell | BodyCellRender[D]
+
   protected[reactTable] def defaultHeaderCell[D, ColumnInstanceD <: ColumnObject[D]]
-    : HeaderCell[D, ColumnInstanceD] =
-    TableHeaderCell()
-  // .asInstanceOf[HeaderCell[D, ColumnInstanceD]] // Doesn't compile without the cast.
+    : HeaderCell[D, ColumnInstanceD] = TableHeaderCell()
+
+  protected[reactTable] def defaultBodyCell[D]: BodyCell[D] = TableCell()
 }
 import definitions._
 
@@ -37,10 +40,10 @@ case class SUITableProps[D, TableInstanceD <: TableInstance[D], ColumnInstanceD 
   headerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
   body:         TableBody = TableBody(),
   row:          TableRow = TableRow(),
-  cell:         TableCell = TableCell(),
+  cell:         BodyCell[D] = defaultBodyCell[D],
   footer:       Boolean | TableFooter | VdomNode = false,
   footerRow:    TableRow = TableRow(),
-  footerCell:   TableHeaderCell = TableHeaderCell()
+  footerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
 )(val instance: TableInstanceD)
 
 class SUITable[
@@ -65,9 +68,21 @@ class SUITable[
         case other => other.asInstanceOf[TableHeader].some // Can't wait for Scala 3's union types
       }
 
-      val headerCell: HeaderCellRender[D, ColumnInstanceD] = (props.headerCell: Any) match {
+      val headerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.headerCell: Any) match {
         case headerCell: TableHeaderCell =>
           col => headerCell(col.getHeaderProps())(col.renderHeader)
+        case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
+      }
+
+      val bodyCellRender: BodyCellRender[D] = (props.cell: Any) match {
+        case cell: TableCell =>
+          cellData => cell(cellData.getCellProps())(cellData.renderCell)
+        case other           => other.asInstanceOf[BodyCellRender[D]]
+      }
+
+      val footerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.footerCell: Any) match {
+        case footerCell: TableHeaderCell =>
+          col => footerCell(col.getFooterProps())(col.renderFooter)
         case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
       }
 
@@ -76,28 +91,25 @@ class SUITable[
           props.headerRow(headerRowData.getHeaderGroupProps())(
             TableMaker
               .headersFromGroup(headerRowData)
-              .toTagMod((col: ColumnInstanceD) => headerCell(col))
+              .toTagMod((col: ColumnInstanceD) => headerCellRender(col))
           )
         }))
 
       val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
         tableInstance.rows.toTagMod { rowData =>
           tableInstance.prepareRow(rowData)
-          props.row(rowData.getRowProps())(rowData.cells.toTagMod { cellData =>
-            props.cell(cellData.getCellProps())(cellData.renderCell)
-          })
+          props.row(rowData.getRowProps())(
+            rowData.cells.toTagMod(cellData => bodyCellRender(cellData))
+          )
         }
       )
 
       def standardFooter(footerTag: TableFooter) =
         footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
           props.footerRow(footerRowData.getFooterGroupProps())(
-            TableMaker.headersFromGroup(footerRowData).toTagMod { footerCellData: HeaderGroup[D] =>
-              props.footerCell(footerCellData.getFooterProps())(
-                // footerCellData.renderFooter
-                footerCellData.render_Footer(reactTableStrings.Footer)
-              )
-            }
+            TableMaker
+              .headersFromGroup(footerRowData)
+              .toTagMod((col: ColumnInstanceD) => footerCellRender(col))
           )
         })
 
@@ -138,10 +150,10 @@ class SUITable[
     headerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
     body:       TableBody = TableBody(),
     row:        TableRow = TableRow(),
-    cell:       TableCell = TableCell(),
+    cell:       BodyCell[D] = defaultBodyCell[D],
     footer:     Boolean | TableFooter | VdomNode = false,
     footerRow:  TableRow = TableRow(),
-    footerCell: TableHeaderCell = TableHeaderCell()
+    footerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
   ): Applied = Applied((instance: TableInstanceD) =>
     component(
       SUITableProps(table,

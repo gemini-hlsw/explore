@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.Icons
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
 import explore.components.Tile
@@ -12,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExpandedIds
 import explore.model.Focused
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
@@ -21,18 +23,16 @@ import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
+import react.common._
 import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
+import reactST.reactTable.mod.UseSortByColumnProps
 import reactST.reactTable.syntax._
-import react.common._
-import explore.model.reusability._
 
 import scalajs.js.JSConverters._
-import reactST.reactTable.mod.UseSortByColumnProps
-import explore.Icons
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
