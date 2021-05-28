@@ -32,6 +32,20 @@ object TargetObsQueriesGQL {
                   }
                 }
                 epoch
+                properMotion {
+                  ra {
+                    microarcsecondsPerYear
+                  }
+                  dec {
+                    microarcsecondsPerYear
+                  }
+                }
+                radialVelocity {
+                  centimetersPerSecond
+                }
+                parallax {
+                  microarcseconds
+                }
               }
             }
             magnitudes {

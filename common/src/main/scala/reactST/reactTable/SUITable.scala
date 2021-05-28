@@ -4,10 +4,12 @@
 package reactST.reactTable
 
 import cats.syntax.all._
+import explore.Icons
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
+import react.semanticui.AsC
 import react.semanticui.collections.table._
 import reactST.reactTable._
 import reactST.reactTable.mod.{ ^ => _, _ }
@@ -19,6 +21,10 @@ import scalajs.js.|
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {
+  type TableRender[D, TableInstanceD <: TableInstance[D]]   = TableInstanceD => Table
+  type TableTemplate[D, TableInstanceD <: TableInstance[D]] =
+    Table | TableRender[D, TableInstanceD]
+
   type HeaderCellRender[D, ColumnInstanceD <: ColumnObject[D]] = ColumnInstanceD => TableHeaderCell
   type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
     TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
@@ -26,24 +32,61 @@ object definitions {
   type BodyCellRender[D] = Cell[D, _] => TableCell
   type BodyCell[D]       = TableCell | BodyCellRender[D]
 
-  protected[reactTable] def defaultHeaderCell[D, ColumnInstanceD <: ColumnObject[D]]
-    : HeaderCell[D, ColumnInstanceD] = TableHeaderCell()
-
-  protected[reactTable] def defaultBodyCell[D]: BodyCell[D] = TableCell()
+  implicit def props2Attrs(obj: js.Object): TagMod = util.props2Attrs(obj)
 }
 import definitions._
 
-case class SUITableProps[D, TableInstanceD <: TableInstance[D], ColumnInstanceD <: ColumnObject[D]](
-  table:        Table = Table(),
-  header:       Boolean | TableHeader = false,
+trait LayoutDefaultTag[Layout] {
+  val tag: js.UndefOr[AsC]
+}
+object LayoutDefaultTag        {
+  implicit object TableLayoutDefaultTag extends LayoutDefaultTag[Layout.Table] {
+    val tag = js.undefined
+  }
+
+  implicit object NonTableLayoutDefaultTag extends LayoutDefaultTag[Layout.NonTable] {
+    val tag = <.div
+  }
+}
+
+trait SortElements[Col]       {
+  val props: Col => TagMod
+  val indicator: Col => TagMod
+}
+trait LowPrioritySortElements {
+  implicit def unsortableColElements[C]: SortElements[C] =
+    new SortElements[C] {
+      val props     = _ => TagMod.empty
+      val indicator = _ => TagMod.empty
+    }
+}
+object SortElements extends LowPrioritySortElements {
+  implicit def sortableColElements[C <: UseSortByColumnProps[_]]: SortElements[C] =
+    new SortElements[C] {
+      val props     = _.getSortByToggleProps()
+      val indicator = col =>
+        if (col.isSorted) {
+          val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
+          val ascDesc: VdomNode =
+            if (col.isSortedDesc.getOrElse(false)) Icons.SortUp else Icons.SortDown
+          <.span(ascDesc, <.small(index))
+        } else Icons.Sort
+    }
+}
+
+protected case class SUITableProps[D, TableInstanceD <: TableInstance[
+  D
+], ColumnInstanceD <: ColumnObject[D]](
+  table:        TableTemplate[D, TableInstanceD],
+  header:       Boolean | TableHeader,
   headerRow:    TableRow = TableRow(),
-  headerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
-  body:         TableBody = TableBody(),
-  row:          TableRow = TableRow(),
-  cell:         BodyCell[D] = defaultBodyCell[D],
-  footer:       Boolean | TableFooter | VdomNode = false,
-  footerRow:    TableRow = TableRow(),
-  footerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
+  headerCell:   HeaderCell[D, ColumnInstanceD],
+  body:         TableBody,
+  row:          TableRow,
+  cell:         BodyCell[D],
+  footer:       Boolean | TableFooter | VdomNode,
+  footerRow:    TableRow,
+  footerCell:   HeaderCell[D, ColumnInstanceD]
 )(val instance: TableInstanceD)
 
 class SUITable[
@@ -52,25 +95,35 @@ class SUITable[
   TableInstanceD <: TableInstance[D],
   ColumnOptsD <: ColumnOptions[D],
   ColumnInstanceD <: ColumnObject[D],
-  State <: TableState[D] // format: on
+  State <: TableState[D],
+  Layout // format: on
 ](
-  tableMaker: TableMaker[D, TableOptsD, TableInstanceD, ColumnOptsD, ColumnInstanceD, State]
+  tableMaker:   TableMaker[D, TableOptsD, TableInstanceD, ColumnOptsD, ColumnInstanceD, State, Layout]
+)(implicit
+  layout:       LayoutDefaultTag[Layout],
+  sortElements: SortElements[ColumnInstanceD]
 ) {
-  private implicit def props2Attrs(obj: js.Object): TagMod = util.props2Attrs(obj)
-
   val component = ScalaFnComponent[SUITableProps[D, TableInstanceD, ColumnInstanceD]] {
     case props =>
       val tableInstance = props.instance
 
+      val tableRender: TableRender[D, TableInstanceD] = (props.table: Any) match {
+        case table: Table => tableInstance => table(tableInstance.getTableProps())
+        case other        => other.asInstanceOf[TableRender[D, TableInstanceD]]
+      }
+
       val headerTag: Option[TableHeader] = (props.header: Any) match {
-        case true  => TableHeader().some
+        case true  => TableHeader(as = layout.tag).some
         case false => none
         case other => other.asInstanceOf[TableHeader].some // Can't wait for Scala 3's union types
       }
 
       val headerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.headerCell: Any) match {
         case headerCell: TableHeaderCell =>
-          col => headerCell(col.getHeaderProps())(col.renderHeader)
+          col =>
+            headerCell(col.getHeaderProps(), sortElements.props(col))(col.renderHeader,
+                                                                      sortElements.indicator(col)
+            )
         case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
       }
 
@@ -121,13 +174,11 @@ class SUITable[
         case _                        => ??? // Can't wait for Scala 3's union types
       }
 
-      props
-        .table(
-          headerElement,
-          bodyElement,
-          footerElement
-        )
-        .vdomElement
+      tableRender(tableInstance)(
+        headerElement,
+        bodyElement,
+        footerElement
+      ).vdomElement
   }
 
   private type Props = SUITableProps[D, TableInstanceD, ColumnInstanceD]
@@ -144,16 +195,16 @@ class SUITable[
   }
 
   def apply(
-    table:      Table = Table(),
+    table:      TableTemplate[D, TableInstanceD] = Table(as = layout.tag),
     header:     Boolean | TableHeader = false,
-    headerRow:  TableRow = TableRow(),
-    headerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
-    body:       TableBody = TableBody(),
-    row:        TableRow = TableRow(),
-    cell:       BodyCell[D] = defaultBodyCell[D],
+    headerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    headerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell(as = layout.tag),
+    body:       TableBody = TableBody(as = layout.tag),
+    row:        TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    cell:       BodyCell[D] = TableCell(as = layout.tag),
     footer:     Boolean | TableFooter | VdomNode = false,
-    footerRow:  TableRow = TableRow(),
-    footerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
+    footerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    footerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell(as = layout.tag)
   ): Applied = Applied((instance: TableInstanceD) =>
     component(
       SUITableProps(table,

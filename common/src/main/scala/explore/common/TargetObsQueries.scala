@@ -17,6 +17,10 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
+import lucuma.core.math.Epoch
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
@@ -49,17 +53,26 @@ object TargetObsQueries {
   type PointingAsterismResult = ObsResult.Pointing.Asterism
   val PointingAsterismResult = ObsResult.Pointing.Asterism
 
-  /**
-   * Lens for the base coordinates of TargetResult.Tracking
-   */
-  val baseCoordinates: Lens[TargetResult, Coordinates] =
-    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
-
   val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
-    baseCoordinates ^|-> Coordinates.rightAscension
+    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
 
   val baseCoordinatesDec: Lens[TargetResult, Declination] =
-    baseCoordinates ^|-> Coordinates.declination
+    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.declination
+
+  val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO
+
+  val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
+    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMDecLensO
+
+  val epoch: Lens[TargetResult, Epoch] =
+    TargetResult.tracking ^|-> SiderealTracking.epoch
+
+  val pxLens: Lens[TargetResult, Option[Parallax]] =
+    TargetResult.tracking ^|-> SiderealTracking.parallax
+
+  val rvLens: Lens[TargetResult, Option[RadialVelocity]] =
+    TargetResult.tracking ^|-> SiderealTracking.radialVelocity
 
   type TargetList         = KeyedIndexedList[Target.Id, TargetResult]
   type AsterismList       = KeyedIndexedList[Asterism.Id, AsterismIdName]
