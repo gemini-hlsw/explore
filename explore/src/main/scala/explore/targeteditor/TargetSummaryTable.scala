@@ -51,9 +51,6 @@ object TargetSummaryTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  // TODO Generalize and move this logic to react-common (ReactProps receiving a FnComponent as parameter)
-  // implicit def render(props: TargetSummaryTable): VdomElement = component(props).vdomElement
-
   private val columnNames = Map("icon" -> " ",
                                 "name"         -> "Name",
                                 "ra"           -> "RA",
@@ -77,9 +74,6 @@ object TargetSummaryTable {
 
       def column[V](id: String, accessor: TargetResult => V) =
         TargetTable.Column(id, accessor).setHeader(columnNames(id))
-
-      // def columnWithObs[V](id: String, accessor: (TargetResult, List[ObsResult]) => V) =
-      //   TargetTable.Column(id, { case (t, obs) => accessor(t, obs) }).setHeader(columnNames(id))
 
       val columns =
         List(
@@ -137,26 +131,11 @@ object TargetSummaryTable {
           )
         ).toJSArray
 
-      // // All this is a hack while we don't have proper hooks.
       val rawData = props.pointingsWithObs.targets.toList.toJSArray
-
-      // val reuseBy = (
-      //   props.pointingsWithObs.targets.toList.map(_.toString) ++
-      //     props.pointingsWithObs.observations.toList.map(_.toString)
-      // ).toJSArray
-
-      // println(rawData)
-      // println(reuseBy)
-
-      // val data = React.raw
-      //   .asInstanceOf[js.Dynamic]
-      //   .useMemo(() => rawData, reuseBy)
-      //   .asInstanceOf[js.Array[TargetResult]]
 
       tableComponent(
         TableComponentProps(TargetTable.Options(columns, rawData), props.renderInTitle)
       )
-
     }
   }
 
