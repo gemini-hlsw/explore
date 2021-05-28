@@ -80,7 +80,7 @@ object AirMassRange extends AirmassRangeOptics {
   val DefaultMin: DecimalValue =
     Refined.unsafeApply[BigDecimal, Value](BigDecimal(1.0))
   val DefaultMax: DecimalValue =
-    Refined.unsafeApply[BigDecimal, Value](BigDecimal(1.5))
+    Refined.unsafeApply[BigDecimal, Value](BigDecimal(2.0))
   val Default: AirMassRange    = apply(DefaultMin, DefaultMax)
 
   implicit val airmassRangeDecoder: Decoder[AirMassRange] = deriveDecoder
