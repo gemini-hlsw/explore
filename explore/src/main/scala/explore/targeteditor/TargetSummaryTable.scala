@@ -5,8 +5,11 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.Icons
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
+import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExpandedIds
 import explore.model.Focused
@@ -22,25 +25,42 @@ import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.semanticui.collections.table._
+import react.semanticui.modules.checkbox.Checkbox
+import react.semanticui.modules.dropdown.DropdownItem
+import react.semanticui.modules.dropdown._
 import reactST.reactTable._
+import reactST.reactTable.mod.UseSortByColumnProps
+import reactST.reactTable.syntax._
 
 import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
   focused:          View[Option[Focused]],
-  expandedIds:      View[ExpandedIds]
+  expandedIds:      View[ExpandedIds],
+  renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
 
-  private val TargetTable = TableMaker[TargetResult]
+  protected val TargetTable = TableMaker[TargetResult].withSort
 
-  private val TargetTableComponent = new SUITable(TargetTable)
+  protected val TargetTableComponent = new SUITable(TargetTable)
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
+
+  private val columnNames = Map("icon" -> " ",
+                                "name"         -> "Name",
+                                "ra"           -> "RA",
+                                "dec"          -> "Dec",
+                                "priority"     -> "Priority",
+                                "vmag"         -> "Vmag",
+                                "count"        -> "Count",
+                                "observations" -> "Observations"
+  )
+
   protected class Backend {
 
     def render(props: Props) = {
@@ -52,15 +72,13 @@ object TargetSummaryTable {
           case _                               => false
         })
 
-      val columns = List(
-        TargetTable
-          .Column(
-            "icon",
-            _ => ""
-          )
-          .setHeader(" "),
-        TargetTable
-          .Column(
+      def column[V](id: String, accessor: TargetResult => V) =
+        TargetTable.Column(id, accessor).setHeader(columnNames(id))
+
+      val columns =
+        List(
+          column("icon", _ => ""),
+          column(
             "name",
             target =>
               <.a(^.onClick ==> (_ =>
@@ -68,47 +86,32 @@ object TargetSummaryTable {
                   ),
                   target.name.value
               ).rawElement
-          )
-          .setHeader("Name"),
-        TargetTable
-          .Column(
+          ),
+          column(
             "ra",
             (TargetObsQueries.baseCoordinatesRa.get _)
               .andThen(TruncatedRA.rightAscension.get)
               .andThen(ValidFormatInput.truncatedRA.reverseGet)
-          )
-          .setHeader("RA"),
-        TargetTable
-          .Column(
+          ),
+          column(
             "dec",
             (TargetObsQueries.baseCoordinatesDec.get _)
               .andThen(TruncatedDec.declination.get)
               .andThen(ValidFormatInput.truncatedDec.reverseGet)
-          )
-          .setHeader("Dec"),
-        TargetTable
-          .Column(
-            "priority",
-            _ => ""
-          )
-          .setHeader("Priority"),
-        TargetTable
-          .Column(
+          ),
+          column("priority", _ => ""),
+          column(
             "vmag",
             _.magnitudes.collectFirst {
               case Magnitude(value, band, _, _) if band === MagnitudeBand.V =>
                 MagnitudeValue.fromString.reverseGet(value)
             }.orEmpty
-          )
-          .setHeader("Vmag"),
-        TargetTable
-          .Column(
+          ),
+          column(
             "count",
             target => targetObservations(target.id).length
-          )
-          .setHeader("Count"),
-        TargetTable
-          .Column(
+          ),
+          column(
             "observations",
             target =>
               <.span(
@@ -116,7 +119,8 @@ object TargetSummaryTable {
                   .map(obs =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.focused.set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
+                        (props.focused
+                          .set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
                           .mod(ExpandedIds.targetIds.modify(_ + target.id))).runAsyncCB
                       ),
                       obs.id.toString()
@@ -125,20 +129,80 @@ object TargetSummaryTable {
                   .mkReactFragment(", ")
               ).rawElement
           )
-          .setHeader("Observations")
-      ).toJSArray
+        ).toJSArray
 
-      TargetTableComponent(
-        Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-        header = true
-      )(TargetTable.Options(columns, props.pointingsWithObs.targets.toList.toJSArray))
+      val rawData = props.pointingsWithObs.targets.toList.toJSArray
+
+      tableComponent(
+        TableComponentProps(TargetTable.Options(columns, rawData), props.renderInTitle)
+      )
     }
   }
 
-  val component =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
+
+  protected final case class TableComponentProps(
+    options:          TargetTable.OptionsType,
+    renderInTitle:    Tile.RenderInTitle
+  )(implicit val ctx: AppContextIO)
+      extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
+
+  def sortIndicator(col: UseSortByColumnProps[_]): TagMod =
+    if (col.isSorted) {
+      val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
+      val ascDesc: VdomNode =
+        if (col.isSortedDesc.getOrElse(false)) Icons.SortUp else Icons.SortDown
+      <.span(ascDesc, <.small(index))
+    } else Icons.Sort
+
+  // Horrible hack while we don't fully have hooks.
+  // Reusability is handled in class component, instead of the need to useMemo.
+  // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
+  protected val tableComponent =
+    ScalaFnComponent[TableComponentProps] { props =>
+      val tableInstance = TargetTable.use(props.options)
+
+      <.div(
+        props.renderInTitle(
+          <.span(ExploreStyles.TitleStrip)(
+            Dropdown(item = true,
+                     simple = true,
+                     pointing = Pointing.TopRight,
+                     text = "Columns",
+                     clazz = ExploreStyles.SelectColumns
+            )(
+              DropdownMenu()(
+                tableInstance.allColumns
+                  .drop(2)
+                  .toTagMod(column =>
+                    DropdownItem()(^.key := column.id.toString)(
+                      <.div(
+                        Checkbox(label = columnNames(column.id.toString),
+                                 checked = column.isVisible,
+                                 onChange = (_: Boolean) => Callback(column.toggleHidden())
+                        )
+                      )
+                    )
+                  )
+              )
+            )
+          )
+        ),
+        TargetTableComponent(
+          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
+          header = true,
+          headerCell = (col: TargetTable.ColumnType) =>
+            TableHeaderCell()(util.props2Attrs(col.getHeaderProps()),
+                              util.props2Attrs(col.getSortByToggleProps())
+            )(col.renderHeader, <.span(sortIndicator(col)))
+        )(
+          tableInstance
+        )
+      )
+    }
 }

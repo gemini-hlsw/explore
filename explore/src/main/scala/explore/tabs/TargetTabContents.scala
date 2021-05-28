@@ -143,8 +143,12 @@ object TargetTabContents {
         case None             =>
           Tile("target", s"Targets Summary", backButton.some)(
             (
-              (_: Tile.RenderInTitle) =>
-                TargetSummaryTable(pointingsWithObs.get, props.focused, props.expandedIds): VdomNode
+              (renderInTitle: Tile.RenderInTitle) =>
+                TargetSummaryTable(pointingsWithObs.get,
+                                   props.focused,
+                                   props.expandedIds,
+                                   renderInTitle
+                ): VdomNode
             ).reusable
           )
       }

@@ -26,6 +26,8 @@ object Icons {
   val ChevronRight        = Icon("chevron right")
   val ChevronLeft         = Icon("chevron left")
   val Sort                = Icon("sort")
+  val SortDown            = Icon("sort down")
+  val SortUp              = Icon("sort up")
   val ExclamationTriangle = Icon("exclamation triangle")
   val Ban                 = Icon("ban")
   val UserAstronaut       = Icon(className = "user-astronaut")
@@ -45,5 +47,5 @@ object Icons {
   val Trash               = Delete.size(Small).fitted(true).clazz(ExploreStyles.TrashIcon)
   val Copy                = Icon("copy")
   val List                = Icon("list alternate outline")
-  val Question            = Icon("question circle ")
+  val Question            = Icon("question circle")
 }

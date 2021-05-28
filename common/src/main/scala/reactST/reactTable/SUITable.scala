@@ -5,6 +5,8 @@ package reactST.reactTable
 
 import cats.syntax.all._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.JsFn
+import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.collections.table._
 import reactST.reactTable._
@@ -15,18 +17,34 @@ import reactST.reactTable.util
 import scalajs.js
 import scalajs.js.|
 
-case class SUITableProps[D, TableOptsD <: UseTableOptions[D]](
-  table:       Table = Table(),
-  header:      Boolean | TableHeader = false,
-  headerRow:   TableRow = TableRow(),
-  headerCell:  TableHeaderCell = TableHeaderCell(),
-  body:        TableBody = TableBody(),
-  row:         TableRow = TableRow(),
-  cell:        TableCell = TableCell(),
-  footer:      Boolean | TableFooter | VdomNode = false,
-  footerRow:   TableRow = TableRow(),
-  footerCell:  TableHeaderCell = TableHeaderCell()
-)(val options: TableOptsD)
+// We can't define a package object since it's already defined in the facade.
+object definitions {
+  type HeaderCellRender[D, ColumnInstanceD <: ColumnObject[D]] = ColumnInstanceD => TableHeaderCell
+  type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
+    TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
+
+  type BodyCellRender[D] = Cell[D, _] => TableCell
+  type BodyCell[D]       = TableCell | BodyCellRender[D]
+
+  protected[reactTable] def defaultHeaderCell[D, ColumnInstanceD <: ColumnObject[D]]
+    : HeaderCell[D, ColumnInstanceD] = TableHeaderCell()
+
+  protected[reactTable] def defaultBodyCell[D]: BodyCell[D] = TableCell()
+}
+import definitions._
+
+case class SUITableProps[D, TableInstanceD <: TableInstance[D], ColumnInstanceD <: ColumnObject[D]](
+  table:        Table = Table(),
+  header:       Boolean | TableHeader = false,
+  headerRow:    TableRow = TableRow(),
+  headerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
+  body:         TableBody = TableBody(),
+  row:          TableRow = TableRow(),
+  cell:         BodyCell[D] = defaultBodyCell[D],
+  footer:       Boolean | TableFooter | VdomNode = false,
+  footerRow:    TableRow = TableRow(),
+  footerCell:   HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
+)(val instance: TableInstanceD)
 
 class SUITable[
   D,
@@ -40,90 +58,115 @@ class SUITable[
 ) {
   private implicit def props2Attrs(obj: js.Object): TagMod = util.props2Attrs(obj)
 
-  val component = ScalaFnComponent[SUITableProps[D, TableOptsD]] { case props =>
-    val tableInstance = tableMaker.use(props.options)
+  val component = ScalaFnComponent[SUITableProps[D, TableInstanceD, ColumnInstanceD]] {
+    case props =>
+      val tableInstance = props.instance
 
-    val headerTag: Option[TableHeader] = (props.header: Any) match {
-      case true               => TableHeader().some
-      case false              => none
-      case other: TableHeader => other.some
-      case _                  => ??? // Can't wait for Scala 3's union types
-    }
-
-    val headerElement: Option[TableHeader] =
-      headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
-        props.headerRow(headerRowData.getHeaderGroupProps())(
-          TableMaker
-            .headersFromGroup(headerRowData)
-            .toTagMod { headerCellData: HeaderGroup[D] =>
-              props.headerCell(headerCellData.getHeaderProps())(
-                // headerCellData.renderHeader
-                headerCellData.render_Header(reactTableStrings.Header)
-              )
-            }
-        )
-      }))
-
-    val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
-      tableInstance.rows.toTagMod { rowData =>
-        tableInstance.prepareRow(rowData)
-        props.row(rowData.getRowProps())(rowData.cells.toTagMod { cellData =>
-          props.cell(cellData.getCellProps())(cellData.renderCell)
-        })
+      val headerTag: Option[TableHeader] = (props.header: Any) match {
+        case true  => TableHeader().some
+        case false => none
+        case other => other.asInstanceOf[TableHeader].some // Can't wait for Scala 3's union types
       }
-    )
 
-    def standardFooter(footerTag: TableFooter) =
-      footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
-        props.footerRow(footerRowData.getFooterGroupProps())(
-          TableMaker.headersFromGroup(footerRowData).toTagMod { footerCellData: HeaderGroup[D] =>
-            props.footerCell(footerCellData.getFooterProps())(
-              // footerCellData.renderFooter
-              footerCellData.render_Footer(reactTableStrings.Footer)
-            )
-          }
-        )
-      })
+      val headerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.headerCell: Any) match {
+        case headerCell: TableHeaderCell =>
+          col => headerCell(col.getHeaderProps())(col.renderHeader)
+        case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
+      }
 
-    val footerElement: Option[VdomNode] = (props.footer: Any) match {
-      case true                     => standardFooter(TableFooter()).vdomElement.some
-      case false                    => none
-      case otherFooter: TableFooter => standardFooter(otherFooter).vdomElement.some
-      case otherElement: VdomNode   => otherElement.some
-      case _                        => ??? // Can't wait for Scala 3's union types
-    }
+      val bodyCellRender: BodyCellRender[D] = (props.cell: Any) match {
+        case cell: TableCell =>
+          cellData => cell(cellData.getCellProps())(cellData.renderCell)
+        case other           => other.asInstanceOf[BodyCellRender[D]]
+      }
 
-    props
-      .table(
-        headerElement,
-        bodyElement,
-        footerElement
+      val footerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.footerCell: Any) match {
+        case footerCell: TableHeaderCell =>
+          col => footerCell(col.getFooterProps())(col.renderFooter)
+        case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
+      }
+
+      val headerElement: Option[TableHeader] =
+        headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
+          props.headerRow(headerRowData.getHeaderGroupProps())(
+            TableMaker
+              .headersFromGroup(headerRowData)
+              .toTagMod((col: ColumnInstanceD) => headerCellRender(col))
+          )
+        }))
+
+      val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
+        tableInstance.rows.toTagMod { rowData =>
+          tableInstance.prepareRow(rowData)
+          props.row(rowData.getRowProps())(
+            rowData.cells.toTagMod(cellData => bodyCellRender(cellData))
+          )
+        }
       )
-      .vdomElement
+
+      def standardFooter(footerTag: TableFooter) =
+        footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
+          props.footerRow(footerRowData.getFooterGroupProps())(
+            TableMaker
+              .headersFromGroup(footerRowData)
+              .toTagMod((col: ColumnInstanceD) => footerCellRender(col))
+          )
+        })
+
+      val footerElement: Option[VdomNode] = (props.footer: Any) match {
+        case true                     => standardFooter(TableFooter()).vdomElement.some
+        case false                    => none
+        case otherFooter: TableFooter => standardFooter(otherFooter).vdomElement.some
+        case otherElement: VdomNode   => otherElement.some
+        case _                        => ??? // Can't wait for Scala 3's union types
+      }
+
+      props
+        .table(
+          headerElement,
+          bodyElement,
+          footerElement
+        )
+        .vdomElement
+  }
+
+  private type Props = SUITableProps[D, TableInstanceD, ColumnInstanceD]
+
+  private type Component = JsFn.UnmountedWithRoot[Props, Unit, Box[Props]]
+
+  case class Applied(builder: TableInstanceD => Component) {
+    def apply(instance: TableInstanceD): Component = builder(instance)
+
+    def apply(options: TableOptsD): Component = builder(tableMaker.use(options))
+
+    def apply(columns: js.Array[_ <: UseTableColumnOptions[D]], data: js.Array[D]): Component =
+      apply(tableMaker.Options(columns, data))
   }
 
   def apply(
     table:      Table = Table(),
     header:     Boolean | TableHeader = false,
     headerRow:  TableRow = TableRow(),
-    headerCell: TableHeaderCell = TableHeaderCell(),
+    headerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD],
     body:       TableBody = TableBody(),
     row:        TableRow = TableRow(),
-    cell:       TableCell = TableCell(),
+    cell:       BodyCell[D] = defaultBodyCell[D],
     footer:     Boolean | TableFooter | VdomNode = false,
     footerRow:  TableRow = TableRow(),
-    footerCell: TableHeaderCell = TableHeaderCell()
-  )(options:    TableOptsD) = component(
-    SUITableProps(table,
-                  header,
-                  headerRow,
-                  headerCell,
-                  body,
-                  row,
-                  cell,
-                  footer,
-                  footerRow,
-                  footerCell
-    )(options)
+    footerCell: HeaderCell[D, ColumnInstanceD] = defaultHeaderCell[D, ColumnInstanceD]
+  ): Applied = Applied((instance: TableInstanceD) =>
+    component(
+      SUITableProps(table,
+                    header,
+                    headerRow,
+                    headerCell,
+                    body,
+                    row,
+                    cell,
+                    footer,
+                    footerRow,
+                    footerCell
+      )(instance)
+    )
   )
 }

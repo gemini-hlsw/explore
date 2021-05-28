@@ -34,6 +34,10 @@ body {
   width: 100vw;
 }
 
+a {
+  color: var(--site-link-color);
+}
+
 // Mixins
 //
 .full-height-width {
@@ -1521,4 +1525,15 @@ html {
 
 .explore-shared-edit-warning {
   text-align: center;
+}
+
+.explore-select-columns {
+  margin-left: auto;
+  margin-right: 1em;
+
+  .ui.simple.active.dropdown > .menu,
+  .ui.simple.dropdown:hover > .menu {
+    overflow: hidden; // hides the pointing tip
+    top: 2em !important; // puts some space between the header and the options
+  }
 }

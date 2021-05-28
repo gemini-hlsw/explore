@@ -193,19 +193,22 @@ object MagnitudeForm {
                       compact = true,
                       clazz = ExploreStyles.MagnitudesTableContainer
               )(
-                MagTableComponent(
-                  Table(celled = true,
-                        selectable = true,
-                        striped = true,
-                        compact = TableCompact.Very
-                  ),
-                  header = TableHeader(),
-                  footer = footer.vdomElement
-                )(
-                  MagTable
-                    .Options(columns, props.magnitudes.toListOfViews(_.band).toJSArray)
-                    .setRowIdFn(_.get.band.tag)
-                    .setInitialStateFull(tableState)
+                tableComponent(
+                  (
+                    MagTableComponent(
+                      Table(celled = true,
+                            selectable = true,
+                            striped = true,
+                            compact = TableCompact.Very
+                      ),
+                      header = TableHeader(),
+                      footer = footer.vdomElement
+                    ),
+                    MagTable
+                      .Options(columns, props.magnitudes.toListOfViews(_.band).toJSArray)
+                      .setRowIdFn(_.get.band.tag)
+                      .setInitialStateFull(tableState)
+                  )
                 )
               )
             )
@@ -214,4 +217,12 @@ object MagnitudeForm {
       }
       .configure(Reusability.shouldComponentUpdate)
       .build
+
+  // Horrible hack while we don't fully have hooks.
+  // Reusability is handled in class component, instead of the need to useMemo.
+  // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
+  private val tableComponent =
+    ScalaFnComponent[(MagTableComponent.Applied, MagTable.OptionsType)] { props =>
+      props._1(props._2)
+    }
 }

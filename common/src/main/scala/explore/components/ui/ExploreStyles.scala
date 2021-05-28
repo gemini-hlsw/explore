@@ -243,6 +243,7 @@ object ExploreStyles {
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonsUndo: Css   = Css("explore-buttons-undo")
   val ButtonSummary: Css = Css("explore-button-summary")
+  val SelectColumns: Css = Css("explore-select-columns")
 
   val VeryCompact: Css = Css("verycompact")
 

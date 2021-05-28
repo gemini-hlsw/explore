@@ -112,10 +112,7 @@ object Tile {
             MenuItem(as = <.a)(p.title)
           ),
           p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-          <.span(ExploreStyles.TileTitleInfo,
-                 ^.untypedRef := infoRef,
-                 ^.key := s"tile-info-${p.title}"
-          ),
+          <.span(ExploreStyles.TileTitleInfo, ^.untypedRef := infoRef),
           minimizeButton.when(p.showMinimize),
           maximizeButton.when(p.showMaximize)
         ),
