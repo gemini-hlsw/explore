@@ -11,15 +11,16 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.macros.Lenses
 import react.common.ReactProps
+import explore.utils.reuse._
 
 final case class UndoRegion[M](
-  renderer: Undoer.Context[IO, M] ~=> VdomNode
+  renderer: Undoer.Context[IO, M] ==> VdomNode
 ) extends ReactProps(UndoRegion.component)
     with UndoRegion.Props[IO, M]
 
 object UndoRegion {
   protected trait Props[F[_], M] {
-    val renderer: Undoer.Context[F, M] ~=> VdomNode
+    val renderer: Undoer.Context[F, M] ==> VdomNode
   }
 
   @Lenses

@@ -16,6 +16,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import monocle.Getter
+import explore.utils.reuse._
 
 import ObsQueriesGQL._
 
@@ -55,7 +56,7 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ~=> VdomNode](render =>
+    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ProgramObservationsQuery.Data,

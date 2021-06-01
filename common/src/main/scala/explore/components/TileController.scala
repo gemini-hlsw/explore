@@ -23,6 +23,7 @@ import monocle.Traversal
 import monocle.unsafe.UnsafeSelect
 import react.common._
 import react.gridlayout._
+import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
@@ -79,7 +80,7 @@ object TileController {
       .render_P { p =>
         implicit val ctx = p.ctx
 
-        def sizeState(id: Tile.TileId)(st: TileSizeState): Callback =
+        def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
           p.layoutMap
             .zoom(allTiles)
             .mod {
@@ -107,7 +108,7 @@ object TileController {
           p.tiles.map { t =>
             <.div(
               ^.key := t.id.value,
-              t.withState(unsafeSizeToState(p.layoutMap.get, t.id), (sizeState(t.id) _).reusable)
+              t.withState(unsafeSizeToState(p.layoutMap.get, t.id), Reuse(sizeState _)(t.id))
             )
           }.toVdomArray
         )

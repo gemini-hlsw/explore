@@ -31,6 +31,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
 import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
@@ -72,7 +73,8 @@ object AladinCell extends ModelOptics {
           .flatMapCB(_.backend.gotoRaDec(coords))
           .toCallback
 
-    val coordinatesSetter = Reusable.fn.state($.zoomStateL(State.current)).set
+    val coordinatesSetter =
+      ((coords: Coordinates) => $.setStateL(State.current)(coords)).reuseAlways
 
     def fovSetter(props: Props, fov: Fov): Callback = {
       implicit val ctx = props.ctx
@@ -95,7 +97,7 @@ object AladinCell extends ModelOptics {
                   props.target,
                   props.options.get,
                   coordinatesSetter,
-                  (fovSetter _).reusable(props)
+                  Reuse.currying(props).in(fovSetter _)
                 )
               },
             AladinToolbar(state.fov, state.current),

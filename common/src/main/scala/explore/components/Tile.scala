@@ -8,7 +8,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
-import explore.implicits._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
 import explore.model.reusability._
@@ -22,26 +21,27 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
+import explore.utils.reuse._
 
 import scalajs.js
 
 final case class Tile(
   id:                Tile.TileId,
   title:             String,
-  back:              Option[Reusable[VdomNode]] = None,
-  control:           Option[Reusable[VdomNode]] = None,
+  back:              Option[Reuse[VdomNode]] = None,
+  control:           Option[Reuse[VdomNode]] = None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
-  sizeStateCallback: TileSizeState ~=> Callback = Reusable.always(_ => Callback.empty),
+  sizeStateCallback: TileSizeState ==> Callback = Reuse.always(_ => Callback.empty),
   key:               js.UndefOr[Key] = js.undefined
-)(val render:        Tile.RenderInTitle ~=> VdomNode)
+)(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactProps[Tile](Tile.component) {
   def showMaximize: Boolean =
     state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)
   def showMinimize: Boolean =
     state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
-  def withState(state: TileSizeState, sizeStateCallback: TileSizeState ~=> Callback): Tile =
+  def withState(state: TileSizeState, sizeStateCallback: TileSizeState ==> Callback): Tile =
     copy(state = state, sizeStateCallback = sizeStateCallback)(render)
 }
 
@@ -49,9 +49,15 @@ object Tile {
   type Props  = Tile
   type TileId = NonEmptyString
 
-  type RenderInTitle = VdomNode ~=> VdomNode
+  type RenderInTitle = VdomNode ==> VdomNode
+
+  protected case class State(portalNode: Option[raw.ReactDOM.Container] = None)
 
   implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
+
+  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
+
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -63,16 +69,11 @@ object Tile {
          (1024                           -> TileLGW)
     )
 
-  def renderPortal(mountNode: Option[raw.ReactDOM.Container], info: VdomNode): VdomNode =
-    mountNode.map(node => ReactPortal(info, node))
-
-  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
-
   class Backend() {
 
-    private val infoRef = Ref.toVdom[html.Element]
+    val infoRef = Ref.toVdom[html.Element]
 
-    def render(p: Props) = {
+    def render(p: Props, s: State) = {
       val maximizeButton =
         Button(
           as = <.a,
@@ -116,15 +117,19 @@ object Tile {
           minimizeButton.when(p.showMinimize),
           maximizeButton.when(p.showMaximize)
         ),
-        ResponsiveComponent(widthBreakpoints, heightBreakpoints, clazz = ExploreStyles.TileBody)(
-          p.render(
-            (renderPortal _).reusable(
-              JsUtil
-                .jsNullToOption(infoRef.raw.current)
-                .map(_.asInstanceOf[raw.ReactDOM.Container])
-            )
-          )
-        ).when(p.state =!= TileSizeState.Minimized)
+        s.portalNode
+          .whenDefined { node =>
+            ResponsiveComponent(widthBreakpoints,
+                                heightBreakpoints,
+                                clazz = ExploreStyles.TileBody
+            )(
+              p.render(
+                Reuse
+                  .currying(node)
+                  .in((mountNode, info: VdomNode) => ReactPortal(info, mountNode))
+              )
+            ).when(p.state =!= TileSizeState.Minimized)
+          }
       )
     }
   }
@@ -132,8 +137,17 @@ object Tile {
   val component =
     ScalaComponent
       .builder[Props]
-      .stateless
+      .initialState(State())
       .renderBackend[Backend]
+      .componentDidMount { $ =>
+        $.setState(
+          State(
+            JsUtil
+              .jsNullToOption($.backend.infoRef.raw.current)
+              .map(_.asInstanceOf[raw.ReactDOM.Container])
+          )
+        )
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 

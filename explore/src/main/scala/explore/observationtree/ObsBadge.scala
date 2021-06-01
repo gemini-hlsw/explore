@@ -27,11 +27,12 @@ import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import react.semanticui.views.card._
+import explore.utils.reuse._
 
 final case class ObsBadge(
   obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected: Boolean = false,
-  deleteCB: Option[Observation.Id ~=> IO[Unit]] = None
+  deleteCB: Option[Observation.Id ==> IO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {

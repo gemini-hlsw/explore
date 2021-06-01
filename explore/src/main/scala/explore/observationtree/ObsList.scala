@@ -39,6 +39,7 @@ import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.util.Random
 
@@ -194,7 +195,7 @@ object ObsList {
                   ObsBadge(
                     obs,
                     selected = selected,
-                    deleteCB = (deleteObs _).reusable.some
+                    deleteCB = (deleteObs _).reuseAlways.some
                   )
                 )
               }
@@ -204,7 +205,7 @@ object ObsList {
       }
 
     def render(props: Props) =
-      UndoRegion[ObservationList]((renderFn _).reusable(props))
+      UndoRegion[ObservationList](Reuse(renderFn _)(props))
   }
 
   protected val component =

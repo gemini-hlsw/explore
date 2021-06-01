@@ -20,12 +20,13 @@ import japgolly.scalajs.react.component.builder.Lifecycle.ComponentWillUnmount
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
+import explore.utils.reuse._
 
 object Render {
   trait Props[F[_], G[_], A] {
-    val valueRender: G[A] ~=> VdomNode
-    val pendingRender: Long ~=> VdomNode
-    val errorRender: Throwable ~=> VdomNode
+    val valueRender: G[A] ==> VdomNode
+    val pendingRender: Long ==> VdomNode
+    val errorRender: Throwable ==> VdomNode
     val onNewData: F[Unit]
 
     implicit val F: Async[F]

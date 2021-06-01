@@ -49,6 +49,7 @@ import react.semanticui.elements.header.Header
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
@@ -308,7 +309,7 @@ object ConstraintSetObsList {
               label = "Name",
               placeholder = "Constraint name",
               okLabel = "Create",
-              onComplete = (createConstraintSet _).reusable,
+              onComplete = (createConstraintSet _).reuseAlways,
               trigger = Button(size = Mini,
                                compact = true,
                                clazz = ExploreStyles.VeryCompact,
@@ -473,7 +474,7 @@ object ConstraintSetObsList {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      UndoRegion[ConstraintSetsWithObs]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      UndoRegion[ConstraintSetsWithObs](Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
     }
   }
 

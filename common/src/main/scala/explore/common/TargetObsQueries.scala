@@ -31,6 +31,7 @@ import monocle.Getter
 import monocle.Iso
 import monocle.Lens
 import monocle.macros.Lenses
+import explore.utils.reuse._
 
 import TargetObsQueriesGQL._
 
@@ -137,7 +138,7 @@ object TargetObsQueries {
     Reusability.derive
 
   val TargetObsLiveQuery =
-    ScalaFnComponent[View[PointingsWithObs] ~=> VdomNode](render =>
+    ScalaFnComponent[View[PointingsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, PointingsWithObs](
           TargetsObsQuery.query(),

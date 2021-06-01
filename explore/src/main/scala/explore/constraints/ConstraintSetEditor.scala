@@ -20,6 +20,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
 import react.common._
+import explore.utils.reuse._
 
 final case class ConstraintSetEditor(
   csId:          ConstraintSet.Id,
@@ -44,7 +45,7 @@ object ConstraintSetEditor {
         allowMultiEdit = true,
         onCopy = (
           (id: ConstraintSet.Id) => props.focused.set(Focused.FocusedConstraintSet(id).some)
-        ).reusable
+        ).reuseAlways
       )
     }
 
@@ -57,8 +58,25 @@ object ConstraintSetEditor {
             ConstraintSetQuery.query(props.csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](props.csId))
-          )((renderFn _).reusable(props))
+          )(
+            Reuse
+              .by(props)((csOpt: View[Option[ConstraintSetModel]]) =>
+                csOpt.get.map { _ =>
+                  ConstraintsPanel(
+                    props.csId,
+                    csOpt.zoom(_.get)(f => _.map(f)),
+                    props.renderInTitle,
+                    allowMultiEdit = true,
+                    onCopy = (
+                      (id: ConstraintSet.Id) =>
+                        props.focused.set(Focused.FocusedConstraintSet(id).some)
+                    ).reuseAlways
+                  )
+                }
+              )
+          )
         }
+
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

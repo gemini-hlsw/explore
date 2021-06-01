@@ -39,6 +39,7 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
@@ -112,7 +113,7 @@ object TargetTabContents {
         )
       )
 
-    val backButton = Reusable.always[VdomNode](
+    val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,
@@ -138,7 +139,7 @@ object TargetTabContents {
       (props.userId.get, targetIdOpt).tupled match {
         case Some((uid, tid)) =>
           Tile("target", s"Target", backButton.some)(
-            (renderContents _).reusable(uid, tid, props.searching)
+            Reuse(renderContents _)(uid, tid, props.searching)
           )
         case None             =>
           Tile("target", s"Targets Summary", backButton.some)(
@@ -149,7 +150,7 @@ object TargetTabContents {
                                    props.expandedIds,
                                    renderInTitle
                 ): VdomNode
-            ).reusable
+            ).reuseAlways
           )
       }
 
@@ -204,7 +205,7 @@ object TargetTabContents {
       )
       .render { $ =>
         implicit val ctx = $.props.ctx
-        TargetObsLiveQuery((renderFn _).reusable($.props, ViewF.fromState($)))
+        TargetObsLiveQuery(Reuse(renderFn _)($.props, ViewF.fromState($)))
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

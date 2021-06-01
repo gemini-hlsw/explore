@@ -16,13 +16,14 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
+import explore.utils.reuse._
 
 import java.time.Instant
 
 final case class SSOManager(
   expiration:       Instant,
-  setVault:         Option[UserVault] ~=> IO[Unit],
-  setMessage:       NonEmptyString ~=> IO[Unit]
+  setVault:         Option[UserVault] ==> IO[Unit],
+  setMessage:       NonEmptyString ==> IO[Unit]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SSOManager](SSOManager.component)
 

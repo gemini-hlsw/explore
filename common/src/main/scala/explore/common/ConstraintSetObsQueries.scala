@@ -27,6 +27,7 @@ import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.macros.Lenses
+import explore.utils.reuse._
 
 import ConstraintSetObsQueriesGQL._
 
@@ -104,7 +105,7 @@ object ConstraintSetObsQueries {
     Reusability.derive
 
   val ConstraintSetObsLiveQuery =
-    ScalaFnComponent[View[ConstraintSetsWithObs] ~=> VdomNode](render =>
+    ScalaFnComponent[View[ConstraintSetsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),

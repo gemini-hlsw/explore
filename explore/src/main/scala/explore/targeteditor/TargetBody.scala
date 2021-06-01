@@ -47,6 +47,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import explore.utils.reuse._
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -179,7 +180,7 @@ object TargetBody {
                 // a single undo/redo operation.
                 props.target.zoom(TargetResult.name).get,
                 props.searching,
-                (searchAndSet _).reusable(allView, nameView)
+                Reuse.currying(allView, nameView).in(searchAndSet _)
               ),
               <.div(
                 ExploreStyles.FlexContainer,
@@ -272,7 +273,7 @@ object TargetBody {
       }
 
     def render(props: Props) =
-      UndoRegion[TargetResult]((renderFn _).reusable(props))
+      UndoRegion[TargetResult](Reuse(renderFn _)(props))
   }
 
   val component =

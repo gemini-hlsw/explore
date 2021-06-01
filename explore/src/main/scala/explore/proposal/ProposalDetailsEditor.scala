@@ -39,6 +39,7 @@ import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import spire.std.any._
+import explore.utils.reuse._
 
 import scala.annotation.unused
 
@@ -258,17 +259,17 @@ object ProposalDetailsEditor {
           <.div(
             ^.key := "details",
             ExploreStyles.ProposalTile,
-            Tile("details", "Details")((renderDetails(appCtx) _).reusable(details))
+            Tile("details", "Details")(Reuse(renderDetails(appCtx) _)(details))
           ),
           <.div(
             ^.key := "preview",
             ExploreStyles.ProposalTile,
-            Tile("preview", "Preview")(Reusable.fn(_ => <.span("Placeholder for PDF preview.")))
+            Tile("preview", "Preview")(Reuse.always(_ => <.span("Placeholder for PDF preview.")))
           ),
           PartnerSplitsEditor(state.showPartnerSplitsModal,
                               splitsZoom,
                               closePartnerSplitsEditor,
-                              (saveStateSplits _).reusable(details)
+                              Reuse(saveStateSplits _)(details)
           )
         )
       }

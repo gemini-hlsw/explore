@@ -30,6 +30,7 @@ import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scalajs.js.JSConverters._
 
@@ -37,7 +38,7 @@ final case class SearchForm(
   id:          Target.Id,
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
-  searchAndGo: SearchCallback ~=> Callback
+  searchAndGo: SearchCallback ==> Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
     searchTerm: String,

@@ -17,9 +17,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.loader.Loader
+import explore.utils.reuse._
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
-  val render:                                Reusable[VdomNode]
+  val render:                                Reuse[VdomNode]
 )(implicit val ctx:                          AppContextIO)
     extends ReactProps[ConnectionManager](ConnectionManager.component)
 

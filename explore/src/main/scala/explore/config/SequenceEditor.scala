@@ -11,6 +11,7 @@ import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
+import explore.utils.reuse._
 
 final case class SequenceEditor() extends ReactProps[SequenceEditor](SequenceEditor.component)
 
@@ -29,7 +30,7 @@ object SequenceEditor {
                           SequenceSteps.Data,
                           SequenceSteps.Data.Observations.Nodes.Config
           ](SequenceSteps.query(), _.observations.nodes.head.config.get, List.empty)(
-            (renderFn _).reusable
+            (renderFn _).reuseAlways
           )
         }
       )

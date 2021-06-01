@@ -46,6 +46,7 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
@@ -274,7 +275,7 @@ object ObsTabContents {
           tid
       }
 
-      val backButton = Reusable.always[VdomNode](
+      val backButton = Reuse.always[VdomNode](
         Button(
           as = <.a,
           basic = true,
@@ -301,7 +302,7 @@ object ObsTabContents {
           backButton.some,
           canMinimize = true
         )(
-          Reusable.fn(_ =>
+          Reuse.always(_ =>
             <.div(
               ExploreStyles.NotesWrapper,
               <.div(
@@ -375,7 +376,7 @@ object ObsTabContents {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
     }
   }
 

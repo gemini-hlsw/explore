@@ -23,6 +23,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.common._
+import explore.utils.reuse._
 
 final case class TargetEditor(
   uid:              User.Id,
@@ -67,7 +68,26 @@ object TargetEditor {
         TargetEditQuery.query(props.tid),
         _.target,
         List(TargetEditSubscription.subscribe[IO](props.tid))
-      )((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      )(
+        Reuse
+          .currying(props, ViewF.fromState[IO]($))
+          .in(
+            (
+              props,
+              state,
+              targetOpt: View[Option[TargetEditQuery.Data.Target]]
+            ) =>
+              targetOpt.get.map { _ =>
+                TargetBody(props.uid,
+                           props.tid,
+                           targetOpt.zoom(_.get)(f => _.map(f)),
+                           props.searching,
+                           state.zoom(State.options),
+                           props.renderInTitle
+                )
+              }
+          )
+      )
     }
   }
 

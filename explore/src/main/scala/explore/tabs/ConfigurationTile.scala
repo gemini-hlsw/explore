@@ -6,11 +6,11 @@ package explore.tabs
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
-import explore.implicits._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
+import explore.utils.reuse._
 
 object ConfigurationTile {
   def configurationTile(
@@ -28,7 +28,7 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(
-      (renderConfiguration _).reusable(obsId)
+      Reuse(renderConfiguration _)(obsId)
     )
   }
 

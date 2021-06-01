@@ -20,6 +20,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
+import explore.utils.reuse._
 
 object TargetTile {
   def targetTile(
@@ -56,7 +57,7 @@ object TargetTile {
             TargetEditQuery.query(targetId),
             _.target,
             List(TargetEditSubscription.subscribe[IO](targetId))
-          )((targetRenderFn _).reusable(targetId, renderInTitle))
+          )(Reuse(targetRenderFn _)(targetId, renderInTitle))
             .withKey(s"target-$targetId")
         }
         .getOrElse(
@@ -65,7 +66,7 @@ object TargetTile {
           )
         )
 
-    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)((renderTarget _).reusable(targetId))
+    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)(Reuse(renderTarget _)(targetId))
   }
 
 }

@@ -29,12 +29,13 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
+import explore.utils.reuse._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
-  onSave:  List[PartnerSplit] ~=> Callback
+  onSave:  List[PartnerSplit] ==> Callback
 ) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {

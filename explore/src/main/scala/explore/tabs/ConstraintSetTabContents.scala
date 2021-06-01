@@ -37,6 +37,7 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
@@ -104,7 +105,7 @@ object ConstraintSetTabContents {
         ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
       )
 
-    val backButton = Reusable.always[VdomNode](
+    val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,
@@ -126,7 +127,7 @@ object ConstraintSetTabContents {
 
     val rightSide =
       Tile("constraints", "Constraints", backButton.some)(
-        (renderEditor _).reusable(csIdOpt, props.focused)
+        Reuse(renderEditor _)(csIdOpt, props.focused)
       )
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
@@ -179,7 +180,7 @@ object ConstraintSetTabContents {
       .render { $ =>
         implicit val ctx = $.props.ctx
         ConstraintSetObsLiveQuery(
-          (renderFn _).reusable($.props, ViewF.fromState[IO]($), window.innerWidth)
+          Reuse(renderFn _)($.props, ViewF.fromState[IO]($), window.innerWidth)
         )
       }
       .componentDidMount(readWidthPreference)

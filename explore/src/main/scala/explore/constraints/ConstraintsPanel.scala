@@ -55,6 +55,7 @@ import react.semanticui.modules.popup.PopupContent
 import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.modules.popup.PopupWide
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 import scala.util.Random
 
@@ -63,7 +64,7 @@ final case class ConstraintsPanel(
   constraintSet:  View[ConstraintSetModel],
   renderInTitle:  Tile.RenderInTitle,
   allowMultiEdit: Boolean,
-  onCopy:         ConstraintSet.Id ~=> IO[Unit] = Reusable.always(_ => IO.unit)
+  onCopy:         ConstraintSet.Id ==> IO[Unit] = Reuse.always(_ => IO.unit)
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -384,7 +385,7 @@ object ConstraintsPanel {
     }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
-      UndoRegion[ConstraintSetModel]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      UndoRegion[ConstraintSetModel](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
     }
   }
 

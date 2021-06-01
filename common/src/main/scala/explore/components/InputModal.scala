@@ -21,6 +21,7 @@ import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.sizes.Small
+import explore.utils.reuse._
 
 /**
  * Generic component to accept user input
@@ -32,7 +33,7 @@ final case class InputModal(
   placeholder:  String,
   okLabel:      String,
   trigger:      VdomNode,
-  onComplete:   NonEmptyString ~=> Callback
+  onComplete:   NonEmptyString ==> Callback
 ) extends ReactProps[InputModal](InputModal.component)
 
 object InputModal {

@@ -19,6 +19,7 @@ import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
+import explore.utils.reuse._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -27,10 +28,9 @@ final case class SubscriptionRenderMod[D, A](
   subscribe:         IO[GraphQLSubscription[IO, D]],
   streamModifier:    fs2.Stream[IO, D] => fs2.Stream[IO, A] = identity[fs2.Stream[IO, D]] _
 )(
-  val valueRender:   View[A] ~=> VdomNode,
-  val pendingRender: Long ~=> VdomNode = Reusable.always(_ => Loader(active = true)),
-  val errorRender:   Throwable ~=> VdomNode =
-    Reusable.always(t => Message(error = true)(t.getMessage)),
+  val valueRender:   View[A] ==> VdomNode,
+  val pendingRender: Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
+  val errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage)),
   val onNewData:     IO[Unit] = IO.unit
 )(implicit
   val F:             Async[IO],

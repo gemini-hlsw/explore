@@ -35,6 +35,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import explore.utils.reuse._
 
 final case class ConfigurationPanel(
   id:            Option[Observation.Id],
@@ -113,7 +114,7 @@ object ConfigurationPanel {
     }
 
     def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
-      UndoRegion[State]((renderFn _).reusable(props, state))
+      UndoRegion[State](Reuse.currying(props, state).in(renderFn _))
     }
   }
   protected val component =

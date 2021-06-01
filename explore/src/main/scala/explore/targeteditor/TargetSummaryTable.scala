@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
-import explore.Icons
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
 import explore.components.Tile
@@ -34,7 +33,6 @@ import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
 import reactST.reactTable.mod.IdType
-import reactST.reactTable.mod.UseSortByColumnProps
 
 import scalajs.js.JSConverters._
 
@@ -50,6 +48,7 @@ object TargetSummaryTable {
   type Props = TargetSummaryTable
 
   protected val TargetTable = TableMaker[TargetResult].withSort
+
   import TargetTable.syntax._
 
   protected val TargetTableComponent = new SUITable(TargetTable)
@@ -197,14 +196,6 @@ object TargetSummaryTable {
     renderInTitle:    Tile.RenderInTitle
   )(implicit val ctx: AppContextIO)
       extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
-
-  def sortIndicator(col: UseSortByColumnProps[_]): TagMod =
-    if (col.isSorted) {
-      val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
-      val ascDesc: VdomNode =
-        if (col.isSortedDesc.getOrElse(false)) Icons.SortUp else Icons.SortDown
-      <.span(ascDesc, <.small(index))
-    } else Icons.Sort
 
   // Horrible hack while we don't fully have hooks.
   // Reusability is handled in class component, instead of the need to useMemo.

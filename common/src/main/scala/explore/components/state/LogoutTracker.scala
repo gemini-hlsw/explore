@@ -16,11 +16,12 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
 import monocle.macros.Lenses
 import react.common.ReactProps
+import explore.utils.reuse._
 
 final case class LogoutTracker(
-  setVault:   Option[UserVault] ~=> IO[Unit],
-  setMessage: NonEmptyString ~=> IO[Unit]
-)(val render: IO[Unit] ~=> VdomNode)(implicit val ctx: AppContextIO)
+  setVault:   Option[UserVault] ==> IO[Unit],
+  setMessage: NonEmptyString ==> IO[Unit]
+)(val render: IO[Unit] ==> VdomNode)(implicit val ctx: AppContextIO)
     extends ReactProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {

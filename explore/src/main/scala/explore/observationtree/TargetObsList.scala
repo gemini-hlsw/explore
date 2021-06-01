@@ -63,6 +63,7 @@ import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.sizes._
 import react.semanticui.views.card.Card
 import react.semanticui.views.card.CardContent
+import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
@@ -521,7 +522,7 @@ object TargetObsList {
       props:        Props,
       state:        View[State],
       undoCtx:      Undoer.Context[IO, PointingsWithObs]
-    )(implicit ctx: AppContextIO): VdomElement = {
+    )(implicit ctx: AppContextIO): VdomNode = {
       val observations  = props.pointingsWithObs.get.observations
       val obsByPointing = observations.toList.groupBy(_.pointing)
 
@@ -580,7 +581,7 @@ object TargetObsList {
                 label = "Name",
                 placeholder = "Target name",
                 okLabel = "Create",
-                onComplete = (createTarget _).reusable, // TODO Set coordinates
+                onComplete = (createTarget _).reuseAlways, // TODO Set coordinates
                 trigger = Button(size = Mini,
                                  compact = true,
                                  clazz = ExploreStyles.VeryCompact,
@@ -594,7 +595,7 @@ object TargetObsList {
                 label = "Name",
                 placeholder = "Asterism name",
                 okLabel = "Create",
-                onComplete = (createAsterism _).reusable,
+                onComplete = (createAsterism _).reuseAlways,
                 trigger = Button(size = Mini,
                                  compact = true,
                                  clazz = ExploreStyles.VeryCompact,
@@ -931,7 +932,7 @@ object TargetObsList {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      UndoRegion[PointingsWithObs]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      UndoRegion[PointingsWithObs](Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
     }
   }
 
