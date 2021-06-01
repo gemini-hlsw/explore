@@ -9,6 +9,7 @@ import explore.common.SequenceStepsGQL._
 import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
@@ -29,8 +30,11 @@ object SequenceEditor {
           LiveQueryRender[ObservationDB,
                           SequenceSteps.Data,
                           SequenceSteps.Data.Observations.Nodes.Config
-          ](SequenceSteps.query(), _.observations.nodes.head.config.get, List.empty)(
-            (renderFn _).reuseAlways
+          ](SequenceSteps.query().reuseAlways,
+            ((_: SequenceSteps.Data).observations.nodes.head.config.get).reuseAlways,
+            List.empty.reuseAlways
+          )(
+            potRender((renderFn _).reuseAlways)
           )
         }
       )

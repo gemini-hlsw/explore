@@ -14,6 +14,7 @@ import explore.model.PointingId
 import explore.model.reusability._
 import explore.optics._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -141,15 +142,14 @@ object TargetObsQueries {
     ScalaFnComponent[View[PointingsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, TargetsObsQuery.Data, PointingsWithObs](
-          TargetsObsQuery.query(),
-          TargetsObsQuery.Data.asTargetsWithObs.get,
+          TargetsObsQuery.query().reuseAlways,
+          (TargetsObsQuery.Data.asTargetsWithObs.get _).reuseAlways,
           List(
             TargetEditSubscription.subscribe[IO](),
             AsterismEditSubscription.subscribe[IO](),
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),
-            ConstraintSetObsQueriesGQL.ConstraintSetsEditSubscription.subscribe[IO]()
-          )
-        )(render)
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO]()
+          ).reuseAlways
+        )(potRender(render))
       }
     )
 }

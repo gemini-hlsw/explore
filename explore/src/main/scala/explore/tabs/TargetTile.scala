@@ -15,6 +15,7 @@ import explore.implicits._
 import explore.model._
 import explore.schemas.ObservationDB
 import explore.targeteditor.TargetBody
+import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -54,10 +55,10 @@ object TargetTile {
                              TargetEditQuery.Data,
                              Option[TargetEditQuery.Data.Target]
           ](
-            TargetEditQuery.query(targetId),
-            _.target,
-            List(TargetEditSubscription.subscribe[IO](targetId))
-          )(Reuse(targetRenderFn _)(targetId, renderInTitle))
+            TargetEditQuery.query(targetId).reuseAlways,
+            (TargetEditQuery.Data.target.get _).reuseAlways,
+            List(TargetEditSubscription.subscribe[IO](targetId)).reuseAlways
+          )(potRender(Reuse(targetRenderFn _)(targetId, renderInTitle)))
             .withKey(s"target-$targetId")
         }
         .getOrElse(
