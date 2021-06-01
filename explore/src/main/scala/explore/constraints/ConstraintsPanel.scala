@@ -5,18 +5,15 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
-import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import eu.timepit.refined.types.numeric
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.Icons
-import explore.common.ConstraintSetObsQueriesGQL
 import explore.common.ConstraintsQueries._
+import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -32,7 +29,7 @@ import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
@@ -47,24 +44,13 @@ import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
-import react.semanticui.colors
-import react.semanticui.elements.button._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
-import react.semanticui.modules.popup.Popup
-import react.semanticui.modules.popup.PopupContent
-import react.semanticui.modules.popup.PopupPosition
-import react.semanticui.modules.popup.PopupWide
-import react.semanticui.sizes._
-
-import scala.util.Random
 
 final case class ConstraintsPanel(
-  id:             ConstraintSet.Id,
-  constraintSet:  View[ConstraintSetModel],
-  renderInTitle:  Tile.RenderInTitle,
-  allowMultiEdit: Boolean,
-  onCopy:         ConstraintSet.Id ==> IO[Unit] = Reuse.always(_ => IO.unit)
+  obsId:         Observation.Id,
+  constraintSet: View[ConstraintSetData],
+  renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -124,31 +110,27 @@ object ConstraintsPanel {
     private def renderFn(
       props:        Props,
       state:        View[State],
-      undoCtx:      Undoer.Context[IO, ConstraintSetModel]
+      undoCtx:      Undoer.Context[IO, ConstraintSetData]
     )(implicit ctx: AppContextIO): VdomNode = {
       val constraintSet = props.constraintSet
 
       val undoViewSet =
-        UndoView(props.id, constraintSet, undoCtx.setter)
+        UndoView(props.obsId, constraintSet, undoCtx.setter)
 
-      def nameView = undoViewSet(ConstraintSetModel.name, UpdateConstraintSet.name)
+      def nameView = undoViewSet(ConstraintSetData.name, UpdateConstraintSet.name)
       def erView   =
-        undoViewSet(ConstraintSetModel.elevationRange, UpdateConstraintSet.elevationRange)
-
-      val obsCount = props.constraintSet.get.observations.totalCount
-      val readOnly = !props.allowMultiEdit && obsCount > 1
+        undoViewSet(ConstraintSetData.elevationRange, UpdateConstraintSet.elevationRange)
 
       def selectEnum[A: Enumerated: Display](
         label:     String,
         helpId:    Help.Id,
-        lens:      Lens[ConstraintSetModel, A],
+        lens:      Lens[ConstraintSetData, A],
         remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
       ) = {
         val id = label.toLowerCase().replaceAll(" ", "-")
         EnumViewSelect(id = id,
                        value = undoViewSet(lens, remoteSet),
-                       label = Label(label, HelpIcon(helpId)),
-                       disabled = readOnly
+                       label = Label(label, HelpIcon(helpId))
         )
       }
 
@@ -158,75 +140,10 @@ object ConstraintsPanel {
           case HourAngle => erView.set(state.get.hourAngle)
         }
 
-      val makeCopy =
-        for {
-          _  <- state.zoom(State.copying).set(true)
-          id <- IO(Random.nextInt(0xfff)).map(int =>
-                  ConstraintSet.Id(numeric.PosLong.unsafeFrom(int.abs.toLong + 1))
-                )
-          _  <-
-            ConstraintSetObsQueriesGQL.AddConstraintSet.execute(
-              CreateConstraintSetInput(
-                constraintSetId = id.assign,
-                // programId = constraintSet.get.programId,
-                programId = "p-2",
-                name = NonEmptyString.unsafeFrom(s"${constraintSet.get.name} [$id]"),
-                imageQuality = constraintSet.get.imageQuality,
-                cloudExtinction = constraintSet.get.cloudExtinction,
-                skyBackground = constraintSet.get.skyBackground,
-                waterVapor = constraintSet.get.waterVapor,
-                elevationRange = constraintSet.get.elevationRange match {
-                  case AirMassRange(min, max)             =>
-                    CreateElevationRangeInput(airmassRange =
-                      CreateAirmassRangeInput(min, max).assign
-                    )
-                  case HourAngleRange(minHours, maxHours) =>
-                    CreateElevationRangeInput(hourAngleRange =
-                      CreateHourAngleRangeInput(minHours, maxHours).assign
-                    )
-                }
-              )
-            )
-          _  <- props.onCopy(id)
-          _  <- state.zoom(State.copying).set(false)
-        } yield ()
-
-      val editWarning =
-        <.span(
-          Popup(
-            trigger =
-              Label(as = <.a, circular = true, color = colors.Red)("Shared ",
-                                                                   Icons.Question.fitted(true)
-              ),
-            content = PopupContent(
-              content = <.div(ExploreStyles.SharedEditWarning)(
-                s"These constraints cannot be modified because they are shared by $obsCount observations.",
-                <.br,
-                "Please edit in Constraints View, create a New one or a Copy."
-              )
-            ),
-            wide = PopupWide.Very,
-            position = PopupPosition.TopRight
-          )
-        ).unless(props.allowMultiEdit)
-
       <.div(
         props.renderInTitle(
           <.span(ExploreStyles.TitleStrip)(
-            <.span(
-              Button(
-                onClick = makeCopy.runAsyncCB,
-                size = Tiny,
-                compact = true,
-                clazz = ExploreStyles.VeryCompact,
-                disabled = state.get.copying,
-                icon = Icons.Copy,
-                content = "Copy",
-                labelPosition = LabelPosition.Left
-              ),
-              editWarning.when(obsCount > 1)
-            ),
-            UndoButtons(constraintSet.get, undoCtx).unless(readOnly)
+            UndoButtons(constraintSet.get, undoCtx)
           )
         ),
         Form(loading = state.get.copying)(ExploreStyles.Grid, ExploreStyles.ConstraintsGrid)(
@@ -237,27 +154,26 @@ object ConstraintsPanel {
             value = nameView,
             validFormat = ValidFormatInput.nonEmptyValidFormat,
             errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below,
-            disabled = readOnly
+            errorPointing = LabelPointing.Below
           ),
           selectEnum("Image Quality",
                      "constraints/main/iq.md",
-                     ConstraintSetModel.imageQuality,
+                     ConstraintSetData.imageQuality,
                      UpdateConstraintSet.imageQuality
           ),
           selectEnum("Cloud Extinction",
                      "constraints/main/ce.md",
-                     ConstraintSetModel.cloudExtinction,
+                     ConstraintSetData.cloudExtinction,
                      UpdateConstraintSet.cloudExtinction
           ),
           selectEnum("Water Vapor",
                      "constraints/main/wv.md",
-                     ConstraintSetModel.waterVapor,
+                     ConstraintSetData.waterVapor,
                      UpdateConstraintSet.waterVapor
           ),
           selectEnum("Sky Background",
                      "constraints/main/sb.md",
-                     ConstraintSetModel.skyBackground,
+                     ConstraintSetData.skyBackground,
                      UpdateConstraintSet.skyBackground
           ),
           <.div(
@@ -269,8 +185,7 @@ object ConstraintsPanel {
               value = state
                 .zoom(State.rangeType)
                 .withOnMod(updateElevationRange),
-              clazz = ExploreStyles.ElevationRangePicker,
-              disabled = readOnly
+              clazz = ExploreStyles.ElevationRangePicker
             ),
             ReactFragment(
               FormInputEV(
@@ -296,8 +211,7 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readOnly
+                clazz = ExploreStyles.ElevationRangeEntry
               ),
               FormInputEV(
                 id = "maxam",
@@ -322,8 +236,7 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readOnly
+                clazz = ExploreStyles.ElevationRangeEntry
               )
             ).when(state.get.rangeType === AirMass),
             ReactFragment(
@@ -349,8 +262,7 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readOnly
+                clazz = ExploreStyles.ElevationRangeEntry
               ),
               FormInputEV(
                 id = "maxha",
@@ -374,8 +286,7 @@ object ConstraintsPanel {
                     )
                   ),
                 changeAuditor = ChangeAuditor.accept.decimal(1),
-                clazz = ExploreStyles.ElevationRangeEntry,
-                disabled = readOnly
+                clazz = ExploreStyles.ElevationRangeEntry
               ),
               <.div(ExploreStyles.UnitsLabel, "hours")
             ).when(state.get.rangeType === HourAngle)
@@ -385,7 +296,7 @@ object ConstraintsPanel {
     }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
-      UndoRegion[ConstraintSetModel](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
+      UndoRegion[ConstraintSetData](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
     }
   }
 

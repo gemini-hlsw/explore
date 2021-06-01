@@ -25,7 +25,7 @@ trait ArbObsSummary {
   implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
     for {
       id          <- arbitrary[Observation.Id]
-      constraints <- arbitrary[Option[ConstraintsSummary]]
+      constraints <- arbitrary[ConstraintsSummary]
       status      <- arbitrary[ObsStatus]
       duration    <- arbitrary[Duration]
     } yield ObsSummaryWithConstraints(id, constraints, status, duration)
@@ -36,19 +36,19 @@ trait ArbObsSummary {
       for {
         id          <- arbitrary[Observation.Id]
         pointing    <- arbitrary[Option[Pointing]]
-        constraints <- arbitrary[Option[ConstraintsSummary]]
+        constraints <- arbitrary[ConstraintsSummary]
         status      <- arbitrary[ObsStatus]
         duration    <- arbitrary[Duration]
       } yield ObsSummaryWithPointingAndConstraints(id, pointing, constraints, status, duration)
     }
 
   implicit val cogenObsSummaryWithConstraints: Cogen[ObsSummaryWithConstraints] =
-    Cogen[(Observation.Id, Option[ConstraintsSummary], ObsStatus, Duration)]
+    Cogen[(Observation.Id, ConstraintsSummary, ObsStatus, Duration)]
       .contramap(o => (o.id, o.constraints, o.status, o.duration))
 
   implicit val cogenObsSummaryWithPointingAndConstraints
     : Cogen[ObsSummaryWithPointingAndConstraints] =
-    Cogen[(Observation.Id, Option[Pointing], Option[ConstraintsSummary], ObsStatus, Duration)]
+    Cogen[(Observation.Id, Option[Pointing], ConstraintsSummary, ObsStatus, Duration)]
       .contramap(o => (o.id, o.pointing, o.constraints, o.status, o.duration))
 }
 

@@ -11,24 +11,21 @@ import cats.effect.std.Queue
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
+import crystal.Pot
 import crystal.react._
 import crystal.react.reuse._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
-import react.semanticui.collections.message.Message
-import react.semanticui.elements.loader.Loader
 
 final case class LiveQueryRender[S, D, A](
-  query:               IO[D],
-  extract:             D => A,
-  changeSubscriptions: List[IO[GraphQLSubscription[IO, _]]]
+  query:               Reuse[IO[D]],
+  extract:             D ==> A,
+  changeSubscriptions: Reuse[List[IO[GraphQLSubscription[IO, _]]]]
 )(
-  val valueRender:     A ==> VdomNode,
-  val pendingRender:   Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
-  val errorRender:     Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage)),
-  val onNewData:       IO[Unit] = IO.unit
+  val render:          Pot[A] ==> VdomNode,
+  val onNewData:       Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:               Async[IO],
   val dispatcher:      Dispatcher[IO],
@@ -48,8 +45,8 @@ object LiveQueryRender {
     renderer:                StreamRenderer.Component[A]
   ) extends Render.LiveQuery.State[F, Id, S, D, A]
 
-  // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
-  implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]] = Reusability.never
+  implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]] =
+    Reusability.by(p => (p.query, p.extract, p.changeSubscriptions, p.render, p.onNewData))
   implicit def stateReuse[F[_], S, D, A]: Reusability[State[F, S, D, A]] = Reusability.never
 
   protected def componentBuilder[F[_], S, D, A] =

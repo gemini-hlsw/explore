@@ -8,10 +8,8 @@ import lucuma.core.enum.CloudExtinction
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.SkyBackground
 import lucuma.core.enum.WaterVapor
-import lucuma.core.model.ConstraintSet
 
 trait ConstraintsSummary {
-  val id: ConstraintSet.Id
   val imageQuality: ImageQuality
   val cloudExtinction: CloudExtinction
   val skyBackground: SkyBackground
@@ -22,6 +20,14 @@ trait ConstraintsSummary {
 }
 
 object ConstraintsSummary {
+  val default: ConstraintsSummary = new ConstraintsSummary {
+    // Defaults here should match server defaults for a smooth UI experience.
+    val imageQuality    = ImageQuality.TwoPointZero
+    val cloudExtinction = CloudExtinction.ThreePointZero
+    val skyBackground   = SkyBackground.Bright
+    val waterVapor      = WaterVapor.Wet
+  }
+
   implicit val eqConstraintSummary: Eq[ConstraintsSummary] =
-    Eq.by(cs => (cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
+    Eq.by(cs => (cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
 }

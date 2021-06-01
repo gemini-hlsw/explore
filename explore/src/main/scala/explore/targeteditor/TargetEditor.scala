@@ -17,6 +17,7 @@ import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -50,28 +51,30 @@ object TargetEditor {
     def render(props: Props) = {
       implicit val ctx = props.ctx
       LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
-        TargetEditQuery.query(props.tid),
-        _.target,
-        List(TargetEditSubscription.subscribe[IO](props.tid))
+        TargetEditQuery.query(props.tid).reuseAlways,
+        (TargetEditQuery.Data.target.get _).reuseAlways,
+        List(TargetEditSubscription.subscribe[IO](props.tid)).reuseAlways
       )(
-        Reuse
-          .currying(props, ViewF.fromState[IO]($))
-          .in(
-            (
-              props,
-              state,
-              targetOpt: View[Option[TargetEditQuery.Data.Target]]
-            ) =>
-              targetOpt.get.map { _ =>
-                TargetBody(props.uid,
-                           props.tid,
-                           targetOpt.zoom(_.get)(f => _.map(f)),
-                           props.searching,
-                           state.zoom(State.options),
-                           props.renderInTitle
-                )
-              }
-          )
+        potRender(
+          Reuse
+            .currying(props, ViewF.fromState[IO]($))
+            .in(
+              (
+                props,
+                state,
+                targetOpt: View[Option[TargetEditQuery.Data.Target]]
+              ) =>
+                targetOpt.get.map { _ =>
+                  TargetBody(props.uid,
+                             props.tid,
+                             targetOpt.zoom(_.get)(f => _.map(f)),
+                             props.searching,
+                             state.zoom(State.options),
+                             props.renderInTitle
+                  )
+                }
+            )
+        )
       )
     }
   }

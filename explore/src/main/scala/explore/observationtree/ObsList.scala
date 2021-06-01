@@ -20,6 +20,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.components.undo.UndoRegion
 import explore.implicits._
+import explore.model.ConstraintsSummary
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
 import explore.model.ObsSummaryWithPointingAndConstraints
@@ -133,7 +134,7 @@ object ObsList {
       val newObs = IO(Random.nextInt(0xfff)).map(int =>
         ObsSummaryWithPointingAndConstraints(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                                              pointing = none,
-                                             constraints = none
+                                             constraints = ConstraintsSummary.default
         )
       )
 

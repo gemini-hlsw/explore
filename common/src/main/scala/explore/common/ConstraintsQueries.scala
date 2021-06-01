@@ -7,6 +7,8 @@ import cats.Endo
 import cats.effect.IO
 import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.common.ObsQueries._
+import explore.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ElevationRange
@@ -15,39 +17,36 @@ import explore.schemas.ObservationDB.Types._
 import explore.undo.UndoableView
 import explore.undo.Undoer
 import lucuma.core.enum._
-import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Observation
 import monocle.Lens
 
-import ConstraintsQueriesGQL._
-
 object ConstraintsQueries {
-  type ConstraintSetModel = ConstraintSetQuery.Data.ConstraintSet
-  val ConstraintSetModel = ConstraintSetQuery.Data.ConstraintSet
-
   case class UndoView(
-    id:           ConstraintSet.Id,
-    view:         View[ConstraintSetModel],
-    setter:       Undoer.Setter[IO, ConstraintSetModel]
+    obsId:        Observation.Id,
+    view:         View[ConstraintSetData],
+    setter:       Undoer.Setter[IO, ConstraintSetData]
   )(implicit ctx: AppContextIO) {
     private val undoableView = UndoableView(view, setter)
 
     def apply[A](
-      modelGet:  ConstraintSetModel => A,
-      modelMod:  (A => A) => ConstraintSetModel => ConstraintSetModel,
+      modelGet:  ConstraintSetData => A,
+      modelMod:  (A => A) => ConstraintSetData => ConstraintSetData,
       remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
     ): View[A] =
       undoableView.apply(
         modelGet,
         modelMod,
-        value => Mutation.execute(remoteSet(value)(EditConstraintSetInput(id))).void
+        value =>
+          UpdateConstraintSetMutation
+            .execute(obsId, remoteSet(value)(EditConstraintSetInput()))
+            .void
       )
 
     def apply[A](
-      lens:      Lens[ConstraintSetModel, A],
+      lens:      Lens[ConstraintSetData, A],
       remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
-
   }
 
   object UpdateConstraintSet {

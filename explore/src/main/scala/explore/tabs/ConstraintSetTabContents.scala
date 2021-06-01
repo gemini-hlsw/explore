@@ -10,18 +10,15 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
-import explore.common.ConstraintSetObsQueries._
+import explore.UnderConstruction
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.constraints.ConstraintSetEditor
 import explore.implicits._
-import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.observationtree.ConstraintSetObsList
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -70,19 +67,11 @@ object ConstraintSetTabContents {
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
-  protected def renderEditor(
-    csIdOpt:       Option[ConstraintSet.Id],
-    focused:       View[Option[Focused]],
-    renderInTitle: Tile.RenderInTitle
-  ): VdomNode =
-    csIdOpt.map(csId => ConstraintSetEditor(csId, focused, renderInTitle).withKey(csId.show))
-
   protected def renderFn(
-    props:                 Props,
-    state:                 View[State],
-    innerWidth:            Double,
-    constraintSetsWithObs: View[ConstraintSetsWithObs]
-  )(implicit ctx:          AppContextIO): VdomNode = {
+    props:        Props,
+    state:        View[State],
+    innerWidth:   Double
+  )(implicit ctx: AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
@@ -95,16 +84,6 @@ object ConstraintSetTabContents {
 
     val treeWidth = state.get.treeWidth.toInt
 
-    def tree(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
-        treeInner(constraintSetsWithObs)
-      )
-
-    def treeInner(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-      <.div(ExploreStyles.TreeBody)(
-        ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
-      )
-
     val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
@@ -116,24 +95,18 @@ object ConstraintSetTabContents {
       )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
     )
 
-    val csIdOpt = props.focused.get.collect {
-      case FocusedConstraintSet(csId) => csId.some
-      case FocusedObs(obsId)          =>
-        constraintSetsWithObs.get.obs.getElement(obsId).flatMap(_.constraints).map(_.id)
-    }.flatten
-
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
+    val tree = UnderConstruction()
+
     val rightSide =
-      Tile("constraints", "Constraints", backButton.some)(
-        Reuse(renderEditor _)(csIdOpt, props.focused)
-      )
+      Tile("constraints", "Constraints", backButton.some)(Reuse.always(_ => UnderConstruction()))
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(constraintSetsWithObs))
+        <.div(ExploreStyles.Tree, tree)
           .when(state.get.leftPanelVisible),
         <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
@@ -150,7 +123,7 @@ object ConstraintSetTabContents {
           maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
           onResize = treeResize,
           resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(constraintSetsWithObs),
+          content = tree,
           clazz = ExploreStyles.ResizableSeparator
         ),
         <.div(^.key := "constraintset-right-side",
@@ -179,9 +152,7 @@ object ConstraintSetTabContents {
       )
       .render { $ =>
         implicit val ctx = $.props.ctx
-        ConstraintSetObsLiveQuery(
-          Reuse(renderFn _)($.props, ViewF.fromState[IO]($), window.innerWidth)
-        )
+        renderFn($.props, ViewF.fromState[IO]($), window.innerWidth)
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

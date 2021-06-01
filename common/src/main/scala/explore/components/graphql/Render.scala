@@ -24,10 +24,8 @@ import org.typelevel.log4cats.Logger
 
 object Render {
   trait Props[F[_], G[_], A] {
-    val valueRender: G[A] ==> VdomNode
-    val pendingRender: Long ==> VdomNode
-    val errorRender: Throwable ==> VdomNode
-    val onNewData: F[Unit]
+    val render: Pot[G[A]] ==> VdomNode
+    val onNewData: Reuse[F[Unit]]
 
     implicit val F: Async[F]
     implicit val dispatcher: Dispatcher[F]
@@ -53,12 +51,7 @@ object Render {
       $ : RenderScope[P, Option[S], Unit]
     ): VdomNode = React.Fragment(
       $.state.fold[VdomNode](EmptyVdom)(
-        _.renderer(
-          ($.props.pendingRender, $.props.errorRender, $.props.valueRender).curryReusing.in(
-            (pendingRender, errorRender, valueRender, pot) =>
-              pot.fold(pendingRender, errorRender, valueRender)
-          )
-        )
+        _.renderer($.props.render)
       )
     )
   }
@@ -68,8 +61,8 @@ object Render {
   object Subscription {
 
     trait Props[F[_], G[_], D, A] extends Render.Props[F, G, A] {
-      val subscribe: F[GraphQLSubscription[F, D]]
-      val streamModifier: fs2.Stream[F, D] => fs2.Stream[F, A]
+      val subscribe: Reuse[F[GraphQLSubscription[F, D]]]
+      val streamModifier: fs2.Stream[F, D] ==> fs2.Stream[F, A]
     }
 
     trait State[F[_], G[_], D, A] extends Render.State[G, A] {
@@ -94,9 +87,9 @@ object Render {
 
   object LiveQuery {
     trait Props[F[_], G[_], S, D, A] extends Render.Props[F, G, A] {
-      val query: F[D]
-      val extract: D => A
-      val changeSubscriptions: List[F[GraphQLSubscription[F, _]]]
+      val query: Reuse[F[D]]
+      val extract: D ==> A
+      val changeSubscriptions: Reuse[List[F[GraphQLSubscription[F, _]]]]
 
       implicit val client: WebSocketClient[F, S]
     }
@@ -124,9 +117,9 @@ object Render {
 
         def queryAndEnqueue(queue: Queue[F, A]): F[Unit] =
           for {
-            result <- $.props.query.map($.props.extract)
+            result <- $.props.query.value.map($.props.extract)
             _      <- queue.offer(result)
-            _      <- $.props.onNewData
+            _      <- $.props.onNewData.value
           } yield ()
 
         // Once run, this effect will end when all subscriptions end.
@@ -161,7 +154,7 @@ object Render {
         val init =
           for {
             queue                   <- Queue.unbounded[F, A]
-            subscriptions           <- $.props.changeSubscriptions.sequence
+            subscriptions           <- $.props.changeSubscriptions.value.sequence
             cancelConnectionTracker <- runCancelableWithLog(trackConnection(queue))
             renderer                 = buildRenderer(fs2.Stream.fromQueueUnterminated(queue), $.props)
             _                       <-

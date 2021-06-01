@@ -33,9 +33,9 @@ object ObsSummary {
 }
 
 trait ObsWithConstraints extends ObsSummary {
-  val constraints: Option[ConstraintsSummary]
+  val constraints: ConstraintsSummary
 
-  lazy val constraintsSummary = constraints.map(_.summaryString).getOrElse("No constraints")
+  lazy val constraintsSummary = constraints.summaryString
 }
 
 trait ObsWithConf extends ObsSummary {
@@ -60,7 +60,7 @@ trait ObsWithPointing extends ObsSummary {
 @Lenses
 case class ObsSummaryWithConstraints(
   override val id:          Observation.Id,
-  override val constraints: Option[ConstraintsSummary],
+  override val constraints: ConstraintsSummary,
   override val status:      ObsStatus = ObsStatus.New,
   override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
 ) extends ObsSummary
@@ -75,7 +75,7 @@ object ObsSummaryWithConstraints {
 case class ObsSummaryWithPointingAndConstraints(
   override val id:          Observation.Id,
   override val pointing:    Option[Pointing],
-  override val constraints: Option[ConstraintsSummary],
+  override val constraints: ConstraintsSummary,
   override val status:      ObsStatus = ObsStatus.New,
   override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
 ) extends ObsSummary

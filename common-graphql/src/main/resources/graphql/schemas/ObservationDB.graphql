@@ -1,3 +1,32 @@
+# DatasetEvent creation parameters
+input AddDatasetEventInput {
+  eventId: ExecutionEventId
+  observationId: ObservationId!
+  generated: Instant!
+  stepId: StepId!
+  datasetIndex: Int!
+  filename: DatasetFilename
+  stageType: DatasetStage!
+}
+
+# SequenceEvent creation parameters
+input AddSequenceEventInput {
+  eventId: ExecutionEventId
+  observationId: ObservationId!
+  generated: Instant!
+  command: SequenceCommand!
+}
+
+# StepEvent creation parameters
+input AddStepEventInput {
+  eventId: ExecutionEventId
+  observationId: ObservationId!
+  generated: Instant!
+  stepId: StepId!
+  sequenceType: SequenceType!
+  stage: StepStage!
+}
+
 type AirMassRange {
   # Minimum Airmass (unitless)
   min: BigDecimal!
@@ -130,6 +159,12 @@ enum Breakpoint {
   DISABLED
 }
 
+# Bulk edit constraint set of multiple observations
+input BulkEditConstraintSetInput {
+  constraintSet: EditConstraintSetInput!
+  observationIds: [ObservationId!]!
+}
+
 type CatalogId {
   # Catalog name option
   name: CatalogName!
@@ -193,18 +228,6 @@ interface Config {
 }
 
 type ConstraintSet {
-  # Constraint set ID
-  id: ConstraintSetId!
-
-  # Deleted or Present
-  existence: Existence!
-
-  # The program that contains this constraint set
-  program(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): Program!
-
   # Constraint set name
   name: NonEmptyString!
 
@@ -228,8 +251,13 @@ type ConstraintSet {
 
   # Hour angle range if elevation range is an Hour angle range
   hourAngleRange: HourAngleRange
+}
 
-  # The observations associated with the constraint set
+type ConstraintSetGroup {
+  # IDs of observations that use the same constraints
+  observationIds: [ObservationId!]!
+
+  # Observations that use this constraint set
   observations(
     # Retrieve `first` values after the given cursor
     first: Int!
@@ -240,15 +268,18 @@ type ConstraintSet {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): ObservationConnection!
+
+  # Constraints held in common across the observations
+  constraintSet: ConstraintSet!
 }
 
-# Constraint Sets in the current page
-type ConstraintSetConnection {
+# Observations group by common constraints
+type ConstraintSetGroupConnection {
   # The nodes in all the edges from the current page
-  nodes: [ConstraintSet!]!
+  nodes: [ConstraintSetGroup!]!
 
   # Edges in the current page
-  edges: [ContraintSetEdge!]!
+  edges: [ConstraintSetGroupEdge!]!
 
   # Count of all nodes in all pages
   totalCount: Int!
@@ -257,25 +288,12 @@ type ConstraintSetConnection {
   pageInfo: PageInfo!
 }
 
-# Event sent when a new object is created or updated
-type ConstraintSetEdit implements Event {
-  # Type of edit
-  editType: EditType!
+# A constraint set group and its cursor
+type ConstraintSetGroupEdge {
+  # ConstraintSetGroupEdge element
+  node: ConstraintSetGroup!
 
-  # Edited object
-  value: ConstraintSet!
-  id: Long!
-}
-
-# ConstraintSetId id formatted as `c-(0|[1-9a-f][0-9a-f]*)`
-scalar ConstraintSetId
-
-# A Constraint Set and its cursor
-type ContraintSetEdge {
-  # ContraintSetEdge element
-  node: ConstraintSet!
-
-  # ContraintSetEdge element cursor
+  # ConstraintSetGroupEdge element cursor
   cursor: Cursor!
 }
 
@@ -309,8 +327,6 @@ input CreateAsterismInput {
 
 # Constraint set creation parameters
 input CreateConstraintSetInput {
-  constraintSetId: ConstraintSetId
-  programId: ProgramId!
   name: NonEmptyString!
   imageQuality: ImageQuality!
   cloudExtinction: CloudExtinction!
@@ -348,7 +364,7 @@ input CreateObservationInput {
   name: NonEmptyString
   asterismId: AsterismId
   targetId: TargetId
-  constraintSetId: ConstraintSetId
+  constraintSet: CreateConstraintSetInput
   status: ObsStatus
 }
 
@@ -374,6 +390,92 @@ scalar Cursor
 type Dark implements StepConfig {
   # Step type
   stepType: StepType!
+}
+
+type Dataset {
+  # Observation associated with this dataset
+  observation: Observation!
+
+  # Step that produced the dataset
+  step: Step!
+
+  # Dataset index
+  index: Int!
+
+  # Dataset filename
+  filename: DatasetFilename!
+}
+
+# Datasets in the current page
+type DatasetConnection {
+  # The nodes in all the edges from the current page
+  nodes: [Dataset!]!
+
+  # Edges in the current page
+  edges: [DatasetEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# A Dataset and its cursor
+type DatasetEdge {
+  # DatasetEdge element
+  node: Dataset!
+
+  # DatasetEdge element cursor
+  cursor: Cursor!
+}
+
+# Dataset-level events
+type DatasetEvent implements ExecutionEvent {
+  # Step from which the dataset comes
+  step: Step!
+
+  # Dataset filename, when known
+  filename: DatasetFilename
+
+  # Dataset stage
+  stage: DatasetStage!
+
+  # Event id
+  id: ExecutionEventId!
+
+  # Observation whose execution produced this event
+  observation: Observation!
+
+  # Time at which this event was generated, according to the caller (e.g., Observe)
+  generated: Instant!
+
+  # Time at which this event was received
+  received: Instant!
+}
+
+# Dataset filename in standard format in format 'N20210519S0001.fits'
+scalar DatasetFilename
+
+# Execution stage or phase of an individual dataset
+enum DatasetStage {
+  # DatasetStage END_OBSERVE
+  END_OBSERVE
+
+  # DatasetStage END_READOUT
+  END_READOUT
+
+  # DatasetStage END_WRITE
+  END_WRITE
+
+  # DatasetStage START_OBSERVE
+  START_OBSERVE
+
+  # DatasetStage START_READOUT
+  START_READOUT
+
+  # DatasetStage START_WRITE
+  START_WRITE
 }
 
 type Declination {
@@ -460,11 +562,6 @@ input EditAsterismInput {
 
 # Edit constraint set
 input EditConstraintSetInput {
-  constraintSetId: ConstraintSetId!
-
-  # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  existence: Existence
-
   # The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
   name: NonEmptyString
 
@@ -482,12 +579,6 @@ input EditConstraintSetInput {
 
   # The elevationRange field must be either specified or skipped altogether.  It cannot be unset with a null value.
   elevationRange: CreateElevationRangeInput
-}
-
-# Edit the constraint set for a set of observations
-input EditObservationConstraintSetInput {
-  observationIds: [ObservationId!]!
-  constraintSetId: ConstraintSetId
 }
 
 # Edit observation
@@ -509,8 +600,8 @@ input EditObservationInput {
   # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
   targetId: TargetId
 
-  # The constraintSetId field may be unset by assigning a null value, or ignored by skipping it altogether
-  constraintSetId: ConstraintSetId
+  # The constraintSet field may be unset by assigning a null value, or ignored by skipping it altogether
+  constraintSet: EditConstraintSetInput
 }
 
 # Edit the target or asterism for a set of observations
@@ -599,6 +690,68 @@ interface Event {
   id: Long!
 }
 
+# Execution event (sequence, step, or dataset events)
+interface ExecutionEvent {
+  # Event id
+  id: ExecutionEventId!
+
+  # Observation whose execution produced this event
+  observation: Observation!
+
+  # Time at which this event was generated, according to the caller (e.g., Observe)
+  generated: Instant!
+
+  # Time at which this event was received
+  received: Instant!
+}
+
+# ExecutionEvents in the current page
+type ExecutionEventConnection {
+  # The nodes in all the edges from the current page
+  nodes: [ExecutionEvent!]!
+
+  # Edges in the current page
+  edges: [ExecutionEventEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# An ExecutionEvent and its cursor
+type ExecutionEventEdge {
+  # ExecutionEventEdge element
+  node: ExecutionEvent!
+
+  # ExecutionEventEdge element cursor
+  cursor: Cursor!
+}
+
+# ExecutionEventId id formatted as `e-(0|[1-9a-f][0-9a-f]*)`
+scalar ExecutionEventId
+
+type ExecutionRecord {
+  # Datasets associated with the observation
+  datasets(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): DatasetConnection!
+
+  # Events associated with the observation
+  events(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): ExecutionEventConnection!
+}
+
 # State of being: either Deleted or Present
 enum Existence {
   # Existence Present
@@ -606,6 +759,15 @@ enum Existence {
 
   # Existence Deleted
   DELETED
+}
+
+# Gaussian source angle in appropriate units
+input GaussianSourceAngleInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
+  fromLong: WavelengthLongInput
+  fromDecimal: WavelengthDecimalInput
 }
 
 # GCAL calibration step (flat / arc)
@@ -1563,6 +1725,9 @@ enum ImageQuality {
   TWO_POINT_ZERO
 }
 
+# Instant of time in ISO-8601 representation in format '2011-12-03T10:15:30Z'
+scalar Instant
+
 # Instrument
 enum InstrumentType {
   # InstrumentType Phoenix
@@ -1738,22 +1903,6 @@ type Mutation {
     # Asterism ID
     asterismId: AsterismId!
   ): Asterism!
-  createConstraintSet(
-    # Constraint set description
-    input: CreateConstraintSetInput!
-  ): ConstraintSet
-  updateConstraintSet(
-    # Edit constraint set
-    input: EditConstraintSetInput!
-  ): ConstraintSet!
-  deleteConstraintSet(
-    # Constraint Set ID
-    constraintSetId: ConstraintSetId!
-  ): ConstraintSet!
-  undeleteContraintSet(
-    # Constraint Set ID
-    constraintSetId: ConstraintSetId!
-  ): ConstraintSet!
   createObservation(
     # Observation description
     input: CreateObservationInput!
@@ -1766,9 +1915,9 @@ type Mutation {
     # Edit observation asterism / target
     input: EditObservationPointingInput!
   ): [Observation!]!
-  updateObservationConstraintSet(
-    # Edit observation constraint set
-    input: EditObservationConstraintSetInput!
+  updateConstraintSet(
+    # Bulk edit constraint set
+    input: BulkEditConstraintSetInput!
   ): [Observation!]!
   deleteObservation(
     # Observation ID
@@ -1830,6 +1979,18 @@ type Mutation {
     # Target / program links
     input: TargetProgramLinks!
   ): Target!
+  addSequenceEvent(
+    # Sequence event description
+    input: AddSequenceEventInput!
+  ): SequenceEvent!
+  addStepEvent(
+    # Step event description
+    input: AddStepEventInput!
+  ): StepEvent!
+  addDatasetEvent(
+    # Dataset event description
+    input: AddDatasetEventInput!
+  ): DatasetEvent!
 }
 
 # A String value that cannot be empty
@@ -1865,11 +2026,8 @@ type Observation {
     includeDeleted: Boolean! = false
   ): Program!
 
-  # The constraint set for the observation, if any
-  constraintSet(
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): ConstraintSet
+  # The constraint set for the observation
+  constraintSet: ConstraintSet!
 
   # The observation's asterism or target (see also `asterism` and `target` fields)
   observationTarget(
@@ -1891,6 +2049,9 @@ type Observation {
 
   # Instrument configuration
   config: Config
+
+  # Execution sequence and runtime artifacts
+  execution: ExecutionRecord!
 }
 
 # Matching observations
@@ -2256,30 +2417,10 @@ type Query {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): Asterism
-
-  # Returns all constraint sets associated with the given program.
-  constraintSets(
-    # Program ID
-    programId: ProgramId!
-
-    # Retrieve `first` values after the given cursor
-    first: Int!
-
-    # Retrieve values after the one associated with this cursor
-    after: Cursor
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): ConstraintSetConnection!
-
-  # Returns the constraint set with the given id, if any.
-  constraintSet(
-    # Constraint Set ID
-    constraintSetId: ConstraintSetId!
-
-    # Set to true to include deleted values
-    includeDeleted: Boolean! = false
-  ): ConstraintSet
+  spectroscopy(
+    # Configuraton alternatives search parameters.
+    input: QueryConfigurationAlternativeSearchInput!
+  ): Int!
 
   # Returns all observations associated with the given program.
   observations(
@@ -2304,6 +2445,18 @@ type Query {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): Observation
+
+  # Observations group by commonly held constraints
+  constraintGroups(
+    # Retrieve `first` values after the given cursor
+    first: Int!
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ConstraintSetGroupConnection!
 
   # Pages through all programs.
   programs(
@@ -2349,6 +2502,33 @@ type Query {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): Target
+}
+
+# Configuration alternatives query
+input QueryConfigurationAlternativeSearchInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput
+
+  # Minimum desired simultaneous wavelength coverage.
+  simultaneousCoverage: WavelengthModelInput
+
+  # Minimum desired resolution.
+  resolution: Int
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: Int
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpctralDistribution
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeInput
+
+  # Target redshift.
+  redshift: BigDecimal
 }
 
 type RadialVelocity {
@@ -2464,6 +2644,54 @@ type Science implements StepConfig {
   stepType: StepType!
 }
 
+# Sequence-level command
+enum SequenceCommand {
+  # SequenceCommand ABORT
+  ABORT
+
+  # SequenceCommand CONTINUE
+  CONTINUE
+
+  # SequenceCommand PAUSE
+  PAUSE
+
+  # SequenceCommand SLEW
+  SLEW
+
+  # SequenceCommand START
+  START
+
+  # SequenceCommand STOP
+  STOP
+}
+
+# Sequence-level events
+type SequenceEvent implements ExecutionEvent {
+  # Sequence command
+  command: SequenceCommand!
+
+  # Event id
+  id: ExecutionEventId!
+
+  # Observation whose execution produced this event
+  observation: Observation!
+
+  # Time at which this event was generated, according to the caller (e.g., Observe)
+  generated: Instant!
+
+  # Time at which this event was received
+  received: Instant!
+}
+
+# Type of sequence, acquisition or science
+enum SequenceType {
+  # SequenceType ACQUISITION
+  ACQUISITION
+
+  # SequenceType SCIENCE
+  SCIENCE
+}
+
 type Sidereal {
   # Catalog id, if any, describing from where the information in this target was obtained
   catalogId: CatalogId
@@ -2499,6 +2727,43 @@ enum SkyBackground {
   BRIGHT
 }
 
+# Spatial profile PointSource/UniformSource/GaussianSource
+input SpatialProfileModelInput {
+  # Spatial profile type: Point/Uniform/Gaussian
+  sourceType: SpatialProfileType!
+
+  # Full width half maximum (including seeing) in suitable units. Required for the
+  # Gaussian spatial profile, ignored otherwise.
+  fwhm: GaussianSourceAngleInput
+}
+
+# Spatial profile type: Point/Uniform/Gaussian
+enum SpatialProfileType {
+  # SpatialProfileType PointSource
+  POINT_SOURCE
+
+  # SpatialProfileType UniformSource
+  UNIFORM_SOURCE
+
+  # SpatialProfileType GaussianSource
+  GAUSSIAN_SOURCE
+}
+
+# Spectral distribution variant
+enum SpctralDistribution {
+  # SpctralDistribution BlackBody
+  BLACK_BODY
+
+  # SpctralDistribution PowerLaw
+  POWER_LAW
+
+  # SpctralDistribution Stellar
+  STELLAR
+
+  # SpctralDistribution NonStellar
+  NON_STELLAR
+}
+
 # Sequence step
 interface Step {
   # Step id
@@ -2523,8 +2788,53 @@ interface StepConfig {
   stepType: StepType!
 }
 
+# Step-level events
+type StepEvent implements ExecutionEvent {
+  # Step to which the event applies
+  step: Step!
+
+  # Sequence type
+  sequenceType: SequenceType!
+
+  # Step stage
+  stage: StepStage!
+
+  # Event id
+  id: ExecutionEventId!
+
+  # Observation whose execution produced this event
+  observation: Observation!
+
+  # Time at which this event was generated, according to the caller (e.g., Observe)
+  generated: Instant!
+
+  # Time at which this event was received
+  received: Instant!
+}
+
 # StepId id formatted as `s-(0|[1-9a-f][0-9a-f]*)`
 scalar StepId
+
+# Execution stage or phase of an individual step
+enum StepStage {
+  # StepStage END_CONFIGURE
+  END_CONFIGURE
+
+  # StepStage END_OBSERVE
+  END_OBSERVE
+
+  # StepStage END_STEP
+  END_STEP
+
+  # StepStage START_CONFIGURE
+  START_CONFIGURE
+
+  # StepStage START_OBSERVE
+  START_OBSERVE
+
+  # StepStage START_STEP
+  START_STEP
+}
 
 # Time required for a step or steps, categorized according to use
 type StepTime {
@@ -2577,21 +2887,6 @@ type Subscription {
     # Program ID
     programId: ProgramId
   ): AsterismEdit!
-
-  #
-  # Subscribes to an event that is generated whenever a(n) constraintSet is
-  # created or updated.  If a(n) constraintSet id is provided, the event is only
-  # generated for edits to that particular constraintSet.  If a program id is
-  # provided then the event must correspond to a(n) constraintSet referenced by
-  # that program.
-  #
-  constraintSetEdit(
-    # Constraint Set ID
-    constraintSetId: ConstraintSetId
-
-    # Program ID
-    programId: ProgramId
-  ): ConstraintSetEdit!
 
   #
   # Subscribes to an event that is generated whenever a(n) observation is
@@ -2772,5 +3067,48 @@ type Wavelength {
 
   # Wavelength in µm
   micrometers: BigDecimal!
+}
+
+# Decimal value in Wavelength
+input WavelengthDecimalInput {
+  # decimal value in associated units
+  value: BigDecimal!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Integral value in Wavelength
+input WavelengthLongInput {
+  # integral value in associated units
+  value: Long!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Wavelength, choose one of the available units
+input WavelengthModelInput {
+  picometers: Long
+  angstroms: BigDecimal
+  nanometers: BigDecimal
+  micrometers: BigDecimal
+  fromLong: WavelengthLongInput
+  fromDecimal: WavelengthDecimalInput
+}
+
+# Wavelength units
+enum WavelengthUnits {
+  # WavelengthUnits Picometers
+  PICOMETERS
+
+  # WavelengthUnits Angstroms
+  ANGSTROMS
+
+  # WavelengthUnits Nanometers
+  NANOMETERS
+
+  # WavelengthUnits Micrometers
+  MICROMETERS
 }
 

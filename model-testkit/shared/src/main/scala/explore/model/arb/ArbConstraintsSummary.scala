@@ -11,12 +11,10 @@ import org.scalacheck.Cogen._
 import explore.model.ConstraintsSummary
 import lucuma.core.enum._
 import lucuma.core.util.arb.ArbGid._
-import lucuma.core.model.ConstraintSet
 
 trait ArbConstraintsSummary {
   def buildConstraintsSummaryArb[A <: ConstraintsSummary](
     build: (
-      ConstraintSet.Id,
       ImageQuality,
       CloudExtinction,
       SkyBackground,
@@ -24,17 +22,15 @@ trait ArbConstraintsSummary {
     ) => A
   ) = Arbitrary[A] {
     for {
-      id <- arbitrary[ConstraintSet.Id]
       iq <- arbitrary[ImageQuality]
       ce <- arbitrary[CloudExtinction]
       sb <- arbitrary[SkyBackground]
       wv <- arbitrary[WaterVapor]
-    } yield build(id, iq, ce, sb, wv)
+    } yield build(iq, ce, sb, wv)
   }
 
-  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((i, iq, ce, sb, wv) =>
+  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((iq, ce, sb, wv) =>
     new ConstraintsSummary {
-      val id              = i
       val imageQuality    = iq
       val cloudExtinction = ce
       val skyBackground   = sb
@@ -43,10 +39,8 @@ trait ArbConstraintsSummary {
   )
 
   implicit val constraintsSummaryCogen: Cogen[ConstraintsSummary] =
-    Cogen[(ConstraintSet.Id, ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
-      .contramap(cs =>
-        (cs.id, cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor)
-      )
+    Cogen[(ImageQuality, CloudExtinction, SkyBackground, WaterVapor)]
+      .contramap(cs => (cs.imageQuality, cs.cloudExtinction, cs.skyBackground, cs.waterVapor))
 }
 
 object ArbConstraintsSummary extends ArbConstraintsSummary
