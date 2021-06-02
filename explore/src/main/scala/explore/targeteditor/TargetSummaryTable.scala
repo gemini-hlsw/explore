@@ -38,6 +38,7 @@ import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
+  hiddenColumns:    View[Set[String]],
   focused:          View[Option[Focused]],
   expandedIds:      View[ExpandedIds],
   renderInTitle:    Tile.RenderInTitle
@@ -179,7 +180,10 @@ object TargetSummaryTable {
       val rawData = props.pointingsWithObs.targets.toList.toJSArray
 
       tableComponent(
-        TableComponentProps(TargetTable.Options(columns, rawData), props.renderInTitle)
+        TableComponentProps(TargetTable.Options(columns, rawData),
+                            props.hiddenColumns,
+                            props.renderInTitle
+        )
       )
     }
   }
@@ -193,6 +197,7 @@ object TargetSummaryTable {
 
   protected final case class TableComponentProps(
     options:          TargetTable.OptionsType,
+    hiddenColumns:    View[Set[String]],
     renderInTitle:    Tile.RenderInTitle
   )(implicit val ctx: AppContextIO)
       extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
@@ -202,15 +207,16 @@ object TargetSummaryTable {
   // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
   protected val tableComponent =
     ScalaFnComponent[TableComponentProps] { props =>
+      implicit val ctx = props.ctx
+
       val tableInstance = TargetTable.use(
         props.options.setInitialStateFull(
           TargetTable
             .State()
             .setHiddenColumns(
-              (List("epoch", "pmra", "pmdec", "parallax", "morphology", "sed") ++
-                MagnitudeBand.all
-                  .filterNot(_ === MagnitudeBand.V)
-                  .map(b => (b.shortName + "mag"))).map(col => col: IdType[TargetResult]).toJSArray
+              props.hiddenColumns.get.toList
+                .map(col => col: IdType[TargetResult])
+                .toJSArray
             )
         )
       )
@@ -228,16 +234,21 @@ object TargetSummaryTable {
               DropdownMenu()(
                 tableInstance.allColumns
                   .drop(2)
-                  .toTagMod(column =>
-                    DropdownItem()(^.key := column.id.toString)(
+                  .toTagMod { column =>
+                    val colId = column.id.toString
+                    DropdownItem()(^.key := colId)(
                       <.div(
-                        Checkbox(label = columnNames(column.id.toString),
-                                 checked = column.isVisible,
-                                 onChange = (_: Boolean) => Callback(column.toggleHidden())
+                        Checkbox(
+                          label = columnNames(colId),
+                          checked = column.isVisible,
+                          onChange = (value: Boolean) =>
+                            props.hiddenColumns
+                              .mod(cols => if (value) cols - colId else cols + colId)
+                              .runAsyncCB
                         )
                       )
                     )
-                  )
+                  }
               )
             )
           )

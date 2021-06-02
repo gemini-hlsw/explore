@@ -14,9 +14,9 @@ import explore.utils.ExploreEvent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common.ReactProps
-import explore.utils.reuse._
 
 final case class LogoutTracker(
   setVault:   Option[UserVault] ==> IO[Unit],

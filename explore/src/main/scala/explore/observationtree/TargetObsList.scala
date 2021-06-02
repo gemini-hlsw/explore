@@ -45,6 +45,7 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
@@ -63,7 +64,6 @@ import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.sizes._
 import react.semanticui.views.card.Card
 import react.semanticui.views.card.CardContent
-import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random

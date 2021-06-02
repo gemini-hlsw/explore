@@ -34,12 +34,12 @@ import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.util.Random
 

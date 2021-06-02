@@ -9,8 +9,8 @@ import explore.config.ConfigurationPanel
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import react.common._
-import explore.utils.reuse._
 
 object ConfigurationTile {
   def configurationTile(

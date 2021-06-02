@@ -9,25 +9,32 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
+import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
-import lucuma.core.model.User
 import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option
 
 import scala.collection.immutable.HashSet
 
+import lucuma.core.model.User
+
 @Lenses
 case class RootModel(
-  vault:                Option[UserVault],
-  tabs:                 EnumZipper[AppTab],
-  focused:              Option[Focused] = none,
-  expandedIds:          ExpandedIds = ExpandedIds(),
-  searchingTarget:      Set[Target.Id] = HashSet.empty,
-  userSelectionMessage: Option[NonEmptyString] = none
+  vault:                      Option[UserVault],
+  tabs:                       EnumZipper[AppTab],
+  focused:                    Option[Focused] = none,
+  expandedIds:                ExpandedIds = ExpandedIds(),
+  searchingTarget:            Set[Target.Id] = HashSet.empty,
+  userSelectionMessage:       Option[NonEmptyString] = none,
+  targetSummaryHiddenColumns: Set[String] =
+    Set("epoch", "pmra", "pmdec", "parallax", "morphology", "sed") ++
+      MagnitudeBand.all
+        .filterNot(_ === MagnitudeBand.V)
+        .map(b => (b.shortName + "mag"))
 )
 
 object RootModel {
@@ -48,6 +55,13 @@ object RootModel {
 
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>
-      (m.vault, m.tabs, m.focused, m.expandedIds, m.searchingTarget, m.userSelectionMessage)
+      (m.vault,
+       m.tabs,
+       m.focused,
+       m.expandedIds,
+       m.searchingTarget,
+       m.userSelectionMessage,
+       m.targetSummaryHiddenColumns
+      )
     )
 }

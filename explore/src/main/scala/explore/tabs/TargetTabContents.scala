@@ -29,6 +29,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import react.common._
@@ -39,7 +40,6 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
@@ -48,6 +48,7 @@ final case class TargetTabContents(
   focused:          View[Option[Focused]],
   searching:        View[Set[Target.Id]],
   expandedIds:      View[ExpandedIds],
+  hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[TargetTabContents](TargetTabContents.component) {
@@ -143,14 +144,14 @@ object TargetTabContents {
           )
         case None             =>
           Tile("target", s"Targets Summary", backButton.some)(
-            (
-              (renderInTitle: Tile.RenderInTitle) =>
-                TargetSummaryTable(pointingsWithObs.get,
-                                   props.focused,
-                                   props.expandedIds,
-                                   renderInTitle
-                ): VdomNode
-            ).reuseAlways
+            Reuse.by((pointingsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
+              TargetSummaryTable(pointingsWithObs.get,
+                                 props.hiddenColumns,
+                                 props.focused,
+                                 props.expandedIds,
+                                 renderInTitle
+              )
+            )
           )
       }
 

@@ -25,9 +25,9 @@ import lucuma.core.enum.WaterVapor
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.macros.Lenses
-import explore.utils.reuse._
 
 import ConstraintSetObsQueriesGQL._
 

@@ -20,13 +20,13 @@ import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 

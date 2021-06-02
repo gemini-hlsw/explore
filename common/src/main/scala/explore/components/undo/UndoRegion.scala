@@ -9,9 +9,9 @@ import crystal.react.implicits._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common.ReactProps
-import explore.utils.reuse._
 
 final case class UndoRegion[M](
   renderer: Undoer.Context[IO, M] ==> VdomNode

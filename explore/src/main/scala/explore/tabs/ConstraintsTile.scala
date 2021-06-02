@@ -29,6 +29,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
 import react.semanticui.addons.select.Select
@@ -36,7 +37,6 @@ import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes
-import explore.utils.reuse._
 
 import scala.util.Random
 

@@ -16,12 +16,12 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.internal.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
-import explore.utils.reuse._
 
 import scalajs.js
 

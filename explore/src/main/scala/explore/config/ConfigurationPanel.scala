@@ -30,12 +30,12 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 final case class ConfigurationPanel(
   id:            Option[Observation.Id],

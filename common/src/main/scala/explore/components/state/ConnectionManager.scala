@@ -14,10 +14,10 @@ import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.loader.Loader
-import explore.utils.reuse._
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
   val render:                                Reuse[VdomNode]

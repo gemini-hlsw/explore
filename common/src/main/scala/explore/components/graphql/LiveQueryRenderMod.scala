@@ -16,11 +16,11 @@ import crystal.react._
 import explore._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps

@@ -19,8 +19,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import react.common._
-import explore.utils.reuse._
 
 final case class ConstraintSetEditor(
   csId:          ConstraintSet.Id,
@@ -32,22 +32,6 @@ object ConstraintSetEditor {
   type Props = ConstraintSetEditor
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
-  protected def renderFn(
-    props: Props,
-    csOpt: View[Option[ConstraintSetModel]]
-  ): VdomNode =
-    csOpt.get.map { _ =>
-      ConstraintsPanel(
-        props.csId,
-        csOpt.zoom(_.get)(f => _.map(f)),
-        props.renderInTitle,
-        allowMultiEdit = true,
-        onCopy = (
-          (id: ConstraintSet.Id) => props.focused.set(Focused.FocusedConstraintSet(id).some)
-        ).reuseAlways
-      )
-    }
 
   val component =
     ScalaComponent

@@ -14,11 +14,11 @@ import clue.WebSocketClient
 import crystal.react._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import explore.utils.reuse._
 
 final case class LiveQueryRender[S, D, A](
   query:               IO[D],

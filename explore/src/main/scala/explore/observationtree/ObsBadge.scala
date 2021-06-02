@@ -22,12 +22,12 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import react.semanticui.views.card._
-import explore.utils.reuse._
 
 final case class ObsBadge(
   obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.

@@ -13,10 +13,10 @@ import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
-import explore.utils.reuse._
 
 import java.time.Instant
 

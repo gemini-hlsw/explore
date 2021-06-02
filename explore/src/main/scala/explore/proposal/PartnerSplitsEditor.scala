@@ -22,6 +22,7 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics._
+import lucuma.ui.reuse._
 import monocle.function.Index
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
@@ -29,7 +30,6 @@ import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
-import explore.utils.reuse._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,

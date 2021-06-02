@@ -15,8 +15,8 @@ import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.ui.reuse._
 import monocle.Getter
-import explore.utils.reuse._
 
 import ObsQueriesGQL._
 

@@ -16,12 +16,12 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
 import react.semanticui.sizes.Small
-import explore.utils.reuse._
 
 /**
  * Generic component to accept user input

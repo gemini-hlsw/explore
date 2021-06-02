@@ -31,6 +31,7 @@ import lucuma.core.model.Partner
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common.ReactProps
@@ -39,7 +40,6 @@ import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import spire.std.any._
-import explore.utils.reuse._
 
 import scala.annotation.unused
 

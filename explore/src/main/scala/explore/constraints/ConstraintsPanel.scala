@@ -42,6 +42,7 @@ import lucuma.ui.optics.TruncatedRefinedBigDecimal
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common._
@@ -55,7 +56,6 @@ import react.semanticui.modules.popup.PopupContent
 import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.modules.popup.PopupWide
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.util.Random
 

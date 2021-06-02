@@ -13,11 +13,11 @@ import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel
 import explore.model.UserVault
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import react.common.ReactProps
-import explore.utils.reuse._
-import explore.model.reusability._
 
 final case class IfLogged(view: View[RootModel])(val render: (UserVault, IO[Unit]) ==> VdomNode)
     extends ReactProps[IfLogged](IfLogged.component)

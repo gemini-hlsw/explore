@@ -19,8 +19,8 @@ import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentWillUnmount
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
-import explore.utils.reuse._
 
 object Render {
   trait Props[F[_], G[_], A] {

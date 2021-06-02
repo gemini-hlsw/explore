@@ -14,6 +14,7 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reuse._
 import react.common._
 import react.hotkeys._
 import react.semanticui.modules.sidebar.Sidebar
@@ -22,7 +23,6 @@ import react.semanticui.modules.sidebar.SidebarDirection
 import react.semanticui.modules.sidebar.SidebarPushable
 import react.semanticui.modules.sidebar.SidebarPusher
 import react.semanticui.modules.sidebar.SidebarWidth
-import explore.utils.reuse._
 
 import scala.scalajs.js
 

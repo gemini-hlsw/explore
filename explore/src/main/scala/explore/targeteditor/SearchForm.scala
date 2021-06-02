@@ -22,6 +22,7 @@ import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import lucuma.ui.utils.abbreviate
 import monocle.macros.Lenses
 import react.common._
@@ -30,7 +31,6 @@ import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scalajs.js.JSConverters._
 

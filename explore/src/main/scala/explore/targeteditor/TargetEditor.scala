@@ -21,9 +21,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common._
-import explore.utils.reuse._
 
 final case class TargetEditor(
   uid:              User.Id,
@@ -45,21 +45,6 @@ object TargetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
-
-  protected def renderFn(
-    props:     Props,
-    state:     View[State],
-    targetOpt: View[Option[TargetEditQuery.Data.Target]]
-  ): VdomNode =
-    targetOpt.get.map { _ =>
-      TargetBody(props.uid,
-                 props.tid,
-                 targetOpt.zoom(_.get)(f => _.map(f)),
-                 props.searching,
-                 state.zoom(State.options),
-                 props.renderInTitle
-      )
-    }
 
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {

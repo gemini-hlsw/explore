@@ -27,6 +27,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import react.common._
@@ -37,7 +38,6 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._

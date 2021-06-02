@@ -19,11 +19,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Traversal
 import monocle.unsafe.UnsafeSelect
 import react.common._
 import react.gridlayout._
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 

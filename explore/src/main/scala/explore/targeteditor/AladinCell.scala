@@ -24,6 +24,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.aladin.Fov
 import react.common._
@@ -31,7 +32,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
 import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 

@@ -18,9 +18,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
-import explore.utils.reuse._
 
 object TargetTile {
   def targetTile(

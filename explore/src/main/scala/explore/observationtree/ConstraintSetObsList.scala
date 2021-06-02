@@ -35,6 +35,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses
@@ -49,7 +50,6 @@ import react.semanticui.elements.header.Header
 import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random

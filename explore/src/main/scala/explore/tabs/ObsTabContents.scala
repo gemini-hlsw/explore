@@ -33,6 +33,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import monocle.function.Field2.second
 import monocle.macros.Lenses
@@ -46,7 +47,6 @@ import react.resizeDetector.ResizeDetector
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
-import explore.utils.reuse._
 
 import scala.concurrent.duration._
 
