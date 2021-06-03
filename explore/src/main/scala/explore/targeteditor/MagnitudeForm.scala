@@ -137,7 +137,7 @@ object MagnitudeForm {
 
           val columns = List(
             MagTable
-              .Column("value")
+              .Column("value", _.get.value)
               .setCell(
                 ReactTableHelpers
                   .editableViewColumn(
@@ -153,7 +153,7 @@ object MagnitudeForm {
               )
               .setHeader("Value"),
             MagTable
-              .Column("band")
+              .Column("band", _.get.band)
               .setCell(
                 ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
                   disabled = props.disabled,
@@ -163,7 +163,7 @@ object MagnitudeForm {
               .setSortByFn(_.get.band)
               .setHeader("Band"),
             MagTable
-              .Column("system")
+              .Column("system", _.get.system)
               .setCell(
                 ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
                   disabled = props.disabled
@@ -171,7 +171,7 @@ object MagnitudeForm {
               )
               .setHeader("System"),
             MagTable
-              .Column("delete")
+              .Column[Unit]("delete")
               .setCell(
                 ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                    onClick = deleteFn,

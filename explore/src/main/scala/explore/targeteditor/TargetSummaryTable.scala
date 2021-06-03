@@ -33,8 +33,11 @@ import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
 import reactST.reactTable.mod.IdType
+import cats.Order._
 
 import scalajs.js.JSConverters._
+import lucuma.core.math.Declination
+import reactST.reactTable.mod.DefaultSortTypes
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
@@ -90,91 +93,80 @@ object TargetSummaryTable {
 
       val columns =
         (List(
-          column("type", _ => Icon("star").rawNode),
-          column(
-            "name",
-            target =>
+          column("type", _ => ()).setCell(_ => Icon("star")),
+          column("name", TargetResult.name.get)
+            .setCell(cell =>
               <.a(^.onClick ==> (_ =>
-                    props.focused.set(Focused.FocusedTarget(target.id).some).runAsyncCB
+                    props.focused.set(Focused.FocusedTarget(cell.row.original.id).some).runAsyncCB
                   ),
-                  target.name.value
-              ).rawElement
-          ),
+                  cell.value.toString
+              )
+            ),
           column(
             "ra",
-            (TargetObsQueries.baseCoordinatesRa.get _)
-              .andThen(TruncatedRA.rightAscension.get)
-              .andThen(ValidFormatInput.truncatedRA.reverseGet)
-          ),
-          column(
+            TargetObsQueries.baseCoordinatesRa.get
+          ).setCell(cell =>
+            TruncatedRA.rightAscension.get
+              .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
+          ).setSortByOrdering,
+          column[Declination](
             "dec",
-            (TargetObsQueries.baseCoordinatesDec.get _)
-              .andThen(TruncatedDec.declination.get)
-              .andThen(ValidFormatInput.truncatedDec.reverseGet)
-          ),
+            TargetObsQueries.baseCoordinatesDec.get
+          ).setCell(cell =>
+            TruncatedDec.declination.get
+              .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
+          ).setSortByOrdering,
           column("priority", _ => "")
         ) ++
           MagnitudeBand.all.map(m =>
             column(
               m.shortName + "mag",
               _.magnitudes.collectFirst {
-                case Magnitude(value, band, _, _) if band === m =>
-                  MagnitudeValue.fromString.reverseGet(value)
-              }.orEmpty
-            )
+                case Magnitude(value, band, _, _) if band === m => value
+              }
+            ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByOrdering
           )
           ++ List(
-            column(
-              "epoch",
-              (TargetObsQueries.epoch.get _).andThen(e =>
-                s"${e.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(e)}"
+            column("epoch", TargetObsQueries.epoch.get)
+              .setCell(cell =>
+                s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
               )
-            ),
-            column(
-              "pmra",
-              (TargetObsQueries.pmRALens.get _)
-                .andThen(_.map(pmRAFormat.reverseGet).orEmpty)
-            ),
-            column(
-              "pmdec",
-              (TargetObsQueries.pmDecLens.get _)
-                .andThen(_.map(pmDecFormat.reverseGet).orEmpty)
-            ),
-            column(
-              "parallax",
-              (TargetObsQueries.pxLens.get _)
-                .andThen(_.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
-            ),
-            column(
-              "morphology",
-              _ => ""
-            ),
-            column(
-              "sed",
-              _ => ""
-            ),
+              .setSortByOrdering,
+            column("pmra", TargetObsQueries.pmRALens.get)
+              .setCell(
+                _.value.map(pmRAFormat.reverseGet).orEmpty
+              )
+              .setSortByOrdering,
+            column("pmdec", TargetObsQueries.pmDecLens.get)
+              .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
+              .setSortByOrdering,
+            column("parallax", TargetObsQueries.pxLens.get)
+              .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
+              .setSortByOrdering,
+            column("morphology", _ => ""),
+            column("sed", _ => ""),
             column(
               "count",
               target => targetObservations(target.id).length
-            ),
-            column(
-              "observations",
-              target =>
+            ).setSortType(DefaultSortTypes.number),
+            column("observations", target => targetObservations(target.id))
+              .setCell(cell =>
                 <.span(
-                  targetObservations(target.id)
+                  cell.value
                     .map(obs =>
                       <.a(
                         ^.onClick ==> (_ =>
                           (props.focused
                             .set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
-                            .mod(ExpandedIds.targetIds.modify(_ + target.id))).runAsyncCB
+                            .mod(ExpandedIds.targetIds.modify(_ + cell.row.original.id))).runAsyncCB
                         ),
                         obs.id.toString()
                       )
                     )
                     .mkReactFragment(", ")
-                ).rawElement
-            )
+                )
+              )
+              .setDisableSortBy(true)
           )).toJSArray
 
       val rawData = props.pointingsWithObs.targets.toList.toJSArray
