@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.Order._
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.common.TargetObsQueries
@@ -17,6 +18,7 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
+import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
@@ -32,12 +34,10 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
+import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
-import cats.Order._
 
 import scalajs.js.JSConverters._
-import lucuma.core.math.Declination
-import reactST.reactTable.mod.DefaultSortTypes
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
@@ -108,14 +108,14 @@ object TargetSummaryTable {
           ).setCell(cell =>
             TruncatedRA.rightAscension.get
               .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
-          ).setSortByOrdering,
+          ).setSortByAuto,
           column[Declination](
             "dec",
             TargetObsQueries.baseCoordinatesDec.get
           ).setCell(cell =>
             TruncatedDec.declination.get
               .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
-          ).setSortByOrdering,
+          ).setSortByAuto,
           column("priority", _ => "")
         ) ++
           MagnitudeBand.all.map(m =>
@@ -124,25 +124,25 @@ object TargetSummaryTable {
               _.magnitudes.collectFirst {
                 case Magnitude(value, band, _, _) if band === m => value
               }
-            ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByOrdering
+            ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
           )
           ++ List(
             column("epoch", TargetObsQueries.epoch.get)
               .setCell(cell =>
                 s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
               )
-              .setSortByOrdering,
+              .setSortByAuto,
             column("pmra", TargetObsQueries.pmRALens.get)
               .setCell(
                 _.value.map(pmRAFormat.reverseGet).orEmpty
               )
-              .setSortByOrdering,
+              .setSortByAuto,
             column("pmdec", TargetObsQueries.pmDecLens.get)
               .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
-              .setSortByOrdering,
+              .setSortByAuto,
             column("parallax", TargetObsQueries.pxLens.get)
               .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
-              .setSortByOrdering,
+              .setSortByAuto,
             column("morphology", _ => ""),
             column("sed", _ => ""),
             column(
