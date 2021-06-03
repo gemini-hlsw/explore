@@ -180,7 +180,7 @@ object TargetSummaryTable {
       val rawData = props.pointingsWithObs.targets.toList.toJSArray
 
       tableComponent(
-        TableComponentProps(TargetTable.Options(columns, rawData),
+        TableComponentProps(TargetTable.Options(columns, rawData).setAutoResetSortBy(false),
                             props.hiddenColumns,
                             props.renderInTitle
         )
