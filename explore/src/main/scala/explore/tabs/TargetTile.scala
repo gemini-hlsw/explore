@@ -5,6 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.TargetQueriesGQL._
 import explore.components.Tile
@@ -56,7 +57,7 @@ object TargetTile {
             TargetEditQuery.query(targetId),
             _.target,
             List(TargetEditSubscription.subscribe[IO](targetId))
-          )((targetRenderFn _).reusable(targetId, renderInTitle))
+          )(Reuse(targetRenderFn _)(targetId, renderInTitle))
             .withKey(s"target-$targetId")
         }
         .getOrElse(
@@ -65,7 +66,7 @@ object TargetTile {
           )
         )
 
-    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)((renderTarget _).reusable(targetId))
+    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)(Reuse(renderTarget _)(targetId))
   }
 
 }

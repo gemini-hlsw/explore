@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
@@ -18,9 +19,9 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class LogoutTracker(
-  setVault:   Option[UserVault] ~=> IO[Unit],
-  setMessage: NonEmptyString ~=> IO[Unit]
-)(val render: IO[Unit] ~=> VdomNode)(implicit val ctx: AppContextIO)
+  setVault:   Option[UserVault] ==> IO[Unit],
+  setMessage: NonEmptyString ==> IO[Unit]
+)(val render: IO[Unit] ==> VdomNode)(implicit val ctx: AppContextIO)
     extends ReactProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {

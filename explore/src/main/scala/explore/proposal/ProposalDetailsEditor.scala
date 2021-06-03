@@ -10,6 +10,7 @@ import coulomb.accepted._
 import coulomb.refined._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.AppCtx
@@ -258,17 +259,17 @@ object ProposalDetailsEditor {
           <.div(
             ^.key := "details",
             ExploreStyles.ProposalTile,
-            Tile("details", "Details")((renderDetails(appCtx) _).reusable(details))
+            Tile("details", "Details")(Reuse(renderDetails(appCtx) _)(details))
           ),
           <.div(
             ^.key := "preview",
             ExploreStyles.ProposalTile,
-            Tile("preview", "Preview")(Reusable.fn(_ => <.span("Placeholder for PDF preview.")))
+            Tile("preview", "Preview")(Reuse.always(_ => <.span("Placeholder for PDF preview.")))
           ),
           PartnerSplitsEditor(state.showPartnerSplitsModal,
                               splitsZoom,
                               closePartnerSplitsEditor,
-                              (saveStateSplits _).reusable(details)
+                              Reuse(saveStateSplits _)(details)
           )
         )
       }

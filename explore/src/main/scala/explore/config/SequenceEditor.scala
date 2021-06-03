@@ -3,6 +3,7 @@
 
 package explore.config
 
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.common.SequenceStepsGQL._
 import explore.components.graphql.LiveQueryRender
@@ -29,7 +30,7 @@ object SequenceEditor {
                           SequenceSteps.Data,
                           SequenceSteps.Data.Observations.Nodes.Config
           ](SequenceSteps.query(), _.observations.nodes.head.config.get, List.empty)(
-            (renderFn _).reusable
+            (renderFn _).reuseAlways
           )
         }
       )

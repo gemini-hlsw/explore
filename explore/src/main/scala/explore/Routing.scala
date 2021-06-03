@@ -51,6 +51,7 @@ object Routing {
           model.zoom(RootModel.focused),
           model.zoom(RootModel.searchingTarget),
           model.zoom(RootModel.expandedIds),
+          model.zoom(RootModel.targetSummaryHiddenColumns),
           size
         )
       )

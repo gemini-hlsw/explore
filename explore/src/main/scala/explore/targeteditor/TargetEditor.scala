@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -45,21 +46,6 @@ object TargetEditor {
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  protected def renderFn(
-    props:     Props,
-    state:     View[State],
-    targetOpt: View[Option[TargetEditQuery.Data.Target]]
-  ): VdomNode =
-    targetOpt.get.map { _ =>
-      TargetBody(props.uid,
-                 props.tid,
-                 targetOpt.zoom(_.get)(f => _.map(f)),
-                 props.searching,
-                 state.zoom(State.options),
-                 props.renderInTitle
-      )
-    }
-
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
@@ -67,7 +53,26 @@ object TargetEditor {
         TargetEditQuery.query(props.tid),
         _.target,
         List(TargetEditSubscription.subscribe[IO](props.tid))
-      )((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      )(
+        Reuse
+          .currying(props, ViewF.fromState[IO]($))
+          .in(
+            (
+              props,
+              state,
+              targetOpt: View[Option[TargetEditQuery.Data.Target]]
+            ) =>
+              targetOpt.get.map { _ =>
+                TargetBody(props.uid,
+                           props.tid,
+                           targetOpt.zoom(_.get)(f => _.map(f)),
+                           props.searching,
+                           state.zoom(State.options),
+                           props.renderInTitle
+                )
+              }
+          )
+      )
     }
   }
 

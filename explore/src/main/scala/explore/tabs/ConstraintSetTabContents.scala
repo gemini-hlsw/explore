@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintSetObsQueries._
@@ -104,7 +105,7 @@ object ConstraintSetTabContents {
         ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
       )
 
-    val backButton = Reusable.always[VdomNode](
+    val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,
@@ -126,7 +127,7 @@ object ConstraintSetTabContents {
 
     val rightSide =
       Tile("constraints", "Constraints", backButton.some)(
-        (renderEditor _).reusable(csIdOpt, props.focused)
+        Reuse(renderEditor _)(csIdOpt, props.focused)
       )
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
@@ -179,7 +180,7 @@ object ConstraintSetTabContents {
       .render { $ =>
         implicit val ctx = $.props.ctx
         ConstraintSetObsLiveQuery(
-          (renderFn _).reusable($.props, ViewF.fromState[IO]($), window.innerWidth)
+          Reuse(renderFn _)($.props, ViewF.fromState[IO]($), window.innerWidth)
         )
       }
       .componentDidMount(readWidthPreference)

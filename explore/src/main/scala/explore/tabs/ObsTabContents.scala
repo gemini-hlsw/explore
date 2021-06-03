@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.NonNegInt
@@ -274,7 +275,7 @@ object ObsTabContents {
           tid
       }
 
-      val backButton = Reusable.always[VdomNode](
+      val backButton = Reuse.always[VdomNode](
         Button(
           as = <.a,
           basic = true,
@@ -301,7 +302,7 @@ object ObsTabContents {
           backButton.some,
           canMinimize = true
         )(
-          Reusable.fn(_ =>
+          Reuse.always(_ =>
             <.div(
               ExploreStyles.NotesWrapper,
               <.div(
@@ -375,7 +376,7 @@ object ObsTabContents {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
     }
   }
 

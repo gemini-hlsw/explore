@@ -76,45 +76,7 @@ trait ContextImplicits {
     ctx.clients.odb
 }
 
-trait ReuseImplicits {
-  implicit class Fn1ReuseOps[Y, Z](val f: Y => Z) {
-    def reusable: Y ~=> Z = Reusable.fn(f)
-  }
-
-  implicit class Fn2ReuseOps[A: Reusability, Y, Z](val f: (A, Y) => Z) {
-    def reusable: A ~=> (Y ~=> Z) = Reusable.fn(f)
-  }
-
-  implicit class Fn3ReuseOps[A: Reusability, B: Reusability, Y, Z](val f: (A, B, Y) => Z) {
-    def reusable: A ~=> (B ~=> (Y ~=> Z)) = Reusable.fn(f)
-  }
-
-  implicit class Fn4ReuseOps[A: Reusability, B: Reusability, C: Reusability, Y, Z](
-    val f: (A, B, C, Y) => Z
-  ) {
-    def reusable: A ~=> (B ~=> (C ~=> (Y ~=> Z))) = Reusable.fn(f)
-  }
-
-  implicit class Fn5ReuseOps[A: Reusability, B: Reusability, C: Reusability, D: Reusability, Y, Z](
-    val f: (A, B, C, D, Y) => Z
-  ) {
-    def reusable: A ~=> (B ~=> (C ~=> (D ~=> (Y ~=> Z)))) = Reusable.fn(f)
-  }
-
-  // format: off
-  implicit class Fn6ReuseOps[A: Reusability, B: Reusability, C: Reusability, D: Reusability, E: Reusability, Y, Z](
-    val f: (A, B, C, D, E, Y) => Z
-  ) {
-    def reusable: A ~=> (B ~=> (C ~=> (D ~=> (E ~=> (Y ~=> Z))))) = Reusable.fn(f)
-  }
-  // format: on
-}
-
-object implicits
-    extends ShorthandTypes
-    with ListImplicits
-    with ContextImplicits
-    with ReuseImplicits {
+object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {
   // View Optics implicits
   implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
     def zoomGetAdjust[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
@@ -149,49 +111,6 @@ object implicits
   implicit class RootModelOps(val rootModel: RootModel) extends AnyVal {
     def url[F[_]](implicit ctx: AppContext[F]): String =
       ctx.pageUrl(rootModel.tabs.focus, rootModel.focused)
-  }
-
-  // Reusable implicits
-  implicit class Fn2ReusableOps[A, Y, Z](val f: A ~=> (Y ~=> Z)) extends AnyVal {
-    def apply(a: A): Y ~=> Z = f.value(a)
-    def apply(a: A, y: Y): Reusable[Z] = f.value(a).map(_(y))
-  }
-
-  implicit class Fn3ReusableOps[A, B, Y, Z](val f: A ~=> (B ~=> (Y ~=> Z))) extends AnyVal {
-    def apply(a: A): B ~=> (Y ~=> Z) = f.value(a)
-    def apply(a: A, b: B): Y ~=> Z = f.value(a).value(b)
-    def apply(a: A, b: B, y: Y): Reusable[Z] = f.value(a).value(b).map(_(y))
-  }
-
-  implicit class Fn4ReusableOps[A, B, C, Y, Z](val f: A ~=> (B ~=> (C ~=> (Y ~=> Z))))
-      extends AnyVal {
-    def apply(a: A): B ~=> (C ~=> (Y ~=> Z)) = f.value(a)
-    def apply(a: A, b: B): C ~=> (Y ~=> Z) = f.value(a).value(b)
-    def apply(a: A, b: B, c: C): Y ~=> Z = f.value(a).value(b).value(c)
-    def apply(a: A, b: B, c: C, y: Y): Reusable[Z] = f.value(a).value(b).value(c).map(_(y))
-  }
-
-  implicit class Fn5ReusableOps[A, B, C, D, Y, Z](val f: A ~=> (B ~=> (C ~=> (D ~=> (Y ~=> Z)))))
-      extends AnyVal {
-    def apply(a: A): B ~=> (C ~=> (D ~=> (Y ~=> Z))) = f.value(a)
-    def apply(a: A, b: B): C ~=> (D ~=> (Y ~=> Z)) = f.value(a).value(b)
-    def apply(a: A, b: B, c: C): D ~=> (Y ~=> Z) = f.value(a).value(b).value(c)
-    def apply(a: A, b: B, c: C, d: D): Y ~=> Z = f.value(a).value(b).value(c).value(d)
-    def apply(a: A, b: B, c: C, d: D, y: Y): Reusable[Z] =
-      f.value(a).value(b).value(c).value(d).map(_(y))
-  }
-
-  implicit class Fn6ReusableOps[A, B, C, D, E, Y, Z](
-    val f: A ~=> (B ~=> (C ~=> (D ~=> (E ~=> (Y ~=> Z)))))
-  ) extends AnyVal {
-    def apply(a: A): B ~=> (C ~=> (D ~=> (E ~=> (Y ~=> Z)))) = f.value(a)
-    def apply(a: A, b: B): C ~=> (D ~=> (E ~=> (Y ~=> Z))) = f.value(a).value(b)
-    def apply(a: A, b: B, c: C): D ~=> (E ~=> (Y ~=> Z)) = f.value(a).value(b).value(c)
-    def apply(a: A, b: B, c: C, d: D): E ~=> (Y ~=> Z) = f.value(a).value(b).value(c).value(d)
-    def apply(a: A, b: B, c: C, d: D, e: E): Y ~=> Z =
-      f.value(a).value(b).value(c).value(d).value(e)
-    def apply(a: A, b: B, c: C, d: D, e: E, y: Y): Reusable[Z] =
-      f.value(a).value(b).value(c).value(d).value(e).map(_(y))
   }
 
   // React implicits

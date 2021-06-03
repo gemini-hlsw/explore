@@ -6,6 +6,7 @@ package explore.proposal
 import cats.effect.IO
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -34,7 +35,7 @@ final case class PartnerSplitsEditor(
   show:    Boolean,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
-  onSave:  List[PartnerSplit] ~=> Callback
+  onSave:  List[PartnerSplit] ==> Callback
 ) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {

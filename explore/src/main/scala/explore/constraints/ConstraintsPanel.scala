@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric
@@ -63,7 +64,7 @@ final case class ConstraintsPanel(
   constraintSet:  View[ConstraintSetModel],
   renderInTitle:  Tile.RenderInTitle,
   allowMultiEdit: Boolean,
-  onCopy:         ConstraintSet.Id ~=> IO[Unit] = Reusable.always(_ => IO.unit)
+  onCopy:         ConstraintSet.Id ==> IO[Unit] = Reuse.always(_ => IO.unit)
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
 object ConstraintsPanel {
@@ -384,7 +385,7 @@ object ConstraintsPanel {
     }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
-      UndoRegion[ConstraintSetModel]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      UndoRegion[ConstraintSetModel](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
     }
   }
 

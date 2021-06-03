@@ -12,6 +12,7 @@ import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
 import crystal.react._
+import crystal.react.reuse._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
@@ -24,10 +25,9 @@ final case class LiveQueryRender[S, D, A](
   extract:             D => A,
   changeSubscriptions: List[IO[GraphQLSubscription[IO, _]]]
 )(
-  val valueRender:     A ~=> VdomNode,
-  val pendingRender:   Long ~=> VdomNode = Reusable.always(_ => Loader(active = true)),
-  val errorRender:     Throwable ~=> VdomNode =
-    Reusable.always(t => Message(error = true)(t.getMessage)),
+  val valueRender:     A ==> VdomNode,
+  val pendingRender:   Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
+  val errorRender:     Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage)),
   val onNewData:       IO[Unit] = IO.unit
 )(implicit
   val F:               Async[IO],

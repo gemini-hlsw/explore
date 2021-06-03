@@ -11,6 +11,7 @@ import coulomb.time._
 import crystal.Ready
 import crystal.react.StreamRendererMod
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
 import explore.components.WIP
@@ -63,10 +64,10 @@ object ProposalTabContents {
 
         val component = StreamRendererMod.build(ref.discrete)
 
-        component(_ match {
+        component(Reuse.always(_ match {
           case Ready(view) => WIP(ProposalDetailsEditor(view))
           case _           => <.div("Ruh-Roh")
-        })
+        }))
       }
   }
 

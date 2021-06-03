@@ -64,6 +64,8 @@ object TopBar {
         val p            = $.props
         val currentTheme = $.state.theme
 
+        println("RENDER")
+
         AppCtx.using { implicit appCtx =>
           val role = p.user.role
 

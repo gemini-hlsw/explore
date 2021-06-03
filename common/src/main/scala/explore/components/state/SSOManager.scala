@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
@@ -21,8 +22,8 @@ import java.time.Instant
 
 final case class SSOManager(
   expiration:       Instant,
-  setVault:         Option[UserVault] ~=> IO[Unit],
-  setMessage:       NonEmptyString ~=> IO[Unit]
+  setVault:         Option[UserVault] ==> IO[Unit],
+  setMessage:       NonEmptyString ==> IO[Unit]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SSOManager](SSOManager.component)
 

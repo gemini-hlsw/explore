@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -33,8 +34,8 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 View[Coordinates],
   options:                TargetVisualOptions,
-  updateMouseCoordinates: Coordinates ~=> Callback,
-  updateFov:              Fov ~=> Callback
+  updateMouseCoordinates: Coordinates ==> Callback,
+  updateFov:              Fov ==> Callback
 ) extends ReactProps[AladinContainer](AladinContainer.component) {
   val aladinCoords: Coordinates = target.get
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)

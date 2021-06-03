@@ -6,6 +6,7 @@ package explore.components
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -79,7 +80,7 @@ object TileController {
       .render_P { p =>
         implicit val ctx = p.ctx
 
-        def sizeState(id: Tile.TileId)(st: TileSizeState): Callback =
+        def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
           p.layoutMap
             .zoom(allTiles)
             .mod {
@@ -107,7 +108,7 @@ object TileController {
           p.tiles.map { t =>
             <.div(
               ^.key := t.id.value,
-              t.withState(unsafeSizeToState(p.layoutMap.get, t.id), (sizeState(t.id) _).reusable)
+              t.withState(unsafeSizeToState(p.layoutMap.get, t.id), Reuse(sizeState _)(t.id))
             )
           }.toVdomArray
         )

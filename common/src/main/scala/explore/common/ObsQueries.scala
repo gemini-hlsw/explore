@@ -4,6 +4,7 @@
 package explore.common
 
 import cats.effect.IO
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
@@ -55,7 +56,7 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ~=> VdomNode](render =>
+    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ProgramObservationsQuery.Data,

@@ -6,6 +6,7 @@ package explore.constraints
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
@@ -32,22 +33,6 @@ object ConstraintSetEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected def renderFn(
-    props: Props,
-    csOpt: View[Option[ConstraintSetModel]]
-  ): VdomNode =
-    csOpt.get.map { _ =>
-      ConstraintsPanel(
-        props.csId,
-        csOpt.zoom(_.get)(f => _.map(f)),
-        props.renderInTitle,
-        allowMultiEdit = true,
-        onCopy = (
-          (id: ConstraintSet.Id) => props.focused.set(Focused.FocusedConstraintSet(id).some)
-        ).reusable
-      )
-    }
-
   val component =
     ScalaComponent
       .builder[Props]
@@ -57,8 +42,25 @@ object ConstraintSetEditor {
             ConstraintSetQuery.query(props.csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](props.csId))
-          )((renderFn _).reusable(props))
+          )(
+            Reuse
+              .by(props)((csOpt: View[Option[ConstraintSetModel]]) =>
+                csOpt.get.map { _ =>
+                  ConstraintsPanel(
+                    props.csId,
+                    csOpt.zoom(_.get)(f => _.map(f)),
+                    props.renderInTitle,
+                    allowMultiEdit = true,
+                    onCopy = (
+                      (id: ConstraintSet.Id) =>
+                        props.focused.set(Focused.FocusedConstraintSet(id).some)
+                    ).reuseAlways
+                  )
+                }
+              )
+          )
         }
+
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

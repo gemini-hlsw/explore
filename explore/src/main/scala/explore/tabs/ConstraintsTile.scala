@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -113,7 +114,7 @@ object ConstraintsTile {
                            csOpt.zoom(_.get)(f => _.map(f)),
                            renderInTitle,
                            allowMultiEdit = false,
-                           (onCopy _).reusable
+                           (onCopy _).reuseAlways
           )
         )
       }
@@ -128,7 +129,7 @@ object ConstraintsTile {
             ConstraintSetQuery.query(csId),
             _.constraintSet,
             List(ConstraintSetEditSubscription.subscribe[IO](csId))
-          )((renderConstraintsFn _).reusable(csId, renderInTitle))
+          )(Reuse(renderConstraintsFn _)(csId, renderInTitle))
             .withKey(s"constraint-${constraintSetId.foldMap(_.show)}")
         }
         .getOrElse(
@@ -142,10 +143,10 @@ object ConstraintsTile {
       "Constraints",
       canMinimize = true,
       control = obsSummaryOpt.map(obsSummary =>
-        ((constraintsSelectorFn _).reusable(constraintSetId, obsSummary.id, constraintsInfo))
+        Reuse(constraintsSelectorFn _)(constraintSetId, obsSummary.id, constraintsInfo)
       )
     )(
-      (renderConstraints _).reusable(constraintSetId)
+      Reuse(renderConstraints _)(constraintSetId)
     )
   }
 

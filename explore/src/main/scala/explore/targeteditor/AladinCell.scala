@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.View
@@ -72,7 +73,8 @@ object AladinCell extends ModelOptics {
           .flatMapCB(_.backend.gotoRaDec(coords))
           .toCallback
 
-    val coordinatesSetter = Reusable.fn.state($.zoomStateL(State.current)).set
+    val coordinatesSetter =
+      ((coords: Coordinates) => $.setStateL(State.current)(coords)).reuseAlways
 
     def fovSetter(props: Props, fov: Fov): Callback = {
       implicit val ctx = props.ctx
@@ -95,7 +97,7 @@ object AladinCell extends ModelOptics {
                   props.target,
                   props.options.get,
                   coordinatesSetter,
-                  (fovSetter _).reusable(props)
+                  Reuse.currying(props).in(fovSetter _)
                 )
               },
             AladinToolbar(state.fov, state.current),

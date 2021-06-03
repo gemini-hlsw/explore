@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -37,7 +38,7 @@ final case class SearchForm(
   id:          Target.Id,
   name:        NonEmptyString,
   searching:   View[Set[Target.Id]],
-  searchAndGo: SearchCallback ~=> Callback
+  searchAndGo: SearchCallback ==> Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(
     searchTerm: String,

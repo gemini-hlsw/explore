@@ -481,7 +481,7 @@ tfoot {
 }
 
 .tree-rgl {
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   position: relative;
 }
@@ -520,6 +520,7 @@ tfoot {
 
   position: absolute;
   top: 0;
+  overflow-y: auto;
 }
 
 // Inner area of the tree
@@ -1531,9 +1532,11 @@ html {
   margin-left: auto;
   margin-right: 1em;
 
-  .ui.simple.active.dropdown > .menu,
-  .ui.simple.dropdown:hover > .menu {
-    overflow: hidden; // hides the pointing tip
-    top: 2em !important; // puts some space between the header and the options
+  .menu {
+    max-height: 30em !important;
+
+    .item {
+      font-size: small !important;
+    }
   }
 }

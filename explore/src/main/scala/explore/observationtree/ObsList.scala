@@ -10,6 +10,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
 import explore.Icons
@@ -194,7 +195,7 @@ object ObsList {
                   ObsBadge(
                     obs,
                     selected = selected,
-                    deleteCB = (deleteObs _).reusable.some
+                    deleteCB = (deleteObs _).reuseAlways.some
                   )
                 )
               }
@@ -204,7 +205,7 @@ object ObsList {
       }
 
     def render(props: Props) =
-      UndoRegion[ObservationList]((renderFn _).reusable(props))
+      UndoRegion[ObservationList](Reuse(renderFn _)(props))
   }
 
   protected val component =

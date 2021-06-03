@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.common.UserPreferencesQueriesGQL._
@@ -13,11 +14,12 @@ import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel
 import explore.model.UserVault
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 
-final case class IfLogged(view: View[RootModel])(val render: UserVault ~=> (IO[Unit] ~=> VdomNode))
+final case class IfLogged(view: View[RootModel])(val render: (UserVault, IO[Unit]) ==> VdomNode)
     extends ReactProps[IfLogged](IfLogged.component)
 
 object IfLogged {
@@ -26,13 +28,6 @@ object IfLogged {
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =
     UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
-
-  private def renderFn(
-    vaultSet:     Option[UserVault] ~=> IO[Unit],
-    messageSet:   NonEmptyString ~=> IO[Unit],
-    render:       IO[Unit] ~=> VdomNode
-  )(implicit ctx: AppContextIO): VdomNode =
-    LogoutTracker(vaultSet, messageSet)(render)
 
   private val component =
     ScalaComponent
@@ -43,9 +38,8 @@ object IfLogged {
           val vaultView   = p.view.zoom(RootModel.vault)
           val messageView = p.view.zoom(RootModel.userSelectionMessage)
 
-          val vaultSet   = vaultView.set.reusable
-          val messageSet =
-            messageView.set.compose((s: NonEmptyString) => s.some).reusable
+          val vaultSet   = vaultView.set.reuseAlways
+          val messageSet = (messageView.set.compose((s: NonEmptyString) => s.some)).reuseAlways
 
           vaultView.get.fold[VdomElement](
             UserSelectionForm(vaultView, messageView)
@@ -53,7 +47,9 @@ object IfLogged {
             React.Fragment(
               SSOManager(vault.expiration, vaultSet, messageSet),
               ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(
-                (renderFn _).reusable(vaultSet, messageSet, p.render(vault))
+                Reuse
+                  .currying(vaultSet, messageSet, p.render.curry(vault))
+                  .in((vaultSet, messageSet, render) => LogoutTracker(vaultSet, messageSet)(render))
               )
             )
           }

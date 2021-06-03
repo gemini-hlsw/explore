@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
@@ -19,7 +20,7 @@ import react.common.ReactProps
 import react.semanticui.elements.loader.Loader
 
 final case class ConnectionManager(ssoToken: NonEmptyString, onConnect: IO[Unit])(
-  val render:                                Reusable[VdomNode]
+  val render:                                Reuse[VdomNode]
 )(implicit val ctx:                          AppContextIO)
     extends ReactProps[ConnectionManager](ConnectionManager.component)
 

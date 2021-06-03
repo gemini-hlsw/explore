@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
@@ -47,6 +48,7 @@ final case class TargetTabContents(
   focused:          View[Option[Focused]],
   searching:        View[Set[Target.Id]],
   expandedIds:      View[ExpandedIds],
+  hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[TargetTabContents](TargetTabContents.component) {
@@ -112,7 +114,7 @@ object TargetTabContents {
         )
       )
 
-    val backButton = Reusable.always[VdomNode](
+    val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
         size = Mini,
@@ -138,18 +140,18 @@ object TargetTabContents {
       (props.userId.get, targetIdOpt).tupled match {
         case Some((uid, tid)) =>
           Tile("target", s"Target", backButton.some)(
-            (renderContents _).reusable(uid, tid, props.searching)
+            Reuse(renderContents _)(uid, tid, props.searching)
           )
         case None             =>
           Tile("target", s"Targets Summary", backButton.some)(
-            (
-              (renderInTitle: Tile.RenderInTitle) =>
-                TargetSummaryTable(pointingsWithObs.get,
-                                   props.focused,
-                                   props.expandedIds,
-                                   renderInTitle
-                ): VdomNode
-            ).reusable
+            Reuse.by((pointingsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
+              TargetSummaryTable(pointingsWithObs.get,
+                                 props.hiddenColumns,
+                                 props.focused,
+                                 props.expandedIds,
+                                 renderInTitle
+              )
+            )
           )
       }
 
@@ -204,7 +206,7 @@ object TargetTabContents {
       )
       .render { $ =>
         implicit val ctx = $.props.ctx
-        TargetObsLiveQuery((renderFn _).reusable($.props, ViewF.fromState($)))
+        TargetObsLiveQuery(Reuse(renderFn _)($.props, ViewF.fromState($)))
       }
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

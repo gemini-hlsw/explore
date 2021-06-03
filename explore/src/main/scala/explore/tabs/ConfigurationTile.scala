@@ -3,10 +3,10 @@
 
 package explore.tabs
 
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
-import explore.implicits._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
@@ -28,7 +28,7 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(
-      (renderConfiguration _).reusable(obsId)
+      Reuse(renderConfiguration _)(obsId)
     )
   }
 

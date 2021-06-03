@@ -6,6 +6,7 @@ package explore.components
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -32,7 +33,7 @@ final case class InputModal(
   placeholder:  String,
   okLabel:      String,
   trigger:      VdomNode,
-  onComplete:   NonEmptyString ~=> Callback
+  onComplete:   NonEmptyString ==> Callback
 ) extends ReactProps[InputModal](InputModal.component)
 
 object InputModal {

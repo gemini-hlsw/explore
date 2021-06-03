@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -308,7 +309,7 @@ object ConstraintSetObsList {
               label = "Name",
               placeholder = "Constraint name",
               okLabel = "Create",
-              onComplete = (createConstraintSet _).reusable,
+              onComplete = (createConstraintSet _).reuseAlways,
               trigger = Button(size = Mini,
                                compact = true,
                                clazz = ExploreStyles.VeryCompact,
@@ -473,7 +474,7 @@ object ConstraintSetObsList {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      UndoRegion[ConstraintSetsWithObs]((renderFn _).reusable(props, ViewF.fromState[IO]($)))
+      UndoRegion[ConstraintSetsWithObs](Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
     }
   }
 

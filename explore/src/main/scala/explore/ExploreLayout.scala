@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -37,62 +38,67 @@ object ExploreLayout {
   implicit val propsReuse: Reusability[Props]                                                    =
     Reusability.by(p => (p.r, p.view))
 
-  private def renderFn(
-    props:    Props,
-    vault:    UserVault,
-    onLogout: IO[Unit]
-  ): VdomNode =
-    AppCtx.using { implicit ctx =>
-      HelpCtx.usingView { helpCtx =>
-        val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-        GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none).runAsyncAndForgetCB)
-        )(
-          SidebarPushable(
-            Sidebar(
-              width = SidebarWidth.Wide,
-              direction = SidebarDirection.Right,
-              animation = SidebarAnimation.Overlay,
-              visible = helpView.get.isDefined
-            )(
-              helpView.get
-                .map { h =>
-                  // Lazy load the React component for help
-                  val prom = js.dynamicImport {
-                    new HelpLoader().loadHelp(helpCtx.get, h)
-                  }
-                  React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
-                }
-                .when(helpView.get.isDefined)
-            ),
-            SidebarPusher(dimmed = helpView.get.isDefined)(
-              <.div(
-                ExploreStyles.MainGrid,
-                TopBar(vault.user, onLogout >> props.view.zoom(RootModel.vault).set(none)),
-                <.div(
-                  ExploreStyles.SideTabs,
-                  SideTabs(props.view.zoom(RootModel.tabs))
-                ),
-                <.div(
-                  ExploreStyles.MainBody,
-                  props.r.renderP(props.view)
-                )
-              )
-            )(
-              ^.onClick -->
-                helpView.set(none).runAsyncAndForgetCB
-            )
-          )
-        )
-      }
-    }
-
   private val component =
     ScalaComponent
       .builder[Props]
       .stateless
-      .render_P { p =>
-        IfLogged(p.view)((renderFn _).reusable(p))
+      .render_P { props =>
+        IfLogged(props.view)(
+          Reuse
+            .by(props)(
+              (
+                vault:    UserVault,
+                onLogout: IO[Unit]
+              ) =>
+                AppCtx.using { implicit ctx =>
+                  HelpCtx.usingView { helpCtx =>
+                    val helpView = helpCtx.zoom(HelpContext.displayedHelp)
+                    GlobalHotKeys(
+                      keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none).runAsyncAndForgetCB)
+                    )(
+                      SidebarPushable(
+                        Sidebar(
+                          width = SidebarWidth.Wide,
+                          direction = SidebarDirection.Right,
+                          animation = SidebarAnimation.Overlay,
+                          visible = helpView.get.isDefined
+                        )(
+                          helpView.get
+                            .map { h =>
+                              // Lazy load the React component for help
+                              val prom = js.dynamicImport {
+                                new HelpLoader().loadHelp(helpCtx.get, h)
+                              }
+                              React.Suspense(<.div("Loading"), AsyncCallback.fromJsPromise(prom))
+                            }
+                            .when(helpView.get.isDefined)
+                        ),
+                        SidebarPusher(dimmed = helpView.get.isDefined)(
+                          <.div(
+                            ExploreStyles.MainGrid,
+                            TopBar(vault.user,
+                                   onLogout >> props.view.zoom(RootModel.vault).set(none)
+                            ),
+                            <.div(
+                              ExploreStyles.SideTabs,
+                              SideTabs(props.view.zoom(RootModel.tabs))
+                            ),
+                            <.div(
+                              ExploreStyles.MainBody,
+                              props.r.renderP(props.view)
+                            )
+                          )
+                        )(
+                          ^.onClick -->
+                            helpView.set(none).runAsyncAndForgetCB
+                        )
+                      )
+                    )
+                  }
+                }: VdomNode
+            )
+        )
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

@@ -5,6 +5,7 @@ package explore.common
 
 import cats.effect.IO
 import clue.data.Input
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -104,7 +105,7 @@ object ConstraintSetObsQueries {
     Reusability.derive
 
   val ConstraintSetObsLiveQuery =
-    ScalaFnComponent[View[ConstraintSetsWithObs] ~=> VdomNode](render =>
+    ScalaFnComponent[View[ConstraintSetsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, ConstraintSetsObsQuery.Data, ConstraintSetsWithObs](
           ConstraintSetsObsQuery.query(),

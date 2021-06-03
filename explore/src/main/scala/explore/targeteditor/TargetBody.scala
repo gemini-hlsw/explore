@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
@@ -179,7 +180,7 @@ object TargetBody {
                 // a single undo/redo operation.
                 props.target.zoom(TargetResult.name).get,
                 props.searching,
-                (searchAndSet _).reusable(allView, nameView)
+                Reuse.currying(allView, nameView).in(searchAndSet _)
               ),
               <.div(
                 ExploreStyles.FlexContainer,
@@ -272,7 +273,7 @@ object TargetBody {
       }
 
     def render(props: Props) =
-      UndoRegion[TargetResult]((renderFn _).reusable(props))
+      UndoRegion[TargetResult](Reuse(renderFn _)(props))
   }
 
   val component =

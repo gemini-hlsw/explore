@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.UnderConstruction
@@ -113,7 +114,7 @@ object ConfigurationPanel {
     }
 
     def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
-      UndoRegion[State]((renderFn _).reusable(props, state))
+      UndoRegion[State](Reuse.currying(props, state).in(renderFn _))
     }
   }
   protected val component =
