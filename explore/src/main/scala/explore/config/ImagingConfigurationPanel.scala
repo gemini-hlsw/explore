@@ -35,6 +35,7 @@ import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown._
 import spire.math.Rational
 
+import scala.collection.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
@@ -46,21 +47,25 @@ object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
-  implicit val propsReuse: Reusability[Props]                         = Reusability.derive
+  implicit val capabDisplay: Display[ImagingCapabilities]               = Display.by(_.label, _.label)
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]   = Reusability.derive
+  implicit val avalableFiltersReuse: Reusability[AvailableFilter]       = Reusability.by(_.tag)
+  implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
+  implicit val propsReuse: Reusability[Props]                           = Reusability.derive
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
   val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
   val narrowBand   = byFilterType.getOrElse(FilterType.NarrowBand, Nil).sortBy(_.centralWavelength)
   val combination  = byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
 
-  def valuesToFilters(v: js.Array[String]): Set[AvailableFilter] =
-    v.map { t =>
-      ImagingConfigurationOptions.availableOptions.find(_.tag === t)
-    }.collect { case Some(x) =>
-      x
-    }.toSet
+  def valuesToFilters(v: js.Array[String]): SortedSet[AvailableFilter] =
+    SortedSet(
+      v.map { t =>
+        ImagingConfigurationOptions.availableOptions.find(_.tag === t)
+      }.collect { case Some(x) =>
+        x
+      }.toList: _*
+    )
 
   def formatCentral(r: Quantity[Int, Nanometer]): String =
     if (r.value > 1000)
