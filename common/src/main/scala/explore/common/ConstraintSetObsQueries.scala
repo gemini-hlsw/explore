@@ -5,6 +5,7 @@ package explore.common
 
 import cats.effect.IO
 import clue.data.Input
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -25,7 +26,6 @@ import lucuma.core.enum.WaterVapor
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.macros.Lenses
 

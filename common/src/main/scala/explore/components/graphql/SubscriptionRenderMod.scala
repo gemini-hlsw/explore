@@ -12,10 +12,10 @@ import crystal.Pot
 import crystal.ViewF
 import crystal.react._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.View
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 import react.common._
 import react.semanticui.collections.message.Message

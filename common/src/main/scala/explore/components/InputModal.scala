@@ -6,6 +6,7 @@ package explore.components
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -16,7 +17,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.elements.button.Button

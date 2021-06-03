@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -22,7 +23,6 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.button.Button

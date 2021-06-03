@@ -6,6 +6,7 @@ package explore.proposal
 import cats.effect.IO
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -22,7 +23,6 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics._
-import lucuma.ui.reuse._
 import monocle.function.Index
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps

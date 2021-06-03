@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintSetObsQueries._
@@ -27,7 +28,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
 import react.common._

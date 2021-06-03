@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -20,7 +21,6 @@ import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._

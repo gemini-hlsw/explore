@@ -6,6 +6,7 @@ package explore.components
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -19,7 +20,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Traversal
 import monocle.unsafe.UnsafeSelect
 import react.common._

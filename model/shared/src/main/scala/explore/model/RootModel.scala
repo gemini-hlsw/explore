@@ -14,13 +14,12 @@ import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
+import lucuma.core.model.User
 import monocle.Lens
 import monocle.macros.Lenses
 import monocle.std.option
 
 import scala.collection.immutable.HashSet
-
-import lucuma.core.model.User
 
 @Lenses
 case class RootModel(

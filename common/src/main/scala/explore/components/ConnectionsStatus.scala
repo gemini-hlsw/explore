@@ -9,6 +9,7 @@ import crystal.Error
 import crystal.Pending
 import crystal.Pot
 import crystal.Ready
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
@@ -25,7 +26,7 @@ final case class ConnectionsStatus()
 object ConnectionsStatus {
   type Props = ConnectionsStatus
 
-  private def renderStatus(name: String)(status: Pot[PersistentClientStatus]): VdomElement = {
+  private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
       case Error(t)     => (t.getMessage, (ConnectionError, true))
       case Pending(_)   => ("Mounting...", (ConnectionWarning, true))
@@ -55,7 +56,7 @@ object ConnectionsStatus {
     .builder[Props]
     .render(_ =>
       AppCtx.using { ctx =>
-        ctx.clients.ODBConnectionStatus(renderStatus("ODB"))
+        ctx.clients.ODBConnectionStatus((renderStatus _).reuseCurrying("ODB"))
       }
     )
     .build

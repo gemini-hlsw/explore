@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.UnderConstruction
@@ -30,7 +31,6 @@ import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common._

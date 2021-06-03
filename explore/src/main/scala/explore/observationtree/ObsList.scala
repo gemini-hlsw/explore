@@ -10,6 +10,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
 import explore.Icons
@@ -34,7 +35,6 @@ import explore.undo.Undoer
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.ui.reuse._
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._

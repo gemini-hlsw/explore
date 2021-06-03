@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric
@@ -42,7 +43,6 @@ import lucuma.ui.optics.TruncatedRefinedBigDecimal
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common._

@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -14,7 +15,6 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import react.common._
 import react.hotkeys._
 import react.semanticui.modules.sidebar.Sidebar

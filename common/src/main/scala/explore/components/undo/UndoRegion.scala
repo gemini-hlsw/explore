@@ -6,10 +6,10 @@ package explore.components.undo
 import cats.effect.Async
 import cats.effect.IO
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common.ReactProps
 

@@ -3,13 +3,13 @@
 
 package explore.tabs
 
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import react.common._
 
 object ConfigurationTile {

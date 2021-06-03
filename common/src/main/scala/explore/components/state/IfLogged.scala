@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.common.UserPreferencesQueriesGQL._
@@ -16,7 +17,6 @@ import explore.model.UserVault
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import react.common.ReactProps
 
 final case class IfLogged(view: View[RootModel])(val render: (UserVault, IO[Unit]) ==> VdomNode)

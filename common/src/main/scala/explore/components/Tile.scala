@@ -4,6 +4,7 @@
 package explore.components
 
 import cats.syntax.all._
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -16,7 +17,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.internal.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._

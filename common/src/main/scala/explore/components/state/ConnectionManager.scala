@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
@@ -14,7 +15,6 @@ import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.loader.Loader

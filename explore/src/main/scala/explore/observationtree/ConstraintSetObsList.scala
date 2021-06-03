@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -35,7 +36,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses

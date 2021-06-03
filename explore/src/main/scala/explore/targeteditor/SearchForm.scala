@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -22,7 +23,6 @@ import lucuma.core.model.Target
 import lucuma.ui.forms._
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import lucuma.ui.utils.abbreviate
 import monocle.macros.Lenses
 import react.common._

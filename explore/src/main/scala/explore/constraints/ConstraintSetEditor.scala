@@ -6,6 +6,7 @@ package explore.constraints
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
 import explore.common.ConstraintsQueriesGQL._
@@ -19,7 +20,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import react.common._
 
 final case class ConstraintSetEditor(

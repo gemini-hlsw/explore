@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
@@ -41,7 +42,6 @@ import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.Form

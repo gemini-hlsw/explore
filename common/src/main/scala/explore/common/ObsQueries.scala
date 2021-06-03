@@ -4,6 +4,7 @@
 package explore.common
 
 import cats.effect.IO
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
@@ -15,7 +16,6 @@ import explore.schemas.ObservationDB
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.ui.reuse._
 import monocle.Getter
 
 import ObsQueriesGQL._

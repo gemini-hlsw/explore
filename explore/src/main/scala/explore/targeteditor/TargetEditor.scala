@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -21,7 +22,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.common._
 

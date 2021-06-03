@@ -4,6 +4,7 @@
 package explore.common
 
 import cats.effect.IO
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -27,7 +28,6 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.Iso
 import monocle.Lens

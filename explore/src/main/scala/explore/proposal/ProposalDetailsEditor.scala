@@ -10,6 +10,7 @@ import coulomb.accepted._
 import coulomb.refined._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.AppCtx
@@ -31,7 +32,6 @@ import lucuma.core.model.Partner
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.Lens
 import monocle.macros.Lenses
 import react.common.ReactProps

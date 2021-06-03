@@ -5,6 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.TargetQueriesGQL._
 import explore.components.Tile
@@ -18,7 +19,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import react.common._
 import react.common.implicits._
 

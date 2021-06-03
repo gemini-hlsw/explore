@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.View
@@ -24,7 +25,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import lucuma.ui.reuse._
 import monocle.macros.Lenses
 import react.aladin.Fov
 import react.common._

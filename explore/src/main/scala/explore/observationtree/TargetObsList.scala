@@ -11,6 +11,7 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.string.NonEmptyString
@@ -45,7 +46,6 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.ui.reuse._
 import monocle.Getter
 import monocle.function.Field1.first
 import monocle.macros.Lenses

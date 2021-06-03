@@ -13,13 +13,13 @@ import clue.PersistentClientStatus
 import clue.WebSocketClient
 import crystal.Pot
 import crystal.react.implicits._
+import crystal.react.reuse._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Generic.UnmountedWithRoot
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentWillUnmount
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.ui.reuse._
 import org.typelevel.log4cats.Logger
 
 object Render {
@@ -35,7 +35,7 @@ object Render {
     implicit val reuse: Reusability[A]
   }
 
-  type StreamRendererProps[G[_], A]     = Pot[G[A]] => VdomNode
+  type StreamRendererProps[G[_], A]     = Pot[G[A]] ==> VdomNode
   type StreamRendererComponent[G[_], A] =
     CtorType.Props[StreamRendererProps[G, A], UnmountedWithRoot[
       StreamRendererProps[G, A],
@@ -53,7 +53,12 @@ object Render {
       $ : RenderScope[P, Option[S], Unit]
     ): VdomNode = React.Fragment(
       $.state.fold[VdomNode](EmptyVdom)(
-        _.renderer(_.fold($.props.pendingRender, $.props.errorRender, $.props.valueRender))
+        _.renderer(
+          ($.props.pendingRender, $.props.errorRender, $.props.valueRender).curryReusing.in(
+            (pendingRender, errorRender, valueRender, pot) =>
+              pot.fold(pendingRender, errorRender, valueRender)
+          )
+        )
       )
     )
   }
