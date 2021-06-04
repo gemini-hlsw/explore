@@ -118,25 +118,20 @@ class SUITable[
         case other => other.asInstanceOf[TableHeader].some // Can't wait for Scala 3's union types
       }
 
-      val headerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.headerCell: Any) match {
-        case headerCell: TableHeaderCell =>
-          col =>
-            headerCell(col.getHeaderProps(), sortElements.props(col))(col.renderHeader,
-                                                                      sortElements.indicator(col)
-            )
-        case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
-      }
+      val headerCellRender: HeaderCellRender[D, ColumnInstanceD] =
+        (props.headerCell: Any) match {
+          case headerCell: TableHeaderCell => _ => headerCell
+          case fn                          => fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
+        }
 
       val bodyCellRender: BodyCellRender[D] = (props.cell: Any) match {
-        case cell: TableCell =>
-          cellData => cell(cellData.getCellProps())(cellData.renderCell)
-        case other           => other.asInstanceOf[BodyCellRender[D]]
+        case cell: TableCell => _ => cell
+        case fn              => fn.asInstanceOf[BodyCellRender[D]]
       }
 
       val footerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.footerCell: Any) match {
-        case footerCell: TableHeaderCell =>
-          col => footerCell(col.getFooterProps())(col.renderFooter)
-        case other                       => other.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
+        case footerCell: TableHeaderCell => _ => footerCell
+        case fn                          => fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
       }
 
       val headerElement: Option[TableHeader] =
@@ -144,7 +139,12 @@ class SUITable[
           props.headerRow(headerRowData.getHeaderGroupProps())(
             TableMaker
               .headersFromGroup(headerRowData)
-              .toTagMod((col: ColumnInstanceD) => headerCellRender(col))
+              .toTagMod((col: ColumnInstanceD) =>
+                headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
+                  col.renderHeader,
+                  sortElements.indicator(col)
+                )
+              )
           )
         }))
 
@@ -152,7 +152,9 @@ class SUITable[
         tableInstance.rows.toTagMod { rowData =>
           tableInstance.prepareRow(rowData)
           props.row(rowData.getRowProps())(
-            rowData.cells.toTagMod(cellData => bodyCellRender(cellData))
+            rowData.cells.toTagMod(cellData =>
+              bodyCellRender(cellData)(cellData.getCellProps())(cellData.renderCell)
+            )
           )
         }
       )
@@ -162,7 +164,9 @@ class SUITable[
           props.footerRow(footerRowData.getFooterGroupProps())(
             TableMaker
               .headersFromGroup(footerRowData)
-              .toTagMod((col: ColumnInstanceD) => footerCellRender(col))
+              .toTagMod((col: ColumnInstanceD) =>
+                footerCellRender(col)(col.getFooterProps())(col.renderFooter)
+              )
           )
         })
 
