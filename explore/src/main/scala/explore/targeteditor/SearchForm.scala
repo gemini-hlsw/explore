@@ -28,7 +28,6 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
-import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes._
 
@@ -111,15 +110,12 @@ object SearchForm {
 
       val disabled   = props.searching.get.exists(_ === props.id)
 
-      Form(size = Small, onSubmitE = submitForm)(
-        ExploreStyles.Grid,
-        ExploreStyles.Compact,
-        ExploreStyles.SearchForm,
+      Form(size = Small, clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
+        <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
           value = ViewF.fromState[IO]($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
-          label = Label("Name", HelpIcon("target/main/search-target.md")),
           error = state.searchError.orUndefined,
           loading = disabled,
           disabled = disabled,

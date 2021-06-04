@@ -43,9 +43,6 @@ object ExploreStyles {
   def Grow(i:       Int Refined Interval.Closed[1, 4]): Css  = Css(s"explore-grow-$i")
   def ColumnSpan(i: Int Refined Interval.Closed[1, 16]): Css = Css(s"explore-column-span-$i")
 
-  // Hide a label while keeping it accessible to screen readers
-  val HideLabel: Css = Css("hide-label")
-
   // Change styles for a readonly input
   val StaticData: Css = Css("static-data")
 
@@ -167,13 +164,14 @@ object ExploreStyles {
   val EditWarning: Css = Css("edit-warning")
 
   // The Target tab contents
-  val TargetGrid: Css           = Css("target-grid")
-  val TargetAladinCell: Css     = Css("target-aladin-cell")
-  val TargetSkyplotCell: Css    = Css("target-skyplot-cell")
-  val TargetRaDecMinWidth: Css  = Css("target-ra-dec-min-width")
-  val SearchForm: Css           = Css("target-search-form")
-  val TargetPropertiesForm: Css = Css("target-properties-form")
-  val CatalogueForm: Css        = Css("catalogue-form")
+  val TargetGrid: Css          = Css("target-grid")
+  val TargetAladinCell: Css    = Css("target-aladin-cell")
+  val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
+  val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
+  val TargetForm: Css          = Css("target-form")
+  val SearchForm: Css          = Css("target-search-form")
+  val TargetRVControls: Css    = Css("target-rv-controls")
+  val CatalogueForm: Css       = Css("catalogue-form")
 
   // The Constraints tab contents
   val ConstraintsGrid                = Css("constraints-grid")
@@ -232,8 +230,8 @@ object ExploreStyles {
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
 
-  val ConfigurationForm: Css         = Css("explore-configuration-form")
-  val ConfigurationGrid: Css         = Css("explore-configuration-grid")
+  val ExploreForm: Css               = Css("explore-form")
+  val ExploreFormGrid: Css           = Css("explore-form-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
   val SkipToNext: Css                = Css("explore-skip-to-next")
   val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")

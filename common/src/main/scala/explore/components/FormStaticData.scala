@@ -18,7 +18,6 @@ final case class FormStaticData(
   id:        String,
   value:     TagMod,
   label:     String,
-  hideLabel: Boolean = false,
   modifiers: Seq[TagMod] = Seq.empty
 ) extends ReactProps[FormStaticData](FormStaticData.component) {
   def apply(mods: TagMod*): FormStaticData = copy(modifiers = modifiers ++ mods)
@@ -33,7 +32,6 @@ object FormStaticData {
       .render_P { props =>
         <.div(
           props.modifiers.toTagMod,
-          (ExploreStyles.HideLabel).when(props.hideLabel),
           ^.cls := "field",
           <.label(props.label, ^.htmlFor := props.id),
           <.div(^.cls := "ui input",

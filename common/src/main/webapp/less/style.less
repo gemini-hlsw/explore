@@ -819,6 +819,23 @@ tfoot {
 @target-grid-responsive-cutoff: 992px;
 @mobile-responsive-cutoff: 670;
 
+.target-form {
+  grid-template-columns: [label] minmax(100px, 1fr) [field] 6fr;
+  justify-items: stretch;
+
+}
+
+.target-search-form {
+  grid-column: 1 / span 2;
+  display: grid;
+  grid-template-columns: [label] minmax(100px, 1fr) [field] 6fr;
+  grid-gap: 0.3em;
+
+  .field {
+    margin-bottom: 0 !important;
+  }
+}
+
 .target-grid {
   display: grid;
   grid-gap: 1em;
@@ -857,20 +874,19 @@ tfoot {
   }
 }
 
-.target-properties-form {
-  grid-template-columns: [field] 6fr [units] auto;
-  align-self: start;
-  justify-items: stretch;
+.target-rv-controls {
+  justify-self: stretch;
 }
 
 .catalogue-form {
   height: max-content; // keep it from expanding to fill cell
 }
 
-// for the ra and dec inputs and the flex container
-// that holds them
+// for the ra and dec inputs expand
 .target-ra-dec-min-width {
-  min-width: 3em;
+  .ui.input {
+    width: 100%;
+  }
 }
 
 .error-label-mixin() {
@@ -897,8 +913,6 @@ tfoot {
 .explore-units-label {
   margin-left: 0.25em;
   margin-bottom: 0.2em;
-  justify-self: end;
-  align-self: end;
 }
 
 .proposal-details-grid {
@@ -1405,13 +1419,13 @@ html {
   color: lightgreen;
 }
 
-.explore-configuration-grid {
+.explore-form-grid {
   padding: 0.5em;
   display: grid;
   grid-template-columns: 380px 1fr;
 }
 
-.explore-configuration-form {
+.explore-form {
   display: grid;
   justify-items: start;
   align-items: baseline;
