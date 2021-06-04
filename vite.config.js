@@ -115,11 +115,24 @@ export default ({ command, mode }) => {
       },
     },
     build: {
+      minify: 'terser',
       rollupOptions: {
         plugins: rollupPlugins
       },
       terserOptions: {
         sourceMap: false,
+        nameCache: {},
+        format: {
+          comments: false,
+        },
+        mangle: {
+          properties: {
+            debug: false,
+            keep_quoted: true,
+            reserved: ['$classData', 'main', 'toString', 'constructor', 'length', 'call', 'apply', 'NaN', 'Infinity', 'undefined'],
+            regex: /^(\$m_|loadHelp.*|.*__f_|Ljava|cats\$)/,
+          }
+        },
       },
       outDir: path.resolve(__dirname, "heroku/static"),
     },
