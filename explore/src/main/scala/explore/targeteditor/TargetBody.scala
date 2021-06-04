@@ -43,9 +43,7 @@ import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-import react.common.implicits._
 import react.semanticui.collections.form.Form
-import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
@@ -169,9 +167,10 @@ object TargetBody {
         React.Fragment(
           <.div(
             ExploreStyles.TargetGrid,
-            Form(as = <.div, size = Small)(
+            <.div(
               ExploreStyles.Grid,
               ExploreStyles.Compact,
+              ExploreStyles.TargetForm,
               // Keep the search field and the coords always together
               SearchForm(
                 props.id,
@@ -182,31 +181,27 @@ object TargetBody {
                 props.searching,
                 Reuse.currying(allView, nameView).in(searchAndSet _)
               ),
-              <.div(
-                ExploreStyles.FlexContainer,
-                ExploreStyles.TargetRaDecMinWidth,
-                FormInputEV(
-                  id = "ra",
-                  value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-                  validFormat = ValidFormatInput.truncatedRA,
-                  changeAuditor = ChangeAuditor.truncatedRA,
-                  label = Label("RA", HelpIcon("target/main/coordinates.md")),
-                  clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                  errorPointing = LabelPointing.Below,
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  disabled = disabled
-                ),
-                FormInputEV(
-                  id = "dec",
-                  value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-                  validFormat = ValidFormatInput.truncatedDec,
-                  changeAuditor = ChangeAuditor.truncatedDec,
-                  label = Label("Dec", HelpIcon("target/main/coordinates.md")),
-                  clazz = ExploreStyles.FlexGrow(1) |+| ExploreStyles.TargetRaDecMinWidth,
-                  errorPointing = LabelPointing.Below,
-                  errorClazz = ExploreStyles.InputErrorTooltip,
-                  disabled = disabled
-                )
+              <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+              FormInputEV(
+                id = "ra",
+                value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                validFormat = ValidFormatInput.truncatedRA,
+                changeAuditor = ChangeAuditor.truncatedRA,
+                clazz = ExploreStyles.TargetRaDecMinWidth,
+                errorPointing = LabelPointing.Below,
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                disabled = disabled
+              ),
+              <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+              FormInputEV(
+                id = "dec",
+                value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                validFormat = ValidFormatInput.truncatedDec,
+                changeAuditor = ChangeAuditor.truncatedDec,
+                clazz = ExploreStyles.TargetRaDecMinWidth,
+                errorPointing = LabelPointing.Below,
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                disabled = disabled
               )
             ),
             AladinCell(
@@ -216,43 +211,43 @@ object TargetBody {
               props.options
             ),
             CataloguesForm(props.options).when(false),
-            Form(as = <.div, size = Small)(
+            Form(as = <.div, clazz = ExploreStyles.ExploreFormGrid, size = Small)(
               ExploreStyles.Grid,
               ExploreStyles.Compact,
-              ExploreStyles.TargetPropertiesForm,
+              ExploreStyles.ExploreForm,
+              <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
               InputWithUnits(
                 epochView,
                 ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
                 ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
                 id = "epoch",
-                label = Label("Epoch", HelpIcon("target/main/epoch.md")),
                 units = "years",
                 disabled = disabled
               ),
+              <.label("µ RA", ExploreStyles.SkipToNext),
               InputWithUnits(
                 properMotionRAView,
                 ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
                 ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                 id = "raPM",
-                label = "µ RA",
                 units = "mas/y",
                 disabled = disabled
               ),
+              <.label("µ Dec", ExploreStyles.SkipToNext),
               InputWithUnits(
                 properMotionDecView,
                 ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
                 ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                 id = "raDec",
-                label = "µ Dec",
                 units = "mas/y",
                 disabled = disabled
               ),
+              <.label("Parallax", ExploreStyles.SkipToNext),
               InputWithUnits(
                 parallaxView,
                 ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
                 ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                 id = "parallax",
-                label = "Parallax",
                 units = "mas",
                 disabled = disabled
               ),

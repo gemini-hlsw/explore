@@ -99,48 +99,50 @@ object RVInput {
           case RVView.Z  =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag.value,
               value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              clazz = ExploreStyles.Grow(1),
               disabled = props.disabled
             )
           case RVView.CZ =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag.value,
               value = props.value.zoom(rvToARVGet)(rvToARVMod),
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              clazz = ExploreStyles.Grow(1),
               disabled = props.disabled
             )
           case RVView.RV =>
             FormInputEV(
               id = state.rvView.tag,
-              label = state.rvView.tag.value,
               value = props.value,
               errorClazz = ExploreStyles.InputErrorTooltip,
               errorPointing = LabelPointing.Below,
               validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
               changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
-              clazz = ExploreStyles.Grow(1) |+| ExploreStyles.HideLabel,
+              clazz = ExploreStyles.Grow(1),
               disabled = props.disabled
             )
         }
+        val label  = state.rvView match {
+          case RVView.Z  =>
+            state.rvView.tag.value
+          case RVView.CZ =>
+            state.rvView.tag.value
+          case RVView.RV =>
+            state.rvView.tag.value
+        }
         React.Fragment(
+          <.label(label, ExploreStyles.SkipToNext),
           <.div(
-            ExploreStyles.FlexContainer |+| ExploreStyles.Grow(1),
-            EnumViewSelect[IO, RVView](id = "view",
-                                       value = rvView,
-                                       label = state.rvView.tag.value,
-                                       disabled = props.disabled
-            ),
+            ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls,
+            EnumViewSelect[IO, RVView](id = "view", value = rvView, disabled = props.disabled),
             input
           ),
           state.units

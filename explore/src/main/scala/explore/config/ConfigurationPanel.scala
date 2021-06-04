@@ -98,11 +98,11 @@ object ConfigurationPanel {
       ReactFragment(
         props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(state, undoCtx))),
         <.div(
-          ExploreStyles.ConfigurationGrid,
+          ExploreStyles.ExploreFormGrid,
           Form(size = Small)(
             ExploreStyles.Grid,
             ExploreStyles.Compact,
-            ExploreStyles.ConfigurationForm,
+            ExploreStyles.ExploreForm,
             <.label("Mode", HelpIcon("configuration/mode.md")),
             EnumViewSelect(id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),

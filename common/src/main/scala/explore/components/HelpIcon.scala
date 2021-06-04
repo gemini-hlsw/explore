@@ -17,31 +17,29 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
-final case class HelpIcon(id: Help.Id) extends ReactProps[HelpIcon](HelpIcon.component)
+final case class HelpIcon(id: Help.Id)
 
 object HelpIcon {
   type Props = HelpIcon
 
   type HelpId = NonEmptyFiniteString[20]
 
-  val component = ScalaComponent
-    .builder[Props]
-    .stateless
-    .render_P { p =>
-      HelpCtx.usingView { help =>
-        AppCtx.using { implicit ctx =>
-          val helpMsg = help.zoom(HelpContext.displayedHelp)
-          <.span(
-            ^.onClick ==> { (e: ReactMouseEvent) =>
-              e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some).runAsyncCB
-            },
-            Icons.Info
-              .link(true)
-              .inverted(true)
-              .clazz(ExploreStyles.HelpIcon)
-          )
-        }
+  implicit def render(props: HelpIcon): VdomElement = component(props).vdomElement
+
+  val component = ScalaFnComponent[Props] { p =>
+    HelpCtx.usingView { help =>
+      AppCtx.using { implicit ctx =>
+        val helpMsg = help.zoom(HelpContext.displayedHelp)
+        <.span(
+          ^.onClick ==> { (e: ReactMouseEvent) =>
+            e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some).runAsyncCB
+          },
+          Icons.Info
+            .link(true)
+            .inverted(true)
+            .clazz(ExploreStyles.HelpIcon)
+        )
       }
     }
-    .build
+  }
 }
