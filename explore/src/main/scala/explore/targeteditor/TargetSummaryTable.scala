@@ -101,7 +101,8 @@ object TargetSummaryTable {
                   ),
                   cell.value.toString
               )
-            ),
+            )
+            .setSortByFn(_.toString),
           column(
             "ra",
             TargetObsQueries.baseCoordinatesRa.get
