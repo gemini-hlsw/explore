@@ -68,9 +68,9 @@ object SortElements extends LowPrioritySortElements {
         if (col.isSorted) {
           val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
           val ascDesc: VdomNode =
-            if (col.isSortedDesc.getOrElse(false)) Icons.SortUp else Icons.SortDown
+            if (col.isSortedDesc.getOrElse(false)) Icons.SortDown else Icons.SortUp
           <.span(ascDesc, <.small(index))
-        } else Icons.Sort
+        } else Icons.Sort.unless(!col.canSort)
     }
 }
 

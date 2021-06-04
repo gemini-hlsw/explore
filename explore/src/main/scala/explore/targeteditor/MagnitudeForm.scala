@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
@@ -137,7 +138,8 @@ object MagnitudeForm {
 
           val columns = List(
             MagTable
-              .Column("value")
+              .Column("value", _.zoom(Magnitude.value))
+              .setHeader("Value")
               .setCell(
                 ReactTableHelpers
                   .editableViewColumn(
@@ -150,28 +152,27 @@ object MagnitudeForm {
                       .allowEmpty,
                     disabled = props.disabled
                   )
-              )
-              .setHeader("Value"),
+              ),
             MagTable
-              .Column("band")
+              .Column("band", _.zoom(Magnitude.band))
+              .setHeader("Band")
               .setCell(
                 ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
                   disabled = props.disabled,
                   excludeFn = Some(excludeFn)
                 )
               )
-              .setSortByFn(_.get.band)
-              .setHeader("Band"),
+              .setSortByFn(_.get),
             MagTable
-              .Column("system")
+              .Column("system", _.zoom(Magnitude.system))
+              .setHeader("System")
               .setCell(
                 ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
                   disabled = props.disabled
                 )
-              )
-              .setHeader("System"),
+              ),
             MagTable
-              .Column("delete")
+              .Column[Unit]("delete")
               .setCell(
                 ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                    onClick = deleteFn,

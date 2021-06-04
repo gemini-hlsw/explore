@@ -92,6 +92,8 @@ object SequenceTable {
 
   private val StepTableComponent = new SUITable(StepTable)
 
+  import StepTable.syntax._
+
   val component =
     ScalaFnComponent[Props] { props =>
       val bracketDef =
@@ -116,60 +118,63 @@ object SequenceTable {
         )
 
       def rightAligned(value: Any) =
-        <.div(^.textAlign.right)(value.toString).rawElement
+        <.div(^.textAlign.right)(value.toString)
 
       val columns = List(
         StepTable
-          .Column(
-            "atomSteps",
-            _.firstOf.map((drawBracket _).andThen(_.rawElement)).orNull
-          )
-          .setHeader(" "),
+          .Column("atomSteps", _.firstOf)
+          .setHeader(" ")
+          .setCell(_.value.map(drawBracket)),
         StepTable
-          .Column("stepType", _.step.stepType.toString)
-          .setHeader("Type"),
+          .Column("stepType", _.step.stepType)
+          .setHeader("Type")
+          .setCell(_.value.toString),
         StepTable
-          .Column("exposure", s => rightAligned(s.exposureSecs))
-          .setHeader(rightAligned("Exp (sec)")),
+          .Column("exposure", _.exposureSecs)
+          .setHeader(rightAligned("Exp (sec)").rawElement)
+          .setCell(cell => rightAligned(cell.value)),
         StepTable
-          .Column(
-            "guide",
-            s => if (s.guided) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided).raw else null
-          )
-          .setHeader(""),
+          .Column("guide", _.guided)
+          .setHeader("")
+          .setCell(cell =>
+            if (cell.value) Icons.Crosshairs.copy(clazz = ExploreStyles.StepGuided) else EmptyVdom
+          ),
         StepTable
-          .Column("p", s => rightAligned(offsetFormat.format(s.p)))
-          .setHeader(rightAligned("p")),
+          .Column("p", _.p)
+          .setHeader(rightAligned("p").rawElement)
+          .setCell(cell => rightAligned(offsetFormat.format(cell.value))),
         StepTable
-          .Column("q", s => rightAligned(offsetFormat.format(s.q)))
-          .setHeader(rightAligned("q")),
+          .Column("q", _.q)
+          .setHeader(rightAligned("q").rawElement)
+          .setCell(cell => rightAligned(offsetFormat.format(cell.value))),
         StepTable
-          .Column(
-            "lambda",
-            _.wavelength.map((rightAligned _).compose(_.toInt)).orNull
-          )
-          .setHeader(rightAligned("λ (nm)")),
+          .Column("lambda", _.wavelength)
+          .setHeader(rightAligned("λ (nm)").rawElement)
+          .setCell(_.value.map((rightAligned _).compose(_.toInt))),
         StepTable
-          .Column(
-            "fpu",
-            _.fpuName.map(rightAligned).orNull
-          )
-          .setHeader(rightAligned("FPU")),
+          .Column("fpu", _.fpuName)
+          .setHeader(rightAligned("FPU").rawElement)
+          .setCell(_.value.map(rightAligned)),
         StepTable
-          .Column("disperser", _.disperserName.orNull)
-          .setHeader("Disperser"),
+          .Column("disperser", _.disperserName)
+          .setHeader("Disperser")
+          .setCell(_.value.orEmpty),
         StepTable
-          .Column("filter", _.filterName.orNull)
-          .setHeader("Filter"),
+          .Column("filter", _.filterName)
+          .setHeader("Filter")
+          .setCell(_.value.orEmpty),
         StepTable
-          .Column("xbin", s => rightAligned(s.step.instrumentConfig.readout.xBin.shortName))
-          .setHeader(rightAligned("Xbin")),
+          .Column("xbin", _.step.instrumentConfig.readout.xBin)
+          .setHeader(rightAligned("Xbin").rawElement)
+          .setCell(cell => rightAligned(cell.value.shortName)),
         StepTable
-          .Column("ybin", s => rightAligned(s.step.instrumentConfig.readout.yBin.shortName))
-          .setHeader(rightAligned("Ybin")),
+          .Column("ybin", _.step.instrumentConfig.readout.yBin)
+          .setHeader(rightAligned("Ybin").rawElement)
+          .setCell(cell => rightAligned(cell.value.shortName)),
         StepTable
-          .Column("roi", _.step.instrumentConfig.roi.shortName)
-          .setHeader("ROI"),
+          .Column("roi", _.step.instrumentConfig.roi)
+          .setHeader("ROI")
+          .setCell(_.value.shortName),
         StepTable
           .Column("sn", _ => "")
           .setHeader("S/N")
