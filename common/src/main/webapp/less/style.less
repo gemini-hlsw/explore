@@ -1554,3 +1554,30 @@ html {
     }
   }
 }
+
+.table .sticky {
+  position: sticky;
+  z-index: 9999;
+}
+
+.ui.striped.table tr td.sticky {
+  background-color: var(--table-background);
+}
+
+.ui.striped.table tr:nth-child(2n) td.sticky {
+  background-color: var(--table-striped-background);
+}
+
+.ui.striped.table tr:hover td.sticky {
+  background: var(--table-selectable-background);
+  color: var(--table-selectable-color);
+}
+
+.explore-target-summary-type {
+  left: 0;
+  width: 20px;
+}
+
+.explore-target-summary-name {
+  left: 37px;
+}

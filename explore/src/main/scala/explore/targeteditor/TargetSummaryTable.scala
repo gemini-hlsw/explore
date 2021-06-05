@@ -28,12 +28,14 @@ import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import react.common._
+import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
+import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
@@ -75,6 +77,11 @@ object TargetSummaryTable {
     "sed"          -> "SED"
   ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
 
+  private val columnClasses: Map[String, Css] = Map(
+    "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
+    "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
+  )
+
   protected class Backend {
 
     def render(props: Props) = {
@@ -93,7 +100,9 @@ object TargetSummaryTable {
 
       val columns =
         (List(
-          column("type", _ => ()).setCell(_ => Icon("star")),
+          column("type", _ => ())
+            .setCell(_ => Icon("star"))
+            .setWidth(30),
           column("name", TargetResult.name.get)
             .setCell(cell =>
               <.a(^.onClick ==> (_ =>
@@ -250,8 +259,15 @@ object TargetSummaryTable {
           table =
             Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very)(),
           header = true,
-          headerCell = TableHeaderCell()(^.textTransform.none, ^.whiteSpace.nowrap),
-          cell = TableCell()(^.whiteSpace.nowrap)
+          headerCell = (col: TargetTable.ColumnType) =>
+            TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
+              ^.textTransform.none,
+              ^.whiteSpace.nowrap
+            ),
+          cell = (cell: Cell[TargetResult, _]) =>
+            TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+              ^.whiteSpace.nowrap
+            )
         )(tableInstance)
       )
     }

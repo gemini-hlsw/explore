@@ -246,4 +246,8 @@ object ExploreStyles {
   val VeryCompact: Css = Css("verycompact")
 
   val SharedEditWarning: Css = Css("explore-shared-edit-warning")
+
+  val Sticky: Css            = Css("sticky")
+  val TargetSummaryType: Css = Css("explore-target-summary-type")
+  val TargetSummaryName: Css = Css("explore-target-summary-name")
 }
