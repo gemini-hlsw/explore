@@ -103,7 +103,6 @@ object TargetSummaryTable {
           column("type", _ => ())
             .setCell(_ => Icon("star"))
             .setWidth(30),
-          // .setClassName("sticky"),
           column("name", TargetResult.name.get)
             .setCell(cell =>
               <.a(^.onClick ==> (_ =>
@@ -113,7 +112,6 @@ object TargetSummaryTable {
               )
             )
             .setSortByFn(_.toString),
-          // .setClassName("sticky"),
           column(
             "ra",
             TargetObsQueries.baseCoordinatesRa.get
