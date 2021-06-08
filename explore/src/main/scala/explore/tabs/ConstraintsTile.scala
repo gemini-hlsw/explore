@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.effect.IO
 import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -12,6 +13,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.implicits._
+import explore.model.reusability._
+import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -21,23 +24,24 @@ import react.common._
 object ConstraintsTile {
 
   def constraintsTile(
-    obsId: Observation.Id,
-    csPot: Pot[View[ConstraintSetData]]
+    obsId:      Observation.Id,
+    csPot:      Pot[View[ConstraintSetData]],
+    undoStacks: View[UndoStacks[IO, ConstraintSetData]]
   ): Tile =
     Tile(
       ObsTabTiles.ConstraintsId,
       "Constraints",
       canMinimize = true
     )(
-      csPot.curryReusing.in((csPotViewPar, renderInTitle) =>
+      (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
         potRender[View[ConstraintSetData]](
           Reuse.always(cs =>
             <.div(
               ExploreStyles.ConstraintsObsTile,
-              ConstraintsPanel(obsId, cs, renderInTitle)
+              ConstraintsPanel(obsId, cs, undoStacks_, renderInTitle)
             ): VdomNode
           )
-        )(csPotViewPar)
+        )(csPotView_)
       )
     )
 

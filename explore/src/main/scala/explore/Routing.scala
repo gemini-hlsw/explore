@@ -3,8 +3,6 @@
 
 package explore
 
-import cats.effect.IO
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
@@ -20,11 +18,9 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Asterism
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
-import org.typelevel.log4cats.Logger
 import react.resizeDetector.ResizeDetector
 
 import scala.scalajs.LinkingInfo
@@ -47,8 +43,10 @@ object Routing {
     withSize { size =>
       AppCtx.using(implicit ctx =>
         TargetTabContents(
-          model.zoom(RootModel.userId),
+          model.zoom(RootModel.userId).get,
           model.zoom(RootModel.focused),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetList),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTarget),
           model.zoom(RootModel.searchingTarget),
           model.zoom(RootModel.expandedIds),
           model.zoom(RootModel.targetSummaryHiddenColumns),
@@ -62,6 +60,7 @@ object Routing {
       AppCtx.using(implicit ctx =>
         ObsTabContents(model.zoom(RootModel.userId),
                        model.zoom(RootModel.focused),
+                       model.zoom(RootModel.undoStacks),
                        model.zoom(RootModel.searchingTarget),
                        size
         )
@@ -72,20 +71,18 @@ object Routing {
     withSize(size =>
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
-          model.zoom(RootModel.userId),
+          model.zoom(RootModel.userId).get,
           model.zoom(RootModel.focused),
           model.zoom(
             RootModel.expandedIds.composeLens(ExpandedIds.constraintSetIds)
           ),
+          // model.zoom(RootModel.undoStacks.composeLens(ModelUndoStacks.forConstraintSet)),
           size
         )
       )
     )
 
-  def config(implicit
-    dispatcher: Dispatcher[IO],
-    logger:     Logger[IO]
-  ): RouterWithPropsConfig[Page, View[RootModel]] =
+  def config: RouterWithPropsConfig[Page, View[RootModel]] =
     RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
       import dsl._
 
@@ -119,10 +116,7 @@ object Routing {
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
           | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
           | dynamicRouteCT(
-            ("/constraint" / id[ConstraintSet.Id]).xmapL(ConstraintsPage.csId)
-          ) ~> renderP(constraintSetTab)
-          | dynamicRouteCT(
-            ("/constraint/obs" / id[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
+            ("/constraint" / id[Observation.Id]).xmapL(ConstraintsPage.obsId)
           ) ~> renderP(constraintSetTab))
 
       val configuration =
@@ -133,10 +127,10 @@ object Routing {
                 if prev.exists(_ =!= next) &&
                   // Short circuit if we get here because of a change in the model.
                   next =!= view.zoom(RootModelRouting.lens).get =>
-              view.zoom(RootModelRouting.lens).set(next).runAsyncCB
+              view.zoom(RootModelRouting.lens).set(next)
             case (None, next, view) =>
               // Set the model if none was previously set
-              view.zoom(RootModelRouting.lens).set(next).runAsyncCB
+              view.zoom(RootModelRouting.lens).set(next)
             case _                  => Callback.empty
           }
           .renderWithP(layout)

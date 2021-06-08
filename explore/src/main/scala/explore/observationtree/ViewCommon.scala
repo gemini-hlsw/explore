@@ -3,8 +3,6 @@
 
 package explore.observationtree
 
-import cats.effect.IO
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
@@ -15,7 +13,6 @@ import explore.model.ObsSummary
 import japgolly.scalajs.react.ReactEvent
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
-import org.typelevel.log4cats.Logger
 import react.beautifuldnd._
 
 trait ViewCommon {
@@ -27,10 +24,7 @@ trait ViewCommon {
       selected = focused.get.exists(_ === FocusedObs(obs.id))
     )
 
-  def renderObsBadgeItem(selectable: Boolean)(obs: ObsSummary, idx: Int)(implicit
-    dispatcher:                      Dispatcher[IO],
-    logger:                          Logger[IO]
-  ): TagMod =
+  def renderObsBadgeItem(selectable: Boolean)(obs: ObsSummary, idx: Int): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(
@@ -38,7 +32,7 @@ trait ViewCommon {
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactEvent =>
-            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some).runAsyncCB
+            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some)
           }).when(selectable)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs)))
       }

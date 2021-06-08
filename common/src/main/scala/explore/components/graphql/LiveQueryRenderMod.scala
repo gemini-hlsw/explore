@@ -11,7 +11,6 @@ import cats.syntax.all._
 import clue.GraphQLSubscription
 import clue.WebSocketClient
 import crystal.Pot
-import crystal.ViewF
 import crystal.react._
 import crystal.react.reuse._
 import explore._
@@ -40,14 +39,14 @@ final case class LiveQueryRenderMod[S, D, A](
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
 object LiveQueryRenderMod {
-  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ViewF[F, *], S, D, A]
+  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, View, S, D, A]
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
     subscriptions:           List[GraphQLSubscription[F, _]],
     cancelConnectionTracker: F[Unit],
-    renderer:                StreamRendererMod.Component[F, A]
-  ) extends Render.LiveQuery.State[F, ViewF[F, *], S, D, A]
+    renderer:                StreamRendererMod.Component[A]
+  ) extends Render.LiveQuery.State[F, View, S, D, A]
 
   implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]] =
     Reusability.by(p => (p.query, p.extract, p.changeSubscriptions, p.render, p.onNewData))
@@ -57,10 +56,10 @@ object LiveQueryRenderMod {
     ScalaComponent
       .builder[Props[F, S, D, A]]
       .initialState[Option[State[F, S, D, A]]](none)
-      .render(Render.renderFn[F, ViewF[F, *], D, A](_))
+      .render(Render.renderFn[F, View, D, A](_))
       .componentDidMount(
         Render.LiveQuery
-          .didMountFn[F, ViewF[F, *], S, D, A][Props[F, S, D, A], State[F, S, D, A]](
+          .didMountFn[F, View, S, D, A][Props[F, S, D, A], State[F, S, D, A]](
             "LiveQueryRenderMod",
             (stream, props) => {
               implicit val F          = props.F
@@ -73,7 +72,7 @@ object LiveQueryRenderMod {
             State.apply
           )
       )
-      .componentWillUnmount(Render.LiveQuery.willUnmountFn[F, ViewF[F, *], S, D, A](_))
+      .componentWillUnmount(Render.LiveQuery.willUnmountFn[F, View, S, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

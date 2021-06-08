@@ -4,6 +4,7 @@
 package explore
 
 import cats._
+import cats.effect.SyncIO
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
@@ -62,18 +63,23 @@ trait ListImplicits {
 }
 
 trait ContextImplicits {
-  implicit def appContext2Dispatcher[F[_]](implicit ctx: AppContext[F]): Dispatcher[F] =
+  implicit def appContext2Dispatcher[F[_]](implicit ctx:   AppContext[F]): Dispatcher[F]  =
     ctx.dispatcher
-  implicit def appContext2Logger[F[_]](implicit ctx:     AppContext[F]): Logger[F]     =
+  implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]      =
     ctx.logger
+  implicit def appContext2SyncIOLogger[F[_]](implicit ctx: AppContext[F]): Logger[SyncIO] =
+    ctx.syncLogger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
-    ctx:                                                 AppContext[F]
+    ctx:                                                   AppContext[F]
   ): WebSocketClient[F, UserPreferencesDB] =
     ctx.clients.preferencesDB
   implicit def appContext2ODBClient[F[_]](implicit
     ctx: AppContext[F]
   ): WebSocketClient[F, ObservationDB] =
     ctx.clients.odb
+  implicit def appContext2fromSync[F[_]](implicit
+    ctx: AppContext[F]
+  ): SyncIO ~> F = ctx.fromSyncIO
 }
 
 object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {

@@ -53,12 +53,40 @@ case class AppContext[F[_]](
   actions:        Actions[F],
   sso:            SSOClient[F],
   pageUrl:        (AppTab, Option[Focused]) => String,
-  environment:    ExecutionEnvironment
+  environment:    ExecutionEnvironment,
+  fromSyncIO:     SyncIO ~> F
 )(implicit
   val F:          Applicative[F],
   val dispatcher: Dispatcher[F],
   val logger:     Logger[F]
-)
+) {
+  val syncLogger: Logger[SyncIO] = {
+    def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))
+    new Logger[SyncIO] {
+      def error(t:       Throwable)(message:       => String): SyncIO[Unit] =
+        f(logger.error(t)(message))
+      def warn(t:        Throwable)(message:       => String): SyncIO[Unit] =
+        f(logger.warn(t)(message))
+      def info(t:        Throwable)(message:       => String): SyncIO[Unit] =
+        f(logger.info(t)(message))
+      def debug(t:       Throwable)(message:       => String): SyncIO[Unit] =
+        f(logger.debug(t)(message))
+      def trace(t:       Throwable)(message: => String): SyncIO[Unit] =
+        f(logger.trace(t)(message))
+      def error(message: => String): SyncIO[Unit] =
+        f(logger.error(message))
+      def warn(message:  => String): SyncIO[Unit] =
+        f(logger.warn(message))
+      def info(message:  => String): SyncIO[Unit] =
+        f(logger.info(message))
+      def debug(message: => String): SyncIO[Unit] =
+        f(logger.debug(message))
+      def trace(message: => String): SyncIO[Unit] =
+        f(logger.trace(message))
+    }
+  }
+
+}
 
 object AppContext {
   private def buildClients[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
@@ -76,7 +104,8 @@ object AppContext {
   def from[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[Focused]) => String
+    pageUrl:              (AppTab, Option[Focused]) => String,
+    fromSyncIO:           SyncIO ~> F
   ): F[AppContext[F]] =
     for {
       clients <- buildClients(config.odbURI, config.preferencesDBURI, reconnectionStrategy)
@@ -87,6 +116,7 @@ object AppContext {
                           actions,
                           SSOClient(config.sso),
                           pageUrl,
-                          config.environment
+                          config.environment,
+                          fromSyncIO
     )
 }

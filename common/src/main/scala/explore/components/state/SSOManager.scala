@@ -4,6 +4,7 @@
 package explore.components.state
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -22,8 +23,8 @@ import java.time.Instant
 
 final case class SSOManager(
   expiration:       Instant,
-  setVault:         Option[UserVault] ==> IO[Unit],
-  setMessage:       NonEmptyString ==> IO[Unit]
+  setVault:         Option[UserVault] ==> SyncIO[Unit],
+  setMessage:       NonEmptyString ==> SyncIO[Unit]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SSOManager](SSOManager.component)
 
@@ -40,13 +41,13 @@ object SSOManager {
 
     def tokenRefresher(
       expiration:   Instant,
-      setVault:     Option[UserVault] => IO[Unit],
-      setMessage:   NonEmptyString => IO[Unit]
+      setVault:     Option[UserVault] => SyncIO[Unit],
+      setMessage:   NonEmptyString => SyncIO[Unit]
     )(implicit ctx: AppContextIO): IO[Unit] =
       for {
         vaultOpt <- ctx.sso.refreshToken(expiration)
-        _        <- setVault(vaultOpt)
-        _        <- vaultOpt.fold(setMessage("Your session has expired"))(vault =>
+        _        <- setVault(vaultOpt).to[IO]
+        _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
                       tokenRefresher(vault.expiration, setVault, setMessage)
                     )
       } yield ()
@@ -65,8 +66,9 @@ object SSOManager {
         .tokenRefresher($.props.expiration, $.props.setVault, $.props.setMessage)
         .onError(t =>
           Logger[IO].error(t)("Error refreshing SSO token") >>
-            $.props.setVault(none) >>
-            $.props.setMessage("There was an error while checking the validity of your session")
+            ($.props.setVault(none) >>
+              $.props.setMessage("There was an error while checking the validity of your session"))
+              .to[IO]
         )
         .start
         .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.cancel.some)))
@@ -76,9 +78,9 @@ object SSOManager {
       implicit val ctx = $.props.ctx
       // Setting vault to none is defensive. This component should actually unmount when vault is none.
       $.state.cancelToken
-        .map(cancel => (cancel >> $.props.setVault(none)))
+        .map(cancel => (cancel >> $.props.setVault(none).to[IO]))
         .orEmpty
-        .runAsyncAndForgetCB
+        .runAsyncCB
     }
     .shouldComponentUpdateConst(false)
     .build

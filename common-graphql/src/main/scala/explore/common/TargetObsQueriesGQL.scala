@@ -16,8 +16,8 @@ object TargetObsQueriesGQL {
   @GraphQL
   trait TargetsObsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($first: Int = 2147483647) {
-        targets(programId: "p-2", first: $first) {
+      query {
+        targets(programId: "p-2") {
           nodes {
             id
             name
@@ -56,7 +56,7 @@ object TargetObsQueriesGQL {
           }
         }
 
-        asterisms(programId: "p-2", first: $first) {
+        asterisms(programId: "p-2") {
           nodes {
             id
             name
@@ -69,7 +69,7 @@ object TargetObsQueriesGQL {
           }
         }
 
-        observations(programId: "p-2", first: $first) {
+        observations(programId: "p-2") {
           nodes {
             id
             pointing: observationTarget {
@@ -158,7 +158,7 @@ object TargetObsQueriesGQL {
   }
 
   @GraphQL
-  trait RemoveTarget extends GraphQLOperation[ObservationDB] {
+  trait DeleteTarget extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($targetId: TargetId!) {
         deleteTarget(targetId: $targetId) {
@@ -195,7 +195,7 @@ object TargetObsQueriesGQL {
   }
 
   @GraphQL
-  trait RemoveAsterism extends GraphQLOperation[ObservationDB] {
+  trait DeleteAsterism extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($asterismId: AsterismId!) {
         deleteAsterism(asterismId: $asterismId) {

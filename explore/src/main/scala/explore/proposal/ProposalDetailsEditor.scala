@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.effect.IO
 import cats.syntax.all._
 import coulomb._
 import coulomb.accepted._
@@ -234,7 +233,7 @@ object ProposalDetailsEditor {
             details
               .zoom(ProposalDetails.abstrakt)
               .set(tap.value.asInstanceOf[String])
-              .runAsyncCB
+              .toCB
           }
         ).addModifiers(Seq(^.id := "abstract"))
       )
@@ -242,7 +241,7 @@ object ProposalDetailsEditor {
 
     def render(props: Props, state: State) =
       AppCtx.using { implicit appCtx =>
-        val splitsZoom = ViewF.fromState[IO]($).zoom(State.splits)
+        val splitsZoom = ViewF.fromStateSyncIO($).zoom(State.splits)
 
         val details = props.proposalDetails
 
@@ -253,7 +252,8 @@ object ProposalDetailsEditor {
           details
             .zoom(ProposalDetails.partnerSplits)
             .set(splits.filter(_.percent.value.value > 0))
-            .runAsyncCB *> closePartnerSplitsEditor
+            .toCB *>
+            closePartnerSplitsEditor
 
         <.div(
           <.div(

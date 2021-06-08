@@ -43,15 +43,13 @@ object ReactTableHelpers {
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>
-        AppCtx.using { implicit ctx =>
-          FormInputEV(id = newId,
-                      value = va.zoom(lens),
-                      validFormat = validFormat,
-                      changeAuditor = changeAuditor,
-                      disabled = disabled,
-                      modifiers = modifiers
-          )
-        }
+        FormInputEV(id = newId,
+                    value = va.zoom(lens),
+                    validFormat = validFormat,
+                    changeAuditor = changeAuditor,
+                    disabled = disabled,
+                    modifiers = modifiers
+        )
       }
       .build
       .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)

@@ -9,7 +9,6 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.Pot
-import crystal.ViewF
 import crystal.react._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -38,12 +37,12 @@ final case class SubscriptionRenderMod[D, A](
     with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
-  trait Props[F[_], D, A] extends Render.Subscription.Props[F, ViewF[F, *], D, A] {}
+  trait Props[F[_], D, A] extends Render.Subscription.Props[F, View, D, A] {}
 
   protected final case class State[F[_], D, A](
     subscription: GraphQLSubscription[F, D],
-    renderer:     StreamRendererMod.Component[F, A]
-  ) extends Render.Subscription.State[F, ViewF[F, *], D, A]
+    renderer:     StreamRendererMod.Component[A]
+  ) extends Render.Subscription.State[F, View, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =
@@ -54,7 +53,7 @@ object SubscriptionRenderMod {
     ScalaComponent
       .builder[Props[F, D, A]]
       .initialState[Option[State[F, D, A]]](none)
-      .render(Render.renderFn[F, ViewF[F, *], D, A](_))
+      .render(Render.renderFn[F, View, D, A](_))
       .componentDidMount { $ =>
         implicit val F          = $.props.F
         implicit val dispatcher = $.props.dispatcher
@@ -79,7 +78,7 @@ object SubscriptionRenderMod {
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRenderMod"))
           .runAsyncCB
       }
-      .componentWillUnmount(Render.Subscription.willUnmountFn[F, ViewF[F, *], D, A](_))
+      .componentWillUnmount(Render.Subscription.willUnmountFn[F, View, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

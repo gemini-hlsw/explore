@@ -3,11 +3,9 @@
 
 package explore
 
-import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -42,7 +40,7 @@ object SideTabs {
           val focus = p.tabs.get.focus
 
           def onClickE[A](tab: AppTab) =
-            linkOverride[IO, A](p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)))
+            linkOverride[A](p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)))
 
           def tabButton(tab:          AppTab): Button       =
             Button(

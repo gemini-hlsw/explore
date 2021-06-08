@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -11,7 +10,6 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -68,22 +66,22 @@ object SearchForm {
 
   class Backend($ : BackendScope[Props, State]) {
 
-    def render(props: Props, state: State) = AppCtx.using { implicit ctx =>
-      val searchComplete: IO[Unit] = props.searching.mod(_ - props.id)
+    def render(props: Props, state: State) = {
+      val searchComplete: Callback = props.searching.mod(_ - props.id).toCB
 
       val search: Callback =
         props
           .submit(
             state.searchTerm,
-            $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id).runAsyncCB,
+            $.setStateL(State.searchError)(none) >> props.searching.mod(_ + props.id),
             t =>
-              searchComplete.runAsyncCB *> ($.setStateL(State.searchError)(
+              searchComplete *> ($.setStateL(State.searchError)(
                 NonEmptyString
                   .unsafeFrom(s"'${abbreviate(state.searchTerm, 10)}' not found")
                   .some
               )).when_(t.isEmpty),
             _ =>
-              searchComplete.runAsyncCB *> $.setStateL(State.searchError)(
+              searchComplete *> $.setStateL(State.searchError)(
                 NonEmptyString("Search error...").some
               )
           )
@@ -114,7 +112,7 @@ object SearchForm {
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
-          value = ViewF.fromState[IO]($).zoom(State.searchTerm),
+          value = ViewF.fromStateSyncIO($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           error = state.searchError.orUndefined,
           loading = disabled,

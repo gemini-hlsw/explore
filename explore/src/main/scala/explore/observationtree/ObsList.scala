@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Applicative
 import cats.ApplicativeError
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
@@ -18,7 +19,6 @@ import explore.common.ObsQueries
 import explore.common.ObsQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.Focused
@@ -27,12 +27,12 @@ import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
-import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import explore.undo.KIListMod
-import explore.undo.Undoer
+import explore.undo.UndoContext
+import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -48,7 +48,8 @@ import ObsQueries._
 
 final case class ObsList(
   observations:     View[ObservationList],
-  focused:          View[Option[Focused]]
+  focused:          View[Option[Focused]],
+  undoStacks:       View[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsList](ObsList.component)
 
@@ -58,76 +59,61 @@ object ObsList {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val obsListMod =
-    new KIListMod[IO, ObsSummaryWithPointingAndConstraints, Observation.Id](
+    new KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
       ObsSummaryWithPointingAndConstraints.id
     )
 
   class Backend($ : BackendScope[Props, Unit]) {
-
     def createObservation[F[_]](obsId: Observation.Id)(implicit
       F:                               ApplicativeError[F, Throwable],
       c:                               TransactionalClient[F, ObservationDB]
     ): F[Unit] =
       ProgramCreateObservation
         .execute[F](
-          CreateObservationInput(programId = "p-2",
-                                 observationId = obsId.assign
-                                 //  name = name.orIgnore
-          )
+          CreateObservationInput(programId = "p-2", observationId = obsId.assign)
         )
         .void
-        .handleErrorWith { _ =>
-          ProgramUndeleteObservation.execute(obsId).void
-        }
 
     def deleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
       c:                                         TransactionalClient[F, ObservationDB]
     ): F[Unit] =
       ProgramDeleteObservation.execute[F](id).void
 
-    private def setObsWithIndex(
-      observations:       View[ObservationList],
-      focused:            View[Option[Focused]],
-      obsId:              Observation.Id,
-      obsWithIndexSetter: Adjuster[ObservationList, obsListMod.ElemWithIndex],
-      nextToFocus:        Option[ObsSummaryWithPointingAndConstraints]
-    )(implicit
-      c:                  TransactionalClient[IO, ObservationDB]
-    ): obsListMod.ElemWithIndex => IO[Unit] =
-      obsWithIndex =>
-        // 1) Update internal model
-        observations
-          .mod(obsWithIndexSetter.set(obsWithIndex)) >>
-          // 2) Send mutation & adjust focus
-          obsWithIndex.fold(
-            focused.set(nextToFocus.map(f => Focused.FocusedObs(f.id))) >>
-              deleteObservation[IO](obsId)
-          ) { case (obs, _) =>
-            createObservation[IO](obs.id) >>
-              focused.set(Focused.FocusedObs(obs.id).some)
-          }
+    def undeleteObservation[F[_]: Applicative](id: Observation.Id)(implicit
+      c:                                           TransactionalClient[F, ObservationDB]
+    ): F[Unit] =
+      ProgramUndeleteObservation.execute[F](id).void
 
     private def obsMod(
-      setter:        Undoer.Setter[IO, ObservationList],
-      observations:  View[ObservationList],
-      focused:       View[Option[Focused]],
-      obsId:         Observation.Id,
-      focusOnDelete: Option[ObsSummaryWithPointingAndConstraints]
+      setter:  UndoCtx[ObservationList],
+      focused: View[Option[Focused]],
+      obsId:   Observation.Id
     )(implicit
-      c:             TransactionalClient[IO, ObservationDB]
-    ): obsListMod.Operation => IO[Unit] = {
+      c:       TransactionalClient[IO, ObservationDB]
+    ): obsListMod.Operation => SyncIO[Unit] = {
       val obsWithId: GetAdjust[ObservationList, obsListMod.ElemWithIndex] =
         obsListMod.withKey(obsId)
 
       setter
         .mod[obsListMod.ElemWithIndex](
-          observations.get,
           obsWithId.getter.get,
-          setObsWithIndex(observations, focused, obsId, obsWithId.adjuster, focusOnDelete)
+          obsWithId.adjuster.set,
+          onSet = (_: obsListMod.ElemWithIndex).fold {
+            deleteObservation[IO](obsId)
+          } { case (obs, _) =>
+            createObservation[IO](obs.id) >>
+              focused.set(Focused.FocusedObs(obs.id).some).to[IO]
+          },
+          onRestore = (_: obsListMod.ElemWithIndex).fold {
+            deleteObservation[IO](obsId)
+          } { case (obs, _) =>
+            undeleteObservation[IO](obs.id) >>
+              focused.set(Focused.FocusedObs(obs.id).some).to[IO]
+          }
         )
     }
 
-    protected def newObs(setter: Undoer.Setter[IO, ObservationList])(implicit
+    protected def newObs(setter: UndoCtx[ObservationList])(implicit
       c:                         TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
@@ -140,26 +126,19 @@ object ObsList {
 
       $.propsIn[IO] >>= { props =>
         newObs >>= { obs =>
-          val mod = obsMod(setter, props.observations, props.focused, obs.id, none)
-          mod(obsListMod.upsert(obs, props.observations.get.length))
+          val mod = obsMod(setter, props.focused, obs.id)
+          mod(obsListMod.upsert(obs, props.observations.get.length)).to[IO]
         }
       }
     }
 
-    private def renderFn(props: Props, undoCtx: Undoer.Context[IO, ObservationList]): VdomNode =
+    def render(props: Props): VdomNode =
       AppCtx.using { implicit ctx =>
-        val focused       = props.focused.get
-        val observations  = props.observations.get.toList
-        val someSelected  = focused.isDefined
-        val obsWithIdx    = observations.zipWithIndex
-        val obsId         = focused.collect { case FocusedObs(id) => id }
-        val obsIdx        = obsWithIdx.find(i => obsId.forall(_ === i._1.id)).foldMap(_._2)
-        val nextToSelect  = obsWithIdx.find(_._2 === obsIdx + 1).map(_._1)
-        val prevToSelect  = obsWithIdx.find(_._2 === obsIdx - 1).map(_._1)
-        val focusOnDelete = nextToSelect.orElse(prevToSelect).filter(_ => someSelected)
+        val undoCtx      = UndoContext(props.undoStacks, props.observations)
+        val observations = props.observations.get.toList
 
-        def deleteObs(obsId: Observation.Id): IO[Unit] = {
-          val mod = obsMod(undoCtx.setter, props.observations, props.focused, obsId, focusOnDelete)
+        def deleteObs(obsId: Observation.Id): SyncIO[Unit] = {
+          val mod = obsMod(undoCtx, props.focused, obsId)
           mod(obsListMod.delete)
         }
 
@@ -169,16 +148,14 @@ object ObsList {
                    compact = true,
                    icon = Icons.New,
                    content = "Obs",
-                   onClick = newObs(undoCtx.setter).runAsyncCB
+                   onClick = newObs(undoCtx).runAsyncCB
             ),
-            UndoButtons(props.observations.get, undoCtx, size = Mini)
+            UndoButtons(undoCtx, size = Mini)
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
               <.div(
-                Button(onClick = props.focused.set(none).runAsyncCB,
-                       clazz = ExploreStyles.ButtonSummary
-                )(
+                Button(onClick = props.focused.set(none), clazz = ExploreStyles.ButtonSummary)(
                   Icons.List,
                   "Observations Summary"
                 )
@@ -204,9 +181,6 @@ object ObsList {
           )
         )
       }
-
-    def render(props: Props) =
-      UndoRegion[ObservationList](Reuse(renderFn _)(props))
   }
 
   protected val component =
@@ -214,21 +188,29 @@ object ObsList {
       .builder[Props]
       .renderBackend[Backend]
       .componentDidMount { $ =>
-        implicit val ctx = $.props.ctx
         val observations = $.props.observations.get
 
-        // Unfocus if focused element is not in list.
-        val unfocus =
-          $.props.focused.get.map { focused =>
-            $.props.focused
-              .set(none)
-              .whenA(focused match {
-                case FocusedObs(oid) => !observations.contains(oid)
-                case _               => true // If focused on something else, unfocus too.
-              })
-          }.orEmpty
+        // If focused observation does not exist anymore, then unfocus.
+        $.props.focused.mod(_.flatMap {
+          case FocusedObs(oid) if !observations.contains(oid) => none
+          case other                                          => other.some
+        })
+      }
+      .componentDidUpdate { $ =>
+        val prevObservations = $.prevProps.observations.get
+        val observations     = $.currentProps.observations.get
 
-        unfocus.runAsyncAndForgetCB
+        // If focused observation does not exist anymore, then focus on closest one.
+        $.currentProps.focused.mod(_.flatMap {
+          case FocusedObs(oid) if !observations.contains(oid) =>
+            prevObservations
+              .getIndex(oid)
+              .flatMap { idx =>
+                observations.toList.get(math.min(idx, observations.length - 1).toLong)
+              }
+              .map(newObs => FocusedObs(newObs.id))
+          case other                                          => other.some
+        })
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

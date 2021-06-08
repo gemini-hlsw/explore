@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -18,14 +17,13 @@ import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._
 import explore.schemas.ObservationDB.Types._
-import explore.undo.Undoer
+import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -50,6 +48,7 @@ import react.semanticui.elements.label.LabelPointing
 final case class ConstraintsPanel(
   obsId:         Observation.Id,
   constraintSet: View[ConstraintSetData],
+  undoStacks:    View[UndoStacks[IO, ConstraintSetData]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
@@ -110,12 +109,11 @@ object ConstraintsPanel {
     private def renderFn(
       props:        Props,
       state:        View[State],
-      undoCtx:      Undoer.Context[IO, ConstraintSetData]
+      undoCtx:      UndoCtx[ConstraintSetData]
     )(implicit ctx: AppContextIO): VdomNode = {
-      val constraintSet = props.constraintSet
+      // val constraintSet = props.constraintSet
 
-      val undoViewSet =
-        UndoView(props.obsId, constraintSet, undoCtx.setter)
+      val undoViewSet = UndoView(props.obsId, undoCtx)
 
       def nameView = undoViewSet(ConstraintSetData.name, UpdateConstraintSet.name)
       def erView   =
@@ -143,7 +141,7 @@ object ConstraintsPanel {
       <.div(
         props.renderInTitle(
           <.span(ExploreStyles.TitleStrip)(
-            UndoButtons(constraintSet.get, undoCtx)
+            UndoButtons(undoCtx)
           )
         ),
         Form(loading = state.get.copying)(ExploreStyles.Grid, ExploreStyles.ConstraintsGrid)(
@@ -296,7 +294,8 @@ object ConstraintsPanel {
     }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
-      UndoRegion[ConstraintSetData](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
+      // UndoRegion[ConstraintSetData](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
+      renderFn(props, ViewF.fromStateSyncIO($), UndoContext(props.undoStacks, props.constraintSet))
     }
   }
 

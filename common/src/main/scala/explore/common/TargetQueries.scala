@@ -4,7 +4,6 @@
 package explore.common
 
 import cats.Endo
-import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
 import eu.timepit.refined.auto._
@@ -13,7 +12,6 @@ import explore.optics._
 import explore.schemas.ObservationDB.Types._
 import explore.schemas.implicits._
 import explore.undo.UndoableView
-import explore.undo.Undoer
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
@@ -69,10 +67,9 @@ object TargetQueries {
 
   case class UndoView(
     id:           Target.Id,
-    view:         View[TargetResult],
-    setter:       Undoer.Setter[IO, TargetResult]
+    undoCtx:      UndoCtx[TargetResult]
   )(implicit ctx: AppContextIO) {
-    private val undoableView = UndoableView(view, setter)
+    private val undoableView = UndoableView(undoCtx)
 
     def apply[A](
       modelGet:  TargetResult => A,

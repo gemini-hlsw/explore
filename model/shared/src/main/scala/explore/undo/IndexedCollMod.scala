@@ -11,7 +11,7 @@ import monocle.function.Field1.first
 import monocle.std.option.some
 import mouse.boolean._
 
-trait IndexedCollMod[F[_], Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node containing A. Can be Id for just A.
+trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node containing A. Can be Id for just A.
   protected val keyLens: Lens[A, K]
 
   protected val valueLens: Lens[N[A], A]

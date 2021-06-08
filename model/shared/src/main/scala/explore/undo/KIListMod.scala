@@ -8,8 +8,8 @@ import monocle.Getter
 import monocle.Iso
 import monocle.Lens
 
-class KIListMod[F[_], A, K](protected val keyLens: Lens[A, K])
-    extends IndexedCollMod[F, KeyedIndexedList, Int, A, cats.Id, K] {
+class KIListMod[A, K](protected val keyLens: Lens[A, K])
+    extends IndexedCollMod[KeyedIndexedList, Int, A, cats.Id, K] {
 
   override protected val valueLens: Lens[A, A] = Iso.id.asLens
   override protected val pureNode              = identity

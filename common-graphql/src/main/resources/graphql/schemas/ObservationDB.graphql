@@ -55,7 +55,7 @@ type Asterism {
     programId: ProgramId
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -67,7 +67,7 @@ type Asterism {
   # All asterism targets
   targets(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -79,7 +79,7 @@ type Asterism {
   # The programs associated with the asterism.
   programs(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -123,7 +123,7 @@ type AsterismEdit implements Event {
   id: Long!
 }
 
-# AsterismId id formatted as `a-(0|[1-9a-f][0-9a-f]*)`
+# AsterismId id formatted as `a-([1-9a-f][0-9a-f]*)`
 scalar AsterismId
 
 # Asterism and the programs with which it is associated
@@ -138,7 +138,7 @@ input AsterismTargetLinks {
   targetIds: [TargetId!]!
 }
 
-# AtomId id formatted as `m-(0|[1-9a-f][0-9a-f]*)`
+# AtomId id formatted as `m-([1-9a-f][0-9a-f]*)`
 scalar AtomId
 
 # Bias calibration step
@@ -260,7 +260,7 @@ type ConstraintSetGroup {
   # Observations that use this constraint set
   observations(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -729,14 +729,14 @@ type ExecutionEventEdge {
   cursor: Cursor!
 }
 
-# ExecutionEventId id formatted as `e-(0|[1-9a-f][0-9a-f]*)`
+# ExecutionEventId id formatted as `e-([1-9a-f][0-9a-f]*)`
 scalar ExecutionEventId
 
 type ExecutionRecord {
   # Datasets associated with the observation
   datasets(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -745,7 +745,7 @@ type ExecutionRecord {
   # Events associated with the observation
   events(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2088,7 +2088,7 @@ type ObservationEdit implements Event {
   id: Long!
 }
 
-# ObservationId id formatted as `o-(0|[1-9a-f][0-9a-f]*)`
+# ObservationId id formatted as `o-([1-9a-f][0-9a-f]*)`
 scalar ObservationId
 
 # Either asterism or target
@@ -2240,7 +2240,7 @@ type Program {
   # All asterisms associated with the program (needs pagination).
   asterisms(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2252,7 +2252,7 @@ type Program {
   # All observations associated with the program (needs pagination).
   observations(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2264,7 +2264,7 @@ type Program {
   # All targets associated with the program (needs pagination).
   targets(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2314,7 +2314,7 @@ type ProgramEdit implements Event {
   id: Long!
 }
 
-# ProgramId id formatted as `p-(0|[1-9a-f][0-9a-f]*)`
+# ProgramId id formatted as `p-([1-9a-f][0-9a-f]*)`
 scalar ProgramId
 
 type ProperMotion {
@@ -2400,7 +2400,7 @@ type Query {
     programId: ProgramId!
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2422,13 +2422,16 @@ type Query {
     input: QueryConfigurationAlternativeSearchInput!
   ): Int!
 
-  # Returns all observations associated with the given program.
+  # Returns all observations associated with the given ids or program, or all observations if neither is specified.
   observations(
-    # Program ID
-    programId: ProgramId!
+    # (Optional) listing of specific observations to retrieve
+    observationIds: [ObservationId!]
+
+    # (Optional) program whose observations are sought
+    programId: ProgramId
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2448,8 +2451,11 @@ type Query {
 
   # Observations group by commonly held constraints
   constraintGroups(
+    # Program ID
+    programId: ProgramId!
+
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2458,10 +2464,13 @@ type Query {
     includeDeleted: Boolean! = false
   ): ConstraintSetGroupConnection!
 
-  # Pages through all programs.
+  # Pages through all requested programs (or all programs if no ids are given).
   programs(
+    # (Optional) listing of programs to retrieve (all programs if empty)
+    programIds: [ProgramId!]
+
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2485,7 +2494,7 @@ type Query {
     programId: ProgramId!
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2812,7 +2821,7 @@ type StepEvent implements ExecutionEvent {
   received: Instant!
 }
 
-# StepId id formatted as `s-(0|[1-9a-f][0-9a-f]*)`
+# StepId id formatted as `s-([1-9a-f][0-9a-f]*)`
 scalar StepId
 
 # Execution stage or phase of an individual step
@@ -2942,7 +2951,7 @@ type Target {
     programId: ProgramId
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2957,7 +2966,7 @@ type Target {
     programId: ProgramId
 
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -2969,7 +2978,7 @@ type Target {
   # The programs associated with the target.
   programs(
     # Retrieve `first` values after the given cursor
-    first: Int!
+    first: Int
 
     # Retrieve values after the one associated with this cursor
     after: Cursor
@@ -3028,7 +3037,7 @@ type TargetEdit implements Event {
   id: Long!
 }
 
-# TargetId id formatted as `t-(0|[1-9a-f][0-9a-f]*)`
+# TargetId id formatted as `t-([1-9a-f][0-9a-f]*)`
 scalar TargetId
 
 # Target and the programs with which it is associated

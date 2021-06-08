@@ -6,12 +6,10 @@ package explore.components
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.string._
-import explore.AppCtx
 import explore.HelpContext
 import explore.HelpCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -28,18 +26,16 @@ object HelpIcon {
 
   val component = ScalaFnComponent[Props] { p =>
     HelpCtx.usingView { help =>
-      AppCtx.using { implicit ctx =>
-        val helpMsg = help.zoom(HelpContext.displayedHelp)
-        <.span(
-          ^.onClick ==> { (e: ReactMouseEvent) =>
-            e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some).runAsyncCB
-          },
-          Icons.Info
-            .link(true)
-            .inverted(true)
-            .clazz(ExploreStyles.HelpIcon)
-        )
-      }
+      val helpMsg = help.zoom(HelpContext.displayedHelp)
+      <.span(
+        ^.onClick ==> { (e: ReactMouseEvent) =>
+          e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
+        },
+        Icons.Info
+          .link(true)
+          .inverted(true)
+          .clazz(ExploreStyles.HelpIcon)
+      )
     }
   }
 }

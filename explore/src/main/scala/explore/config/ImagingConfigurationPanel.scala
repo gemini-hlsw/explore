@@ -3,7 +3,7 @@
 
 package explore.config
 
-import cats.effect.IO
+import cats.effect.SyncIO
 import cats.implicits._
 import coulomb.Quantity
 import crystal.react.implicits._
@@ -124,15 +124,16 @@ object ImagingConfigurationPanel {
               value = filters.get.toList.map(_.tag).toJSArray,
               options = options.collect { case Some(x) => filterItem(x) },
               onChange = (ddp: Dropdown.DropdownProps) =>
-                ddp.value
+                ddp.value.toOption
                   .map(r =>
                     ((r: Any) match {
                       case v: js.Array[_] =>
                         filters.set(valuesToFilters(v.collect { case s: String => s }))
-                      case _              => IO.unit
-                    }).runAsyncAndForgetCB
+                      case _              => SyncIO.unit
+                    })
                   )
-                  .getOrElse(Callback.empty)
+                  .map(_.toCB)
+                  .getOrEmpty
             ),
             <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
             InputWithUnits(

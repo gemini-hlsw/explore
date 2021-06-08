@@ -6,7 +6,6 @@ package explore.model.arb
 import cats.syntax.all._
 import explore.model.Focused
 import explore.model.Focused.FocusedAsterism
-import explore.model.Focused.FocusedConstraintSet
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import org.scalacheck.Arbitrary
@@ -16,7 +15,6 @@ import org.scalacheck.Cogen._
 import org.scalacheck.Gen
 import org.scalacheck.Gen._
 import lucuma.core.model.Asterism
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.arb.ArbGid._
@@ -24,7 +22,7 @@ import lucuma.core.util.arb.ArbGid._
 trait ArbFocused {
   implicit val focusedArb: Arbitrary[Focused] =
     Arbitrary(
-      oneOf(focusedObsGen, focusedTargetGen, focusedAsterismGen, focusedConstraintSetGen)
+      oneOf(focusedObsGen, focusedTargetGen, focusedAsterismGen)
     )
 
   val focusedObsGen: Gen[Focused.FocusedObs] =
@@ -36,9 +34,6 @@ trait ArbFocused {
   val focusedAsterismGen: Gen[Focused.FocusedAsterism] =
     arbitrary[Asterism.Id].map(FocusedAsterism.apply)
 
-  val focusedConstraintSetGen: Gen[Focused.FocusedConstraintSet] =
-    arbitrary[ConstraintSet.Id].map(FocusedConstraintSet.apply)
-
   implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
     Cogen[Observation.Id].contramap(_.obsId)
 
@@ -48,16 +43,12 @@ trait ArbFocused {
   implicit val focusedAsterismCogen: Cogen[Focused.FocusedAsterism] =
     Cogen[Asterism.Id].contramap(_.asterismId)
 
-  implicit val focusedConstraintSetCogen: Cogen[Focused.FocusedConstraintSet] =
-    Cogen[ConstraintSet.Id].contramap(_.constraintSetId)
-
   implicit val focusedCogen: Cogen[Focused] =
-    Cogen[Either[Either[Either[FocusedObs, FocusedTarget], FocusedAsterism], FocusedConstraintSet]]
+    Cogen[Either[Either[FocusedObs, FocusedTarget], FocusedAsterism]]
       .contramap {
-        case a: Focused.FocusedObs           => a.asLeft.asLeft.asLeft
-        case a: Focused.FocusedTarget        => a.asRight.asLeft.asLeft
-        case a: Focused.FocusedAsterism      => a.asRight.asLeft
-        case a: Focused.FocusedConstraintSet => a.asRight
+        case a: Focused.FocusedObs      => a.asLeft.asLeft
+        case a: Focused.FocusedTarget   => a.asRight.asLeft
+        case a: Focused.FocusedAsterism => a.asRight
       }
 }
 

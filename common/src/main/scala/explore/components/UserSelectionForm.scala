@@ -3,6 +3,7 @@
 
 package explore.components
 
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -31,7 +32,7 @@ final case class UserSelectionForm(
   message: View[Option[NonEmptyString]]
 ) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
   def guest(implicit ctx: AppContextIO): Callback =
-    ctx.sso.guest.flatMap(v => vault.set(v.some)).runAsyncCB
+    ctx.sso.guest.flatMap(v => vault.set(v.some).to[IO]).runAsyncCB
   def login(implicit ctx: AppContextIO): Callback =
     ctx.sso.redirectToLogin.runAsyncCB
 
@@ -79,12 +80,12 @@ object UserSelectionForm {
                   ),
                   clazz = ExploreStyles.LoginBoxButton,
                   size = Big,
-                  onClick = p.login >> p.message.set(none).runAsyncCB
+                  onClick = p.login >> p.message.set(none)
                 ).when(s.showButtons),
                 Button(content = "Continue as Guest",
                        size = Big,
                        clazz = ExploreStyles.LoginBoxButton,
-                       onClick = p.guest >> p.message.set(none).runAsyncCB,
+                       onClick = p.guest >> p.message.set(none),
                        icon = Icons.UserAstronaut
                 ).when(s.showButtons),
                 p.message.get.whenDefined(message =>

@@ -9,7 +9,6 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model._
 import explore.model.reusability._
 import japgolly.scalajs.react._
@@ -55,7 +54,7 @@ object ExploreLayout {
                     val helpView = helpCtx.zoom(HelpContext.displayedHelp)
                     GlobalHotKeys(
                       keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none).runAsyncAndForgetCB)
+                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none).toCB)
                     )(
                       SidebarPushable(
                         Sidebar(
@@ -78,7 +77,7 @@ object ExploreLayout {
                           <.div(
                             ExploreStyles.MainGrid,
                             TopBar(vault.user,
-                                   onLogout >> props.view.zoom(RootModel.vault).set(none)
+                                   onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
                             ),
                             <.div(
                               ExploreStyles.SideTabs,
@@ -90,8 +89,7 @@ object ExploreLayout {
                             )
                           )
                         )(
-                          ^.onClick -->
-                            helpView.set(none).runAsyncAndForgetCB
+                          ^.onClick --> helpView.set(none)
                         )
                       )
                     )

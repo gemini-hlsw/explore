@@ -7,6 +7,7 @@ import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
+import explore.common.TargetQueries.TargetResult
 import explore.common.TargetQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
@@ -17,6 +18,7 @@ import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.schemas.ObservationDB
+import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -29,6 +31,7 @@ import react.common._
 final case class TargetEditor(
   uid:              User.Id,
   tid:              Target.Id,
+  undoStacks:       View[UndoStacks[IO, TargetResult]],
   searching:        View[Set[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
@@ -50,6 +53,7 @@ object TargetEditor {
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
+
       LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
         TargetEditQuery.query(props.tid).reuseAlways,
         (TargetEditQuery.Data.target.get _).reuseAlways,
@@ -57,7 +61,7 @@ object TargetEditor {
       )(
         potRender(
           Reuse
-            .currying(props, ViewF.fromState[IO]($))
+            .currying(props, ViewF.fromStateSyncIO($))
             .in(
               (
                 props,
@@ -68,6 +72,7 @@ object TargetEditor {
                   TargetBody(props.uid,
                              props.tid,
                              targetOpt.zoom(_.get)(f => _.map(f)),
+                             props.undoStacks,
                              props.searching,
                              state.zoom(State.options),
                              props.renderInTitle

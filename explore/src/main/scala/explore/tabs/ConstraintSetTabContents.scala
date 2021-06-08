@@ -40,13 +40,14 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
-  userId:           ViewOpt[User.Id],
+  userId:           Option[User.Id],
   focused:          View[Option[Focused]],
   expandedIds:      View[SortedSet[ConstraintSet.Id]],
+  // undoStacks:       View[Map[ConstraintSet.Id, UndoStacks[IO, ConstraintSetData]]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
-  def isCsSelected: Boolean = focused.get.collect { case Focused.FocusedConstraintSet(_) =>
+  def isSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) =>
     ()
   }.isDefined
 }
@@ -58,10 +59,10 @@ object ConstraintSetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference(
-    $ : ComponentDidMount[Props, State, Unit]
+    $ : ComponentDidMount[Props, State, _]
   ): Callback = {
     implicit val ctx = $.props.ctx
-    (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+    (UserAreaWidths.queryWithDefault[IO]($.props.userId,
                                          ResizableSection.ConstraintSetsTree,
                                          Constants.InitialTreeWidth.toInt
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
@@ -74,9 +75,9 @@ object ConstraintSetTabContents {
   )(implicit ctx: AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
           UserWidthsCreation
-            .storeWidthPreference[IO](props.userId.get,
+            .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
                                       d.size.width
             )).runAsyncCB
@@ -91,7 +92,7 @@ object ConstraintSetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+        onClickE = linkOverride[ButtonProps](props.focused.set(none))
       )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
     )
 
@@ -139,21 +140,26 @@ object ConstraintSetTabContents {
 
   protected implicit val innerWidthReuse = Reusability.double(2.0)
 
+  protected class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      renderFn(props, ViewF.fromStateSyncIO($), window.innerWidth)
+
+    }
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => TwoPanelState.initial(p.isCsSelected)
+          case None    => TwoPanelState.initial(p.isSelected)
           case Some(s) =>
-            if (s.elementSelected =!= p.isCsSelected) s.copy(elementSelected = p.isCsSelected)
+            if (s.elementSelected =!= p.isSelected) s.copy(elementSelected = p.isSelected)
             else s
         }
       )
-      .render { $ =>
-        implicit val ctx = $.props.ctx
-        renderFn($.props, ViewF.fromState[IO]($), window.innerWidth)
-      }
+      .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build

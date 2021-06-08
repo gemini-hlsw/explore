@@ -4,18 +4,17 @@
 package explore.config
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.ViewF
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
@@ -23,8 +22,9 @@ import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
 import explore.modes.ModesMatrix
+import explore.undo.UndoContext
+import explore.undo.UndoStacks
 import explore.undo.UndoableView
-import explore.undo.Undoer
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -68,10 +68,9 @@ object ConfigurationPanel {
   )
 
   case class UndoView(
-    view:   View[State],
-    setter: Undoer.Setter[IO, State]
+    undoCtx: UndoCtx[State]
   ) {
-    private val undoableView = UndoableView(view, setter)
+    private val undoableView = UndoableView(undoCtx)
 
     def apply[A](
       modelGet: State => A,
@@ -93,11 +92,10 @@ object ConfigurationPanel {
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
       props:        Props,
-      state:        State,
-      undoCtx:      Undoer.Context[IO, State]
+      undoCtx:      UndoCtx[State]
     )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet    =
-        UndoView(ViewF.fromState[IO]($), undoCtx.setter)
+      val undoViewSet = UndoView(undoCtx)
+
       def mode           = undoViewSet(State.mode)
       val isSpectroscopy = mode.get === ConfigurationMode.Spectroscopy
 
@@ -105,7 +103,7 @@ object ConfigurationPanel {
       val imaging      = undoViewSet(State.imagingOptions)
 
       ReactFragment(
-        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(state, undoCtx))),
+        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(undoCtx))),
         <.div(
           ExploreStyles.ConfigurationGrid,
           Form(size = Small)(
@@ -122,8 +120,13 @@ object ConfigurationPanel {
       )
     }
 
-    def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
-      UndoRegion[State](Reuse.currying(props, state).in(renderFn _))
+    def render(props: Props) = AppCtx.using { implicit appCtx =>
+      renderFn(
+        props,
+        UndoContext(ViewF[SyncIO, UndoStacks[IO, State]](UndoStacks.empty, (_, _) => SyncIO.unit),
+                    ViewF.fromStateSyncIO($)
+        )
+      )
     }
   }
 

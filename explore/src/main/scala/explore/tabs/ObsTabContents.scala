@@ -31,7 +31,9 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
+import explore.optics._
 import explore.schemas.ObservationDB
+import explore.undo.UndoStacks
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -57,6 +59,7 @@ import scala.concurrent.duration._
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
   focused:          View[Option[Focused]],
+  undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -256,7 +259,8 @@ object ObsTabContents {
         <.div(ExploreStyles.TreeBody)(
           ObsList(
             observations,
-            props.focused
+            props.focused,
+            props.undoStacks.zoom(ModelUndoStacks.forObsList)
           )
         )
 
@@ -284,7 +288,7 @@ object ObsTabContents {
           size = Mini,
           compact = true,
           clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-          onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+          onClickE = linkOverride[ButtonProps](props.focused.set(none))
         )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
       )
 
@@ -295,7 +299,7 @@ object ObsTabContents {
           props.size.width.getOrElse(0) - treeWidth
         }
 
-      val layouts = ViewF.fromState[IO]($).zoom(State.layouts)
+      val layouts = ViewF.fromStateSyncIO($).zoom(State.layouts)
 
       val notesTile =
         Tile(
@@ -334,6 +338,7 @@ object ObsTabContents {
              layouts,
              notesTile,
              targetId,
+             props.undoStacks,
              props.searching,
              state.zoom(State.options)
             )
@@ -350,13 +355,21 @@ object ObsTabContents {
               layouts,
               List(
                 notesTile,
-                TargetTile.targetTile(props.userId.get,
-                                      targetId,
-                                      props.searching,
-                                      state.zoom(State.options)
+                TargetTile.targetTile(
+                  props.userId.get,
+                  targetId,
+                  props.undoStacks.zoom(ModelUndoStacks.forTarget),
+                  props.searching,
+                  state.zoom(State.options)
                 ),
                 ConstraintsTile
-                  .constraintsTile(obsId, obsView.map(_.zoom(ObservationData.constraintSet))),
+                  .constraintsTile(
+                    obsId,
+                    obsView.map(_.zoom(ObservationData.constraintSet)),
+                    props.undoStacks
+                      .zoom(ModelUndoStacks.forConstraintSet[IO])
+                      .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+                  ),
                 ConfigurationTile.configurationTile(obsSummaryOpt.map(_.id))
               )
             ): VdomNode
@@ -405,7 +418,7 @@ object ObsTabContents {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
+      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromStateSyncIO($)))
     }
   }
 
