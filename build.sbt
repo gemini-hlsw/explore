@@ -171,6 +171,7 @@ lazy val commonLibSettings = Seq(
       Sttp.value ++
       Clue.value ++
       PPrint.value ++
+      FS2Data.value ++
       In(Test)(
         MUnit.value ++
           MUnitCatsEffect.value ++
@@ -189,6 +190,7 @@ lazy val testkitLibSettings = Seq(
 
 lazy val commonJVMSettings = Seq(
   libraryDependencies ++=
+    FS2IO.value ++
     In(Test)(
       CirceGolden.value
     )
