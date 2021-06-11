@@ -15,6 +15,8 @@ object Settings {
     val crystal           = "0.13.0"
     val discipline        = "1.1.4"
     val disciplineMUnit   = "1.0.8"
+    val fs2               = "3.0.4"
+    val fs2Data           = "1.0.0-RC3"
     val geminiLocales     = "0.6.0"
     val log4Cats          = "2.1.0"
     val log4CatsLogLevel  = "0.3.0"
@@ -114,6 +116,18 @@ object Settings {
       deps(
         "edu.gemini" %%% "gemini-locales"
       )(geminiLocales)
+    )
+
+    val FS2IO = Def.setting(
+      deps(
+        "co.fs2" %%% "fs2-io"
+      )(fs2)
+    )
+
+    val FS2Data = Def.setting(
+      deps(
+        "org.gnieh" %%% "fs2-data-csv"
+      )(fs2Data)
     )
 
     val Log4Cats = Def.setting(
