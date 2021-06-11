@@ -1,26 +1,33 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.modes
 
+import cats.Order
 import cats.syntax.all._
 import coulomb._
 import coulomb.si.Second
 import eu.timepit.refined._
+import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric._
 import fs2.data.csv._
 import lucuma.core.enum.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
+import spire.math.Rational
 
-sealed trait InstrumentMode extends Product with Serializable
+sealed trait ObservationMode extends Product with Serializable
 
-object InstrumentMode {
-  case object Spectroscopy extends InstrumentMode
-  case object Imaging      extends InstrumentMode
-  case object Polarimetry  extends InstrumentMode
+object ObservationMode {
+  case object Spectroscopy extends ObservationMode
+  case object Imaging      extends ObservationMode
+  case object Polarimetry  extends ObservationMode
 
   /** @group Typeclass Instances */
-  implicit val InstrumentModeEnumerated: Enumerated[InstrumentMode] =
+  implicit val ObservationModeEnumerated: Enumerated[ObservationMode] =
     Enumerated.of(Spectroscopy, Imaging, Polarimetry)
 }
 
@@ -28,24 +35,40 @@ case class ModeIQ(iq: Angle) {
   override def toString: String = s"iq(${Angle.milliarcseconds.get(iq)})"
 }
 
+object ModeIQ {
+  implicit val orderModeIQ: Order[ModeIQ] = Order.by(_.iq.toMicroarcseconds)
+}
+
 case class ModeFov(fov: Angle) {
   override def toString: String = s"fov(${Angle.milliarcseconds.get(fov)})"
 }
 
-case class ModeWavelength(w: Wavelength) {
-  override def toString: String = s"wavelength(${Wavelength.decimalNanometers.reverseGet(w)})"
+object ModeFov {
+  implicit val orderModeFov: Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
 }
 
-case class ModeBandWidth(w: Wavelength) {
-  override def toString: String = s"band_width(${Wavelength.decimalNanometers.reverseGet(w)})"
+case class ModeWavelength(w: Wavelength) {
+  override def toString: String = s"wavelength(${w.micrometer.value.toInt})"
+}
+
+case class ModeBandWidth(w: Quantity[Rational, Micrometer]) {
+  override def toString: String = s"band_width(${w.value.toInt})"
 }
 
 case class ModeGratingMinWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_min(${Wavelength.decimalNanometers.reverseGet(w)})"
+  override def toString: String = s"grcwlen_min(${w.micrometer.value.toInt})"
+}
+
+object ModeGratingMinWavelength {
+  implicit val orderModeGratingMinWavelength: Order[ModeGratingMinWavelength] = Order.by(_.w)
 }
 
 case class ModeGratingMaxWavelength(w: Wavelength) {
-  override def toString: String = s"grcwlen_max(${Wavelength.decimalNanometers.reverseGet(w)})"
+  override def toString: String = s"grcwlen_max(${w.micrometer.value.toInt})"
+}
+
+object ModeGratingMaxWavelength {
+  implicit val orderModeGratingMaxWavelength: Order[ModeGratingMaxWavelength] = Order.by(_.w)
 }
 
 sealed trait ModeFilter extends Product with Serializable
@@ -110,11 +133,11 @@ object ModeMOS {
 
 case class ModeRow(
   instrument:           Instrument,
-  mode:                 InstrumentMode,
+  mode:                 ObservationMode,
   fov:                  ModeFov,
   iqMin:                ModeIQ,
   iqMax:                ModeIQ,
-  resolution:           BigDecimal,
+  resolution:           PosBigDecimal,
   wavelength:           ModeWavelength,
   bandWidth:            ModeBandWidth,
   gratingMinWavelength: ModeGratingMinWavelength,
@@ -125,6 +148,7 @@ case class ModeRow(
   spatialDimensions:    PosInt,
   coronograph:          ModeCoronagraph,
   skySub:               ModeSkysub,
+  mos:                  ModeMOS,
   minExposure:          Quantity[PosBigDecimal, Second]
 )
 
@@ -141,12 +165,12 @@ trait ModesMatrixDecoders {
         case x            => new DecoderError(s"Unknown instrument $x").asLeft
       }
 
-  implicit val instModeDecoder: CellDecoder[InstrumentMode] =
+  implicit val instModeDecoder: CellDecoder[ObservationMode] =
     CellDecoder.stringDecoder
       .emap {
-        case "spec"        => InstrumentMode.Spectroscopy.asRight
-        case "imaging"     => InstrumentMode.Imaging.asRight
-        case "polarimetry" => InstrumentMode.Polarimetry.asRight
+        case "spec"        => ObservationMode.Spectroscopy.asRight
+        case "imaging"     => ObservationMode.Imaging.asRight
+        case "polarimetry" => ObservationMode.Polarimetry.asRight
         case x             => new DecoderError(s"Unknown instrument mode $x").asLeft
       }
 
@@ -159,24 +183,24 @@ trait ModesMatrixDecoders {
   implicit val fovDecoder: CellDecoder[ModeFov] =
     arcsecDecoder.map(ModeFov.apply)
 
-  val nanometerDecoder: CellDecoder[Wavelength] =
+  val micrometerDecoder: CellDecoder[Wavelength] =
     CellDecoder.bigDecimalDecoder.emap(x =>
       Wavelength.fromPicometers
-        .getOption((x * 1000).intValue)
+        .getOption((x * 1000000).intValue)
         .toRight(new DecoderError(s"Invalid wavelength value $x"))
     )
 
   implicit val wavelength: CellDecoder[ModeWavelength] =
-    nanometerDecoder.map(ModeWavelength.apply)
+    micrometerDecoder.map(ModeWavelength.apply)
 
   implicit val bandWidth: CellDecoder[ModeBandWidth] =
-    nanometerDecoder.map(ModeBandWidth.apply)
+    micrometerDecoder.map(w => ModeBandWidth(w.nanometer))
 
   implicit val gratingMinWv: CellDecoder[ModeGratingMinWavelength] =
-    nanometerDecoder.map(ModeGratingMinWavelength.apply)
+    micrometerDecoder.map(ModeGratingMinWavelength.apply)
 
   implicit val gratingMaxWv: CellDecoder[ModeGratingMaxWavelength] =
-    nanometerDecoder.map(ModeGratingMaxWavelength.apply)
+    micrometerDecoder.map(ModeGratingMaxWavelength.apply)
 
   implicit val modeFilter: CellDecoder[ModeFilter] =
     CellDecoder.stringDecoder
@@ -193,6 +217,12 @@ trait ModesMatrixDecoders {
       .map {
         case "yes" => ModeAO.AO
         case _     => ModeAO.NoAO
+      }
+
+  implicit val posBigDecimalDecoder: CellDecoder[PosBigDecimal] =
+    CellDecoder.bigDecimalDecoder
+      .emap { x =>
+        refineV[Positive](x).leftMap(s => new DecoderError(s))
       }
 
   implicit val posIntDecoder: CellDecoder[PosInt] =
@@ -216,6 +246,13 @@ trait ModesMatrixDecoders {
         case x        => new DecoderError(s"Unknwon mos mode $x").asLeft
       }
 
+  implicit val modeMOSDecoder: CellDecoder[ModeMOS] =
+    CellDecoder.stringDecoder
+      .map {
+        case "yes" => ModeMOS.MOS
+        case _     => ModeMOS.NoMOS
+      }
+
   implicit val modeMinExpDecoder: CellDecoder[Quantity[PosBigDecimal, Second]] =
     CellDecoder.bigDecimalDecoder
       .emap { x =>
@@ -226,11 +263,11 @@ trait ModesMatrixDecoders {
     def apply(row: CsvRow[String]): DecoderResult[ModeRow] =
       for {
         i    <- row.as[Instrument]("instrument")
-        m    <- row.as[InstrumentMode]("mode")
+        m    <- row.as[ObservationMode]("mode")
         f    <- row.as[ModeFov]("fov")
         im   <- row.as[ModeIQ]("iq_min")
         ix   <- row.as[ModeIQ]("iq_max")
-        r    <- row.as[BigDecimal]("resolution")
+        r    <- row.as[PosBigDecimal]("resolution")
         w    <- row.as[ModeWavelength]("wavelength")
         b    <- row.as[ModeBandWidth]("band_width")
         gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
@@ -241,13 +278,49 @@ trait ModesMatrixDecoders {
         sd   <- row.as[PosInt]("spatial_dims")
         c    <- row.as[ModeCoronagraph]("coronagraph")
         ss   <- row.as[ModeSkysub]("skysub")
+        mo   <- row.as[ModeMOS]("mos")
         me   <- row.as[Quantity[PosBigDecimal, Second]]("minexp")
-      } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, sw, ao, sd, c, ss, me)
+      } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, sw, ao, sd, c, ss, mo, me)
   }
 }
 
 trait ModesMatrix[F[_]] {
   def matrix: List[ModeRow]
+
+  def spectroscopyModes(
+    dwmin:       Option[ModeBandWidth],
+    dwmax:       Option[ModeBandWidth],
+    rmin:        Option[PosBigDecimal],
+    dims:        Option[PosInt],
+    coronograph: Option[ModeCoronagraph],
+    mexp:        Option[Quantity[PosBigDecimal, Second]],
+    mos:         Option[ModeMOS],
+    skysub:      Option[ModeSkysub],
+    iqmax:       Option[ModeIQ],
+    fov:         Option[ModeFov],
+    wlen:        Option[Wavelength]
+  ): List[ModeRow] = {
+    val defaultIQMax                 = ModeIQ(Angle.fromDoubleArcseconds(10))
+    val defaultFOV                   = ModeFov(Angle.fromDoubleArcseconds(1))
+    val l_dwmin                      = dwmin.map(_.w).getOrElse(Rational.zero.withUnit[Micrometer])
+    val l_dwmax                      = dwmax.map(_.w).getOrElse(Rational(10).withUnit[Micrometer])
+    val criteria: ModeRow => Boolean = m =>
+      m.mode === ObservationMode.Spectroscopy &&
+        rmin.forall(m.resolution >= _) &&
+        dims.forall(m.spatialDimensions >= _) &&
+        m.bandWidth.w >= l_dwmin &&
+        m.bandWidth.w <= l_dwmax &&
+        coronograph.forall(_ === m.coronograph) &&
+        m.minExposure <= mexp.getOrElse(refineMV[Positive](BigDecimal(1)).withUnit[Second]) &&
+        mos.forall(_ === m.mos) &&
+        skysub.forall(_ === m.skySub) &&
+        m.iqMin <= iqmax.getOrElse(defaultIQMax) &&
+        m.fov >= fov.getOrElse(defaultFOV) &&
+        wlen.forall(m.gratingMinWavelength.w <= _) &&
+        wlen.forall(m.gratingMaxWavelength.w >= _)
+
+    matrix.filter(criteria)
+  }
 }
 
 object ModesMatrix extends ModesMatrixPlatform
