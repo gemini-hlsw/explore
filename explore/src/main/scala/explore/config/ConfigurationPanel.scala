@@ -5,12 +5,12 @@ package explore.config
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
-import explore.UnderConstruction
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -22,8 +22,10 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
+import explore.modes.ModesMatrix
 import explore.undo.UndoableView
 import explore.undo.Undoer
+import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
@@ -36,11 +38,17 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import sttp.client3._
+import sttp.client3.impl.cats.FetchCatsBackend
+import sttp.model._
+
+import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
-  id:            Option[Observation.Id],
-  renderInTitle: Tile.RenderInTitle
-) extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
+  id:               Option[Observation.Id],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel {
   type Props = ConfigurationPanel
@@ -55,7 +63,8 @@ object ConfigurationPanel {
   final case class State(
     mode:                ConfigurationMode,
     spectroscopyOptions: SpectroscopyConfigurationOptions,
-    imagingOptions:      ImagingConfigurationOptions
+    imagingOptions:      ImagingConfigurationOptions,
+    matrix:              Pot[ModesMatrix]
   )
 
   case class UndoView(
@@ -98,7 +107,7 @@ object ConfigurationPanel {
       ReactFragment(
         props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(state, undoCtx))),
         <.div(
-          ExploreStyles.ExploreFormGrid,
+          ExploreStyles.ConfigurationGrid,
           Form(size = Small)(
             ExploreStyles.Grid,
             ExploreStyles.Compact,
@@ -108,7 +117,7 @@ object ConfigurationPanel {
             SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
             ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
           ),
-          UnderConstruction()
+          ModesTable(state.matrix.toOption.getOrElse(ModesMatrix.empty))
         )
       )
     }
@@ -117,16 +126,35 @@ object ConfigurationPanel {
       UndoRegion[State](Reuse.currying(props, state).in(renderFn _))
     }
   }
+
+  def load(uri: Uri): IO[ModesMatrix] = {
+    val backend = FetchCatsBackend[IO]()
+    basicRequest
+      .get(uri)
+      .readTimeout(5.seconds)
+      .send(backend)
+      .flatMap {
+        _.body.fold(_ => ModesMatrix.empty.pure[IO], s => ModesMatrix[IO](Stream.emit(s)))
+      }
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
       .initialState(
-        State(ConfigurationMode.Imaging,
+        State(ConfigurationMode.Spectroscopy,
               SpectroscopyConfigurationOptions.Default,
-              ImagingConfigurationOptions.Default
+              ImagingConfigurationOptions.Default,
+              Pot.pending
         )
       )
       .renderBackend[Backend]
+      .componentDidMount { $ =>
+        implicit val ctx = $.props.ctx
+        load(uri"/instrument_matrix.csv").flatMap { m =>
+          $.modStateIn[IO](State.matrix.set(Pot(m)))
+        }.runAsyncAndForgetCB
+      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

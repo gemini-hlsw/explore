@@ -43,7 +43,7 @@ class ModesSuite extends CatsEffectSuite {
           dwmin = ModeBandWidth(Rational.zero.withUnit[Nanometer]).some,
           dwmax = none,
           rmin = refineMV[Positive](BigDecimal(300)).some,
-          dims = refineMV[Positive](1).some,
+          dims = ModeSpatialDimension.One.some,
           coronograph = ModeCoronagraph.NoCoronagraph.some,
           mexp = refineMV[Positive](BigDecimal(1)).withUnit[Second].some,
           mos = ModeMOS.NoMOS.some,

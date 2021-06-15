@@ -21,9 +21,5 @@ trait ModesMatrixPlatform extends ModesMatrixDecoders {
       .compile
       .toList
 
-  def apply[F[_]: Async](path: Path): F[ModesMatrix[F]] = loadMatrix(path).map(rows =>
-    new ModesMatrix[F] {
-      def matrix = rows
-    }
-  )
+  def apply[F[_]: Async](path: Path): F[ModesMatrix] = loadMatrix(path).map(ModesMatrix(_))
 }

@@ -17,6 +17,8 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
+import monocle.Lens
+import monocle.macros.GenLens
 import spire.math.Rational
 
 sealed trait ObservationMode extends Product with Serializable
@@ -83,6 +85,14 @@ object ModeFilter {
     Enumerated.of(NoFilter, SomeFilter)
 }
 
+sealed trait ModeDisperser extends Product with Serializable
+
+object ModeDisperser {
+  // At the moment we only care about the presence of filter
+  case object NoDisperser extends ModeDisperser
+  case class SomeDisperser(tag: String) extends ModeDisperser
+}
+
 case class ModeSlitWidth(sw: Angle) {
   override def toString: String = s"slit_width(${Angle.milliarcseconds.get(sw)})"
 }
@@ -96,6 +106,17 @@ object ModeAO {
   /** @group Typeclass Instances */
   implicit val ModeAOEnumerated: Enumerated[ModeAO] =
     Enumerated.of(NoAO, AO)
+}
+
+sealed trait ModeSpatialDimension extends Product with Serializable
+
+object ModeSpatialDimension {
+  case object One extends ModeSpatialDimension
+  case object Two extends ModeSpatialDimension
+
+  /** @group Typeclass Instances */
+  implicit val ModeSpatialDimensionEnumerated: Enumerated[ModeSpatialDimension] =
+    Enumerated.of(One, Two)
 }
 
 sealed trait ModeCoronagraph extends Product with Serializable
@@ -143,14 +164,20 @@ case class ModeRow(
   gratingMinWavelength: ModeGratingMinWavelength,
   gratingMaxWavelength: ModeGratingMaxWavelength,
   filter:               ModeFilter,
+  disperser:            ModeDisperser,
   slitWidth:            ModeSlitWidth,
   ao:                   ModeAO,
-  spatialDimensions:    PosInt,
+  spatialDimensions:    ModeSpatialDimension,
   coronograph:          ModeCoronagraph,
   skySub:               ModeSkysub,
   mos:                  ModeMOS,
   minExposure:          Quantity[PosBigDecimal, Second]
 )
+
+object ModeRow {
+  val instrument: Lens[ModeRow, Instrument]   = GenLens[ModeRow](_.instrument)
+  val disperser: Lens[ModeRow, ModeDisperser] = GenLens[ModeRow](_.disperser)
+}
 
 trait ModesMatrixDecoders {
   implicit val instDecoder: CellDecoder[Instrument] =
@@ -209,6 +236,13 @@ trait ModesMatrixDecoders {
         case _      => ModeFilter.SomeFilter
       }
 
+  implicit val modeDisperser: CellDecoder[ModeDisperser] =
+    CellDecoder.stringDecoder
+      .map {
+        case "none" => ModeDisperser.NoDisperser
+        case x      => ModeDisperser.SomeDisperser(x)
+      }
+
   implicit val swDecoder: CellDecoder[ModeSlitWidth] =
     arcsecDecoder.map(ModeSlitWidth.apply)
 
@@ -217,6 +251,14 @@ trait ModesMatrixDecoders {
       .map {
         case "yes" => ModeAO.AO
         case _     => ModeAO.NoAO
+      }
+
+  implicit val modeSpatialDimensionDecoder: CellDecoder[ModeSpatialDimension] =
+    CellDecoder.intDecoder
+      .emap {
+        case 1 => ModeSpatialDimension.One.asRight
+        case 2 => ModeSpatialDimension.Two.asRight
+        case x => new DecoderError(s"Unsupported spatial dimensions $x").asLeft
       }
 
   implicit val posBigDecimalDecoder: CellDecoder[PosBigDecimal] =
@@ -273,19 +315,19 @@ trait ModesMatrixDecoders {
         gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
         gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
         mf   <- row.as[ModeFilter]("filter")
+        di   <- row.as[ModeDisperser]("disperser")
         sw   <- row.as[ModeSlitWidth]("slit_width")
         ao   <- row.as[ModeAO]("ao")
-        sd   <- row.as[PosInt]("spatial_dims")
+        sd   <- row.as[ModeSpatialDimension]("spatial_dims")
         c    <- row.as[ModeCoronagraph]("coronagraph")
         ss   <- row.as[ModeSkysub]("skysub")
         mo   <- row.as[ModeMOS]("mos")
         me   <- row.as[Quantity[PosBigDecimal, Second]]("minexp")
-      } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, sw, ao, sd, c, ss, mo, me)
+      } yield ModeRow(i, m, f, im, ix, r, w, b, gmin, gmax, mf, di, sw, ao, sd, c, ss, mo, me)
   }
 }
 
-trait ModesMatrix[F[_]] {
-  def matrix: List[ModeRow]
+final case class ModesMatrix(matrix: List[ModeRow]) {
 
   val DefaultMinExp: Quantity[PosBigDecimal, Second] =
     refineMV[Positive](BigDecimal(1)).withUnit[Second]
@@ -294,7 +336,7 @@ trait ModesMatrix[F[_]] {
     dwmin:       Option[ModeBandWidth],
     dwmax:       Option[ModeBandWidth],
     rmin:        Option[PosBigDecimal],
-    dims:        Option[PosInt],
+    dims:        Option[ModeSpatialDimension],
     coronograph: Option[ModeCoronagraph],
     mexp:        Option[Quantity[PosBigDecimal, Second]],
     mos:         Option[ModeMOS],
@@ -326,4 +368,6 @@ trait ModesMatrix[F[_]] {
   }
 }
 
-object ModesMatrix extends ModesMatrixPlatform
+object ModesMatrix extends ModesMatrixPlatform {
+  val empty: ModesMatrix = ModesMatrix(Nil)
+}
