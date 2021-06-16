@@ -1,8 +1,12 @@
 name: clubhouse
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
-    types: [opened, closed]
+    branches:
+      - master
 
 jobs:
   clubhouse:
