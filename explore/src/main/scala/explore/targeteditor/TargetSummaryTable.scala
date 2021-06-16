@@ -30,7 +30,6 @@ import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
-import react.semanticui.elements.icon.Icon
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
@@ -40,6 +39,7 @@ import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
 import scalajs.js.JSConverters._
+import explore.Icons
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
@@ -98,7 +98,7 @@ object TargetSummaryTable {
       val columns =
         (List(
           column("type", _ => ())
-            .setCell(_ => Icon("star"))
+            .setCell(_ => Icons.Star)
             .setWidth(30),
           column("name", TargetResult.name.get)
             .setCell(cell =>

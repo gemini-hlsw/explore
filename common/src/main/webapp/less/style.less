@@ -680,7 +680,7 @@ tfoot {
   display: flex;
   flex-shrink: 0;
   justify-content: space-between;
-  padding: 5px 0 5px 5px;
+  padding: 5px;
   background-color: var(--tile-title-background);
 }
 
@@ -1119,7 +1119,7 @@ img.partner-split-flag {
 }
 
 .ui.button.delete-button {
-  padding: 0.4em 0.4em 0.4em 0.4em;
+  padding: 0px;
   margin: 0;
   margin-right: 0.4em;
   border: none;
@@ -1333,7 +1333,7 @@ html {
   justify-content: center;
 
   .ui.button.delete-button {
-    margin-right: 0.2em;
+    padding: 0.4em 0.4em 0.4em 0.4em;
   }
 }
 
@@ -1344,10 +1344,11 @@ html {
 
 .obs-card-header {
   display: flex;
+  align-items: center;
 }
 
 .ui.button.delete-button.obs-delete-button {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .crash-message {
@@ -1358,8 +1359,10 @@ html {
   text-align: center;
 }
 
-.explore-help-button {
-  padding-left: 0.5em;
+.explore-help-icon {
+  margin-left: 0.5em;
+  cursor: pointer;
+  color: var(--site-text-color);
 }
 
 .explore-help-sidebar {
@@ -1394,10 +1397,15 @@ html {
   height: 100%;
   padding: 1em;
 
+  svg.svg-inline--fa {
+    color: hsl(210, 12.2%, 16.1%);
+  }
+
   * {
     text-shadow: none;
     color: black;
   }
+
 }
 
 .title-strip {
@@ -1595,4 +1603,40 @@ html {
 
 .explore-modes-header {
   top: 0;
+}
+
+.ui.button.compact,
+.ui.labeled.icon.button.left.verycompact {
+  padding-left: 0.5em !important;
+  padding-right: 0.5em !important;
+}
+
+.ui.icon.button svg.svg-inline--fa,
+.ui.button.compact svg.svg-inline--fa,
+.ui.button.verycompact svg.svg-inline--fa {
+  width: 1.5em;
+}
+
+svg.padded-right-icon.svg-inline--fa,
+.ui.icon.button svg.svg-inline--fa,
+.ui.menu .ui.dropdown .menu > .item svg.svg-inline--fa {
+  margin-right: 9px;
+}
+
+.modal-close-button {
+  z-index: 1;
+  position: absolute;
+  top: -1rem;
+  right: -1rem;
+  opacity: 0.8;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.user-selection-buttons {
+  display: flex;
+  flex-direction: column;
 }

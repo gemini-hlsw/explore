@@ -129,7 +129,7 @@ object TargetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](props.focused.set(none))
-      )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
+      )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft)
     )
 
     val targetIdOpt = props.focused.get.collect {

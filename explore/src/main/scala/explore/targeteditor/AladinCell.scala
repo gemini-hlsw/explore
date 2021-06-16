@@ -28,6 +28,7 @@ import lucuma.ui.reusability._
 import monocle.macros.Lenses
 import react.aladin.Fov
 import react.common._
+import react.fa.Transform
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
 import react.semanticui.modules.popup.PopupPosition
@@ -107,7 +108,7 @@ object AladinCell extends ModelOptics {
                 content = "Center on target",
                 position = PopupPosition.BottomLeft,
                 trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
-                  Icons.Bullseye.fitted(true).clazz(ExploreStyles.Accented)
+                  Icons.Bullseye.transform(Transform(size = 24)).clazz(ExploreStyles.Accented)
                 )
               )
             )

@@ -38,6 +38,7 @@ import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.Label
+import react.semanticui.shorthand._
 import spire.std.any._
 
 import scala.annotation.unused

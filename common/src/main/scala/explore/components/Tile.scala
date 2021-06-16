@@ -85,7 +85,7 @@ object Tile {
             .when_(p.state === TileSizeState.Minimized) *> p
             .sizeStateCallback(TileSizeState.Maximized)
             .when_(p.state === TileSizeState.Normal)
-        )(Icons.Maximize.fitted(true))
+        )(Icons.Maximize)
 
       val minimizeButton =
         Button(
@@ -98,7 +98,7 @@ object Tile {
             .when_(p.state === TileSizeState.Maximized) *> p
             .sizeStateCallback(TileSizeState.Minimized)
             .when_(p.state === TileSizeState.Normal)
-        )(Icons.Minimize.fitted(true))
+        )(Icons.Minimize)
 
       <.div(ExploreStyles.Tile, p.key.whenDefined(^.key := _))(
         <.div(

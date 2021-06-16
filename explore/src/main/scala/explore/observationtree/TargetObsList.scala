@@ -56,13 +56,14 @@ import org.typelevel.log4cats.Logger
 import react.beautifuldnd._
 import react.common._
 import react.common.implicits._
+import react.fa.FontAwesomeIcon
 import react.reflex._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.elements.header.Header
-import react.semanticui.elements.icon.Icon
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import react.semanticui.views.card.Card
 import react.semanticui.views.card.CardContent
@@ -543,7 +544,7 @@ object TargetObsList {
           ),
           <.div(
             Button(onClick = props.focused.set(none), clazz = ExploreStyles.ButtonSummary)(
-              Icons.List,
+              Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
               "Targets Summary"
             )
           ),
@@ -558,24 +559,27 @@ object TargetObsList {
                       val targetId  = target.id
                       val targetObs = obsByPointing.get(PointingTargetResult(targetId).some).orEmpty
 
-                      val expandedTargetIds =
+                      val expandedTargetIds       =
                         props.expandedIds.zoom(ExpandedIds.targetIds)
-                      val opIcon            =
-                        targetObs.nonEmpty.fold(
-                          Icon(
-                            "chevron " + expandedTargetIds.get
+                      val opIcon: FontAwesomeIcon =
+                        targetObs.nonEmpty
+                          .fold(
+                            expandedTargetIds.get
                               .exists(_ === targetId)
-                              .fold("down", "right")
-                          )(^.cursor.pointer,
-                            ^.onClick ==> { e: ReactEvent =>
-                              e.stopPropagationCB >>
-                                toggleExpanded(targetId, expandedTargetIds)
-                                  .asEventDefault(e)
-                                  .void
-                            }
-                          ),
-                          Icons.ChevronRight
-                        )
+                              .fold(Icons.ChevronDown, Icons.ChevronRight)
+                              .addModifiers(
+                                Seq(^.cursor.pointer,
+                                    ^.onClick ==> { e: ReactEvent =>
+                                      e.stopPropagationCB >>
+                                        toggleExpanded(targetId, expandedTargetIds)
+                                          .asEventDefault(e)
+                                          .void
+                                    }
+                                )
+                              ),
+                            Icons.ChevronRight
+                          )
+                          .fixedWidth()
 
                       val memberObsSelected = props.focused.get
                         .exists(f => targetObs.map(obs => FocusedObs(obs.id)).exists(f === _))
@@ -687,21 +691,24 @@ object TargetObsList {
                       val expandedAsterismIds =
                         props.expandedIds.zoom(ExpandedIds.asterismIds)
                       val opIcon              =
-                        (asterismObs.nonEmpty || asterismTargets.nonEmpty).fold(
-                          Icon(
-                            "chevron " + expandedAsterismIds.get
+                        (asterismObs.nonEmpty || asterismTargets.nonEmpty)
+                          .fold(
+                            expandedAsterismIds.get
                               .exists(_ === asterismId)
-                              .fold("down", "right")
-                          )(^.cursor.pointer,
-                            ^.onClick ==> { e: ReactEvent =>
-                              e.stopPropagationCB >>
-                                toggleExpanded(asterismId, expandedAsterismIds)
-                                  .asEventDefault(e)
-                                  .void
-                            }
-                          ),
-                          Icons.ChevronRight
-                        )
+                              .fold(Icons.ChevronDown, Icons.ChevronRight)
+                              .addModifiers(
+                                Seq(^.cursor.pointer,
+                                    ^.onClick ==> { e: ReactEvent =>
+                                      e.stopPropagationCB >>
+                                        toggleExpanded(asterismId, expandedAsterismIds)
+                                          .asEventDefault(e)
+                                          .void
+                                    }
+                                )
+                              ),
+                            Icons.ChevronRight
+                          )
+                          .fixedWidth()
 
                       val memberObsSelected = props.focused.get
                         .exists(f => asterismObs.map(obs => FocusedObs(obs.id)).exists(f === _))

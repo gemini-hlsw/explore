@@ -44,6 +44,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
+import react.semanticui.shorthand._
 
 final case class ConstraintsPanel(
   obsId:         Observation.Id,

@@ -98,10 +98,10 @@ object HelpBody {
               <.h4(ExploreStyles.HelpTitleLabel, "Help"),
               <.div(
                 Button(as = <.a, size = Mini, compact = true, onClick = helpView.set(None))(
-                  Icons.Edit.size(Small).fitted(true)
+                  Icons.Edit
                 )(^.href := editUrl.toString(), ^.target := "_blank"),
                 Button(size = Mini, compact = true, onClick = helpView.set(None))(
-                  Icons.Close.size(Small).fitted(true)
+                  Icons.Close
                 )
               )
             ),
@@ -124,10 +124,7 @@ object HelpBody {
                     <.div(
                       ExploreStyles.HelpMarkdownBody,
                       "Not found, maybe you want to create it ",
-                      <.a(^.href := p.newPage.toString(),
-                          ^.target := "_blank",
-                          Icons.Edit.link(true)
-                      )
+                      <.a(^.href := p.newPage.toString(), ^.target := "_blank", Icons.Edit)
                     )
                   case crystal.Error(_)                                 =>
                     <.div(

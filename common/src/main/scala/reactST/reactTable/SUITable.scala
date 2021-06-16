@@ -61,6 +61,10 @@ trait LowPrioritySortElements {
     }
 }
 object SortElements extends LowPrioritySortElements {
+  val sortDown = Icons.SortDown.fixedWidth()
+  val sortUp   = Icons.SortUp.fixedWidth()
+  val sort     = Icons.Sort.fixedWidth()
+
   implicit def sortableColElements[C <: UseSortByColumnProps[_]]: SortElements[C] =
     new SortElements[C] {
       val props     = _.getSortByToggleProps()
@@ -68,9 +72,9 @@ object SortElements extends LowPrioritySortElements {
         if (col.isSorted) {
           val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
           val ascDesc: VdomNode =
-            if (col.isSortedDesc.getOrElse(false)) Icons.SortDown else Icons.SortUp
+            if (col.isSortedDesc.getOrElse(false)) sortDown else sortUp
           <.span(ascDesc, <.small(index))
-        } else Icons.Sort.unless(!col.canSort)
+        } else sort.unless(!col.canSort)
     }
 }
 

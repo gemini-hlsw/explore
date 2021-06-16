@@ -33,6 +33,7 @@ import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.dropdown.DropdownDivider
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown.DropdownMenu
+import react.semanticui.shorthand._
 import react.semanticui.views.item.Item
 
 final case class TopBar(
@@ -101,7 +102,9 @@ object TopBar {
                   )(
                     DropdownMenu(
                       About(
-                        Reuse.always(DropdownItem(text = "About Explore", icon = Icons.Info)),
+                        Reuse.always(
+                          DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
+                        ),
                         Reuse.always(
                           <.span(ExploreStyles.Version,
                                  ExploreStyles.VersionUncopied.when(! $.state.copied)
@@ -131,7 +134,7 @@ object TopBar {
                         )
                       ).when(role === GuestRole),
                       DropdownItem(text = "Logout",
-                                   icon = Icons.Logout,
+                                   icon = Icons.Logout.fixedWidth(),
                                    onClick = logout.runAsyncCB
                       ),
                       DropdownItem(onClick =

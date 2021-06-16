@@ -32,8 +32,7 @@ object HelpIcon {
           e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
         },
         Icons.Info
-          .link(true)
-          .inverted(true)
+          .fixedWidth()
           .clazz(ExploreStyles.HelpIcon)
       )
     }

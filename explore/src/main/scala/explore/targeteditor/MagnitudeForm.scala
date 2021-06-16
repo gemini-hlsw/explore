@@ -115,7 +115,7 @@ object MagnitudeForm {
                            onClick = addMagnitude,
                            disabled = props.disabled
                     )(^.marginLeft := "5px")(
-                      Icons.New.size(Small).fitted(true)
+                      Icons.New
                     )
                   )
                 }
