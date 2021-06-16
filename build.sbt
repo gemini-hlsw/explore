@@ -5,7 +5,7 @@ import Settings.Libraries._
 
 val reactJS              = "16.13.1"
 val FUILess              = "2.8.7"
-val kindProjectorVersion = "0.11.3"
+val kindProjectorVersion = "0.13.0"
 
 addCommandAlias(
   "quickTest",
