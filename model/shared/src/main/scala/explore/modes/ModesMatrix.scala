@@ -158,8 +158,8 @@ trait ModesMatrixDecoders {
       .emap {
         case "FLAMINGOS2" => Instrument.Flamingos2.asRight
         case "GSAOI"      => Instrument.Gsaoi.asRight
-        case "GMOS-S"     => Instrument.Gsaoi.asRight
-        case "GMOS-N"     => Instrument.GmosN.asRight
+        case "GMOS-S"     => Instrument.GmosSouth.asRight
+        case "GMOS-N"     => Instrument.GmosNorth.asRight
         case "GPI"        => Instrument.Gpi.asRight
         case "NIFS"       => Instrument.Nifs.asRight
         case x            => new DecoderError(s"Unknown instrument $x").asLeft
@@ -287,6 +287,9 @@ trait ModesMatrixDecoders {
 trait ModesMatrix[F[_]] {
   def matrix: List[ModeRow]
 
+  val DefaultMinExp: Quantity[PosBigDecimal, Second] =
+    refineMV[Positive](BigDecimal(1)).withUnit[Second]
+
   def spectroscopyModes(
     dwmin:       Option[ModeBandWidth],
     dwmax:       Option[ModeBandWidth],
@@ -311,7 +314,7 @@ trait ModesMatrix[F[_]] {
         m.bandWidth.w >= l_dwmin &&
         m.bandWidth.w <= l_dwmax &&
         coronograph.forall(_ === m.coronograph) &&
-        m.minExposure <= mexp.getOrElse(refineMV[Positive](BigDecimal(1)).withUnit[Second]) &&
+        m.minExposure <= mexp.getOrElse(DefaultMinExp) &&
         mos.forall(_ === m.mos) &&
         skysub.forall(_ === m.skySub) &&
         m.iqMin <= iqmax.getOrElse(defaultIQMax) &&
