@@ -231,12 +231,14 @@ object ExploreStyles {
   val StepGuided: Css      = Css("step-guided")
 
   val ExploreForm: Css               = Css("explore-form")
-  val ExploreFormGrid: Css           = Css("explore-form-grid")
+  val ConfigurationGrid: Css         = Css("explore-configuration-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
   val SkipToNext: Css                = Css("explore-skip-to-next")
   val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")
   val ConfigurationFilter: Css       = Css("explore-configuration-filter")
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
+  val ModesTable: Css                = Css("explore-modes-table")
+  val ModesHeader: Css               = Css("explore-modes-header")
 
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonsUndo: Css   = Css("explore-buttons-undo")

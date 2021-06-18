@@ -5,6 +5,7 @@ package explore.tabs
 
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import explore.AppCtx
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import japgolly.scalajs.react.vdom.html_<^._
@@ -21,7 +22,9 @@ object ConfigurationTile {
       obsId:         Option[Observation.Id],
       renderInTitle: Tile.RenderInTitle
     ): VdomNode =
-      <.div(ConfigurationPanel(obsId, renderInTitle))
+      AppCtx.using { implicit ctx =>
+        ConfigurationPanel(obsId, renderInTitle)
+      }
 
     Tile(
       ObsTabTiles.ConfigurationId,

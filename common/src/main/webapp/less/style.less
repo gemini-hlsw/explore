@@ -1,4 +1,5 @@
 @import "suithemes/default/globals/site.variables";
+@import "suithemes/default/modules/dropdown.variables";
 @import "theme/site/modules/sidebar.variables";
 @import "theme/site/globals/site.variables";
 
@@ -1418,10 +1419,14 @@ html {
   color: lightgreen;
 }
 
-.explore-form-grid {
+.explore-configuration-grid {
   padding: 0.5em;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-gap: 0.5em;
+  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
 }
 
 .explore-form {
@@ -1580,4 +1585,14 @@ html {
 
 .explore-target-summary-name {
   left: 37px;
+}
+
+.explore-modes-table {
+  overflow-y: auto;
+  border: 0.2px solid var(--site-border-color);
+  border-radius: @menuBorderRadius;
+}
+
+.explore-modes-header {
+  top: 0;
 }

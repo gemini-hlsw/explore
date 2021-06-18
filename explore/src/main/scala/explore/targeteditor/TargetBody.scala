@@ -211,7 +211,7 @@ object TargetBody {
               props.options
             ),
             CataloguesForm(props.options).when(false),
-            Form(as = <.div, clazz = ExploreStyles.ExploreFormGrid, size = Small)(
+            Form(as = <.div, size = Small)(
               ExploreStyles.Grid,
               ExploreStyles.Compact,
               ExploreStyles.ExploreForm,

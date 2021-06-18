@@ -3,4 +3,19 @@
 
 package explore.modes
 
-trait ModesMatrixPlatform
+import cats.effect.Concurrent
+import cats.syntax.all._
+import fs2._
+import fs2.data.csv._
+
+trait ModesMatrixPlatform extends ModesMatrixDecoders {
+  def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[ModeRow]] =
+    s
+      .through(decodeUsingHeaders[ModeRow]())
+      .compile
+      .toList
+
+  def apply[F[_]: Concurrent](s: Stream[F, String]): F[ModesMatrix] =
+    loadMatrix(s).map(ModesMatrix(_))
+
+}
