@@ -6,6 +6,7 @@ package explore.modes
 import cats.Order
 import cats.syntax.all._
 import coulomb._
+import coulomb.refined._
 import coulomb.si.Second
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
@@ -288,7 +289,7 @@ trait ModesMatrix[F[_]] {
   def matrix: List[ModeRow]
 
   val DefaultMinExp: Quantity[PosBigDecimal, Second] =
-    refineMV[Positive](BigDecimal(1)).withUnit[Second]
+    BigDecimal(1).withRefinedUnit[Positive, Second]
 
   def spectroscopyModes(
     dwmin:       Option[ModeBandWidth],
