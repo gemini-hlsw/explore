@@ -111,8 +111,6 @@ object ConstraintsPanel {
       state:        View[State],
       undoCtx:      UndoCtx[ConstraintSetData]
     )(implicit ctx: AppContextIO): VdomNode = {
-      // val constraintSet = props.constraintSet
-
       val undoViewSet = UndoView(props.obsId, undoCtx)
 
       def nameView = undoViewSet(ConstraintSetData.name, UpdateConstraintSet.name)
@@ -294,7 +292,6 @@ object ConstraintsPanel {
     }
 
     def render(props: Props) = AppCtx.using { implicit appCtx =>
-      // UndoRegion[ConstraintSetData](Reuse.currying(props, ViewF.fromState[IO]($)).in(renderFn _))
       renderFn(props, ViewF.fromStateSyncIO($), UndoContext(props.undoStacks, props.constraintSet))
     }
   }

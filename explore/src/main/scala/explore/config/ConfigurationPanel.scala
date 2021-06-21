@@ -115,7 +115,7 @@ object ConfigurationPanel {
             SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
             ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
           ),
-          ModesTable(state.matrix.toOption.getOrElse(ModesMatrix.empty))
+          ModesTable(undoCtx.model.get.matrix.toOption.getOrElse(ModesMatrix.empty))
         )
       )
     }

@@ -3,7 +3,6 @@
 
 package explore.undo
 
-import cats.effect.IO
 import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
 import monocle.Getter
@@ -17,7 +16,7 @@ class ListModSpec extends DisciplineSuite {
 
   implicit val idGet = Getter.id[Int].get _
 
-  val listMod = new KIListMod[IO, Int, Int](Lens.id)
+  val listMod = new KIListMod[Int, Int](Lens.id)
 
   val elemWithKey = listMod.withKey(0)
   val posWithKey  = listMod.pos.withKey(0)
@@ -38,7 +37,7 @@ class ListModSpec extends DisciplineSuite {
 
   implicit val keyGet = V.id.get _
 
-  val vlistMod = new KIListMod[IO, V, Int](V.id)
+  val vlistMod = new KIListMod[V, Int](V.id)
 
   val vWithId    = listMod.withKey(0)
   val vPosWithId = listMod.pos.withKey(0)

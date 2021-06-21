@@ -3,79 +3,53 @@
 
 package explore.undo
 
-import cats.FlatMap
-import cats.effect.Sync
+import cats.~>
 import cats.effect.Ref
+import cats.effect.Concurrent
 import cats.syntax.all._
 import explore.optics.GetAdjust
-import explore.undo.Undoer
-import monocle.macros.Lenses
+import cats.effect.std.Dispatcher
+import cats.Monad
+import crystal.ViewF
+import cats.arrow.FunctionK
+import crystal.refModCB
+import cats.Applicative
 
-@Lenses
-case class TestStacks[F[_], A](
-  undoStack: Undoer.Stack[F, A] = List.empty,
-  redoStack: Undoer.Stack[F, A] = List.empty
-)
+class TestUndoable[F[_]: Monad, M](
+  val valueRef:            Ref[F, M],
+  stacksRef:               Ref[F, UndoStacks[F, M]]
+)(implicit val dispatcher: Dispatcher[F]) {
+  def get: F[M] = valueRef.get
 
-class TestUndoer[F[_]: Sync, M](stacks: Ref[F, TestStacks[F, M]]) extends Undoer[F, M] {
-  type Stacks = TestStacks[F, M]
+  def set[A](getAdjust: GetAdjust[M, A], v: A): F[Unit]      =
+    context >>= (_.set(getAdjust.get, getAdjust.set, (_: A) => Applicative[F].unit)(v))
 
-  override lazy val getStacks: F[Stacks] = stacks.get
+  def mod[A](getAdjust: GetAdjust[M, A], f: A => A): F[Unit] =
+    context >>= (_.mod(getAdjust.get, getAdjust.set, (_: A) => Applicative[F].unit)(f))
 
-  override def modStacks(mod: Stacks => Stacks): F[Unit] = stacks.modify(s => (mod(s), ()))
+  def undo: F[Unit] = context >>= (_.undo)
 
-  override lazy val undoStack: StackLens = TestStacks.undoStack
+  def redo: F[Unit] = context >>= (_.redo)
 
-  override lazy val redoStack: StackLens = TestStacks.redoStack
+  private def refView[A](ref: Ref[F, A]): F[ViewF[F, A]] =
+    ref.get.map(a => ViewF(a, refModCB(ref)))
 
-  def ctx: F[Undoer.Context[F, M]] =
-    stacks.get.map(context)
-}
+  implicit private val syncToAsync: F ~> F = FunctionK.id[F]
 
-object TestUndoer {
-  def apply[F[_]: Sync, M]: F[TestUndoer[F, M]] =
+  val context: F[UndoContext[F, F, M]] =
     for {
-      stacks <- Ref[F].of(TestStacks[F, M]())
-    } yield new TestUndoer(stacks)
-}
+      valueView  <- refView(valueRef)
+      stacksView <- refView(stacksRef)
+    } yield UndoContext(stacksView, valueView)
 
-class TestUndoable[F[_]: FlatMap, M](model: Ref[F, M], undoer: TestUndoer[F, M]) {
-  def get: F[M] = model.get
-
-  def set[A](getSet: GetAdjust[M, A], value: A): F[Unit] =
-    for {
-      m <- model.get
-      c <- undoer.ctx
-      _ <- c.setter.set[A](m, getSet.get, (model.update _).compose(getSet.set))(value)
-    } yield ()
-
-  def mod[A](getSet: GetAdjust[M, A], f: A => A): F[Unit] =
-    for {
-      m <- model.get
-      c <- undoer.ctx
-      _ <- c.setter.mod[A](m, getSet.get, (model.update _).compose(getSet.set))(f)
-    } yield ()
-
-  def undo: F[Unit] =
-    for {
-      m <- model.get
-      c <- undoer.ctx
-      _ <- c.undo(m)
-    } yield ()
-
-  def redo: F[Unit] =
-    for {
-      m <- model.get
-      c <- undoer.ctx
-      _ <- c.redo(m)
-    } yield ()
 }
 
 object TestUndoable {
-  def apply[F[_]: Sync, M](
-    model: Ref[F, M]
-  ): F[TestUndoable[F, M]] =
+  def apply[F[_]: Concurrent, M](
+    initValue:           M
+  )(implicit dispatcher: Dispatcher[F]): F[TestUndoable[F, M]] =
     for {
-      undoer <- TestUndoer[F, M]
-    } yield new TestUndoable(model, undoer)
+      valueRef  <- Ref[F].of(initValue)
+      stacksRef <- Ref[F].of(UndoStacks.empty[F, M])
+    } yield new TestUndoable(valueRef, stacksRef)
 }
