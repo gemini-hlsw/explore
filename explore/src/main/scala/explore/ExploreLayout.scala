@@ -34,7 +34,8 @@ object ExploreLayout {
 
   implicit val resolutionWithPropsReuse: Reusability[ResolutionWithProps[Page, View[RootModel]]] =
     Reusability.byRefOr_==
-  implicit val propsReuse: Reusability[Props]                                                    =
+
+  implicit val propsReuse: Reusability[Props] =
     Reusability.by(p => (p.r, p.view))
 
   private val component =

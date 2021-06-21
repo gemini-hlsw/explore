@@ -6,6 +6,7 @@ package explore.components.state
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
+import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
@@ -24,6 +25,9 @@ final case class IfLogged(view: View[RootModel])(val render: (UserVault, IO[Unit
 
 object IfLogged {
   type Props = IfLogged
+
+  protected implicit val propsReuse: Reusability[Props] =
+    Reusability.derive && Reusability.by(_.render)
 
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =
@@ -46,7 +50,7 @@ object IfLogged {
           ) { vault =>
             React.Fragment(
               SSOManager(vault.expiration, vaultSet, messageSet),
-              ConnectionManager(vault.token, onConnect = createUserPrefs(vault))(
+              ConnectionManager(vault.token, onConnect = vault.curryReusing.in(createUserPrefs _))(
                 Reuse
                   .currying(vaultSet, messageSet, p.render.curry(vault))
                   .in((vaultSet, messageSet, render) => LogoutTracker(vaultSet, messageSet)(render))
@@ -55,5 +59,6 @@ object IfLogged {
           }
         }
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 }

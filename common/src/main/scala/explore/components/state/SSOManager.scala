@@ -34,8 +34,8 @@ object SSOManager {
   @Lenses
   case class State(cancelToken: Option[IO[Unit]])
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(_.expiration)
-  implicit val stateReuse: Reusability[State] = Reusability.never
+  protected implicit val propsReuse: Reusability[Props] = Reusability.by(_.expiration)
+  protected implicit val stateReuse: Reusability[State] = Reusability.never
 
   final class Backend() {
 
@@ -82,6 +82,6 @@ object SSOManager {
         .orEmpty
         .runAsyncCB
     }
-    .shouldComponentUpdateConst(false)
+    .configure(Reusability.shouldComponentUpdate)
     .build
 }

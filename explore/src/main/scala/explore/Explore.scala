@@ -151,19 +151,13 @@ object ExploreMain {
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 
-        val (router, routerLogic) =
-          RouterWithProps.componentAndLogic(BaseUrl.fromWindowOrigin, Routing.config)
+        val (router, routerCtl) =
+          RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
         def routingView(view: View[RootModel]): View[RootModel] =
           view.withOnMod { model =>
-            // Set URL but don't broadcast (we don't want to rerender in this case).
-            routerLogic
-              .interpret(
-                RouteCmd
-                  .setRoute(routerLogic.ctl.urlFor(RootModelRouting.lens.get(model)),
-                            SetRouteVia.HistoryPush
-                  )
-              )
+            routerCtl
+              .set(RootModelRouting.lens.get(model))
               .to[SyncIO]
           }
 
@@ -173,7 +167,7 @@ object ExploreMain {
           )
 
         def pageUrl(tab: AppTab, focused: Option[Focused]): String =
-          routerLogic.ctl.urlFor(RootModelRouting.getPage(tab, focused)).value
+          routerCtl.urlFor(RootModelRouting.getPage(tab, focused)).value
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)

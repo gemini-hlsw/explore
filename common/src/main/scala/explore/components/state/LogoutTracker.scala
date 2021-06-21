@@ -31,6 +31,10 @@ object LogoutTracker {
   @Lenses
   case class State(bc: Option[BroadcastChannel[ExploreEvent]])
 
+  protected implicit val propsReuse: Reusability[Props] =
+    Reusability.derive && Reusability.by(_.render)
+  protected implicit val stateReuse: Reusability[State] = Reusability.never
+
   private val component =
     ScalaComponent
       .builder[LogoutTracker]
@@ -59,6 +63,7 @@ object LogoutTracker {
         implicit val ctx = $.props.ctx
         $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForgetCB
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }
