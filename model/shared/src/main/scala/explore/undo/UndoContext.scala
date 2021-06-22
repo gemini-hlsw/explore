@@ -88,10 +88,6 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
   private def push(stack: ViewF[F, UndoStack[G, M]]): Restorer[G, M] => F[Unit] =
     restorer => stack.mod(s => restorer +: s)
 
-  // Try doing both state updates with .start and removing the working mechanism
-  // We have to reorganize things.
-  // Move stack reorganizing logic to UndoStacks, produce the new stacks but don't modify until here.
-
   private def undoStacks: F[Option[Restorer[G, M]]] =
     stacks.get.undo match {
       case head :: tail =>
@@ -146,13 +142,3 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
 
   val redo: F[Unit] = redoStacks >>= restore
 }
-
-// case class UndoableAction[F[_], M](
-//   mod:  Mod[F, M] => (M => M) => F[Unit],
-//   undo: Mod[F, M] => F[Unit],
-//   redo: Mod[F, M] => F[Unit]
-// ) {
-//   val set: M => F[Unit] = m =>
-// }
-
-// case class Action[F[_], M, A](get: M => A, mod: (A => A) => M => F[Unit]
