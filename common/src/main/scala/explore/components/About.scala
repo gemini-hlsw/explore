@@ -3,6 +3,7 @@
 
 package explore.components
 
+import crystal.react.reuse._
 import explore.Icons
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -11,17 +12,20 @@ import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 
-case class About(trigger: VdomNode, content: VdomNode) extends ReactProps[About](About.component)
+case class About(trigger: Reuse[VdomNode], content: Reuse[VdomNode])
+    extends ReactProps[About](About.component)
 
 object About {
   type Props = About
+
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val component = ScalaComponent
     .builder[Props]
     .render_P { props =>
       Modal(
         dimmer = Blurring,
-        trigger = props.trigger,
+        trigger = props.trigger: VdomNode,
         closeIcon = Icons.Close,
         content = ModalContent(
           <.div(
@@ -31,5 +35,6 @@ object About {
         )
       )
     }
+    .configure(Reusability.shouldComponentUpdate)
     .build
 }
