@@ -17,7 +17,11 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "14.8.0"
+      - uses: c-hive/gha-npm-cache@v1
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
       - name: Setup and expand vars
+        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: |
