@@ -5,7 +5,6 @@ package explore.model
 
 import cats.syntax.all._
 import explore.model.Focused.FocusedAsterism
-import explore.model.Focused.FocusedConstraintSet
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.Page._
@@ -36,10 +35,8 @@ object RootModelRouting {
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
         focused
-          .collect {
-            case FocusedConstraintSet(csId) =>
-              ConstraintsPage(csId)
-            case FocusedObs(obsId)          => ConstraintsObsPage(obsId)
+          .collect { case FocusedObs(obsId) =>
+            ConstraintsPage(obsId)
           }
           .getOrElse(ConstraintsBasePage)
     }
@@ -66,9 +63,7 @@ object RootModelRouting {
         setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case ConstraintsBasePage             =>
         setTab(AppTab.Constraints)
-      case ConstraintsPage(csId)           =>
-        setTab(AppTab.Constraints) >>> RootModel.focused.set(FocusedConstraintSet(csId).some)
-      case ConstraintsObsPage(obsId)       =>
+      case ConstraintsPage(obsId)          =>
         setTab(AppTab.Constraints) >>> RootModel.focused.set(FocusedObs(obsId).some)
       case ConfigurationsPage              =>
         setTab(AppTab.Configurations)

@@ -5,7 +5,9 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
 import crystal.ViewF
+import crystal.implicits._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -14,10 +16,12 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ObsQueries._
+import explore.common.ObsQueriesGQL._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileController
+import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Focused.FocusedObs
@@ -27,6 +31,9 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
+import explore.optics._
+import explore.schemas.ObservationDB
+import explore.undo.UndoStacks
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -35,7 +42,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.function.Field2.second
 import monocle.macros.Lenses
 import org.scalajs.dom.window
 import react.common._
@@ -53,6 +59,7 @@ import scala.concurrent.duration._
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
   focused:          View[Option[Focused]],
+  undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -226,7 +233,7 @@ object ObsTabContents {
     protected def renderFn(
       props:        Props,
       state:        View[State],
-      observations: View[(ConstraintsInfo, ObservationList)]
+      observations: View[ObservationList]
     )(implicit ctx: AppContextIO): VdomNode = {
 
       val treeResize =
@@ -252,18 +259,17 @@ object ObsTabContents {
         <.div(ExploreStyles.TreeBody)(
           ObsList(
             observations,
-            props.focused
+            props.focused,
+            props.undoStacks.zoom(ModelUndoStacks.forObsList)
           )
         )
 
-      val obsId: Option[Observation.Id] = props.focused.get.collect { case FocusedObs(obsId) =>
+      val obsIdOpt: Option[Observation.Id] = props.focused.get.collect { case FocusedObs(obsId) =>
         obsId
       }
 
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
-        obsId.flatMap(observations.get._2.getElement)
-
-      val constraintsSetId = obsSummaryOpt.flatMap(_.constraints.map(_.id))
+        obsIdOpt.flatMap(observations.get.getElement)
 
       val targetId = obsSummaryOpt.collect {
         case ObsSummaryWithPointingAndConstraints(_,
@@ -282,7 +288,7 @@ object ObsTabContents {
           size = Mini,
           compact = true,
           clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-          onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+          onClickE = linkOverride[ButtonProps](props.focused.set(none))
         )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
       )
 
@@ -293,7 +299,7 @@ object ObsTabContents {
           props.size.width.getOrElse(0) - treeWidth
         }
 
-      val layouts = ViewF.fromState[IO]($).zoom(State.layouts)
+      val layouts = ViewF.fromStateSyncIO($).zoom(State.layouts)
 
       val notesTile =
         Tile(
@@ -313,38 +319,74 @@ object ObsTabContents {
           )
         )
 
-      val rightSideRGL =
-        TileController(
-          props.userId.get,
-          coreWidth,
-          defaultLayout,
-          layouts,
-          List(
-            notesTile,
-            TargetTile.targetTile(props.userId.get,
-                                  targetId,
-                                  props.searching,
-                                  state.zoom(State.options)
-            ),
-            ConstraintsTile
-              .constraintsTile(constraintsSetId, obsSummaryOpt, observations.get._1),
-            ConfigurationTile.configurationTile(obsSummaryOpt.map(_.id))
-          )
-        )
+      def rightSideRGL(obsId: Observation.Id) =
+        LiveQueryRenderMod[ObservationDB, ObsEditQuery.Data, Pot[ObservationData]](
+          ObsEditQuery.query(obsId).reuseAlways,
+          (ObsEditQuery.Data.observation.get _)
+            .andThen(_.toRight(new Exception(s"Observation [$obsId] not found")).toTry.toPot)
+            .reuseAlways,
+          List(ObservationEditSubscription.subscribe[IO](obsId)).reuseAlways
+        )(
+          // TODO Better declare reusability. We might need higher arities than defined now.
+          // Something like this is what we strive for:
+          // (props.userId.get, coreWidth, defaultLayout, layouts, notesTile, targetId, props.searching, state.zoom(State.options), obsPot).curryReusing.in(
+          // (_: Pot[View[Pot[ObservationData]]]).curryReusing.in
+          Reuse.by(
+            (props.userId.get,
+             coreWidth,
+             defaultLayout,
+             layouts,
+             notesTile,
+             targetId,
+             props.undoStacks,
+             props.searching,
+             state.zoom(State.options)
+            )
+          ) { (obsViewPot: Pot[View[Pot[ObservationData]]]) =>
+            val obsView: Pot[View[ObservationData]] =
+              obsViewPot.flatMap(view =>
+                view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod)))
+              )
+
+            TileController(
+              props.userId.get,
+              coreWidth,
+              defaultLayout,
+              layouts,
+              List(
+                notesTile,
+                TargetTile.targetTile(
+                  props.userId.get,
+                  targetId,
+                  props.undoStacks.zoom(ModelUndoStacks.forTarget),
+                  props.searching,
+                  state.zoom(State.options)
+                ),
+                ConstraintsTile
+                  .constraintsTile(
+                    obsId,
+                    obsView.map(_.zoom(ObservationData.constraintSet)),
+                    props.undoStacks
+                      .zoom(ModelUndoStacks.forConstraintSet[IO])
+                      .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+                  ),
+                ConfigurationTile.configurationTile(obsSummaryOpt.map(_.id))
+              )
+            ): VdomNode
+          }
+        ).withKey(obsId.toString)
 
       val rightSide =
-        if (props.focused.get.isDefined) {
-          <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL)
-        } else {
+        obsIdOpt.fold(
           <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
                 <.div("Select or add an observation")
           )
-        }
+        )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
 
       if (window.innerWidth <= Constants.TwoPanelCutoff) {
         <.div(
           ExploreStyles.TreeRGL,
-          <.div(ExploreStyles.Tree, treeInner(observations.zoom(second)))
+          <.div(ExploreStyles.Tree, treeInner(observations))
             .when(state.get.panels.leftPanelVisible),
           <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
             rightSide
@@ -361,7 +403,7 @@ object ObsTabContents {
             maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
             onResize = treeResize,
             resizeHandles = List(ResizeHandleAxis.East),
-            content = tree(observations.zoom(second))
+            content = tree(observations)
           ),
           <.div(^.key := "obs-right-side",
                 ^.width := coreWidth.px,
@@ -376,7 +418,7 @@ object ObsTabContents {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState[IO]($)))
+      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromStateSyncIO($)))
     }
   }
 

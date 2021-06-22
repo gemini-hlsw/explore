@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -65,10 +66,10 @@ object AladinContainer {
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     def setRa(ra: RightAscension)(implicit ctx: AppContextIO): Callback =
-      $.props >>= (_.target.zoom(Coordinates.rightAscension).set(ra).runAsyncCB)
+      $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.rightAscension).set(ra))
 
     def setDec(dec: Declination)(implicit ctx: AppContextIO): Callback =
-      $.props >>= (_.target.zoom(Coordinates.declination).set(dec).runAsyncCB)
+      $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.declination).set(dec))
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get

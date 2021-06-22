@@ -5,13 +5,18 @@ package explore
 
 import cats.effect.Sync
 import cats.syntax.all._
+import crystal.Pot
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
 import explore.model.enum.Theme
+import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.scalajs.dom
+import react.semanticui.collections.message.Message
+import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
 import scala.scalajs.js
@@ -45,6 +50,16 @@ package object utils {
           .orEmpty
     )
   }
+
+  def potRender[A](
+    valueRender:   A ==> VdomNode,
+    pendingRender: Long ==> VdomNode = Reuse.always(_ => Loader(active = true)),
+    errorRender:   Throwable ==> VdomNode = Reuse.always(t => Message(error = true)(t.getMessage))
+  ): Pot[A] ==> VdomNode =
+    (pendingRender, errorRender, valueRender).curryReusing.in(
+      (pendingRender, errorRender, valueRender, pot: Pot[A]) =>
+        pot.fold(pendingRender, errorRender, valueRender)
+    )
 }
 
 package utils {

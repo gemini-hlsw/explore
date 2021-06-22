@@ -10,18 +10,15 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
-import explore.common.ConstraintSetObsQueries._
+import explore.UnderConstruction
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.constraints.ConstraintSetEditor
 import explore.implicits._
-import explore.model.Focused._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.observationtree.ConstraintSetObsList
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -43,13 +40,14 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
-  userId:           ViewOpt[User.Id],
+  userId:           Option[User.Id],
   focused:          View[Option[Focused]],
   expandedIds:      View[SortedSet[ConstraintSet.Id]],
+  // undoStacks:       View[Map[ConstraintSet.Id, UndoStacks[IO, ConstraintSetData]]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
-  def isCsSelected: Boolean = focused.get.collect { case Focused.FocusedConstraintSet(_) =>
+  def isSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) =>
     ()
   }.isDefined
 }
@@ -61,49 +59,31 @@ object ConstraintSetTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def readWidthPreference(
-    $ : ComponentDidMount[Props, State, Unit]
+    $ : ComponentDidMount[Props, State, _]
   ): Callback = {
     implicit val ctx = $.props.ctx
-    (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+    (UserAreaWidths.queryWithDefault[IO]($.props.userId,
                                          ResizableSection.ConstraintSetsTree,
                                          Constants.InitialTreeWidth.toInt
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
   }
 
-  protected def renderEditor(
-    csIdOpt:       Option[ConstraintSet.Id],
-    focused:       View[Option[Focused]],
-    renderInTitle: Tile.RenderInTitle
-  ): VdomNode =
-    csIdOpt.map(csId => ConstraintSetEditor(csId, focused, renderInTitle).withKey(csId.show))
-
   protected def renderFn(
-    props:                 Props,
-    state:                 View[State],
-    innerWidth:            Double,
-    constraintSetsWithObs: View[ConstraintSetsWithObs]
-  )(implicit ctx:          AppContextIO): VdomNode = {
+    props:        Props,
+    state:        View[State],
+    innerWidth:   Double
+  )(implicit ctx: AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
           UserWidthsCreation
-            .storeWidthPreference[IO](props.userId.get,
+            .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
                                       d.size.width
             )).runAsyncCB
           .debounce(1.second)
 
     val treeWidth = state.get.treeWidth.toInt
-
-    def tree(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
-        treeInner(constraintSetsWithObs)
-      )
-
-    def treeInner(constraintSetsWithObs: View[ConstraintSetsWithObs]) =
-      <.div(ExploreStyles.TreeBody)(
-        ConstraintSetObsList(constraintSetsWithObs, props.focused, props.expandedIds)
-      )
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -112,28 +92,22 @@ object ConstraintSetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+        onClickE = linkOverride[ButtonProps](props.focused.set(none))
       )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft.fitted(true))
     )
-
-    val csIdOpt = props.focused.get.collect {
-      case FocusedConstraintSet(csId) => csId.some
-      case FocusedObs(obsId)          =>
-        constraintSetsWithObs.get.obs.getElement(obsId).flatMap(_.constraints).map(_.id)
-    }.flatten
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
+    val tree = UnderConstruction()
+
     val rightSide =
-      Tile("constraints", "Constraints", backButton.some)(
-        Reuse(renderEditor _)(csIdOpt, props.focused)
-      )
+      Tile("constraints", "Constraints", backButton.some)(Reuse.always(_ => UnderConstruction()))
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(constraintSetsWithObs))
+        <.div(ExploreStyles.Tree, tree)
           .when(state.get.leftPanelVisible),
         <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
@@ -150,7 +124,7 @@ object ConstraintSetTabContents {
           maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
           onResize = treeResize,
           resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(constraintSetsWithObs),
+          content = tree,
           clazz = ExploreStyles.ResizableSeparator
         ),
         <.div(^.key := "constraintset-right-side",
@@ -166,23 +140,26 @@ object ConstraintSetTabContents {
 
   protected implicit val innerWidthReuse = Reusability.double(2.0)
 
+  protected class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      renderFn(props, ViewF.fromStateSyncIO($), window.innerWidth)
+
+    }
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => TwoPanelState.initial(p.isCsSelected)
+          case None    => TwoPanelState.initial(p.isSelected)
           case Some(s) =>
-            if (s.elementSelected =!= p.isCsSelected) s.copy(elementSelected = p.isCsSelected)
+            if (s.elementSelected =!= p.isSelected) s.copy(elementSelected = p.isSelected)
             else s
         }
       )
-      .render { $ =>
-        implicit val ctx = $.props.ctx
-        ConstraintSetObsLiveQuery(
-          Reuse(renderFn _)($.props, ViewF.fromState[IO]($), window.innerWidth)
-        )
-      }
+      .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build

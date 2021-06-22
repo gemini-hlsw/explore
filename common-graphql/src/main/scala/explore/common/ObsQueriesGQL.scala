@@ -5,8 +5,10 @@ package explore.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
+import explore.model
 import explore.model.ConstraintsSummary
 import explore.schemas.ObservationDB
+// gql: import explore.model.reusability._
 // gql: import io.circe.refined._
 // gql: import lucuma.ui.reusability._
 
@@ -15,15 +17,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query($first: Int = 2147483647) {
-        constraintSets(programId: "p-2", first: $first) {
-          nodes {
-            id
-            name
-          }
-        }
-
-        observations(programId: "p-2", first: $first) {
+      query {
+        observations(programId: "p-2") {
           nodes {
             id
             observationTarget {
@@ -38,7 +33,6 @@ object ObsQueriesGQL {
               }
             }
             constraintSet {
-              id
               imageQuality
               cloudExtinction
               skyBackground
@@ -97,6 +91,65 @@ object ObsQueriesGQL {
     val document = """
       mutation($oid: ObservationId!) {
         undeleteObservation(observationId: $oid) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ObsEditQuery extends GraphQLOperation[ObservationDB] {
+    val document = """
+      query($obsId: ObservationId!) {
+        observation(observationId: $obsId) {
+          id
+          constraintSet {
+            name
+            cloudExtinction
+            imageQuality
+            skyBackground
+            waterVapor
+            elevationRange {
+              type: __typename
+              ... on AirMassRange {
+                min
+                max
+              }
+              ... on HourAngleRange {
+                minHours
+                maxHours
+              }
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      object Observation {
+        object ConstraintSet {
+          type ElevationRange = model.ElevationRange
+        }
+      }
+    }
+  }
+
+  @GraphQL
+  trait ObservationEditSubscription extends GraphQLOperation[ObservationDB] {
+    val document = """
+      subscription($obsId: ObservationId!) {
+        observationEdit(observationId: $obsId) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($obsId: ObservationId!, $input: EditConstraintSetInput!){
+        updateConstraintSet(input: {observationIds: [$obsId], constraintSet: $input}) {
           id
         }
       }

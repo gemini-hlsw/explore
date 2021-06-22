@@ -4,6 +4,7 @@
 package explore
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse.Reuse
@@ -35,8 +36,8 @@ import react.semanticui.modules.dropdown.DropdownMenu
 import react.semanticui.views.item.Item
 
 final case class TopBar(
-  user:   User,
-  logout: IO[Unit]
+  user:     User,
+  onLogout: IO[Unit]
 ) extends ReactProps[TopBar](TopBar.component)
 
 object TopBar {
@@ -69,7 +70,7 @@ object TopBar {
           val role = p.user.role
 
           def logout: IO[Unit] =
-            appCtx.sso.logout >> p.logout
+            appCtx.sso.logout >> p.onLogout
 
           React.Fragment(
             <.div(
@@ -135,10 +136,9 @@ object TopBar {
                       ),
                       DropdownItem(onClick =
                         utils
-                          .setupScheme[IO](
+                          .setupScheme[SyncIO](
                             if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
-                          )
-                          .runAsyncCB *> $.modState(_.flip)
+                          ) *> $.modStateIn[SyncIO](_.flip)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )

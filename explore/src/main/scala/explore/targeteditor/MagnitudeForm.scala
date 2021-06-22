@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.Order._
-import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -63,6 +62,149 @@ object MagnitudeForm {
 
   private val MagTableComponent = new SUITable(MagTable)
 
+  protected class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props, state: State) =
+      AppCtx.using { implicit ctx =>
+        val newBandView: Option[View[MagnitudeBand]] =
+          state.newBand.map(band =>
+            ViewF(
+              band,
+              (mod, cb) =>
+                $.modStateInSyncIO(State.newBand.composePrism(some).modify(mod),
+                                   _.newBand.map(cb).orEmpty
+                )
+            )
+          )
+
+        val deleteButton = Button(
+          size = Small,
+          compact = true,
+          clazz = ExploreStyles.DeleteButton
+        )(
+          Icons.Trash
+        )
+
+        val deleteFn: View[Magnitude] => Callback =
+          mag => props.magnitudes.mod(_.filterNot(_.band === mag.get.band))
+
+        val excludeFn: View[Magnitude] => Set[MagnitudeBand] =
+          mag => HashSet.from(props.magnitudes.get.map(_.band)) - mag.get.band
+
+        val footer = TableFooter(
+          TableRow(
+            TableHeaderCell()(^.colSpan := 4)(
+              <.div(
+                ExploreStyles.MagnitudesTableFooter,
+                newBandView.whenDefined { view =>
+                  val addMagnitude =
+                    props.magnitudes.mod(list =>
+                      (list :+ Magnitude(MagnitudeValue(0), view.get, view.get.magnitudeSystem))
+                        .sortBy(_.band)
+                    )
+
+                  React.Fragment(
+                    EnumViewSelect(
+                      id = "NEW_BAND",
+                      value = view,
+                      exclude = state.usedBands,
+                      clazz = ExploreStyles.FlatFormField,
+                      disabled = props.disabled
+                    ),
+                    Button(size = Mini,
+                           compact = true,
+                           onClick = addMagnitude,
+                           disabled = props.disabled
+                    )(^.marginLeft := "5px")(
+                      Icons.New.size(Small).fitted(true)
+                    )
+                  )
+                }
+              )
+            )
+          )
+        )
+
+        val columns = List(
+          MagTable
+            .Column("value", _.zoom(Magnitude.value))
+            .setHeader("Value")
+            .setCell(
+              ReactTableHelpers
+                .editableViewColumn(
+                  Magnitude.value,
+                  validFormat =
+                    ValidFormatInput.fromFormat(MagnitudeValue.fromString, "Invalid magnitude"),
+                  changeAuditor = ChangeAuditor
+                    .fromFormat(MagnitudeValue.fromString)
+                    .decimal(3)
+                    .allowEmpty,
+                  disabled = props.disabled
+                )
+            ),
+          MagTable
+            .Column("band", _.zoom(Magnitude.band))
+            .setHeader("Band")
+            .setCell(
+              ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
+                disabled = props.disabled,
+                excludeFn = Some(excludeFn)
+              )
+            )
+            .setSortByFn(_.get),
+          MagTable
+            .Column("system", _.zoom(Magnitude.system))
+            .setHeader("System")
+            .setCell(
+              ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
+                disabled = props.disabled
+              )
+            ),
+          MagTable
+            .Column[Unit]("delete")
+            .setCell(
+              ReactTableHelpers.buttonViewColumn(button = deleteButton,
+                                                 onClick = deleteFn,
+                                                 disabled = props.disabled,
+                                                 wrapperClass =
+                                                   ExploreStyles.MagnitudesTableDeletButtonWrapper
+              )
+            )
+        ).toJSArray
+
+        val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
+
+        // Put it inside a form to get the SUI styles right
+        Form(as = <.div, size = Small)(
+          <.div(
+            ExploreStyles.MagnitudesTableSection,
+            <.label("Magnitudes"),
+            Segment(attached = SegmentAttached.Attached,
+                    compact = true,
+                    clazz = ExploreStyles.MagnitudesTableContainer
+            )(
+              tableComponent(
+                (
+                  MagTableComponent(
+                    Table(celled = true,
+                          selectable = true,
+                          striped = true,
+                          compact = TableCompact.Very
+                    ),
+                    header = TableHeader(),
+                    footer = footer.vdomElement
+                  ),
+                  MagTable
+                    .Options(columns, props.magnitudes.toListOfViews(_.band).toJSArray)
+                    .setRowIdFn(_.get.band.tag)
+                    .setInitialStateFull(tableState)
+                )
+              )
+            )
+          )
+        )
+      }
+  }
+
   val component =
     ScalaComponent
       .builder[Props]
@@ -75,147 +217,7 @@ object MagnitudeForm {
             State(usedBands, MagnitudeBand.all.diff(usedBands.toList).headOption)
         }
       }
-      .render { $ =>
-        val props = $.props
-        val state = $.state
-
-        AppCtx.using { implicit ctx =>
-          val newBandView: Option[View[MagnitudeBand]] =
-            state.newBand.map(band =>
-              ViewF(band,
-                    (mod: MagnitudeBand => MagnitudeBand) =>
-                      $.modStateIn[IO](State.newBand.composePrism(some).modify(mod))
-              )
-            )
-
-          val deleteButton = Button(
-            size = Small,
-            compact = true,
-            clazz = ExploreStyles.DeleteButton
-          )(
-            Icons.Trash
-          )
-
-          val deleteFn: View[Magnitude] => Callback =
-            mag => props.magnitudes.mod(_.filterNot(_.band === mag.get.band)).runAsyncCB
-
-          val excludeFn: View[Magnitude] => Set[MagnitudeBand] =
-            mag => HashSet.from(props.magnitudes.get.map(_.band)) - mag.get.band
-
-          val footer = TableFooter(
-            TableRow(
-              TableHeaderCell()(^.colSpan := 4)(
-                <.div(
-                  ExploreStyles.MagnitudesTableFooter,
-                  newBandView.whenDefined { view =>
-                    val addMagnitude =
-                      props.magnitudes.mod(list =>
-                        (list :+ Magnitude(MagnitudeValue(0), view.get, view.get.magnitudeSystem))
-                          .sortBy(_.band)
-                      )
-
-                    React.Fragment(
-                      EnumViewSelect(
-                        id = "NEW_BAND",
-                        value = view,
-                        exclude = state.usedBands,
-                        clazz = ExploreStyles.FlatFormField,
-                        disabled = props.disabled
-                      ),
-                      Button(size = Mini,
-                             compact = true,
-                             onClick = addMagnitude.runAsyncCB,
-                             disabled = props.disabled
-                      )(^.marginLeft := "5px")(
-                        Icons.New.size(Small).fitted(true)
-                      )
-                    )
-                  }
-                )
-              )
-            )
-          )
-
-          val columns = List(
-            MagTable
-              .Column("value", _.zoom(Magnitude.value))
-              .setHeader("Value")
-              .setCell(
-                ReactTableHelpers
-                  .editableViewColumn(
-                    Magnitude.value,
-                    validFormat =
-                      ValidFormatInput.fromFormat(MagnitudeValue.fromString, "Invalid magnitude"),
-                    changeAuditor = ChangeAuditor
-                      .fromFormat(MagnitudeValue.fromString)
-                      .decimal(3)
-                      .allowEmpty,
-                    disabled = props.disabled
-                  )
-              ),
-            MagTable
-              .Column("band", _.zoom(Magnitude.band))
-              .setHeader("Band")
-              .setCell(
-                ReactTableHelpers.editableEnumViewColumn(Magnitude.band)(
-                  disabled = props.disabled,
-                  excludeFn = Some(excludeFn)
-                )
-              )
-              .setSortByFn(_.get),
-            MagTable
-              .Column("system", _.zoom(Magnitude.system))
-              .setHeader("System")
-              .setCell(
-                ReactTableHelpers.editableEnumViewColumn(Magnitude.system)(
-                  disabled = props.disabled
-                )
-              ),
-            MagTable
-              .Column[Unit]("delete")
-              .setCell(
-                ReactTableHelpers.buttonViewColumn(button = deleteButton,
-                                                   onClick = deleteFn,
-                                                   disabled = props.disabled,
-                                                   wrapperClass =
-                                                     ExploreStyles.MagnitudesTableDeletButtonWrapper
-                )
-              )
-          ).toJSArray
-
-          val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
-
-          // Put it inside a form to get the SUI styles right
-          Form(as = <.div, size = Small)(
-            <.div(
-              ExploreStyles.MagnitudesTableSection,
-              <.label("Magnitudes"),
-              Segment(attached = SegmentAttached.Attached,
-                      compact = true,
-                      clazz = ExploreStyles.MagnitudesTableContainer
-              )(
-                tableComponent(
-                  (
-                    MagTableComponent(
-                      Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very
-                      ),
-                      header = TableHeader(),
-                      footer = footer.vdomElement
-                    ),
-                    MagTable
-                      .Options(columns, props.magnitudes.toListOfViews(_.band).toJSArray)
-                      .setRowIdFn(_.get.band.tag)
-                      .setInitialStateFull(tableState)
-                  )
-                )
-              )
-            )
-          )
-        }
-      }
+      .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)
       .build
 

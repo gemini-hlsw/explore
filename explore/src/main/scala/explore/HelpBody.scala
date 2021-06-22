@@ -81,76 +81,71 @@ object HelpBody {
       .initialState(State(Pot.pending))
       .render_PS { (p, s) =>
         val imageConv = (s: Uri) => p.baseUrl.addPath(s.path)
-        AppCtx.using { implicit ctx =>
-          HelpCtx.usingView { helpCtx =>
-            val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-            val editUrl  = s.content match {
-              case Ready(_) => p.editPage
-              case _        => p.newPage
-            }
+
+        HelpCtx.usingView { helpCtx =>
+          val helpView = helpCtx.zoom(HelpContext.displayedHelp)
+          val editUrl  = s.content match {
+            case Ready(_) => p.editPage
+            case _        => p.newPage
+          }
+          <.div(
+            ExploreStyles.HelpSidebar,
+            GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
+                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none).toCB)
+            ),
             <.div(
-              ExploreStyles.HelpSidebar,
-              GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                            handlers =
-                              Handlers("CLOSE_HELP" -> helpView.set(none).runAsyncAndForgetCB)
-              ),
+              ExploreStyles.HelpTitle,
+              <.h4(ExploreStyles.HelpTitleLabel, "Help"),
               <.div(
-                ExploreStyles.HelpTitle,
-                <.h4(ExploreStyles.HelpTitleLabel, "Help"),
-                <.div(
-                  Button(as = <.a,
-                         size = Mini,
-                         compact = true,
-                         onClick = helpView.set(None).runAsyncCB
-                  )(
-                    Icons.Edit.size(Small).fitted(true)
-                  )(^.href := editUrl.toString(), ^.target := "_blank"),
-                  Button(size = Mini, compact = true, onClick = helpView.set(None).runAsyncCB)(
-                    Icons.Close.size(Small).fitted(true)
-                  )
-                )
-              ),
-              <.div(
-                ExploreStyles.HelpBody,
-                <.div(
-                  ExploreStyles.HelpBody,
-                  s.content match {
-                    case Ready(a)                                         =>
-                      ReactMarkdown(
-                        content = a,
-                        clazz = ExploreStyles.HelpMarkdownBody,
-                        linkTarget = "_blank",
-                        imageConv,
-                        remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                        rehypePlugins = List(RehypePlugin.RehypeKatex)
-                      ): VdomNode
-                    case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                    case crystal.Error(o) if o.getMessage.contains("404") =>
-                      <.div(
-                        ExploreStyles.HelpMarkdownBody,
-                        "Not found, maybe you want to create it ",
-                        <.a(^.href := p.newPage.toString(),
-                            ^.target := "_blank",
-                            Icons.Edit.link(true)
-                        )
-                      )
-                    case crystal.Error(_)                                 =>
-                      <.div(
-                        ExploreStyles.HelpMarkdownBody,
-                        "We encountered an error trying to read the help file"
-                      )
-                  }
+                Button(as = <.a, size = Mini, compact = true, onClick = helpView.set(None))(
+                  Icons.Edit.size(Small).fitted(true)
+                )(^.href := editUrl.toString(), ^.target := "_blank"),
+                Button(size = Mini, compact = true, onClick = helpView.set(None))(
+                  Icons.Close.size(Small).fitted(true)
                 )
               )
+            ),
+            <.div(
+              ExploreStyles.HelpBody,
+              <.div(
+                ExploreStyles.HelpBody,
+                s.content match {
+                  case Ready(a)                                         =>
+                    ReactMarkdown(
+                      content = a,
+                      clazz = ExploreStyles.HelpMarkdownBody,
+                      linkTarget = "_blank",
+                      imageConv,
+                      remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
+                      rehypePlugins = List(RehypePlugin.RehypeKatex)
+                    ): VdomNode
+                  case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+                  case crystal.Error(o) if o.getMessage.contains("404") =>
+                    <.div(
+                      ExploreStyles.HelpMarkdownBody,
+                      "Not found, maybe you want to create it ",
+                      <.a(^.href := p.newPage.toString(),
+                          ^.target := "_blank",
+                          Icons.Edit.link(true)
+                      )
+                    )
+                  case crystal.Error(_)                                 =>
+                    <.div(
+                      ExploreStyles.HelpMarkdownBody,
+                      "We encountered an error trying to read the help file"
+                    )
+                }
+              )
             )
-          }
+          )
         }
       }
       .componentDidMount { $ =>
         implicit val ctx = $.props.ctx
+
         load($.props.url)
           .flatMap(v => $.modStateIn[IO](State.content.set(Pot.fromTry(v))))
-          .runAsyncAndForgetCB
+          .runAsync
       }
       .build
 

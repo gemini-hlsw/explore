@@ -9,8 +9,8 @@ import monocle.Lens
 
 import KeyedIndexedTree.Index
 
-class KITreeMod[F[_], A, K](protected val keyLens: Lens[A, K])
-    extends IndexedCollMod[F, KeyedIndexedTree, Index[K], A, Node, K] {
+class KITreeMod[A, K](protected val keyLens: Lens[A, K])
+    extends IndexedCollMod[KeyedIndexedTree, Index[K], A, Node, K] {
 
   override protected val valueLens: Lens[Node[A], A] = Node.value
   override protected val pureNode                    = Node.apply(_)

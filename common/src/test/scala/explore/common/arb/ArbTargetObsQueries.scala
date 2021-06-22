@@ -45,7 +45,7 @@ trait ArbTargetObsQueries {
       for {
         id            <- arbitrary[Observation.Id]
         pointing      <- arbitrary[Option[ObsResult.Pointing]]
-        constraintSet <- arbitrary[Option[ConstraintSet]]
+        constraintSet <- arbitrary[ConstraintSet]
       } yield ObsResult(id, pointing, constraintSet)
     }
 }

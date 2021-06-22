@@ -4,7 +4,6 @@
 package explore.undo
 
 import cats.effect.IO
-import cats.effect.Ref
 import cats.syntax.all._
 import cats.kernel.Eq
 import explore.data.KeyedIndexedList
@@ -17,13 +16,15 @@ import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
 
-class UndoerSpec extends munit.CatsEffectSuite {
+import cats.effect.std.Dispatcher
+
+class UndoContextSpec extends munit.CatsEffectSuite {
 
   def idLens[A] = Lens.id[A]
 
   def id[A] = GetAdjust(idLens[A])
 
-  class ListModByIdEq[F[_], A, Id](idLens: Lens[A, Id]) extends KIListMod[F, A, Id](idLens)
+  class ListModByIdEq[F[_], A, Id](idLens: Lens[A, Id]) extends KIListMod[A, Id](idLens)
 
   class ListModIdentityId[F[_], A] extends ListModByIdEq[F, A, A](idLens[A])
 
@@ -33,10 +34,11 @@ class UndoerSpec extends munit.CatsEffectSuite {
 
   def kiIntList(i: Int*) = kiList(i: _*)(idLens.get)
 
-  test("UndoRedo") {
+  val dispatcher = ResourceFixture(Dispatcher[IO])
+
+  dispatcher.test("UndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(0)
-      undoable <- TestUndoable(model)
+      undoable <- TestUndoable[IO, Int](0)
       _        <- undoable.set(id[Int], 1)
       _        <- undoable.set(id[Int], 2)
       _        <- undoable.set(id[Int], 3)
@@ -52,10 +54,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  test("ListModPosUndoRedo") {
+  dispatcher.test("ListModPosUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
-      undoable <- TestUndoable(model)
+      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.pos.withKey(3), listIntMod.pos.set(8))
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5, 3)))
       _        <- undoable.undo
@@ -65,10 +66,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  test("ListDeleteUndoRedo") {
+  dispatcher.test("ListDeleteUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
-      undoable <- TestUndoable(model)
+      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.withKey(3), listIntMod.delete)
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5)))
       _        <- undoable.undo
@@ -78,10 +78,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  test("ListInsertUndoRedo") {
+  dispatcher.test("ListInsertUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(kiIntList(1, 2, 3, 4, 5))
-      undoable <- TestUndoable(model)
+      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.withKey(8), listIntMod.upsert(8, 3))
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 8, 4, 5)))
       _        <- undoable.undo
@@ -112,15 +111,16 @@ class UndoerSpec extends munit.CatsEffectSuite {
       .composeLens(first)
       .composeLens(V.s)
 
-  test("ListObjModPosUndoRedo") {
+  dispatcher.test("ListObjModPosUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(kiVList(V(1), V(2), V(3), V(4), V(5)))
-      undoable <- TestUndoable(model)
+      undoable <- TestUndoable[IO, KeyedIndexedList[Int, V]](kiVList(V(1), V(2), V(3), V(4), V(5)))
       _        <- undoable.mod(vListMod.pos.withKey(3), vListMod.pos.set(8))
       _        <- undoable.get.map(v =>
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
                   )
-      _        <- model.update(externalVListSetS(3).set("three")) // External modification, before undo
+      _        <- undoable.valueRef.update( // External modification, before undo
+                    externalVListSetS(3).set("three")
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
                   )
@@ -133,7 +133,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "three")))
                   )
       _        <- undoable.undo
-      _        <- model.update(externalVListSetS(3).set("tres")) // External modification, before redo
+      _        <- undoable.valueRef.update( // External modification, before redo
+                    externalVListSetS(3).set("tres")
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(3, "tres"), V(4, "4"), V(5, "5")))
                   )
@@ -144,7 +146,7 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  class TreeModByIdEq[F[_], A, K](keyLens: Lens[A, K]) extends KITreeMod[F, A, K](keyLens)
+  class TreeModByIdEq[F[_], A, K](keyLens: Lens[A, K]) extends KITreeMod[A, K](keyLens)
 
   class TreeModIdentityId[F[_], A] extends TreeModByIdEq[F, A, A](idLens[A])
 
@@ -154,9 +156,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
 
   def kiIntTree(tree: Tree[Int]) = kiTree(tree)(idLens.get)
 
-  test("TreeModPosUndoRedo") {
+  dispatcher.test("TreeModPosUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(
+      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -164,7 +166,6 @@ class UndoerSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.pos.withKey(3), treeIntMod.pos.set(Index(4.some, 1)))
       _        <- undoable.get.map(v =>
                     assertEquals(
@@ -203,9 +204,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  test("TreeDeleteUndoRedo") {
+  dispatcher.test("TreeDeleteUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(
+      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -213,7 +214,6 @@ class UndoerSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.withKey(3), treeIntMod.delete)
       _        <- undoable.get.map(v =>
                     assertEquals(v,
@@ -250,9 +250,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  test("TreeInsertUndoRedo") {
+  dispatcher.test("TreeInsertUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(
+      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -260,7 +260,6 @@ class UndoerSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      undoable <- TestUndoable(model)
       _        <- undoable.mod(treeIntMod.withKey(8), treeIntMod.upsert(8, Index(1.some, 8)))
       _        <- undoable.get.map(v =>
                     assertEquals(v,
@@ -310,9 +309,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
       .composeLens(Node.value)
       .composeLens(V.s)
 
-  test("TreeObjModPosUndoRedo") {
+  dispatcher.test("TreeObjModPosUndoRedo") { implicit dispatcher =>
     for {
-      model    <- Ref[IO].of(
+      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, V]](
                     kiVTree(
                       Tree(
                         Node(V(1), Node(V(2)), Node(V(3))),
@@ -320,7 +319,6 @@ class UndoerSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      undoable <- TestUndoable(model)
       _        <- undoable.mod(vTreeMod.pos.withKey(3), vTreeMod.pos.set(Index(4.some, 1)))
       _        <- undoable.get.map(v =>
                     assertEquals(v,
@@ -332,7 +330,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
                                  )
                     )
                   )
-      _        <- model.update(externalVTreeSetS(3).set("three")) // External modification, before undo
+      _        <- undoable.valueRef.update( // External modification, before undo
+                    externalVTreeSetS(3).set("three")
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v,
                                  kiVTree(
@@ -366,7 +366,9 @@ class UndoerSpec extends munit.CatsEffectSuite {
                     )
                   )
       _        <- undoable.undo
-      _        <- model.update(externalVTreeSetS(3).set("tres")) // External modification, before undo
+      _        <- undoable.valueRef.update( // External modification, before undo
+                    externalVTreeSetS(3).set("tres")
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v,
                                  kiVTree(

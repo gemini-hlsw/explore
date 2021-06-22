@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -94,7 +93,7 @@ object RVInput {
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) =
       AppCtx.using { implicit ctx =>
-        val rvView = ViewF.fromState[IO]($).zoom(State.rvView)
+        val rvView = ViewF.fromStateSyncIO($).zoom(State.rvView)
         val input  = state.rvView match {
           case RVView.Z  =>
             FormInputEV(
@@ -142,7 +141,7 @@ object RVInput {
           <.label(label, ExploreStyles.SkipToNext),
           <.div(
             ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls,
-            EnumViewSelect[IO, RVView](id = "view", value = rvView, disabled = props.disabled),
+            EnumViewSelect[RVView](id = "view", value = rvView, disabled = props.disabled),
             input
           ),
           state.units

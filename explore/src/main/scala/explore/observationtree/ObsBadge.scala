@@ -3,14 +3,12 @@
 
 package explore.observationtree
 
-import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import explore.AppCtx
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
@@ -32,7 +30,7 @@ import react.semanticui.views.card._
 final case class ObsBadge(
   obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected: Boolean = false,
-  deleteCB: Option[Observation.Id ==> IO[Unit]] = None
+  deleteCB: Option[Observation.Id ==> SyncIO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -64,18 +62,16 @@ object ObsBadge {
         }
 
         val deleteButton =
-          AppCtx.using(implicit ctx =>
-            Button(
-              size = Small,
-              compact = true,
-              clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
-              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-                e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-                  .map(cb => cb(props.obs.id).runAsyncAndForgetCB)
-                  .getOrEmpty
-            )(
-              Icons.Trash
-            )
+          Button(
+            size = Small,
+            compact = true,
+            clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
+            onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+              e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
+                .map(cb => cb.value(props.obs.id).toCB)
+                .getOrEmpty
+          )(
+            Icons.Trash
           )
 
         def nameAndId(name: String) =

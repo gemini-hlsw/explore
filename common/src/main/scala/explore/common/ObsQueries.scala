@@ -13,6 +13,7 @@ import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
 import explore.schemas.ObservationDB
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -23,7 +24,11 @@ import ObsQueriesGQL._
 object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
-  type ConstraintsInfo = List[ProgramObservationsQuery.Data.ConstraintSets.Nodes]
+
+  type ObservationData = ObsEditQuery.Data.Observation
+  val ObservationData = ObsEditQuery.Data.Observation
+  type ConstraintSetData = ObservationData.ConstraintSet
+  val ConstraintSetData = ObservationData.ConstraintSet
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
@@ -36,9 +41,8 @@ object ObsQueries {
     }
 
   private val programObservationsQueryoObservationListGetter
-    : Getter[ProgramObservationsQuery.Data, (ConstraintsInfo, ObservationList)] = data => {
-    val cs  = data.constraintSets.nodes
-    val obs = KeyedIndexedList.fromList(
+    : Getter[ProgramObservationsQuery.Data, ObservationList] = data =>
+    KeyedIndexedList.fromList(
       data.observations.nodes.map(node =>
         ObsSummaryWithPointingAndConstraints(node.id,
                                              node.observationTarget.map(convertPointing),
@@ -47,8 +51,6 @@ object ObsQueries {
       ),
       ObsSummaryWithPointingAndConstraints.id.get
     )
-    (cs, obs)
-  }
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
@@ -56,19 +58,15 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[(ConstraintsInfo, ObservationList)] ==> VdomNode](render =>
+    ScalaFnComponent[View[ObservationList] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB,
-                           ProgramObservationsQuery.Data,
-                           (ConstraintsInfo, ObservationList)
-        ](
-          ProgramObservationsQuery.query(),
-          ProgramObservationsQuery.Data.asObservationList.get,
+        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
+          ProgramObservationsQuery.query().reuseAlways,
+          (ProgramObservationsQuery.Data.asObservationList.get _).reuseAlways,
           List(
-            ProgramObservationsEditSubscription.subscribe[IO](),
-            ConstraintSetObsQueriesGQL.ConstraintSetsEditSubscription.subscribe[IO]()
-          )
-        )(render)
+            ProgramObservationsEditSubscription.subscribe[IO]()
+          ).reuseAlways
+        )(potRender(render))
       }
     )
 

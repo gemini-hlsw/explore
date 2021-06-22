@@ -84,10 +84,8 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
 
 lazy val graphql = project
   .in(file("common-graphql"))
-  .dependsOn(model.js)
+  .dependsOn(model.jvm)
   .settings(commonSettings: _*)
-  .settings(commonJsLibSettings: _*)
-  .enablePlugins(ScalaJSPlugin)
 
 lazy val common = project
   .in(file("common"))

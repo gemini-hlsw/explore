@@ -47,8 +47,7 @@ final case class TargetSummaryTable(
   focused:          View[Option[Focused]],
   expandedIds:      View[ExpandedIds],
   renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
-    extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
+) extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
@@ -85,8 +84,6 @@ object TargetSummaryTable {
   protected class Backend {
 
     def render(props: Props) = {
-      implicit val ctx = props.ctx
-
       def targetObservations(id: Target.Id): List[ObsResult] =
         props.pointingsWithObs.observations.toList.filter(_.pointing match {
           case Some(PointingTargetResult(tid)) => tid === id
@@ -106,7 +103,7 @@ object TargetSummaryTable {
           column("name", TargetResult.name.get)
             .setCell(cell =>
               <.a(^.onClick ==> (_ =>
-                    props.focused.set(Focused.FocusedTarget(cell.row.original.id).some).runAsyncCB
+                    props.focused.set(Focused.FocusedTarget(cell.row.original.id).some)
                   ),
                   cell.value.toString
               )
@@ -168,7 +165,7 @@ object TargetSummaryTable {
                         ^.onClick ==> (_ =>
                           (props.focused
                             .set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
-                            .mod(ExpandedIds.targetIds.modify(_ + cell.row.original.id))).runAsyncCB
+                            .mod(ExpandedIds.targetIds.modify(_ + cell.row.original.id)))
                         ),
                         obs.id.toString()
                       )
@@ -198,19 +195,16 @@ object TargetSummaryTable {
       .build
 
   protected final case class TableComponentProps(
-    options:          TargetTable.OptionsType,
-    hiddenColumns:    View[Set[String]],
-    renderInTitle:    Tile.RenderInTitle
-  )(implicit val ctx: AppContextIO)
-      extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
+    options:       TargetTable.OptionsType,
+    hiddenColumns: View[Set[String]],
+    renderInTitle: Tile.RenderInTitle
+  ) extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
 
   // Horrible hack while we don't fully have hooks.
   // Reusability is handled in class component, instead of the need to useMemo.
   // Table is only rerendered when needed, thus avoiding the loop in react-table when passing unstable columns or data.
   protected val tableComponent =
     ScalaFnComponent[TableComponentProps] { props =>
-      implicit val ctx = props.ctx
-
       val tableInstance = TargetTable.use(
         props.options.setInitialStateFull(
           TargetTable
@@ -246,7 +240,6 @@ object TargetSummaryTable {
                           onChange = (value: Boolean) =>
                             props.hiddenColumns
                               .mod(cols => if (value) cols - colId else cols + colId)
-                              .runAsyncCB
                         )
                       )
                     )

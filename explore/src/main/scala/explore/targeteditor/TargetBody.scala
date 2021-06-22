@@ -20,14 +20,14 @@ import explore.components.Tile
 import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.components.undo.UndoRegion
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.utils._
 import explore.schemas.ObservationDB.Types._
-import explore.undo.Undoer
+import explore.undo.UndoContext
+import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
@@ -59,6 +59,7 @@ final case class TargetBody(
   uid:           User.Id,
   id:            Target.Id,
   target:        View[TargetResult],
+  undoStacks:    View[UndoStacks[IO, TargetResult]],
   searching:     View[Set[Target.Id]],
   options:       View[TargetVisualOptions],
   renderInTitle: Tile.RenderInTitle
@@ -72,13 +73,14 @@ object TargetBody {
   type Props = TargetBody
   val AladinRef = AladinCell.component
 
-  implicit val propsReuse = Reusability.derive[Props]
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   class Backend() {
-    def renderFn(props: Props, undoCtx: Undoer.Context[IO, TargetResult]): VdomNode =
+    def render(props: Props) =
       AppCtx.using { implicit appCtx =>
+        val undoCtx     = UndoContext(props.undoStacks, props.target)
         val target      = props.target.get
-        val undoViewSet = UndoView(props.id, props.target, undoCtx.setter)
+        val undoViewSet = UndoView(props.id, undoCtx)
 
         val allView = undoViewSet(
           targetPropsL,
@@ -148,18 +150,14 @@ object TargetBody {
             .search(s.searchTerm)
             .runAsyncAndThenCB {
               case Right(r @ Some(Target(n, Right(st), m))) =>
-                allView.set((n, st, m.values.toList)).runAsyncCB >>
-                  s.onComplete(r)
+                allView.set((n, st, m.values.toList)).toCB >> s.onComplete(r)
               case Right(Some(r))                           =>
                 Callback.log(s"Unknown target type $r") >>
-                  nameView.set(s.searchTerm).runAsyncCB >>
-                  s.onComplete(none)
+                  nameView.set(s.searchTerm).toCB >> s.onComplete(none)
               case Right(None)                              =>
-                nameView.set(s.searchTerm).runAsyncCB >>
-                  s.onComplete(none)
+                nameView.set(s.searchTerm).toCB >> s.onComplete(none)
               case Left(t)                                  =>
-                nameView.set(s.searchTerm).runAsyncCB >>
-                  s.onError(t)
+                nameView.set(s.searchTerm).toCB >> s.onError(t)
             }
 
         val disabled = props.searching.get.exists(_ === props.id)
@@ -255,7 +253,7 @@ object TargetBody {
             ),
             MagnitudeForm(target.id, magnitudesView, disabled = disabled),
             props.renderInTitle(
-              <.span(ExploreStyles.TitleStrip, UndoButtons(target, undoCtx, disabled = disabled))
+              <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
             ),
             <.div(
               ExploreStyles.TargetSkyplotCell,
@@ -266,9 +264,6 @@ object TargetBody {
           )
         )
       }
-
-    def render(props: Props) =
-      UndoRegion[TargetResult](Reuse(renderFn _)(props))
   }
 
   val component =

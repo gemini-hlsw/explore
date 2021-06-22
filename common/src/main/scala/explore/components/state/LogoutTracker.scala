@@ -4,6 +4,7 @@
 package explore.components.state
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -19,8 +20,8 @@ import monocle.macros.Lenses
 import react.common.ReactProps
 
 final case class LogoutTracker(
-  setVault:   Option[UserVault] ==> IO[Unit],
-  setMessage: NonEmptyString ==> IO[Unit]
+  setVault:   Option[UserVault] ==> SyncIO[Unit],
+  setMessage: NonEmptyString ==> SyncIO[Unit]
 )(val render: IO[Unit] ==> VdomNode)(implicit val ctx: AppContextIO)
     extends ReactProps[LogoutTracker](LogoutTracker.component)
 
@@ -29,6 +30,10 @@ object LogoutTracker {
 
   @Lenses
   case class State(bc: Option[BroadcastChannel[ExploreEvent]])
+
+  protected implicit val propsReuse: Reusability[Props] =
+    Reusability.derive && Reusability.by(_.render)
+  protected implicit val stateReuse: Reusability[State] = Reusability.never
 
   private val component =
     ScalaComponent
@@ -42,23 +47,23 @@ object LogoutTracker {
         )
       }
       .componentDidMount { $ =>
-        implicit val ctx = $.props.ctx
-        IO {
+        SyncIO {
           val bc = new BroadcastChannel[ExploreEvent]("explore")
           bc.onmessage = (x: ExploreEvent) =>
             // This is coming from the js world, we can't match the type
             (x.event match {
               case ExploreEvent.Logout.event =>
                 $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
-              case _                         => IO.unit
+              case _                         => SyncIO.unit
             })
           bc
-        }.flatMap(bc => $.modStateIn[IO](State.bc.set(bc.some))).runAsyncCB
+        }.flatMap(bc => $.modStateIn[SyncIO](State.bc.set(bc.some)))
       }
       .componentWillUnmount { $ =>
         implicit val ctx = $.props.ctx
         $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForgetCB
       }
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
 }

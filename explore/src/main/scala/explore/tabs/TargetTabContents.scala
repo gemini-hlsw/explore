@@ -12,6 +12,7 @@ import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.Icons
 import explore.common.TargetObsQueries._
+import explore.common.TargetQueries.TargetResult
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
@@ -22,8 +23,10 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetObsList
+import explore.optics._
 import explore.targeteditor.TargetEditor
 import explore.targeteditor.TargetSummaryTable
+import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -44,13 +47,15 @@ import react.semanticui.sizes._
 import scala.concurrent.duration._
 
 final case class TargetTabContents(
-  userId:           ViewOpt[User.Id],
-  focused:          View[Option[Focused]],
-  searching:        View[Set[Target.Id]],
-  expandedIds:      View[ExpandedIds],
-  hiddenColumns:    View[Set[String]],
-  size:             ResizeDetector.Dimensions
-)(implicit val ctx: AppContextIO)
+  userId:            Option[User.Id],
+  focused:           View[Option[Focused]],
+  listUndoStacks:    View[UndoStacks[IO, PointingsWithObs]],
+  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
+  searching:         View[Set[Target.Id]],
+  expandedIds:       View[ExpandedIds],
+  hiddenColumns:     View[Set[String]],
+  size:              ResizeDetector.Dimensions
+)(implicit val ctx:  AppContextIO)
     extends ReactProps[TargetTabContents](TargetTabContents.component) {
   def isTargetSelected: Boolean = focused.get.collect { case Focused.FocusedTarget(_) =>
     ()
@@ -63,9 +68,9 @@ object TargetTabContents {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  def readWidthPreference($ : ComponentDidMount[Props, State, Unit]): Callback = {
+  def readWidthPreference($ : ComponentDidMount[Props, State, _]): Callback = {
     implicit val ctx = $.props.ctx
-    (UserAreaWidths.queryWithDefault[IO]($.props.userId.get,
+    (UserAreaWidths.queryWithDefault[IO]($.props.userId,
                                          ResizableSection.TargetsTree,
                                          Constants.InitialTreeWidth.toInt
     ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
@@ -74,11 +79,12 @@ object TargetTabContents {
   def renderContents(
     userId:        User.Id,
     targetId:      Target.Id,
+    undoStacks:    View[UndoStacks[IO, TargetResult]],
     searching:     View[Set[Target.Id]],
     renderInTitle: Tile.RenderInTitle
   ): VdomNode =
     AppCtx.using(implicit ctx =>
-      TargetEditor(userId, targetId, searching, renderInTitle).withKey(targetId.show)
+      TargetEditor(userId, targetId, undoStacks, searching, renderInTitle).withKey(targetId.show)
     )
 
   protected def renderFn(
@@ -88,9 +94,9 @@ object TargetTabContents {
   )(implicit ctx:     AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width) *>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
           UserWidthsCreation
-            .storeWidthPreference[IO](props.userId.get,
+            .storeWidthPreference[IO](props.userId,
                                       ResizableSection.TargetsTree,
                                       d.size.width
             )).runAsyncCB
@@ -110,7 +116,8 @@ object TargetTabContents {
           objectsWithObs,
           props.focused,
           props.expandedIds,
-          props.searching
+          props.searching,
+          props.listUndoStacks
         )
       )
 
@@ -121,7 +128,7 @@ object TargetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[IO, ButtonProps](props.focused.set(none))
+        onClickE = linkOverride[ButtonProps](props.focused.set(none))
       )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft.fitted(true))
     )
 
@@ -137,10 +144,15 @@ object TargetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide =
-      (props.userId.get, targetIdOpt).tupled match {
+      (props.userId, targetIdOpt).tupled match {
         case Some((uid, tid)) =>
           Tile("target", s"Target", backButton.some)(
-            Reuse(renderContents _)(uid, tid, props.searching)
+            Reuse(renderContents _)(
+              uid,
+              tid,
+              props.targetsUndoStacks.zoom(atMapWithDefault(tid, UndoStacks.empty)),
+              props.searching
+            )
           )
         case None             =>
           Tile("target", s"Targets Summary", backButton.some)(
@@ -192,6 +204,13 @@ object TargetTabContents {
     }
   }
 
+  protected class Backend($ : BackendScope[Props, State]) {
+    def render(props: Props) = {
+      implicit val ctx = props.ctx
+      TargetObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromStateSyncIO($)))
+    }
+  }
+
   protected val component =
     ScalaComponent
       .builder[Props]
@@ -204,10 +223,7 @@ object TargetTabContents {
             else s
         }
       )
-      .render { $ =>
-        implicit val ctx = $.props.ctx
-        TargetObsLiveQuery(Reuse(renderFn _)($.props, ViewF.fromState($)))
-      }
+      .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
       .build

@@ -17,22 +17,26 @@ import lucuma.core.model.Target
 trait ObservationDB {
   object Scalars {
     // Ids
-    type AsterismId      = Asterism.Id
-    type AtomId          = Atom.Id
-    type ConstraintSetId = ConstraintSet.Id
-    type ObservationId   = Observation.Id
-    type ProgramId       = String
-    type StepId          = Step.Id
-    type TargetId        = Target.Id
+    type AsterismId       = Asterism.Id
+    type AtomId           = Atom.Id
+    type ConstraintSetId  = ConstraintSet.Id
+    type ObservationId    = Observation.Id
+    type ProgramId        = String
+    type StepId           = Step.Id
+    type TargetId         = Target.Id
+    type ExecutionEventId = String
     // Basic types
-    type BigDecimal      = scala.BigDecimal
-    type Long            = scala.Long
+    type BigDecimal       = scala.BigDecimal
+    type Long             = scala.Long
     // Formatted strings
-    type DmsString       = String
-    type EpochString     = String
-    type HmsString       = String
+    type DmsString        = String
+    type EpochString      = String
+    type HmsString        = String
+    type DatasetFilename  = String
     // Refined
-    type NonEmptyString  = eu.timepit.refined.types.string.NonEmptyString
+    type NonEmptyString   = eu.timepit.refined.types.string.NonEmptyString
+    // Time
+    type Instant          = java.time.Instant
   }
 
   object Enums {

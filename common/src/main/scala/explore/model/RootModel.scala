@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -33,7 +34,8 @@ case class RootModel(
     Set("epoch", "pmra", "pmdec", "parallax", "morphology", "sed") ++
       MagnitudeBand.all
         .filterNot(_ === MagnitudeBand.V)
-        .map(b => (b.shortName + "mag"))
+        .map(b => (b.shortName + "mag")),
+  undoStacks:                 ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 )
 
 object RootModel {
@@ -60,7 +62,8 @@ object RootModel {
        m.expandedIds,
        m.searchingTarget,
        m.userSelectionMessage,
-       m.targetSummaryHiddenColumns
+       m.targetSummaryHiddenColumns,
+       m.undoStacks
       )
     )
 }

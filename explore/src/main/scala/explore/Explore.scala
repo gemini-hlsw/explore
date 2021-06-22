@@ -4,13 +4,16 @@
 package explore
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.effect.std.Dispatcher
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
+import cats.~>
 import clue.WebSocketReconnectionStrategy
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
@@ -62,6 +65,10 @@ object ExploreMain {
 
   private var releaseOldDispatcher: Option[IO[Unit]] = none
 
+  val syncIOtoIO: SyncIO ~> IO = new ~>[SyncIO, IO] {
+    def apply[A](fa: SyncIO[A]): IO[A] = fa.to[IO]
+  }
+
   @JSExport
   def runIOApp(): Unit =
     (releaseOldDispatcher.orEmpty >>
@@ -107,7 +114,7 @@ object ExploreMain {
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, reason) =>
         // Web Socket close codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
-        if (reason.exists(_.code === 1000))
+        if (reason.toOption.flatMap(_.toOption.flatMap(_.code)).exists(_ === 1000))
           none
         else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
           FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
@@ -149,7 +156,9 @@ object ExploreMain {
 
         def routingView(view: View[RootModel]): View[RootModel] =
           view.withOnMod { model =>
-            routerCtl.set(RootModelRouting.lens.get(model)).to[IO]
+            routerCtl
+              .set(RootModelRouting.lens.get(model))
+              .to[SyncIO]
           }
 
         def rootComponent(view: View[RootModel]): VdomElement =
@@ -165,27 +174,33 @@ object ExploreMain {
           appConfig            <- fetchConfig
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
-          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl)
+          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, syncIOtoIO)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {
           val RootComponent =
-            ContextProvider[IO](AppCtx, ctx)(
-              ContextProvider[IO](
-                HelpCtx,
-                HelpContext(
-                  rawUrl = uri"https://raw.githubusercontent.com",
-                  editUrl = uri"https://github.com",
-                  user = "gemini-hlsw",
-                  project = "explore-help-docs",
-                  displayedHelp = none
-                )
-              )(
-                StateProvider[IO](initialModel(vault))(rootView => rootComponent(rootView))
+            ContextProviderSyncIO(AppCtx, ctx)
+
+          val HelpContextComponent =
+            ContextProviderSyncIO(
+              HelpCtx,
+              HelpContext(
+                rawUrl = uri"https://raw.githubusercontent.com",
+                editUrl = uri"https://github.com",
+                user = "gemini-hlsw",
+                project = "explore-help-docs",
+                displayedHelp = none
               )
             )
 
-          RootComponent().renderIntoDOM(container)
+          val StateProviderComponent =
+            StateProviderSyncIO(initialModel(vault))
+
+          RootComponent(
+            (HelpContextComponent(
+              (StateProviderComponent((rootComponent _).reuseAlways): VdomNode).reuseAlways
+            ): VdomNode).reuseAlways
+          ).renderIntoDOM(container)
 
           releaseDispatcher
         }

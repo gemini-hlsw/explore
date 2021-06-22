@@ -32,8 +32,8 @@ class ModesSuite extends CatsEffectSuite {
   override def munitFixtures = List(fixture)
 
   test("csv loading") {
-    IO(fixture()).map(_.matrix.foreach(println)) *>
-      IO(fixture()).map(_.matrix.length).assertEquals(101)
+    // IO(fixture()).map(_.matrix.foreach(println)) *>
+    IO(fixture()).map(_.matrix.length).assertEquals(101)
   }
 
   test("spectroscopy selection") {
@@ -53,7 +53,7 @@ class ModesSuite extends CatsEffectSuite {
           wlen = Wavelength.fromNanometers(800)
         )
       )
-      .flatTap(_.traverse(IO.println))
+      // .flatTap(_.traverse(IO.println))
       .map(_.length)
       .assertEquals(17)
   }

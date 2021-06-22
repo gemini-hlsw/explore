@@ -3,8 +3,10 @@
 
 package explore.model
 
+import cats.data.NonEmptyList
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.undo.UndoStacks
 import japgolly.scalajs.react.CatsReact._
 import japgolly.scalajs.react.Key
 import japgolly.scalajs.react.Reusability
@@ -17,6 +19,14 @@ import react.common.Size
  * Reusability instances for model classes
  */
 object reusability {
+  // Move to lucuma-ui
+  implicit val bigDecimalReuse: Reusability[BigDecimal]                               = Reusability.byEq
+  implicit val offsetReuse: Reusability[Offset]                                       = Reusability.byEq
+  implicit val wavelengthReuse: Reusability[Wavelength]                               = Reusability.byEq
+  implicit val keyReuse: Reusability[Key]                                             = Reusability.by_==
+  implicit def nelReuse[A: Reusability]: Reusability[NonEmptyList[A]]                 =
+    Reusability.by(nel => (nel.head, nel.tail))
+  // Model
   implicit val statusReuse: Reusability[PersistentClientStatus]                       = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                   = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                 = Reusability.byEq
@@ -38,9 +48,9 @@ object reusability {
     Reusability.byEq
   implicit val obsSummaryWithPointingAndConstraintsReuse
     : Reusability[ObsSummaryWithPointingAndConstraints]                               = Reusability.byEq
-  // Move to lucuma-ui
-  implicit val bigDecimalReuse: Reusability[BigDecimal]                               = Reusability.byEq
-  implicit val offsetReuse: Reusability[Offset]                                       = Reusability.byEq
-  implicit val wavelengthReuse: Reusability[Wavelength]                               = Reusability.byEq
-  implicit val keyReuse: Reusability[Key]                                             = Reusability.by_==
+  implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]                =
+    Reusability.by(s => (s.undo.length, s.redo.length, s.working))
+  implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]]  =
+    Reusability.never
+  implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]            = Reusability.derive
 }
