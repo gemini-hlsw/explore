@@ -7,7 +7,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.semanticui.sizes.Huge
+import react.fa.IconSize
 
 object UnderConstruction {
 
@@ -20,7 +20,7 @@ object UnderConstruction {
           ExploreStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(ExploreStyles.HVCenter, Icons.Cogs.copy(size = Huge))
+            <.div(ExploreStyles.HVCenter, Icons.Cogs.size(IconSize.X5).title("Under construction"))
           )
         )
       }

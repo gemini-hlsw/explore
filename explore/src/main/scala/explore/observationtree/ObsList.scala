@@ -40,6 +40,7 @@ import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.util.Random
@@ -156,7 +157,7 @@ object ObsList {
             <.div(ExploreStyles.ObsScrollTree)(
               <.div(
                 Button(onClick = props.focused.set(none), clazz = ExploreStyles.ButtonSummary)(
-                  Icons.List,
+                  Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
                   "Observations Summary"
                 )
               ),

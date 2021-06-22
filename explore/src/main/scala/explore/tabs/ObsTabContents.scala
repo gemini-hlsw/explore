@@ -289,7 +289,7 @@ object ObsTabContents {
           compact = true,
           clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
           onClickE = linkOverride[ButtonProps](props.focused.set(none))
-        )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft.fitted(true))
+        )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
       )
 
       val coreWidth =

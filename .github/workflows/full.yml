@@ -1,6 +1,6 @@
 name: full
 
-on: [push, pull_request]
+on: push
 
 jobs:
   build:
@@ -16,6 +16,7 @@ jobs:
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: |
           sbt stage
           npm install

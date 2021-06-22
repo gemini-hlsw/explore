@@ -216,7 +216,7 @@ object ExploreStyles {
   val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))
 
   // Help styles
-  val HelpIcon: Css         = Css("explore-help-button")
+  val HelpIcon: Css         = Css("explore-help-icon")
   val HelpSidebar: Css      = Css("explore-help-sidebar")
   val HelpTitle: Css        = Css("explore-help-title")
   val HelpTitleLabel: Css   = Css("explore-help-title-label")
@@ -252,4 +252,8 @@ object ExploreStyles {
   val Sticky: Css            = Css("sticky")
   val TargetSummaryType: Css = Css("explore-target-summary-type")
   val TargetSummaryName: Css = Css("explore-target-summary-name")
+
+  val ModalCloseButton: Css     = Css("modal-close-button")
+  val UserSelectionButtons: Css = Css("user-selection-buttons")
+  val PaddedRightIcon: Css      = Css("padded-right-icon")
 }

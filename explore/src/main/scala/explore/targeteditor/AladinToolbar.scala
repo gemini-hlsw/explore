@@ -14,6 +14,7 @@ import react.aladin.Fov
 import react.aladin.reusability._
 import react.common.ReactProps
 import react.semanticui.elements.label._
+import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 
 import scala.math.rint
@@ -70,7 +71,7 @@ object AladinToolbar {
       .render_P((props: Props) =>
         React.Fragment(
           Label(
-            icon = Icons.Expand.fitted(true).clazz(ExploreStyles.Accented),
+            icon = Icons.Maximize.clazz(ExploreStyles.Accented),
             clazz = ExploreStyles.AladinFOV,
             size = Small,
             detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,
@@ -79,7 +80,7 @@ object AladinToolbar {
             )
           ),
           Label(
-            icon = Icons.MousePointer.fitted(true).clazz(ExploreStyles.Accented),
+            icon = Icons.MousePointer.clazz(ExploreStyles.Accented),
             clazz = ExploreStyles.AladinCurrentCoords,
             size = Small,
             detail = LabelDetail(clazz = ExploreStyles.AladinDetailText,

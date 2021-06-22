@@ -7,6 +7,8 @@ val reactJS              = "16.13.1"
 val FUILess              = "2.8.7"
 val kindProjectorVersion = "0.13.0"
 
+ThisBuild / Test / bspEnabled := false
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
@@ -32,7 +34,7 @@ inThisBuild(
     scalacOptions += "-Ymacro-annotations",
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     scalafixDependencies += "edu.gemini" %% "clue-generator" % Settings.LibraryVersions.clue,
-    scalafixScalaBinaryVersion := "2.13"
+    scalafixScalaBinaryVersion := "2.13",
   ) ++ lucumaPublishSettings
 )
 

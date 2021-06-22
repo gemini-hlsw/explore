@@ -11,11 +11,11 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.implicits._
 import explore.model.Clients
-import lucuma.ui.reusability._
 import io.circe.Json
 import io.circe.syntax._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reusability._
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 import react.semanticui.elements.loader.Loader

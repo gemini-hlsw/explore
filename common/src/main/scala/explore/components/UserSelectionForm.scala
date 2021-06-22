@@ -25,6 +25,7 @@ import react.semanticui.elements.label.Label
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 import react.semanticui.modules.modal.ModalSize
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 final case class UserSelectionForm(
@@ -73,21 +74,29 @@ object UserSelectionForm {
               <.div(
                 ExploreStyles.LoginBoxLayout,
                 Logo(),
-                Button(
-                  content = <.div(ExploreStyles.LoginOrcidButton,
-                                  Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
-                                  "Login with ORCID"
-                  ),
-                  clazz = ExploreStyles.LoginBoxButton,
-                  size = Big,
-                  onClick = p.login >> p.message.set(none)
-                ).when(s.showButtons),
-                Button(content = "Continue as Guest",
-                       size = Big,
-                       clazz = ExploreStyles.LoginBoxButton,
-                       onClick = p.guest >> p.message.set(none),
-                       icon = Icons.UserAstronaut
-                ).when(s.showButtons),
+                <.div(
+                  ExploreStyles.UserSelectionButtons,
+                  Button(
+                    content =
+                      <.div(ExploreStyles.LoginOrcidButton,
+                            Image(clazz = ExploreStyles.OrcidIcon, src = Resources.OrcidLogo),
+                            "Login with ORCID"
+                      ),
+                    clazz = ExploreStyles.LoginBoxButton,
+                    size = Big,
+                    onClick = p.login >> p.message.set(none)
+                  ).when(s.showButtons),
+                  Button(
+                    content = <.div(ExploreStyles.LoginOrcidButton,
+                                    Icons.UserAstronaut
+                                      .clazz(ExploreStyles.OrcidIcon),
+                                    "Continue as Guest"
+                    ),
+                    size = Big,
+                    clazz = ExploreStyles.LoginBoxButton,
+                    onClick = p.guest >> p.message.set(none)
+                  ).when(s.showButtons)
+                ),
                 p.message.get.whenDefined(message =>
                   Label(size = Large,
                         clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
@@ -96,13 +105,13 @@ object UserSelectionForm {
                 Label(size = Large,
                       clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.ErrorLabel
                 )(
-                  Icons.SkullCrossBones.size(Big),
+                  Icons.SkullCrossBones,
                   "This version of Safari isn't supported. Try a newer version (≥14.0.1) or a recent version of Chrome or Firefox."
                 ).unless(s.supportedOrcidBrowser),
                 Label(size = Large,
                       clazz = ExploreStyles.LoginBoxButton |+| ExploreStyles.WarningLabel
                 )(
-                  Icons.WarningSign.size(Big),
+                  Icons.ExclamationTriangle,
                   "ORCID authentication does not work with some configurations of Safari and MacOS. If it doesn't work for you please try Chrome or Firefox."
                 ).when(s.warnBrowser)
               )

@@ -66,6 +66,7 @@ object ObsBadge {
             size = Small,
             compact = true,
             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
+            icon = true,
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
               e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
                 .map(cb => cb.value(props.obs.id).toCB)

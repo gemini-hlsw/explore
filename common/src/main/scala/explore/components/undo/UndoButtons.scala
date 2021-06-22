@@ -11,6 +11,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
 import react.semanticui.elements.button._
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 final case class UndoButtons[A](

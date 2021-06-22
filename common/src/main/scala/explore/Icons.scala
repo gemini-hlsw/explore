@@ -4,48 +4,204 @@
 package explore
 
 import explore.components.ui.ExploreStyles
-import react.semanticui.elements.icon.Icon
-import react.semanticui.sizes.Small
+import react.fa.FAIcon
+import react.fa.FontAwesomeIcon
+import react.fa.IconLibrary
 
+import scala.annotation.nowarn
+import scala.scalajs.js
+import scala.scalajs.js.annotation._
+
+@nowarn
 object Icons {
-  val Bars                = Icon("bars")
-  val Home                = Icon("home")
-  val Cogs                = Icon("cogs")
-  val Undo                = Icon("undo alternate")
-  val Redo                = Icon("redo alternate")
-  val New                 = Icon("plus")
-  val Delete              = Icon("trash alternate outline")
-  val Bullseye            = Icon("bullseye")
-  val Crosshairs          = Icon("crosshairs")
-  val UserCircle          = Icon("user circle")
-  val Lock                = Icon("lock")
-  val User                = Icon("user")
-  val CircleNotched       = Icon("circle notched")
-  val Edit                = Icon("edit")
-  val Search              = Icon("search")
-  val ChevronRight        = Icon("chevron right")
-  val ChevronLeft         = Icon("chevron left")
-  val Sort                = Icon("sort")
-  val SortDown            = Icon("sort down")
-  val SortUp              = Icon("sort up")
-  val ExclamationTriangle = Icon("exclamation triangle")
-  val Ban                 = Icon("ban")
-  val UserAstronaut       = Icon(className = "user-astronaut")
-  val Logout              = Icon("sign out alternate")
-  val SkullCrossBones     = Icon(className = "skull crossbones")
-  val WarningSign         = Icon("warning sign")
-  val Info                = Icon("info circle")
-  val Clipboard           = Icon("clipboard outline")
-  val ClipboardCheck      = Icon("clipboard check")
-  val Close               = Icon("close")
-  val MousePointer        = Icon("mouse pointer")
-  val Expand              = Icon("expand")
-  val Minimize            = Icon(className = "compress alt")
-  val Maximize            = Icon(className = "expand alt")
-  val Checkmark           = Icon("checkmark")
-  val Remove              = Icon("remove")
-  val Trash               = Delete.size(Small).fitted(true).clazz(ExploreStyles.TrashIcon)
-  val Copy                = Icon("copy")
-  val List                = Icon("list alternate outline")
-  val Question            = Icon("question circle")
+  @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faCogs")
+  val faCogs: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faUndo")
+  val faUndo: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faRedo")
+  val faRedo: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faBars")
+  val faBars: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashAlt")
+  val faTrash: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faCrosshairs")
+  val faCrosshairs: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faBullseye")
+  val faBullseye: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faPlus")
+  val faPlus: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faEdit")
+  val faEdit: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSearch")
+  val faSearch: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faBan")
+  val faBan: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faMousePointer")
+  val faMousePointer: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSignOutAlt")
+  val faSignOutAlt: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faInfoCircle")
+  val faInfoCircle: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboard")
+  val faClipboard: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faClipboardCheck")
+  val faClipboardCheck: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTimes")
+  val faTimes: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faUserAstronaut")
+  val faUserAstronaut: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faExclamationTriangle")
+  val faExclamationTriangle: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSkullCrossbones")
+  val faSkullCrossbones: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faCheck")
+  val faCheck: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSort")
+  val faSort: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortUp")
+  val faSortUp: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSortDown")
+  val faSortDown: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronRight")
+  val faChevronRight: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronLeft")
+  val faChevronLeft: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronDown")
+  val faChevronDown: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faListAlt")
+  val faListAlt: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faCompress")
+  val faCompress: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faExpand")
+  val faExpand: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faStar")
+  val faStar: FAIcon = js.native
+
+  // This is tedious but lets us do proper tree-shaking
+  IconLibrary.add(
+    faCogs,
+    faBars,
+    faUndo,
+    faRedo,
+    faPlus,
+    faTrash,
+    faBullseye,
+    faCrosshairs,
+    faEdit,
+    faSearch,
+    faBan,
+    faMousePointer,
+    faSignOutAlt,
+    faInfoCircle,
+    faClipboard,
+    faClipboardCheck,
+    faTimes,
+    faUserAstronaut,
+    faExclamationTriangle,
+    faSkullCrossbones,
+    faCheck,
+    faSort,
+    faSortUp,
+    faSortDown,
+    faChevronRight,
+    faChevronLeft,
+    faChevronDown,
+    faListAlt,
+    faCompress,
+    faExpand,
+    faStar
+  )
+
+  val Bars                = FontAwesomeIcon(faBars)
+  val Cogs                = FontAwesomeIcon(faCogs)
+  val Undo                = FontAwesomeIcon(faUndo)
+  val Redo                = FontAwesomeIcon(faRedo)
+  val New                 = FontAwesomeIcon(faPlus)
+  val Trash               = FontAwesomeIcon(faTrash).clazz(ExploreStyles.TrashIcon)
+  val Bullseye            = FontAwesomeIcon(faBullseye)
+  val Crosshairs          = FontAwesomeIcon(faCrosshairs)
+  val Edit                = FontAwesomeIcon(faEdit)
+  val Search              = FontAwesomeIcon(faSearch)
+  val ChevronRight        = FontAwesomeIcon(faChevronRight)
+  val ChevronLeft         = FontAwesomeIcon(faChevronLeft)
+  val ChevronDown         = FontAwesomeIcon(faChevronDown)
+  val Ban                 = FontAwesomeIcon(faBan)
+  val Sort                = FontAwesomeIcon(faSort)
+  val SortDown            = FontAwesomeIcon(faSortDown)
+  val SortUp              = FontAwesomeIcon(faSortUp)
+  val ExclamationTriangle = FontAwesomeIcon(faExclamationTriangle)
+  val UserAstronaut       = FontAwesomeIcon(faUserAstronaut)
+  val Logout              = FontAwesomeIcon(faSignOutAlt)
+  val SkullCrossBones     = FontAwesomeIcon(faSkullCrossbones)
+  val Info                = FontAwesomeIcon(faInfoCircle)
+  val Clipboard           = FontAwesomeIcon(faClipboard)
+  val ClipboardCheck      = FontAwesomeIcon(faClipboardCheck)
+  val Close               = FontAwesomeIcon(faTimes)
+  val MousePointer        = FontAwesomeIcon(faMousePointer)
+  val Minimize            = FontAwesomeIcon(faCompress)
+  val Maximize            = FontAwesomeIcon(faExpand)
+  val Checkmark           = FontAwesomeIcon(faCheck)
+  val ListIcon            = FontAwesomeIcon(faListAlt)
+  val Star                = FontAwesomeIcon(faStar)
 }

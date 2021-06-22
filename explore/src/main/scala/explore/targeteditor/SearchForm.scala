@@ -27,7 +27,7 @@ import react.common._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
-import react.semanticui.sizes._
+import react.semanticui.shorthand._
 
 import scalajs.js.JSConverters._
 
@@ -97,18 +97,16 @@ object SearchForm {
 
       val searchIcon =
         (if (state.searchEnabled)
-           Icons.Search
-             .link(true)(
-               ^.onKeyPress ==> iconKeyPress,
-               ^.onClick --> search
-             )
+           Icons.Search.addModifiers(
+             Seq(^.onKeyPress ==> iconKeyPress, ^.onClick --> search)
+           )
          else
            Icons.Ban)
           .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
 
       val disabled   = props.searching.get.exists(_ === props.id)
 
-      Form(size = Small, clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
+      Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",

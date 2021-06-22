@@ -9,6 +9,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -18,6 +19,7 @@ import monocle.macros.Lenses
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
+import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
 
 /**
@@ -55,6 +57,7 @@ object InputModal {
             size = Small,
             primary = true,
             disabled = state.inputValue.isEmpty,
+            icon = true,
             onClick = cleanInput *> props.onComplete(
               NonEmptyString.from(state.inputValue).getOrElse("------")
             )
@@ -62,14 +65,14 @@ object InputModal {
             Icons.Checkmark,
             props.okLabel
           )(^.key := "input-ok"),
-          Button(size = Small, onClick = cleanInput)(
-            Icons.Remove,
+          Button(size = Small, icon = true, onClick = cleanInput)(
+            Icons.Close,
             "Cancel"
           )(^.key := "input-cancel")
         ),
         centered = false, //Works betten on iOS
         trigger = props.trigger.value,
-        closeIcon = Icons.Close,
+        closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
         dimmer = Dimmer.Blurring,
         size = ModalSize.Small,
         onClose = cleanInput,
