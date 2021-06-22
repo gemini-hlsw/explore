@@ -253,21 +253,21 @@ object TargetObsList {
     )(implicit
       c:        TransactionalClient[IO, ObservationDB]
     ): targetListMod.Operation => SyncIO[Unit] = {
-      val getAdjust: GetAdjust[PointingsWithObs, targetListMod.ElemWithIndex] =
+      val getAdjust: GetAdjust[PointingsWithObs, targetListMod.ElemWithIndexOpt] =
         PointingsWithObs.targets.composeGetAdjust(
           targetListMod.withKey(targetId)
         )
 
       setter
-        .mod[targetListMod.ElemWithIndex](
+        .mod[targetListMod.ElemWithIndexOpt](
           getAdjust.get,
           getAdjust.set,
-          onSet = (_: targetListMod.ElemWithIndex).fold(
+          onSet = (_: targetListMod.ElemWithIndexOpt).fold(
             deleteTarget(targetId)
           ) { case (target, _) =>
             insertTarget(target) >> focusSet(FocusedTarget(targetId).some).to[IO]
           },
-          onRestore = (_: targetListMod.ElemWithIndex).fold(
+          onRestore = (_: targetListMod.ElemWithIndexOpt).fold(
             deleteTarget(targetId)
           ) { case (target, _) =>
             undeleteTarget(target.id) >> focusSet(FocusedTarget(target.id).some).to[IO]
@@ -358,21 +358,21 @@ object TargetObsList {
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]
     ): asterismListMod.Operation => SyncIO[Unit] = {
-      val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndex] =
+      val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndexOpt] =
         PointingsWithObs.asterisms.composeGetAdjust(
           asterismListMod.withKey(asterismId)
         )
 
       setter
-        .mod[asterismListMod.ElemWithIndex](
+        .mod[asterismListMod.ElemWithIndexOpt](
           getAdjust.get,
           getAdjust.set,
-          onSet = (_: asterismListMod.ElemWithIndex).fold(
+          onSet = (_: asterismListMod.ElemWithIndexOpt).fold(
             deleteAsterism(asterismId)
           ) { case (asterism, _) =>
             insertAsterism(asterism) >> focusSet(FocusedAsterism(asterism.id).some).to[IO]
           },
-          onRestore = (_: asterismListMod.ElemWithIndex).fold(
+          onRestore = (_: asterismListMod.ElemWithIndexOpt).fold(
             deleteAsterism(asterismId)
           ) { case (asterism, _) =>
             undeleteAsterism(asterism.id) >> focusSet(FocusedAsterism(asterism.id).some).to[IO]
@@ -388,17 +388,17 @@ object TargetObsList {
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]
     ): asterismTargetListMod.Operation => SyncIO[Unit] = {
-      val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndex] =
+      val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndexOpt] =
         PointingsWithObs.asterisms.composeGetAdjust(asterismListMod.withKey(asterismId))
 
-      val targetWithId: GetAdjust[AsterismTargetList, asterismTargetListMod.ElemWithIndex] =
+      val targetWithId: GetAdjust[AsterismTargetList, asterismTargetListMod.ElemWithIndexOpt] =
         asterismTargetListMod.withKey(targetId)
 
-      val getter: Getter[PointingsWithObs, asterismTargetListMod.ElemWithIndex] =
+      val getter: Getter[PointingsWithObs, asterismTargetListMod.ElemWithIndexOpt] =
         getAdjust.getter
           .map(_.map(_._1.targets).map(targetWithId.getter.get).flatten)
 
-      val adjuster: Adjuster[PointingsWithObs, asterismTargetListMod.ElemWithIndex] =
+      val adjuster: Adjuster[PointingsWithObs, asterismTargetListMod.ElemWithIndexOpt] =
         getAdjust.adjuster
           .composePrism(some)
           .composeLens(first)
@@ -406,10 +406,10 @@ object TargetObsList {
           .composeAdjuster(targetWithId.adjuster)
 
       setter
-        .mod[asterismTargetListMod.ElemWithIndex](
+        .mod[asterismTargetListMod.ElemWithIndexOpt](
           getter.get,
           adjuster.set,
-          (_: asterismTargetListMod.ElemWithIndex).fold(
+          (_: asterismTargetListMod.ElemWithIndexOpt).fold(
             unshareTargetWithAsterism(targetId, asterismId)
           ) { case (target, _) =>
             shareTargetWithAsterism(target.id, asterismId)
@@ -456,7 +456,7 @@ object TargetObsList {
       }
 
     private def obsResultToObsSummary(obs: ObsResult): ObsSummaryWithConstraints =
-      ObsSummaryWithConstraints(obs.id, obs.constraintSet)
+      ObsSummaryWithConstraints(obs.id, obs.constraintSet, obs.status, obs.plannedTime.execution)
 
     def render(props: Props) = {
       implicit val ctx = props.ctx

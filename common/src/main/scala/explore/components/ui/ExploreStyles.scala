@@ -105,6 +105,8 @@ object ExploreStyles {
   val ObsBadge: Css                = Css("obs-badge")
   val ObsBadgeId: Css              = Css("obs-badge-id")
   val ObsBadgeTargetAndId: Css     = Css("obs-badge-target-and-id")
+  val ObsBadgeExtra: Css           = Css("obs-badge-extra")
+  val ObsStatusSelect: Css         = Css("obs-status-select")
   val SelectedObsItem: Css         = Css("selected-obs-item")
   val ObsItem: Css                 = Css("obs-item")
   val TrashIcon: Css               = Css("trash-icon")

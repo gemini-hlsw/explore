@@ -113,7 +113,7 @@
 //             setter
 //               .set(tree,
 //                    getSet.getter.get,
-//                    { value: props.treeMod.ElemWithIndex =>
+//                    { value: props.treeMod.ElemWithIndexOpt =>
 //                      (modState.apply _).compose(getSet.adjuster.set)(value)
 //                    }
 //               ) _

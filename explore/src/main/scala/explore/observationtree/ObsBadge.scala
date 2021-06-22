@@ -5,6 +5,7 @@ package explore.observationtree
 
 import cats.effect.SyncIO
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -17,20 +18,25 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
+import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
+import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
+import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
 final case class ObsBadge(
-  obs:      ObsSummary, // The layout will depend on the mixins of the ObsSummary.
-  selected: Boolean = false,
-  deleteCB: Option[Observation.Id ==> SyncIO[Unit]] = None
+  obs:         ObsSummary, // The layout will depend on the mixins of the ObsSummary.
+  selected:    Boolean = false,
+  setStatusCB: Option[ObsStatus ==> SyncIO[Unit]] = None,
+  deleteCB:    Option[Observation.Id ==> SyncIO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -82,7 +88,7 @@ object ObsBadge {
             <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
           )
 
-        <.small(
+        <.div(
           Card(raised = props.selected)(ExploreStyles.ObsBadge)(
             CardContent(
               CardHeader(
@@ -110,9 +116,27 @@ object ObsBadge {
                     ReactFragment(obs.id.toString)
                 }
               ),
-              CardExtra(
-                // select new status
-                s"${obs.duration.toHours}hrs ${obs.duration.toMinutes % 60}mins"
+              CardExtra(clazz = ExploreStyles.ObsBadgeExtra)(
+                props.setStatusCB.map(setStatus =>
+                  EnumViewSelect(
+                    id = s"obs-status-${obs.id}-2",
+                    value = ViewF[SyncIO, ObsStatus](obs.status,
+                                                     { (f, cb) =>
+                                                       val newValue = f(obs.status)
+                                                       setStatus(newValue) >> cb(newValue)
+                                                     }
+                    ),
+                    compact = true,
+                    onClickE = (e: ReactEvent, _: Dropdown.DropdownProps) =>
+                      e.preventDefaultCB >> e.stopPropagationCB,
+                    onChangeE = (e: ReactEvent, _: FormDropdown.FormDropdownProps) =>
+                      e.preventDefaultCB >> e.stopPropagationCB,
+                    clazz = ExploreStyles.ObsStatusSelect
+                  )
+                ),
+                <.span(
+                  s"${obs.duration.toHours}hrs ${obs.duration.toMinutes % 60}mins"
+                )
               )
             )
           )

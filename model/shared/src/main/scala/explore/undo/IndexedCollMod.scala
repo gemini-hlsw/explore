@@ -17,14 +17,15 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   protected val valueLens: Lens[N[A], A]
   protected val pureNode: A => N[A]
 
-  type ElemWithIndex = Option[(N[A], Idx)]
-  type Operation     = ElemWithIndex => ElemWithIndex
-  type Collection    = Coll[K, A]
+  type ElemWithIndex    = (N[A], Idx)
+  type ElemWithIndexOpt = Option[ElemWithIndex]
+  type Operation        = ElemWithIndexOpt => ElemWithIndexOpt
+  type Collection       = Coll[K, A]
 
-  protected lazy val elemWithIndexKey: Optional[ElemWithIndex, K] =
+  protected lazy val ElemWithIndexOptKey: Optional[ElemWithIndexOpt, K] =
     some.composeLens(first[(N[A], Idx), N[A]]).composeLens(valueLens).composeLens(keyLens)
 
-  protected def getterForKey(key: K): Getter[Collection, ElemWithIndex]
+  protected def getterForKey(key: K): Getter[Collection, ElemWithIndexOpt]
 
   def removeWithKey(col: Collection, key: K): Collection
 
@@ -32,13 +33,13 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
 
   protected def adjusterForKey(
     key:      K,
-    getter:   Getter[Collection, ElemWithIndex],
+    getter:   Getter[Collection, ElemWithIndexOpt],
     preserve: Boolean // If true, won't modify an existing element, just its location. Deletion is still possible.
-  ): Adjuster[Collection, ElemWithIndex] =
-    Adjuster[Collection, ElemWithIndex] { mod => coll =>
+  ): Adjuster[Collection, ElemWithIndexOpt] =
+    Adjuster[Collection, ElemWithIndexOpt] { mod => coll =>
       val oldElemAndIndex        = getter.get(coll)
       val newElemAndIndex        = mod(oldElemAndIndex)
-      val newElemAndIndexWithKey = elemWithIndexKey.set(key)(newElemAndIndex) // Reinstate key
+      val newElemAndIndexWithKey = ElemWithIndexOptKey.set(key)(newElemAndIndex) // Reinstate key
 
       val baseColl = removeWithKey(coll, key)
 
@@ -50,7 +51,7 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
       }
     }
 
-  def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
+  def withKey(key: K): GetAdjust[Collection, ElemWithIndexOpt] = {
     val getter   = getterForKey(key)
     val adjuster = adjusterForKey(key, getter, preserve = false)
     GetAdjust(getter, adjuster)
@@ -79,7 +80,7 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   // End Element Operations
 
   object pos {
-    def withKey(key: K): GetAdjust[Collection, ElemWithIndex] = {
+    def withKey(key: K): GetAdjust[Collection, ElemWithIndexOpt] = {
       val getter   = getterForKey(key)
       val adjuster = adjusterForKey(key, getter, preserve = true)
       GetAdjust(getter, adjuster)

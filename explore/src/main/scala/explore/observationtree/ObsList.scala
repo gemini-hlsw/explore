@@ -30,19 +30,23 @@ import explore.observationtree.ObsBadge
 import explore.optics.GetAdjust
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
+import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.ui.utils._
+import monocle.function.Field1.first
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
+import java.time.Duration
 import scala.util.Random
 
 import ObsQueries._
@@ -57,14 +61,14 @@ final case class ObsList(
 object ObsList {
   type Props = ObsList
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  val obsListMod =
+  protected val obsListMod =
     new KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
       ObsSummaryWithPointingAndConstraints.id
     )
 
-  class Backend($ : BackendScope[Props, Unit]) {
+  protected class Backend($ : BackendScope[Props, Unit]) {
     def createObservation[F[_]](obsId: Observation.Id)(implicit
       F:                               ApplicativeError[F, Throwable],
       c:                               TransactionalClient[F, ObservationDB]
@@ -85,27 +89,42 @@ object ObsList {
     ): F[Unit] =
       ProgramUndeleteObservation.execute[F](id).void
 
+    protected def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
+      c:                                              TransactionalClient[F, ObservationDB]
+    ) = Action[F](
+      obsListMod
+        .withKey(obsId)
+        .composeOptionLens(first)
+        .composeOptionLens(ObsSummaryWithPointingAndConstraints.status)
+    )((_, status) =>
+      UpdateObservationMutation
+        .execute[F](
+          EditObservationInput(observationId = obsId, status = status.orIgnore)
+        )
+        .void
+    )
+
     private def obsMod(
-      setter:  UndoCtx[ObservationList],
+      undoCtx: UndoCtx[ObservationList],
       focused: View[Option[Focused]],
       obsId:   Observation.Id
     )(implicit
       c:       TransactionalClient[IO, ObservationDB]
     ): obsListMod.Operation => SyncIO[Unit] = {
-      val obsWithId: GetAdjust[ObservationList, obsListMod.ElemWithIndex] =
+      val obsWithId: GetAdjust[ObservationList, obsListMod.ElemWithIndexOpt] =
         obsListMod.withKey(obsId)
 
-      setter
-        .mod[obsListMod.ElemWithIndex](
+      undoCtx
+        .mod[obsListMod.ElemWithIndexOpt](
           obsWithId.getter.get,
           obsWithId.adjuster.set,
-          onSet = (_: obsListMod.ElemWithIndex).fold {
+          onSet = (_: obsListMod.ElemWithIndexOpt).fold {
             deleteObservation[IO](obsId)
           } { case (obs, _) =>
             createObservation[IO](obs.id) >>
               focused.set(Focused.FocusedObs(obs.id).some).to[IO]
           },
-          onRestore = (_: obsListMod.ElemWithIndex).fold {
+          onRestore = (_: obsListMod.ElemWithIndexOpt).fold {
             deleteObservation[IO](obsId)
           } { case (obs, _) =>
             undeleteObservation[IO](obs.id) >>
@@ -114,20 +133,22 @@ object ObsList {
         )
     }
 
-    protected def newObs(setter: UndoCtx[ObservationList])(implicit
-      c:                         TransactionalClient[IO, ObservationDB]
+    protected def newObs(undoCtx: UndoCtx[ObservationList])(implicit
+      c:                          TransactionalClient[IO, ObservationDB]
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt(0xfff)).map(int =>
         ObsSummaryWithPointingAndConstraints(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
                                              pointing = none,
-                                             constraints = ConstraintsSummary.default
+                                             constraints = ConstraintsSummary.default,
+                                             ObsStatus.New,
+                                             Duration.ZERO
         )
       )
 
       $.propsIn[IO] >>= { props =>
         newObs >>= { obs =>
-          val mod = obsMod(setter, props.focused, obs.id)
+          val mod = obsMod(undoCtx, props.focused, obs.id)
           mod(obsListMod.upsert(obs, props.observations.get.length)).to[IO]
         }
       }
@@ -174,6 +195,8 @@ object ObsList {
                   ObsBadge(
                     obs,
                     selected = selected,
+                    setStatusCB = (obsStatus[IO](obs.id)
+                      .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
                     deleteCB = (deleteObs _).reuseAlways.some
                   )
                 )

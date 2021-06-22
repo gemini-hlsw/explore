@@ -46,7 +46,9 @@ object ObsQueries {
       data.observations.nodes.map(node =>
         ObsSummaryWithPointingAndConstraints(node.id,
                                              node.observationTarget.map(convertPointing),
-                                             node.constraintSet
+                                             node.constraintSet,
+                                             node.status,
+                                             node.plannedTime.execution
         )
       ),
       ObsSummaryWithPointingAndConstraints.id.get

@@ -8,7 +8,6 @@ import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.formats._
@@ -91,62 +90,61 @@ object RVInput {
     modZ => rvToRedshiftMod(rsOpt => modZ(rsOpt.map(_.toApparentRadialVelocity)).map(_.toRedshift))
 
   class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props, state: State) =
-      AppCtx.using { implicit ctx =>
-        val rvView = ViewF.fromStateSyncIO($).zoom(State.rvView)
-        val input  = state.rvView match {
-          case RVView.Z  =>
-            FormInputEV(
-              id = state.rvView.tag,
-              value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
-              errorClazz = ExploreStyles.InputErrorTooltip,
-              errorPointing = LabelPointing.Below,
-              validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
-              changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
-              clazz = ExploreStyles.Grow(1),
-              disabled = props.disabled
-            )
-          case RVView.CZ =>
-            FormInputEV(
-              id = state.rvView.tag,
-              value = props.value.zoom(rvToARVGet)(rvToARVMod),
-              errorClazz = ExploreStyles.InputErrorTooltip,
-              errorPointing = LabelPointing.Below,
-              validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
-              changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
-              clazz = ExploreStyles.Grow(1),
-              disabled = props.disabled
-            )
-          case RVView.RV =>
-            FormInputEV(
-              id = state.rvView.tag,
-              value = props.value,
-              errorClazz = ExploreStyles.InputErrorTooltip,
-              errorPointing = LabelPointing.Below,
-              validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
-              changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
-              clazz = ExploreStyles.Grow(1),
-              disabled = props.disabled
-            )
-        }
-        val label  = state.rvView match {
-          case RVView.Z  =>
-            state.rvView.tag.value
-          case RVView.CZ =>
-            state.rvView.tag.value
-          case RVView.RV =>
-            state.rvView.tag.value
-        }
-        React.Fragment(
-          <.label(label, ExploreStyles.SkipToNext),
-          <.div(
-            ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls,
-            EnumViewSelect[RVView](id = "view", value = rvView, disabled = props.disabled),
-            input
-          ),
-          state.units
-        )
+    def render(props: Props, state: State) = {
+      val rvView = ViewF.fromStateSyncIO($).zoom(State.rvView)
+      val input  = state.rvView match {
+        case RVView.Z  =>
+          FormInputEV(
+            id = state.rvView.tag,
+            value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below,
+            validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
+            changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
+            clazz = ExploreStyles.Grow(1),
+            disabled = props.disabled
+          )
+        case RVView.CZ =>
+          FormInputEV(
+            id = state.rvView.tag,
+            value = props.value.zoom(rvToARVGet)(rvToARVMod),
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below,
+            validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
+            changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
+            clazz = ExploreStyles.Grow(1),
+            disabled = props.disabled
+          )
+        case RVView.RV =>
+          FormInputEV(
+            id = state.rvView.tag,
+            value = props.value,
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below,
+            validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
+            changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
+            clazz = ExploreStyles.Grow(1),
+            disabled = props.disabled
+          )
       }
+      val label  = state.rvView match {
+        case RVView.Z  =>
+          state.rvView.tag.value
+        case RVView.CZ =>
+          state.rvView.tag.value
+        case RVView.RV =>
+          state.rvView.tag.value
+      }
+      React.Fragment(
+        <.label(label, ExploreStyles.SkipToNext),
+        <.div(
+          ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls,
+          EnumViewSelect[RVView](id = "view", value = rvView, disabled = props.disabled),
+          input
+        ),
+        state.units
+      )
+    }
   }
 
   val component =

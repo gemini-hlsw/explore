@@ -63,14 +63,12 @@ trait ListImplicits {
 }
 
 trait ContextImplicits {
-  implicit def appContext2Dispatcher[F[_]](implicit ctx:   AppContext[F]): Dispatcher[F]  =
+  implicit def appContext2Dispatcher[F[_]](implicit ctx: AppContext[F]): Dispatcher[F] =
     ctx.dispatcher
-  implicit def appContext2Logger[F[_]](implicit ctx:       AppContext[F]): Logger[F]      =
+  implicit def appContext2Logger[F[_]](implicit ctx:     AppContext[F]): Logger[F]     =
     ctx.logger
-  implicit def appContext2SyncIOLogger[F[_]](implicit ctx: AppContext[F]): Logger[SyncIO] =
-    ctx.syncLogger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
-    ctx:                                                   AppContext[F]
+    ctx:                                                 AppContext[F]
   ): WebSocketClient[F, UserPreferencesDB] =
     ctx.clients.preferencesDB
   implicit def appContext2ODBClient[F[_]](implicit

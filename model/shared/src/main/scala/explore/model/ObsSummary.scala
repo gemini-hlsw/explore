@@ -13,12 +13,11 @@ import lucuma.core.model.Observation
 import monocle.macros.Lenses
 
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 trait ObsSummary {
   val id: Observation.Id
-  val status: ObsStatus  = ObsStatus.New
-  val duration: Duration = Duration.of(93, ChronoUnit.MINUTES)
+  val status: ObsStatus
+  val duration: Duration
 }
 
 object ObsSummary {
@@ -61,8 +60,8 @@ trait ObsWithPointing extends ObsSummary {
 case class ObsSummaryWithConstraints(
   override val id:          Observation.Id,
   override val constraints: ConstraintsSummary,
-  override val status:      ObsStatus = ObsStatus.New,
-  override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
+  override val status:      ObsStatus,
+  override val duration:    Duration
 ) extends ObsSummary
     with ObsWithConstraints
 
@@ -76,8 +75,8 @@ case class ObsSummaryWithPointingAndConstraints(
   override val id:          Observation.Id,
   override val pointing:    Option[Pointing],
   override val constraints: ConstraintsSummary,
-  override val status:      ObsStatus = ObsStatus.New,
-  override val duration:    Duration = Duration.of(93, ChronoUnit.MINUTES)
+  override val status:      ObsStatus,
+  override val duration:    Duration
 ) extends ObsSummary
     with ObsWithPointing
     with ObsWithConstraints
