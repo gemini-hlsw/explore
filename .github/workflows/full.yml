@@ -9,11 +9,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: coursier/cache-action@v6
+      - uses: c-hive/gha-npm-cache@v1
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
       - name: Set up Scala
         uses: olafurpg/setup-scala@v12
         with:
           java-version: adopt@1.11
       - name: Build application
+        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
