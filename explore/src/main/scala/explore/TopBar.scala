@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.Resources
 import explore.components.About
@@ -94,24 +95,27 @@ object TopBar {
                            simple = true,
                            compact = true,
                            icon = Icons.Bars,
+                           open = false,
                            clazz = ExploreStyles.MainMenuDropdown
                   )(
                     DropdownMenu(
                       About(
-                        DropdownItem(text = "About Explore", icon = Icons.Info),
-                        <.span(ExploreStyles.Version,
-                               ExploreStyles.VersionUncopied.when(! $.state.copied)
-                        )(
-                          s"Version: ${appCtx.version}",
-                          CopyToClipboard(
-                            text = appCtx.version.value,
-                            onCopy = (_, copied) =>
-                              $.setStateL(State.copied)(copied) >>
-                                $.setStateL(State.copied)(false).delayMs(1500).toCallback
+                        Reuse.always(DropdownItem(text = "About Explore", icon = Icons.Info)),
+                        Reuse.always(
+                          <.span(ExploreStyles.Version,
+                                 ExploreStyles.VersionUncopied.when(! $.state.copied)
                           )(
-                            <.span(
-                              Icons.Clipboard.when(! $.state.copied),
-                              Icons.ClipboardCheck.when($.state.copied)
+                            s"Version: ${appCtx.version}",
+                            CopyToClipboard(
+                              text = appCtx.version.value,
+                              onCopy = (_, copied) =>
+                                $.setStateL(State.copied)(copied) >>
+                                  $.setStateL(State.copied)(false).delayMs(1500).toCallback
+                            )(
+                              <.span(
+                                Icons.Clipboard.when(! $.state.copied),
+                                Icons.ClipboardCheck.when($.state.copied)
+                              )
                             )
                           )
                         )
