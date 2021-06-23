@@ -125,9 +125,9 @@ object ConstraintsPanel {
         remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
       ) = {
         val id = label.toLowerCase().replaceAll(" ", "-")
-        EnumViewSelect(id = id,
-                       value = undoViewSet(lens, remoteSet),
-                       label = Label(label, HelpIcon(helpId))
+        ReactFragment(
+          <.label(label, HelpIcon(helpId)),
+          EnumViewSelect(id = id, value = undoViewSet(lens, remoteSet))
         )
       }
 
@@ -143,7 +143,7 @@ object ConstraintsPanel {
             UndoButtons(undoCtx)
           )
         ),
-        Form(loading = state.get.copying)(ExploreStyles.Grid, ExploreStyles.ConstraintsGrid)(
+        Form(loading = state.get.copying, clazz = ExploreStyles.ConstraintsGrid)(
           FormInputEV(
             id = "name",
             label = Label("Name", HelpIcon("constraints/main/name.md")),
@@ -174,20 +174,20 @@ object ConstraintsPanel {
                      UpdateConstraintSet.skyBackground
           ),
           <.div(
-            ExploreStyles.FlexContainer,
             ExploreStyles.ConstraintsElevationRangeGroup,
+            <.label("Elevation Range", HelpIcon("constraints/main/er.md")),
             EnumViewSelect(
               id = "ertype",
-              label = Label("Elevation Range", HelpIcon("constraints/main/er.md")),
               value = state
                 .zoom(State.rangeType)
                 .withOnMod(updateElevationRange),
+              upward = true,
               clazz = ExploreStyles.ElevationRangePicker
             ),
             ReactFragment(
+              <.label("Min"),
               FormInputEV(
                 id = "minam",
-                label = "Min",
                 value = state
                   .zoom(State.airMass)
                   .zoom(AirMassRange.min)
@@ -210,9 +210,9 @@ object ConstraintsPanel {
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
+              <.label("Min"),
               FormInputEV(
                 id = "maxam",
-                label = "Max",
                 value = state
                   .zoom(State.airMass)
                   .zoom(AirMassRange.max)

@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import crystal.react.implicits._
+import explore.Icons
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
 import explore.components.Tile
@@ -39,7 +40,6 @@ import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
 import scalajs.js.JSConverters._
-import explore.Icons
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,
