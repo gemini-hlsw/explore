@@ -50,10 +50,6 @@ object ModeFov {
   implicit val orderModeFov: Order[ModeFov] = Order.by(_.fov.toMicroarcseconds)
 }
 
-case class ModeWavelength(w: Wavelength) {
-  override def toString: String = s"wavelength(${w.micrometer.value.toInt})"
-}
-
 case class ModeBandWidth(w: Quantity[Rational, Micrometer]) {
   override def toString: String = s"band_width(${w.value.toInt})"
 }
@@ -92,21 +88,6 @@ object ModeDisperser {
   // At the moment we only care about the presence of filter
   case object NoDisperser extends ModeDisperser
   case class SomeDisperser(tag: String) extends ModeDisperser
-}
-
-case class ModeSlitWidth(sw: Angle) {
-  override def toString: String = s"slit_width(${Angle.milliarcseconds.get(sw)})"
-}
-
-sealed trait ModeAO extends Product with Serializable
-
-object ModeAO {
-  case object NoAO extends ModeAO
-  case object AO   extends ModeAO
-
-  /** @group Typeclass Instances */
-  implicit val ModeAOEnumerated: Enumerated[ModeAO] =
-    Enumerated.of(NoAO, AO)
 }
 
 sealed trait ModeSpatialDimension extends Product with Serializable
@@ -166,7 +147,7 @@ case class ModeRow(
   gratingMaxWavelength: ModeGratingMaxWavelength,
   filter:               ModeFilter,
   disperser:            ModeDisperser,
-  slitWidth:            ModeSlitWidth,
+  slitWidth:            ModeSlitSize,
   ao:                   ModeAO,
   spatialDimensions:    ModeSpatialDimension,
   coronograph:          ModeCoronagraph,
@@ -180,18 +161,7 @@ object ModeRow {
   val disperser: Lens[ModeRow, ModeDisperser] = GenLens[ModeRow](_.disperser)
 }
 
-trait ModesMatrixDecoders {
-  implicit val instDecoder: CellDecoder[Instrument] =
-    CellDecoder.stringDecoder
-      .emap {
-        case "FLAMINGOS2" => Instrument.Flamingos2.asRight
-        case "GSAOI"      => Instrument.Gsaoi.asRight
-        case "GMOS-S"     => Instrument.GmosSouth.asRight
-        case "GMOS-N"     => Instrument.GmosNorth.asRight
-        case "GPI"        => Instrument.Gpi.asRight
-        case "NIFS"       => Instrument.Nifs.asRight
-        case x            => new DecoderError(s"Unknown instrument $x").asLeft
-      }
+trait ModesMatrixDecoders extends Decoders {
 
   implicit val instModeDecoder: CellDecoder[ObservationMode] =
     CellDecoder.stringDecoder
@@ -202,24 +172,11 @@ trait ModesMatrixDecoders {
         case x             => new DecoderError(s"Unknown instrument mode $x").asLeft
       }
 
-  val arcsecDecoder: CellDecoder[Angle] =
-    CellDecoder.bigDecimalDecoder.map(x => Angle.milliarcseconds.reverseGet((x * 1000).intValue))
-
   implicit val iqDecoder: CellDecoder[ModeIQ] =
     arcsecDecoder.map(ModeIQ.apply)
 
   implicit val fovDecoder: CellDecoder[ModeFov] =
     arcsecDecoder.map(ModeFov.apply)
-
-  val micrometerDecoder: CellDecoder[Wavelength] =
-    CellDecoder.bigDecimalDecoder.emap(x =>
-      Wavelength.fromPicometers
-        .getOption((x * 1000000).intValue)
-        .toRight(new DecoderError(s"Invalid wavelength value $x"))
-    )
-
-  implicit val wavelength: CellDecoder[ModeWavelength] =
-    micrometerDecoder.map(ModeWavelength.apply)
 
   implicit val bandWidth: CellDecoder[ModeBandWidth] =
     micrometerDecoder.map(w => ModeBandWidth(w.nanometer))
@@ -244,34 +201,12 @@ trait ModesMatrixDecoders {
         case x      => ModeDisperser.SomeDisperser(x)
       }
 
-  implicit val swDecoder: CellDecoder[ModeSlitWidth] =
-    arcsecDecoder.map(ModeSlitWidth.apply)
-
-  implicit val modeAODecoder: CellDecoder[ModeAO] =
-    CellDecoder.stringDecoder
-      .map {
-        case "yes" => ModeAO.AO
-        case _     => ModeAO.NoAO
-      }
-
   implicit val modeSpatialDimensionDecoder: CellDecoder[ModeSpatialDimension] =
     CellDecoder.intDecoder
       .emap {
         case 1 => ModeSpatialDimension.One.asRight
         case 2 => ModeSpatialDimension.Two.asRight
         case x => new DecoderError(s"Unsupported spatial dimensions $x").asLeft
-      }
-
-  implicit val posBigDecimalDecoder: CellDecoder[PosBigDecimal] =
-    CellDecoder.bigDecimalDecoder
-      .emap { x =>
-        refineV[Positive](x).leftMap(s => new DecoderError(s))
-      }
-
-  implicit val posIntDecoder: CellDecoder[PosInt] =
-    CellDecoder.intDecoder
-      .emap { x =>
-        refineV[Positive](x).leftMap(s => new DecoderError(s))
       }
 
   implicit val modeCoronagraphDecoder: CellDecoder[ModeCoronagraph] =
@@ -317,7 +252,7 @@ trait ModesMatrixDecoders {
         gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
         mf   <- row.as[ModeFilter]("filter")
         di   <- row.as[ModeDisperser]("disperser")
-        sw   <- row.as[ModeSlitWidth]("slit_width")
+        sw   <- row.as[ModeSlitSize]("slit_width")
         ao   <- row.as[ModeAO]("ao")
         sd   <- row.as[ModeSpatialDimension]("spatial_dims")
         c    <- row.as[ModeCoronagraph]("coronagraph")
