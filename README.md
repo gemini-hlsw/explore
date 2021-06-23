@@ -5,6 +5,17 @@
 
 ## Launch on local development
 
+We are now using FontAwesome Pro which requires a license. To build the app locally request a TOKEN
+from the admins and you need to setup an env variable containing it like
+
+```bash
+export FONTAWESOME_NPM_AUTH_TOKEN=...
+```
+or
+```fish
+set -x FONTAWESOME_NPM_AUTH_TOKEN ...
+```
+
 For auth to work you need your app to run on the `lucuma.xyz` domain, the simplest way
 is to setup `/etc/host` adding an alias for `localhost`
 
@@ -27,3 +38,19 @@ You may need to update your node modules via `npm install`
 
 With that you can open the app at:
 http://local.lucuma.xyz:8080/
+
+## Test full deployment
+In same cases you may want to test locally how the app looks without deploying. In that case you need to:
+
+* Build a full link version of explore
+```
+sbt explore/fullLinkJS
+```
+
+* Build it with vite and launch
+```
+npx vite build && npx vite preview
+```
+
+As before you can now see the app locally but in a different port
+http://local.lucuma.xyz:5000/
