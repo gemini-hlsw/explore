@@ -6,6 +6,7 @@ jobs:
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
+    if: startsWith(github.repository, 'gemini')
 
     steps:
       - name: Check out Git repository
@@ -21,7 +22,6 @@ jobs:
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
       - name: Setup and expand vars
-        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: |
@@ -29,7 +29,6 @@ jobs:
           sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/webapp/less/variables-dark.less > common/src/main/webapp/less/vars.css
           cat common/src/main/webapp/less/vars.css
       - name: Run linters in dark mode
-        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: wearerequired/lint-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +45,6 @@ jobs:
           cat common/src/main/webapp/less/vars.css
       - name: Run linters in light mode
         uses: wearerequired/lint-action@v1
-        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Enable your linters herename: Lint
