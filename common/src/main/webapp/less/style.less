@@ -271,6 +271,66 @@ tfoot {
   letter-spacing: 2px;
 }
 
+.constraints-grid.ui.form .field {
+  margin-bottom: 0;
+}
+
+.constraints-grid {
+  padding: 0.5em;
+  display: grid;
+  align-items: baseline;
+  gap: 0.3em 0.5em;
+
+  --column-wide-span: 4;
+
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch, 3fr);
+
+  .elevation-range-picker {
+    width: 9em;
+  }
+
+  .elevation-range-entry {
+    width: 8em;
+  }
+
+  .constraints-elevation-range {
+    display: flex;
+    gap: 0.3em 0.5em;
+    align-items: baseline;
+  }
+
+  .constraints-elevation-range,
+  .constraints-name-field {
+    grid-column: 1 / span var(--column-wide-span);
+  }
+}
+
+.tile-xxs-width,
+.tile-xs-width {
+  .constraints-grid {
+    --column-wide-span: 1;
+
+    grid-template-columns: 1fr;
+
+    .constraints-elevation-range {
+      flex-direction: column;
+      justify-items: stretch;
+
+      .field {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.constraints-obs-tile {
+  .constraints-grid {
+    .constraints-name-field {
+      display: none;
+    }
+  }
+}
+
 .ui.menu.explore-tile-title-menu a.item:hover {
   background: unset;
   color: unset;
@@ -985,44 +1045,6 @@ tfoot {
   }
 }
 
-.constraints-grid {
-  padding: 0.5em;
-
-  --column-count: 2;
-  --column-wide-span: 2;
-
-  grid-template-columns: repeat(var(--column-count), minmax(40ch, 1fr));
-
-  .elevation-range-picker {
-    width: 9em;
-  }
-
-  .elevation-range-entry {
-    width: 8em;
-  }
-
-  .constraints-elevation-range,
-  .constraints-name-field {
-    grid-column: 1 / span var(--column-wide-span);
-  }
-}
-
-.tile-xxs-width,
-.tile-xs-width {
-  .constraints-grid {
-    --column-count: 1;
-    --column-wide-span: 1;
-  }
-}
-
-.constraints-obs-tile {
-  .constraints-grid {
-    .constraints-name-field {
-      display: none;
-    }
-  }
-}
-
 .version.uncopied {
   // CopyToClipboard
   div {
@@ -1431,7 +1453,7 @@ html {
   min-height: 0;
   display: grid;
   grid-gap: 0.5em;
-  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-columns: 390px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
 }
