@@ -3,12 +3,12 @@
 
 package explore.data
 
-import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
-import explore.model.arb.all._
-import explore.data.tree.Tree
 import cats.laws.discipline.FunctorTests
 import explore.data.tree.Node
+import explore.data.tree.Tree
+import explore.model.arb.all._
+import munit.DisciplineSuite
 
 class TreeSuite extends DisciplineSuite {
   checkAll("Eq[Tree]", EqTests[Tree[Int]].eqv)

@@ -1365,9 +1365,14 @@ html {
   justify-content: flex-end;
 }
 
-.obs-card-header {
+.obs-badge-header {
   display: flex;
   align-items: center;
+}
+
+.obs-badge-description {
+  display: flex;
+  justify-content: space-between;
 }
 
 .ui.button.delete-button.obs-delete-button {
@@ -1686,5 +1691,13 @@ svg.padded-right-icon.svg-inline--fa,
       font-size: inherit;
       border: 0;
     }
+  }
+}
+
+.ui.toggle.checkbox.obs-active-status-toggle {
+  transform: rotate(270deg) scale(0.6) translate(0, 150%);
+
+  input:checked ~ label::before {
+    background-color: var(--checkbox-toggle-checked-background) !important;
   }
 }

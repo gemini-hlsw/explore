@@ -4,8 +4,9 @@
 package explore.undo
 
 import cats.effect.IO
-import cats.syntax.all._
+import cats.effect.std.Dispatcher
 import cats.kernel.Eq
+import cats.syntax.all._
 import explore.data.KeyedIndexedList
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree._
@@ -15,8 +16,6 @@ import explore.undo._
 import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
-
-import cats.effect.std.Dispatcher
 
 class UndoContextSpec extends munit.CatsEffectSuite {
 

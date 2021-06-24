@@ -3,20 +3,19 @@
 
 package explore.model
 
-import explore.optics._
-import lucuma.core.math.arb.ArbDeclination
-import lucuma.core.math.arb.ArbRightAscension
-import lucuma.core.model.arb.ArbSiderealTracking
-import monocle.law.discipline.LensTests
-import monocle.law.discipline.IsoTests
-import munit.DisciplineSuite
-import lucuma.core.math.arb.ArbRadialVelocity
-import lucuma.core.math.arb.ArbApparentRadialVelocity
-import lucuma.core.math.arb.ArbRedshift
-import org.scalacheck.Arbitrary._
 import coulomb.accepted.Percent
 import coulomb.cats.implicits._
-import coulomb.scalacheck.ArbQuantity._
+import explore.optics._
+import lucuma.core.math.arb.ArbApparentRadialVelocity
+import lucuma.core.math.arb.ArbDeclination
+import lucuma.core.math.arb.ArbRadialVelocity
+import lucuma.core.math.arb.ArbRedshift
+import lucuma.core.math.arb.ArbRightAscension
+import lucuma.core.model.arb.ArbSiderealTracking
+import monocle.law.discipline.IsoTests
+import monocle.law.discipline.LensTests
+import munit.DisciplineSuite
+import org.scalacheck.Arbitrary._
 
 class ModelOpticsSuite
     extends DisciplineSuite
@@ -26,6 +25,7 @@ class ModelOpticsSuite
     with ArbRedshift
     with ArbApparentRadialVelocity
     with ArbSiderealTracking {
+  import coulomb.scalacheck.ArbQuantity._ // This import has to be last.
 
   checkAll("properMotionRA", LensTests(ModelOptics.properMotionRA))
   checkAll("properMotionDec", LensTests(ModelOptics.properMotionDec))

@@ -5,8 +5,8 @@ package explore.model
 
 import cats.kernel.laws.discipline.EqTests
 import explore.model.RootModel
-import munit.DisciplineSuite
 import explore.model.arb.ArbRootModel
+import munit.DisciplineSuite
 
 class RootModelSuite extends DisciplineSuite {
   import ArbRootModel._

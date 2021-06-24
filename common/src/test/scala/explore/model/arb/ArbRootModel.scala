@@ -5,15 +5,15 @@ package explore.model.arb
 
 import explore.model.Focused
 import explore.model.RootModel
-import explore.model.enum.AppTab
+import explore.model.UserVault
 import explore.model.arb.all._
+import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
 import lucuma.core.data.arb.ArbEnumZipper._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import explore.model.UserVault
 import org.scalacheck.Gen
 
 trait ArbRootModel {

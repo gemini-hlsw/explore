@@ -18,6 +18,7 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
@@ -28,15 +29,17 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
+import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
 final case class ObsBadge(
-  obs:         ObsSummary, // The layout will depend on the mixins of the ObsSummary.
-  selected:    Boolean = false,
-  setStatusCB: Option[ObsStatus ==> SyncIO[Unit]] = None,
-  deleteCB:    Option[Observation.Id ==> SyncIO[Unit]] = None
+  obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
+  selected:          Boolean = false,
+  setStatusCB:       Option[ObsStatus ==> SyncIO[Unit]] = None,
+  setActiveStatusCB: Option[ObsActiveStatus ==> SyncIO[Unit]] = None,
+  deleteCB:          Option[Observation.Id ==> SyncIO[Unit]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -71,7 +74,7 @@ object ObsBadge {
           Button(
             size = Small,
             compact = true,
-            clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObservationDeleteButton,
+            clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
             icon = true,
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
               e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
@@ -93,7 +96,7 @@ object ObsBadge {
             CardContent(
               CardHeader(
                 <.div(
-                  ExploreStyles.ObservationCardHeader,
+                  ExploreStyles.ObsBadgeHeader,
                   obs match {
                     case withPointing: ObsWithPointing =>
                       nameAndId(withPointing.pointingName.toString)
@@ -106,7 +109,7 @@ object ObsBadge {
               CardMeta(
                 renderEnumProgress(obs.status)
               ),
-              CardDescription(
+              CardDescription()(ExploreStyles.ObsBadgeDescription)(
                 obs match {
                   case _: ObsWithPointing                  =>
                     ReactFragment(List(conf, constraints).flatten: _*)
@@ -114,7 +117,18 @@ object ObsBadge {
                     ReactFragment(withConstraints.constraintsSummary)
                   case _                                   =>
                     ReactFragment(obs.id.toString)
-                }
+                },
+                props.setActiveStatusCB.map(setActiveStatus =>
+                  Checkbox(
+                    toggle = true,
+                    checked = obs.activeStatus.toBoolean,
+                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                      ),
+                    clazz = ExploreStyles.ObsActiveStatusToggle
+                  ): VdomNode
+                )
               ),
               CardExtra(clazz = ExploreStyles.ObsBadgeExtra)(
                 props.setStatusCB.map(setStatus =>

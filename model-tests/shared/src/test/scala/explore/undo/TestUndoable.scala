@@ -3,17 +3,17 @@
 
 package explore.undo
 
-import cats.~>
-import cats.effect.Ref
-import cats.effect.Concurrent
-import cats.syntax.all._
-import explore.optics.GetAdjust
-import cats.effect.std.Dispatcher
-import cats.Monad
-import crystal.ViewF
-import cats.arrow.FunctionK
-import crystal.refModCB
 import cats.Applicative
+import cats.Monad
+import cats.arrow.FunctionK
+import cats.effect.Concurrent
+import cats.effect.Ref
+import cats.effect.std.Dispatcher
+import cats.syntax.all._
+import cats.~>
+import crystal.ViewF
+import crystal.refModCB
+import explore.optics.GetAdjust
 
 class TestUndoable[F[_]: Monad, M](
   val valueRef:            Ref[F, M],

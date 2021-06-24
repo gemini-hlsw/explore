@@ -3,13 +3,13 @@
 
 package explore.model
 
-import monocle.law.discipline.LensTests
-import monocle.law.discipline.IsoTests
-import munit.DisciplineSuite
-import org.scalacheck.Arbitrary._
 import explore.common.TargetObsQueries
 import explore.common.arb.ArbTargetObsQueries
 import explore.model.arb.ArbPointingId
+import monocle.law.discipline.IsoTests
+import monocle.law.discipline.LensTests
+import munit.DisciplineSuite
+import org.scalacheck.Arbitrary._
 
 class TargetObsQueriesSuite extends DisciplineSuite {
   import ArbTargetObsQueries._
