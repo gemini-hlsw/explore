@@ -10,7 +10,7 @@ import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
-import explore.model.enum.Display
+import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -48,10 +48,10 @@ object CataloguesForm {
 
   val angleItems = angleItemsMap.values
 
-  val fovL     = TargetVisualOptions.fov ^<-> Display.boolReverseIso
-  val guidingL = TargetVisualOptions.guiding ^<-> Display.boolReverseIso
-  val probeL   = TargetVisualOptions.probe ^<-> Display.boolReverseIso
-  val offsetsL = TargetVisualOptions.offsets ^<-> Display.boolReverseIso
+  val fovL     = TargetVisualOptions.fov ^<-> Visible.boolReverseIso
+  val guidingL = TargetVisualOptions.guiding ^<-> Visible.boolReverseIso
+  val probeL   = TargetVisualOptions.probe ^<-> Visible.boolReverseIso
+  val offsetsL = TargetVisualOptions.offsets ^<-> Visible.boolReverseIso
 
   val component =
     ScalaComponent

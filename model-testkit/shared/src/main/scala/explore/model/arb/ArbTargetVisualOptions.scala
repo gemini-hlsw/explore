@@ -4,7 +4,7 @@
 package explore.model.arb
 
 import explore.model.TargetVisualOptions
-import explore.model.enum.Display
+import explore.model.enum.Visible
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.math.Angle
 import lucuma.core.math.arb.ArbAngle._
@@ -17,17 +17,17 @@ trait ArbTargetVisualOptions {
 
   implicit val targetVisualOptionsArb = Arbitrary[TargetVisualOptions] {
     for {
-      f  <- arbitrary[Display]
+      f  <- arbitrary[Visible]
       fa <- arbitrary[Angle]
-      o  <- arbitrary[Display]
-      g  <- arbitrary[Display]
-      p  <- arbitrary[Display]
+      o  <- arbitrary[Visible]
+      g  <- arbitrary[Visible]
+      p  <- arbitrary[Visible]
       a  <- arbitrary[Angle]
     } yield TargetVisualOptions(f, fa, o, g, p, a)
   }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =
-    Cogen[(Display, Display, Display, Display, Angle)].contramap(c =>
+    Cogen[(Visible, Visible, Visible, Visible, Angle)].contramap(c =>
       (c.fov, c.offsets, c.guiding, c.probe, c.posAngle)
     )
 }
