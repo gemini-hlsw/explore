@@ -3,19 +3,20 @@
 
 package explore.modes
 
-import cats.effect.Resource
 import cats.effect.IO
+import cats.effect.Resource
 import cats.syntax.all._
 import coulomb._
 import coulomb.si.Second
 import eu.timepit.refined._
 import eu.timepit.refined.numeric._
-import java.io.File
-import lucuma.core.math.units._
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.units._
 import munit.CatsEffectSuite
 import spire.math.Rational
+
+import java.io.File
 
 class ModesSuite extends CatsEffectSuite {
   val csvPath = IO {

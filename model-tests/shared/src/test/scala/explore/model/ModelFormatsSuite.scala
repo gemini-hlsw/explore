@@ -5,12 +5,12 @@ package explore.model
 
 import explore.model.formats._
 import lucuma.core.arb._
-import lucuma.core.math.arb._
 import lucuma.core.math.Parallax
+import lucuma.core.math.arb._
 import lucuma.core.optics.laws.discipline.FormatTests
 import munit.DisciplineSuite
-import org.scalacheck.Gen
 import org.scalacheck.Arbitrary._
+import org.scalacheck.Gen
 
 class ModelFormatsSuite extends DisciplineSuite {
   import ArbParallax._

@@ -3,10 +3,10 @@
 
 package explore.data
 
-import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
-import explore.model.arb.all._
 import explore.data.tree.KeyedIndexedTree
+import explore.model.arb.all._
+import munit.DisciplineSuite
 
 class KeyedIndexedTreeSuite extends DisciplineSuite {
   checkAll("Eq[KeyedIndexedTree]", EqTests[KeyedIndexedTree[Int, (Int, String)]].eqv)

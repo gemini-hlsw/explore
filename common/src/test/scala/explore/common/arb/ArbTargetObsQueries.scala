@@ -4,22 +4,24 @@
 package explore.common.arb
 
 import cats.syntax.all._
+import explore.common.TargetObsQueries._
+import explore.common.TargetObsQueriesGQL
+import explore.model.arb.ArbConstraintsSummary
+import lucuma.core.arb.ArbTime
+import lucuma.core.enum.ObsActiveStatus
+import lucuma.core.enum.ObsStatus
+import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.core.util.arb.ArbEnumerated._
+import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Gen
-import lucuma.core.model.Target
-import lucuma.core.model.Asterism
-import explore.common.TargetObsQueries._
-import lucuma.core.model.Observation
-import explore.model.arb.ArbConstraintsSummary
-import explore.common.TargetObsQueriesGQL
-import lucuma.core.enum.ObsStatus
+
 import java.time.Duration
-import lucuma.core.arb.ArbTime
 
 trait ArbTargetObsQueries {
   import ArbConstraintsSummary._
@@ -51,8 +53,15 @@ trait ArbTargetObsQueries {
         pointing      <- arbitrary[Option[ObsResult.Pointing]]
         constraintSet <- arbitrary[ConstraintSet]
         status        <- arbitrary[ObsStatus]
+        activeStatus  <- arbitrary[ObsActiveStatus]
         duration      <- arbitrary[Duration]
-      } yield ObsResult(id, pointing, constraintSet, status, ObsResult.PlannedTime(duration))
+      } yield ObsResult(id,
+                        pointing,
+                        constraintSet,
+                        status,
+                        activeStatus,
+                        ObsResult.PlannedTime(duration)
+      )
     }
 }
 

@@ -3,9 +3,9 @@
 
 package explore.data
 
-import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
 import explore.model.arb.all._
+import munit.DisciplineSuite
 
 class KeyedIndexedListSuite extends DisciplineSuite {
   checkAll("Eq[KeyedIndexedList]", EqTests[KeyedIndexedList[Int, (Int, String)]].eqv)
