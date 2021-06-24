@@ -42,6 +42,7 @@ import explore.undo.KIListMod
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
@@ -456,7 +457,12 @@ object TargetObsList {
       }
 
     private def obsResultToObsSummary(obs: ObsResult): ObsSummaryWithConstraints =
-      ObsSummaryWithConstraints(obs.id, obs.constraintSet, obs.status, obs.plannedTime.execution)
+      ObsSummaryWithConstraints(obs.id,
+                                obs.constraintSet,
+                                obs.status,
+                                ObsActiveStatus.Active,
+                                obs.plannedTime.execution
+      )
 
     def render(props: Props) = {
       implicit val ctx = props.ctx

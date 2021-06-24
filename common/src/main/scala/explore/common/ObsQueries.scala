@@ -48,6 +48,7 @@ object ObsQueries {
                                              node.observationTarget.map(convertPointing),
                                              node.constraintSet,
                                              node.status,
+                                             node.activeStatus,
                                              node.plannedTime.execution
         )
       ),

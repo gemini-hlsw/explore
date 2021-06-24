@@ -8,6 +8,7 @@ import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.chrisdavenport.cats.time._
+import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import monocle.macros.Lenses
@@ -17,6 +18,7 @@ import java.time.Duration
 trait ObsSummary {
   val id: Observation.Id
   val status: ObsStatus
+  val activeStatus: ObsActiveStatus
   val duration: Duration
 }
 
@@ -58,30 +60,32 @@ trait ObsWithPointing extends ObsSummary {
 
 @Lenses
 case class ObsSummaryWithConstraints(
-  override val id:          Observation.Id,
-  override val constraints: ConstraintsSummary,
-  override val status:      ObsStatus,
-  override val duration:    Duration
+  override val id:           Observation.Id,
+  override val constraints:  ConstraintsSummary,
+  override val status:       ObsStatus,
+  override val activeStatus: ObsActiveStatus,
+  override val duration:     Duration
 ) extends ObsSummary
     with ObsWithConstraints
 
 object ObsSummaryWithConstraints {
   implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
-    Eq.by(o => (o.id, o.constraints, o.status, o.duration))
+    Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
 @Lenses
 case class ObsSummaryWithPointingAndConstraints(
-  override val id:          Observation.Id,
-  override val pointing:    Option[Pointing],
-  override val constraints: ConstraintsSummary,
-  override val status:      ObsStatus,
-  override val duration:    Duration
+  override val id:           Observation.Id,
+  override val pointing:     Option[Pointing],
+  override val constraints:  ConstraintsSummary,
+  override val status:       ObsStatus,
+  override val activeStatus: ObsActiveStatus,
+  override val duration:     Duration
 ) extends ObsSummary
     with ObsWithPointing
     with ObsWithConstraints
 
 object ObsSummaryWithPointingAndConstraints {
   implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
-    Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.duration))
+    Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.activeStatus, o.duration))
 }

@@ -138,6 +138,12 @@ input AsterismTargetLinks {
   targetIds: [TargetId!]!
 }
 
+# Sequence atom
+interface Atom {
+  # Atom id
+  id: AtomId!
+}
+
 # AtomId id formatted as `m-([1-9a-f][0-9a-f]*)`
 scalar AtomId
 
@@ -366,6 +372,7 @@ input CreateObservationInput {
   targetId: TargetId
   constraintSet: CreateConstraintSetInput
   status: ObsStatus
+  activeStatus: ObsActiveStatus
 }
 
 # Sidereal target parameters
@@ -594,6 +601,9 @@ input EditObservationInput {
   # The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
   status: ObsStatus
 
+  # The activeStatus field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  activeStatus: ObsActiveStatus
+
   # The asterismId field may be unset by assigning a null value, or ignored by skipping it altogether
   asterismId: AsterismId
 
@@ -690,6 +700,89 @@ interface Event {
   id: Long!
 }
 
+# Executed step
+type ExecutedStep {
+  # Step id
+  id: StepId!
+
+  # The executed step itself
+  step: Step!
+
+  # The atom containing the executed step
+  atom: Atom!
+
+  # Datasets associated with this step
+  datasets(
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): DatasetConnection!
+}
+
+# Executed steps in the current page
+type ExecutedStepConnection {
+  # The nodes in all the edges from the current page
+  nodes: [ExecutedStep!]!
+
+  # Edges in the current page
+  edges: [ExecutedStepEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# An executed step and its cursor
+type ExecutedStepEdge {
+  # ExecutedStepEdge element
+  node: ExecutedStep!
+
+  # ExecutedStepEdge element cursor
+  cursor: Cursor!
+}
+
+type Execution {
+  # Datasets associated with the observation
+  datasets(
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): DatasetConnection!
+
+  # Events associated with the observation
+  events(
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): ExecutionEventConnection!
+
+  # Executed steps associated with the observation
+  executedSteps(
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+  ): ExecutedStepConnection!
+
+  # Execution config
+  executionConfig: ExecutionConfig
+}
+
+# Execution configuration
+interface ExecutionConfig {
+  # Instrument type
+  instrument: InstrumentType!
+}
+
 # Execution event (sequence, step, or dataset events)
 interface ExecutionEvent {
   # Event id
@@ -731,26 +824,6 @@ type ExecutionEventEdge {
 
 # ExecutionEventId id formatted as `e-([1-9a-f][0-9a-f]*)`
 scalar ExecutionEventId
-
-type ExecutionRecord {
-  # Datasets associated with the observation
-  datasets(
-    # Retrieve `first` values after the given cursor
-    first: Int
-
-    # Retrieve values after the one associated with this cursor
-    after: Cursor
-  ): DatasetConnection!
-
-  # Events associated with the observation
-  events(
-    # Retrieve `first` values after the given cursor
-    first: Int
-
-    # Retrieve values after the one associated with this cursor
-    after: Cursor
-  ): ExecutionEventConnection!
-}
 
 # State of being: either Deleted or Present
 enum Existence {
@@ -1034,15 +1107,15 @@ type GmosNodAndShuffle {
 }
 
 # GmosNorth atom, a collection of steps that should be executed in their entirety
-type GmosNorthAtom {
-  # Atom id
-  id: AtomId!
-
+type GmosNorthAtom implements Atom {
   # Individual steps that comprise the atom
   steps: [GmosNorthStep!]!
 
   # Time estimate for this atom's execution, the sum of each step's time.
   time: StepTime!
+
+  # Atom id
+  id: AtomId!
 }
 
 # GMOS North builtin-in FPU
@@ -1054,7 +1127,7 @@ type GmosNorthBuiltinFpu {
 # GMOS North Configuration
 type GmosNorthConfig implements Config {
   # Static/unchanging configuration
-  static: GmosNorthStaticConfig!
+  static: GmosNorthStatic!
 
   # Acquisition sequence.
   acquisition: GmosNorthSequence!
@@ -1121,6 +1194,30 @@ type GmosNorthDynamic {
 
   # GMOS North FPU
   fpu: GmosNorthFpuUnion
+}
+
+# GMOS North Execution Config
+type GmosNorthExecutionConfig implements ExecutionConfig {
+  # GMOS North static configuration
+  static: GmosNorthStatic!
+
+  # GMOS North acquisition execution
+  acquisition: GmosNorthExecutionSequence!
+
+  # GMOS North science execution
+  science: GmosNorthExecutionSequence!
+
+  # Instrument type
+  instrument: InstrumentType!
+}
+
+# Next atom to execute and potential future atoms
+type GmosNorthExecutionSequence {
+  # Next atom to execute, if any
+  nextAtom: GmosNorthAtom
+
+  # Remaining atoms to execute, if any
+  possibleFuture: [GmosNorthAtom!]!
 }
 
 # GMOS North Filter
@@ -1295,7 +1392,7 @@ enum GmosNorthStageMode {
 }
 
 # Unchanging (over the course of the sequence) configuration values
-type GmosNorthStaticConfig {
+type GmosNorthStatic {
   # Stage mode
   stageMode: GmosNorthStageMode!
 
@@ -1355,15 +1452,15 @@ enum GmosRoi {
 }
 
 # GmosSouth atom, a collection of steps that should be executed in their entirety
-type GmosSouthAtom {
-  # Atom id
-  id: AtomId!
-
+type GmosSouthAtom implements Atom {
   # Individual steps that comprise the atom
   steps: [GmosSouthStep!]!
 
   # Time estimate for this atom's execution, the sum of each step's time.
   time: StepTime!
+
+  # Atom id
+  id: AtomId!
 }
 
 # GMOS South builtin-in FPU
@@ -1375,7 +1472,7 @@ type GmosSouthBuiltinFpu {
 # GMOS South Configuration
 type GmosSouthConfig implements Config {
   # Static/unchanging configuration
-  static: GmosSouthStaticConfig!
+  static: GmosSouthStatic!
 
   # Acquisition sequence.
   acquisition: GmosSouthSequence!
@@ -1436,6 +1533,30 @@ type GmosSouthDynamic {
 
   # GMOS South FPU
   fpu: GmosSouthFpuUnion
+}
+
+# GMOS South Execution Config
+type GmosSouthExecutionConfig implements ExecutionConfig {
+  # GMOS South static configuration
+  static: GmosSouthStatic!
+
+  # GMOS South acquisition execution
+  acquisition: GmosSouthExecutionSequence!
+
+  # GMOS South science execution
+  science: GmosSouthExecutionSequence!
+
+  # Instrument type
+  instrument: InstrumentType!
+}
+
+# Next atom to execute and potential future atoms
+type GmosSouthExecutionSequence {
+  # Next atom to execute, if any
+  nextAtom: GmosSouthAtom
+
+  # Remaining atoms to execute, if any
+  possibleFuture: [GmosSouthAtom!]!
 }
 
 # GMOS South Filter
@@ -1625,7 +1746,7 @@ enum GmosSouthStageMode {
 }
 
 # Unchanging (over the course of the sequence) configuration values
-type GmosSouthStaticConfig {
+type GmosSouthStatic {
   # Stage mode
   stageMode: GmosSouthStageMode!
 
@@ -1730,26 +1851,26 @@ scalar Instant
 
 # Instrument
 enum InstrumentType {
-  # InstrumentType Phoenix
-  PHOENIX
+  # InstrumentType AcqCam
+  ACQ_CAM
 
-  # InstrumentType Michelle
-  MICHELLE
+  # InstrumentType Bhros
+  BHROS
+
+  # InstrumentType Flamingos2
+  FLAMINGOS2
+
+  # InstrumentType Ghost
+  GHOST
+
+  # InstrumentType GmosNorth
+  GMOS_NORTH
+
+  # InstrumentType GmosSouth
+  GMOS_SOUTH
 
   # InstrumentType Gnirs
   GNIRS
-
-  # InstrumentType Niri
-  NIRI
-
-  # InstrumentType Trecs
-  TRECS
-
-  # InstrumentType Nici
-  NICI
-
-  # InstrumentType Nifs
-  NIFS
 
   # InstrumentType Gpi
   GPI
@@ -1757,26 +1878,35 @@ enum InstrumentType {
   # InstrumentType Gsaoi
   GSAOI
 
-  # InstrumentType GmosS
-  GMOS_S
+  # InstrumentType Michelle
+  MICHELLE
 
-  # InstrumentType AcqCam
-  ACQ_CAM
+  # InstrumentType Nici
+  NICI
 
-  # InstrumentType GmosN
-  GMOS_N
+  # InstrumentType Nifs
+  NIFS
 
-  # InstrumentType Bhros
-  BHROS
+  # InstrumentType Niri
+  NIRI
+
+  # InstrumentType Phoenix
+  PHOENIX
+
+  # InstrumentType Trecs
+  TRECS
 
   # InstrumentType Visitor
   VISITOR
 
-  # InstrumentType Flamingos2
-  FLAMINGOS2
+  # InstrumentType Scorpio
+  SCORPIO
 
-  # InstrumentType Ghost
-  GHOST
+  # InstrumentType Alopeke
+  ALOPEKE
+
+  # InstrumentType Zorro
+  ZORRO
 }
 
 # The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -2004,6 +2134,15 @@ type Nonsidereal {
   keyType: EphemerisKeyType!
 }
 
+# Observation operational/active status options
+enum ObsActiveStatus {
+  # ObsActiveStatus Active
+  ACTIVE
+
+  # ObsActiveStatus Inactive
+  INACTIVE
+}
+
 type Observation {
   # Observation ID
   id: ObservationId!
@@ -2016,6 +2155,9 @@ type Observation {
 
   # Observation status
   status: ObsStatus!
+
+  # Observation operational status
+  activeStatus: ObsActiveStatus!
 
   # Observation planned time calculation.
   plannedTime: PlannedTimeSummary!
@@ -2047,11 +2189,11 @@ type Observation {
     includeDeleted: Boolean! = false
   ): Target
 
-  # Instrument configuration
-  config: Config
+  # Manual instrument configuration
+  manualConfig: Config
 
   # Execution sequence and runtime artifacts
-  execution: ExecutionRecord!
+  execution: Execution!
 }
 
 # Matching observations

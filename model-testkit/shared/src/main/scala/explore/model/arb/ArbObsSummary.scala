@@ -16,6 +16,7 @@ import explore.model.ObsSummaryWithConstraints
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import lucuma.core.arb.ArbTime
+import lucuma.core.enum.ObsActiveStatus
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
@@ -24,22 +25,30 @@ trait ArbObsSummary {
 
   implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
     for {
-      id          <- arbitrary[Observation.Id]
-      constraints <- arbitrary[ConstraintsSummary]
-      status      <- arbitrary[ObsStatus]
-      duration    <- arbitrary[Duration]
-    } yield ObsSummaryWithConstraints(id, constraints, status, duration)
+      id           <- arbitrary[Observation.Id]
+      constraints  <- arbitrary[ConstraintsSummary]
+      status       <- arbitrary[ObsStatus]
+      activeStatus <- arbitrary[ObsActiveStatus]
+      duration     <- arbitrary[Duration]
+    } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration)
   }
 
   implicit val arbObsSummaryWithPointingAndConstraints =
     Arbitrary[ObsSummaryWithPointingAndConstraints] {
       for {
-        id          <- arbitrary[Observation.Id]
-        pointing    <- arbitrary[Option[Pointing]]
-        constraints <- arbitrary[ConstraintsSummary]
-        status      <- arbitrary[ObsStatus]
-        duration    <- arbitrary[Duration]
-      } yield ObsSummaryWithPointingAndConstraints(id, pointing, constraints, status, duration)
+        id           <- arbitrary[Observation.Id]
+        pointing     <- arbitrary[Option[Pointing]]
+        constraints  <- arbitrary[ConstraintsSummary]
+        status       <- arbitrary[ObsStatus]
+        activeStatus <- arbitrary[ObsActiveStatus]
+        duration     <- arbitrary[Duration]
+      } yield ObsSummaryWithPointingAndConstraints(id,
+                                                   pointing,
+                                                   constraints,
+                                                   status,
+                                                   activeStatus,
+                                                   duration
+      )
     }
 
   implicit val cogenObsSummaryWithConstraints: Cogen[ObsSummaryWithConstraints] =

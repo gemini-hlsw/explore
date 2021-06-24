@@ -36,6 +36,7 @@ import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.ui.utils._
@@ -89,17 +90,29 @@ object ObsList {
     ): F[Unit] =
       ProgramUndeleteObservation.execute[F](id).void
 
+    protected def obsWithId(obsId: Observation.Id) =
+      obsListMod.withKey(obsId).composeOptionLens(first)
+
     protected def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
       c:                                              TransactionalClient[F, ObservationDB]
     ) = Action[F](
-      obsListMod
-        .withKey(obsId)
-        .composeOptionLens(first)
-        .composeOptionLens(ObsSummaryWithPointingAndConstraints.status)
+      obsWithId(obsId).composeOptionLens(ObsSummaryWithPointingAndConstraints.status)
     )((_, status) =>
       UpdateObservationMutation
         .execute[F](
           EditObservationInput(observationId = obsId, status = status.orIgnore)
+        )
+        .void
+    )
+
+    protected def obsActiveStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
+      c:                                                    TransactionalClient[F, ObservationDB]
+    ) = Action[F](
+      obsWithId(obsId).composeOptionLens(ObsSummaryWithPointingAndConstraints.activeStatus)
+    )((_, activeStatus) =>
+      UpdateObservationMutation
+        .execute[F](
+          EditObservationInput(observationId = obsId, activeStatus = activeStatus.orIgnore)
         )
         .void
     )
@@ -138,11 +151,13 @@ object ObsList {
     ): IO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = IO(Random.nextInt(0xfff)).map(int =>
-        ObsSummaryWithPointingAndConstraints(Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-                                             pointing = none,
-                                             constraints = ConstraintsSummary.default,
-                                             ObsStatus.New,
-                                             Duration.ZERO
+        ObsSummaryWithPointingAndConstraints(
+          Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
+          pointing = none,
+          constraints = ConstraintsSummary.default,
+          ObsStatus.New,
+          ObsActiveStatus.Active,
+          Duration.ZERO
         )
       )
 
@@ -197,6 +212,8 @@ object ObsList {
                     selected = selected,
                     setStatusCB = (obsStatus[IO](obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
+                    setActiveStatusCB = (obsActiveStatus[IO](obs.id)
+                      .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
                     deleteCB = (deleteObs _).reuseAlways.some
                   )
                 )

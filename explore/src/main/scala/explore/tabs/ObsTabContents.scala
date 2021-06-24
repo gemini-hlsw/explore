@@ -276,6 +276,7 @@ object ObsTabContents {
                                                   Some(Pointing.PointingTarget(tid, _)),
                                                   _,
                                                   _,
+                                                  _,
                                                   _
             ) =>
           tid

@@ -34,7 +34,7 @@ inThisBuild(
     scalacOptions += "-Ymacro-annotations",
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     scalafixDependencies += "edu.gemini" %% "clue-generator" % Settings.LibraryVersions.clue,
-    scalafixScalaBinaryVersion := "2.13",
+    scalafixScalaBinaryVersion := "2.13"
   ) ++ lucumaPublishSettings
 )
 
@@ -88,6 +88,8 @@ lazy val graphql = project
   .in(file("common-graphql"))
   .dependsOn(model.jvm)
   .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .enablePlugins(ScalaJSPlugin)
 
 lazy val common = project
   .in(file("common"))
@@ -191,9 +193,9 @@ lazy val testkitLibSettings = Seq(
 lazy val commonJVMSettings = Seq(
   libraryDependencies ++=
     FS2IO.value ++
-    In(Test)(
-      CirceGolden.value
-    )
+      In(Test)(
+        CirceGolden.value
+      )
 )
 
 lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(

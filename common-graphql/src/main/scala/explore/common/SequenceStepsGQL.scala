@@ -30,7 +30,7 @@ object SequenceStepsGQL {
           nodes {
             id
             name
-            config {
+            config:manualConfig {
               __typename
               instrument
               plannedTime {

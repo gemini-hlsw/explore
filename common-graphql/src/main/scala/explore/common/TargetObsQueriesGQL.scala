@@ -90,6 +90,7 @@ object TargetObsQueriesGQL {
               waterVapor
             }
             status
+            activeStatus
             plannedTime {
               execution {
                 microseconds

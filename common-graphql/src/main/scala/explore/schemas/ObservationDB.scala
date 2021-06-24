@@ -71,6 +71,7 @@ trait ObservationDB {
     type MagnitudeSystem     = enum.MagnitudeSystem
     type MosPreImaging       = enum.MosPreImaging
     type ObsStatus           = enum.ObsStatus
+    type ObsActiveStatus     = enum.ObsActiveStatus
     type SkyBackground       = enum.SkyBackground
     type StepType            = enum.StepType
     type WaterVapor          = enum.WaterVapor
