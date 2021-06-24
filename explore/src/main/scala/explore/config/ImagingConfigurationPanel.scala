@@ -9,7 +9,6 @@ import coulomb.Quantity
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import explore.AppCtx
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -107,69 +106,64 @@ object ImagingConfigurationPanel {
       .builder[Props]
       .stateless
       .render_P { p =>
-        AppCtx.using { implicit appCtx =>
-          val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
-          val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
-          val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
-          val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
+        val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
+        val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
+        val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
+        val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
-          ReactFragment(
-            <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
-            Dropdown(
-              placeholder = "Filters",
-              clazz = ExploreStyles.ConfigurationFilter,
-              selection = true,
-              multiple = true,
-              search = true,
-              value = filters.get.toList.map(_.tag).toJSArray,
-              options = options.collect { case Some(x) => filterItem(x) },
-              onChange = (ddp: Dropdown.DropdownProps) =>
-                ddp.value.toOption
-                  .map(r =>
-                    ((r: Any) match {
-                      case v: js.Array[_] =>
-                        filters.set(valuesToFilters(v.collect { case s: String => s }))
-                      case _              => SyncIO.unit
-                    })
-                  )
-                  .map(_.toCB)
-                  .getOrEmpty
-            ),
-            <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
-            InputWithUnits(
-              id = "configuration-fov",
-              clazz = Css.Empty,
-              inline = true,
-              value = fov,
-              units = "arcsec",
-              validFormat = ValidFormatInput.fromFormatOptional(formatArcsec),
-              changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
-              disabled = false
-            ),
-            <.label("S / N",
-                    HelpIcon("configuration/signal_to_noise.md"),
-                    ExploreStyles.SkipToNext
-            ),
-            FormInputEV(
-              id = "signal-to-noise",
-              value = signalToNoise,
-              validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
-              changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
-            ),
-            <.label("Capabilities",
-                    HelpIcon("configuration/capabilities.md"),
-                    ExploreStyles.SkipToNext
-            ),
-            EnumViewOptionalSelect(
-              id = "imaging-capabilities",
-              clazz = ExploreStyles.ConfigurationCapabilities,
-              clearable = true,
-              upward = true,
-              placeholder = "Extra capablities",
-              value = capabilities
-            )
+        ReactFragment(
+          <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
+          Dropdown(
+            placeholder = "Filters",
+            clazz = ExploreStyles.ConfigurationFilter,
+            selection = true,
+            multiple = true,
+            search = true,
+            value = filters.get.toList.map(_.tag).toJSArray,
+            options = options.collect { case Some(x) => filterItem(x) },
+            onChange = (ddp: Dropdown.DropdownProps) =>
+              ddp.value.toOption
+                .map(r =>
+                  ((r: Any) match {
+                    case v: js.Array[_] =>
+                      filters.set(valuesToFilters(v.collect { case s: String => s }))
+                    case _              => SyncIO.unit
+                  })
+                )
+                .map(_.toCB)
+                .getOrEmpty
+          ),
+          <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
+          InputWithUnits(
+            id = "configuration-fov",
+            clazz = Css.Empty,
+            inline = true,
+            value = fov,
+            units = "arcsec",
+            validFormat = ValidFormatInput.fromFormatOptional(formatArcsec),
+            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+            disabled = false
+          ),
+          <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
+          FormInputEV(
+            id = "signal-to-noise",
+            value = signalToNoise,
+            validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
+            changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
+          ),
+          <.label("Capabilities",
+                  HelpIcon("configuration/capabilities.md"),
+                  ExploreStyles.SkipToNext
+          ),
+          EnumViewOptionalSelect(
+            id = "imaging-capabilities",
+            clazz = ExploreStyles.ConfigurationCapabilities,
+            clearable = true,
+            upward = true,
+            placeholder = "Extra capablities",
+            value = capabilities
           )
-        }
+        )
       }
       .configure(Reusability.shouldComponentUpdate)
       .build

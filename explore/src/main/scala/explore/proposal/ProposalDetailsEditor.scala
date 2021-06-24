@@ -12,7 +12,6 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
-import explore.AppCtx
 import explore.Icons
 import explore.components.FormStaticData
 import explore.components.HelpIcon
@@ -116,12 +115,10 @@ object ProposalDetailsEditor {
 
   class Backend($ : BackendScope[Props, State]) {
 
-    def renderDetails(appCtx: AppContextIO)(
-      details:                View[ProposalDetails],
-      @unused renderInTitle:  Tile.RenderInTitle
+    def renderDetails(
+      details:               View[ProposalDetails],
+      @unused renderInTitle: Tile.RenderInTitle
     ): VdomNode = {
-      implicit val ctx = appCtx
-
       val requestTime1 = details.zoom(ProposalDetails.requestTime1).get
       val requestTime2 = details.zoom(ProposalDetails.requestTime2).get
       val minimumPct1  = details.zoom(ProposalDetails.minimumPct1).get
@@ -240,40 +237,39 @@ object ProposalDetailsEditor {
       )
     }
 
-    def render(props: Props, state: State) =
-      AppCtx.using { implicit appCtx =>
-        val splitsZoom = ViewF.fromStateSyncIO($).zoom(State.splits)
+    def render(props: Props, state: State) = {
+      val splitsZoom = ViewF.fromStateSyncIO($).zoom(State.splits)
 
-        val details = props.proposalDetails
+      val details = props.proposalDetails
 
-        def closePartnerSplitsEditor: Callback =
-          $.modState(State.showPartnerSplitsModal.set(false))
+      def closePartnerSplitsEditor: Callback =
+        $.modState(State.showPartnerSplitsModal.set(false))
 
-        def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
-          details
-            .zoom(ProposalDetails.partnerSplits)
-            .set(splits.filter(_.percent.value.value > 0))
-            .toCB *>
-            closePartnerSplitsEditor
+      def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
+        details
+          .zoom(ProposalDetails.partnerSplits)
+          .set(splits.filter(_.percent.value.value > 0))
+          .toCB *>
+          closePartnerSplitsEditor
 
+      <.div(
         <.div(
-          <.div(
-            ^.key := "details",
-            ExploreStyles.ProposalTile,
-            Tile("details", "Details")(Reuse(renderDetails(appCtx) _)(details))
-          ),
-          <.div(
-            ^.key := "preview",
-            ExploreStyles.ProposalTile,
-            Tile("preview", "Preview")(Reuse.always(_ => <.span("Placeholder for PDF preview.")))
-          ),
-          PartnerSplitsEditor(state.showPartnerSplitsModal,
-                              splitsZoom,
-                              closePartnerSplitsEditor,
-                              Reuse(saveStateSplits _)(details)
-          )
+          ^.key := "details",
+          ExploreStyles.ProposalTile,
+          Tile("details", "Details")(Reuse(renderDetails _)(details))
+        ),
+        <.div(
+          ^.key := "preview",
+          ExploreStyles.ProposalTile,
+          Tile("preview", "Preview")(Reuse.always(_ => <.span("Placeholder for PDF preview.")))
+        ),
+        PartnerSplitsEditor(state.showPartnerSplitsModal,
+                            splitsZoom,
+                            closePartnerSplitsEditor,
+                            Reuse(saveStateSplits _)(details)
         )
-      }
+      )
+    }
   }
 
   val component =

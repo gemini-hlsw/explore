@@ -654,6 +654,7 @@ tfoot {
   margin: 0 0;
   background-color: var(--obs-badge-background);
   border: solid 1px var(--site-border-color);
+  font-size: inherit;
 }
 
 .card.obs-badge:last-child {
@@ -1370,7 +1371,12 @@ html {
 }
 
 .ui.button.delete-button.obs-delete-button {
-  margin-left: 0;
+  margin: 0;
+  padding: 0 !important;
+
+  svg {
+    margin: 0 !important;
+  }
 }
 
 .crash-message {
@@ -1660,4 +1666,25 @@ svg.padded-right-icon.svg-inline--fa,
 .user-selection-buttons {
   display: flex;
   flex-direction: column;
+}
+
+.obs-badge-extra {
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.obs-status-select {
+  flex-grow: 2;
+  margin-right: 2em;
+
+  .ui.dropdown {
+    width: 100%;
+    font-size: inherit;
+
+    .menu .item {
+      font-size: inherit;
+      border: 0;
+    }
+  }
 }

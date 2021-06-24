@@ -17,9 +17,13 @@ import explore.common.TargetObsQueries._
 import lucuma.core.model.Observation
 import explore.model.arb.ArbConstraintsSummary
 import explore.common.TargetObsQueriesGQL
+import lucuma.core.enum.ObsStatus
+import java.time.Duration
+import lucuma.core.arb.ArbTime
 
 trait ArbTargetObsQueries {
   import ArbConstraintsSummary._
+  import ArbTime._
 
   type ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
   val ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
@@ -46,7 +50,9 @@ trait ArbTargetObsQueries {
         id            <- arbitrary[Observation.Id]
         pointing      <- arbitrary[Option[ObsResult.Pointing]]
         constraintSet <- arbitrary[ConstraintSet]
-      } yield ObsResult(id, pointing, constraintSet)
+        status        <- arbitrary[ObsStatus]
+        duration      <- arbitrary[Duration]
+      } yield ObsResult(id, pointing, constraintSet, status, ObsResult.PlannedTime(duration))
     }
 }
 

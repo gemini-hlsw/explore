@@ -8,6 +8,9 @@ import clue.annotation.GraphQL
 import explore.model
 import explore.model.ConstraintsSummary
 import explore.schemas.ObservationDB
+
+import java.time
+// gql: import explore.model.decoders._
 // gql: import explore.model.reusability._
 // gql: import io.circe.refined._
 // gql: import lucuma.ui.reusability._
@@ -38,6 +41,12 @@ object ObsQueriesGQL {
               skyBackground
               waterVapor
             }
+            status
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
           }
         }
       }
@@ -47,6 +56,9 @@ object ObsQueriesGQL {
       object Observations {
         object Nodes {
           trait ConstraintSet extends ConstraintsSummary
+          object PlannedTime {
+            type Execution = time.Duration
+          }
         }
       }
     }
@@ -139,6 +151,17 @@ object ObsQueriesGQL {
     val document = """
       subscription($obsId: ObservationId!) {
         observationEdit(observationId: $obsId) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateObservationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($input: EditObservationInput!){
+        updateObservation(input: $input) {
           id
         }
       }

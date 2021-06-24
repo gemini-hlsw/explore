@@ -91,9 +91,9 @@ object ConfigurationPanel {
 
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
-      props:        Props,
-      undoCtx:      UndoCtx[State]
-    )(implicit ctx: AppContextIO): VdomNode = {
+      props:   Props,
+      undoCtx: UndoCtx[State]
+    ): VdomNode = {
       val undoViewSet = UndoView(undoCtx)
 
       def mode           = undoViewSet(State.mode)
