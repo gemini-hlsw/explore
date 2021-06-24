@@ -11,7 +11,7 @@ import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
-import explore.model.enum.Display
+import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react.MonocleReact._
 import japgolly.scalajs.react._
@@ -97,7 +97,7 @@ object AladinContainer {
         )
         .toCallback
 
-    def toggleVisibility(g: Element, selector: String, option: Display): Unit =
+    def toggleVisibility(g: Element, selector: String, option: Visible): Unit =
       g.querySelectorAll(selector).foreach {
         case e: Element =>
           option.fold(

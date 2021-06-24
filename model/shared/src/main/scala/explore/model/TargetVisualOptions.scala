@@ -4,28 +4,28 @@
 package explore.model
 
 import cats._
-import explore.model.enum.Display
+import explore.model.enum.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.syntax.int._
 import monocle.macros.Lenses
 
 @Lenses
 final case class TargetVisualOptions(
-  fov:      Display,
+  fov:      Visible,
   fovAngle: Angle,
-  offsets:  Display,
-  guiding:  Display,
-  probe:    Display,
+  offsets:  Visible,
+  guiding:  Visible,
+  probe:    Visible,
   posAngle: Angle // This belongs to the observation model
 )
 
 object TargetVisualOptions {
   val Default =
-    TargetVisualOptions(Display.Hidden,
+    TargetVisualOptions(Visible.Hidden,
                         Constants.InitialFov,
-                        Display.Hidden,
-                        Display.Hidden,
-                        Display.Hidden,
+                        Visible.Hidden,
+                        Visible.Hidden,
+                        Visible.Hidden,
                         145.deg
     )
 
