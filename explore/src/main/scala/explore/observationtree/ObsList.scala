@@ -3,20 +3,16 @@
 
 package explore.observationtree
 
-import cats.Applicative
-import cats.effect.Async
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.TransactionalClient
-import clue.data.syntax._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
 import explore.Icons
 import explore.common.ObsQueries
-import explore.common.ObsQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -28,8 +24,6 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
-import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -39,7 +33,6 @@ import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.ui.utils._
-import monocle.function.Field1.first
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.elements.button.Button
@@ -64,63 +57,9 @@ object ObsList {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
-    new KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
+    KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
       ObsSummaryWithPointingAndConstraints.id
     )
-
-  object Actions {
-
-    private def obsWithId(obsId: Observation.Id) =
-      obsListMod.withKey(obsId).composeOptionLens(first)
-
-    def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
-      c:                                    TransactionalClient[F, ObservationDB]
-    ) = Action[F](
-      access = obsWithId(obsId).composeOptionLens(ObsSummaryWithPointingAndConstraints.status)
-    )((_, status) =>
-      UpdateObservationMutation
-        .execute[F](
-          EditObservationInput(observationId = obsId, status = status.orIgnore)
-        )
-        .void
-    )
-
-    def obsActiveStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
-      c:                                          TransactionalClient[F, ObservationDB]
-    ) = Action[F](
-      access = obsWithId(obsId).composeOptionLens(ObsSummaryWithPointingAndConstraints.activeStatus)
-    )((_, activeStatus) =>
-      UpdateObservationMutation
-        .execute[F](
-          EditObservationInput(observationId = obsId, activeStatus = activeStatus.orIgnore)
-        )
-        .void
-    )
-
-    def obsExistence[F[_]: Async](obsId: Observation.Id, focused: View[Option[Focused]])(implicit
-      c:                                 TransactionalClient[F, ObservationDB]
-    ) =
-      Action[F](
-        access = obsListMod.withKey(obsId)
-      )(
-        onSet = (_, elemWithIndexOpt) =>
-          elemWithIndexOpt.fold {
-            ProgramDeleteObservation.execute[F](obsId).void
-          } { case (obs, _) =>
-            ProgramCreateObservation
-              .execute[F](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
-              .void >>
-              focused.set(Focused.FocusedObs(obs.id).some).to[F]
-          },
-        onRestore = (_, elemWithIndexOpt) =>
-          elemWithIndexOpt.fold {
-            ProgramDeleteObservation.execute[F](obsId).void
-          } { case (obs, _) =>
-            ProgramUndeleteObservation.execute[F](obs.id).void >>
-              focused.set(Focused.FocusedObs(obs.id).some).to[F]
-          }
-      )
-  }
 
   protected class Backend {
     protected def insertObs(
@@ -143,7 +82,7 @@ object ObsList {
       )
 
       newObs.flatMap { obs =>
-        Actions
+        ObsListActions
           .obsExistence[IO](obs.id, focused)
           .mod(undoCtx)(obsListMod.upsert(obs, pos))
       }
@@ -185,13 +124,13 @@ object ObsList {
                   ObsBadge(
                     obs,
                     selected = selected,
-                    setStatusCB = (Actions
+                    setStatusCB = (ObsListActions
                       .obsStatus[IO](obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
-                    setActiveStatusCB = (Actions
+                    setActiveStatusCB = (ObsListActions
                       .obsActiveStatus[IO](obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
-                    deleteCB = Actions
+                    deleteCB = ObsListActions
                       .obsExistence[IO](obs.id, props.focused)
                       .mod(undoCtx)(obsListMod.delete)
                       .reuseAlways
