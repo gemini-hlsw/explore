@@ -39,11 +39,11 @@ object Action {
     ): AppliedGetSet[G, M, A] =
       new AppliedGetSet[G, M, A](getter, setter)
 
-    def apply[M, A](lens: Lens[M, A]): AppliedGetSet[G, M, A] =
-      new AppliedGetSet[G, M, A](lens.get, lens.set)
+    def apply[M, A](access: Lens[M, A]): AppliedGetSet[G, M, A] =
+      new AppliedGetSet[G, M, A](access.get, access.set)
 
-    def apply[M, A](getAdjust: GetAdjust[M, A]): AppliedGetSet[G, M, A] =
-      new AppliedGetSet[G, M, A](getAdjust.get, getAdjust.set)
+    def apply[M, A](access: GetAdjust[M, A]): AppliedGetSet[G, M, A] =
+      new AppliedGetSet[G, M, A](access.get, access.set)
   }
 
   class AppliedGetSet[G[_], M, A](val getter: M => A, val setter: A => M => M) {

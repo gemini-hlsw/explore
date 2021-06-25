@@ -39,7 +39,7 @@ final case class ObsBadge(
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus ==> SyncIO[Unit]] = None,
   setActiveStatusCB: Option[ObsActiveStatus ==> SyncIO[Unit]] = None,
-  deleteCB:          Option[Observation.Id ==> SyncIO[Unit]] = None
+  deleteCB:          Option[Reuse[SyncIO[Unit]]] = None
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -77,9 +77,9 @@ object ObsBadge {
             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
             icon = true,
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-              e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-                .map(cb => cb.value(props.obs.id).toCB)
-                .getOrEmpty
+              e.preventDefaultCB *>
+                e.stopPropagationCB *>
+                props.deleteCB.map(_.value: Callback).getOrEmpty
           )(
             Icons.Trash
           )
