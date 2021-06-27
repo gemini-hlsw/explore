@@ -16,7 +16,7 @@ object Settings {
     val discipline        = "1.1.5"
     val disciplineMUnit   = "1.0.9"
     val fs2               = "3.0.4"
-    val fs2Data           = "1.0.0-RC3"
+    val fs2Data           = "1.0.0"
     val geminiLocales     = "0.6.0"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
