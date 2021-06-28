@@ -29,7 +29,7 @@ object Settings {
     val mouse             = "1.0.3"
     val mUnit             = "0.7.26"
     val mUnitCatsEffect   = "1.0.5"
-    val reactAladin       = "0.5.0"
+    val reactAladin       = "0.5.1"
     val reactAtlasKitTree = "0.4.0"
     val reactClipboard    = "1.4.3"
     val reactCommon       = "0.11.3"
