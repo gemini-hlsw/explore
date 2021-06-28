@@ -17,7 +17,7 @@ import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.core.math.units.Micrometer
+import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
 import monocle.Lens
 import monocle.macros.GenLens
@@ -129,7 +129,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     val filter: SpectroscopyModeRow => Boolean = r => {
       focalPlane.forall(f => r.focalPlane.exists(_ === f)) &&
         r.capabilities === capabilities &&
-        iq.forall(i => r.ao =!= ModeAO.AO || (i.toArcSeconds <= 0.2)) &&
+        iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
         resolution.forall(_ <= r.resolution) &&
         range.forall(_ <= r.wavelengthRange) &&
@@ -144,14 +144,16 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
           .map(w => (r.optimalWavelength.w.nanometer - w.nanometer).value.abs)
           .getOrElse(Rational.zero)
       // Difference in slit width
-      val deltaSlitWidth            =
-        iq.foldMap(i => (r.slitWidth.sw.toMicroarcseconds / 1000000.0 - i.toArcSeconds).abs)
+      val deltaSlitWidth: Rational  =
+        iq.map(i =>
+          (Rational(r.slitWidth.sw.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
+        ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal      =
         resolution.foldMap(re => (re.value - r.resolution.value).abs)
       // give a bumpp to non-AO modes (but don't discard them)
       val aoScore: Rational         =
-        if (iq.forall(i => r.ao =!= ModeAO.AO || (i.toArcSeconds <= 0.2))) ScoreBump
+        if (iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo))) ScoreBump
         else Rational.zero
       // If wavelength > 0.65mu, then prefer settings with a filter to avoid 2nd order contamination
       val filterScore: Rational     =
@@ -172,7 +174,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       val slitWidthScore            =
         if (r.focalPlane.forall(_ === FocalPlane.IFU)) Rational.one
         else
-          iq.map(i => Rational(i.toArcSeconds / (i.toArcSeconds + deltaSlitWidth)))
+          iq.map(i => Rational(i.toArcSeconds.value / (i.toArcSeconds.value + deltaSlitWidth)))
             .getOrElse(Rational.zero)
       aoScore + wavelengthScore + filterScore + resolutionScore + slitWidthScore
     }
