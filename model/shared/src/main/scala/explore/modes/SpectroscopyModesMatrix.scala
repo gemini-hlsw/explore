@@ -19,9 +19,11 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
-import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
+import monocle.Getter
+import monocle.Lens
+import lucuma.core.enum.GmosSouthFpu
 
 sealed trait FocalPlane extends Product with Serializable
 
@@ -35,8 +37,53 @@ object FocalPlane {
     Enumerated.of(SingleSlit, MultipleSlit, IFU)
 }
 
+trait InstrumentRow {
+  def instrument: Instrument
+
+  type FPU
+  val fpu: FPU
+}
+
+object InstrumentRow {
+  def apply[FPU0](instrument0: Instrument, fpu0: String): InstrumentRow =
+    instrument0 match {
+      case i @ Instrument.GmosSouth =>
+        new InstrumentRow {
+          val instrument = i
+          type FPU = GmosSouthFpu
+          val fpu = fpu0 match {
+            case "0.25arcsec" => GmosSouthFpu.LongSlit_0_25
+            case "0.50arcsec" => GmosSouthFpu.LongSlit_0_50
+            case "0.75arcsec" => GmosSouthFpu.LongSlit_0_75
+            case "1.00arcsec" => GmosSouthFpu.LongSlit_1_00
+            case "1.50arcsec" => GmosSouthFpu.LongSlit_1_50
+            case "2.00arcsec" => GmosSouthFpu.LongSlit_2_00
+            case "5.00arcsec" => GmosSouthFpu.LongSlit_5_00
+            case _            => GmosSouthFpu.Bhros
+          }
+        }
+      case i                        =>
+        new InstrumentRow {
+          val instrument = i
+          type FPU = String
+          val fpu = fpu0
+        }
+    }
+
+  val instrument: Getter[InstrumentRow, Instrument] =
+    Getter[InstrumentRow, Instrument](_.instrument)
+
+  def fpu: Getter[InstrumentRow, InstrumentRow#FPU] =
+    Getter[InstrumentRow, InstrumentRow#FPU](_.fpu)
+
+  def displayFPU(fpu: InstrumentRow#FPU): String = fpu match {
+    case f: GmosSouthFpu => f.shortName
+    case r               => r.toString
+  }
+}
+
 case class SpectroscopyModeRow(
-  instrument:        Instrument,
+  instrument:        InstrumentRow,
   config:            NonEmptyString,
   filterTag:         Option[NonEmptyString], // TODO Find a better type to represent any filter
   focalPlane:        NonEmptyList[FocalPlane],
@@ -52,7 +99,14 @@ case class SpectroscopyModeRow(
 )
 
 object SpectroscopyModeRow {
-  val instrument: Lens[SpectroscopyModeRow, Instrument] = GenLens[SpectroscopyModeRow](_.instrument)
+  val instrumentRow: Lens[SpectroscopyModeRow, InstrumentRow] =
+    GenLens[SpectroscopyModeRow](_.instrument)
+
+  val instrument: Getter[SpectroscopyModeRow, Instrument] =
+    instrumentRow.composeGetter(InstrumentRow.instrument)
+
+  val fpu: Getter[SpectroscopyModeRow, InstrumentRow#FPU] =
+    instrumentRow.composeGetter(InstrumentRow.fpu)
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
@@ -92,7 +146,8 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       extends CsvRowDecoder[SpectroscopyModeRow, String] {
     def apply(row: CsvRow[String]): DecoderResult[SpectroscopyModeRow] =
       for {
-        i   <- row.as[Instrument]("instrument")
+        fu  <- row.as[String]("fpu")
+        i   <- row.as[Instrument]("instrument").map(InstrumentRow(_, fu))
         s   <- row.as[NonEmptyString]("Config")
         fi  <- row.as[NonEmptyString]("filter").map {
                  case n if n.value.toLowerCase === "none" => none
