@@ -13,17 +13,20 @@ import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
 import explore.model.enum.SpectroscopyCapabilities
 import fs2.data.csv._
+import lucuma.core.enum.F2Disperser
+import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GnirsDisperser
+import lucuma.core.enum.GpiDisperser
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
 import lucuma.core.util.Enumerated
-import monocle.macros.GenLens
-import spire.math.Rational
 import monocle.Getter
 import monocle.Lens
-import lucuma.core.enum.GmosSouthFpu
+import monocle.macros.GenLens
+import spire.math.Rational
 
 sealed trait FocalPlane extends Product with Serializable
 
@@ -40,46 +43,83 @@ object FocalPlane {
 trait InstrumentRow {
   def instrument: Instrument
 
-  type FPU
-  val fpu: FPU
+  type Disperser
+  val disperser: Disperser
 }
 
 object InstrumentRow {
-  def apply[FPU0](instrument0: Instrument, fpu0: String): InstrumentRow =
+  def apply[FPU0](
+    instrument0: Instrument,
+    disperser0:  String
+  ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
-      case i @ Instrument.GmosSouth =>
-        new InstrumentRow {
-          val instrument = i
-          type FPU = GmosSouthFpu
-          val fpu = fpu0 match {
-            case "0.25arcsec" => GmosSouthFpu.LongSlit_0_25
-            case "0.50arcsec" => GmosSouthFpu.LongSlit_0_50
-            case "0.75arcsec" => GmosSouthFpu.LongSlit_0_75
-            case "1.00arcsec" => GmosSouthFpu.LongSlit_1_00
-            case "1.50arcsec" => GmosSouthFpu.LongSlit_1_50
-            case "2.00arcsec" => GmosSouthFpu.LongSlit_2_00
-            case "5.00arcsec" => GmosSouthFpu.LongSlit_5_00
-            case _            => GmosSouthFpu.Bhros
+      case i @ Instrument.GmosSouth  =>
+        (disperser0 match {
+          case "B1200" => GmosSouthDisperser.B1200_G5321.asRight
+          case "B600"  => GmosSouthDisperser.B600_G5323.asRight
+          case "R831"  => GmosSouthDisperser.R831_G5322.asRight
+          case "R400"  => GmosSouthDisperser.R400_G5325.asRight
+          case "R150"  => GmosSouthDisperser.R150_G5326.asRight
+          case x       => new DecoderError(s"Unknown disperser $x").asLeft
+        }).map { d =>
+          new InstrumentRow {
+            val instrument = i
+            type Disperser = GmosSouthDisperser
+            val disperser = d
           }
         }
-      case i                        =>
+      case i @ Instrument.Flamingos2 =>
+        (disperser0 match {
+          case "R3K" => F2Disperser.R3000.asRight
+          case "JH"  => F2Disperser.R1200JH.asRight
+          case "HK"  => F2Disperser.R1200HK.asRight
+          case x     => new DecoderError(s"Unknown disperser $x").asLeft
+        }).map { d =>
+          new InstrumentRow {
+            val instrument = i
+            type Disperser = F2Disperser
+            val disperser = d
+          }
+        }
+      case i @ Instrument.Gpi        =>
+        (disperser0.toLowerCase match {
+          case "prism"     => GpiDisperser.PRISM.asRight
+          case "wollaston" => GpiDisperser.WOLLASTON.asRight
+          case x           => new DecoderError(s"Unknown disperser $x").asLeft
+        }).map { d =>
+          new InstrumentRow {
+            val instrument = i
+            type Disperser = GpiDisperser
+            val disperser = d
+          }
+        }
+      case i @ Instrument.Gnirs      =>
+        (disperser0.toLowerCase match {
+          case "10"  => GnirsDisperser.D10.asRight
+          case "32"  => GnirsDisperser.D32.asRight
+          case "111" => GnirsDisperser.D111.asRight
+          case x     => new DecoderError(s"Unknown disperser $x").asLeft
+        }).map { d =>
+          new InstrumentRow {
+            val instrument = i
+            type Disperser = GnirsDisperser
+            val disperser = d
+          }
+        }
+      case i                         =>
         new InstrumentRow {
           val instrument = i
-          type FPU = String
-          val fpu = fpu0
-        }
+          type Disperser = String
+          val disperser = disperser0
+        }.asRight
     }
 
   val instrument: Getter[InstrumentRow, Instrument] =
     Getter[InstrumentRow, Instrument](_.instrument)
 
-  def fpu: Getter[InstrumentRow, InstrumentRow#FPU] =
-    Getter[InstrumentRow, InstrumentRow#FPU](_.fpu)
+  def disperser: Getter[InstrumentRow, InstrumentRow#Disperser] =
+    Getter[InstrumentRow, InstrumentRow#Disperser](_.disperser)
 
-  def displayFPU(fpu: InstrumentRow#FPU): String = fpu match {
-    case f: GmosSouthFpu => f.shortName
-    case r               => r.toString
-  }
 }
 
 case class SpectroscopyModeRow(
@@ -96,7 +136,9 @@ case class SpectroscopyModeRow(
   resolution:        PosBigDecimal,
   slitLength:        ModeSlitSize,
   slitWidth:         ModeSlitSize
-)
+) {
+  def calculatedRange: Quantity[NonNegBigDecimal, Micrometer] = wavelengthRange
+}
 
 object SpectroscopyModeRow {
   val instrumentRow: Lens[SpectroscopyModeRow, InstrumentRow] =
@@ -105,8 +147,23 @@ object SpectroscopyModeRow {
   val instrument: Getter[SpectroscopyModeRow, Instrument] =
     instrumentRow.composeGetter(InstrumentRow.instrument)
 
-  val fpu: Getter[SpectroscopyModeRow, InstrumentRow#FPU] =
-    instrumentRow.composeGetter(InstrumentRow.fpu)
+  val config: Lens[SpectroscopyModeRow, NonEmptyString] =
+    GenLens[SpectroscopyModeRow](_.config)
+
+  val slitWidth: Lens[SpectroscopyModeRow, ModeSlitSize] =
+    GenLens[SpectroscopyModeRow](_.slitWidth)
+
+  val slitLength: Lens[SpectroscopyModeRow, ModeSlitSize] =
+    GenLens[SpectroscopyModeRow](_.slitLength)
+
+  def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
+    instrumentRow.composeGetter(InstrumentRow.disperser)
+
+  def range: Getter[SpectroscopyModeRow, Quantity[NonNegBigDecimal, Micrometer]] =
+    Getter(_.calculatedRange)
+
+  def resolution: Getter[SpectroscopyModeRow, PosBigDecimal] =
+    Getter(_.resolution)
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
@@ -146,8 +203,8 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       extends CsvRowDecoder[SpectroscopyModeRow, String] {
     def apply(row: CsvRow[String]): DecoderResult[SpectroscopyModeRow] =
       for {
-        fu  <- row.as[String]("fpu")
-        i   <- row.as[Instrument]("instrument").map(InstrumentRow(_, fu))
+        di  <- row.as[String]("disperser")
+        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow(_, di))
         s   <- row.as[NonEmptyString]("Config")
         fi  <- row.as[NonEmptyString]("filter").map {
                  case n if n.value.toLowerCase === "none" => none
@@ -188,7 +245,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
         resolution.forall(_ <= r.resolution) &&
         range.forall(_ <= r.wavelengthRange) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.sw.toMicroarcseconds)
+        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds)
     }
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
@@ -201,7 +258,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       // Difference in slit width
       val deltaSlitWidth: Rational  =
         iq.map(i =>
-          (Rational(r.slitWidth.sw.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
+          (Rational(r.slitWidth.size.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal      =

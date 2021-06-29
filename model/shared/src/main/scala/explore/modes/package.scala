@@ -12,7 +12,10 @@ import fs2.data.csv._
 import lucuma.core.enum.Instrument
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.optics.Wedge
 import lucuma.core.util.Enumerated
+import monocle.Lens
+import monocle.macros.GenLens
 
 package modes {
 
@@ -20,8 +23,18 @@ package modes {
     override def toString: String = s"${w.micrometer.value.toDouble} μm"
   }
 
-  case class ModeSlitSize(sw: Angle) {
-    override def toString: String = s"${Angle.milliarcseconds.get(sw) / 1000.0} arcsec"
+  case class ModeSlitSize(size: Angle) {
+    override def toString: String = s"${Angle.milliarcseconds.get(size) / 1000.0} arcsec"
+  }
+
+  object ModeSlitSize {
+    val size: Lens[ModeSlitSize, Angle] = GenLens[ModeSlitSize](_.size)
+
+    val milliarcseconds: Wedge[Angle, BigDecimal] =
+      Angle.milliarcseconds
+        .imapB(_.underlying.movePointRight(3).intValue,
+               n => new java.math.BigDecimal(n).movePointLeft(3)
+        )
   }
 
   sealed trait ModeAO extends Product with Serializable
