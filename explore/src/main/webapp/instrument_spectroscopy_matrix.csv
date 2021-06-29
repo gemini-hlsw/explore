@@ -78,168 +78,168 @@ GPI,H,ifu,Coronagraph,0.246,2.8,prism,H,1.5,1.8,1.65,0.30,46,yes,coronagraph,s
 GPI,K1,ifu,Coronagraph,0.306,2.8,prism,K1,1.9,2.19,2.045,0.29,66,yes,coronagraph,s
 GPI,K2,ifu,Coronagraph,0.306,2.8,prism,K2,2.13,2.4,2.265,0.27,79,yes,coronagraph,s
 SCORPIO,foo,singleslit,?,0.300,180,?,dichroic,0.37,2.35,1.36,1.98,4000,no,,s
-GNIRS,"SCLS 32 X 0.3""",singleslit,0.3,0.300,99,32,X,1.03,1.17,1.1,0.331,1700,no,,n
-GNIRS,"SCLS 32 J 0.3""",singleslit,0.3,0.300,99,32,J,1.17,1.37,1.27,0.397,1600,no,,n
-GNIRS,"SCLS 32 H 0.3""",singleslit,0.3,0.300,99,32,H,1.49,1.8,1.645,0.496,1700,no,,n
-GNIRS,"SCLS 32 K 0.3""",singleslit,0.3,0.300,99,32,K,1.91,2.49,2.2,0.661,1700,no,,n
-GNIRS,"SCLS 32 L 0.3""",singleslit,0.3,0.300,99,32,L,2.8,4.2,3.5,0.992,1800,no,,n
-GNIRS,"SCLS 32 X 0.45""",singleslit,0.45,0.450,99,32,X,1.03,1.17,1.1,0.331,1133,no,,n
-GNIRS,"SCLS 32 J 0.45""",singleslit,0.45,0.450,99,32,J,1.17,1.37,1.27,0.397,1067,no,,n
-GNIRS,"SCLS 32 H 0.45""",singleslit,0.45,0.450,99,32,H,1.49,1.8,1.645,0.496,1133,no,,n
-GNIRS,"SCLS 32 K 0.45""",singleslit,0.45,0.450,99,32,K,1.91,2.49,2.2,0.661,1133,no,,n
-GNIRS,"SCLS 32 L 0.45""",singleslit,0.45,0.450,99,32,L,2.8,4.2,3.5,0.992,1200,no,,n
-GNIRS,"SCLS 32 X 0.675""",singleslit,0.675,0.675,99,32,X,1.03,1.17,1.1,0.331,756,no,,n
-GNIRS,"SCLS 32 J 0.675""",singleslit,0.675,0.675,99,32,J,1.17,1.37,1.27,0.397,711,no,,n
-GNIRS,"SCLS 32 H 0.675""",singleslit,0.675,0.675,99,32,H,1.49,1.8,1.645,0.496,756,no,,n
-GNIRS,"SCLS 32 K 0.675""",singleslit,0.675,0.675,99,32,K,1.91,2.49,2.2,0.661,756,no,,n
-GNIRS,"SCLS 32 L 0.675""",singleslit,0.675,0.675,99,32,L,2.8,4.2,3.5,0.992,800,no,,n
-GNIRS,"SCLS 32 X 1.0""",singleslit,1.0,1.000,99,32,X,1.03,1.17,1.1,0.331,510,no,,n
-GNIRS,"SCLS 32 J 1.0""",singleslit,1.0,1.000,99,32,J,1.17,1.37,1.27,0.397,480,no,,n
-GNIRS,"SCLS 32 H 1.0""",singleslit,1.0,1.000,99,32,H,1.49,1.8,1.645,0.496,510,no,,n
-GNIRS,"SCLS 32 K 1.0""",singleslit,1.0,1.000,99,32,K,1.91,2.49,2.2,0.661,510,no,,n
-GNIRS,"SCLS 32 L 1.0""",singleslit,1.0,1.000,99,32,L,2.8,4.2,3.5,0.992,540,no,,n
-GNIRS,"SCLS 111 X 0.3""",singleslit,0.3,0.300,99,111,X,1.03,1.17,1.1,0.094,6600,no,,n
-GNIRS,"SCLS 111 J 0.3""",singleslit,0.3,0.300,99,111,J,1.17,1.37,1.27,0.113,7200,no,,n
-GNIRS,"SCLS 111 H 0.3""",singleslit,0.3,0.300,99,111,H,1.49,1.8,1.645,0.142,5900,no,,n
-GNIRS,"SCLS 111 K 0.3""",singleslit,0.3,0.300,99,111,K,1.91,2.49,2.2,0.189,5900,no,,n
-GNIRS,"SCLS 111 L 0.3""",singleslit,0.3,0.300,99,111,L,2.8,4.2,3.5,0.28,6400,no,,n
-GNIRS,"SCLS 111 M 0.3""",singleslit,0.3,0.300,99,111,M,4.4,6,4.8,0.575,4300,no,,n
-GNIRS,"SCLS 111 X 0.45""",singleslit,0.45,0.450,99,111,X,1.03,1.17,1.1,0.094,4400,no,,n
-GNIRS,"SCLS 111 J 0.45""",singleslit,0.45,0.450,99,111,J,1.17,1.37,1.27,0.113,4800,no,,n
-GNIRS,"SCLS 111 H 0.45""",singleslit,0.45,0.450,99,111,H,1.49,1.8,1.645,0.142,3933,no,,n
-GNIRS,"SCLS 111 K 0.45""",singleslit,0.45,0.450,99,111,K,1.91,2.49,2.2,0.189,3933,no,,n
-GNIRS,"SCLS 111 L 0.45""",singleslit,0.45,0.450,99,111,L,2.8,4.2,3.5,0.28,4267,no,,n
-GNIRS,"SCLS 111 M 0.45""",singleslit,0.45,0.450,99,111,M,4.4,6,4.8,0.575,2867,no,,n
-GNIRS,"SCLS 111 X 0.675""",singleslit,0.675,0.675,99,111,X,1.03,1.17,1.1,0.094,2933,no,,n
-GNIRS,"SCLS 111 J 0.675""",singleslit,0.675,0.675,99,111,J,1.17,1.37,1.27,0.113,3200,no,,n
-GNIRS,"SCLS 111 H 0.675""",singleslit,0.675,0.675,99,111,H,1.49,1.8,1.645,0.142,2622,no,,n
-GNIRS,"SCLS 111 K 0.675""",singleslit,0.675,0.675,99,111,K,1.91,2.49,2.2,0.189,2622,no,,n
-GNIRS,"SCLS 111 L 0.675""",singleslit,0.675,0.675,99,111,L,2.8,4.2,3.5,0.28,2844,no,,n
-GNIRS,"SCLS 111 M 0.675""",singleslit,0.675,0.675,99,111,M,4.4,6,4.8,0.575,1911,no,,n
-GNIRS,"SCLS 111 X 1.0""",singleslit,1.00,1.000,99,111,X,1.03,1.17,1.1,0.094,1980,no,,n
-GNIRS,"SCLS 111 J 1.0""",singleslit,1.00,1.000,99,111,J,1.17,1.37,1.27,0.113,2160,no,,n
-GNIRS,"SCLS 111 H 1.0""",singleslit,1.00,1.000,99,111,H,1.49,1.8,1.645,0.142,1770,no,,n
-GNIRS,"SCLS 111 K 1.0""",singleslit,1.00,1.000,99,111,K,1.91,2.49,2.2,0.189,1770,no,,n
-GNIRS,"SCLS 111 L 1.0""",singleslit,1.00,1.000,99,111,L,2.8,4.2,3.5,0.28,1920,no,,n
-GNIRS,"SCLS 111 M 1.0""",singleslit,1.00,1.000,99,111,M,4.4,6,4.8,0.575,1290,no,,n
-GNIRS,"LCLS 10 X 0.1""",singleslit,0.10,0.100,49,10,X,1.03,1.17,1.1,0.332,2100,yes,,n
-GNIRS,"LCLS 10 J 0.1""",singleslit,0.10,0.100,49,10,J,1.17,1.37,1.27,0.398,1600,yes,,n
-GNIRS,"LCLS 10 H 0.1""",singleslit,0.10,0.100,49,10,H,1.49,1.8,1.645,0.497,1700,yes,,n
-GNIRS,"LCLS 10 K 0.1""",singleslit,0.10,0.100,49,10,K,1.91,2.49,2.2,0.663,1700,yes,,n
-GNIRS,"LCLS 10 L 0.1""",singleslit,0.10,0.100,49,10,L,2.8,4.2,3.5,0.995,1800,no,,n
-GNIRS,"LCLS 10 X 0.15""",singleslit,0.15,0.150,49,10,X,1.03,1.17,1.1,0.332,1400,yes,,n
-GNIRS,"LCLS 10 J 0.15""",singleslit,0.15,0.150,49,10,J,1.17,1.37,1.27,0.398,1067,yes,,n
-GNIRS,"LCLS 10 H 0.15""",singleslit,0.15,0.150,49,10,H,1.49,1.8,1.645,0.497,1133,yes,,n
-GNIRS,"LCLS 10 K 0.15""",singleslit,0.15,0.150,49,10,K,1.91,2.49,2.2,0.663,1133,yes,,n
-GNIRS,"LCLS 10 L 0.15""",singleslit,0.15,0.150,49,10,L,2.8,4.2,3.5,0.995,1200,no,,n
-GNIRS,"LCLS 10 X 0.2""",singleslit,0.20,0.200,49,10,X,1.03,1.17,1.1,0.332,1050,yes,,n
-GNIRS,"LCLS 10 J 0.2""",singleslit,0.20,0.200,49,10,J,1.17,1.37,1.27,0.398,800,yes,,n
-GNIRS,"LCLS 10 H 0.2""",singleslit,0.20,0.200,49,10,H,1.49,1.8,1.645,0.497,850,yes,,n
-GNIRS,"LCLS 10 K 0.2""",singleslit,0.20,0.200,49,10,K,1.91,2.49,2.2,0.663,850,yes,,n
-GNIRS,"LCLS 10 L 0.2""",singleslit,0.20,0.200,49,10,L,2.8,4.2,3.5,0.995,900,no,,n
-GNIRS,"LCLS 10 X 0.3""",singleslit,0.30,0.300,49,10,X,1.03,1.17,1.1,0.332,700,yes,,n
-GNIRS,"LCLS 10 J 0.3""",singleslit,0.30,0.300,49,10,J,1.17,1.37,1.27,0.398,533,yes,,n
-GNIRS,"LCLS 10 H 0.3""",singleslit,0.30,0.300,49,10,H,1.49,1.8,1.645,0.497,567,yes,,n
-GNIRS,"LCLS 10 K 0.3""",singleslit,0.30,0.300,49,10,K,1.91,2.49,2.2,0.663,567,yes,,n
-GNIRS,"LCLS 10 L 0.3""",singleslit,0.30,0.300,49,10,L,2.8,4.2,3.5,0.995,600,no,,n
-GNIRS,"LCLS 10 X 0.45""",singleslit,0.45,0.450,49,10,X,1.03,1.17,1.1,0.332,467,yes,,n
-GNIRS,"LCLS 10 J 0.45""",singleslit,0.45,0.450,49,10,J,1.17,1.37,1.27,0.398,356,yes,,n
-GNIRS,"LCLS 10 H 0.45""",singleslit,0.45,0.450,49,10,H,1.49,1.8,1.645,0.497,378,yes,,n
-GNIRS,"LCLS 10 K 0.45""",singleslit,0.45,0.450,49,10,K,1.91,2.49,2.2,0.663,378,yes,,n
-GNIRS,"LCLS 10 L 0.45""",singleslit,0.45,0.450,49,10,L,2.8,4.2,3.5,0.995,400,no,,n
-GNIRS,"LCLS 10 X 0.675""",singleslit,0.675,0.675,49,10,X,1.03,1.17,1.1,0.332,311,yes,,n
-GNIRS,"LCLS 10 J 0.675""",singleslit,0.675,0.675,49,10,J,1.17,1.37,1.27,0.398,237,yes,,n
-GNIRS,"LCLS 10 H 0.675""",singleslit,0.675,0.675,49,10,H,1.49,1.8,1.645,0.497,252,yes,,n
-GNIRS,"LCLS 10 K 0.675""",singleslit,0.675,0.675,49,10,K,1.91,2.49,2.2,0.663,252,yes,,n
-GNIRS,"LCLS 10 L 0.675""",singleslit,0.675,0.675,49,10,L,2.8,4.2,3.5,0.995,267,no,,n
-GNIRS,"LCLS 10 X 1.0""",singleslit,1.00,1.000,49,10,X,1.03,1.17,1.1,0.332,210,yes,,n
-GNIRS,"LCLS 10 J 1.0""",singleslit,1.00,1.000,49,10,J,1.17,1.37,1.27,0.398,160,yes,,n
-GNIRS,"LCLS 10 H 1.0""",singleslit,1.00,1.000,49,10,H,1.49,1.8,1.645,0.497,170,yes,,n
-GNIRS,"LCLS 10 K 1.0""",singleslit,1.00,1.000,49,10,K,1.91,2.49,2.2,0.663,170,yes,,n
-GNIRS,"LCLS 10 L 1.0""",singleslit,1.00,1.000,49,10,L,2.8,4.2,3.5,0.995,180,no,,n
-GNIRS,"LCLS 32 X 0.1""",singleslit,0.1,0.100,49,32,X,1.03,1.17,1.1,0.11,5100,yes,,n
-GNIRS,"LCLS 32 J 0.1""",singleslit,0.1,0.100,49,32,J,1.17,1.37,1.27,0.132,4800,yes,,n
-GNIRS,"LCLS 32 H 0.1""",singleslit,0.1,0.100,49,32,H,1.49,1.8,1.645,0.166,5100,yes,,n
-GNIRS,"LCLS 32 K 0.1""",singleslit,0.1,0.100,49,32,K,1.91,2.49,2.2,0.221,5100,yes,,n
-GNIRS,"LCLS 32 L 0.1""",singleslit,0.1,0.100,49,32,L,2.8,4.2,3.5,0.332,5400,no,,n
-GNIRS,"LCLS 32 M 0.1""",singleslit,0.1,0.100,49,32,M,2.8,4.2,3.5,0.66,3700,no,,n
-GNIRS,"LCLS 32 X 0.15""",singleslit,0.15,0.150,49,32,X,1.03,1.17,1.1,0.11,3400,yes,,n
-GNIRS,"LCLS 32 J 0.15""",singleslit,0.15,0.150,49,32,J,1.17,1.37,1.27,0.132,3200,yes,,n
-GNIRS,"LCLS 32 H 0.15""",singleslit,0.15,0.150,49,32,H,1.49,1.8,1.645,0.166,3400,yes,,n
-GNIRS,"LCLS 32 K 0.15""",singleslit,0.15,0.150,49,32,K,1.91,2.49,2.2,0.221,3400,yes,,n
-GNIRS,"LCLS 32 L 0.15""",singleslit,0.15,0.150,49,32,L,2.8,4.2,3.5,0.332,3600,no,,n
-GNIRS,"LCLS 32 M 0.15""",singleslit,0.15,0.150,49,32,M,2.8,4.2,3.5,0.66,2467,no,,n
-GNIRS,"LCLS 32 X 0.2""",singleslit,0.2,0.200,49,32,X,1.03,1.17,1.1,0.11,2550,yes,,n
-GNIRS,"LCLS 32 J 0.2""",singleslit,0.2,0.200,49,32,J,1.17,1.37,1.27,0.132,2400,yes,,n
-GNIRS,"LCLS 32 H 0.2""",singleslit,0.2,0.200,49,32,H,1.49,1.8,1.645,0.166,2550,yes,,n
-GNIRS,"LCLS 32 K 0.2""",singleslit,0.2,0.200,49,32,K,1.91,2.49,2.2,0.221,2550,yes,,n
-GNIRS,"LCLS 32 L 0.2""",singleslit,0.2,0.200,49,32,L,2.8,4.2,3.5,0.332,2700,no,,n
-GNIRS,"LCLS 32 M 0.2""",singleslit,0.2,0.200,49,32,M,2.8,4.2,3.5,0.66,1850,no,,n
-GNIRS,"LCLS 32 X 0.3""",singleslit,0.3,0.300,49,32,X,1.03,1.17,1.1,0.11,1700,yes,,n
-GNIRS,"LCLS 32 J 0.3""",singleslit,0.3,0.300,49,32,J,1.17,1.37,1.27,0.132,1600,yes,,n
-GNIRS,"LCLS 32 H 0.3""",singleslit,0.3,0.300,49,32,H,1.49,1.8,1.645,0.166,1700,yes,,n
-GNIRS,"LCLS 32 K 0.3""",singleslit,0.3,0.300,49,32,K,1.91,2.49,2.2,0.221,1700,yes,,n
-GNIRS,"LCLS 32 L 0.3""",singleslit,0.3,0.300,49,32,L,2.8,4.2,3.5,0.332,1800,no,,n
-GNIRS,"LCLS 32 M 0.3""",singleslit,0.3,0.300,49,32,M,2.8,4.2,3.5,0.66,1233,no,,n
-GNIRS,"LCLS 32 X 0.45""",singleslit,0.45,0.450,49,32,X,1.03,1.17,1.1,0.11,1133,yes,,n
-GNIRS,"LCLS 32 J 0.45""",singleslit,0.45,0.450,49,32,J,1.17,1.37,1.27,0.132,1067,yes,,n
-GNIRS,"LCLS 32 H 0.45""",singleslit,0.45,0.450,49,32,H,1.49,1.8,1.645,0.166,1133,yes,,n
-GNIRS,"LCLS 32 K 0.45""",singleslit,0.45,0.450,49,32,K,1.91,2.49,2.2,0.221,1133,yes,,n
-GNIRS,"LCLS 32 L 0.45""",singleslit,0.45,0.450,49,32,L,2.8,4.2,3.5,0.332,1200,no,,n
-GNIRS,"LCLS 32 M 0.45""",singleslit,0.45,0.450,49,32,M,2.8,4.2,3.5,0.66,822,no,,n
-GNIRS,"LCLS 32 X 0.675""",singleslit,0.675,0.675,49,32,X,1.03,1.17,1.1,0.11,756,yes,,n
-GNIRS,"LCLS 32 J 0.675""",singleslit,0.675,0.675,49,32,J,1.17,1.37,1.27,0.132,711,yes,,n
-GNIRS,"LCLS 32 H 0.675""",singleslit,0.675,0.675,49,32,H,1.49,1.8,1.645,0.166,756,yes,,n
-GNIRS,"LCLS 32 K 0.675""",singleslit,0.675,0.675,49,32,K,1.91,2.49,2.2,0.221,756,yes,,n
-GNIRS,"LCLS 32 L 0.675""",singleslit,0.675,0.675,49,32,L,2.8,4.2,3.5,0.332,800,no,,n
-GNIRS,"LCLS 32 M 0.675""",singleslit,0.675,0.675,49,32,M,2.8,4.2,3.5,0.66,548,no,,n
-GNIRS,"LCLS 32 X 1.0""",singleslit,1.0,1.000,49,32,X,1.03,1.17,1.1,0.11,510,yes,,n
-GNIRS,"LCLS 32 J 1.0""",singleslit,1.0,1.000,49,32,J,1.17,1.37,1.27,0.132,480,yes,,n
-GNIRS,"LCLS 32 H 1.0""",singleslit,1.0,1.000,49,32,H,1.49,1.8,1.645,0.166,510,yes,,n
-GNIRS,"LCLS 32 K 1.0""",singleslit,1.0,1.000,49,32,K,1.91,2.49,2.2,0.221,510,yes,,n
-GNIRS,"LCLS 32 L 1.0""",singleslit,1.0,1.000,49,32,L,2.8,4.2,3.5,0.332,540,no,,n
-GNIRS,"LCLS 32 M 1.0""",singleslit,1.0,1.000,49,32,M,2.8,4.2,3.5,0.66,370,no,,n
-GNIRS,"LCLS 111 X 0.1""",singleslit,0.1,0.100,49,111,X,1.03,1.17,1.1,0.0316,17800,yes,,n
-GNIRS,"LCLS 111 J 0.1""",singleslit,0.1,0.100,49,111,J,1.17,1.37,1.27,0.038,17000,yes,,n
-GNIRS,"LCLS 111 H 0.1""",singleslit,0.1,0.100,49,111,H,1.49,1.8,1.645,0.0475,17800,yes,,n
-GNIRS,"LCLS 111 K 0.1""",singleslit,0.1,0.100,49,111,K,1.91,2.49,2.2,0.0633,17800,yes,,n
-GNIRS,"LCLS 111 L 0.1""",singleslit,0.1,0.100,49,111,L,2.8,4.2,3.5,0.0944,19000,no,,n
-GNIRS,"LCLS 111 M 0.1""",singleslit,0.1,0.100,49,111,M,2.8,4.2,3.5,0.192,12800,no,,n
-GNIRS,"LCLS 111 X 0.15""",singleslit,0.15,0.150,49,111,X,1.03,1.17,1.1,0.0316,11867,yes,,n
-GNIRS,"LCLS 111 J 0.15""",singleslit,0.15,0.150,49,111,J,1.17,1.37,1.27,0.038,11333,yes,,n
-GNIRS,"LCLS 111 H 0.15""",singleslit,0.15,0.150,49,111,H,1.49,1.8,1.645,0.0475,11867,yes,,n
-GNIRS,"LCLS 111 K 0.15""",singleslit,0.15,0.150,49,111,K,1.91,2.49,2.2,0.0633,11867,yes,,n
-GNIRS,"LCLS 111 L 0.15""",singleslit,0.15,0.150,49,111,L,2.8,4.2,3.5,0.0944,12667,no,,n
-GNIRS,"LCLS 111 M 0.15""",singleslit,0.15,0.150,49,111,M,2.8,4.2,3.5,0.192,8533,no,,n
-GNIRS,"LCLS 111 X 0.2""",singleslit,0.2,0.200,49,111,X,1.03,1.17,1.1,0.0316,8900,yes,,n
-GNIRS,"LCLS 111 J 0.2""",singleslit,0.2,0.200,49,111,J,1.17,1.37,1.27,0.038,8500,yes,,n
-GNIRS,"LCLS 111 H 0.2""",singleslit,0.2,0.200,49,111,H,1.49,1.8,1.645,0.0475,8900,yes,,n
-GNIRS,"LCLS 111 K 0.2""",singleslit,0.2,0.200,49,111,K,1.91,2.49,2.2,0.0633,8900,yes,,n
-GNIRS,"LCLS 111 L 0.2""",singleslit,0.2,0.200,49,111,L,2.8,4.2,3.5,0.0944,9500,no,,n
-GNIRS,"LCLS 111 M 0.2""",singleslit,0.2,0.200,49,111,M,2.8,4.2,3.5,0.192,6400,no,,n
-GNIRS,"LCLS 111 X 0.3""",singleslit,0.3,0.300,49,111,X,1.03,1.17,1.1,0.0316,5933,yes,,n
-GNIRS,"LCLS 111 J 0.3""",singleslit,0.3,0.300,49,111,J,1.17,1.37,1.27,0.038,5667,yes,,n
-GNIRS,"LCLS 111 H 0.3""",singleslit,0.3,0.300,49,111,H,1.49,1.8,1.645,0.0475,5933,yes,,n
-GNIRS,"LCLS 111 K 0.3""",singleslit,0.3,0.300,49,111,K,1.91,2.49,2.2,0.0633,5933,yes,,n
-GNIRS,"LCLS 111 L 0.3""",singleslit,0.3,0.300,49,111,L,2.8,4.2,3.5,0.0944,6333,no,,n
-GNIRS,"LCLS 111 M 0.3""",singleslit,0.3,0.300,49,111,M,2.8,4.2,3.5,0.192,4267,no,,n
-GNIRS,"LCLS 111 X 0.45""",singleslit,0.45,0.450,49,111,X,1.03,1.17,1.1,0.0316,3956,yes,,n
-GNIRS,"LCLS 111 J 0.45""",singleslit,0.45,0.450,49,111,J,1.17,1.37,1.27,0.038,3778,yes,,n
-GNIRS,"LCLS 111 H 0.45""",singleslit,0.45,0.450,49,111,H,1.49,1.8,1.645,0.0475,3956,yes,,n
-GNIRS,"LCLS 111 K 0.45""",singleslit,0.45,0.450,49,111,K,1.91,2.49,2.2,0.0633,3956,yes,,n
-GNIRS,"LCLS 111 L 0.45""",singleslit,0.45,0.450,49,111,L,2.8,4.2,3.5,0.0944,4222,no,,n
-GNIRS,"LCLS 111 M 0.45""",singleslit,0.45,0.450,49,111,M,2.8,4.2,3.5,0.192,2844,no,,n
-GNIRS,"LCLS 111 X 0.675""",singleslit,0.675,0.675,49,111,X,1.03,1.17,1.1,0.0316,2637,yes,,n
-GNIRS,"LCLS 111 J 0.675""",singleslit,0.675,0.675,49,111,J,1.17,1.37,1.27,0.038,2519,yes,,n
-GNIRS,"LCLS 111 H 0.675""",singleslit,0.675,0.675,49,111,H,1.49,1.8,1.645,0.0475,2637,yes,,n
-GNIRS,"LCLS 111 K 0.675""",singleslit,0.675,0.675,49,111,K,1.91,2.49,2.2,0.0633,2637,yes,,n
-GNIRS,"LCLS 111 L 0.675""",singleslit,0.675,0.675,49,111,L,2.8,4.2,3.5,0.0944,2815,no,,n
-GNIRS,"LCLS 111 M 0.675""",singleslit,0.675,0.675,49,111,M,2.8,4.2,3.5,0.192,1896,no,,n
-GNIRS,"LCLS 111 X 1.0""",singleslit,1.0,1.000,49,111,X,1.03,1.17,1.1,0.0316,1780,yes,,n
-GNIRS,"LCLS 111 J 1.0""",singleslit,1.0,1.000,49,111,J,1.17,1.37,1.27,0.038,1700,yes,,n
-GNIRS,"LCLS 111 H 1.0""",singleslit,1.0,1.000,49,111,H,1.49,1.8,1.645,0.0475,1780,yes,,n
-GNIRS,"LCLS 111 K 1.0""",singleslit,1.0,1.000,49,111,K,1.91,2.49,2.2,0.0633,1780,yes,,n
-GNIRS,"LCLS 111 L 1.0""",singleslit,1.0,1.000,49,111,L,2.8,4.2,3.5,0.0944,1900,no,,n
-GNIRS,"LCLS 111 M 1.0""",singleslit,1.0,1.000,49,111,M,2.8,4.2,3.5,0.192,1280,no,,n
-GNIRS,SCXD,singleslit,0.3,0.300,7,32,XD,0.85,2.5,1.675,2.5,1700,no,,n
-GNIRS,LCXD,singleslit,0.1,0.100,5,32,XD,0.85,2.5,1.675,2.5,5000,yes,,n
+GNIRS,SC,singleslit,0.3,0.300,99,32,X,1.03,1.17,1.1,0.331,1700,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,32,J,1.17,1.37,1.27,0.397,1600,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,32,H,1.49,1.8,1.645,0.496,1700,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,32,K,1.91,2.49,2.2,0.661,1700,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,32,L,2.8,4.2,3.5,0.992,1800,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,32,X,1.03,1.17,1.1,0.331,1133,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,32,J,1.17,1.37,1.27,0.397,1067,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,32,H,1.49,1.8,1.645,0.496,1133,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,32,K,1.91,2.49,2.2,0.661,1133,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,32,L,2.8,4.2,3.5,0.992,1200,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,32,X,1.03,1.17,1.1,0.331,756,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,32,J,1.17,1.37,1.27,0.397,711,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,32,H,1.49,1.8,1.645,0.496,756,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,32,K,1.91,2.49,2.2,0.661,756,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,32,L,2.8,4.2,3.5,0.992,800,no,,n
+GNIRS,SC,singleslit,1.0,1.000,99,32,X,1.03,1.17,1.1,0.331,510,no,,n
+GNIRS,SC,singleslit,1.0,1.000,99,32,J,1.17,1.37,1.27,0.397,480,no,,n
+GNIRS,SC,singleslit,1.0,1.000,99,32,H,1.49,1.8,1.645,0.496,510,no,,n
+GNIRS,SC,singleslit,1.0,1.000,99,32,K,1.91,2.49,2.2,0.661,510,no,,n
+GNIRS,SC,singleslit,1.0,1.000,99,32,L,2.8,4.2,3.5,0.992,540,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,X,1.03,1.17,1.1,0.094,6600,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,J,1.17,1.37,1.27,0.113,7200,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,H,1.49,1.8,1.645,0.142,5900,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,K,1.91,2.49,2.2,0.189,5900,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,L,2.8,4.2,3.5,0.28,6400,no,,n
+GNIRS,SC,singleslit,0.3,0.300,99,111,M,4.4,6,4.8,0.575,4300,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,X,1.03,1.17,1.1,0.094,4400,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,J,1.17,1.37,1.27,0.113,4800,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,H,1.49,1.8,1.645,0.142,3933,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,K,1.91,2.49,2.2,0.189,3933,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,L,2.8,4.2,3.5,0.28,4267,no,,n
+GNIRS,SC,singleslit,0.45,0.450,99,111,M,4.4,6,4.8,0.575,2867,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,X,1.03,1.17,1.1,0.094,2933,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,J,1.17,1.37,1.27,0.113,3200,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,H,1.49,1.8,1.645,0.142,2622,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,K,1.91,2.49,2.2,0.189,2622,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,L,2.8,4.2,3.5,0.28,2844,no,,n
+GNIRS,SC,singleslit,0.675,0.675,99,111,M,4.4,6,4.8,0.575,1911,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,X,1.03,1.17,1.1,0.094,1980,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,J,1.17,1.37,1.27,0.113,2160,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,H,1.49,1.8,1.645,0.142,1770,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,K,1.91,2.49,2.2,0.189,1770,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,L,2.8,4.2,3.5,0.28,1920,no,,n
+GNIRS,SC,singleslit,1.00,1.000,99,111,M,4.4,6,4.8,0.575,1290,no,,n
+GNIRS,LC,singleslit,0.10,0.100,49,10,X,1.03,1.17,1.1,0.332,2100,yes,,n
+GNIRS,LC,singleslit,0.10,0.100,49,10,J,1.17,1.37,1.27,0.398,1600,yes,,n
+GNIRS,LC,singleslit,0.10,0.100,49,10,H,1.49,1.8,1.645,0.497,1700,yes,,n
+GNIRS,LC,singleslit,0.10,0.100,49,10,K,1.91,2.49,2.2,0.663,1700,yes,,n
+GNIRS,LC,singleslit,0.10,0.100,49,10,L,2.8,4.2,3.5,0.995,1800,no,,n
+GNIRS,LC,singleslit,0.15,0.150,49,10,X,1.03,1.17,1.1,0.332,1400,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,10,J,1.17,1.37,1.27,0.398,1067,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,10,H,1.49,1.8,1.645,0.497,1133,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,10,K,1.91,2.49,2.2,0.663,1133,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,10,L,2.8,4.2,3.5,0.995,1200,no,,n
+GNIRS,LC,singleslit,0.20,0.200,49,10,X,1.03,1.17,1.1,0.332,1050,yes,,n
+GNIRS,LC,singleslit,0.20,0.200,49,10,J,1.17,1.37,1.27,0.398,800,yes,,n
+GNIRS,LC,singleslit,0.20,0.200,49,10,H,1.49,1.8,1.645,0.497,850,yes,,n
+GNIRS,LC,singleslit,0.20,0.200,49,10,K,1.91,2.49,2.2,0.663,850,yes,,n
+GNIRS,LC,singleslit,0.20,0.200,49,10,L,2.8,4.2,3.5,0.995,900,no,,n
+GNIRS,LC,singleslit,0.30,0.300,49,10,X,1.03,1.17,1.1,0.332,700,yes,,n
+GNIRS,LC,singleslit,0.30,0.300,49,10,J,1.17,1.37,1.27,0.398,533,yes,,n
+GNIRS,LC,singleslit,0.30,0.300,49,10,H,1.49,1.8,1.645,0.497,567,yes,,n
+GNIRS,LC,singleslit,0.30,0.300,49,10,K,1.91,2.49,2.2,0.663,567,yes,,n
+GNIRS,LC,singleslit,0.30,0.300,49,10,L,2.8,4.2,3.5,0.995,600,no,,n
+GNIRS,LC,singleslit,0.45,0.450,49,10,X,1.03,1.17,1.1,0.332,467,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,10,J,1.17,1.37,1.27,0.398,356,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,10,H,1.49,1.8,1.645,0.497,378,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,10,K,1.91,2.49,2.2,0.663,378,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,10,L,2.8,4.2,3.5,0.995,400,no,,n
+GNIRS,LC,singleslit,0.675,0.675,49,10,X,1.03,1.17,1.1,0.332,311,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,10,J,1.17,1.37,1.27,0.398,237,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,10,H,1.49,1.8,1.645,0.497,252,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,10,K,1.91,2.49,2.2,0.663,252,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,10,L,2.8,4.2,3.5,0.995,267,no,,n
+GNIRS,LC,singleslit,1.00,1.000,49,10,X,1.03,1.17,1.1,0.332,210,yes,,n
+GNIRS,LC,singleslit,1.00,1.000,49,10,J,1.17,1.37,1.27,0.398,160,yes,,n
+GNIRS,LC,singleslit,1.00,1.000,49,10,H,1.49,1.8,1.645,0.497,170,yes,,n
+GNIRS,LC,singleslit,1.00,1.000,49,10,K,1.91,2.49,2.2,0.663,170,yes,,n
+GNIRS,LC,singleslit,1.00,1.000,49,10,L,2.8,4.2,3.5,0.995,180,no,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,X,1.03,1.17,1.1,0.11,5100,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,J,1.17,1.37,1.27,0.132,4800,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,H,1.49,1.8,1.645,0.166,5100,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,K,1.91,2.49,2.2,0.221,5100,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,L,2.8,4.2,3.5,0.332,5400,no,,n
+GNIRS,LC,singleslit,0.1,0.100,49,32,M,2.8,4.2,3.5,0.66,3700,no,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,X,1.03,1.17,1.1,0.11,3400,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,J,1.17,1.37,1.27,0.132,3200,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,H,1.49,1.8,1.645,0.166,3400,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,K,1.91,2.49,2.2,0.221,3400,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,L,2.8,4.2,3.5,0.332,3600,no,,n
+GNIRS,LC,singleslit,0.15,0.150,49,32,M,2.8,4.2,3.5,0.66,2467,no,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,X,1.03,1.17,1.1,0.11,2550,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,J,1.17,1.37,1.27,0.132,2400,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,H,1.49,1.8,1.645,0.166,2550,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,K,1.91,2.49,2.2,0.221,2550,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,L,2.8,4.2,3.5,0.332,2700,no,,n
+GNIRS,LC,singleslit,0.2,0.200,49,32,M,2.8,4.2,3.5,0.66,1850,no,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,X,1.03,1.17,1.1,0.11,1700,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,J,1.17,1.37,1.27,0.132,1600,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,H,1.49,1.8,1.645,0.166,1700,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,K,1.91,2.49,2.2,0.221,1700,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,L,2.8,4.2,3.5,0.332,1800,no,,n
+GNIRS,LC,singleslit,0.3,0.300,49,32,M,2.8,4.2,3.5,0.66,1233,no,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,X,1.03,1.17,1.1,0.11,1133,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,J,1.17,1.37,1.27,0.132,1067,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,H,1.49,1.8,1.645,0.166,1133,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,K,1.91,2.49,2.2,0.221,1133,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,L,2.8,4.2,3.5,0.332,1200,no,,n
+GNIRS,LC,singleslit,0.45,0.450,49,32,M,2.8,4.2,3.5,0.66,822,no,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,X,1.03,1.17,1.1,0.11,756,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,J,1.17,1.37,1.27,0.132,711,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,H,1.49,1.8,1.645,0.166,756,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,K,1.91,2.49,2.2,0.221,756,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,L,2.8,4.2,3.5,0.332,800,no,,n
+GNIRS,LC,singleslit,0.675,0.675,49,32,M,2.8,4.2,3.5,0.66,548,no,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,X,1.03,1.17,1.1,0.11,510,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,J,1.17,1.37,1.27,0.132,480,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,H,1.49,1.8,1.645,0.166,510,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,K,1.91,2.49,2.2,0.221,510,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,L,2.8,4.2,3.5,0.332,540,no,,n
+GNIRS,LC,singleslit,1.0,1.000,49,32,M,2.8,4.2,3.5,0.66,370,no,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,X,1.03,1.17,1.1,0.0316,17800,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,J,1.17,1.37,1.27,0.038,17000,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,H,1.49,1.8,1.645,0.0475,17800,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,K,1.91,2.49,2.2,0.0633,17800,yes,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,L,2.8,4.2,3.5,0.0944,19000,no,,n
+GNIRS,LC,singleslit,0.1,0.100,49,111,M,2.8,4.2,3.5,0.192,12800,no,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,X,1.03,1.17,1.1,0.0316,11867,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,J,1.17,1.37,1.27,0.038,11333,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,H,1.49,1.8,1.645,0.0475,11867,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,K,1.91,2.49,2.2,0.0633,11867,yes,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,L,2.8,4.2,3.5,0.0944,12667,no,,n
+GNIRS,LC,singleslit,0.15,0.150,49,111,M,2.8,4.2,3.5,0.192,8533,no,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,X,1.03,1.17,1.1,0.0316,8900,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,J,1.17,1.37,1.27,0.038,8500,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,H,1.49,1.8,1.645,0.0475,8900,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,K,1.91,2.49,2.2,0.0633,8900,yes,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,L,2.8,4.2,3.5,0.0944,9500,no,,n
+GNIRS,LC,singleslit,0.2,0.200,49,111,M,2.8,4.2,3.5,0.192,6400,no,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,X,1.03,1.17,1.1,0.0316,5933,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,J,1.17,1.37,1.27,0.038,5667,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,H,1.49,1.8,1.645,0.0475,5933,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,K,1.91,2.49,2.2,0.0633,5933,yes,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,L,2.8,4.2,3.5,0.0944,6333,no,,n
+GNIRS,LC,singleslit,0.3,0.300,49,111,M,2.8,4.2,3.5,0.192,4267,no,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,X,1.03,1.17,1.1,0.0316,3956,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,J,1.17,1.37,1.27,0.038,3778,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,H,1.49,1.8,1.645,0.0475,3956,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,K,1.91,2.49,2.2,0.0633,3956,yes,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,L,2.8,4.2,3.5,0.0944,4222,no,,n
+GNIRS,LC,singleslit,0.45,0.450,49,111,M,2.8,4.2,3.5,0.192,2844,no,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,X,1.03,1.17,1.1,0.0316,2637,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,J,1.17,1.37,1.27,0.038,2519,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,H,1.49,1.8,1.645,0.0475,2637,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,K,1.91,2.49,2.2,0.0633,2637,yes,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,L,2.8,4.2,3.5,0.0944,2815,no,,n
+GNIRS,LC,singleslit,0.675,0.675,49,111,M,2.8,4.2,3.5,0.192,1896,no,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,X,1.03,1.17,1.1,0.0316,1780,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,J,1.17,1.37,1.27,0.038,1700,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,H,1.49,1.8,1.645,0.0475,1780,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,K,1.91,2.49,2.2,0.0633,1780,yes,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,L,2.8,4.2,3.5,0.0944,1900,no,,n
+GNIRS,LC,singleslit,1.0,1.000,49,111,M,2.8,4.2,3.5,0.192,1280,no,,n
+GNIRS,SC,singleslit,0.3,0.300,7,32,XD,0.85,2.5,1.675,2.5,1700,no,,n
+GNIRS,LC,singleslit,0.1,0.100,5,32,XD,0.85,2.5,1.675,2.5,5000,yes,,n

@@ -16,6 +16,7 @@ import lucuma.core.enum.F2Disperser
 import lucuma.core.enum.GmosSouthDisperser
 import lucuma.core.enum.GnirsDisperser
 import lucuma.core.enum.GpiDisperser
+import lucuma.core.enum.Instrument
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
 import react.common._
@@ -24,6 +25,7 @@ import react.semanticui.collections.table._
 import reactST.reactTable._
 
 import scalajs.js.JSConverters._
+import java.text.DecimalFormat
 
 final case class SpectroscopyModesTable(
   matrix: SpectroscopyModesMatrix
@@ -37,6 +39,7 @@ object SpectroscopyModesTable {
 
   import ModesTableMaker.syntax._
 
+  val  swFormat = new DecimalFormat("0.###");
   protected val ModesTableComponent = new SUITable(ModesTableMaker)
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
@@ -50,7 +53,6 @@ object SpectroscopyModesTable {
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
   val InstrumentColumnId: ColId = "instrument"
-  val ConfigColumnId: ColId     = "config"
   val SlitWidthColumnId: ColId  = "slit_width"
   val SlitLengthColumnId: ColId = "slit_length"
   val DisperserColumnId: ColId  = "disperser"
@@ -60,7 +62,6 @@ object SpectroscopyModesTable {
   private val columnNames: Map[ColId, String] =
     Map[NonEmptyString, String](
       InstrumentColumnId -> "Instrument",
-      ConfigColumnId     -> "Config",
       SlitWidthColumnId  -> "Slit Width",
       SlitLengthColumnId -> "Slit Length",
       DisperserColumnId  -> "Disperser",
@@ -69,7 +70,7 @@ object SpectroscopyModesTable {
     )
 
   val formatSlitWidth: ModeSlitSize => String = ss =>
-    f"${ModeSlitSize.milliarcseconds.get(ss.size).setScale(3, BigDecimal.RoundingMode.UP)}%1.3f"
+    swFormat.format(ModeSlitSize.milliarcseconds.get(ss.size).setScale(3, BigDecimal.RoundingMode.UP))
 
   val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.size).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
@@ -83,15 +84,17 @@ object SpectroscopyModesTable {
   }
 
   def formatWavelengthRange(r: Quantity[NonNegBigDecimal, Micrometer]): String =
-    f"${r.value.value.setScale(3, BigDecimal.RoundingMode.DOWN)}%1.0f"
+    swFormat.format(r.value.value.setScale(3, BigDecimal.RoundingMode.DOWN))
+
+  def formatInstrument(r: (Instrument, NonEmptyString)): String = r match {
+    case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
+    case (i, _)                    => i.longName
+  }
 
   val columns =
     List(
-      column(InstrumentColumnId, SpectroscopyModeRow.instrument.get)
-        .setCell(_.value.shortName)
-        .setWidth(30),
-      column(ConfigColumnId, SpectroscopyModeRow.config.get)
-        .setCell(_.value.value)
+      column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
+        .setCell(c => formatInstrument(c.value))
         .setWidth(30),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))

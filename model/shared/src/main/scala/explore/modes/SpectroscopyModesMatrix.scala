@@ -150,6 +150,9 @@ object SpectroscopyModeRow {
   val config: Lens[SpectroscopyModeRow, NonEmptyString] =
     GenLens[SpectroscopyModeRow](_.config)
 
+  val instrumentAndConfig: Getter[SpectroscopyModeRow, (Instrument, NonEmptyString)] =
+    instrument.zip(config.asGetter)
+
   val slitWidth: Lens[SpectroscopyModeRow, ModeSlitSize] =
     GenLens[SpectroscopyModeRow](_.slitWidth)
 
