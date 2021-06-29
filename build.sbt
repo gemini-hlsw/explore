@@ -8,6 +8,7 @@ val FUILess              = "2.8.7"
 val kindProjectorVersion = "0.13.0"
 
 ThisBuild / Test / bspEnabled := false
+ThisBuild / ScalafixConfig / bspEnabled := false
 
 addCommandAlias(
   "quickTest",

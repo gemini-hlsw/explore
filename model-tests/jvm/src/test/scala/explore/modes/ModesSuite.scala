@@ -7,9 +7,12 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all._
 import coulomb._
+import coulomb.refined._
 import coulomb.si.Second
 import eu.timepit.refined._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
+import lucuma.core.enum.ImageQuality
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
@@ -19,26 +22,64 @@ import spire.math.Rational
 import java.io.File
 
 class ModesSuite extends CatsEffectSuite {
-  val csvPath = IO {
+  val allModesPath = IO {
     val f =
       new File(this.getClass().getClassLoader().getResource("instrument_matrix.csv").getFile())
 
     f.toPath()
   }
-  val fixture = ResourceSuiteLocalFixture(
+
+  val allModesFixture = ResourceSuiteLocalFixture(
     "modes",
-    Resource.make(csvPath.flatMap(ModesMatrix[IO]))(_ => IO.unit)
+    Resource.make(allModesPath.flatMap(ModesMatrix[IO]))(_ => IO.unit)
   )
 
-  override def munitFixtures = List(fixture)
-
-  test("csv loading") {
-    // IO(fixture()).map(_.matrix.foreach(println)) *>
-    IO(fixture()).map(_.matrix.length).assertEquals(101)
+  val spectroscopyPath = IO {
+    val f =
+      new File(
+        this.getClass().getClassLoader().getResource("instrument_spectroscopy_matrix.csv").getFile()
+      )
+    f.toPath()
   }
 
-  test("spectroscopy selection") {
-    IO(fixture())
+  val spectroscopyModesFixture = ResourceSuiteLocalFixture(
+    "spectrosocpy",
+    Resource.make(spectroscopyPath.flatMap(SpectroscopyModesMatrix[IO]))(_ => IO.unit)
+  )
+
+  override def munitFixtures = List(allModesFixture, spectroscopyModesFixture)
+
+  test("csv loading") {
+    IO(allModesFixture()).map(_.matrix.length).assertEquals(101)
+  }
+
+  test("spectroscopy csv selection") {
+    IO(spectroscopyModesFixture())
+      .map(
+        _.filtered(
+          FocalPlane.SingleSlit.some,
+          none,
+          Some(ImageQuality.PointThree),
+          Wavelength.fromNanometers(500),
+          refineMV[Positive](BigDecimal(1)).some,
+          BigDecimal(0).withRefinedUnit[NonNegative, Micrometer].some,
+          Angle.fromDoubleArcseconds(1).some
+        )
+      )
+      // .flatTap(_.traverse(IO.println))
+      .map(_.length)
+      .assertEquals(36)
+  }
+
+  test("spectroscopy csv loading") {
+    IO(spectroscopyModesFixture())
+      // .flatTap(_.matrix.traverse(IO.println))
+      .map(_.matrix.length)
+      .assertEquals(244)
+  }
+
+  test("spectroscopy selection old") {
+    IO(allModesFixture())
       .map(
         _.spectroscopyModes(
           dwmin = ModeBandWidth(Rational.zero.withUnit[Nanometer]).some,
