@@ -16,7 +16,6 @@ import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.enum.ImagingCapabilities
 import explore.model.formats._
-import explore.model.reusability._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment

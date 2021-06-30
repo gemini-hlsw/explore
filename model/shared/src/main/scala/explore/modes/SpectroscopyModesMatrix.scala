@@ -4,8 +4,10 @@
 package explore.modes
 
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.syntax.all._
 import coulomb._
+import coulomb.cats.implicits._
+import coulomb.refined._
 import eu.timepit.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
@@ -32,14 +34,24 @@ import lucuma.core.util.Enumerated
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
+import spire.math.Interval
 import spire.math.Rational
+import spire.std.int._
 
-sealed trait FocalPlane extends Product with Serializable
+sealed trait FocalPlane extends Product with Serializable {
+  def label: String
+}
 
 object FocalPlane {
-  case object SingleSlit   extends FocalPlane
-  case object MultipleSlit extends FocalPlane
-  case object IFU          extends FocalPlane
+  case object SingleSlit   extends FocalPlane {
+    val label = "Single Slit"
+  }
+  case object MultipleSlit extends FocalPlane {
+    val label = "Multiple Slits"
+  }
+  case object IFU          extends FocalPlane {
+    val label = "IFU"
+  }
 
   /** @group Typeclass Instances */
   implicit val FocalPlaneEnumerated: Enumerated[FocalPlane] =
@@ -54,6 +66,8 @@ trait InstrumentRow {
 
   type Filter
   val filter: Filter
+
+  override def toString(): String = s"${instrument.shortName}, $disperser, $filter"
 }
 
 object InstrumentRow {
@@ -179,6 +193,7 @@ object InstrumentRow {
 }
 
 case class SpectroscopyModeRow(
+  id:                Long, // Give them a local id to simplify reusability
   instrument:        InstrumentRow,
   config:            NonEmptyString,
   focalPlane:        NonEmptyList[FocalPlane],
@@ -188,7 +203,7 @@ case class SpectroscopyModeRow(
   maxWavelength:     ModeWavelength,
   optimalWavelength: ModeWavelength,
   wavelengthRange:   Quantity[NonNegBigDecimal, Micrometer],
-  resolution:        PosBigDecimal,
+  resolution:        PosInt,
   slitLength:        ModeSlitSize,
   slitWidth:         ModeSlitSize
 ) {
@@ -202,6 +217,7 @@ case class SpectroscopyModeRow(
 }
 
 object SpectroscopyModeRow {
+
   val instrumentRow: Lens[SpectroscopyModeRow, InstrumentRow] =
     GenLens[SpectroscopyModeRow](_.instrument)
 
@@ -226,10 +242,31 @@ object SpectroscopyModeRow {
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
     instrumentRow.composeGetter(InstrumentRow.filter)
 
-  def range: Getter[SpectroscopyModeRow, Quantity[NonNegBigDecimal, Micrometer]] =
-    Getter(_.calculatedRange)
+  val TwoFactor = BigDecimal(2).withUnit[Unitless]
 
-  def resolution: Getter[SpectroscopyModeRow, PosBigDecimal] =
+  def rangeInterval(
+    cw: Option[Wavelength]
+  ): SpectroscopyModeRow => Interval[Quantity[BigDecimal, Micrometer]] =
+    r =>
+      cw.fold(
+        Interval.point(r.wavelengthRange.toValue[BigDecimal])
+      ) { w =>
+        import spire.std.bigDecimal._
+
+        val λr = r.wavelengthRange.toValue[BigDecimal]
+        val λm = r.minWavelength.w.micrometer
+        val Δ  = λr / TwoFactor
+        val λ  = w.micrometer
+        val λa = λ - Δ
+        val λb = λ + Δ
+        if (λa <= λm) {
+          Interval.closed(λm, λm + λr)
+        } else {
+          Interval.closed(λa, λb)
+        }
+      }
+
+  def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
 }
 
@@ -281,10 +318,10 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         max <- row.as[ModeWavelength]("wave max")
         wo  <- row.as[ModeWavelength]("wave optimal")
         wr  <- row.as[NonNegBigDecimal]("wave range").map(_.withUnit[Micrometer])
-        r   <- row.as[PosBigDecimal]("resolution")
+        r   <- row.as[PosInt]("resolution")
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
-      } yield SpectroscopyModeRow(i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+      } yield SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
   }
 }
 
@@ -293,13 +330,13 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   val FilterLimit = Wavelength.fromNanometers(650)
 
   def filtered(
-    focalPlane:   Option[FocalPlane],
-    capabilities: Option[SpectroscopyCapabilities],
-    iq:           Option[ImageQuality],
-    wavelength:   Option[Wavelength],
-    resolution:   Option[PosBigDecimal],
-    range:        Option[Quantity[NonNegBigDecimal, Micrometer]],
-    slitWidth:    Option[Angle]
+    focalPlane:   Option[FocalPlane] = None,
+    capabilities: Option[SpectroscopyCapabilities] = None,
+    iq:           Option[ImageQuality] = None,
+    wavelength:   Option[Wavelength] = None,
+    resolution:   Option[PosInt] = None,
+    range:        Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
+    slitWidth:    Option[Angle] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
     val filter: SpectroscopyModeRow => Boolean = r => {
