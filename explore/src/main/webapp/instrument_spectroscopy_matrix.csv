@@ -39,7 +39,7 @@ GMOS-S,B600 IFU2,ifu,IFU2,5.000,7,B600,g,0.398,0.552,0.461,0.154,2722,no,,s
 GMOS-S,B600 IFU1 NS,ifu,IFU1 N&S,3.000,5,B600,none,0.36,1.03,0.461,0.307,2722,no,Nod&Shuffle,s
 GMOS-S,B600 IFU2 NS,ifu,IFU2 N&S,5.000,7,B600,g,0.398,0.552,0.461,0.154,2722,no,Nod&Shuffle,s
 GMOS-S,R150 NS1.0 GG455,"singleslit,multislit",N&S 1.0arcsec,1.000,330,R150,GG455,0.46,1.03,0.717,0.57,316,no,Nod&Shuffle,s
-GMOS-S,R150 NS1.0 GG515,"singleslit,multislit",N&S 1.0arcsec,1.000,330,R150,GG515,0.52,1.03,0.717,0.51,316,no,Nod&Shuffle,s
+GMOS-S,R150 NS1.0 OG515,"singleslit,multislit",N&S 1.0arcsec,1.000,330,R150,OG515,0.52,1.03,0.717,0.51,316,no,Nod&Shuffle,s
 GMOS-S,R831 NS1.0 CaT,"singleslit,multislit",N&S 1.0arcsec,1.000,330,R831,CaT,0.78,0.933,0.757,0.23,2198,no,Nod&Shuffle,s
 NIFS,Z + ZJ,ifu,none,3.000,3,Z,ZJ,1.11,1.265,1.1875,0.21,4990,yes,,n
 NIFS,J + ZJ,ifu,none,3.000,3,J,ZJ,1.11,1.44,1.275,0.18,6040,yes,,n
@@ -65,18 +65,18 @@ NIFS,"J + HK + 0.5"" OD",ifu,none,3.000,3,J,HK,1.57,1.45,1.51,0.18,6040,yes,coro
 NIFS,"H + JH + 0.5"" OD",ifu,none,3.000,3,H,JH,1.325,1.96,1.6425,0.31,5290,yes,coronagraph,n
 NIFS,"H + HK + 0.5"" OD",ifu,none,3.000,3,H,HK,1.635,1.975,1.805,0.31,5290,yes,coronagraph,n
 NIFS,"K + HK + 0.5"" OD",ifu,none,3.000,3,K,HK,1.775,2.615,2.195,0.41,5290,yes,coronagraph,n
-FLAMINGOS2,"R3K + J + 0.36""","singleslit,multislit",2pixel,0.360,263,R3K,J,1.175,1.333,1.254,0.158,2800,no,,s
-FLAMINGOS2,"R3K + H + 0.36""","singleslit,multislit",2pixel,0.360,263,R3K,H,1.486,1.775,1.6305,0.289,2800,no,,s
-FLAMINGOS2,"R3K + Ks + 0.36""","singleslit,multislit",2pixel,0.360,263,R3K,Ks,1.991,2.32,2.1555,0.329,2900,no,,s
-FLAMINGOS2,"R3K + Kb + 0.36""","singleslit,multislit",2pixel,0.360,263,R3K,K-blue,1.934,2.177,2.0555,0.243,2900,no,,s
-FLAMINGOS2,"R3K + Kr + 0.36""","singleslit,multislit",2pixel,0.360,263,R3K,K-red,2.181,2.446,2.3135,0.265,2900,no,,s
-FLAMINGOS2,"JH 0.36""","singleslit,multislit",2pixel,0.360,263,JH,JH,0.97,1.805,1.3875,0.835,900,no,,s
-FLAMINGOS2,"HK 0.36""","singleslit,multislit",2pixel,0.360,263,HK,HK,1.261,2.551,1.906,1.29,900,no,,s
-GPI,Y,ifu,Coronagraph,0.156,2.8,prism,Y,0.95,1.14,1.045,0.19,35,yes,coronagraph,s
-GPI,J,ifu,Coronagraph,0.184,2.8,prism,J,1.12,1.35,1.235,0.23,36,yes,coronagraph,s
-GPI,H,ifu,Coronagraph,0.246,2.8,prism,H,1.5,1.8,1.65,0.30,46,yes,coronagraph,s
-GPI,K1,ifu,Coronagraph,0.306,2.8,prism,K1,1.9,2.19,2.045,0.29,66,yes,coronagraph,s
-GPI,K2,ifu,Coronagraph,0.306,2.8,prism,K2,2.13,2.4,2.265,0.27,79,yes,coronagraph,s
+FLAMINGOS2,"R3K + J + 0.36""","singleslit,multislit",2pixel,0.360,263,R3000,J,1.175,1.333,1.254,0.158,2800,no,,s
+FLAMINGOS2,"R3K + H + 0.36""","singleslit,multislit",2pixel,0.360,263,R3000,H,1.486,1.775,1.6305,0.289,2800,no,,s
+FLAMINGOS2,"R3K + Ks + 0.36""","singleslit,multislit",2pixel,0.360,263,R3000,K-short,1.991,2.32,2.1555,0.329,2900,no,,s
+FLAMINGOS2,"R3K + Kb + 0.36""","singleslit,multislit",2pixel,0.360,263,R3000,K-blue,1.934,2.177,2.0555,0.243,2900,no,,s
+FLAMINGOS2,"R3K + Kr + 0.36""","singleslit,multislit",2pixel,0.360,263,R3000,K-red,2.181,2.446,2.3135,0.265,2900,no,,s
+FLAMINGOS2,"JH 0.36""","singleslit,multislit",2pixel,0.360,263,R1200JH,JH,0.97,1.805,1.3875,0.835,900,no,,s
+FLAMINGOS2,"HK 0.36""","singleslit,multislit",2pixel,0.360,263,R1200HK,HK,1.261,2.551,1.906,1.29,900,no,,s
+GPI,Y,ifu,Coronagraph,0.156,2.8,Prism,Y,0.95,1.14,1.045,0.19,35,yes,coronagraph,s
+GPI,J,ifu,Coronagraph,0.184,2.8,Prism,J,1.12,1.35,1.235,0.23,36,yes,coronagraph,s
+GPI,H,ifu,Coronagraph,0.246,2.8,Prism,H,1.5,1.8,1.65,0.30,46,yes,coronagraph,s
+GPI,K1,ifu,Coronagraph,0.306,2.8,Prism,K1,1.9,2.19,2.045,0.29,66,yes,coronagraph,s
+GPI,K2,ifu,Coronagraph,0.306,2.8,Prism,K2,2.13,2.4,2.265,0.27,79,yes,coronagraph,s
 SCORPIO,foo,singleslit,?,0.300,180,?,dichroic,0.37,2.35,1.36,1.98,4000,no,,s
 GNIRS,SC,singleslit,0.3,0.300,99,32,X,1.03,1.17,1.1,0.331,1700,no,,n
 GNIRS,SC,singleslit,0.3,0.300,99,32,J,1.17,1.37,1.27,0.397,1600,no,,n

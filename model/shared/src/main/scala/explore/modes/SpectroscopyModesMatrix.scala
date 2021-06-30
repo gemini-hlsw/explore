@@ -14,9 +14,15 @@ import eu.timepit.refined.types.string._
 import explore.model.enum.SpectroscopyCapabilities
 import fs2.data.csv._
 import lucuma.core.enum.F2Disperser
+import lucuma.core.enum.F2Filter
+import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GnirsDisperser
+import lucuma.core.enum.GnirsFilter
 import lucuma.core.enum.GpiDisperser
+import lucuma.core.enum.GpiFilter
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.Instrument
 import lucuma.core.math.Angle
@@ -45,65 +51,110 @@ trait InstrumentRow {
 
   type Disperser
   val disperser: Disperser
+
+  type Filter
+  val filter: Filter
 }
 
 object InstrumentRow {
-  def apply[FPU0](
+
+  def decodeEnum[A: Enumerated, B](
+    id:       B,
+    criteria: (B, A) => Boolean
+  ): Either[DecoderError, A] =
+    Enumerated[A].all.find(criteria(id, _)).toRight(new DecoderError(s"Unknown enum $id"))
+
+  def decodeOptionalEnum[A: Enumerated](
+    filter:   String,
+    criteria: (String, A) => Boolean
+  ): Either[DecoderError, Option[A]] =
+    if (filter.isEmpty || filter.toLowerCase === "none") none.asRight
+    else decodeEnum[A, String](filter, criteria).map(_.some)
+
+  def decodeGmosSouthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosSouthFilter]] =
+    decodeOptionalEnum[GmosSouthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeGmosSouthDisperser(disperser: String): Either[DecoderError, GmosSouthDisperser] =
+    decodeEnum[GmosSouthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeGmosNorthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosNorthFilter]] =
+    decodeOptionalEnum[GmosNorthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeGmosNorthDisperser(disperser: String): Either[DecoderError, GmosNorthDisperser] =
+    decodeEnum[GmosNorthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
+    decodeEnum[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeF2Disperser(disperser: String): Either[DecoderError, F2Disperser] =
+    decodeEnum[F2Disperser, String](disperser, _ === _.shortName)
+
+  def decodeGpiFilter(filter: NonEmptyString): Either[DecoderError, GpiFilter] =
+    decodeEnum[GpiFilter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeGpiDisperser(disperser: String): Either[DecoderError, GpiDisperser] =
+    decodeEnum[GpiDisperser, String](disperser, _ === _.shortName)
+
+  def decodeGnirsFilter(filter: NonEmptyString): Either[DecoderError, GnirsFilter] =
+    decodeEnum[GnirsFilter, String](filter.value, _ === _.shortName)
+
+  def decodeGnirsDisperser(disperser: String): Either[DecoderError, GnirsDisperser] =
+    decodeEnum[GnirsDisperser, String](disperser, _ === _.shortName)
+
+  def decode(
     instrument0: Instrument,
-    disperser0:  String
+    disperser0:  String,
+    filter0:     NonEmptyString
   ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
+      case i @ Instrument.GmosNorth  =>
+        (decodeGmosNorthDisperser(disperser0), decodeGmosNorthFilter(filter0)).mapN { case (d, f) =>
+          new InstrumentRow {
+            val instrument = i
+            type Disperser = GmosNorthDisperser
+            val disperser = d
+            type Filter = Option[GmosNorthFilter]
+            val filter = f
+          }
+        }
       case i @ Instrument.GmosSouth  =>
-        (disperser0 match {
-          case "B1200" => GmosSouthDisperser.B1200_G5321.asRight
-          case "B600"  => GmosSouthDisperser.B600_G5323.asRight
-          case "R831"  => GmosSouthDisperser.R831_G5322.asRight
-          case "R400"  => GmosSouthDisperser.R400_G5325.asRight
-          case "R150"  => GmosSouthDisperser.R150_G5326.asRight
-          case x       => new DecoderError(s"Unknown disperser $x").asLeft
-        }).map { d =>
+        (decodeGmosSouthDisperser(disperser0), decodeGmosSouthFilter(filter0)).mapN { case (d, f) =>
           new InstrumentRow {
             val instrument = i
             type Disperser = GmosSouthDisperser
             val disperser = d
+            type Filter = Option[GmosSouthFilter]
+            val filter = f
           }
         }
       case i @ Instrument.Flamingos2 =>
-        (disperser0 match {
-          case "R3K" => F2Disperser.R3000.asRight
-          case "JH"  => F2Disperser.R1200JH.asRight
-          case "HK"  => F2Disperser.R1200HK.asRight
-          case x     => new DecoderError(s"Unknown disperser $x").asLeft
-        }).map { d =>
+        (decodeF2Disperser(disperser0), decodeF2Filter(filter0)).mapN { case (d, f) =>
           new InstrumentRow {
             val instrument = i
             type Disperser = F2Disperser
             val disperser = d
+            type Filter = F2Filter
+            val filter = f
           }
         }
       case i @ Instrument.Gpi        =>
-        (disperser0.toLowerCase match {
-          case "prism"     => GpiDisperser.PRISM.asRight
-          case "wollaston" => GpiDisperser.WOLLASTON.asRight
-          case x           => new DecoderError(s"Unknown disperser $x").asLeft
-        }).map { d =>
+        (decodeGpiDisperser(disperser0), decodeGpiFilter(filter0)).mapN { case (d, f) =>
           new InstrumentRow {
             val instrument = i
             type Disperser = GpiDisperser
             val disperser = d
+            type Filter = GpiFilter
+            val filter = f
           }
         }
       case i @ Instrument.Gnirs      =>
-        (disperser0.toLowerCase match {
-          case "10"  => GnirsDisperser.D10.asRight
-          case "32"  => GnirsDisperser.D32.asRight
-          case "111" => GnirsDisperser.D111.asRight
-          case x     => new DecoderError(s"Unknown disperser $x").asLeft
-        }).map { d =>
+        (decodeGnirsDisperser(disperser0), decodeGnirsFilter(filter0)).mapN { case (d, f) =>
           new InstrumentRow {
             val instrument = i
             type Disperser = GnirsDisperser
             val disperser = d
+            type Filter = GnirsFilter
+            val filter = f
           }
         }
       case i                         =>
@@ -111,6 +162,8 @@ object InstrumentRow {
           val instrument = i
           type Disperser = String
           val disperser = disperser0
+          type Filter = String
+          val filter = filter0.value
         }.asRight
     }
 
@@ -120,12 +173,14 @@ object InstrumentRow {
   def disperser: Getter[InstrumentRow, InstrumentRow#Disperser] =
     Getter[InstrumentRow, InstrumentRow#Disperser](_.disperser)
 
+  def filter: Getter[InstrumentRow, InstrumentRow#Filter] =
+    Getter[InstrumentRow, InstrumentRow#Filter](_.filter)
+
 }
 
 case class SpectroscopyModeRow(
   instrument:        InstrumentRow,
   config:            NonEmptyString,
-  filterTag:         Option[NonEmptyString], // TODO Find a better type to represent any filter
   focalPlane:        NonEmptyList[FocalPlane],
   capabilities:      Option[SpectroscopyCapabilities],
   ao:                ModeAO,
@@ -138,6 +193,12 @@ case class SpectroscopyModeRow(
   slitWidth:         ModeSlitSize
 ) {
   def calculatedRange: Quantity[NonNegBigDecimal, Micrometer] = wavelengthRange
+
+  val hasFilter: Boolean = instrument.filter match {
+    case _: None.type => false
+    case _            => true
+  }
+
 }
 
 object SpectroscopyModeRow {
@@ -161,6 +222,9 @@ object SpectroscopyModeRow {
 
   def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
     instrumentRow.composeGetter(InstrumentRow.disperser)
+
+  def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
+    instrumentRow.composeGetter(InstrumentRow.filter)
 
   def range: Getter[SpectroscopyModeRow, Quantity[NonNegBigDecimal, Micrometer]] =
     Getter(_.calculatedRange)
@@ -207,12 +271,9 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
     def apply(row: CsvRow[String]): DecoderResult[SpectroscopyModeRow] =
       for {
         di  <- row.as[String]("disperser")
-        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow(_, di))
+        fi  <- row.as[NonEmptyString]("filter")
+        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi))
         s   <- row.as[NonEmptyString]("Config")
-        fi  <- row.as[NonEmptyString]("filter").map {
-                 case n if n.value.toLowerCase === "none" => none
-                 case f                                   => f.some
-               }
         f   <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
         c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
         a   <- row.as[ModeAO]("AO")
@@ -223,7 +284,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         r   <- row.as[PosBigDecimal]("resolution")
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
-      } yield SpectroscopyModeRow(i, s, fi, f, c, a, min, max, wo, wr, r, sl, sw)
+      } yield SpectroscopyModeRow(i, s, f, c, a, min, max, wo, wr, r, sl, sw)
   }
 }
 
@@ -274,7 +335,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       val filterScore: Rational     =
         (wavelength, FilterLimit)
           .mapN { (w, l) =>
-            if (w >= l && r.filterTag.isDefined) ScoreBump else Rational.zero
+            if (w >= l && r.hasFilter) ScoreBump else Rational.zero
           }
           .getOrElse(Rational.zero)
       // Wavelength matche
