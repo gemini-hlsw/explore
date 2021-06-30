@@ -21,13 +21,12 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
-import explore.modes.ModesMatrix
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import explore.undo.UndoableView
 import fs2._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.util.Display
@@ -64,7 +63,7 @@ object ConfigurationPanel {
     mode:                ConfigurationMode,
     spectroscopyOptions: SpectroscopyConfigurationOptions,
     imagingOptions:      ImagingConfigurationOptions,
-    matrix:              Pot[ModesMatrix]
+    matrix:              Pot[SpectroscopyModesMatrix]
   )
 
   case class UndoView(
@@ -102,21 +101,21 @@ object ConfigurationPanel {
       val spectroscopy = undoViewSet(State.spectroscopyOptions)
       val imaging      = undoViewSet(State.imagingOptions)
 
-      ReactFragment(
+      <.div(
+        ExploreStyles.ConfigurationGrid,
         props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(undoCtx))),
-        <.div(
-          ExploreStyles.ConfigurationGrid,
-          Form(size = Small)(
-            ExploreStyles.Grid,
-            ExploreStyles.Compact,
-            ExploreStyles.ExploreForm,
-            <.label("Mode", HelpIcon("configuration/mode.md")),
-            EnumViewSelect(id = "configuration-mode", value = mode),
-            SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
-            ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
-          ),
-          ModesTable(undoCtx.model.get.matrix.toOption.getOrElse(ModesMatrix.empty))
-        )
+        Form(size = Small)(
+          ExploreStyles.Grid,
+          ExploreStyles.Compact,
+          ExploreStyles.ExploreForm,
+          <.label("Mode", HelpIcon("configuration/mode.md")),
+          EnumViewSelect(id = "configuration-mode", value = mode),
+          SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
+          ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
+        ),
+        SpectroscopyModesTable(
+          undoCtx.model.get.matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
+        ).when(isSpectroscopy)
       )
     }
 
@@ -130,14 +129,16 @@ object ConfigurationPanel {
     }
   }
 
-  def load(uri: Uri): IO[ModesMatrix] = {
+  def load(uri: Uri): IO[SpectroscopyModesMatrix] = {
     val backend = FetchCatsBackend[IO]()
     basicRequest
       .get(uri)
       .readTimeout(5.seconds)
       .send(backend)
       .flatMap {
-        _.body.fold(_ => ModesMatrix.empty.pure[IO], s => ModesMatrix[IO](Stream.emit(s)))
+        _.body.fold(_ => SpectroscopyModesMatrix.empty.pure[IO],
+                    s => SpectroscopyModesMatrix[IO](Stream.emit(s))
+        )
       }
   }
 
@@ -154,7 +155,7 @@ object ConfigurationPanel {
       .renderBackend[Backend]
       .componentDidMount { $ =>
         implicit val ctx = $.props.ctx
-        load(uri"/instrument_matrix.csv").flatMap { m =>
+        load(uri"/instrument_spectroscopy_matrix.csv").flatMap { m =>
           $.modStateIn[IO](State.matrix.set(Pot(m)))
         }.runAsyncAndForgetCB
       }

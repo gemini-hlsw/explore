@@ -8,14 +8,14 @@ import cats.syntax.all._
 import fs2._
 import fs2.data.csv._
 
-trait SpectroscopyModesMatrixPlatform extends ModesMatrixDecoders {
-  def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[ModeRow]] =
+trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
+  def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[SpectroscopyModeRow]] =
     s
-      .through(decodeUsingHeaders[ModeRow]())
+      .through(decodeUsingHeaders[SpectroscopyModeRow]())
       .compile
       .toList
 
-  def apply[F[_]: Concurrent](s: Stream[F, String]): F[ModesMatrix] =
-    loadMatrix(s).map(ModesMatrix(_))
+  def apply[F[_]: Concurrent](s: Stream[F, String]): F[SpectroscopyModesMatrix] =
+    loadMatrix(s).map(SpectroscopyModesMatrix(_))
 
 }
