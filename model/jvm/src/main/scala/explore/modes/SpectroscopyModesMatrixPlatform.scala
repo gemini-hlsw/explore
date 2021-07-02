@@ -18,6 +18,10 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
       .readAll(path, 1024)
       .through(text.utf8Decode)
       .through(decodeUsingHeaders[SpectroscopyModeRow]())
+      .zipWithIndex
+      .map { case (r, i) =>
+        r.copy(id = i)
+      }
       .compile
       .toList
 

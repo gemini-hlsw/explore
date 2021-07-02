@@ -235,6 +235,7 @@ object ExploreStyles {
   val StepGuided: Css      = Css("step-guided")
 
   val ExploreForm: Css               = Css("explore-form")
+  val ConfigurationForm: Css         = Css("explore-configuration-form")
   val ConfigurationGrid: Css         = Css("explore-configuration-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
   val SkipToNext: Css                = Css("explore-skip-to-next")
@@ -242,6 +243,7 @@ object ExploreStyles {
   val ConfigurationFilter: Css       = Css("explore-configuration-filter")
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
   val ModesTable: Css                = Css("explore-modes-table")
+  val ModesTableTitle: Css           = Css("explore-modes-table-title")
   val ModesHeader: Css               = Css("explore-modes-header")
 
   val ButtonCopy: Css    = Css("explore-button-copy")

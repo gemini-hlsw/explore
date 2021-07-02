@@ -61,12 +61,12 @@ class ModesSuite extends CatsEffectSuite {
           none,
           Some(ImageQuality.PointThree),
           Wavelength.fromNanometers(500),
-          refineMV[Positive](BigDecimal(1)).some,
+          refineMV[Positive](1).some,
           BigDecimal(0).withRefinedUnit[NonNegative, Micrometer].some,
           Angle.fromDoubleArcseconds(1).some
         )
       )
-      // .flatTap(_.traverse(IO.println))
+      .flatTap(_.traverse(IO.println))
       .map(_.length)
       .assertEquals(36)
   }

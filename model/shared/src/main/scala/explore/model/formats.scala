@@ -93,6 +93,11 @@ trait formats {
            _.nanometer.to[BigDecimal, Nanometer].value.toString
     )
 
+  val formatWavelengthMicro: Format[String, Wavelength] =
+    Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
+           _.micrometer.toValue[BigDecimal].value.toString
+    )
+
   val formatPosInt: Format[String, PosInt] =
     Format(_.parseIntOption.flatMap(refineV[Positive](_).toOption), _.value.toString)
 

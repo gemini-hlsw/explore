@@ -7,8 +7,8 @@ import cats.Eq
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
-import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
+import explore.modes.FocalPlane
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import monocle.macros.Lenses
@@ -16,11 +16,11 @@ import monocle.macros.Lenses
 @Lenses
 final case class SpectroscopyConfigurationOptions(
   wavelength:      Option[Wavelength],
-  resolutionPower: Option[PosInt],
+  resolution:      Option[PosInt],
   signalToNoise:   Option[PosBigDecimal],
   signalToNoiseAt: Option[Wavelength],
   wavelengthRange: Option[Wavelength],
-  focalPlane:      Option[FocalPlaneOptions],
+  focalPlane:      Option[FocalPlane],
   focalPlaneAngle: Option[Angle],
   capabilities:    Option[SpectroscopyCapabilities]
 )
@@ -30,7 +30,7 @@ object SpectroscopyConfigurationOptions {
 
   implicit val eqSpectroscopyConfigurationOptions: Eq[SpectroscopyConfigurationOptions] = Eq.by(x =>
     (x.wavelength,
-     x.resolutionPower,
+     x.resolution,
      x.signalToNoise,
      x.signalToNoiseAt,
      x.wavelengthRange,

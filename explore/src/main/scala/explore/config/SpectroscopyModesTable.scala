@@ -6,10 +6,10 @@ package explore.config
 import cats.syntax.all._
 import coulomb.Quantity
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.modes._
+import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.F2Disperser
@@ -21,26 +21,34 @@ import lucuma.core.enum.GnirsDisperser
 import lucuma.core.enum.GnirsFilter
 import lucuma.core.enum.GpiDisperser
 import lucuma.core.enum.Instrument
+import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import reactST.reactTable._
+import reactST.reactTable.mod.DefaultSortTypes
+import spire.math.Bounded
+import spire.math.Interval
 
 import java.text.DecimalFormat
 
 import scalajs.js.JSConverters._
 
 final case class SpectroscopyModesTable(
-  matrix: SpectroscopyModesMatrix
+  matrix:            List[SpectroscopyModeRow],
+  centralWavelength: Option[Wavelength]
 ) extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
   type ColId = NonEmptyString
 
-  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow]
+  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort
+
+  private implicit val rowReuse: Reusability[SpectroscopyModeRow] = Reusability.by(_.id)
+  private implicit val propsReuse: Reusability[Props]             = Reusability.by(_.matrix)
 
   import ModesTableMaker.syntax._
 
@@ -65,6 +73,7 @@ object SpectroscopyModesTable {
   val FilterColumnId: ColId     = "filter"
   val RangeColumnId: ColId      = "range"
   val ResolutionColumnId: ColId = "resolution"
+  val TimeColumnId: ColId       = "time"
 
   private val columnNames: Map[ColId, String] =
     Map[NonEmptyString, String](
@@ -74,7 +83,8 @@ object SpectroscopyModesTable {
       DisperserColumnId  -> "Disperser",
       FilterColumnId     -> "Filter",
       RangeColumnId      -> "Range",
-      ResolutionColumnId -> "Res."
+      ResolutionColumnId -> "λ / Δλ",
+      TimeColumnId       -> "Time"
     )
 
   val formatSlitWidth: ModeSlitSize => String = ss =>
@@ -102,50 +112,67 @@ object SpectroscopyModesTable {
     case r                        => r.toString
   }
 
-  def formatWavelengthRange(r: Quantity[NonNegBigDecimal, Micrometer]): String =
-    decFormat.format(r.value.value.setScale(3, BigDecimal.RoundingMode.DOWN))
+  def formatWavelengthRange(r: Interval[Quantity[BigDecimal, Micrometer]]): String = r match {
+    case Bounded(a, b, _) =>
+      List(a, b)
+        .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
+        .mkString(" - ")
+    case _                =>
+      "-"
+  }
 
   def formatInstrument(r: (Instrument, NonEmptyString)): String = r match {
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
     case (i, _)                    => i.longName
   }
 
-  val columns =
+  def columns(cw: Option[Wavelength]) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
         .setWidth(30),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
-        .setWidth(10),
+        .setWidth(10)
+        .setSortType(DefaultSortTypes.number),
       column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
         .setCell(c => formatSlitLength(c.value))
-        .setWidth(10),
+        .setWidth(10)
+        .setSortType(DefaultSortTypes.number),
       column(DisperserColumnId, SpectroscopyModeRow.disperser.get)
         .setCell(c => formatDisperser(c.value))
         .setWidth(10),
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
         .setCell(c => formatFilter(c.value))
         .setWidth(10),
-      column(RangeColumnId, SpectroscopyModeRow.range.get)
+      column(RangeColumnId, SpectroscopyModeRow.rangeInterval(cw))
         .setCell(c => formatWavelengthRange(c.value))
-        .setWidth(10),
+        .setWidth(10)
+        .setSortType(DefaultSortTypes.number),
       column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
         .setCell(c => c.value.toString)
-        .setWidth(10)
+        .setWidth(5)
+        .setSortType(DefaultSortTypes.number),
+      column(TimeColumnId, _ => "N/A")
+        .setCell(_ => "N/A")
+        .setWidth(5)
+        .setSortType(DefaultSortTypes.number)
     )
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .render_P { p =>
-        tableComponent(
-          ModesTableProps(
-            ModesTableMaker.Options(columns.toJSArray, p.matrix.matrix.toJSArray)
+        React.Fragment(
+          <.label(ExploreStyles.ModesTableTitle, s"${p.matrix.length} matching configurations"),
+          tableComponent(
+            ModesTableProps(
+              ModesTableMaker.Options(columns(p.centralWavelength).toJSArray, p.matrix.toJSArray)
+            )
           )
         )
       }
-      // .configure(Reusability.shouldComponentUpdate)
+      .configure(Reusability.shouldComponentUpdate)
       .build
 
   protected final case class ModesTableProps(
@@ -163,10 +190,10 @@ object SpectroscopyModesTable {
           table =
             Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very)(),
           header = true,
-          headerCell = (_: ModesTableMaker.ColumnType) =>
+          headerCell = (c: ModesTableMaker.ColumnType) =>
             TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
-              ^.textTransform.capitalize,
-              ^.whiteSpace.nowrap
+              ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
+              ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
             )
         )(tableInstance)
       )

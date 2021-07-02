@@ -19,10 +19,10 @@ import eu.timepit.refined._
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.PosDouble
 import eu.timepit.refined.numeric.Positive
-import explore.model.enum.FocalPlaneOptions
 import lucuma.core.math.Angle
 import explore.model.enum.SpectroscopyCapabilities
 import scala.math.BigDecimal
+import explore.modes.FocalPlane
 
 trait ArbSpectroscopyConfigurationOptions {
 
@@ -34,7 +34,7 @@ trait ArbSpectroscopyConfigurationOptions {
       sn  <- arbitrary[Option[PosDouble]]
       sna <- arbitrary[Option[Wavelength]]
       wr  <- arbitrary[Option[Wavelength]]
-      sm  <- arbitrary[Option[FocalPlaneOptions]]
+      sm  <- arbitrary[Option[FocalPlane]]
       fa  <- arbitrary[Option[Angle]]
       sc  <- arbitrary[Option[SpectroscopyCapabilities]]
     } yield SpectroscopyConfigurationOptions(
@@ -57,14 +57,14 @@ trait ArbSpectroscopyConfigurationOptions {
         Option[BigDecimal],
         Option[Wavelength],
         Option[Wavelength],
-        Option[FocalPlaneOptions],
+        Option[FocalPlane],
         Option[Angle],
         Option[SpectroscopyCapabilities]
       )
     ]
       .contramap(cs =>
         (cs.wavelength,
-         cs.resolutionPower.map(_.value),
+         cs.resolution.map(_.value),
          cs.signalToNoise.map(_.value),
          cs.signalToNoiseAt,
          cs.wavelengthRange,

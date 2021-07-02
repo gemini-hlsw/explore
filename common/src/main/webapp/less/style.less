@@ -1464,9 +1464,26 @@ html {
   min-height: 0;
   display: grid;
   grid-gap: 0.5em;
-  grid-template-columns: 390px minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas:
+    "form table-header"
+    "form table";
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   height: 100%;
+}
+
+.tile-sm-width,
+.tile-xxs-width,
+.tile-xs-width {
+  .explore-configuration-grid {
+    --column-wide-span: 1;
+
+    grid-template-areas:
+      "form"
+      "table-header"
+      "table";
+    grid-template-columns: 1fr;
+  }
 }
 
 .explore-form {
@@ -1627,14 +1644,25 @@ html {
   left: 37px;
 }
 
+.explore-modes-table-title {
+  grid-area: table-header;
+}
+
+.explore-configuration-form {
+  grid-area: form;
+}
+
 .explore-modes-table {
   overflow-y: auto;
+  height: 100%;
   border: 0.2px solid var(--site-border-color);
   border-radius: @menuBorderRadius;
+  grid-area: table;
 }
 
 .explore-modes-header {
   top: 0;
+  white-space: nowrap;
 }
 
 .ui.button.compact,
@@ -1700,4 +1728,10 @@ svg.padded-right-icon.svg-inline--fa,
   input:checked ~ label::before {
     background-color: var(--checkbox-toggle-checked-background) !important;
   }
+}
+
+.ui.ui.selectable.table > tbody > tr:hover,
+.ui.table tbody tr td.selectable:hover {
+  outline: 1px var(--explore-accent-color) solid;
+  outline-offset: -1px;
 }

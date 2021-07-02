@@ -6,10 +6,12 @@ package explore.config
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
+import coulomb.refined._
 import crystal.Pot
 import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.numeric.Positive
 import explore.AppCtx
 import explore.components.HelpIcon
 import explore.components.Tile
@@ -19,8 +21,8 @@ import explore.implicits._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
-import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
+import explore.modes.FocalPlane
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -54,7 +56,7 @@ object ConfigurationPanel {
 
   implicit val modeDisplay: Display[ConfigurationMode]             = Display.by(_.label, _.label)
   implicit val specCapabDisplay: Display[SpectroscopyCapabilities] = Display.by(_.label, _.label)
-  implicit val focaLPlaneDisplay: Display[FocalPlaneOptions]       = Display.by(_.label, _.label)
+  implicit val focaLPlaneDisplay: Display[FocalPlane]              = Display.by(_.label, _.label)
   implicit val propsReuse: Reusability[Props]                      = Reusability.derive
   implicit val stateReuse: Reusability[State]                      = Reusability.never
 
@@ -108,13 +110,27 @@ object ConfigurationPanel {
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.ExploreForm,
+          ExploreStyles.ConfigurationForm,
           <.label("Mode", HelpIcon("configuration/mode.md")),
           EnumViewSelect(id = "configuration-mode", value = mode),
           SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
           ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
         ),
         SpectroscopyModesTable(
-          undoCtx.model.get.matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
+          undoCtx.model.get.matrix.toOption
+            .map(
+              _.filtered(
+                focalPlane = spectroscopy.get.focalPlane,
+                capabilities = spectroscopy.get.capabilities,
+                wavelength = spectroscopy.get.wavelength,
+                slitWidth = spectroscopy.get.focalPlaneAngle,
+                resolution = spectroscopy.get.resolution,
+                range = spectroscopy.get.wavelengthRange
+                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+              )
+            )
+            .getOrElse(Nil),
+          spectroscopy.get.wavelength
         ).when(isSpectroscopy)
       )
     }

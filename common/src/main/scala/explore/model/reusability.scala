@@ -3,36 +3,24 @@
 
 package explore.model
 
-import cats.data.NonEmptyList
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.CatsReact._
-import japgolly.scalajs.react.Key
 import japgolly.scalajs.react.Reusability
-import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
 import lucuma.ui.reusability._
-import react.common.Size
 
 /**
  * Reusability instances for model classes
  */
 object reusability {
-  // Move to lucuma-ui
-  implicit val bigDecimalReuse: Reusability[BigDecimal]                               = Reusability.byEq
-  implicit val offsetReuse: Reusability[Offset]                                       = Reusability.byEq
-  implicit val wavelengthReuse: Reusability[Wavelength]                               = Reusability.byEq
-  implicit val keyReuse: Reusability[Key]                                             = Reusability.by_==
-  implicit def nelReuse[A: Reusability]: Reusability[NonEmptyList[A]]                 =
-    Reusability.by(nel => (nel.head, nel.tail))
   // Model
+  implicit val pointingReuse: Reusability[Pointing]                                   = Reusability.byEq
   implicit val statusReuse: Reusability[PersistentClientStatus]                       = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                   = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                 = Reusability.byEq
   implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                   = Reusability.byEq
   implicit val rootModelReuse: Reusability[RootModel]                                 = Reusability.byEq
-  implicit val sizeReuse: Reusability[Size]                                           = Reusability.by(x => (x.height, x.width))
   implicit val focusedReuse: Reusability[Focused]                                     = Reusability.derive
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]  =
     Reusability.by(_.toList)
@@ -42,7 +30,6 @@ object reusability {
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]               = Reusability.byEq
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.derive
-  implicit val pointingReuse: Reusability[Pointing]                                   = Reusability.byEq
   implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
     Reusability.byEq

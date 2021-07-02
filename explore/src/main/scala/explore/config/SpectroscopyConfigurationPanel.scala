@@ -10,10 +10,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.SpectroscopyConfigurationOptions
-import explore.model.enum.FocalPlaneOptions
 import explore.model.enum.SpectroscopyCapabilities
 import explore.model.formats._
-import explore.model.reusability._
+import explore.modes.FocalPlane
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -34,7 +33,7 @@ object SpectroscopyConfigurationPanel {
   type Props = SpectroscopyConfigurationPanel
 
   implicit val specCapabDisplay: Display[SpectroscopyCapabilities]         = Display.by(_.label, _.label)
-  implicit val focaLPlaneDisplay: Display[FocalPlaneOptions]               = Display.by(_.label, _.label)
+  implicit val focaLPlaneDisplay: Display[FocalPlane]                      = Display.byShortName(_.label)
   implicit val optionsReuse: Reusability[SpectroscopyConfigurationOptions] = Reusability.derive
   implicit val propsReuse: Reusability[Props]                              = Reusability.derive
 
@@ -44,7 +43,7 @@ object SpectroscopyConfigurationPanel {
       .stateless
       .render_P { p =>
         val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelength)
-        val resolutionPower          = p.options.zoom(SpectroscopyConfigurationOptions.resolutionPower)
+        val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
         val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
         val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAt)
         val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRange)
@@ -52,6 +51,8 @@ object SpectroscopyConfigurationPanel {
         val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
         val spectroscopyCapabilities =
           p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
+        val wvMicroInput             = ValidFormatInput.fromFormatOptional(formatWavelengthMicro)
+        val wvChangeAuditor          = ChangeAuditor.fromFormat(formatWavelengthMicro).decimal(3).optional
 
         ReactFragment(
           <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
@@ -60,9 +61,9 @@ object SpectroscopyConfigurationPanel {
             clazz = Css.Empty,
             inline = true,
             value = wv,
-            units = "nm",
-            validFormat = ValidFormatInput.fromFormatOptional(formatWavelength),
-            changeAuditor = ChangeAuditor.fromFormat(formatWavelength).decimal(3).optional,
+            units = "μm",
+            validFormat = wvMicroInput,
+            changeAuditor = wvChangeAuditor,
             disabled = false
           ),
           <.label("λ / Δλ",
@@ -71,7 +72,7 @@ object SpectroscopyConfigurationPanel {
           ),
           FormInputEV(
             id = "configuration-resolution-power",
-            value = resolutionPower,
+            value = resolution,
             validFormat = ValidFormatInput.fromFormatOptional(formatPosInt),
             changeAuditor = ChangeAuditor.fromFormat(formatPosInt).optional
           ),
@@ -89,9 +90,9 @@ object SpectroscopyConfigurationPanel {
               id = "signal-to-noise-at",
               clazz = Css.Empty,
               value = signalToNoiseAt,
-              units = "nm",
-              validFormat = ValidFormatInput.fromFormatOptional(formatWavelength),
-              changeAuditor = ChangeAuditor.fromFormat(formatWavelength).decimal(3).optional,
+              units = "μm",
+              validFormat = wvMicroInput,
+              changeAuditor = wvChangeAuditor,
               disabled = false
             )
           ),
@@ -104,9 +105,9 @@ object SpectroscopyConfigurationPanel {
             clazz = Css.Empty,
             inline = true,
             value = wavelengthRange,
-            units = "nm",
-            validFormat = ValidFormatInput.fromFormatOptional(formatWavelength),
-            changeAuditor = ChangeAuditor.fromFormat(formatWavelength).decimal(3).optional,
+            units = "μm",
+            validFormat = wvMicroInput,
+            changeAuditor = wvChangeAuditor,
             disabled = false
           ),
           <.label("Focal Plane",
