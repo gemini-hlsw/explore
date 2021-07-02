@@ -3,6 +3,7 @@
 
 package explore.config
 
+import coulomb.cats.implicits._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -42,17 +43,18 @@ object SpectroscopyConfigurationPanel {
       .builder[Props]
       .stateless
       .render_P { p =>
-        val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelength)
+        val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthQ)
         val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
         val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
-        val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAt)
-        val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRange)
+        val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAtQ)
+        val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRangeQ)
         val focalPlane               = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
         val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
         val spectroscopyCapabilities =
           p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
-        val wvMicroInput             = ValidFormatInput.fromFormatOptional(formatWavelengthMicro)
-        val wvChangeAuditor          = ChangeAuditor.fromFormat(formatWavelengthMicro).decimal(3).optional
+
+        val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatWavelengthMicron)
+        val wvChangeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional
 
         ReactFragment(
           <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
