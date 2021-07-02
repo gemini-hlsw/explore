@@ -239,6 +239,9 @@ object SpectroscopyModeRow {
   def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
     instrumentRow.composeGetter(InstrumentRow.disperser)
 
+  def fpu: Lens[SpectroscopyModeRow, NonEmptyList[FocalPlane]] =
+    GenLens[SpectroscopyModeRow](_.focalPlane)
+
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
     instrumentRow.composeGetter(InstrumentRow.filter)
 
@@ -253,17 +256,22 @@ object SpectroscopyModeRow {
       ) { w =>
         import spire.std.bigDecimal._
 
-        val λr = r.wavelengthRange.toValue[BigDecimal]
-        val λm = r.minWavelength.w.micrometer
-        val Δ  = λr / TwoFactor
-        val λ  = w.micrometer
-        val λa = λ - Δ
-        val λb = λ + Δ
-        if (λa <= λm) {
-          Interval.closed(λm, λm + λr)
+        val λr     = r.wavelengthRange.toValue[BigDecimal]
+        // Range of allowed wavelength
+        val λmin   = r.minWavelength.w.micrometer
+        val λmax   = r.maxWavelength.w.micrometer
+        val Δ      = λr / TwoFactor
+        val λ      = w.micrometer
+        val λa     = λ - Δ
+        val λb     = λ + Δ
+        val (a, b) = if (λa < λmin) {
+          (λmin, λmax + λmin + λa)
+        } else if (λb > λmax) {
+          (λmin - λb + λmax, λmax)
         } else {
-          Interval.closed(λa, λb)
+          (λa, λb)
         }
+        Interval(a, b)
       }
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =

@@ -130,6 +130,7 @@ object ConfigurationPanel {
               )
             )
             .getOrElse(Nil),
+          spectroscopy.get.focalPlane,
           spectroscopy.get.wavelength
         ).when(isSpectroscopy)
       )

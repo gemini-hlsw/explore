@@ -5,5 +5,9 @@
 // Fix clearable dropdown
 // See https://github.com/fomantic/Fomantic-UI/issues/1259
 .ui.dropdown > .clear.icon:before {
-  content: "×";
+  content: "⨉";
+  top: 0.2em;
+  right: 0.2em;
+  position: absolute;
+  font-size: medium;
 }

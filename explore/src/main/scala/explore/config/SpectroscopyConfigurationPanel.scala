@@ -117,7 +117,7 @@ object SpectroscopyConfigurationPanel {
                   ExploreStyles.SkipToNext
           ),
           EnumViewOptionalSelect(id = "focal-plane",
-                                 placeholder = "Focal plane",
+                                 placeholder = "Any",
                                  upward = true,
                                  value = focalPlane,
                                  clearable = true
@@ -143,7 +143,7 @@ object SpectroscopyConfigurationPanel {
             clazz = ExploreStyles.ConfigurationCapabilities,
             clearable = true,
             upward = true,
-            placeholder = "Extra capablities",
+            placeholder = "None",
             value = spectroscopyCapabilities
           )
         )
