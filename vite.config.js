@@ -35,6 +35,10 @@ export default ({ command, mode }) => {
       path.resolve(publicDirProd, "development.conf.json"),
       path.resolve(publicDirDev, "conf.json")
     );
+    fs.copyFileSync(
+      path.resolve(publicDirProd, "instrument_spectroscopy_matrix.csv"),
+      path.resolve(publicDirDev, "instrument_spectroscopy_matrix.csv")
+    );
   });
 
   const publicDir = mode == "production" ? publicDirProd : publicDirDev;
