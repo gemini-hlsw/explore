@@ -5,7 +5,6 @@ package explore.model.arb
 
 import explore.model.SpectroscopyConfigurationOptions
 import lucuma.core.math.arb.ArbAngle._
-import lucuma.core.math.arb.ArbWavelength._
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary
@@ -14,26 +13,28 @@ import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
 // these need to be at the end to avoid diverging implicit expansion problems
 import eu.timepit.refined.scalacheck.numeric._
-import lucuma.core.math.Wavelength
 import eu.timepit.refined._
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.PosDouble
 import eu.timepit.refined.numeric.Positive
 import lucuma.core.math.Angle
+import lucuma.core.math.units.Micrometer
 import explore.model.enum.SpectroscopyCapabilities
 import scala.math.BigDecimal
+import coulomb.scalacheck.ArbQuantity._
 import explore.modes.FocalPlane
+import coulomb.Quantity
 
 trait ArbSpectroscopyConfigurationOptions {
 
   implicit val spectroscopyConfigurationurationOptionsArb
     : Arbitrary[SpectroscopyConfigurationOptions] = Arbitrary {
     for {
-      wv  <- arbitrary[Option[Wavelength]]
+      wv  <- arbitrary[Option[Quantity[BigDecimal, Micrometer]]]
       rp  <- arbitrary[Option[PosInt]]
       sn  <- arbitrary[Option[PosDouble]]
-      sna <- arbitrary[Option[Wavelength]]
-      wr  <- arbitrary[Option[Wavelength]]
+      sna <- arbitrary[Option[Quantity[BigDecimal, Micrometer]]]
+      wr  <- arbitrary[Option[Quantity[BigDecimal, Micrometer]]]
       sm  <- arbitrary[Option[FocalPlane]]
       fa  <- arbitrary[Option[Angle]]
       sc  <- arbitrary[Option[SpectroscopyCapabilities]]
@@ -52,22 +53,22 @@ trait ArbSpectroscopyConfigurationOptions {
   implicit val spectroscopyConfigurationOptionsCogen: Cogen[SpectroscopyConfigurationOptions] =
     Cogen[
       (
-        Option[Wavelength],
+        Option[Quantity[BigDecimal, Micrometer]],
         Option[Int],
         Option[BigDecimal],
-        Option[Wavelength],
-        Option[Wavelength],
+        Option[Quantity[BigDecimal, Micrometer]],
+        Option[Quantity[BigDecimal, Micrometer]],
         Option[FocalPlane],
         Option[Angle],
         Option[SpectroscopyCapabilities]
       )
     ]
       .contramap(cs =>
-        (cs.wavelength,
+        (cs.wavelengthQ,
          cs.resolution.map(_.value),
          cs.signalToNoise.map(_.value),
-         cs.signalToNoiseAt,
-         cs.wavelengthRange,
+         cs.signalToNoiseAtQ,
+         cs.wavelengthRangeQ,
          cs.focalPlane,
          cs.focalPlaneAngle,
          cs.capabilities

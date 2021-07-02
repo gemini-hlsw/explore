@@ -4,6 +4,8 @@
 package explore.model
 
 import cats.Eq
+import coulomb.Quantity
+import coulomb.cats.implicits._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
@@ -11,29 +13,43 @@ import explore.model.enum.SpectroscopyCapabilities
 import explore.modes.FocalPlane
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
+import lucuma.core.math.units.Micrometer
 import monocle.macros.Lenses
 
+/**
+ * We want to store wavelengths in units to allow 0 in the UI
+ * but later we convert these units for calculations were Wavelength 0 is not allowed
+ */
 @Lenses
 final case class SpectroscopyConfigurationOptions(
-  wavelength:      Option[Wavelength],
-  resolution:      Option[PosInt],
-  signalToNoise:   Option[PosBigDecimal],
-  signalToNoiseAt: Option[Wavelength],
-  wavelengthRange: Option[Wavelength],
-  focalPlane:      Option[FocalPlane],
-  focalPlaneAngle: Option[Angle],
-  capabilities:    Option[SpectroscopyCapabilities]
-)
+  wavelengthQ:      Option[Quantity[BigDecimal, Micrometer]],
+  resolution:       Option[PosInt],
+  signalToNoise:    Option[PosBigDecimal],
+  signalToNoiseAtQ: Option[Quantity[BigDecimal, Micrometer]],
+  wavelengthRangeQ: Option[Quantity[BigDecimal, Micrometer]],
+  focalPlane:       Option[FocalPlane],
+  focalPlaneAngle:  Option[Angle],
+  capabilities:     Option[SpectroscopyCapabilities]
+) {
+  def wavelength: Option[Wavelength] =
+    wavelengthQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
+
+  def signalToNoiseAt: Option[Wavelength] =
+    signalToNoiseAtQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
+
+  def wavelengthRange: Option[Wavelength] =
+    wavelengthRangeQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
+}
 
 object SpectroscopyConfigurationOptions {
   val Default = SpectroscopyConfigurationOptions(None, None, None, None, None, None, None, None)
 
   implicit val eqSpectroscopyConfigurationOptions: Eq[SpectroscopyConfigurationOptions] = Eq.by(x =>
-    (x.wavelength,
+    (x.wavelengthQ,
      x.resolution,
      x.signalToNoise,
-     x.signalToNoiseAt,
-     x.wavelengthRange,
+     x.signalToNoiseAtQ,
+     x.wavelengthRangeQ,
      x.focalPlane,
      x.focalPlaneAngle,
      x.capabilities

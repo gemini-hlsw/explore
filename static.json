@@ -8,6 +8,7 @@
     }
   },
   "routes": {
+    "/*.csv": "/",
     "/**": "index.html"
   },
   "headers": {
