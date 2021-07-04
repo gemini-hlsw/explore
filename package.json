@@ -4,7 +4,7 @@
     "yarn": "1.x"
   },
   "dependencies": {
-    "@atlaskit/tree": "8.2.0",
+    "@atlaskit/tree": "8.3.0",
     "@cquiroz/aladin-lite": "0.4.0",
     "@fortawesome/fontawesome-pro": "^5.15.3",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
