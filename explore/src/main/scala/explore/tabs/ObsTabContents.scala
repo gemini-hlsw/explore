@@ -171,7 +171,7 @@ object ObsTabContents {
         x = 0,
         y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
-        h = ConfigurationMaxHeight.value,
+        h = 2 * ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
       )
     )

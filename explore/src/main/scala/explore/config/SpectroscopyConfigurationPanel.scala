@@ -11,9 +11,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.SpectroscopyConfigurationOptions
+import explore.model.enum.FocalPlane
 import explore.model.enum.SpectroscopyCapabilities
 import explore.model.formats._
-import explore.modes.FocalPlane
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -117,7 +117,7 @@ object SpectroscopyConfigurationPanel {
                   ExploreStyles.SkipToNext
           ),
           EnumViewOptionalSelect(id = "focal-plane",
-                                 placeholder = "Focal plane",
+                                 placeholder = "Any",
                                  upward = true,
                                  value = focalPlane,
                                  clearable = true
@@ -143,7 +143,7 @@ object SpectroscopyConfigurationPanel {
             clazz = ExploreStyles.ConfigurationCapabilities,
             clearable = true,
             upward = true,
-            placeholder = "Extra capablities",
+            placeholder = "None",
             value = spectroscopyCapabilities
           )
         )

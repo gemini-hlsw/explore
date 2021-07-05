@@ -3,11 +3,13 @@
 
 package explore.config
 
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import coulomb.Quantity
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
+import explore.model.enum.FocalPlane
 import explore.modes._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
@@ -38,6 +40,7 @@ import scalajs.js.JSConverters._
 
 final case class SpectroscopyModesTable(
   matrix:            List[SpectroscopyModeRow],
+  focalPlane:        Option[FocalPlane],
   centralWavelength: Option[Wavelength]
 ) extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -72,6 +75,7 @@ object SpectroscopyModesTable {
   val DisperserColumnId: ColId  = "disperser"
   val FilterColumnId: ColId     = "filter"
   val RangeColumnId: ColId      = "range"
+  val FPUColumnId: ColId        = "fpu"
   val ResolutionColumnId: ColId = "resolution"
   val TimeColumnId: ColId       = "time"
 
@@ -82,6 +86,7 @@ object SpectroscopyModesTable {
       SlitLengthColumnId -> "Slit Length",
       DisperserColumnId  -> "Disperser",
       FilterColumnId     -> "Filter",
+      FPUColumnId        -> "FPU",
       RangeColumnId      -> "Range",
       ResolutionColumnId -> "λ / Δλ",
       TimeColumnId       -> "Time"
@@ -126,7 +131,16 @@ object SpectroscopyModesTable {
     case (i, _)                    => i.longName
   }
 
-  def columns(cw: Option[Wavelength]) =
+  def formatFPU(r: NonEmptyList[FocalPlane]): String = r
+    .map {
+      case FocalPlane.SingleSlit   => "Single"
+      case FocalPlane.MultipleSlit => "Multi"
+      case f                       => f.label
+    }
+    .toList
+    .mkString(", ")
+
+  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
@@ -145,6 +159,9 @@ object SpectroscopyModesTable {
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
         .setCell(c => formatFilter(c.value))
         .setWidth(10),
+      column(FPUColumnId, SpectroscopyModeRow.fpu.get)
+        .setCell(c => formatFPU(c.value))
+        .setWidth(10),
       column(RangeColumnId, SpectroscopyModeRow.rangeInterval(cw))
         .setCell(c => formatWavelengthRange(c.value))
         .setWidth(10)
@@ -157,7 +174,7 @@ object SpectroscopyModesTable {
         .setCell(_ => "N/A")
         .setWidth(5)
         .setSortType(DefaultSortTypes.number)
-    )
+    ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   protected val component =
     ScalaComponent
@@ -167,7 +184,9 @@ object SpectroscopyModesTable {
           <.label(ExploreStyles.ModesTableTitle, s"${p.matrix.length} matching configurations"),
           tableComponent(
             ModesTableProps(
-              ModesTableMaker.Options(columns(p.centralWavelength).toJSArray, p.matrix.toJSArray)
+              ModesTableMaker.Options(columns(p.centralWavelength, p.focalPlane).toJSArray,
+                                      p.matrix.toJSArray
+              )
             )
           )
         )

@@ -13,6 +13,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
+import explore.model.enum.FocalPlane
 import explore.model.enum.SpectroscopyCapabilities
 import fs2.data.csv._
 import lucuma.core.enum.F2Disperser
@@ -37,26 +38,6 @@ import monocle.macros.GenLens
 import spire.math.Interval
 import spire.math.Rational
 import spire.std.int._
-
-sealed trait FocalPlane extends Product with Serializable {
-  def label: String
-}
-
-object FocalPlane {
-  case object SingleSlit   extends FocalPlane {
-    val label = "Single Slit"
-  }
-  case object MultipleSlit extends FocalPlane {
-    val label = "Multiple Slits"
-  }
-  case object IFU          extends FocalPlane {
-    val label = "IFU"
-  }
-
-  /** @group Typeclass Instances */
-  implicit val FocalPlaneEnumerated: Enumerated[FocalPlane] =
-    Enumerated.of(SingleSlit, MultipleSlit, IFU)
-}
 
 trait InstrumentRow {
   def instrument: Instrument
@@ -239,6 +220,9 @@ object SpectroscopyModeRow {
   def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
     instrumentRow.composeGetter(InstrumentRow.disperser)
 
+  def fpu: Lens[SpectroscopyModeRow, NonEmptyList[FocalPlane]] =
+    GenLens[SpectroscopyModeRow](_.focalPlane)
+
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
     instrumentRow.composeGetter(InstrumentRow.filter)
 
@@ -253,17 +237,25 @@ object SpectroscopyModeRow {
       ) { w =>
         import spire.std.bigDecimal._
 
-        val λr = r.wavelengthRange.toValue[BigDecimal]
-        val λm = r.minWavelength.w.micrometer
-        val Δ  = λr / TwoFactor
-        val λ  = w.micrometer
-        val λa = λ - Δ
-        val λb = λ + Δ
-        if (λa <= λm) {
-          Interval.closed(λm, λm + λr)
+        val λr     = r.wavelengthRange.toValue[BigDecimal]
+        // Range of allowed wavelength
+        val λmin   = r.minWavelength.w.micrometer
+        val λmax   = r.maxWavelength.w.micrometer
+        val Δ      = λr / TwoFactor
+        val λ      = w.micrometer
+        val λa     = λ - Δ
+        val λb     = λ + Δ
+        // if we are below min clip but shift the range
+        // same if we are above max
+        // At any event we clip at min/max
+        val (a, b) = if (λa < λmin) {
+          (λmin, λmax + λmin - λa)
+        } else if (λb > λmax) {
+          (λmin - λb + λmax, λmax)
         } else {
-          Interval.closed(λa, λb)
+          (λa, λb)
         }
+        Interval(a.max(λmin), b.min(λmax))
       }
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =

@@ -21,8 +21,8 @@ import explore.implicits._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.enum.ConfigurationMode
+import explore.model.enum.FocalPlane
 import explore.model.enum.SpectroscopyCapabilities
-import explore.modes.FocalPlane
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -130,6 +130,7 @@ object ConfigurationPanel {
               )
             )
             .getOrElse(Nil),
+          spectroscopy.get.focalPlane,
           spectroscopy.get.wavelength
         ).when(isSpectroscopy)
       )
