@@ -255,7 +255,7 @@ object SpectroscopyModeRow {
         } else {
           (λa, λb)
         }
-        Interval(a, b)
+        Interval(a.max(λmin), b.min(λmax))
       }
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
