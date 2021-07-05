@@ -3,11 +3,13 @@
 
 package explore.config
 
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import coulomb.Quantity
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
+import explore.model.enum.FocalPlane
 import explore.modes._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
@@ -35,7 +37,6 @@ import spire.math.Interval
 import java.text.DecimalFormat
 
 import scalajs.js.JSConverters._
-import cats.data.NonEmptyList
 
 final case class SpectroscopyModesTable(
   matrix:            List[SpectroscopyModeRow],

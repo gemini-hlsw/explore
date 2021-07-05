@@ -11,9 +11,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.SpectroscopyConfigurationOptions
+import explore.model.enum.FocalPlane
 import explore.model.enum.SpectroscopyCapabilities
 import explore.model.formats._
-import explore.modes.FocalPlane
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment

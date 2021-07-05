@@ -22,7 +22,7 @@ import lucuma.core.math.units.Micrometer
 import explore.model.enum.SpectroscopyCapabilities
 import scala.math.BigDecimal
 import coulomb.scalacheck.ArbQuantity._
-import explore.modes.FocalPlane
+import explore.model.enum.FocalPlane
 import coulomb.Quantity
 
 trait ArbSpectroscopyConfigurationOptions {

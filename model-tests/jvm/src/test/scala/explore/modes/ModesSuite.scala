@@ -12,6 +12,7 @@ import coulomb.si.Second
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
+import explore.model.enum.FocalPlane
 import lucuma.core.enum.ImageQuality
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
