@@ -39,7 +39,7 @@ import spire.math.Interval
 import spire.math.Rational
 import spire.std.int._
 
-trait InstrumentRow {
+sealed trait InstrumentRow {
   def instrument: Instrument
 
   type Disperser
@@ -49,6 +49,53 @@ trait InstrumentRow {
   val filter: Filter
 
   override def toString(): String = s"${instrument.shortName}, $disperser, $filter"
+}
+
+final case class GmosNorthSpectroscopyRow(
+  disperser: GmosNorthDisperser,
+  filter:    Option[GmosNorthFilter]
+) extends InstrumentRow {
+  type Disperser = GmosNorthDisperser
+  type Filter    = Option[GmosNorthFilter]
+  val instrument = Instrument.GmosNorth
+}
+
+final case class GmosSouthSpectroscopyRow(
+  disperser: GmosSouthDisperser,
+  filter:    Option[GmosSouthFilter]
+) extends InstrumentRow {
+  type Disperser = GmosSouthDisperser
+  type Filter    = Option[GmosSouthFilter]
+  val instrument = Instrument.GmosSouth
+}
+
+final case class Flamingos2SpectroscopyRow(disperser: F2Disperser, filter: F2Filter)
+    extends InstrumentRow {
+  type Disperser = F2Disperser
+  type Filter    = F2Filter
+  val instrument = Instrument.Flamingos2
+}
+
+final case class GpiSpectroscopyRow(disperser: GpiDisperser, filter: GpiFilter)
+    extends InstrumentRow {
+  type Disperser = GpiDisperser
+  type Filter    = GpiFilter
+  val instrument = Instrument.Gpi
+}
+
+final case class GnirsSpectroscopyRow(disperser: GnirsDisperser, filter: GnirsFilter)
+    extends InstrumentRow {
+  type Disperser = GnirsDisperser
+  type Filter    = GnirsFilter
+  val instrument = Instrument.Gnirs
+}
+
+// Used for Instruments not fully defined
+final case class GenericSpectroscopyRow(i: Instrument, disperser: String, filter: NonEmptyString)
+    extends InstrumentRow {
+  type Disperser = String
+  type Filter    = NonEmptyString
+  val instrument = i
 }
 
 object InstrumentRow {
@@ -102,64 +149,25 @@ object InstrumentRow {
     filter0:     NonEmptyString
   ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
-      case i @ Instrument.GmosNorth  =>
-        (decodeGmosNorthDisperser(disperser0), decodeGmosNorthFilter(filter0)).mapN { case (d, f) =>
-          new InstrumentRow {
-            val instrument = i
-            type Disperser = GmosNorthDisperser
-            val disperser = d
-            type Filter = Option[GmosNorthFilter]
-            val filter = f
-          }
-        }
-      case i @ Instrument.GmosSouth  =>
-        (decodeGmosSouthDisperser(disperser0), decodeGmosSouthFilter(filter0)).mapN { case (d, f) =>
-          new InstrumentRow {
-            val instrument = i
-            type Disperser = GmosSouthDisperser
-            val disperser = d
-            type Filter = Option[GmosSouthFilter]
-            val filter = f
-          }
-        }
-      case i @ Instrument.Flamingos2 =>
-        (decodeF2Disperser(disperser0), decodeF2Filter(filter0)).mapN { case (d, f) =>
-          new InstrumentRow {
-            val instrument = i
-            type Disperser = F2Disperser
-            val disperser = d
-            type Filter = F2Filter
-            val filter = f
-          }
-        }
-      case i @ Instrument.Gpi        =>
-        (decodeGpiDisperser(disperser0), decodeGpiFilter(filter0)).mapN { case (d, f) =>
-          new InstrumentRow {
-            val instrument = i
-            type Disperser = GpiDisperser
-            val disperser = d
-            type Filter = GpiFilter
-            val filter = f
-          }
-        }
-      case i @ Instrument.Gnirs      =>
-        (decodeGnirsDisperser(disperser0), decodeGnirsFilter(filter0)).mapN { case (d, f) =>
-          new InstrumentRow {
-            val instrument = i
-            type Disperser = GnirsDisperser
-            val disperser = d
-            type Filter = GnirsFilter
-            val filter = f
-          }
-        }
-      case i                         =>
-        new InstrumentRow {
-          val instrument = i
-          type Disperser = String
-          val disperser = disperser0
-          type Filter = String
-          val filter = filter0.value
-        }.asRight
+      case Instrument.GmosNorth  =>
+        (decodeGmosNorthDisperser(disperser0), decodeGmosNorthFilter(filter0)).mapN(
+          GmosNorthSpectroscopyRow.apply
+        )
+      case Instrument.GmosSouth  =>
+        (decodeGmosSouthDisperser(disperser0), decodeGmosSouthFilter(filter0)).mapN(
+          GmosSouthSpectroscopyRow.apply
+        )
+      case Instrument.Flamingos2 =>
+        (decodeF2Disperser(disperser0), decodeF2Filter(filter0)).mapN(
+          Flamingos2SpectroscopyRow.apply
+        )
+      case Instrument.Gpi        =>
+        (decodeGpiDisperser(disperser0), decodeGpiFilter(filter0)).mapN(GpiSpectroscopyRow.apply)
+      case Instrument.Gnirs      =>
+        (decodeGnirsDisperser(disperser0), decodeGnirsFilter(filter0)).mapN(
+          GnirsSpectroscopyRow.apply
+        )
+      case i                     => GenericSpectroscopyRow(i, disperser0, filter0).asRight
     }
 
   val instrument: Getter[InstrumentRow, Instrument] =
