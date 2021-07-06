@@ -67,16 +67,16 @@ class ModesSuite extends CatsEffectSuite {
           Angle.fromDoubleArcseconds(1).some
         )
       )
-      .flatTap(_.traverse(IO.println))
+      // .flatTap(_.traverse(IO.println))
       .map(_.length)
-      .assertEquals(36)
+      .assertEquals(71)
   }
 
   test("spectroscopy csv loading") {
     IO(spectroscopyModesFixture())
       // .flatTap(_.matrix.traverse(IO.println))
       .map(_.matrix.length)
-      .assertEquals(244)
+      .assertEquals(309)
   }
 
   test("spectroscopy selection old") {
