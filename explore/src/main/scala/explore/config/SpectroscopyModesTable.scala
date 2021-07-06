@@ -26,6 +26,7 @@ import lucuma.core.enum.Instrument
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
+import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -50,8 +51,8 @@ object SpectroscopyModesTable {
 
   protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort
 
-  private implicit val rowReuse: Reusability[SpectroscopyModeRow] = Reusability.by(_.id)
-  private implicit val propsReuse: Reusability[Props]             = Reusability.by(_.matrix)
+  implicit val rowReuse: Reusability[SpectroscopyModeRow] = Reusability.by(_.id)
+  implicit val propsReuse: Reusability[Props]             = Reusability.derive
 
   import ModesTableMaker.syntax._
 
