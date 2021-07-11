@@ -57,7 +57,7 @@ object LogoutTracker {
               case _                         => SyncIO.unit
             })
           bc
-        }.flatMap(bc => $.modStateIn[SyncIO](State.bc.set(bc.some)))
+        }.flatMap(bc => $.modStateIn[SyncIO](State.bc.replace(bc.some)))
       }
       .componentWillUnmount { $ =>
         implicit val ctx = $.props.ctx

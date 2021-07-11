@@ -5,8 +5,8 @@ package explore.undo
 
 import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
-import monocle.Getter
 import monocle.Lens
+import monocle.Iso
 import monocle.macros.Lenses
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
@@ -14,7 +14,7 @@ import org.scalacheck.Arbitrary._
 
 class ListModSpec extends DisciplineSuite {
 
-  implicit val idGet = Getter.id[Int].get _
+  implicit val idGet = Iso.id[Int].get _
 
   val listMod = new KIListMod[Int, Int](Lens.id)
 

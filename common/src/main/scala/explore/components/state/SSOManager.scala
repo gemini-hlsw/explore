@@ -71,7 +71,7 @@ object SSOManager {
               .to[IO]
         )
         .start
-        .flatMap(ct => $.modStateIn[IO](State.cancelToken.set(ct.cancel.some)))
+        .flatMap(ct => $.modStateIn[IO](State.cancelToken.replace(ct.cancel.some)))
         .runAsyncCB
     }
     .componentWillUnmount { $ =>

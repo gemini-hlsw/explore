@@ -158,7 +158,7 @@ object SequenceStepsGQL {
     implicit def offsetComponentDecoder[T]: Decoder[Offset.Component[T]] = Decoder.instance(c =>
       c.downField("microarcseconds")
         .as[Long]
-        .map(Angle.signedMicroarcseconds.reverse.composeIso(Offset.Component.angle[T].reverse).get)
+        .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
     )
 
     implicit val offsetDecoder: Decoder[Offset] = Decoder.instance(c =>

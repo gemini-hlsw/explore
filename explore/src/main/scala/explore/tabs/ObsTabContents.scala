@@ -197,9 +197,9 @@ object ObsTabContents {
   }
 
   object State {
-    val panelsWidth   = State.panels.composeLens(TwoPanelState.treeWidth)
-    val panelSelected = State.panels.composeLens(TwoPanelState.elementSelected)
-    val fovAngle      = State.options.composeLens(TargetVisualOptions.fovAngle)
+    val panelsWidth   = State.panels.andThen(TwoPanelState.treeWidth)
+    val panelSelected = State.panels.andThen(TwoPanelState.elementSelected)
+    val fovAngle      = State.options.andThen(TargetVisualOptions.fovAngle)
   }
 
   type Props = ObsTabContents
@@ -215,7 +215,7 @@ object ObsTabContents {
         )
         .runAsyncAndThenCB {
           case Right((w, l)) =>
-            $.modState((s: State) => State.panelsWidth.set(w)(s.updateLayouts(l)))
+            $.modState((s: State) => State.panelsWidth.replace(w)(s.updateLayouts(l)))
           case Left(_)       => Callback.empty
         }
 
@@ -225,7 +225,7 @@ object ObsTabContents {
         p.userId.get.map { uid =>
           UserTargetPreferencesQuery
             .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
-            .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+            .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
             .runAsyncAndForgetCB
         }.getOrEmpty
       }
@@ -441,7 +441,7 @@ object ObsTabContents {
             )
           case Some(s) =>
             if (s.panels.elementSelected =!= p.isObsSelected)
-              State.panelSelected.set(p.isObsSelected)(s)
+              State.panelSelected.replace(p.isObsSelected)(s)
             else s
         }
       )

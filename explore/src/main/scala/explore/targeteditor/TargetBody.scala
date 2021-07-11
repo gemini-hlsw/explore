@@ -85,7 +85,7 @@ object TargetBody {
         val allView = undoViewSet(
           targetPropsL,
           { args: (NonEmptyString, SiderealTracking, List[Magnitude]) =>
-            EditSiderealInput.name.set(args._1.value.assign) >>>
+            EditSiderealInput.name.replace(args._1.value.assign) >>>
               TargetQueries.UpdateSiderealTracking(args._2) >>>
               TargetQueries.replaceMagnitudes(args._3)
           }
@@ -112,7 +112,7 @@ object TargetBody {
 
         val nameView = undoViewSet(
           TargetResult.name,
-          (EditSiderealInput.name.set _).compose((_: NonEmptyString).value.assign)
+          (EditSiderealInput.name.replace _).compose((_: NonEmptyString).value.assign)
         )
 
         val properMotionRAView = undoViewSet(

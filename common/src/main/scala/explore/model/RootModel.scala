@@ -18,7 +18,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Lens
 import monocle.macros.Lenses
-import monocle.std.option
 
 import scala.collection.immutable.HashSet
 
@@ -49,10 +48,9 @@ object RootModel {
   )
 
   val userId =
-    RootModel.vault
-      .composePrism(option.some)
-      .composeLens(UserVault.user)
-      .composeLens(userUserId)
+    RootModel.vault.some
+      .andThen(UserVault.user)
+      .andThen(userUserId)
 
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>

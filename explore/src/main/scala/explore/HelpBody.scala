@@ -141,7 +141,7 @@ object HelpBody {
         implicit val ctx = $.props.ctx
 
         load($.props.url)
-          .flatMap(v => $.modStateIn[IO](State.content.set(Pot.fromTry(v))))
+          .flatMap(v => $.modStateIn[IO](State.content.replace(Pot.fromTry(v))))
           .runAsync
       }
       .build

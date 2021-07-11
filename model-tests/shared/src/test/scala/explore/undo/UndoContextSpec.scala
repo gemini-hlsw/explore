@@ -14,12 +14,13 @@ import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import explore.undo._
 import monocle.Lens
+import monocle.Iso
 import monocle.function.all._
 import monocle.macros.GenLens
 
 class UndoContextSpec extends munit.CatsEffectSuite {
 
-  def idLens[A] = Lens.id[A]
+  def idLens[A] = Iso.id[A]
 
   def id[A] = GetAdjust(idLens[A])
 
