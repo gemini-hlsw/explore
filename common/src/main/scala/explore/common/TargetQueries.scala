@@ -37,13 +37,13 @@ object TargetQueries {
    * Lens for the base coordinates of TargetResult.Tracking
    */
   val baseCoordinates: Lens[TargetResult, Coordinates] =
-    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates
+    TargetResult.tracking.andThen(SiderealTracking.baseCoordinates)
 
   val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
-    baseCoordinates ^|-> Coordinates.rightAscension
+    baseCoordinates.andThen(Coordinates.rightAscension)
 
   val baseCoordinatesDec: Lens[TargetResult, Declination] =
-    baseCoordinates ^|-> Coordinates.declination
+    baseCoordinates.andThen(Coordinates.declination)
 
   /**
    * Lens used to change name and coordinates of a target
@@ -51,19 +51,19 @@ object TargetQueries {
   val targetPropsL = disjointZip(TargetResult.name, TargetResult.tracking, TargetResult.magnitudes)
 
   val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
-    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO
+    TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMRALensO)
 
   val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
-    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMDecLensO
+    TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMDecLensO)
 
   val epoch: Lens[TargetResult, Epoch] =
-    TargetResult.tracking ^|-> SiderealTracking.epoch
+    TargetResult.tracking.andThen(SiderealTracking.epoch)
 
   val pxLens: Lens[TargetResult, Option[Parallax]] =
-    TargetResult.tracking ^|-> SiderealTracking.parallax
+    TargetResult.tracking.andThen(SiderealTracking.parallax)
 
   val rvLens: Lens[TargetResult, Option[RadialVelocity]] =
-    TargetResult.tracking ^|-> SiderealTracking.radialVelocity
+    TargetResult.tracking.andThen(SiderealTracking.radialVelocity)
 
   case class UndoView(
     id:           Target.Id,
@@ -90,21 +90,21 @@ object TargetQueries {
 
   object UpdateSiderealTracking {
     def catalogId(cid: Option[CatalogId]): Endo[EditSiderealInput] =
-      EditSiderealInput.catalogId.set(
+      EditSiderealInput.catalogId.replace(
         cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value)).orUnassign
       )
 
     def epoch(epoch: Option[Epoch]): Endo[EditSiderealInput] =
-      EditSiderealInput.epoch.set(epoch.map(Epoch.fromString.reverseGet).orUnassign)
+      EditSiderealInput.epoch.replace(epoch.map(Epoch.fromString.reverseGet).orUnassign)
 
     def ra(ra: Option[RightAscension]): Endo[EditSiderealInput] =
-      EditSiderealInput.ra.set(
+      EditSiderealInput.ra.replace(
         ra.map(r => RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.assign))
           .orUnassign
       )
 
     def dec(dec: Option[Declination]): Endo[EditSiderealInput] =
-      EditSiderealInput.dec.set(
+      EditSiderealInput.dec.replace(
         dec
           .map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.assign))
           .orUnassign
@@ -113,7 +113,7 @@ object TargetQueries {
     def properMotion(
       pm: Option[ProperMotion]
     ): Endo[EditSiderealInput] =
-      EditSiderealInput.properMotion.set(
+      EditSiderealInput.properMotion.replace(
         pm.map(p =>
           ProperMotionInput(
             ra = ProperMotionComponentInput(microarcsecondsPerYear = p.ra.μasy.value.assign),
@@ -125,7 +125,7 @@ object TargetQueries {
     def radialVelocity(
       rv: Option[RadialVelocity]
     ): Endo[EditSiderealInput] =
-      EditSiderealInput.radialVelocity.set(
+      EditSiderealInput.radialVelocity.replace(
         rv.map(r =>
           RadialVelocityInput(
             metersPerSecond = r.rv.withUnit[CentimetersPerSecond].value.value.assign
@@ -134,7 +134,7 @@ object TargetQueries {
       )
 
     def parallax(p: Option[Parallax]): Endo[EditSiderealInput] =
-      EditSiderealInput.parallax.set(
+      EditSiderealInput.parallax.replace(
         p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.value.assign)).orUnassign
       )
 
@@ -152,5 +152,5 @@ object TargetQueries {
   }
 
   def updateMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
-    EditSiderealInput.magnitudes.set(mags.map(_.toInput).assign)
+    EditSiderealInput.magnitudes.replace(mags.map(_.toInput).assign)
 }

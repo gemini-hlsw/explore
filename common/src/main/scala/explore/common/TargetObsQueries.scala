@@ -56,25 +56,27 @@ object TargetObsQueries {
   val PointingAsterismResult = ObsResult.Pointing.Asterism
 
   val baseCoordinatesRa: Lens[TargetResult, RightAscension] =
-    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
+    TargetResult.tracking
+      .andThen(SiderealTracking.baseCoordinates)
+      .andThen(Coordinates.rightAscension)
 
   val baseCoordinatesDec: Lens[TargetResult, Declination] =
-    TargetResult.tracking ^|-> SiderealTracking.baseCoordinates ^|-> Coordinates.declination
+    TargetResult.tracking.andThen(SiderealTracking.baseCoordinates).andThen(Coordinates.declination)
 
   val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
-    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMRALensO
+    TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMRALensO)
 
   val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
-    TargetResult.tracking ^|-> SiderealTracking.properMotion ^|-> unsafePMDecLensO
+    TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMDecLensO)
 
   val epoch: Lens[TargetResult, Epoch] =
-    TargetResult.tracking ^|-> SiderealTracking.epoch
+    TargetResult.tracking.andThen(SiderealTracking.epoch)
 
   val pxLens: Lens[TargetResult, Option[Parallax]] =
-    TargetResult.tracking ^|-> SiderealTracking.parallax
+    TargetResult.tracking.andThen(SiderealTracking.parallax)
 
   val rvLens: Lens[TargetResult, Option[RadialVelocity]] =
-    TargetResult.tracking ^|-> SiderealTracking.radialVelocity
+    TargetResult.tracking.andThen(SiderealTracking.radialVelocity)
 
   type TargetList         = KeyedIndexedList[Target.Id, TargetResult]
   type AsterismList       = KeyedIndexedList[Asterism.Id, AsterismIdName]
@@ -113,7 +115,7 @@ object TargetObsQueries {
     }
 
   val targetsObsQueryObsPointingId: Lens[ObsResult, Option[PointingId]] =
-    ObsResult.pointing.composeIso(optionIso(targetsObsQueryPointingId))
+    ObsResult.pointing.andThen(optionIso(targetsObsQueryPointingId))
 
   private val targetsObsQueryTargetsWithObs: Getter[TargetsObsQuery.Data, PointingsWithObs] =
     data => {

@@ -173,7 +173,7 @@ object ConfigurationPanel {
       .componentDidMount { $ =>
         implicit val ctx = $.props.ctx
         load(uri"/instrument_spectroscopy_matrix.csv").flatMap { m =>
-          $.modStateIn[IO](State.matrix.set(Pot(m)))
+          $.modStateIn[IO](State.matrix.replace(Pot(m)))
         }.runAsyncAndForgetCB
       }
       .configure(Reusability.shouldComponentUpdate)

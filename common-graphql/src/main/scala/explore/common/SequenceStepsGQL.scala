@@ -36,7 +36,7 @@ object SequenceStepsGQL {
                 total {
                   microseconds
                 }
-              }              
+              }
               ... on GmosNorthConfig {
                 acquisitionN:acquisition {
                   ...northSequenceFields
@@ -84,13 +84,13 @@ object SequenceStepsGQL {
                 xBin
                 yBin
               }
-              roi                        
+              roi
             }
             stepConfig {
               __typename
               ... on Gcal {
                 shutter
-              }                        
+              }
               ... on Science {
                 offset {
                   p {
@@ -103,7 +103,7 @@ object SequenceStepsGQL {
               }
             }
           }
-        }      
+        }
       }
 
       fragment southSequenceFields on GmosSouthSequence {
@@ -132,13 +132,13 @@ object SequenceStepsGQL {
                 xBin
                 yBin
               }
-              roi                        
+              roi
             }
             stepConfig {
               __typename
               ... on Gcal {
                 shutter
-              }                        
+              }
               ... on Science {
                 offset {
                   p {
@@ -151,14 +151,14 @@ object SequenceStepsGQL {
               }
             }
           }
-        }      
+        }
       }
     """
 
     implicit def offsetComponentDecoder[T]: Decoder[Offset.Component[T]] = Decoder.instance(c =>
       c.downField("microarcseconds")
         .as[Long]
-        .map(Angle.signedMicroarcseconds.reverse.composeIso(Offset.Component.angle[T].reverse).get)
+        .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
     )
 
     implicit val offsetDecoder: Decoder[Offset] = Decoder.instance(c =>

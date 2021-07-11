@@ -44,7 +44,7 @@ object TargetEditor {
   final case class State(options: TargetVisualOptions)
 
   object State {
-    val fovAngle = options.composeLens(TargetVisualOptions.fovAngle)
+    val fovAngle = options.andThen(TargetVisualOptions.fovAngle)
   }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
@@ -94,7 +94,7 @@ object TargetEditor {
         implicit val ctx = p.ctx
         UserTargetPreferencesQuery
           .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
-          .flatMap(v => $.modStateIn[IO](State.fovAngle.set(v)))
+          .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
           .runAsyncAndForgetCB
       }
       .configure(Reusability.shouldComponentUpdate)

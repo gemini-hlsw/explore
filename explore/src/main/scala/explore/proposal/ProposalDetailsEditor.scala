@@ -243,7 +243,7 @@ object ProposalDetailsEditor {
       val details = props.proposalDetails
 
       def closePartnerSplitsEditor: Callback =
-        $.modState(State.showPartnerSplitsModal.set(false))
+        $.modState(State.showPartnerSplitsModal.replace(false))
 
       def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
         details
