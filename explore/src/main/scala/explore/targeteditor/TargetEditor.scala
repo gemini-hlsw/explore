@@ -25,7 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 
 final case class TargetEditor(
@@ -40,10 +40,10 @@ final case class TargetEditor(
 object TargetEditor {
   type Props = TargetEditor
 
-  @Lenses
   final case class State(options: TargetVisualOptions)
 
   object State {
+    val options  = Focus[State](_.options)
     val fovAngle = options.andThen(TargetVisualOptions.fovAngle)
   }
 

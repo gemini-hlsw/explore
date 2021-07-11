@@ -7,9 +7,8 @@ import cats._
 import explore.model.enum.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.syntax.int._
-import monocle.macros.Lenses
+import monocle.Focus
 
-@Lenses
 final case class TargetVisualOptions(
   fov:      Visible,
   fovAngle: Angle,
@@ -20,6 +19,13 @@ final case class TargetVisualOptions(
 )
 
 object TargetVisualOptions {
+  val fov      = Focus[TargetVisualOptions](_.fov)
+  val fovAngle = Focus[TargetVisualOptions](_.fovAngle)
+  val offsets  = Focus[TargetVisualOptions](_.offsets)
+  val guiding  = Focus[TargetVisualOptions](_.guiding)
+  val probe    = Focus[TargetVisualOptions](_.probe)
+  val posAngle = Focus[TargetVisualOptions](_.posAngle)
+
   val Default =
     TargetVisualOptions(Visible.Hidden,
                         Constants.InitialFov,

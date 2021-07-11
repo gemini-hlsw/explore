@@ -71,7 +71,6 @@ object ConfigurationPanel {
   implicit val propsReuse: Reusability[Props]                      = Reusability.derive
   implicit val stateReuse: Reusability[State]                      = Reusability.never
 
-  @Lenses
   final case class State(
     mode:           ScienceMode,
     imagingOptions: ImagingConfigurationOptions,

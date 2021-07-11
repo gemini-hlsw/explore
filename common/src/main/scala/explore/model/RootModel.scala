@@ -17,11 +17,10 @@ import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Lens
-import monocle.macros.Lenses
+import monocle.Focus
 
 import scala.collection.immutable.HashSet
 
-@Lenses
 case class RootModel(
   vault:                      Option[UserVault],
   tabs:                       EnumZipper[AppTab],
@@ -38,6 +37,15 @@ case class RootModel(
 )
 
 object RootModel {
+  val vault                      = Focus[RootModel](_.vault)
+  val focused                    = Focus[RootModel](_.focused)
+  val userSelectionMessage       = Focus[RootModel](_.userSelectionMessage)
+  val tabs                       = Focus[RootModel](_.tabs)
+  val searchingTarget            = Focus[RootModel](_.searchingTarget)
+  val undoStacks                 = Focus[RootModel](_.undoStacks)
+  val expandedIds                = Focus[RootModel](_.expandedIds)
+  val targetSummaryHiddenColumns = Focus[RootModel](_.targetSummaryHiddenColumns)
+
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
       a match {

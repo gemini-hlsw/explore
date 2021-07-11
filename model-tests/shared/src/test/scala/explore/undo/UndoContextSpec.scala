@@ -15,6 +15,7 @@ import explore.optics.GetAdjust
 import explore.undo._
 import monocle.Lens
 import monocle.Iso
+import monocle.Focus
 import monocle.function.all._
 import monocle.macros.GenLens
 
@@ -90,11 +91,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  // @Lenses
   case class V(id: Int, s: String)
   object V {
     def apply(id: Int): V = V(id, id.toString)
-    // @Lenses doesn't seem to be working for some reason...
     val id: Lens[V, Int]   = GenLens[V](_.id)
     val s: Lens[V, String] = GenLens[V](_.s)
   }
@@ -108,7 +107,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
       .withKey(id)
       .adjuster
       .composeTraversal(each)
-      .composeLens(first)
+      .composeLens(Focus[(V, Int)](_._1))
       .composeLens(V.s)
 
   dispatcher.test("ListObjModPosUndoRedo") { implicit dispatcher =>
@@ -305,7 +304,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
       .withKey(key)
       .adjuster
       .composeTraversal(each)
-      .composeLens(first)
+      .composeLens(Focus[(Node[V], Index[Int])](_._1))
       .composeLens(Node.value)
       .composeLens(V.s)
 

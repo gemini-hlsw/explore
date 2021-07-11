@@ -4,15 +4,19 @@
 package explore.undo
 
 import cats.Eq
-import monocle.macros.Lenses
+import monocle.Focus
 
-@Lenses
 case class UndoStacks[F[_], M](
   undo:    UndoStack[F, M],
   redo:    UndoStack[F, M],
   working: Boolean
 )
+
 object UndoStacks {
+  def undo[F[_], M]    = Focus[UndoStacks[F, M]](_.undo)
+  def redo[F[_], M]    = Focus[UndoStacks[F, M]](_.redo)
+  def working[F[_], M] = Focus[UndoStacks[F, M]](_.working)
+
   def empty[F[_], M]: UndoStacks[F, M] =
     UndoStacks(List.empty[Restorer[F, M]], List.empty[Restorer[F, M]], false)
 

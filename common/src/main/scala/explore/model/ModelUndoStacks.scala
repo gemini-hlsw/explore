@@ -12,9 +12,8 @@ import explore.common.TargetQueries.TargetResult
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import monocle.macros.Lenses
+import monocle.Focus
 
-@Lenses
 case class ModelUndoStacks[F[_]](
   forObsList:             UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetList:          UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
@@ -27,6 +26,11 @@ case class ModelUndoStacks[F[_]](
 )
 
 object ModelUndoStacks {
+  def forTarget[F[_]]        = Focus[ModelUndoStacks[F]](_.forTarget)
+  def forObsList[F[_]]       = Focus[ModelUndoStacks[F]](_.forObsList)
+  def forTargetList[F[_]]    = Focus[ModelUndoStacks[F]](_.forTargetList)
+  def forConstraintSet[F[_]] = Focus[ModelUndoStacks[F]](_.forConstraintSet)
+
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
       (u.forObsList, u.forTargetList, u.forTarget, u.forConstraintSet, u.forScienceRequirements)

@@ -42,7 +42,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.macros.Lenses
+import monocle.Focus
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
@@ -186,7 +186,6 @@ object ObsTabContents {
       )
     )
 
-  @Lenses
   final case class State(
     panels:  TwoPanelState,
     layouts: LayoutsMap,
@@ -197,6 +196,9 @@ object ObsTabContents {
   }
 
   object State {
+    val panels        = Focus[State](_.panels)
+    val options       = Focus[State](_.options)
+    val layouts       = Focus[State](_.layouts)
     val panelsWidth   = State.panels.andThen(TwoPanelState.treeWidth)
     val panelSelected = State.panels.andThen(TwoPanelState.elementSelected)
     val fovAngle      = State.options.andThen(TargetVisualOptions.fovAngle)
