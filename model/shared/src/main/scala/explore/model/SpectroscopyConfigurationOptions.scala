@@ -14,13 +14,12 @@ import explore.model.enum.SpectroscopyCapabilities
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
-import monocle.macros.Lenses
+import monocle.Focus
 
 /**
  * We want to store wavelengths in units to allow 0 in the UI
  * but later we convert these units for calculations were Wavelength 0 is not allowed
  */
-@Lenses
 final case class SpectroscopyConfigurationOptions(
   wavelengthQ:      Option[Quantity[BigDecimal, Micrometer]],
   resolution:       Option[PosInt],
@@ -42,6 +41,15 @@ final case class SpectroscopyConfigurationOptions(
 }
 
 object SpectroscopyConfigurationOptions {
+  val wavelengthQ      = Focus[SpectroscopyConfigurationOptions](_.wavelengthQ)
+  val resolution       = Focus[SpectroscopyConfigurationOptions](_.resolution)
+  val signalToNoise    = Focus[SpectroscopyConfigurationOptions](_.signalToNoise)
+  val signalToNoiseAtQ = Focus[SpectroscopyConfigurationOptions](_.signalToNoiseAtQ)
+  val wavelengthRangeQ = Focus[SpectroscopyConfigurationOptions](_.wavelengthRangeQ)
+  val focalPlane       = Focus[SpectroscopyConfigurationOptions](_.focalPlane)
+  val focalPlaneAngle  = Focus[SpectroscopyConfigurationOptions](_.focalPlaneAngle)
+  val capabilities     = Focus[SpectroscopyConfigurationOptions](_.capabilities)
+
   val Default = SpectroscopyConfigurationOptions(None, None, None, None, None, None, None, None)
 
   implicit val eqSpectroscopyConfigurationOptions: Eq[SpectroscopyConfigurationOptions] = Eq.by(x =>

@@ -23,7 +23,7 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
@@ -58,7 +58,6 @@ object RVInput {
 
   }
 
-  @Lenses
   final case class State(rvView: RVView) {
     val units = rvView match {
       case RVView.Z              =>
@@ -69,6 +68,10 @@ object RVInput {
           "km/s"
         )
     }
+  }
+
+  object State {
+    val rvView = Focus[State](_.rvView)
   }
 
   implicit def propsReuse: Reusability[Props] = Reusability.derive

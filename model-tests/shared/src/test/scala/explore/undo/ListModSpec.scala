@@ -7,7 +7,7 @@ import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
 import monocle.Lens
 import monocle.Iso
-import monocle.macros.Lenses
+import monocle.Focus
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
@@ -16,7 +16,7 @@ class ListModSpec extends DisciplineSuite {
 
   implicit val idGet = Iso.id[Int].get _
 
-  val listMod = new KIListMod[Int, Int](Lens.id)
+  val listMod = new KIListMod[Int, Int](Iso.id)
 
   val elemWithKey = listMod.withKey(0)
   val posWithKey  = listMod.pos.withKey(0)
@@ -29,9 +29,10 @@ class ListModSpec extends DisciplineSuite {
   checkAll("listMod.withKey.adjuster", AdjusterTests(elemWithKey.adjuster))
   checkAll("listMod.pos.withKey.adjuster", AdjusterTests(posWithKey.adjuster))
 
-  @Lenses
   case class V(id: Int, s: String)
   object V {
+    val id: Lens[V, Int] = Focus[V](_.id)
+
     def apply(id: Int): V = V(id, id.toString)
   }
 

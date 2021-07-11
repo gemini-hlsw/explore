@@ -23,7 +23,7 @@ import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common.ReactProps
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
@@ -48,8 +48,12 @@ final case class MagnitudeForm(
 object MagnitudeForm {
   type Props = MagnitudeForm
 
-  @Lenses
   protected case class State(usedBands: Set[MagnitudeBand], newBand: Option[MagnitudeBand])
+
+  object State {
+    val usedBands = Focus[State](_.usedBands)
+    val newBand   = Focus[State](_.newBand)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive

@@ -16,7 +16,7 @@ import explore.utils.ExploreEvent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common.ReactProps
 
 final case class LogoutTracker(
@@ -28,8 +28,11 @@ final case class LogoutTracker(
 object LogoutTracker {
   type Props = LogoutTracker
 
-  @Lenses
   case class State(bc: Option[BroadcastChannel[ExploreEvent]])
+
+  object State {
+    val bc = Focus[State](_.bc)
+  }
 
   protected implicit val propsReuse: Reusability[Props] =
     Reusability.derive && Reusability.by(_.render)

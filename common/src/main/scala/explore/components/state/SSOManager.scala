@@ -15,7 +15,7 @@ import explore.model.UserVault
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import org.typelevel.log4cats.Logger
 import react.common.ReactProps
 
@@ -31,8 +31,11 @@ final case class SSOManager(
 object SSOManager {
   type Props = SSOManager
 
-  @Lenses
   case class State(cancelToken: Option[IO[Unit]])
+
+  object State {
+    val cancelToken = Focus[State](_.cancelToken)
+  }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.by(_.expiration)
   protected implicit val stateReuse: Reusability[State] = Reusability.never

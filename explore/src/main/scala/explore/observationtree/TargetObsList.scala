@@ -49,7 +49,6 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.Getter
-import monocle.macros.Lenses
 import monocle.std.option.some
 import monocle.Focus
 import mouse.boolean._
@@ -71,6 +70,7 @@ import react.semanticui.views.card.CardContent
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
+import monocle.Lens
 
 final case class TargetObsList(
   pointingsWithObs: View[PointingsWithObs],
@@ -85,11 +85,14 @@ final case class TargetObsList(
 object TargetObsList {
   type Props = TargetObsList
 
-  @Lenses
   case class State(
     dragging: Boolean = false
     // undoStacks: UndoStacks2[IO, PointingsWithObs] = UndoStacks2.empty
   )
+
+  object State {
+    val dragging: Lens[State, Boolean] = Focus[State](_.dragging)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive

@@ -35,7 +35,7 @@ import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
 import monocle.Lens
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
@@ -60,13 +60,19 @@ object ConfigurationPanel {
   implicit val propsReuse: Reusability[Props]                      = Reusability.derive
   implicit val stateReuse: Reusability[State]                      = Reusability.never
 
-  @Lenses
   final case class State(
     mode:                ConfigurationMode,
     spectroscopyOptions: SpectroscopyConfigurationOptions,
     imagingOptions:      ImagingConfigurationOptions,
     matrix:              Pot[SpectroscopyModesMatrix]
   )
+
+  object State {
+    val mode                = Focus[State](_.mode)
+    val spectroscopyOptions = Focus[State](_.spectroscopyOptions)
+    val imagingOptions      = Focus[State](_.imagingOptions)
+    val matrix              = Focus[State](_.matrix)
+  }
 
   case class UndoView(
     undoCtx: UndoCtx[State]

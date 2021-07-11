@@ -5,22 +5,25 @@ package explore
 
 import cats.kernel.Eq
 import explore.optics._
-import monocle.macros.Lenses
+import monocle.Focus
+import monocle.Lens
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 
 class OpticsSuite extends DisciplineSuite {
 
-  @Lenses
   case class Inner[A](a: A)
   object Inner {
+    def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
+
     implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
   }
 
-  @Lenses
   case class Outer[A](opt: Option[Inner[A]])
   object Outer {
+    def opt[A]: Lens[Outer[A], Option[Inner[A]]] = Focus[Outer[A]](_.opt)
+
     implicit def eqOuter[A: Eq]: Eq[Outer[A]] = Eq.by(_.opt)
   }
 

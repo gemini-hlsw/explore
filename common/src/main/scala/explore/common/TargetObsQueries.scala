@@ -32,7 +32,7 @@ import lucuma.ui.reusability._
 import monocle.Getter
 import monocle.Iso
 import monocle.Lens
-import monocle.macros.Lenses
+import monocle.Focus
 
 import TargetObsQueriesGQL._
 
@@ -83,13 +83,16 @@ object TargetObsQueries {
   type ObsList            = KeyedIndexedList[Observation.Id, ObsResult]
   type AsterismTargetList = KeyedIndexedList[Target.Id, AsterismResultTarget]
 
-  @Lenses
   case class AsterismIdName(
     id:      Asterism.Id,
     name:    Option[NonEmptyString],
     targets: AsterismTargetList
   )
+
   object AsterismIdName {
+    val id      = Focus[AsterismIdName](_.id)
+    val targets = Focus[AsterismIdName](_.targets)
+
     def fromAsterismResult(asterism: AsterismResult): AsterismIdName =
       AsterismIdName(
         asterism.id,
@@ -98,12 +101,17 @@ object TargetObsQueries {
       )
   }
 
-  @Lenses
   case class PointingsWithObs(
     targets:      TargetList,
     asterisms:    AsterismList,
     observations: ObsList
   )
+
+  object PointingsWithObs {
+    val targets      = Focus[PointingsWithObs](_.targets)
+    val asterisms    = Focus[PointingsWithObs](_.asterisms)
+    val observations = Focus[PointingsWithObs](_.observations)
+  }
 
   val targetsObsQueryPointingId: Iso[ObsResult.Pointing, PointingId] =
     Iso[ObsResult.Pointing, PointingId] {

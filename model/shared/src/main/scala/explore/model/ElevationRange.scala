@@ -15,7 +15,7 @@ import io.circe.refined._
 import lucuma.core.optics.SplitEpi
 import monocle.Prism
 import monocle.macros.GenPrism
-import monocle.macros.Lenses
+import monocle.Focus
 
 private sealed abstract class ElevationRangeType(val typeName: String) { self =>
   implicit val elevationRangeTypeEncoder: Encoder[self.type] =
@@ -65,7 +65,6 @@ object ElevationRange {
   }
 }
 
-@Lenses
 final case class AirMassRange protected (
   min: AirMassRange.DecimalValue,
   max: AirMassRange.DecimalValue
@@ -90,6 +89,8 @@ object AirMassRange extends AirmassRangeOptics {
 
 trait AirmassRangeOptics {
   import AirMassRange.DecimalValue
+  val min = Focus[AirMassRange](_.min)
+  val max = Focus[AirMassRange](_.max)
 
   /** @group Optics */
   // Ensures that min <= max by swapping if necessary
@@ -104,7 +105,6 @@ trait AirmassRangeOptics {
     )
 }
 
-@Lenses
 final case class HourAngleRange protected (
   minHours: HourAngleRange.DecimalHour,
   maxHours: HourAngleRange.DecimalHour
@@ -129,6 +129,8 @@ object HourAngleRange extends HourAngleRangeOptics {
 
 trait HourAngleRangeOptics {
   import HourAngleRange.DecimalHour
+  val minHours = Focus[HourAngleRange](_.minHours)
+  val maxHours = Focus[HourAngleRange](_.maxHours)
 
   /** @group Optics */
   // Ensures that minHours <= maxHours by swapping if necessary

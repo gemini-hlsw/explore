@@ -8,9 +8,8 @@ import explore.model.enum._
 import explore.model.refined._
 import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser
-import monocle.macros.Lenses
+import monocle.Focus
 
-@Lenses
 final case class ProposalDetails(
   title:         String,
   pi:            StandardUser,
@@ -34,12 +33,26 @@ final case class ProposalDetails(
 )
 
 object ProposalDetails {
+  val title         = Focus[ProposalDetails](_.title)
+  val pi            = Focus[ProposalDetails](_.pi)
+  val proposalClass = Focus[ProposalDetails](_.proposalClass)
+  val toOActivation = Focus[ProposalDetails](_.toOActivation)
+  val keywords      = Focus[ProposalDetails](_.keywords)
+  val partnerSplits = Focus[ProposalDetails](_.partnerSplits)
+  val category      = Focus[ProposalDetails](_.category)
+  val requestTime1  = Focus[ProposalDetails](_.requestTime1)
+  val requestTime2  = Focus[ProposalDetails](_.requestTime1)
+  val minimumPct1   = Focus[ProposalDetails](_.minimumPct1)
+  val minimumPct2   = Focus[ProposalDetails](_.minimumPct2)
+  val abstrakt      = Focus[ProposalDetails](_.abstrakt)
+
   implicit val equalProposalDetails: Eq[ProposalDetails] = Eq.fromUniversalEquals
 }
 
-@Lenses
 final case class PartnerSplit(partner: Partner, percent: IntPercent)
 
 object PartnerSplit {
+  val percent = Focus[PartnerSplit](_.percent)
+
   implicit val equalPartnerSplit: Eq[PartnerSplit] = Eq.fromUniversalEquals
 }

@@ -13,7 +13,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common.ReactProps
 import react.datepicker._
 import react.semanticui.modules.checkbox.Checkbox
@@ -39,13 +39,18 @@ object SkyPlotSection {
     implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
   }
 
-  @Lenses
   final case class State(site: Site, date: LocalDate, timeDisplay: TimeDisplay) {
     def zoneId: ZoneId =
       timeDisplay match {
         case TimeDisplay.UTC  => ZoneOffset.UTC
         case TimeDisplay.Site => site.timezone
       }
+  }
+
+  object State {
+    val site        = Focus[State](_.site)
+    val date        = Focus[State](_.date)
+    val timeDisplay = Focus[State](_.timeDisplay)
   }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive

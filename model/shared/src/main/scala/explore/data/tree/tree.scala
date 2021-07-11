@@ -5,13 +5,13 @@ package explore.data.tree
 
 import cats._
 import cats.syntax.all._
-import monocle.macros.Lenses
+import monocle.Focus
 
-@Lenses final case class Tree[A](children: List[Node[A]]) {
+final case class Tree[A](children: List[Node[A]]) {
   def map[B](f: A => B): Tree[B] =
     Tree(children.map(_.map(f)))
 }
-@Lenses final case class Node[A](value: A, children: List[Node[A]] = List.empty) {
+final case class Node[A](value: A, children: List[Node[A]] = List.empty) {
   def map[B](f: A => B): Node[B] =
     Node(f(value), children.map(_.map(f)))
 }
@@ -30,6 +30,8 @@ object Tree {
 
 object Node {
   def apply[A](value: A, children: Node[A]*): Node[A] = Node(value, children.toList)
+
+  def value[A] = Focus[Node[A]](_.value)
 
   implicit def eqNode[A: Eq]: Eq[Node[A]] =
     Eq.instance((node1, node2) => node1.value === node2.value && node1.children === node2.children)
