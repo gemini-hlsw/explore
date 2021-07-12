@@ -17,8 +17,8 @@ import monocle.function.At.atMap
 
 package object optics {
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
@@ -28,8 +28,8 @@ package object optics {
   }
 
   implicit class LensOps[From, To](val self: Lens[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
@@ -39,7 +39,7 @@ package object optics {
 
     def composeGetAdjust[X](other: GetAdjust[To, X]): GetAdjust[From, X] =
       new GetAdjust[From, X](self.asGetter.andThen(other.getter),
-                             asAdjuster.composeAdjuster(other.adjuster)
+                             asAdjuster.andThen(other.adjuster)
       )
 
     @inline final def asGetAdjust: GetAdjust[From, To] =
@@ -47,8 +47,8 @@ package object optics {
   }
 
   implicit class PrismOps[From, To](val self: Prism[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
@@ -58,8 +58,8 @@ package object optics {
   }
 
   implicit class OptionalOps[From, To](val self: Optional[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
@@ -70,15 +70,15 @@ package object optics {
 
   implicit class TraversalOps[From, To](val self: Traversal[From, To]) extends AnyVal {
     def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       Adjuster(self.modify)
   }
 
   implicit class SetterOps[From, To](val self: Setter[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {

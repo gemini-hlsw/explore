@@ -12,11 +12,11 @@ final case class GetAdjust[T, A](getter: Getter[T, A], adjuster: Adjuster[T, A])
   lazy val set: A => T => T        = adjuster.set
   lazy val mod: (A => A) => T => T = adjuster.modify
 
-  def composeLens[B](lens: Lens[A, B]): GetAdjust[T, B] =
-    GetAdjust(getter.andThen(lens), adjuster.composeLens(lens))
+  def andThen[B](lens: Lens[A, B]): GetAdjust[T, B] =
+    GetAdjust(getter.andThen(lens), adjuster.andThen(lens))
 
-  def composeGetAdjust[B](getAdjust: GetAdjust[A, B]): GetAdjust[T, B] =
-    GetAdjust(getter.andThen(getAdjust.getter), adjuster.composeAdjuster(getAdjust.adjuster))
+  def andThen[B](getAdjust: GetAdjust[A, B]): GetAdjust[T, B] =
+    GetAdjust(getter.andThen(getAdjust.getter), adjuster.andThen(getAdjust.adjuster))
 }
 object GetAdjust {
   def apply[T, A](lens: Lens[T, A]): GetAdjust[T, A] =
