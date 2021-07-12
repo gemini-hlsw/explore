@@ -406,10 +406,10 @@ object TargetObsList {
 
       val adjuster: Adjuster[PointingsWithObs, asterismTargetListMod.ElemWithIndexOpt] =
         getAdjust.adjuster
-          .composePrism(some)
-          .composeLens(Focus[(AsterismIdName, Int)](_._1))
-          .composeLens(AsterismIdName.targets)
-          .composeAdjuster(targetWithId.adjuster)
+          .andThen(some[(AsterismIdName, Int)])
+          .andThen(Focus[(AsterismIdName, Int)](_._1))
+          .andThen(AsterismIdName.targets)
+          .andThen(targetWithId.adjuster)
 
       setter
         .mod[asterismTargetListMod.ElemWithIndexOpt](

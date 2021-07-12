@@ -11,6 +11,7 @@ final case class Tree[A](children: List[Node[A]]) {
   def map[B](f: A => B): Tree[B] =
     Tree(children.map(_.map(f)))
 }
+
 final case class Node[A](value: A, children: List[Node[A]] = List.empty) {
   def map[B](f: A => B): Node[B] =
     Node(f(value), children.map(_.map(f)))

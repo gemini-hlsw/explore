@@ -106,9 +106,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     vListMod
       .withKey(id)
       .adjuster
-      .composeTraversal(each)
-      .composeLens(Focus[(V, Int)](_._1))
-      .composeLens(V.s)
+      .andThen(each[Option[(V, Int)], (V, Int)])
+      .andThen(Focus[(V, Int)](_._1))
+      .andThen(V.s)
 
   dispatcher.test("ListObjModPosUndoRedo") { implicit dispatcher =>
     for {
@@ -303,10 +303,10 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     vTreeMod
       .withKey(key)
       .adjuster
-      .composeTraversal(each)
-      .composeLens(Focus[(Node[V], Index[Int])](_._1))
-      .composeLens(Node.value)
-      .composeLens(V.s)
+      .andThen(each[Option[(Node[V], Index[Int])], (Node[V], Index[Int])])
+      .andThen(Focus[(Node[V], Index[Int])](_._1))
+      .andThen(Node.value[V])
+      .andThen(V.s)
 
   dispatcher.test("TreeObjModPosUndoRedo") { implicit dispatcher =>
     for {
