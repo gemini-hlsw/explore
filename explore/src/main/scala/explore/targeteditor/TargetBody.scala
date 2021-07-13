@@ -87,7 +87,7 @@ object TargetBody {
           { args: (NonEmptyString, SiderealTracking, List[Magnitude]) =>
             EditSiderealInput.name.set(args._1.value.assign) >>>
               TargetQueries.UpdateSiderealTracking(args._2) >>>
-              TargetQueries.updateMagnitudes(args._3)
+              TargetQueries.replaceMagnitudes(args._3)
           }
         )
 
@@ -108,7 +108,7 @@ object TargetBody {
           )
 
         val magnitudesView =
-          undoViewSet(TargetResult.magnitudes, TargetQueries.updateMagnitudes)
+          undoViewSet(TargetResult.magnitudes, TargetQueries.replaceMagnitudes)
 
         val nameView = undoViewSet(
           TargetResult.name,
