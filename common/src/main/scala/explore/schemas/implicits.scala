@@ -8,16 +8,16 @@ import lucuma.core.model.Magnitude
 
 import java.math.MathContext
 
-import ObservationDB.Types.MagnitudeInput
+import ObservationDB.Types.MagnitudeCreateInput
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 object implicits {
   implicit class MagnitudeOps(m: Magnitude) {
-    def toInput: MagnitudeInput =
-      MagnitudeInput(m.value.toDoubleValue,
-                     m.band,
-                     m.error.map(_.toRational.toBigDecimal(MathContext.UNLIMITED)).orIgnore,
-                     m.system.assign
+    def toCreateInput: MagnitudeCreateInput =
+      MagnitudeCreateInput(m.band,
+                           m.value.toDoubleValue,
+                           m.error.map(_.toRational.toBigDecimal(MathContext.UNLIMITED)).orIgnore,
+                           m.system.assign
       )
   }
 
