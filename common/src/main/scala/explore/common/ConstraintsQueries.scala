@@ -48,19 +48,19 @@ object ConstraintsQueries {
 
   object UpdateConstraintSet {
     def name(n: NonEmptyString): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.name.set(n.assign)
+      EditConstraintSetInput.name.replace(n.assign)
 
     def imageQuality(iq: ImageQuality): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.imageQuality.set(iq.assign)
+      EditConstraintSetInput.imageQuality.replace(iq.assign)
 
     def cloudExtinction(ce: CloudExtinction): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.cloudExtinction.set(ce.assign)
+      EditConstraintSetInput.cloudExtinction.replace(ce.assign)
 
     def skyBackground(sb: SkyBackground): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.skyBackground.set(sb.assign)
+      EditConstraintSetInput.skyBackground.replace(sb.assign)
 
     def waterVapor(wv: WaterVapor): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.waterVapor.set(wv.assign)
+      EditConstraintSetInput.waterVapor.replace(wv.assign)
 
     def elevationRange(er: ElevationRange): Endo[EditConstraintSetInput] = {
       val createER: CreateElevationRangeInput = er match {
@@ -74,7 +74,7 @@ object ConstraintsQueries {
           )
       }
       CreateElevationRangeInput()
-      EditConstraintSetInput.elevationRange.set(createER.assign)
+      EditConstraintSetInput.elevationRange.replace(createER.assign)
     }
   }
 }

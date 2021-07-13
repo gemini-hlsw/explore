@@ -25,7 +25,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.aladin.Fov
 import react.common._
 import react.fa.Transform
@@ -50,11 +50,12 @@ object AladinCell extends ModelOptics {
   type Props = AladinCell
   val AladinRef = AladinContainer.component
 
-  @Lenses
   final case class State(fov: Fov, current: Coordinates)
 
   object State {
-    val Zero = State(Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
+    val fov     = Focus[State](_.fov)
+    val current = Focus[State](_.current)
+    val Zero    = State(Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
   }
   implicit val propsReuse = Reusability.derive[Props]
   implicit val stateReuse = Reusability.never[State]

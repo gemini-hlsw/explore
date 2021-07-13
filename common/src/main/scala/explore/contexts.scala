@@ -11,12 +11,11 @@ import eu.timepit.refined.string._
 import explore.model.Help
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.Reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import sttp.model.Uri
 
 object AppCtx extends Ctx[SyncIO, AppContextIO]
 
-@Lenses
 case class HelpContext(
   rawUrl:        Uri,
   editUrl:       Uri,
@@ -26,6 +25,8 @@ case class HelpContext(
 )
 
 object HelpContext {
+  val displayedHelp = Focus[HelpContext](_.displayedHelp)
+
   implicit val helpIdReuse: Reusability[Help.Id]          = Reusability.by(_.value)
   implicit val uriReuse: Reusability[Uri]                 = Reusability.by(_.toString)
   implicit val helpContextReuse: Reusability[HelpContext] =

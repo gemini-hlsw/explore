@@ -8,13 +8,12 @@ import cats.syntax.all._
 import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import monocle.macros.Lenses
 
 sealed trait Focused extends Product with Serializable
 object Focused {
-  @Lenses case class FocusedObs(obsId: Observation.Id) extends Focused
-  @Lenses case class FocusedTarget(targetId: Target.Id) extends Focused
-  @Lenses case class FocusedAsterism(asterismId: Asterism.Id) extends Focused
+  case class FocusedObs(obsId: Observation.Id) extends Focused
+  case class FocusedTarget(targetId: Target.Id) extends Focused
+  case class FocusedAsterism(asterismId: Asterism.Id) extends Focused
 
   implicit val eqFocused: Eq[Focused] = Eq.instance {
     case (FocusedObs(a), FocusedObs(b))           => a === b

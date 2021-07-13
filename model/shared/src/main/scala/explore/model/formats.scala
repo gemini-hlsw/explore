@@ -80,13 +80,13 @@ trait formats {
     Format(_.parseBigDecimalOption, rv => formatterRV.format(rv))
 
   val formatRV: Format[String, RadialVelocity] =
-    formatBigDecimalRV.composePrism(fromKilometersPerSecondRV)
+    formatBigDecimalRV.andThen(fromKilometersPerSecondRV)
 
   val formatZ: Format[String, Redshift] =
-    formatBigDecimalZ.composeIso(redshiftBigDecimalISO)
+    formatBigDecimalZ.andThen(redshiftBigDecimalISO)
 
   val formatCZ: Format[String, ApparentRadialVelocity] =
-    formatBigDecimalCZ.composeIso(fromKilometersPerSecondCZ)
+    formatBigDecimalCZ.andThen(fromKilometersPerSecondCZ)
 
   val formatWavelength: Format[String, Wavelength] =
     Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalNanometers.getOption),

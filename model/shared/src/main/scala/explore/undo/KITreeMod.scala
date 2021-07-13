@@ -30,7 +30,7 @@ class KITreeMod[A, K](protected val keyLens: Lens[A, K])
     idx:    Index[K],
     elem:   Node[A]
   ): KeyedIndexedTree[K, A] = {
-    val key = valueLens.composeLens(keyLens).get(elem)
+    val key = valueLens.andThen(keyLens).get(elem)
     kiTree.inserted(key, elem, idx)
   }
 }

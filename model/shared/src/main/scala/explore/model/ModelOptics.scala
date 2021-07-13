@@ -18,13 +18,13 @@ trait ModelOptics {
    * Lens for right ascension of a SiderealTracking
    */
   val properMotionRA: Lens[SiderealTracking, RightAscension] =
-    SiderealTracking.baseCoordinates ^|-> Coordinates.rightAscension
+    SiderealTracking.baseCoordinates.andThen(Coordinates.rightAscension)
 
   /**
    * Lens for declination of a SiderealTracking
    */
   val properMotionDec: Lens[SiderealTracking, Declination] =
-    SiderealTracking.baseCoordinates ^|-> Coordinates.declination
+    SiderealTracking.baseCoordinates.andThen(Coordinates.declination)
 }
 
 object ModelOptics extends ModelOptics

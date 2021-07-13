@@ -49,9 +49,8 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.Getter
-import monocle.function.Field1.first
-import monocle.macros.Lenses
 import monocle.std.option.some
+import monocle.Focus
 import mouse.boolean._
 import org.typelevel.log4cats.Logger
 import react.beautifuldnd._
@@ -71,6 +70,7 @@ import react.semanticui.views.card.CardContent
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
+import monocle.Lens
 
 final case class TargetObsList(
   pointingsWithObs: View[PointingsWithObs],
@@ -85,11 +85,14 @@ final case class TargetObsList(
 object TargetObsList {
   type Props = TargetObsList
 
-  @Lenses
   case class State(
     dragging: Boolean = false
     // undoStacks: UndoStacks2[IO, PointingsWithObs] = UndoStacks2.empty
   )
+
+  object State {
+    val dragging: Lens[State, Boolean] = Focus[State](_.dragging)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
@@ -191,7 +194,9 @@ object TargetObsList {
                     PointingsWithObs.observations.composeGetAdjust(
                       obsListMod
                         .withKey(obsId)
-                        .composeOptionLens(first) // Focus on Observation within ElemWithIndex
+                        .composeOptionLens(
+                          Focus[(ObsResult, Int)](_._1)
+                        ) // Focus on Observation within ElemWithIndex
                         .composeOptionLens(targetsObsQueryObsPointingId)
                     )
 
@@ -401,10 +406,10 @@ object TargetObsList {
 
       val adjuster: Adjuster[PointingsWithObs, asterismTargetListMod.ElemWithIndexOpt] =
         getAdjust.adjuster
-          .composePrism(some)
-          .composeLens(first)
-          .composeLens(AsterismIdName.targets)
-          .composeAdjuster(targetWithId.adjuster)
+          .andThen(some[(AsterismIdName, Int)])
+          .andThen(Focus[(AsterismIdName, Int)](_._1))
+          .andThen(AsterismIdName.targets)
+          .andThen(targetWithId.adjuster)
 
       setter
         .mod[asterismTargetListMod.ElemWithIndexOpt](

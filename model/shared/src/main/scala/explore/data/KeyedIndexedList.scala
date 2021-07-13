@@ -41,6 +41,7 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
   def exists(p: A => Boolean): Boolean = elements.exists(p)
 
   def take(n: Int): KeyedIndexedList[K, A] = KeyedIndexedList.unsafeFromTreeSeqMap(list.take(n))
+
   def drop(n: Int): KeyedIndexedList[K, A] =
     KeyedIndexedList.unsafeFromTreeSeqMap(
       list

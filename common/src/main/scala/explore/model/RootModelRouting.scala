@@ -46,25 +46,25 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage                    => setTab(AppTab.Proposal) >>> RootModel.focused.set(none)
+      case ProposalPage                    => setTab(AppTab.Proposal) >>> RootModel.focused.replace(none)
       case ObservationsBasePage            =>
-        setTab(AppTab.Observations) >>> RootModel.focused.set(none)
+        setTab(AppTab.Observations) >>> RootModel.focused.replace(none)
       case ObsPage(obsId)                  =>
-        setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
+        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ObsAdvancedConfPage(obsId)      =>
-        setTab(AppTab.Observations) >>> RootModel.focused.set(FocusedObs(obsId).some)
+        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case TargetsBasePage                 =>
-        setTab(AppTab.Targets) >>> RootModel.focused.set(none)
+        setTab(AppTab.Targets) >>> RootModel.focused.replace(none)
       case TargetPage(targetId)            =>
-        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedTarget(targetId).some)
+        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedTarget(targetId).some)
       case TargetsAsterismPage(asterismId) =>
-        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedAsterism(asterismId).some)
+        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedAsterism(asterismId).some)
       case TargetsObsPage(obsId)           =>
-        setTab(AppTab.Targets) >>> RootModel.focused.set(FocusedObs(obsId).some)
+        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ConstraintsBasePage             =>
         setTab(AppTab.Constraints)
       case ConstraintsPage(obsId)          =>
-        setTab(AppTab.Constraints) >>> RootModel.focused.set(FocusedObs(obsId).some)
+        setTab(AppTab.Constraints) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ConfigurationsPage              =>
         setTab(AppTab.Configurations)
       case HomePage                        =>

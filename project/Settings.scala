@@ -20,12 +20,12 @@ object Settings {
     val geminiLocales     = "0.6.0"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
-    val lucumaCore        = "0.10.1"
+    val lucumaCore        = "0.11.0"
     val lucumaCatalog     = "0.4.1"
     val lucumaUI          = "0.15.1"
     val lucumaSSO         = "0.0.9"
     val lucumaBC          = "0.2.4"
-    val monocle           = "2.1.0"
+    val monocle           = "3.0.0"
     val mouse             = "1.0.4"
     val mUnit             = "0.7.27"
     val mUnitCatsEffect   = "1.0.5"
@@ -175,16 +175,15 @@ object Settings {
 
     val Monocle = Def.setting(
       deps(
-        "com.github.julien-truffaut" %%% "monocle-core",
-        "com.github.julien-truffaut" %%% "monocle-state",
-        "com.github.julien-truffaut" %%% "monocle-macro",
-        "com.github.julien-truffaut" %%% "monocle-unsafe"
+        "dev.optics" %%% "monocle-core",
+        "dev.optics" %%% "monocle-macro",
+        "dev.optics" %%% "monocle-unsafe"
       )(monocle)
     )
 
     val MonocleLaw = Def.setting(
       deps(
-        "com.github.julien-truffaut" %%% "monocle-law"
+        "dev.optics" %%% "monocle-law"
       )(monocle)
     )
 

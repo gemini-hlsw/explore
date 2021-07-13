@@ -11,7 +11,7 @@ import io.chrisdavenport.cats.time._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
-import monocle.macros.Lenses
+import monocle.Focus
 
 import java.time.Duration
 
@@ -58,7 +58,6 @@ trait ObsWithPointing extends ObsSummary {
     }
 }
 
-@Lenses
 case class ObsSummaryWithConstraints(
   override val id:           Observation.Id,
   override val constraints:  ConstraintsSummary,
@@ -73,7 +72,6 @@ object ObsSummaryWithConstraints {
     Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
-@Lenses
 case class ObsSummaryWithPointingAndConstraints(
   override val id:           Observation.Id,
   override val pointing:     Option[Pointing],
@@ -86,6 +84,10 @@ case class ObsSummaryWithPointingAndConstraints(
     with ObsWithConstraints
 
 object ObsSummaryWithPointingAndConstraints {
+  val id           = Focus[ObsSummaryWithPointingAndConstraints](_.id)
+  val status       = Focus[ObsSummaryWithPointingAndConstraints](_.status)
+  val activeStatus = Focus[ObsSummaryWithPointingAndConstraints](_.activeStatus)
+
   implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
     Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.activeStatus, o.duration))
 }

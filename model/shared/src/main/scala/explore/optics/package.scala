@@ -14,33 +14,32 @@ import lucuma.core.math.Redshift
 import lucuma.core.math.units._
 import monocle._
 import monocle.function.At.atMap
-import monocle.std.option.some
 
 package object optics {
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.set(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
   implicit class LensOps[From, To](val self: Lens[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.set(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
 
     def composeGetAdjust[X](other: GetAdjust[To, X]): GetAdjust[From, X] =
-      new GetAdjust[From, X](self.asGetter.composeGetter(other.getter),
-                             asAdjuster.composeAdjuster(other.adjuster)
+      new GetAdjust[From, X](self.asGetter.andThen(other.getter),
+                             asAdjuster.andThen(other.adjuster)
       )
 
     @inline final def asGetAdjust: GetAdjust[From, To] =
@@ -48,43 +47,43 @@ package object optics {
   }
 
   implicit class PrismOps[From, To](val self: Prism[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.set(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
   implicit class OptionalOps[From, To](val self: Optional[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.set(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
   implicit class TraversalOps[From, To](val self: Traversal[From, To]) extends AnyVal {
     def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       Adjuster(self.modify)
   }
 
   implicit class SetterOps[From, To](val self: Setter[From, To]) extends AnyVal {
-    def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
-      asAdjuster.composeAdjuster(other)
+    def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
+      asAdjuster.andThen(other)
 
     @inline final def asAdjuster: Adjuster[From, To] =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.set(to)
+        def set(to:   To): From => From       = self.replace(to)
       }
   }
 
@@ -106,7 +105,7 @@ package object optics {
 
     def composeOptionGetter[B](other: Getter[A, B]): Getter[S, Option[B]] =
       Getter(
-        getter.composePrism(some).composeGetter(other).headOption
+        getter.some.andThen(other).headOption
       )
   }
 
@@ -128,12 +127,12 @@ package object optics {
   // See https://github.com/optics-dev/Monocle/issues/545
   def disjointZip[S, A, B](l1: Lens[S, A], l2: Lens[S, B]): Lens[S, (A, B)] =
     Lens((s: S) => (l1.get(s), l2.get(s)))((ab: (A, B)) =>
-      (s: S) => l2.set(ab._2)(l1.set(ab._1)(s))
+      (s: S) => l2.replace(ab._2)(l1.replace(ab._1)(s))
     )
 
   def disjointZip[S, A, B, C](l1: Lens[S, A], l2: Lens[S, B], l3: Lens[S, C]): Lens[S, (A, B, C)] =
     Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s)))((abc: (A, B, C)) =>
-      (s: S) => l3.set(abc._3)(l2.set(abc._2)(l1.set(abc._1)(s)))
+      (s: S) => l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s)))
     )
 
   val unsafePMDecLensO: Lens[Option[ProperMotion], Option[ProperMotion.Dec]] =
@@ -171,5 +170,5 @@ package object optics {
 
   // This should be safe to use with Maps that have .withDefault(...)
   def atMapWithDefault[K, V](k: K, default: => V): Lens[Map[K, V], V] =
-    atMap.at(k).composeLens(getWithDefault(default))
+    atMap.at(k).andThen(getWithDefault(default))
 }

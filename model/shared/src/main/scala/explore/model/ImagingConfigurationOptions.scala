@@ -14,7 +14,7 @@ import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
-import monocle.macros.Lenses
+import monocle.Focus
 import spire.math.interval.ValueBound
 
 import scala.collection.SortedSet
@@ -31,7 +31,6 @@ object AvailableFilter {
   implicit val order: Order[AvailableFilter] = Order.by(x => (x.centralWavelength, x.tag))
 }
 
-@Lenses
 final case class ImagingConfigurationOptions(
   filters:       SortedSet[AvailableFilter],
   fov:           Option[Angle],
@@ -40,6 +39,11 @@ final case class ImagingConfigurationOptions(
 )
 
 object ImagingConfigurationOptions {
+  val filters       = Focus[ImagingConfigurationOptions](_.filters)
+  val fov           = Focus[ImagingConfigurationOptions](_.fov)
+  val signalToNoise = Focus[ImagingConfigurationOptions](_.signalToNoise)
+  val capabilities  = Focus[ImagingConfigurationOptions](_.capabilities)
+
   val Default = ImagingConfigurationOptions(SortedSet.empty, none, none, none)
 
   val gmosNorthFilters = GmosNorthFilter.all

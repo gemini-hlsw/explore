@@ -40,7 +40,7 @@ object Action {
       new AppliedGetSet[G, M, A](getter, setter)
 
     def apply[M, A](access: Lens[M, A]): AppliedGetSet[G, M, A] =
-      new AppliedGetSet[G, M, A](access.get, access.set)
+      new AppliedGetSet[G, M, A](access.get, access.replace)
 
     def apply[M, A](access: GetAdjust[M, A]): AppliedGetSet[G, M, A] =
       new AppliedGetSet[G, M, A](access.get, access.set)

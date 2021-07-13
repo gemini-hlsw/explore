@@ -48,10 +48,10 @@ object CataloguesForm {
 
   val angleItems = angleItemsMap.values
 
-  val fovL     = TargetVisualOptions.fov ^<-> Visible.boolReverseIso
-  val guidingL = TargetVisualOptions.guiding ^<-> Visible.boolReverseIso
-  val probeL   = TargetVisualOptions.probe ^<-> Visible.boolReverseIso
-  val offsetsL = TargetVisualOptions.offsets ^<-> Visible.boolReverseIso
+  val fovL     = TargetVisualOptions.fov.andThen(Visible.boolReverseIso)
+  val guidingL = TargetVisualOptions.guiding.andThen(Visible.boolReverseIso)
+  val probeL   = TargetVisualOptions.probe.andThen(Visible.boolReverseIso)
+  val offsetsL = TargetVisualOptions.offsets.andThen(Visible.boolReverseIso)
 
   val component =
     ScalaComponent

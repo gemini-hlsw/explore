@@ -15,7 +15,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.modal._
@@ -38,8 +38,11 @@ final case class InputModal(
 object InputModal {
   type Props = InputModal
 
-  @Lenses
   final case class State(inputValue: String)
+
+  object State {
+    val inputValue = Focus[State](_.inputValue)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive

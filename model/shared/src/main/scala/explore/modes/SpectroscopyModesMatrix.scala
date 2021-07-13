@@ -211,7 +211,7 @@ object SpectroscopyModeRow {
     GenLens[SpectroscopyModeRow](_.instrument)
 
   val instrument: Getter[SpectroscopyModeRow, Instrument] =
-    instrumentRow.composeGetter(InstrumentRow.instrument)
+    instrumentRow.andThen(InstrumentRow.instrument)
 
   val config: Lens[SpectroscopyModeRow, NonEmptyString] =
     GenLens[SpectroscopyModeRow](_.config)
@@ -226,13 +226,13 @@ object SpectroscopyModeRow {
     GenLens[SpectroscopyModeRow](_.slitLength)
 
   def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
-    instrumentRow.composeGetter(InstrumentRow.disperser)
+    instrumentRow.andThen(InstrumentRow.disperser)
 
   def fpu: Lens[SpectroscopyModeRow, NonEmptyList[FocalPlane]] =
     GenLens[SpectroscopyModeRow](_.focalPlane)
 
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
-    instrumentRow.composeGetter(InstrumentRow.filter)
+    instrumentRow.andThen(InstrumentRow.filter)
 
   val TwoFactor = BigDecimal(2).withUnit[Unitless]
 

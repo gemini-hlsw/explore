@@ -18,7 +18,9 @@ import explore.schemas.ObservationDB.Types._
 import explore.undo.Action
 import explore.undo.KIListMod
 import lucuma.core.model.Observation
-import monocle.function.Field1.first
+import monocle.Focus
+import explore.data.KeyedIndexedList
+import explore.optics.GetAdjust
 
 object ObsListActions {
   protected val obsListMod =
@@ -26,8 +28,14 @@ object ObsListActions {
       ObsSummaryWithPointingAndConstraints.id
     )
 
-  private def obsWithId(obsId: Observation.Id) =
-    obsListMod.withKey(obsId).composeOptionLens(first)
+  private def obsWithId(
+    obsId: Observation.Id
+  ): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints], Option[
+    ObsSummaryWithPointingAndConstraints
+  ]] =
+    obsListMod
+      .withKey(obsId)
+      .composeOptionLens(Focus[(ObsSummaryWithPointingAndConstraints, Int)](_._1))
 
   def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
     c:                                    TransactionalClient[F, ObservationDB]
