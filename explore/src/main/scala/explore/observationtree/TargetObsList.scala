@@ -302,7 +302,7 @@ object TargetObsList {
           ).parTupled.flatMap {
             case (_, Right(Some(Target(_, Right(st), m)))) =>
               val update = TargetQueries.UpdateSiderealTracking(st) >>>
-                TargetQueries.updateMagnitudes(m.values.toList)
+                TargetQueries.replaceMagnitudes(m.values.toList)
               TargetQueriesGQL.TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
             case _                                         =>
               IO.unit

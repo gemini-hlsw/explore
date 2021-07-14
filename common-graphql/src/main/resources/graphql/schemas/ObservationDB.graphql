@@ -360,7 +360,7 @@ input CreateNonsiderealInput {
   name: NonEmptyString!
   key: EphemerisKeyType!
   des: String!
-  magnitudes: [MagnitudeInput!]
+  magnitudes: [MagnitudeCreateInput!]
 }
 
 # Observation creation parameters
@@ -387,7 +387,7 @@ input CreateSiderealInput {
   properMotion: ProperMotionInput
   radialVelocity: RadialVelocityInput
   parallax: ParallaxModelInput
-  magnitudes: [MagnitudeInput!]
+  magnitudes: [MagnitudeCreateInput!]
 }
 
 # Opaque object cursor
@@ -625,14 +625,8 @@ input EditObservationPointingInput {
 input EditSiderealInput {
   targetId: TargetId!
 
-  # Replace all magnitudes with the provided values
-  magnitudes: [MagnitudeInput!]
-
-  # Update any listed magnitudes leaving unmentioned values unchanged
-  modifyMagnitudes: [MagnitudeInput!]
-
-  # Removes any listed magnitude values
-  deleteMagnitudes: [MagnitudeBand!]
+  # Edit magnitudes
+  magnitudes: MagnitudeEditList
 
   # The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
   existence: Existence
@@ -1987,12 +1981,39 @@ enum MagnitudeBand {
   AP
 }
 
-# Magnitude description
-input MagnitudeInput {
-  value: BigDecimal!
+# Magnitude creation parameters
+input MagnitudeCreateInput {
   band: MagnitudeBand!
+  value: BigDecimal!
   error: BigDecimal
   system: MagnitudeSystem = VEGA
+}
+
+# Magnitude edit action (choose one option only)
+input MagnitudeEditAction {
+  add: MagnitudeCreateInput
+  delete: MagnitudeBand
+  edit: MagnitudeEditInput
+}
+
+# Magnitude editing parameters
+input MagnitudeEditInput {
+  band: MagnitudeBand!
+
+  # The value field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  value: BigDecimal
+
+  # The system field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  system: MagnitudeSystem
+
+  # The error field may be unset by assigning a null value, or ignored by skipping it altogether
+  error: BigDecimal
+}
+
+# Magnitude list editing (choose one option only)
+input MagnitudeEditList {
+  replaceList: [MagnitudeCreateInput!]
+  editList: [MagnitudeEditAction!]
 }
 
 # Magnitude system
@@ -2676,7 +2697,7 @@ input QueryConfigurationAlternativeSearchInput {
   spectralDistribution: SpctralDistribution
 
   # Target magnitude/system/band.
-  magnitude: MagnitudeInput
+  magnitude: MagnitudeCreateInput
 
   # Target redshift.
   redshift: BigDecimal

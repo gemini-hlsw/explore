@@ -151,6 +151,8 @@ object TargetQueries {
         parallax(t.parallax)
   }
 
-  def updateMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
-    EditSiderealInput.magnitudes.set(mags.map(_.toInput).assign)
+  def replaceMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
+    EditSiderealInput.magnitudes.set(
+      MagnitudeEditList(replaceList = mags.map(_.toCreateInput).assign).assign
+    )
 }
