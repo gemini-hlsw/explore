@@ -25,10 +25,16 @@ object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
 
+  type WavelengthInput = ObservationDB.Types.WavelengthModelInput
+  val WavelengthInput = ObservationDB.Types.WavelengthModelInput
   type ObservationData = ObsEditQuery.Data.Observation
   val ObservationData = ObsEditQuery.Data.Observation
   type ConstraintSetData = ObservationData.ConstraintSet
   val ConstraintSetData = ObservationData.ConstraintSet
+  type ScienceRequirementsData = ObservationData.ScienceRequirements
+  val ScienceRequirementsData = ObservationData.ScienceRequirements
+  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
+  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget

@@ -4,8 +4,8 @@
 package explore.config
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
+import coulomb.Quantity
 import coulomb.refined._
 import crystal.Pot
 import crystal.ViewF
@@ -13,6 +13,8 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import explore.AppCtx
+import explore.common.ObsQueries._
+import explore.common.ScienceRequirementsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -20,21 +22,24 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
-import explore.model.enum.ConfigurationMode
 import explore.model.enum.FocalPlane
+import explore.model.enum.ScienceMode
 import explore.model.enum.SpectroscopyCapabilities
+import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
-import explore.undo.UndoableView
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Wavelength
+import lucuma.core.math.units.Micrometer
 import lucuma.core.model.Observation
+import lucuma.core.optics.syntax.lens._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
-import monocle.Lens
+import monocle.Iso
 import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
@@ -46,15 +51,21 @@ import sttp.model._
 import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
-  id:               Option[Observation.Id],
-  renderInTitle:    Tile.RenderInTitle
-)(implicit val ctx: AppContextIO)
+  obsId:               Observation.Id,
+  scienceRequirements: View[ScienceRequirementsData],
+  undoStacks:          View[UndoStacks[IO, ScienceRequirementsData]],
+  renderInTitle:       Tile.RenderInTitle
+)(implicit val ctx:    AppContextIO)
     extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel {
   type Props = ConfigurationPanel
 
-  implicit val modeDisplay: Display[ConfigurationMode]             = Display.by(_.label, _.label)
+  implicit val modeDisplay: Display[ScienceMode] = Display.byShortName {
+    case ScienceMode.Spectroscopy => "Spectroscopy"
+    case ScienceMode.Imaging      => "Imaging"
+  }
+
   implicit val specCapabDisplay: Display[SpectroscopyCapabilities] = Display.by(_.label, _.label)
   implicit val focaLPlaneDisplay: Display[FocalPlane]              = Display.by(_.label, _.label)
   implicit val propsReuse: Reusability[Props]                      = Reusability.derive
@@ -62,46 +73,67 @@ object ConfigurationPanel {
 
   @Lenses
   final case class State(
-    mode:                ConfigurationMode,
-    spectroscopyOptions: SpectroscopyConfigurationOptions,
-    imagingOptions:      ImagingConfigurationOptions,
-    matrix:              Pot[SpectroscopyModesMatrix]
+    mode:           ScienceMode,
+    imagingOptions: ImagingConfigurationOptions,
+    matrix:         Pot[SpectroscopyModesMatrix]
   )
 
-  case class UndoView(
-    undoCtx: UndoCtx[State]
-  ) {
-    private val undoableView = UndoableView(undoCtx)
+  val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
+    Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
+      def wavelengthToMicro(w: Wavelength) = w.micrometer.toValue[BigDecimal]
 
-    def apply[A](
-      modelGet: State => A,
-      modelMod: (A => A) => State => State
-    ): View[A] =
-      undoableView.apply(
-        modelGet,
-        modelMod,
-        _ => IO.unit
-      )
+      val op = for {
+        _ <- SpectroscopyConfigurationOptions.wavelengthQ := s.wavelength.map(wavelengthToMicro)
+        _ <- SpectroscopyConfigurationOptions.resolution := s.resolution
+        _ <- SpectroscopyConfigurationOptions.signalToNoise := s.signalToNoise
+        _ <- SpectroscopyConfigurationOptions.signalToNoiseAtQ := s.signalToNoiseAt.map(
+               wavelengthToMicro
+             )
+        _ <- SpectroscopyConfigurationOptions.wavelengthRangeQ := s.wavelengthRange.map(
+               wavelengthToMicro
+             )
+        _ <- SpectroscopyConfigurationOptions.focalPlane := s.focalPlane
+        _ <- SpectroscopyConfigurationOptions.focalPlaneAngle := s.focalPlaneAngle
+        _ <- SpectroscopyConfigurationOptions.capabilities := s.capabilities
+      } yield ()
+      op.runS(SpectroscopyConfigurationOptions.Default).value
+    } { s =>
+      def microToWavelength(m: Quantity[BigDecimal, Micrometer]) =
+        Wavelength.decimalMicrometers.getOption(m.value)
 
-    def apply[A](
-      lens: Lens[State, A]
-    ): View[A] =
-      apply(lens.get, lens.modify)
-
-  }
+      val op = for {
+        _ <- SpectroscopyRequirementsData.wavelength := s.wavelengthQ.flatMap(microToWavelength)
+        _ <- SpectroscopyRequirementsData.resolution := s.resolution
+        _ <- SpectroscopyRequirementsData.signalToNoise := s.signalToNoise
+        _ <- SpectroscopyRequirementsData.signalToNoiseAt := s.signalToNoiseAtQ.flatMap(
+               microToWavelength
+             )
+        _ <- SpectroscopyRequirementsData.wavelengthRange := s.wavelengthRangeQ.flatMap(
+               microToWavelength
+             )
+        _ <- SpectroscopyRequirementsData.focalPlane := s.focalPlane
+        _ <- SpectroscopyRequirementsData.focalPlaneAngle := s.focalPlaneAngle
+        _ <- SpectroscopyRequirementsData.capabilities := s.capabilities
+      } yield ()
+      op.runS(SpectroscopyRequirementsData()).value
+    }
 
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
-      props:   Props,
-      undoCtx: UndoCtx[State]
-    ): VdomNode = {
-      val undoViewSet = UndoView(undoCtx)
+      props:        Props,
+      state:        State,
+      undoCtx:      UndoCtx[ScienceRequirementsData]
+    )(implicit ctx: AppContextIO): VdomNode = {
+      val undoViewSet = UndoView(props.obsId, undoCtx)
 
-      def mode           = undoViewSet(State.mode)
-      val isSpectroscopy = mode.get === ConfigurationMode.Spectroscopy
+      def mode           = undoViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
+      val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
-      val spectroscopy = undoViewSet(State.spectroscopyOptions)
-      val imaging      = undoViewSet(State.imagingOptions)
+      val spectroscopy = undoViewSet(
+        ScienceRequirementsData.spectroscopyRequirements,
+        UpdateScienceRequirements.spectroscopyRequirements
+      )
+      val imaging      = ViewF.fromStateSyncIO($).zoom(State.imagingOptions)
 
       <.div(
         ExploreStyles.ConfigurationGrid,
@@ -113,11 +145,12 @@ object ConfigurationPanel {
           ExploreStyles.ConfigurationForm,
           <.label("Mode", HelpIcon("configuration/mode.md")),
           EnumViewSelect(id = "configuration-mode", value = mode),
-          SpectroscopyConfigurationPanel(spectroscopy).when(isSpectroscopy),
+          SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
+            .when(isSpectroscopy),
           ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
         ),
         SpectroscopyModesTable(
-          undoCtx.model.get.matrix.toOption
+          state.matrix.toOption
             .map(
               _.filtered(
                 focalPlane = spectroscopy.get.focalPlane,
@@ -136,12 +169,11 @@ object ConfigurationPanel {
       )
     }
 
-    def render(props: Props) = AppCtx.using { implicit appCtx =>
+    def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
       renderFn(
         props,
-        UndoContext(ViewF[SyncIO, UndoStacks[IO, State]](UndoStacks.empty, (_, _) => SyncIO.unit),
-                    ViewF.fromStateSyncIO($)
-        )
+        state,
+        UndoContext(props.undoStacks, props.scienceRequirements)
       )
     }
   }
@@ -163,11 +195,7 @@ object ConfigurationPanel {
     ScalaComponent
       .builder[Props]
       .initialState(
-        State(ConfigurationMode.Spectroscopy,
-              SpectroscopyConfigurationOptions.Default,
-              ImagingConfigurationOptions.Default,
-              Pot.pending
-        )
+        State(ScienceMode.Spectroscopy, ImagingConfigurationOptions.Default, Pot.pending)
       )
       .renderBackend[Backend]
       .componentDidMount { $ =>

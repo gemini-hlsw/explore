@@ -371,7 +371,13 @@ object ObsTabContents {
                       .zoom(ModelUndoStacks.forConstraintSet[IO])
                       .zoom(atMapWithDefault(obsId, UndoStacks.empty))
                   ),
-                ConfigurationTile.configurationTile(obsSummaryOpt.map(_.id))
+                ConfigurationTile.configurationTile(
+                  obsId,
+                  obsView.map(_.zoom(ObservationData.scienceRequirements)),
+                  props.undoStacks
+                    .zoom(ModelUndoStacks.forScienceRequirements[IO])
+                    .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+                )
               )
             ): VdomNode
           }
