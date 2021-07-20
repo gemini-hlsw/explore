@@ -171,6 +171,12 @@ input BulkEditConstraintSetInput {
   observationIds: [ObservationId!]!
 }
 
+# Bulk edit science requirements set of multiple observations
+input BulkEditScienceRequirementSetInput {
+  scienceRequirements: EditScienceRequirementsInput!
+  observationIds: [ObservationId!]!
+}
+
 type CatalogId {
   # Catalog name option
   name: CatalogName!
@@ -373,6 +379,7 @@ input CreateObservationInput {
   constraintSet: CreateConstraintSetInput
   status: ObsStatus
   activeStatus: ObsActiveStatus
+  scienceRequirements: ScienceRequirementsInput
 }
 
 # Sidereal target parameters
@@ -610,6 +617,9 @@ input EditObservationInput {
   # The targetId field may be unset by assigning a null value, or ignored by skipping it altogether
   targetId: TargetId
 
+  # The scienceRequirements field may be unset by assigning a null value, or ignored by skipping it altogether
+  scienceRequirements: EditScienceRequirementsInput
+
   # The constraintSet field may be unset by assigning a null value, or ignored by skipping it altogether
   constraintSet: EditConstraintSetInput
 }
@@ -619,6 +629,15 @@ input EditObservationPointingInput {
   observationIds: [ObservationId!]!
   asterismId: AsterismId
   targetId: TargetId
+}
+
+# Edit science requirements
+input EditScienceRequirementsInput {
+  # The mode field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  mode: ScienceMode
+
+  # The spectroscopyRequirements field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  spectroscopyRequirements: SpectroscopyScienceRequirementsInput
 }
 
 # Sidereal target edit parameters
@@ -826,6 +845,36 @@ enum Existence {
 
   # Existence Deleted
   DELETED
+}
+
+# Focal plane Single/Multi/IFU
+enum FocalPlane {
+  # FocalPlane SingleSlit
+  SINGLE_SLIT
+
+  # FocalPlane MultipleSlit
+  MULTIPLE_SLIT
+
+  # FocalPlane IFU
+  IFU
+}
+
+type focalPlaneAngle {
+  # Focal plane angle in µas
+  microarcseconds: Long!
+
+  # Focal plane angle in mas
+  milliarcseconds: BigDecimal!
+
+  # Focal plane angle in arcsec
+  arcseconds: BigDecimal!
+}
+
+# Focal plane angle source angle in appropriate units
+input FocalPlaneAngleInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
 }
 
 # Gaussian source angle in appropriate units
@@ -2070,6 +2119,10 @@ type Mutation {
     # Bulk edit constraint set
     input: BulkEditConstraintSetInput!
   ): [Observation!]!
+  updateScienceRequirements(
+    # Bulk edit science requirements set
+    input: BulkEditScienceRequirementSetInput!
+  ): [Observation!]!
   deleteObservation(
     # Observation ID
     observationId: ObservationId!
@@ -2191,6 +2244,12 @@ type Observation {
 
   # The constraint set for the observation
   constraintSet: ConstraintSet!
+
+  # The top level science requirements
+  scienceRequirements(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ScienceRequirements!
 
   # The observation's asterism or target (see also `asterism` and `target` fields)
   observationTarget(
@@ -2389,6 +2448,12 @@ type PlannedTimeSummary {
   # The total estimated execution time
   execution: Duration!
 }
+
+# An `Int` in the range from 1 to `Int.MaxValue`,
+scalar PosBigDecimal
+
+# An `Int` in the range from 1 to `Int.MaxValue`,
+scalar PosInt
 
 type Program {
   # Program ID
@@ -2685,10 +2750,10 @@ input QueryConfigurationAlternativeSearchInput {
   simultaneousCoverage: WavelengthModelInput
 
   # Minimum desired resolution.
-  resolution: Int
+  resolution: PosInt
 
   # Minimum desired signal-to-noise ratio.
-  signalToNoise: Int
+  signalToNoise: PosInt
 
   # Spatial profile PointSource/UniformSource/GaussianSource.
   spatialProfile: SpatialProfileModelInput
@@ -2816,6 +2881,29 @@ type Science implements StepConfig {
   stepType: StepType!
 }
 
+# Mode Spectroscopy/Imaging
+enum ScienceMode {
+  # ScienceMode Imaging
+  IMAGING
+
+  # ScienceMode Spectroscopy
+  SPECTROSCOPY
+}
+
+type ScienceRequirements {
+  # Science mode
+  mode: ScienceMode!
+
+  # Spectroscopy requirements
+  spectroscopyRequirements: SpectroscopyScienceRequirements!
+}
+
+# Science requirement input params
+input ScienceRequirementsInput {
+  mode: ScienceMode!
+  spectroscopyRequirements: SpectroscopyScienceRequirementsInput!
+}
+
 # Sequence-level command
 enum SequenceCommand {
   # SequenceCommand ABORT
@@ -2934,6 +3022,56 @@ enum SpctralDistribution {
 
   # SpctralDistribution NonStellar
   NON_STELLAR
+}
+
+# Spectroscopy capabilities Nod&Shuffle/Polarimetry/Corongraphy
+enum SpectroscopyCapabilities {
+  # SpectroscopyCapabilities NodAndShuffle
+  NOD_AND_SHUFFLE
+
+  # SpectroscopyCapabilities Polarimetry
+  POLARIMETRY
+
+  # SpectroscopyCapabilities Corongraphy
+  CORONGRAPHY
+}
+
+type SpectroscopyScienceRequirements {
+  # Requested central wavelength
+  wavelength: Wavelength
+
+  # Requested resolution
+  resolution: PosInt
+
+  # Requested signal to noise ratio
+  signalToNoise: PosBigDecimal
+
+  # Requested wavelength for the requested signal to noise
+  signalToNoiseAt: Wavelength
+
+  # Wavelength range
+  wavelengthRange: Wavelength
+
+  # Focal plane choice
+  focalPlane: FocalPlane
+
+  # Focal plane angle
+  focalPlaneAngle: focalPlaneAngle
+
+  # Spectroscopy Capabilities
+  capabilities: SpectroscopyCapabilities
+}
+
+# Spectroscopy science requirements create params
+input SpectroscopyScienceRequirementsInput {
+  wavelength: WavelengthModelInput
+  resolution: PosInt
+  signalToNoise: PosBigDecimal
+  signalToNoiseAt: WavelengthModelInput
+  wavelengthRange: WavelengthModelInput
+  focalPlane: FocalPlane
+  focalPlaneAngle: FocalPlaneAngleInput
+  capabilities: SpectroscopyCapabilities
 }
 
 # Sequence step

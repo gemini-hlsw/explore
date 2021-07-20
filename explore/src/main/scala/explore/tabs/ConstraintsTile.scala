@@ -39,7 +39,7 @@ object ConstraintsTile {
             <.div(
               ExploreStyles.ConstraintsObsTile,
               ConstraintsPanel(obsId, cs, undoStacks_, renderInTitle)
-            ): VdomNode
+            )
           )
         )(csPotView_)
       )

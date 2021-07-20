@@ -35,46 +35,52 @@ trait ObservationDB {
     type DatasetFilename  = String
     // Refined
     type NonEmptyString   = eu.timepit.refined.types.string.NonEmptyString
+    type PosInt           = eu.timepit.refined.types.numeric.PosInt
+    type PosBigDecimal    = eu.timepit.refined.types.numeric.PosBigDecimal
     // Time
     type Instant          = java.time.Instant
   }
 
   object Enums {
-    type CatalogName         = enum.CatalogName
-    type CloudExtinction     = enum.CloudExtinction
-    type EphemerisKeyType    = enum.EphemerisKeyType
-    type GcalArc             = enum.GcalArc
-    type GcalContinuum       = enum.GcalContinuum
-    type GcalDiffuser        = enum.GcalDiffuser
-    type GcalFilter          = enum.GcalFilter
-    type GcalShutter         = enum.GcalShutter
-    type GmosAmpCount        = enum.GmosAmpCount
-    type GmosAmpReadMode     = enum.GmosAmpReadMode
-    type GmosCustomSlitWidth = enum.GmosCustomSlitWidth
-    type GmosDetector        = enum.GmosDetector
-    type GmosDtax            = enum.GmosDtax
-    type GmosEOffsetting     = enum.GmosEOffsetting
-    type GmosNorthDisperser  = enum.GmosNorthDisperser
-    type GmosNorthFilter     = enum.GmosNorthFilter
-    type GmosNorthFpu        = enum.GmosNorthFpu
-    type GmosNorthStageMode  = enum.GmosNorthStageMode
-    type GmosRoi             = enum.GmosRoi
-    type GmosSouthDisperser  = enum.GmosSouthDisperser
-    type GmosSouthFilter     = enum.GmosSouthFilter
-    type GmosSouthFpu        = enum.GmosSouthFpu
-    type GmosSouthStageMode  = enum.GmosSouthStageMode
-    type GmosXBinning        = enum.GmosXBinning
-    type GmosYBinning        = enum.GmosYBinning
-    type ImageQuality        = enum.ImageQuality
-    type InstrumentType      = enum.Instrument
-    type MagnitudeBand       = enum.MagnitudeBand
-    type MagnitudeSystem     = enum.MagnitudeSystem
-    type MosPreImaging       = enum.MosPreImaging
-    type ObsStatus           = enum.ObsStatus
-    type ObsActiveStatus     = enum.ObsActiveStatus
-    type SkyBackground       = enum.SkyBackground
-    type StepType            = enum.StepType
-    type WaterVapor          = enum.WaterVapor
+    type CatalogName              = enum.CatalogName
+    type CloudExtinction          = enum.CloudExtinction
+    type EphemerisKeyType         = enum.EphemerisKeyType
+    type GcalArc                  = enum.GcalArc
+    type GcalContinuum            = enum.GcalContinuum
+    type GcalDiffuser             = enum.GcalDiffuser
+    type GcalFilter               = enum.GcalFilter
+    type GcalShutter              = enum.GcalShutter
+    type GmosAmpCount             = enum.GmosAmpCount
+    type GmosAmpReadMode          = enum.GmosAmpReadMode
+    type GmosCustomSlitWidth      = enum.GmosCustomSlitWidth
+    type GmosDetector             = enum.GmosDetector
+    type GmosDtax                 = enum.GmosDtax
+    type GmosEOffsetting          = enum.GmosEOffsetting
+    type GmosNorthDisperser       = enum.GmosNorthDisperser
+    type GmosNorthFilter          = enum.GmosNorthFilter
+    type GmosNorthFpu             = enum.GmosNorthFpu
+    type GmosNorthStageMode       = enum.GmosNorthStageMode
+    type GmosRoi                  = enum.GmosRoi
+    type GmosSouthDisperser       = enum.GmosSouthDisperser
+    type GmosSouthFilter          = enum.GmosSouthFilter
+    type GmosSouthFpu             = enum.GmosSouthFpu
+    type GmosSouthStageMode       = enum.GmosSouthStageMode
+    type GmosXBinning             = enum.GmosXBinning
+    type GmosYBinning             = enum.GmosYBinning
+    type ImageQuality             = enum.ImageQuality
+    type InstrumentType           = enum.Instrument
+    type MagnitudeBand            = enum.MagnitudeBand
+    type MagnitudeSystem          = enum.MagnitudeSystem
+    type MosPreImaging            = enum.MosPreImaging
+    type ObsStatus                = enum.ObsStatus
+    type ObsActiveStatus          = enum.ObsActiveStatus
+    type SkyBackground            = enum.SkyBackground
+    type StepType                 = enum.StepType
+    type WaterVapor               = enum.WaterVapor
+    // temporal
+    type ScienceMode              = explore.model.enum.ScienceMode
+    type FocalPlane               = explore.model.enum.FocalPlane
+    type SpectroscopyCapabilities = explore.model.enum.SpectroscopyCapabilities
   }
 
   object Types {
