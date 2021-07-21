@@ -17,7 +17,7 @@ import explore.implicits._
 import explore.model.ModelOptics
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
@@ -65,13 +65,13 @@ object AladinCell extends ModelOptics {
     private val aladinRef = Ref.toScalaComponent(AladinRef)
 
     val centerOnTarget =
-      aladinRef.get
+      aladinRef.get.asCBO
         .flatMapCB(_.backend.centerOnTarget)
         .toCallback
 
     val gotoRaDec = (coords: Coordinates) =>
       $.setStateL(State.current)(coords) *>
-        aladinRef.get
+        aladinRef.get.asCBO
           .flatMapCB(_.backend.gotoRaDec(coords))
           .toCallback
 

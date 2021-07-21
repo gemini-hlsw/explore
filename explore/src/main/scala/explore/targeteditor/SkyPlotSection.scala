@@ -6,8 +6,8 @@ package explore.targeteditor
 import cats.Eq
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react.CatsReact._
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactCats._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site

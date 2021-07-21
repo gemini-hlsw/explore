@@ -12,7 +12,7 @@ object Settings {
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
     val clue              = "0.16.0"
-    val crystal           = "0.15.1"
+    val crystal           = "0.15.2"
     val discipline        = "1.1.5"
     val disciplineMUnit   = "1.0.9"
     val fs2               = "3.0.6"
@@ -21,26 +21,26 @@ object Settings {
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaCore        = "0.11.0"
-    val lucumaCatalog     = "0.4.1"
-    val lucumaUI          = "0.15.1"
+    val lucumaCatalog     = "0.5.0"
+    val lucumaUI          = "0.17.0"
     val lucumaSSO         = "0.0.9"
     val lucumaBC          = "0.2.4"
     val monocle           = "3.0.0"
     val mouse             = "1.0.4"
     val mUnit             = "0.7.27"
     val mUnitCatsEffect   = "1.0.5"
-    val reactAladin       = "0.5.1"
-    val reactAtlasKitTree = "0.4.0"
-    val reactClipboard    = "1.4.3"
-    val reactCommon       = "0.11.3"
-    val reactDatepicker   = "0.2.3"
-    val reactGridLayout   = "0.12.0"
-    val reactHighcharts   = "0.3.4"
-    val reactHotkeys      = "0.3.1"
-    val reactResizable    = "0.4.4"
-    val reactSemanticUI   = "0.10.8"
-    val reactTable        = "0.1.4"
-    val scalaJsReact      = "1.7.7"
+    val reactAladin       = "0.6.0"
+    val reactAtlasKitTree = "0.4.1"
+    val reactClipboard    = "1.5.0"
+    val reactCommon       = "0.13.0"
+    val reactDatepicker   = "0.3.0"
+    val reactGridLayout   = "0.14.0"
+    val reactHighcharts   = "0.3.5"
+    val reactHotkeys      = "0.3.2"
+    val reactResizable    = "0.6.0"
+    val reactSemanticUI   = "0.11.1"
+    val reactTable        = "0.2.0"
+    val scalaJsReact      = "2.0.0-RC2"
     val sttp              = "3.3.11"
     val pprint            = "0.6.6"
   }
@@ -277,8 +277,9 @@ object Settings {
       deps(
         "com.github.japgolly.scalajs-react" %%% "core",
         "com.github.japgolly.scalajs-react" %%% "extra",
-        "com.github.japgolly.scalajs-react" %%% "ext-monocle-cats",
-        "com.github.japgolly.scalajs-react" %%% "ext-cats"
+        "com.github.japgolly.scalajs-react" %%% "extra-ext-monocle3",
+        "com.github.japgolly.scalajs-react" %%% "core-ext-cats",
+        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect"
       )(scalaJsReact)
     )
 

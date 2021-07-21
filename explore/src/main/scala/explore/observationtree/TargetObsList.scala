@@ -48,9 +48,10 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import monocle.Getter
-import monocle.std.option.some
 import monocle.Focus
+import monocle.Getter
+import monocle.Lens
+import monocle.std.option.some
 import mouse.boolean._
 import org.typelevel.log4cats.Logger
 import react.beautifuldnd._
@@ -70,7 +71,6 @@ import react.semanticui.views.card.CardContent
 
 import scala.collection.immutable.SortedSet
 import scala.util.Random
-import monocle.Lens
 
 final case class TargetObsList(
   pointingsWithObs: View[PointingsWithObs],
@@ -582,7 +582,7 @@ object TargetObsList {
                                 Seq(^.cursor.pointer,
                                     ^.onClick ==> { e: ReactEvent =>
                                       e.stopPropagationCB >>
-                                        toggleExpanded(targetId, expandedTargetIds)
+                                        toggleExpanded(targetId, expandedTargetIds).toCB
                                           .asEventDefault(e)
                                           .void
                                     }
@@ -711,7 +711,7 @@ object TargetObsList {
                                 Seq(^.cursor.pointer,
                                     ^.onClick ==> { e: ReactEvent =>
                                       e.stopPropagationCB >>
-                                        toggleExpanded(asterismId, expandedAsterismIds)
+                                        toggleExpanded(asterismId, expandedAsterismIds).toCB
                                           .asEventDefault(e)
                                           .void
                                     }

@@ -26,10 +26,11 @@ case class ModelUndoStacks[F[_]](
 )
 
 object ModelUndoStacks {
-  def forTarget[F[_]]        = Focus[ModelUndoStacks[F]](_.forTarget)
-  def forObsList[F[_]]       = Focus[ModelUndoStacks[F]](_.forObsList)
-  def forTargetList[F[_]]    = Focus[ModelUndoStacks[F]](_.forTargetList)
-  def forConstraintSet[F[_]] = Focus[ModelUndoStacks[F]](_.forConstraintSet)
+  def forTarget[F[_]]              = Focus[ModelUndoStacks[F]](_.forTarget)
+  def forObsList[F[_]]             = Focus[ModelUndoStacks[F]](_.forObsList)
+  def forTargetList[F[_]]          = Focus[ModelUndoStacks[F]](_.forTargetList)
+  def forConstraintSet[F[_]]       = Focus[ModelUndoStacks[F]](_.forConstraintSet)
+  def forScienceRequirements[F[_]] = Focus[ModelUndoStacks[F]](_.forScienceRequirements)
 
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>

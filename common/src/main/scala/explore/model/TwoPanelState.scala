@@ -4,7 +4,7 @@
 package explore.model
 
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.raw.JsNumber
+import japgolly.scalajs.react.facade.JsNumber
 import lucuma.ui.reusability._
 import monocle.Focus
 import org.scalajs.dom.window

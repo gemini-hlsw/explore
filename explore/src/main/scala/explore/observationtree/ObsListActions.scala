@@ -10,17 +10,17 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
 import explore.common.ObsQueriesGQL._
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.Focused
 import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.optics.GetAdjust
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import explore.undo.Action
 import explore.undo.KIListMod
 import lucuma.core.model.Observation
 import monocle.Focus
-import explore.data.KeyedIndexedList
-import explore.optics.GetAdjust
 
 object ObsListActions {
   protected val obsListMod =

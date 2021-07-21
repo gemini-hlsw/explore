@@ -34,7 +34,7 @@ import explore.observationtree.ObsList
 import explore.optics._
 import explore.schemas.ObservationDB
 import explore.undo.UndoStacks
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation

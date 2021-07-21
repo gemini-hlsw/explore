@@ -13,9 +13,9 @@ import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.refined._
 import lucuma.core.optics.SplitEpi
+import monocle.Focus
 import monocle.Prism
 import monocle.macros.GenPrism
-import monocle.Focus
 
 private sealed abstract class ElevationRangeType(val typeName: String) { self =>
   implicit val elevationRangeTypeEncoder: Encoder[self.type] =

@@ -39,8 +39,9 @@ import lucuma.core.optics.syntax.lens._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
+import monocle.Focus
 import monocle.Iso
-import monocle.macros.Lenses
+import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
@@ -76,6 +77,11 @@ object ConfigurationPanel {
     imagingOptions: ImagingConfigurationOptions,
     matrix:         Pot[SpectroscopyModesMatrix]
   )
+  object State {
+    val mode: Lens[State, ScienceMode]                           = Focus[State](_.mode)
+    val imagingOptions: Lens[State, ImagingConfigurationOptions] = Focus[State](_.imagingOptions)
+    val matrix: Lens[State, Pot[SpectroscopyModesMatrix]]        = Focus[State](_.matrix)
+  }
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>

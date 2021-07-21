@@ -16,7 +16,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.GuestRole

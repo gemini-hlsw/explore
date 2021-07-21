@@ -16,8 +16,8 @@ import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
 
 import scala.collection.immutable.HashSet
 

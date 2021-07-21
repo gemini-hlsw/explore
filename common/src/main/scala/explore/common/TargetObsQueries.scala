@@ -29,10 +29,10 @@ import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
+import monocle.Focus
 import monocle.Getter
 import monocle.Iso
 import monocle.Lens
-import monocle.Focus
 
 import TargetObsQueriesGQL._
 

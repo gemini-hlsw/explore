@@ -6,8 +6,8 @@ package explore.undo
 import cats.syntax.all._
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
-import monocle._
 import monocle.Focus
+import monocle._
 import monocle.std.option.some
 import mouse.boolean._
 

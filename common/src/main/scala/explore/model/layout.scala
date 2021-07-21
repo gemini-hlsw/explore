@@ -7,7 +7,7 @@ import cats._
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.CatsReact._
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import monocle.Lens
 import monocle.Traversal

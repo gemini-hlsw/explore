@@ -5,9 +5,9 @@ package explore.undo
 
 import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
-import monocle.Lens
-import monocle.Iso
 import monocle.Focus
+import monocle.Iso
+import monocle.Lens
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._

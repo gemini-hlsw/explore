@@ -30,8 +30,8 @@ import lucuma.core.model.Partner
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import lucuma.ui.reusability._
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea

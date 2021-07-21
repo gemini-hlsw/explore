@@ -152,7 +152,7 @@ object TargetQueries {
   }
 
   def replaceMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
-    EditSiderealInput.magnitudes.set(
+    EditSiderealInput.magnitudes.replace(
       MagnitudeEditList(replaceList = mags.map(_.toCreateInput).assign).assign
     )
 }

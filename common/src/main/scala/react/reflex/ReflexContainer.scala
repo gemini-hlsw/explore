@@ -4,7 +4,7 @@
 package react.reflex
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.raw.JsNumber
+import japgolly.scalajs.react.facade.JsNumber
 import japgolly.scalajs.react.vdom.TagMod
 import react.common._
 
