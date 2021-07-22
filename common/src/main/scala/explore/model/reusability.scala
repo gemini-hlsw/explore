@@ -6,7 +6,7 @@ package explore.model
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.undo.UndoStacks
-import japgolly.scalajs.react.CatsReact._
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.ui.reusability._
 

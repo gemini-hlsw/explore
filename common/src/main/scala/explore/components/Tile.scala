@@ -13,8 +13,9 @@ import explore.model.Constants
 import explore.model.enum.TileSizeState
 import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.internal.JsUtil
+import japgolly.scalajs.react.util.JsUtil
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{ facade => Raw }
 import lucuma.ui.reusability._
 import org.scalajs.dom.html
 import react.common._
@@ -50,11 +51,11 @@ object Tile {
 
   type RenderInTitle = VdomNode ==> VdomNode
 
-  protected case class State(portalNode: Option[raw.ReactDOM.Container] = None)
+  protected case class State(portalNode: Option[Raw.ReactDOM.Container] = None)
 
   implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
-  implicit val rawContainerReuse: Reusability[raw.ReactDOM.Container] = Reusability.always
+  implicit val rawContainerReuse: Reusability[Raw.ReactDOM.Container] = Reusability.always
 
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
@@ -143,7 +144,7 @@ object Tile {
           State(
             JsUtil
               .jsNullToOption($.backend.infoRef.raw.current)
-              .map(_.asInstanceOf[raw.ReactDOM.Container])
+              .map(_.asInstanceOf[Raw.ReactDOM.Container])
           )
         )
       }

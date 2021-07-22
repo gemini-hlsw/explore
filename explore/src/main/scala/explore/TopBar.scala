@@ -16,13 +16,13 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import org.scalajs.dom
 import react.clipboard.CopyToClipboard
 import react.common._
@@ -44,10 +44,13 @@ final case class TopBar(
 object TopBar {
   type Props = TopBar
 
-  @Lenses
   protected case class State(copied: Boolean = false, theme: Theme) {
     def flip: State =
       if (theme === Theme.Dark) copy(theme = Theme.Light) else copy(theme = Theme.Dark)
+  }
+
+  object State {
+    val copied = Focus[State](_.copied)
   }
 
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)

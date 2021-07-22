@@ -30,8 +30,8 @@ import lucuma.core.model.Partner
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import lucuma.ui.reusability._
+import monocle.Focus
 import monocle.Lens
-import monocle.macros.Lenses
 import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
@@ -48,8 +48,13 @@ final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
 object ProposalDetailsEditor {
   type Props = ProposalDetailsEditor
 
-  @Lenses
   final case class State(showPartnerSplitsModal: Boolean, splits: List[PartnerSplit])
+
+  object State {
+    val showPartnerSplitsModal = Focus[State](_.showPartnerSplitsModal)
+
+    val splits = Focus[State](_.splits)
+  }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
@@ -243,7 +248,7 @@ object ProposalDetailsEditor {
       val details = props.proposalDetails
 
       def closePartnerSplitsEditor: Callback =
-        $.modState(State.showPartnerSplitsModal.set(false))
+        $.modState(State.showPartnerSplitsModal.replace(false))
 
       def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
         details

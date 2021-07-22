@@ -4,18 +4,20 @@
 package explore.model
 
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.raw.JsNumber
+import japgolly.scalajs.react.facade.JsNumber
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import org.scalajs.dom.window
 
-@Lenses
 final case class TwoPanelState(treeWidth: JsNumber, elementSelected: Boolean) {
   val leftPanelVisible: Boolean  = !elementSelected
   val rightPanelVisible: Boolean = elementSelected
 }
 
 object TwoPanelState {
+  val elementSelected = Focus[TwoPanelState](_.elementSelected)
+  val treeWidth       = Focus[TwoPanelState](_.treeWidth)
+
   // Keep them as def to take the value window.innerWidth at the current time
   def isTwoPanel: Boolean =
     window.innerWidth > Constants.TwoPanelCutoff

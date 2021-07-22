@@ -14,7 +14,7 @@ import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -22,7 +22,7 @@ import lucuma.ui.forms._
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import lucuma.ui.utils.abbreviate
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
@@ -53,13 +53,18 @@ final case class SearchForm(
 object SearchForm {
   type Props = SearchForm
 
-  @Lenses
   final case class State(
     initialName:   NonEmptyString,
     searchTerm:    NonEmptyString,
     searchEnabled: Boolean,
     searchError:   Option[NonEmptyString]
   )
+
+  object State {
+    val searchError   = Focus[State](_.searchError)
+    val searchEnabled = Focus[State](_.searchEnabled)
+    val searchTerm    = Focus[State](_.searchTerm)
+  }
 
   implicit val stateReuse                     = Reusability.derive[State]
   implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.id, x.name, x.searching))

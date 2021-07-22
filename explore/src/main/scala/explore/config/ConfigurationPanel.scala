@@ -39,8 +39,9 @@ import lucuma.core.optics.syntax.lens._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
+import monocle.Focus
 import monocle.Iso
-import monocle.macros.Lenses
+import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
@@ -71,12 +72,16 @@ object ConfigurationPanel {
   implicit val propsReuse: Reusability[Props]                      = Reusability.derive
   implicit val stateReuse: Reusability[State]                      = Reusability.never
 
-  @Lenses
   final case class State(
     mode:           ScienceMode,
     imagingOptions: ImagingConfigurationOptions,
     matrix:         Pot[SpectroscopyModesMatrix]
   )
+  object State {
+    val mode: Lens[State, ScienceMode]                           = Focus[State](_.mode)
+    val imagingOptions: Lens[State, ImagingConfigurationOptions] = Focus[State](_.imagingOptions)
+    val matrix: Lens[State, Pot[SpectroscopyModesMatrix]]        = Focus[State](_.matrix)
+  }
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
@@ -201,7 +206,7 @@ object ConfigurationPanel {
       .componentDidMount { $ =>
         implicit val ctx = $.props.ctx
         load(uri"/instrument_spectroscopy_matrix.csv").flatMap { m =>
-          $.modStateIn[IO](State.matrix.set(Pot(m)))
+          $.modStateIn[IO](State.matrix.replace(Pot(m)))
         }.runAsyncAndForgetCB
       }
       .configure(Reusability.shouldComponentUpdate)

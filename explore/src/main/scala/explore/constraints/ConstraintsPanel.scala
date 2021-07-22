@@ -38,8 +38,8 @@ import lucuma.ui.optics.TruncatedRefinedBigDecimal
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ValidFormatNec
 import lucuma.ui.reusability._
+import monocle.Focus
 import monocle.Lens
-import monocle.macros.Lenses
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.Label
@@ -78,13 +78,18 @@ object ConstraintsPanel {
 
   import ElevationRangeType._
 
-  @Lenses
   final case class State(
     rangeType: ElevationRangeType,
     airMass:   AirMassRange,
     hourAngle: HourAngleRange,
     copying:   Boolean = false
   )
+
+  object State {
+    val rangeType = Focus[State](_.rangeType)
+    val airMass   = Focus[State](_.airMass)
+    val hourAngle = Focus[State](_.hourAngle)
+  }
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
@@ -199,7 +204,7 @@ object ConstraintsPanel {
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
                   .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
-                  .composeValidFormat(
+                  .andThen(
                     ValidFormatNec.lte(
                       TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
                         state.get.airMass.max
@@ -224,7 +229,7 @@ object ConstraintsPanel {
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
                   .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
-                  .composeValidFormat(
+                  .andThen(
                     ValidFormatNec.gte(
                       TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
                         state.get.airMass.min
@@ -251,7 +256,7 @@ object ConstraintsPanel {
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
                   .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
-                  .composeValidFormat(
+                  .andThen(
                     ValidFormatNec.lte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
                                          state.get.hourAngle.maxHours
                                        ).get,
@@ -275,7 +280,7 @@ object ConstraintsPanel {
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
                   .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
-                  .composeValidFormat(
+                  .andThen(
                     ValidFormatNec.gte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
                                          state.get.hourAngle.minHours
                                        ).get,

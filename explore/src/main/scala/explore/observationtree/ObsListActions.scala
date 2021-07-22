@@ -10,15 +10,17 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
 import explore.common.ObsQueriesGQL._
+import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.Focused
 import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.optics.GetAdjust
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import explore.undo.Action
 import explore.undo.KIListMod
 import lucuma.core.model.Observation
-import monocle.function.Field1.first
+import monocle.Focus
 
 object ObsListActions {
   protected val obsListMod =
@@ -26,8 +28,14 @@ object ObsListActions {
       ObsSummaryWithPointingAndConstraints.id
     )
 
-  private def obsWithId(obsId: Observation.Id) =
-    obsListMod.withKey(obsId).composeOptionLens(first)
+  private def obsWithId(
+    obsId: Observation.Id
+  ): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints], Option[
+    ObsSummaryWithPointingAndConstraints
+  ]] =
+    obsListMod
+      .withKey(obsId)
+      .composeOptionLens(Focus[(ObsSummaryWithPointingAndConstraints, Int)](_._1))
 
   def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
     c:                                    TransactionalClient[F, ObservationDB]

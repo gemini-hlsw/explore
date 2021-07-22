@@ -21,7 +21,6 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Traversal
-import monocle.unsafe.UnsafeSelect
 import react.common._
 import react.gridlayout._
 
@@ -49,7 +48,7 @@ object TileController {
       .runAsyncAndForgetCB
       .debounce(1.second)
 
-  val itemHeght = layoutItems.composeLens(layoutItemHeight)
+  val itemHeght = layoutItems.andThen(layoutItemHeight)
 
   // Calculate the state out of the height
   def unsafeSizeToState(
@@ -57,7 +56,7 @@ object TileController {
     tileId:     Tile.TileId
   ): TileSizeState = {
     val k = allTiles
-      .composePrism(UnsafeSelect.unsafeSelect(s => s.i.forall(_ === tileId.value)))
+      .filter((s => s.i.forall(_ === tileId.value)))
       .getAll(layoutsMap)
       .headOption
 
@@ -66,12 +65,12 @@ object TileController {
   }
 
   val allTiles: Traversal[LayoutsMap, LayoutItem] =
-    allLayouts.composeTraversal(layoutItems)
+    allLayouts.andThen(layoutItems)
 
   def unsafeTileHeight(id: Tile.TileId): Traversal[LayoutsMap, Int] =
     allTiles
-      .composePrism(UnsafeSelect.unsafeSelect(_.i.forall(_ === id.value)))
-      .composeLens(layoutItemHeight)
+      .filter(_.i.forall(_ === id.value))
+      .andThen(layoutItemHeight)
 
   val component =
     ScalaComponent

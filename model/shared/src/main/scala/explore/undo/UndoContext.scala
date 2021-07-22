@@ -83,6 +83,8 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
   lazy val isUndoEmpty: Boolean = stacks.get.undo.isEmpty
   lazy val isRedoEmpty: Boolean = stacks.get.redo.isEmpty
 
+  // Unset "working" on callback passed to react to be executed after setState completion...
+
   lazy val working: Boolean = stacks.get.working
 
   private def push(stack: ViewF[F, UndoStack[G, M]]): Restorer[G, M] => F[Unit] =

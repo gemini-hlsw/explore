@@ -47,7 +47,7 @@ object ScienceRequirementsQueries {
 
   object UpdateScienceRequirements {
     def mode(n: ScienceMode): Endo[EditScienceRequirementsInput] =
-      EditScienceRequirementsInput.mode.set(n.assign)
+      EditScienceRequirementsInput.mode.replace(n.assign)
 
     def angle(w: Angle): FocalPlaneAngleInput =
       (FocalPlaneAngleInput.microarcseconds := w.toMicroarcseconds.assign)
@@ -83,7 +83,7 @@ object ScienceRequirementsQueries {
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.capabilities := op.capabilities.orUnassign
         } yield ()
-      EditScienceRequirementsInput.spectroscopyRequirements.set(
+      EditScienceRequirementsInput.spectroscopyRequirements.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign
       )
     }

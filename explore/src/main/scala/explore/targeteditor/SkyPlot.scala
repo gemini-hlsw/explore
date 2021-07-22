@@ -9,7 +9,7 @@ import explore.implicits._
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
@@ -19,7 +19,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.highcharts.Chart
 import react.moon.MoonPhase
@@ -48,8 +48,11 @@ final case class SkyPlot(
 object SkyPlot {
   type Props = SkyPlot
 
-  @Lenses
   case class State(shownSeries: HashSet[ElevationSeries] = HashSet(ElevationSeries.Elevation))
+
+  object State {
+    val shownSeries = Focus[State](_.shownSeries)
+  }
 
   implicit private val propsReuse: Reusability[Props] = Reusability.derive
   // State doesn't trigger rerenders. We keep track of what is shown in case there is a

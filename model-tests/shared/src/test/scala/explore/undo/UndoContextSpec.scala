@@ -13,13 +13,15 @@ import explore.data.tree._
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import explore.undo._
+import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
 
 class UndoContextSpec extends munit.CatsEffectSuite {
 
-  def idLens[A] = Lens.id[A]
+  def idLens[A] = Iso.id[A]
 
   def id[A] = GetAdjust(idLens[A])
 
@@ -89,11 +91,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     } yield ()
   }
 
-  // @Lenses
   case class V(id: Int, s: String)
   object V {
     def apply(id: Int): V = V(id, id.toString)
-    // @Lenses doesn't seem to be working for some reason...
     val id: Lens[V, Int]   = GenLens[V](_.id)
     val s: Lens[V, String] = GenLens[V](_.s)
   }
@@ -106,9 +106,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     vListMod
       .withKey(id)
       .adjuster
-      .composeTraversal(each)
-      .composeLens(first)
-      .composeLens(V.s)
+      .andThen(each[Option[(V, Int)], (V, Int)])
+      .andThen(Focus[(V, Int)](_._1))
+      .andThen(V.s)
 
   dispatcher.test("ListObjModPosUndoRedo") { implicit dispatcher =>
     for {
@@ -303,10 +303,10 @@ class UndoContextSpec extends munit.CatsEffectSuite {
     vTreeMod
       .withKey(key)
       .adjuster
-      .composeTraversal(each)
-      .composeLens(first)
-      .composeLens(Node.value)
-      .composeLens(V.s)
+      .andThen(each[Option[(Node[V], Index[Int])], (Node[V], Index[Int])])
+      .andThen(Focus[(Node[V], Index[Int])](_._1))
+      .andThen(Node.value[V])
+      .andThen(V.s)
 
   dispatcher.test("TreeObjModPosUndoRedo") { implicit dispatcher =>
     for {

@@ -19,8 +19,8 @@ final case class MoonPhase(
   border:     js.UndefOr[String] = js.undefined,
   rotation:   js.UndefOr[String] = js.undefined
 ) extends GenericFnComponentP[MoonPhase.MoonPhaseProps] {
-  override protected def cprops                        = MoonPhase.props(this)
-  @inline def render: Render[MoonPhase.MoonPhaseProps] = MoonPhase.component(cprops)
+  override protected def cprops                          = MoonPhase.props(this)
+  @inline def render: RenderFn[MoonPhase.MoonPhaseProps] = MoonPhase.component(cprops)
 }
 
 object MoonPhase {
@@ -54,5 +54,5 @@ object MoonPhase {
   }
 
   private val component =
-    JsComponent[MoonPhaseProps, Children.None, Null](RawComponent)
+    JsFnComponent[MoonPhaseProps, Children.None](RawComponent)
 }

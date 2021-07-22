@@ -9,11 +9,10 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.View
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
@@ -22,16 +21,16 @@ import lucuma.core.math.Declination
 import lucuma.core.math.RightAscension
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
-import monocle.macros.Lenses
+import monocle.Focus
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Element
 import react.aladin._
 import react.common._
 
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 
-@Lenses
 final case class AladinContainer(
   target:                 View[Coordinates],
   options:                TargetVisualOptions,
@@ -48,10 +47,10 @@ object AladinContainer {
   /**
    * On the state we keep the svg to avoid recalculations during panning
    */
-  @Lenses
   final case class State(svg: Option[Svg])
 
   object State {
+    val svg         = Focus[State](_.svg)
     val Zero: State = State(None)
   }
 
@@ -65,14 +64,14 @@ object AladinContainer {
     // Create a mutable reference
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
-    def setRa(ra: RightAscension)(implicit ctx: AppContextIO): Callback =
+    def setRa(ra: RightAscension): Callback =
       $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.rightAscension).set(ra))
 
-    def setDec(dec: Declination)(implicit ctx: AppContextIO): Callback =
+    def setDec(dec: Declination): Callback =
       $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.declination).set(dec))
 
     val gotoRaDec = (coords: Coordinates) =>
-      aladinRef.get
+      aladinRef.get.asCBO
         .flatMapCB(
           _.backend
             .gotoRaDec(coords.ra.toAngle.toDoubleDegrees, coords.dec.toAngle.toDoubleDegrees)
@@ -81,8 +80,8 @@ object AladinContainer {
 
     def searchAndGo(
       modify: ((String, RightAscension, Declination)) => Callback
-    )(search: String)(implicit ctx: AppContextIO) =
-      aladinRef.get
+    )(search: String) =
+      aladinRef.get.asCBO
         .flatMapCB(
           _.backend
             .gotoObject(
@@ -113,7 +112,7 @@ object AladinContainer {
      * @return
      */
     def initialSvgState: Callback =
-      aladinRef.get
+      aladinRef.get.asCBO
         .flatMapCB(_.backend.runOnAladinCB(updateSvgState))
         .void
 
@@ -147,7 +146,7 @@ object AladinContainer {
         .map(_.aladinCoords)
         .toCBO
         // calculate the offset
-        .flatMap(c => aladinRef.get.flatMapCB(_.backend.world2pix(c)))
+        .flatMap(c => aladinRef.get.asCBO.flatMapCB(_.backend.world2pix(c)))
         .zip($.props.map(_.options).toCBO)
         .map {
           case (Some((x, y)), options: TargetVisualOptions) =>
@@ -196,7 +195,7 @@ object AladinContainer {
 
     def onZoom(v: JsAladin): Callback =
       updateSvgState(v).flatMap { s =>
-        aladinRef.get.flatMapCB(r =>
+        aladinRef.get.asCBO.flatMapCB(r =>
           r.backend.recalculateView *>
             r.backend.runOnAladinCB(updateVisualization(s))
         )
@@ -206,7 +205,8 @@ object AladinContainer {
      * Called when the position changes, i.e. aladin pans. We want to offset the visualization to
      * keep the internal target correct
      */
-    def onPositionChanged(v: JsAladin)(s: PositionChanged): Callback =
+    @nowarn
+    def onPositionChanged(v: JsAladin)(u: PositionChanged): Callback =
       $.props
         .zip($.state)
         .flatMap { case (p, s) =>
@@ -215,7 +215,7 @@ object AladinContainer {
           // Update the existing visualization in place
           val previous = Option(div.querySelector(".aladin-visualization"))
           (s.svg, previous).mapN { case (svg, previous) =>
-            aladinRef.get
+            aladinRef.get.asCBO
               .flatMapCB(
                 _.backend.world2pix(Coordinates(p.aladinCoords.ra, p.aladinCoords.dec))
               )
@@ -241,14 +241,14 @@ object AladinContainer {
 
     def centerOnTarget: Callback =
       $.props.flatMap(p =>
-        aladinRef.get.flatMapCB(
+        aladinRef.get.asCBO.flatMapCB(
           _.backend.gotoRaDec(p.aladinCoords.ra.toAngle.toDoubleDegrees,
                               p.aladinCoords.dec.toAngle.toSignedDoubleDegrees
           )
         )
       )
 
-    def render(props: Props, state: State) =
+    def render(props: Props) =
       <.div(
         ExploreStyles.AladinContainerBody,
         AladinComp.withRef(aladinRef) {
@@ -264,7 +264,7 @@ object AladinContainer {
       )
 
     def recalculateView =
-      aladinRef.get.flatMapCB { r =>
+      aladinRef.get.asCBO.flatMapCB { r =>
         r.backend.runOnAladinCB { v =>
           updateSvgState(v).flatMap(s =>
             r.backend.recalculateView *> r.backend.runOnAladinCB(updateVisualization(s))
@@ -278,7 +278,7 @@ object AladinContainer {
       .builder[Props]
       .initialState(State.Zero)
       .renderBackend[Backend]
-      .componentDidUpdate(_.backend.recalculateView)
+      .componentDidUpdate(_.backend.recalculateView.toCallback)
       .configure(Reusability.shouldComponentUpdate)
       .build
 }

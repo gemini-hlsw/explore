@@ -7,12 +7,11 @@ import cats._
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.CatsReact._
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import monocle.Lens
 import monocle.Traversal
 import monocle.function.Each._
-import monocle.function.Field3._
 import monocle.macros.GenLens
 import react.gridlayout._
 
@@ -50,9 +49,9 @@ object layout {
   implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
   implicit val breakpointNameOrdering: Ordering[BreakpointName] = breakpointNameOrder.toOrdering
   val allLayouts: Traversal[LayoutsMap, Layout]                 =
-    each[LayoutsMap, LayoutEntry].composeLens(third)
+    each[LayoutsMap, LayoutEntry].andThen(GenLens[LayoutEntry](_._3))
   val layoutItem: Lens[Layout, List[LayoutItem]]                = GenLens[Layout](_.l)
-  val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.composeTraversal(each)
+  val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.each
   val layoutItemName                                            = GenLens[LayoutItem](_.i)
   val layoutItemHeight                                          = GenLens[LayoutItem](_.h)
   val layoutItemWidth                                           = GenLens[LayoutItem](_.w)

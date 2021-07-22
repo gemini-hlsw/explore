@@ -4,7 +4,7 @@
 package react.fa
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.raw.JsNumber
+import japgolly.scalajs.react.facade.JsNumber
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 

@@ -3,8 +3,8 @@
 
 package explore
 
+import cats.effect.SyncIO
 import cats.syntax.all._
-import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
 import explore.model.Page
@@ -12,8 +12,7 @@ import explore.model.Page._
 import explore.model._
 import explore.proposal._
 import explore.tabs._
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.MonocleReact._
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -74,7 +73,7 @@ object Routing {
           model.zoom(RootModel.userId).get,
           model.zoom(RootModel.focused),
           model.zoom(
-            RootModel.expandedIds.composeLens(ExpandedIds.constraintSetIds)
+            RootModel.expandedIds.andThen(ExpandedIds.constraintSetIds)
           ),
           // model.zoom(RootModel.undoStacks.composeLens(ModelUndoStacks.forConstraintSet)),
           size
@@ -131,7 +130,7 @@ object Routing {
             case (None, next, view) =>
               // Set the model if none was previously set
               view.zoom(RootModelRouting.lens).set(next)
-            case _                  => Callback.empty
+            case _                  => SyncIO.unit
           }
           .renderWithP(layout)
       // .logToConsole

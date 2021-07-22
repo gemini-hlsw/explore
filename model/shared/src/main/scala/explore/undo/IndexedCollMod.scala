@@ -6,8 +6,8 @@ package explore.undo
 import cats.syntax.all._
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
+import monocle.Focus
 import monocle._
-import monocle.function.Field1.first
 import monocle.std.option.some
 import mouse.boolean._
 
@@ -22,8 +22,10 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   type Operation        = ElemWithIndexOpt => ElemWithIndexOpt
   type Collection       = Coll[K, A]
 
+  private def first: Lens[(N[A], Idx), N[A]] = Focus[(N[A], Idx)](_._1)
+
   protected lazy val ElemWithIndexOptKey: Optional[ElemWithIndexOpt, K] =
-    some.composeLens(first[(N[A], Idx), N[A]]).composeLens(valueLens).composeLens(keyLens)
+    some.andThen(first).andThen(valueLens).andThen(keyLens)
 
   protected def getterForKey(key: K): Getter[Collection, ElemWithIndexOpt]
 
@@ -39,7 +41,8 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
     Adjuster[Collection, ElemWithIndexOpt] { mod => coll =>
       val oldElemAndIndex        = getter.get(coll)
       val newElemAndIndex        = mod(oldElemAndIndex)
-      val newElemAndIndexWithKey = ElemWithIndexOptKey.set(key)(newElemAndIndex) // Reinstate key
+      val newElemAndIndexWithKey =
+        ElemWithIndexOptKey.replace(key)(newElemAndIndex) // Reinstate key
 
       val baseColl = removeWithKey(coll, key)
 
@@ -61,7 +64,7 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   // Key is reinstated (it can't be modified.)
   def mod(f: A => A): Operation =
     _.map { case (node, idx) =>
-      (valueLens.modify(value => keyLens.set(keyLens.get(value))(f(value)))(node), idx)
+      (valueLens.modify(value => keyLens.replace(keyLens.get(value))(f(value)))(node), idx)
     }
 
   // Key is reinstated (it can't be modified.)
@@ -74,7 +77,7 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   // If updating, key is reinstated (it can't be modified.)
   def upsert(a: A, idx: Idx): Operation =
     _.map { case (node, _) =>
-      (valueLens.modify(value => keyLens.set(keyLens.get(value))(a))(node), idx)
+      (valueLens.modify(value => keyLens.replace(keyLens.get(value))(a))(node), idx)
     }.orElse((pureNode(a), idx).some)
 
   // End Element Operations

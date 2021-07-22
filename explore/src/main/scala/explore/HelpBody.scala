@@ -14,7 +14,7 @@ import explore.implicits._
 import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.macros.Lenses
+import monocle.Focus
 import react.common._
 import react.hotkeys._
 import react.markdown.ReactMarkdown
@@ -58,8 +58,11 @@ class HelpLoader {
 object HelpBody {
   type Props = HelpBody
 
-  @Lenses
   final case class State(content: Pot[String])
+
+  object State {
+    val content = Focus[State](_.content)
+  }
 
   def load(uri: Uri): IO[Try[String]] = {
     val backend = FetchCatsBackend[IO]()
@@ -141,7 +144,7 @@ object HelpBody {
         implicit val ctx = $.props.ctx
 
         load($.props.url)
-          .flatMap(v => $.modStateIn[IO](State.content.set(Pot.fromTry(v))))
+          .flatMap(v => $.modStateIn[IO](State.content.replace(Pot.fromTry(v))))
           .runAsync
       }
       .build
