@@ -19,7 +19,7 @@ jobs:
           java-version: adopt@1.11
       - name: Build application
         env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
+          NODE_OPTIONS: '--max-old-space-size=6144'
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: |
           sbt stage
