@@ -8,7 +8,6 @@ import cats.effect.Async
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.implicits._
 import explore.common.ObsQueriesGQL._
 import explore.data.KeyedIndexedList
 import explore.implicits._

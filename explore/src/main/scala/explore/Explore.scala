@@ -4,9 +4,9 @@
 package explore
 
 import cats.effect.IO
+import cats.effect.IOApp
 import cats.effect.SyncIO
 import cats.effect.std.Dispatcher
-import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
 import cats.~>
 import clue.WebSocketReconnectionStrategy
@@ -46,14 +46,14 @@ import sttp.client3.impl.cats.FetchCatsBackend
 import sttp.model.Uri
 
 import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
 
 @JSExportTopLevel("Explore")
-object ExploreMain {
-  japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+object ExploreMain extends IOApp.Simple {
 
   LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
 
@@ -61,21 +61,21 @@ object ExploreMain {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  implicit val ioRuntume: IORuntime = cats.effect.unsafe.implicits.global
-
-  private var releaseOldDispatcher: Option[IO[Unit]] = none
-
   val syncIOtoIO: SyncIO ~> IO = new ~>[SyncIO, IO] {
     def apply[A](fa: SyncIO[A]): IO[A] = fa.to[IO]
   }
 
   @JSExport
-  def runIOApp(): Unit =
-    (releaseOldDispatcher.orEmpty >>
-      start.map(releaseDispatcher => releaseOldDispatcher = releaseDispatcher.some))
-      .unsafeRunAndForget()
+  @nowarn
+  def resetIOApp(): Unit =
+    // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
+    cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
 
-  final def start: IO[IO[Unit]] = {
+  @JSExport
+  def runIOApp(): Unit = main(Array.empty)
+
+  override final def run: IO[Unit] = {
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     def initialModel(vault: Option[UserVault]) = RootModel(
       vault = vault,
@@ -145,9 +145,8 @@ object ExploreMain {
       }
 
     Dispatcher[IO].allocated
-      .flatMap { case (dispatcher, releaseDispatcher) =>
-        implicit val d = dispatcher
-
+      .map(_._1)
+      .flatMap { implicit dispatcher =>
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 
@@ -201,13 +200,13 @@ object ExploreMain {
               (StateProviderComponent((rootComponent _).reuseAlways): VdomNode).reuseAlways
             ): VdomNode).reuseAlways
           ).renderIntoDOM(container)
-
-          releaseDispatcher
         }
       }
-      .onError { t =>
+      .void
+      .handleErrorWith { t =>
         logger.error(t)("Error initializing") >>
           crash(s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
   }
+
 }
