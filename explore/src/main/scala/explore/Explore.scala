@@ -209,5 +209,4 @@ object ExploreMain extends IOApp.Simple {
       }
   }
 
-  // TODO Release dispatcher on stop.
 }
