@@ -17,7 +17,6 @@ import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.WIP
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -71,9 +70,10 @@ final case class TargetBody(
 object TargetBody {
 
   type Props = TargetBody
-  val AladinRef = AladinCell.component
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
+
+  val AladinRef = AladinCell.component
 
   class Backend() {
     def render(props: Props) =
@@ -163,12 +163,8 @@ object TargetBody {
         val disabled = props.searching.get.exists(_ === props.id)
 
         React.Fragment(
-          <.div(
-            ExploreStyles.TargetGrid,
-            <.div(
-              ExploreStyles.Grid,
-              ExploreStyles.Compact,
-              ExploreStyles.TargetForm,
+          <.div(ExploreStyles.TargetGrid)(
+            <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
               SearchForm(
                 props.id,
@@ -252,14 +248,11 @@ object TargetBody {
               RVInput(radialVelocityView, disabled)
             ),
             MagnitudeForm(target.id, magnitudesView, disabled = disabled),
+            <.div(ExploreStyles.TargetSkyplotCell)(
+              SkyPlotSection(props.baseCoordinates)
+            ),
             props.renderInTitle(
               <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
-            ),
-            <.div(
-              ExploreStyles.TargetSkyplotCell,
-              WIP(
-                SkyPlotSection(props.baseCoordinates)
-              ).when(false)
             )
           )
         )

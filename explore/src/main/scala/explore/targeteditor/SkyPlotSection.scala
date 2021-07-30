@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.syntax.all._
+import explore._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.ReactMonocle._
@@ -12,6 +13,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
 import lucuma.core.math.Coordinates
+import lucuma.core.model.Semester
 import lucuma.ui.reusability._
 import monocle.Focus
 import react.common.ReactProps
@@ -24,11 +26,21 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 final case class SkyPlotSection(
-  coords: Coordinates
-) extends ReactProps[SkyPlotSection](SkyPlotSection.component)
+  coords:           Coordinates
+)(implicit val ctx: AppContextIO)
+    extends ReactProps[SkyPlotSection](SkyPlotSection.component)
 
 object SkyPlotSection {
   type Props = SkyPlotSection
+
+  protected sealed trait PlotPeriod
+  protected object PlotPeriod {
+    final case object Night    extends PlotPeriod
+    final case object Semester extends PlotPeriod
+
+    implicit val PlotPeriodEq: Eq[PlotPeriod]             = Eq.fromUniversalEquals
+    implicit val PlotPeriodReuse: Reusability[PlotPeriod] = Reusability.byEq
+  }
 
   protected sealed trait TimeDisplay
   protected object TimeDisplay {
@@ -39,7 +51,12 @@ object SkyPlotSection {
     implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
   }
 
-  final case class State(site: Site, date: LocalDate, timeDisplay: TimeDisplay) {
+  final case class State(
+    site:        Site,
+    date:        LocalDate,
+    plotPeriod:  PlotPeriod,
+    timeDisplay: TimeDisplay
+  ) {
     def zoneId: ZoneId =
       timeDisplay match {
         case TimeDisplay.UTC  => ZoneOffset.UTC
@@ -50,6 +67,7 @@ object SkyPlotSection {
   object State {
     val site        = Focus[State](_.site)
     val date        = Focus[State](_.date)
+    val plotPeriod  = Focus[State](_.plotPeriod)
     val timeDisplay = Focus[State](_.timeDisplay)
   }
 
@@ -63,19 +81,38 @@ object SkyPlotSection {
         case Site.GN => Site.GS
       }
 
+    val togglePlotPeriod: Callback =
+      $.modStateL(State.plotPeriod) {
+        case PlotPeriod.Night    => PlotPeriod.Semester
+        case PlotPeriod.Semester => PlotPeriod.Night
+      }
+
     val toggleTimeDisplay: Callback =
       $.modStateL(State.timeDisplay) {
         case TimeDisplay.UTC  => TimeDisplay.Site
         case TimeDisplay.Site => TimeDisplay.UTC
       }
 
-    def render(props: Props, state: State) =
+    def render(props: Props, state: State) = {
+      implicit val ctx = props.ctx
+
       <.div(ExploreStyles.SkyPlotSection)(
-        <.div(ExploreStyles.SkyPlot)(
-          SkyPlot(state.site, props.coords, state.date, state.zoneId, 350)
-        ),
+        <.div(ExploreStyles.SkyPlot) {
+          state.plotPeriod match {
+            case PlotPeriod.Night    =>
+              SkyPlotNight(state.site, props.coords, state.date, state.zoneId, 350)
+            case PlotPeriod.Semester =>
+              val site     = state.site
+              val coords   = props.coords
+              val semester = Semester.fromLocalDate(state.date)
+              val zoneId   = state.zoneId
+              SkyPlotSemester(site, coords, semester, zoneId, 350).withKey(
+                s"$site-$coords-$semester"
+              )
+          }
+        },
         <.div(ExploreStyles.SkyPlotControls)(
-          <.div(
+          <.div(ExploreStyles.PlotToggleCheckbox)(
             <.label(Site.GN.toString,
                     ^.cursor.pointer,
                     ^.onClick --> $.setStateL(State.site)(Site.GN)
@@ -91,13 +128,29 @@ object SkyPlotSection {
             )
           ),
           <.div(
-            Datepicker(onChange =
-              (newValue, _) => $.setStateL(State.date)(newValue.toLocalDateOpt.get)
+            Datepicker(
+              onChange = (newValue, _) => $.setStateL(State.date)(newValue.toLocalDateOpt.get)
             )
               .selected(state.date.toJsDate)
               .dateFormat("yyyy-MM-dd")
+              .className(ExploreStyles.SkyPlotDatePicker.htmlClass)
           ),
-          <.div(
+          <.div(ExploreStyles.PlotToggleCheckbox)(
+            <.label(PlotPeriod.Night.toString,
+                    ^.cursor.pointer,
+                    ^.onClick --> $.setStateL(State.plotPeriod)(PlotPeriod.Night)
+            ),
+            Checkbox(slider = true,
+                     clazz = ExploreStyles.PlotToggle,
+                     onClick = togglePlotPeriod,
+                     checked = state.plotPeriod === PlotPeriod.Semester
+            ),
+            <.label(PlotPeriod.Semester.toString,
+                    ^.cursor.pointer,
+                    ^.onClick --> $.setStateL(State.plotPeriod)(PlotPeriod.Semester)
+            )
+          ),
+          <.div(ExploreStyles.PlotToggleCheckbox)(
             <.label(TimeDisplay.UTC.toString,
                     ^.cursor.pointer,
                     ^.onClick --> $.setStateL(State.timeDisplay)(TimeDisplay.UTC)
@@ -114,6 +167,7 @@ object SkyPlotSection {
           )
         )
       )
+    }
 
   }
 
@@ -121,7 +175,11 @@ object SkyPlotSection {
     ScalaComponent
       .builder[Props]
       .initialState(
-        State(Site.GS, ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1), TimeDisplay.UTC)
+        State(Site.GS,
+              ZonedDateTime.now(Site.GS.timezone).toLocalDate.plusDays(1),
+              PlotPeriod.Night,
+              TimeDisplay.UTC
+        )
       )
       .renderBackend[Backend]
       .configure(Reusability.shouldComponentUpdate)

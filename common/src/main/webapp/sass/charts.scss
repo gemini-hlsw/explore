@@ -3,6 +3,36 @@
 /* Using custom classes for series works, but messes up tooltip border colors.
 See https://github.com/highcharts/highcharts/issues/13320 */
 
+.highcharts-background {
+  fill: var(--plot-background-color);
+}
+
+.highcharts-root text {
+  fill: var(--plot-text-color);
+}
+
+.highcharts-grid-line {
+  stroke: var(--plot-grid-color);
+}
+
+.highcharts-minor-grid-line {
+  stroke: var(--plot-grid-color);
+  stroke-dasharray: 2, 2;
+}
+
+.highcharts-tooltip-box {
+  fill: var(--plot-tooltip-background-color);
+}
+
+.highcharts-legend-item:hover text {
+  fill: var(--plot-text-color-hover);
+}
+
+.highcharts-legend-item-hidden * {
+  fill: var(--plot-text-color-disabled) !important;
+  stroke: var(--plot-text-color-disabled) !important;
+}
+
 /* Target Elevation */
 .highcharts-color-0 {
   fill: #f45b5b;
@@ -61,7 +91,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 	stroke-width: 1px;
 }
 
-.highcharts-minor-grid-line {
-  stroke: #e6e6e6;
-  stroke-dasharray: 2, 2;
+// We force these to override highchart's defaults.
+.plot-plot-line-progress {
+  stroke-width: 2 !important;
+  stroke: green !important;
 }

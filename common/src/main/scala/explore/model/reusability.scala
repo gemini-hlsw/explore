@@ -8,6 +8,7 @@ import explore.data.KeyedIndexedList
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.core.model.Semester
 import lucuma.ui.reusability._
 
 /**
@@ -40,4 +41,6 @@ object reusability {
   implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]]  =
     Reusability.never
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]            = Reusability.derive
+  // Move to lucuma-ui
+  implicit val semesterReuse: Reusability[Semester]                                   = Reusability.derive
 }

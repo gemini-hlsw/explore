@@ -755,32 +755,56 @@ tfoot {
 
 .sky-plot-section {
   height: 390;
-  background-color: white;
-  color: black;
+  background-color: var(--plot-background-color);
+  color: var(--plot-text-color);
 }
 
 .sky-plot-section .ui.checkbox + label {
-  color: black;
+  color: var(--plot-text-color);
 }
 
 .sky-plot-controls {
   display: flex;
   justify-content: space-around;
+  background-color: var(--plot-background-color);
+  color: var(--plot-text-color);
+}
+
+.sky-plot-datepicker {
+  width: 100px;
+}
+
+.plot-toggle-checkbox {
+  white-space: nowrap;
+  display: flex;
 }
 
 .plot-toggle {
-  margin-left: 10px;
-  margin-right: 10px;
-  padding-top: 6px;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  padding-top: 4px;
 }
 
+.plot-toggle.ui.fitted.slider.checkbox {
+  width: 2.5rem;
+}
+.plot-toggle.ui.slider.checkbox label::before {
+  width: 2.5rem;
+}
 .plot-toggle.ui.slider.checkbox .box::before,
 .plot-toggle.ui.slider.checkbox label::before {
   background-color: hsl(0, 0%, 33%) !important;
 }
-
+.plot-toggle.ui.slider.checkbox label::after {
+  width: 1rem;
+  height: 1rem;
+  top: -0.05rem;
+}
 .plot-toggle.ui.slider.checkbox input:focus:checked ~ label::before {
   background-color: hsl(0, 0%, 33%) !important;
+}
+.plot-toggle.ui.slider.checkbox input:checked ~ label:after {
+  left: 1.5rem;
 }
 
 .ui.grid > .row > .column.aladin-column {
@@ -829,7 +853,7 @@ tfoot {
 .moon-phase {
   position: absolute;
   top: 5px;
-  right: 20;
+  right: 1rem;
   z-index: 10;
 }
 
@@ -929,10 +953,9 @@ tfoot {
 
 .target-skyplot-cell {
   margin: 0 1em 1em;
-
-  & > .wip {
-    display: block; // makes skyplot fill the width.
-  }
+  grid-column-start: 1;
+  grid-column-end: 3;
+  position: relative;
 }
 
 .target-rv-controls {

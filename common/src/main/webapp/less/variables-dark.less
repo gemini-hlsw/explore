@@ -375,6 +375,15 @@
   --header-block-background: var(--color-background-light-10);
 }
 
+.plot-dark() {
+  --plot-background-color: black;
+  --plot-text-color: var(--text-color);
+  --plot-text-color-hover: var(--text-alt);
+  --plot-text-color-disabled: #888888;
+  --plot-grid-color: #2a2a2a;
+  --plot-tooltip-background-color: #131313;
+}
+
 .dark-theme() {
   // Values defined based on slate theme
   // COLORS
@@ -397,4 +406,5 @@
   .dimmer-dark();
   .reflex-dark();
   .header-dark();
+  .plot-dark();
 }
