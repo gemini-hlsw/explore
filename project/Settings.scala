@@ -41,7 +41,7 @@ object Settings {
     val reactSemanticUI   = "0.11.1"
     val reactTable        = "0.2.0"
     val scalaJsReact      = "2.0.0-RC2"
-    val sttp              = "3.3.12"
+    val sttp              = "3.3.13"
     val pprint            = "0.6.6"
   }
 
