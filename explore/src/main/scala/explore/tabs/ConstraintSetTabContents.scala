@@ -11,6 +11,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.UnderConstruction
+import explore.common.ConstraintGroupQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
@@ -19,9 +20,12 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.undo._
+import explore.observationtree.ConstraintGroupObsList
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -40,8 +44,8 @@ import scala.concurrent.duration._
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
   focused:          View[Option[Focused]],
-  // expandedIds:      View[SortedSet[ConstraintSet.Id]],
-  // undoStacks:       View[Map[ConstraintSet.Id, UndoStacks[IO, ConstraintSetData]]],
+  expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
+  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
@@ -67,10 +71,11 @@ object ConstraintSetTabContents {
   }
 
   protected def renderFn(
-    props:        Props,
-    state:        View[State],
-    innerWidth:   Double
-  )(implicit ctx: AppContextIO): VdomNode = {
+    props:              Props,
+    state:              View[State],
+    innerWidth:         Double,
+    constraintsWithObs: View[ConstraintSummaryWithObervations]
+  )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
@@ -82,6 +87,20 @@ object ConstraintSetTabContents {
           .debounce(1.second)
 
     val treeWidth = state.get.treeWidth.toInt
+
+    def tree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
+      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
+        treeInner(constraintWithObs)
+      )
+
+    def treeInner(constraintWithObs: View[ConstraintSummaryWithObervations]) =
+      <.div(ExploreStyles.TreeBody)(
+        ConstraintGroupObsList(constraintWithObs,
+                               props.focused,
+                               props.expandedIds,
+                               props.listUndoStacks
+        )
+      )
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -97,15 +116,13 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val tree = UnderConstruction()
-
     val rightSide =
       Tile("constraints", "Constraints", backButton.some)(Reuse.always(_ => UnderConstruction()))
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, tree)
+        <.div(ExploreStyles.Tree, tree(constraintsWithObs))
           .when(state.get.leftPanelVisible),
         <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
@@ -122,7 +139,7 @@ object ConstraintSetTabContents {
           maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
           onResize = treeResize,
           resizeHandles = List(ResizeHandleAxis.East),
-          content = tree,
+          content = tree(constraintsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
         <.div(^.key := "constraintset-right-side",
@@ -141,8 +158,9 @@ object ConstraintSetTabContents {
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      renderFn(props, ViewF.fromStateSyncIO($), window.innerWidth)
-
+      ConstraintGroupLiveQuery(
+        Reuse(renderFn _)(props, ViewF.fromStateSyncIO($), window.innerWidth)
+      )
     }
   }
 

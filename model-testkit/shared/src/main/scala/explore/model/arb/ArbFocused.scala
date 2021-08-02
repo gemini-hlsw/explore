@@ -3,9 +3,11 @@
 
 package explore.model.arb
 
+import cats.laws.discipline.arbitrary._
 import cats.syntax.all._
 import explore.model.Focused
 import explore.model.Focused.FocusedAsterism
+import explore.model.Focused.FocusedConstraintGroup
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import org.scalacheck.Arbitrary
@@ -18,6 +20,7 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.arb.ArbGid._
+import scala.collection.immutable.SortedSet
 
 trait ArbFocused {
   implicit val focusedArb: Arbitrary[Focused] =
@@ -34,6 +37,9 @@ trait ArbFocused {
   val focusedAsterismGen: Gen[Focused.FocusedAsterism] =
     arbitrary[Asterism.Id].map(FocusedAsterism.apply)
 
+  val focusedConstraintGroup: Gen[Focused.FocusedConstraintGroup] =
+    arbitrary[SortedSet[Observation.Id]].map(FocusedConstraintGroup.apply)
+
   implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
     Cogen[Observation.Id].contramap(_.obsId)
 
@@ -43,12 +49,18 @@ trait ArbFocused {
   implicit val focusedAsterismCogen: Cogen[Focused.FocusedAsterism] =
     Cogen[Asterism.Id].contramap(_.asterismId)
 
+  implicit val focusedConstraintGroupGogen: Cogen[Focused.FocusedConstraintGroup] =
+    Cogen[SortedSet[Observation.Id]].contramap(_.obsIds)
+
   implicit val focusedCogen: Cogen[Focused] =
-    Cogen[Either[Either[FocusedObs, FocusedTarget], FocusedAsterism]]
+    Cogen[
+      Either[Either[Either[FocusedObs, FocusedTarget], FocusedAsterism], FocusedConstraintGroup]
+    ]
       .contramap {
-        case a: Focused.FocusedObs      => a.asLeft.asLeft
-        case a: Focused.FocusedTarget   => a.asRight.asLeft
-        case a: Focused.FocusedAsterism => a.asRight
+        case a: Focused.FocusedObs             => a.asLeft.asLeft.asLeft
+        case a: Focused.FocusedTarget          => a.asRight.asLeft.asLeft
+        case a: Focused.FocusedAsterism        => a.asRight.asLeft
+        case a: Focused.FocusedConstraintGroup => a.asRight
       }
 }
 
