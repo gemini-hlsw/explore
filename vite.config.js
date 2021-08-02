@@ -18,10 +18,12 @@ const fontImport = ViteFonts({
 // https://vitejs.dev/config/
 export default ({ command, mode }) => {
   const scalaClassesDir = path.resolve(__dirname, "explore/target/scala-2.13");
+  const isProduction = mode == "production";
   const sjs =
-    mode == "production"
+    isProduction
       ? path.resolve(scalaClassesDir, "explore-opt")
       : path.resolve(scalaClassesDir, "explore-fastopt");
+  const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(__dirname, "common/");
   const webappCommon = path.resolve(common, "src/main/webapp/");
   const imagesCommon = path.resolve(webappCommon, "images");
@@ -110,7 +112,7 @@ export default ({ command, mode }) => {
     },
     build: {
       rollupOptions: {
-        plugins: [visualizer()],
+        plugins: rollupPlugins
       },
       terserOptions: {
         sourceMap: false,
