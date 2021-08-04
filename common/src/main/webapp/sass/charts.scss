@@ -76,7 +76,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 .plot-band-twilight-nautical {
-  fill-opacity: 0.05;
+  fill: var(--plot-plot-band-color);
+  fill-opacity: var(--plot-plot-band-opacity);
 }
 
 .plot-band-twilight-nautical-end {
