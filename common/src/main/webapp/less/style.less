@@ -788,22 +788,27 @@ tfoot {
 .plot-toggle.ui.fitted.slider.checkbox {
   width: 2.5rem;
 }
+
 .plot-toggle.ui.slider.checkbox label::before {
   width: 2.5rem;
 }
+
 .plot-toggle.ui.slider.checkbox .box::before,
 .plot-toggle.ui.slider.checkbox label::before {
   background-color: hsl(0, 0%, 33%) !important;
 }
+
 .plot-toggle.ui.slider.checkbox label::after {
   width: 1rem;
   height: 1rem;
   top: -0.05rem;
 }
+
 .plot-toggle.ui.slider.checkbox input:focus:checked ~ label::before {
   background-color: hsl(0, 0%, 33%) !important;
 }
-.plot-toggle.ui.slider.checkbox input:checked ~ label:after {
+
+.plot-toggle.ui.slider.checkbox input:checked ~ label::after {
   left: 1.5rem;
 }
 
