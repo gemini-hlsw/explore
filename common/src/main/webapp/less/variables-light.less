@@ -208,6 +208,17 @@
   --header-block-background: @gray-light;
 }
 
+.plot-light() {
+  --plot-background-color: white;
+  --plot-text-color: var(--text-color);
+  --plot-text-color-hover: var(--color-text-light-45);
+  --plot-text-color-disabled: hsl(0, 0%, 80%);
+  --plot-grid-color: hsl(0, 0%, 90%);
+  --plot-tooltip-background-color: hsl(0, 0%, 97%);
+  --plot-plot-band-color: hsl(0, 0%, 0%);
+  --plot-plot-band-opacity: 0.05;
+}
+
 .light-theme() {
   // Values here come from the default SUI theme
   // COLORS
@@ -230,4 +241,5 @@
   .dimmer-light();
   .reflex-light();
   .header-light();
+  .plot-light();
 }

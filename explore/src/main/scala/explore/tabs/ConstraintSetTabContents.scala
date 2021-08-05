@@ -22,7 +22,6 @@ import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -36,13 +35,12 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
-import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
   focused:          View[Option[Focused]],
-  expandedIds:      View[SortedSet[ConstraintSet.Id]],
+  // expandedIds:      View[SortedSet[ConstraintSet.Id]],
   // undoStacks:       View[Map[ConstraintSet.Id, UndoStacks[IO, ConstraintSetData]]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)

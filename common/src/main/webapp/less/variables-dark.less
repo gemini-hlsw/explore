@@ -375,6 +375,17 @@
   --header-block-background: var(--color-background-light-10);
 }
 
+.plot-dark() {
+  --plot-background-color: black;
+  --plot-text-color: var(--text-color);
+  --plot-text-color-hover: var(--text-alt);
+  --plot-text-color-disabled: hsl(0, 0%, 53%);
+  --plot-grid-color: hsl(0, 0%, 16%);
+  --plot-tooltip-background-color: hsl(0, 0%, 7%);
+  --plot-plot-band-color: hsl(0, 0%, 100%);
+  --plot-plot-band-opacity: 0.1;
+}
+
 .dark-theme() {
   // Values defined based on slate theme
   // COLORS
@@ -397,4 +408,5 @@
   .dimmer-dark();
   .reflex-dark();
   .header-dark();
+  .plot-dark();
 }

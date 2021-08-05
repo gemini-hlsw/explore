@@ -72,9 +72,9 @@ object Routing {
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
           model.zoom(RootModel.focused),
-          model.zoom(
-            RootModel.expandedIds.andThen(ExpandedIds.constraintSetIds)
-          ),
+          // model.zoom(
+          //   RootModel.expandedIds.andThen(ExpandedIds.constraintSetIds)
+          // ),
           // model.zoom(RootModel.undoStacks.composeLens(ModelUndoStacks.forConstraintSet)),
           size
         )

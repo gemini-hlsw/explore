@@ -37,16 +37,16 @@ import scala.scalajs.js
 
 import js.JSConverters._
 
-final case class SkyPlot(
+final case class SkyPlotNight(
   site:   Site,
   coords: Coordinates,
   date:   LocalDate,
   zoneId: ZoneId,
   height: Int
-) extends ReactProps[SkyPlot](SkyPlot.component)
+) extends ReactProps[SkyPlotNight](SkyPlotNight.component)
 
-object SkyPlot {
-  type Props = SkyPlot
+object SkyPlotNight {
+  type Props = SkyPlotNight
 
   case class State(shownSeries: HashSet[ElevationSeries] = HashSet(ElevationSeries.Elevation))
 
@@ -151,9 +151,8 @@ object SkyPlot {
         (ctx: TooltipFormatterContextObject, _: Tooltip) =>
           val time  = timeFormat(ctx.x)
           val value = ctx.series.index match {
-            case 2 => // Sky Brightness
-              "%0.2f".format(ctx.y)
-            case _ => formatAngle(ctx.y)
+            case 2 => "%.2f".format(ctx.y) // Sky Brightness
+            case _ => formatAngle(ctx.y)   // Elevations
           }
           s"<strong>$time ($timeZone)</strong><br/>${ctx.series.name}: $value"
       }
@@ -277,7 +276,11 @@ object SkyPlot {
       <.span(
         <.div(ExploreStyles.MoonPhase)(
           <.span(
-            MoonPhase(phase = moonPhase, size = 20, border = "1px solid black"),
+            MoonPhase(phase = moonPhase,
+                      size = 20,
+                      border = "1px solid black",
+                      darkColor = "#303030"
+            ),
             <.small("%1.0f%%".format(moonIllum * 100))
           )
         ),

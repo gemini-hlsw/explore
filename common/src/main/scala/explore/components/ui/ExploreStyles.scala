@@ -120,10 +120,12 @@ object ExploreStyles {
 
   val DraggingOver: Css = Css("dragging-over")
 
-  val SkyPlot: Css         = Css("sky-plot")
-  val SkyPlotSection: Css  = Css("sky-plot-section")
-  val SkyPlotControls: Css = Css("sky-plot-controls")
-  val PlotToggle: Css      = Css("plot-toggle")
+  val SkyPlot: Css            = Css("sky-plot")
+  val SkyPlotSection: Css     = Css("sky-plot-section")
+  val SkyPlotControls: Css    = Css("sky-plot-controls")
+  val SkyPlotDatePicker: Css  = Css("sky-plot-datepicker")
+  val PlotToggleCheckbox: Css = Css("plot-toggle-checkbox")
+  val PlotToggle: Css         = Css("plot-toggle")
 
   val AladinContainerColumn: Css = Css("aladin-container-column")
   val AladinContainerBody: Css   = Css("aladin-container-body")
