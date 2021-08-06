@@ -236,7 +236,7 @@ object ConstraintsPanel {
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
-              <.label("Min"),
+              <.label("Max"),
               FormInputEV(
                 id = "maxam",
                 value = airMassView
