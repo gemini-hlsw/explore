@@ -40,7 +40,7 @@ private object ElevationRangeType {
 sealed trait ElevationRange extends Product with Serializable
 
 object ElevationRange {
-  val airmass: Prism[ElevationRange, AirMassRange] =
+  val airMass: Prism[ElevationRange, AirMassRange] =
     GenPrism[ElevationRange, AirMassRange]
 
   val hourAngle: Prism[ElevationRange, HourAngleRange] =
