@@ -39,6 +39,11 @@ a {
   color: var(--site-link-color);
 }
 
+// Override SUI's default, which prevented 
+.ui.form .fields .field .ui.input input, .ui.form .field .ui.input input {
+  width: 100%;
+}
+
 // Mixins
 //
 .full-height-width {
@@ -932,15 +937,9 @@ tfoot {
   padding: 0.5em;
 }
 
-.target-aladin-cell {
-  height: 100px;
-  min-height: 300px; // don't collapse in single column mode.
-}
-
 .tile-xl-width,
 .tile-lg-width,
-.tile-md-width,
-.tile-sm-width {
+.tile-md-width {
   .target-grid {
     grid-template-columns: repeat(auto-fit, minmax(40ch, 1fr));
   }
@@ -952,15 +951,20 @@ tfoot {
   }
 
   .target-aladin-cell {
-    grid-row: span 2;
+    grid-row: span 3;
+    max-height: 500px;
+  }
+
+  .target-skyplot-cell {
+    grid-column-start: 1;
+    grid-column-end: 3;
   }
 }
 
 .target-skyplot-cell {
   margin: 0 1em 1em;
-  grid-column-start: 1;
-  grid-column-end: 3;
   position: relative;
+  min-width: 1px; // Needed to help highcharts recompute width on the fly.
 }
 
 .target-rv-controls {
