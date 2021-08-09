@@ -13,6 +13,7 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
 import explore.model.enum.FocalPlane
+import fs2.io.file.Path
 import lucuma.core.enum.ImageQuality
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -20,14 +21,9 @@ import lucuma.core.math.units._
 import munit.CatsEffectSuite
 import spire.math.Rational
 
-import java.io.File
-
 class ModesSuite extends CatsEffectSuite {
   val allModesPath = IO {
-    val f =
-      new File(this.getClass().getClassLoader().getResource("instrument_matrix.csv").getFile())
-
-    f.toPath()
+    Path(this.getClass().getClassLoader().getResource("instrument_matrix.csv").getPath)
   }
 
   val allModesFixture = ResourceSuiteLocalFixture(
@@ -36,11 +32,7 @@ class ModesSuite extends CatsEffectSuite {
   )
 
   val spectroscopyPath = IO {
-    val f =
-      new File(
-        this.getClass().getClassLoader().getResource("instrument_spectroscopy_matrix.csv").getFile()
-      )
-    f.toPath()
+    Path(this.getClass().getClassLoader().getResource("instrument_spectroscopy_matrix.csv").getPath)
   }
 
   val spectroscopyModesFixture = ResourceSuiteLocalFixture(

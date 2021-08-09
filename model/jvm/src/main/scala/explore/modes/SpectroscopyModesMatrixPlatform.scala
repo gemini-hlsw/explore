@@ -9,14 +9,12 @@ import fs2.data.csv._
 import fs2.io.file._
 import fs2.text
 
-import java.nio.file.Path
-
 trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
 
   def loadMatrix[F[_]: Async](path: Path): F[List[SpectroscopyModeRow]] =
     Files[F]
-      .readAll(path, 1024)
-      .through(text.utf8Decode)
+      .readAll(path)
+      .through(text.utf8.decode)
       .through(decodeUsingHeaders[SpectroscopyModeRow]())
       .zipWithIndex
       .map { case (r, i) =>
