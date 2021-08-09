@@ -17,6 +17,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.F2Disperser
 import lucuma.core.enum.F2Filter
 import lucuma.core.enum.GmosNorthFilter
+import lucuma.core.enum.GmosNorthDisperser
 import lucuma.core.enum.GmosSouthDisperser
 import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GnirsDisperser
@@ -103,6 +104,7 @@ object SpectroscopyModesTable {
 
   def formatDisperser(disperser: InstrumentRow#Disperser): String = disperser match {
     case f: GmosSouthDisperser => f.shortName
+    case f: GmosNorthDisperser => f.shortName
     case f: F2Disperser        => f.shortName
     case f: GpiDisperser       => f.shortName
     case f: GnirsDisperser     => f.shortName
