@@ -39,10 +39,15 @@ a {
   color: var(--site-link-color);
 }
 
-// Override SUI's default, which prevented
+// Override SUI's default, which prevented shrinking on small screens.
 .ui.form .field .ui.input input,
 .ui.form .fields .field .ui.input input {
   width: 100%;
+}
+
+.ui.form .field .ui.icon.input input,
+.ui.form .fields .field .ui.icon.input input {
+  width: auto;
 }
 
 // Mixins
