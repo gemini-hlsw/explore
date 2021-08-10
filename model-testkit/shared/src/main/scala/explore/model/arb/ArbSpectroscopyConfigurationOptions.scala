@@ -3,10 +3,16 @@
 
 package explore.model.arb
 
+import coulomb.scalacheck.ArbQuantity._
+import coulomb.Quantity
 import explore.model.SpectroscopyConfigurationOptions
 import lucuma.core.math.arb.ArbAngle._
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
+import lucuma.core.math.Angle
+import lucuma.core.math.units.Micrometer
+import lucuma.core.enum.FocalPlane
+import lucuma.core.enum.SpectroscopyCapabilities
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
@@ -17,13 +23,7 @@ import eu.timepit.refined._
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.PosDouble
 import eu.timepit.refined.numeric.Positive
-import lucuma.core.math.Angle
-import lucuma.core.math.units.Micrometer
-import explore.model.enum.SpectroscopyCapabilities
 import scala.math.BigDecimal
-import coulomb.scalacheck.ArbQuantity._
-import explore.model.enum.FocalPlane
-import coulomb.Quantity
 
 trait ArbSpectroscopyConfigurationOptions {
 

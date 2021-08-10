@@ -8,9 +8,9 @@ import clue.data.syntax._
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
-import explore.model.enum.ScienceMode
 import explore.schemas.ObservationDB.Types._
 import explore.undo.UndoableView
+import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation

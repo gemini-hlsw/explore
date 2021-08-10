@@ -11,14 +11,12 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.SpectroscopyConfigurationOptions
-import explore.model.enum.FocalPlane
-import explore.model.enum.SpectroscopyCapabilities
+import explore.model.display._
 import explore.model.formats._
 import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
@@ -33,8 +31,6 @@ final case class SpectroscopyConfigurationPanel(
 object SpectroscopyConfigurationPanel {
   type Props = SpectroscopyConfigurationPanel
 
-  implicit val specCapabDisplay: Display[SpectroscopyCapabilities]         = Display.by(_.label, _.label)
-  implicit val focaLPlaneDisplay: Display[FocalPlane]                      = Display.byShortName(_.label)
   implicit val optionsReuse: Reusability[SpectroscopyConfigurationOptions] = Reusability.derive
   implicit val propsReuse: Reusability[Props]                              = Reusability.derive
 
