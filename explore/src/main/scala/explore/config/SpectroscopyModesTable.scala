@@ -16,8 +16,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.F2Disperser
 import lucuma.core.enum.F2Filter
-import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosSouthDisperser
 import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GnirsDisperser

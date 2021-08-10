@@ -2,6 +2,7 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 import sbtcrossproject.crossProject
 import sbtcrossproject.CrossType
 import Settings.Libraries._
+import scala.sys.process._
 
 val reactJS              = "17.0.2"
 val FUILess              = "2.8.7"
@@ -22,7 +23,7 @@ addCommandAlias(
 
 addCommandAlias(
   "fix",
-  "; headerCreateAll; fixImports; scalafmtAll"
+  "; headerCreateAll; fixImports; scalafmtAll; fixCSS"
 )
 
 inThisBuild(
@@ -227,3 +228,15 @@ lazy val esModule = Seq(
     ModuleSplitStyle.FewestModules
   ))
 )
+
+val lintCSS = TaskKey[Unit]("lintCSS", "Lint CSS files")
+lintCSS := {
+  if(("npm run lint-dark" #&& "npm run lint-light" !) != 0)
+    throw new Exception("Error in CSS format")
+}
+
+val fixCSS = TaskKey[Unit]("fixCSS", "Fix CSS files")
+fixCSS := {
+  if(("npm run fix-dark" #&& "npm run fix-light" !) != 0)
+    throw new Exception("Error in CSS fix")
+}
