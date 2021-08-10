@@ -59,10 +59,10 @@
     "vite-plugin-fonts": "^0.2.2"
   },
   "scripts": {
-    "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;npx stylelint common/src/main/webapp/less; rm vars.css",
-    "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;npx stylelint --fix common/src/main/webapp/less; rm vars.css",
-    "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;npx stylelint common/src/main/webapp/less; rm vars.css",
-    "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;npx stylelint --fix common/src/main/webapp/less; rm vars.css",
+    "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/less",
+    "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/less",
+    "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/less",
+    "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/less",
     "build": "vite build",
     "serve": "vite preview"
   }

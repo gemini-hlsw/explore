@@ -39,8 +39,9 @@ a {
   color: var(--site-link-color);
 }
 
-// Override SUI's default, which prevented 
-.ui.form .fields .field .ui.input input, .ui.form .field .ui.input input {
+// Override SUI's default, which prevented
+.ui.form .field .ui.input input,
+.ui.form .fields .field .ui.input input {
   width: 100%;
 }
 
@@ -937,6 +938,12 @@ tfoot {
   padding: 0.5em;
 }
 
+.target-skyplot-cell {
+  margin: 0 1em 1em;
+  position: relative;
+  min-width: 1px; // Needed to help highcharts recompute width on the fly.
+}
+
 .tile-xl-width,
 .tile-lg-width,
 .tile-md-width {
@@ -959,12 +966,6 @@ tfoot {
     grid-column-start: 1;
     grid-column-end: 3;
   }
-}
-
-.target-skyplot-cell {
-  margin: 0 1em 1em;
-  position: relative;
-  min-width: 1px; // Needed to help highcharts recompute width on the fly.
 }
 
 .target-rv-controls {
