@@ -117,7 +117,7 @@ export default ({ command, mode }) => {
       terserOptions: {
         sourceMap: false,
       },
-      outDir: path.resolve(__dirname, "static"),
+      outDir: path.resolve(__dirname, "heroku/static"),
     },
     plugins: [reactRefresh(), fontImport],
   };
