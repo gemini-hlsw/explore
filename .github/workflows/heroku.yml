@@ -22,7 +22,8 @@ jobs:
         with:
           node-version: 14.17.5
           cache: 'npm'
-        env: FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
       - name: Scala.js - Full Link
         run: sbt -v -J-Xmx6g stage
       - name: Vite - Build
