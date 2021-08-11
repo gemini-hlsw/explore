@@ -28,6 +28,9 @@ object definitions {
   type HeaderCellRender[D, ColumnInstanceD <: ColumnObject[D]] = ColumnInstanceD => TableHeaderCell
   type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
     TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
+      
+  type RowRender[D] = Row[D] => TableRow
+  type RowTemplate[D] = TableRow | RowRender[D]
 
   type BodyCellRender[D] = Cell[D, _] => TableCell
   type BodyCell[D]       = TableCell | BodyCellRender[D]
@@ -86,7 +89,7 @@ protected case class SUITableProps[D, TableInstanceD <: TableInstance[
   headerRow:    TableRow = TableRow(),
   headerCell:   HeaderCell[D, ColumnInstanceD],
   body:         TableBody,
-  row:          TableRow,
+  row:          RowTemplate[D],
   cell:         BodyCell[D],
   footer:       Boolean | TableFooter | VdomNode,
   footerRow:    TableRow,
@@ -114,6 +117,11 @@ class SUITable[
       val tableRender: TableRender[D, TableInstanceD] = (props.table: Any) match {
         case table: Table => tableInstance => table(tableInstance.getTableProps())
         case other        => other.asInstanceOf[TableRender[D, TableInstanceD]]
+      }
+
+      val rowRender: RowRender[D] = (props.row : Any) match {
+        case row: TableRow => rowData => row(rowData.getRowProps())
+        case other         => other.asInstanceOf[RowRender[D]]
       }
 
       val headerTag: Option[TableHeader] = (props.header: Any) match {
@@ -155,7 +163,7 @@ class SUITable[
       val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
         tableInstance.rows.toTagMod { rowData =>
           tableInstance.prepareRow(rowData)
-          props.row(rowData.getRowProps())(
+          rowRender(rowData)(
             rowData.cells.toTagMod(cellData =>
               bodyCellRender(cellData)(cellData.getCellProps())(cellData.renderCell)
             )
@@ -208,7 +216,7 @@ class SUITable[
     headerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
     headerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell(as = layout.tag),
     body:       TableBody = TableBody(as = layout.tag),
-    row:        TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    row:        RowTemplate[D] = TableRow(as = layout.tag, cellAs = layout.tag),
     cell:       BodyCell[D] = TableCell(as = layout.tag),
     footer:     Boolean | TableFooter | VdomNode = false,
     footerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),

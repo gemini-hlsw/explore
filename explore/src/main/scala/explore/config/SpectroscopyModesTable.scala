@@ -22,7 +22,9 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import reactST.reactTable._
+import reactST.reactTable.util._
 import reactST.reactTable.mod.DefaultSortTypes
+import reactST.reactTable.mod.Row
 import spire.math.Bounded
 import spire.math.Interval
 
@@ -61,6 +63,7 @@ object SpectroscopyModesTable {
       .Column(id, accessor)
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
+  val SelectedColumnId: ColId   = "selected"
   val InstrumentColumnId: ColId = "instrument"
   val SlitWidthColumnId: ColId  = "slit_width"
   val SlitLengthColumnId: ColId = "slit_length"
@@ -135,6 +138,9 @@ object SpectroscopyModesTable {
 
   def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
+      // column(SelectedColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
+      //   .setCell(c => formatInstrument(c.value))
+      //   .setWidth(30),
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
         .setWidth(30),
@@ -167,7 +173,7 @@ object SpectroscopyModesTable {
         .setCell(_ => "N/A")
         .setWidth(5)
         .setSortType(DefaultSortTypes.number)
-    ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
+    )//.filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   protected val component =
     ScalaComponent
@@ -191,6 +197,11 @@ object SpectroscopyModesTable {
     options: ModesTableMaker.OptionsType
   ) extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
+  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
+    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
+      row.focalPlane.contains_(FocalPlane.SingleSlit)
+
+
   protected val tableComponent =
     ScalaFnComponent[ModesTableProps] { props =>
       val tableInstance = ModesTableMaker.use(
@@ -206,7 +217,8 @@ object SpectroscopyModesTable {
             TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
               ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
               ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
-            )
+            ),
+          row = (rowData: Row[SpectroscopyModeRow]) => TableRow(disabled = !enabledRow(rowData.original))(props2Attrs(rowData.getRowProps()))
         )(tableInstance)
       )
     }
