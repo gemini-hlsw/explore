@@ -11,6 +11,7 @@ import explore.common.ConstraintGroupQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.model.AirMassRange
+import explore.model.ConstraintSet
 import explore.model.HourAngleRange
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
@@ -21,7 +22,7 @@ import scala.collection.immutable.SortedSet
 object ConstraintGroupObsListActions {
   private def updateConstraintSet[F[_]: Async](
     obsId:       Observation.Id,
-    constraints: ConstraintSetData
+    constraints: ConstraintSet
   )(implicit
     c:           TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
@@ -46,12 +47,12 @@ object ConstraintGroupObsListActions {
     UpdateConstraintSetMutation.execute[F](List(obsId), editInput).void
   }
 
-  private def getter(obsId: Observation.Id): ConstraintGroupList => Option[ConstraintSetData] =
+  private def getter(obsId: Observation.Id): ConstraintGroupList => Option[ConstraintSet] =
     cgl => cgl.values.find(_.obsIds.contains(obsId)).map(_.constraintSet)
 
   private def setter(
     obsId: Observation.Id
-  )(ocs:   Option[ConstraintSetData]): ConstraintGroupList => ConstraintGroupList = cgl => {
+  )(ocs:   Option[ConstraintSet]): ConstraintGroupList => ConstraintGroupList = cgl => {
     val constraintGroups = cgl.values
     val oData            = for {
       cs    <- ocs
@@ -70,7 +71,7 @@ object ConstraintGroupObsListActions {
 
   private def updateExpandedIds(
     obsId: Observation.Id,
-    cs:    ConstraintSetData,
+    cs:    ConstraintSet,
     cgl:   ConstraintGroupList
   )(
     eids:  SortedSet[SortedSet[Observation.Id]]

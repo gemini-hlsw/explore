@@ -11,6 +11,7 @@ import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
+import explore.model.ConstraintSet
 import explore.model.Pointing
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.reusability._
@@ -37,8 +38,6 @@ object ConstraintGroupQueries {
   type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
 
-  type ConstraintSetData = ConstraintGroupObsQuery.Data.ConstraintSetGroup.Nodes.ConstraintSet
-
   private def convertPointing(
     pointing: ConstraintGroupObsQuery.Data.Observations.Nodes.ObservationTarget
   ): Pointing = pointing match {
@@ -50,7 +49,7 @@ object ConstraintGroupQueries {
       Pointing.PointingAsterism(asterismId, asterismName, Nil)
   }
 
-  case class ConstraintGroup(constraintSet: ConstraintSetData, obsIds: SortedSet[Observation.Id]) {
+  case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: SortedSet[Observation.Id]) {
     def addObsId(obsId:    Observation.Id): ConstraintGroup =
       ConstraintGroup.obsIds.modify(_ + obsId)(this)
     def removeObsId(obsId: Observation.Id): ConstraintGroup =
