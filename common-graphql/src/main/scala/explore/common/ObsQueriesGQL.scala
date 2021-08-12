@@ -160,6 +160,25 @@ object ObsQueriesGQL {
               capabilities
             }
           }
+          scienceConfiguration {
+            instrument
+            mode
+            __typename
+            ... on GmosNorthLongSlit {
+              filterN:filter
+              disperserN:disperser
+              slitWidthN:slitWidth {
+                microarcseconds
+              }
+            }
+            ... on GmosSouthLongSlit {
+              filterS:filter
+              disperserS:disperser
+              slitWidthS:slitWidth {
+                microarcseconds
+              }
+            }
+          }          
         }
       }
     """

@@ -12,6 +12,7 @@ import explore.implicits._
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
+import explore.optics._
 import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._
@@ -20,6 +21,9 @@ import lucuma.core.model.Observation
 import monocle.Getter
 
 import ObsQueriesGQL._
+import monocle.Lens
+import monocle.Focus
+import monocle.macros.GenIso
 
 object ObsQueries {
 
@@ -35,6 +39,20 @@ object ObsQueries {
   val ScienceRequirementsData = ObservationData.ScienceRequirements
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
+  type ScienceConfigurationData = ObservationData.ScienceConfiguration
+  val ScienceConfigurationData = ObservationData.ScienceConfiguration
+
+  case class ScienceData(requirements: ScienceRequirementsData, configuration: Option[ScienceConfigurationData])
+  object ScienceData {
+    val requirements: Lens[ScienceData, ScienceRequirementsData] = Focus[ScienceData](_.requirements)
+    val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] = Focus[ScienceData](_.configuration)
+    implicit val reusabilityScienceData: Reusability[ScienceData] = Reusability.derive
+  }
+
+  val scienceDataForObs: Lens[ObservationData, ScienceData] = 
+    disjointZip(ObservationData.scienceRequirements, ObservationData.scienceConfiguration)
+      .andThen(GenIso.fields[ScienceData].reverse)
+
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget

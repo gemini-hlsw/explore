@@ -11,8 +11,11 @@ import cats.syntax.all._
 import cats.~>
 import crystal.ViewF
 import crystal.implicits._
+import monocle.Lens
 
-trait UndoSetter[F[_], G[_], M] {
+trait UndoSetter[F[_], G[_], M] { self =>
+  def model: ViewF[F, M]
+
   def set[A](
     getter:    M => A,
     setter:    A => M => M,
@@ -70,6 +73,19 @@ trait UndoSetter[F[_], G[_], M] {
     onSet:  A => G[Unit]
   )(f:      A => A): F[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a))(f)
+
+  def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[F, G, N] = new UndoSetter[F, G, N] {
+
+    override def model: ViewF[F, N] = self.model.zoom(getN)(modN)
+
+    override def set[A](getter: N => A, setter: A => (N => N), onSet: (N, A) => G[Unit], onRestore: (N, A) => G[Unit])(v: A): F[Unit] = 
+      self.set(getter.compose(getN), modN.compose(setter), (m, a) => onSet(getN(m), a), (m, a) => onRestore(getN(m), a))(v)
+
+    override def mod[A](getter: N => A, setter: A => (N => N), onSet: (N, A) => G[Unit], onRestore: (N, A) => G[Unit])(f: A => A): F[Unit] = 
+      self.mod(getter.compose(getN), modN.compose(setter), (m, a) => onSet(getN(m), a), (m, a) => onRestore(getN(m), a))(f)
+  }
+
+  def zoom[N](lens: Lens[M, N]): UndoSetter[F, G, N] = zoom(lens.get, lens.modify)
 }
 
 case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
@@ -82,6 +98,7 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
 
   lazy val isUndoEmpty: Boolean = stacks.get.undo.isEmpty
   lazy val isRedoEmpty: Boolean = stacks.get.redo.isEmpty
+
 
   // Unset "working" on callback passed to react to be executed after setState completion...
 

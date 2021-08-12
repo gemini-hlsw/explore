@@ -23,19 +23,19 @@ import react.common._
 
 object ConfigurationTile {
   def configurationTile(
-    obsId:               Observation.Id,
-    scienceRequirements: Pot[View[ScienceRequirementsData]],
-    undoStacks:          View[UndoStacks[IO, ScienceRequirementsData]]
+    obsId:       Observation.Id,
+    scienceData: Pot[View[ScienceData]],
+    undoStacks:  View[UndoStacks[IO, ScienceData]]
   ) = {
 
     def renderConfiguration(
-      obsId:               Observation.Id,
-      scienceRequirements: View[ScienceRequirementsData],
-      undoStacks:          View[UndoStacks[IO, ScienceRequirementsData]],
-      renderInTitle:       Tile.RenderInTitle
+      obsId:         Observation.Id,
+      scienceData:   View[ScienceData],
+      undoStacks:    View[UndoStacks[IO, ScienceData]],
+      renderInTitle: Tile.RenderInTitle
     ): VdomNode =
       AppCtx.using { implicit ctx =>
-        ConfigurationPanel(obsId, scienceRequirements, undoStacks, renderInTitle)
+        ConfigurationPanel(obsId, scienceData, undoStacks, renderInTitle)
       }
 
     Tile(
@@ -43,10 +43,10 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(
-      (scienceRequirements, undoStacks).curryReusing.in((potView_, undoStacks_, renderInTitle) =>
-        potRender[View[ScienceRequirementsData]](
-          Reuse.always(cs => renderConfiguration(obsId, cs, undoStacks_, renderInTitle))
-        )(potView_)
+      (scienceData, undoStacks).curryReusing.in((potView, undoStacks_, renderInTitle) =>
+        potRender[View[ScienceData]](
+          Reuse.always( scienceData_ => renderConfiguration(obsId, scienceData_, undoStacks_, renderInTitle) )
+        )(potView)
       )
     )
   }

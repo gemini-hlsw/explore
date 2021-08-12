@@ -165,14 +165,14 @@ enum Breakpoint {
   DISABLED
 }
 
-# Bulk edit constraint set of multiple observations
+# Input for bulk editing multiple observations
 input BulkEditConstraintSetInput {
   constraintSet: EditConstraintSetInput!
   observationIds: [ObservationId!]!
 }
 
-# Bulk edit science requirements set of multiple observations
-input BulkEditScienceRequirementSetInput {
+# Input for bulk editing multiple observations
+input BulkEditScienceRequirementsInput {
   scienceRequirements: EditScienceRequirementsInput!
   observationIds: [ObservationId!]!
 }
@@ -239,6 +239,15 @@ interface Config {
   setupTime: Duration!
 }
 
+# ConfigurationMode
+enum ConfigurationModeType {
+  # ConfigurationModeType GmosNorthLongSlit
+  GMOS_NORTH_LONG_SLIT
+
+  # ConfigurationModeType GmosSouthLongSlit
+  GMOS_SOUTH_LONG_SLIT
+}
+
 type ConstraintSet {
   # Constraint set name
   name: NonEmptyString!
@@ -281,11 +290,11 @@ type ConstraintSetGroup {
     includeDeleted: Boolean! = false
   ): ObservationConnection!
 
-  # Constraints held in common across the observations
+  # Commonly held value across the observations
   constraintSet: ConstraintSet!
 }
 
-# Observations group by common constraints
+# Observations grouped by common properties
 type ConstraintSetGroupConnection {
   # The nodes in all the edges from the current page
   nodes: [ConstraintSetGroup!]!
@@ -300,7 +309,7 @@ type ConstraintSetGroupConnection {
   pageInfo: PageInfo!
 }
 
-# A constraint set group and its cursor
+# An observation group and its cursor
 type ConstraintSetGroupEdge {
   # ConstraintSetGroupEdge element
   node: ConstraintSetGroup!
@@ -353,6 +362,20 @@ input CreateElevationRangeInput {
   hourAngleRange: CreateHourAngleRangeInput
 }
 
+# Create a configuration for a GMOS North Long Slit observation
+input CreateGmosNorthLongSlit {
+  filter: GmosNorthFilter
+  disperser: GmosNorthDisperser!
+  slitWidth: SlitWidthInput!
+}
+
+# Create a configuration for a GMOS South Long Slit observation
+input CreateGmosSouthLongSlit {
+  filter: GmosSouthFilter
+  disperser: GmosSouthDisperser!
+  slitWidth: SlitWidthInput!
+}
+
 # Hour angle range creation parameters
 input CreateHourAngleRangeInput {
   minHours: BigDecimal!
@@ -369,17 +392,24 @@ input CreateNonsiderealInput {
   magnitudes: [MagnitudeCreateInput!]
 }
 
+# Create observation configuration
+input CreateObservationConfigInput {
+  gmosNorthLongSlit: CreateGmosNorthLongSlit
+  gmosSouthLongSlit: CreateGmosSouthLongSlit
+}
+
 # Observation creation parameters
 input CreateObservationInput {
   observationId: ObservationId
   programId: ProgramId!
   name: NonEmptyString
+  status: ObsStatus
+  activeStatus: ObsActiveStatus
   asterismId: AsterismId
   targetId: TargetId
   constraintSet: CreateConstraintSetInput
-  status: ObsStatus
-  activeStatus: ObsActiveStatus
   scienceRequirements: ScienceRequirementsInput
+  scienceConfiguration: CreateObservationConfigInput
 }
 
 # Sidereal target parameters
@@ -595,6 +625,30 @@ input EditConstraintSetInput {
   elevationRange: CreateElevationRangeInput
 }
 
+# Edit GMOS North Long Slit configuration
+input EditGmosNorthLongSlit {
+  # The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  filter: GmosNorthFilter
+
+  # The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  disperser: GmosNorthDisperser
+
+  # The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  slitWidth: SlitWidthInput
+}
+
+# Edit GMOS South Long Slit configuration
+input EditGmosSouthLongSlit {
+  # The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  filter: GmosSouthFilter
+
+  # The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  disperser: GmosSouthDisperser
+
+  # The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  slitWidth: SlitWidthInput
+}
+
 # Edit observation
 input EditObservationInput {
   observationId: ObservationId!
@@ -622,6 +676,9 @@ input EditObservationInput {
 
   # The constraintSet field may be unset by assigning a null value, or ignored by skipping it altogether
   constraintSet: EditConstraintSetInput
+
+  # The scienceConfiguration field may be unset by assigning a null value, or ignored by skipping it altogether
+  scienceConfiguration: EditScienceConfigurationInput
 }
 
 # Edit the target or asterism for a set of observations
@@ -629,6 +686,24 @@ input EditObservationPointingInput {
   observationIds: [ObservationId!]!
   asterismId: AsterismId
   targetId: TargetId
+}
+
+# Edit observation configuration
+input EditScienceConfiguration {
+  # The gmosNorthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  gmosNorthLongSlit: EditGmosNorthLongSlit
+
+  # The gmosSouthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  gmosSouthLongSlit: EditGmosSouthLongSlit
+}
+
+# Edit or set observation configuration
+input EditScienceConfigurationInput {
+  # The set field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  set: CreateObservationConfigInput
+
+  # The edit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+  edit: EditScienceConfiguration
 }
 
 # Edit science requirements
@@ -882,8 +957,8 @@ input GaussianSourceAngleInput {
   microarcseconds: Long
   milliarcseconds: BigDecimal
   arcseconds: BigDecimal
-  fromLong: WavelengthLongInput
-  fromDecimal: WavelengthDecimalInput
+  fromLong: SpatialProfileLongInput
+  fromDecimal: SpatialProfileDecimalInput
 }
 
 # GCAL calibration step (flat / arc)
@@ -1410,6 +1485,24 @@ type GmosNorthGrating {
   wavelength: Wavelength!
 }
 
+# Basic configuration for GMOS North Long Slit
+type GmosNorthLongSlit implements ScienceConfiguration {
+  # GMOS North Filter
+  filter: GmosNorthFilter
+
+  # GMOS North Disperser
+  disperser: GmosNorthDisperser!
+
+  # Slit width in appropriate units
+  slitWidth: slitWidth!
+
+  # Instrument
+  instrument: InstrumentType!
+
+  # Configuration mode
+  mode: ConfigurationModeType!
+}
+
 # A series of GmosNorth atoms that comprise the sequence
 type GmosNorthSequence {
   # Sequence atoms
@@ -1764,6 +1857,24 @@ type GmosSouthGrating {
   wavelength: Wavelength!
 }
 
+# Basic configuration for GMOS South Long Slit
+type GmosSouthLongSlit implements ScienceConfiguration {
+  # GMOS South Filter
+  filter: GmosSouthFilter
+
+  # GMOS South Disperser
+  disperser: GmosSouthDisperser!
+
+  # Slit width in appropriate units
+  slitWidth: slitWidth!
+
+  # Instrument
+  instrument: InstrumentType!
+
+  # Configuration mode
+  mode: ConfigurationModeType!
+}
+
 # A series of GmosSouth atoms that comprise the sequence
 type GmosSouthSequence {
   # Sequence atoms
@@ -2116,12 +2227,12 @@ type Mutation {
     input: EditObservationPointingInput!
   ): [Observation!]!
   updateConstraintSet(
-    # Bulk edit constraint set
+    # Bulk edit constraintSet
     input: BulkEditConstraintSetInput!
   ): [Observation!]!
   updateScienceRequirements(
-    # Bulk edit science requirements set
-    input: BulkEditScienceRequirementSetInput!
+    # Bulk edit scienceRequirements
+    input: BulkEditScienceRequirementsInput!
   ): [Observation!]!
   deleteObservation(
     # Observation ID
@@ -2250,6 +2361,12 @@ type Observation {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): ScienceRequirements!
+
+  # The science configuration
+  scienceConfiguration(
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ScienceConfiguration
 
   # The observation's asterism or target (see also `asterism` and `target` fields)
   observationTarget(
@@ -2449,10 +2566,10 @@ type PlannedTimeSummary {
   execution: Duration!
 }
 
-# An `Int` in the range from 1 to `Int.MaxValue`,
+# A `BigDecimal` greater than 0
 scalar PosBigDecimal
 
-# An `Int` in the range from 1 to `Int.MaxValue`,
+# An `Int` in the range from 1 to `Int.MaxValue`
 scalar PosInt
 
 type Program {
@@ -2677,8 +2794,8 @@ type Query {
     includeDeleted: Boolean! = false
   ): Observation
 
-  # Observations group by commonly held constraints
-  constraintGroups(
+  # Observations grouped by commonly held constraints
+  constraintSetGroup(
     # Program ID
     programId: ProgramId!
 
@@ -2691,6 +2808,21 @@ type Query {
     # Set to true to include deleted values
     includeDeleted: Boolean! = false
   ): ConstraintSetGroupConnection!
+
+  # Observations grouped by commonly held science requirements
+  scienceRequirementsGroup(
+    # Program ID
+    programId: ProgramId!
+
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ScienceRequirementsGroupConnection!
 
   # Pages through all requested programs (or all programs if no ids are given).
   programs(
@@ -2881,6 +3013,15 @@ type Science implements StepConfig {
   stepType: StepType!
 }
 
+# Base science configuration
+interface ScienceConfiguration {
+  # Instrument
+  instrument: InstrumentType!
+
+  # Configuration mode
+  mode: ConfigurationModeType!
+}
+
 # Mode Spectroscopy/Imaging
 enum ScienceMode {
   # ScienceMode Imaging
@@ -2896,6 +3037,50 @@ type ScienceRequirements {
 
   # Spectroscopy requirements
   spectroscopyRequirements: SpectroscopyScienceRequirements!
+}
+
+type ScienceRequirementsGroup {
+  # IDs of observations that use the same constraints
+  observationIds: [ObservationId!]!
+
+  # Observations that use this constraint set
+  observations(
+    # Retrieve `first` values after the given cursor
+    first: Int
+
+    # Retrieve values after the one associated with this cursor
+    after: Cursor
+
+    # Set to true to include deleted values
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  # Commonly held value across the observations
+  scienceRequirements: ScienceRequirements!
+}
+
+# Observations grouped by common properties
+type ScienceRequirementsGroupConnection {
+  # The nodes in all the edges from the current page
+  nodes: [ScienceRequirementsGroup!]!
+
+  # Edges in the current page
+  edges: [ScienceRequirementsGroupEdge!]!
+
+  # Count of all nodes in all pages
+  totalCount: Int!
+
+  # Paging information
+  pageInfo: PageInfo!
+}
+
+# An observation group and its cursor
+type ScienceRequirementsGroupEdge {
+  # ScienceRequirementsGroupEdge element
+  node: ScienceRequirementsGroup!
+
+  # ScienceRequirementsGroupEdge element cursor
+  cursor: Cursor!
 }
 
 # Science requirement input params
@@ -2987,6 +3172,42 @@ enum SkyBackground {
   BRIGHT
 }
 
+type slitWidth {
+  # Slit width in µas
+  microarcseconds: Long!
+
+  # Slit width in mas
+  milliarcseconds: BigDecimal!
+
+  # Slit width in arcsec
+  arcseconds: BigDecimal!
+}
+
+# Slit width in appropriate units
+input SlitWidthInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
+}
+
+# Decimal value in SpatialProfile
+input SpatialProfileDecimalInput {
+  # decimal value in associated units
+  value: BigDecimal!
+
+  # units for associated value
+  units: SpatialProfileUnits!
+}
+
+# Integral value in SpatialProfile
+input SpatialProfileLongInput {
+  # integral value in associated units
+  value: Long!
+
+  # units for associated value
+  units: SpatialProfileUnits!
+}
+
 # Spatial profile PointSource/UniformSource/GaussianSource
 input SpatialProfileModelInput {
   # Spatial profile type: Point/Uniform/Gaussian
@@ -3007,6 +3228,18 @@ enum SpatialProfileType {
 
   # SpatialProfileType GaussianSource
   GAUSSIAN_SOURCE
+}
+
+# Spatial profial gaussian units
+enum SpatialProfileUnits {
+  # SpatialProfileUnits Microarcseconds
+  MICROARCSECONDS
+
+  # SpatialProfileUnits Milliarcseconds
+  MILLIARCSECONDS
+
+  # SpatialProfileUnits Arcseconds
+  ARCSECONDS
 }
 
 # Spectral distribution variant

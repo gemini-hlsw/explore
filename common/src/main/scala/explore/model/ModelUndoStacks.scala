@@ -6,7 +6,7 @@ package explore.model
 import cats.Eq
 import explore.common.ObsQueries.ConstraintSetData
 import explore.common.ObsQueries.ObservationList
-import explore.common.ObsQueries.ScienceRequirementsData
+import explore.common.ObsQueries.ScienceData
 import explore.common.TargetObsQueries.PointingsWithObs
 import explore.common.TargetQueries.TargetResult
 import explore.undo.UndoStacks
@@ -21,8 +21,8 @@ case class ModelUndoStacks[F[_]](
     Map.empty[Target.Id, UndoStacks[F, TargetResult]],
   forConstraintSet:       Map[Observation.Id, UndoStacks[F, ConstraintSetData]] =
     Map.empty[Observation.Id, UndoStacks[F, ConstraintSetData]],
-  forScienceRequirements: Map[Observation.Id, UndoStacks[F, ScienceRequirementsData]] =
-    Map.empty[Observation.Id, UndoStacks[F, ScienceRequirementsData]]
+  forScienceData: Map[Observation.Id, UndoStacks[F, ScienceData]] =
+    Map.empty[Observation.Id, UndoStacks[F, ScienceData]]
 )
 
 object ModelUndoStacks {
@@ -30,10 +30,10 @@ object ModelUndoStacks {
   def forObsList[F[_]]             = Focus[ModelUndoStacks[F]](_.forObsList)
   def forTargetList[F[_]]          = Focus[ModelUndoStacks[F]](_.forTargetList)
   def forConstraintSet[F[_]]       = Focus[ModelUndoStacks[F]](_.forConstraintSet)
-  def forScienceRequirements[F[_]] = Focus[ModelUndoStacks[F]](_.forScienceRequirements)
+  def forScienceData[F[_]] = Focus[ModelUndoStacks[F]](_.forScienceData)
 
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
-      (u.forObsList, u.forTargetList, u.forTarget, u.forConstraintSet, u.forScienceRequirements)
+      (u.forObsList, u.forTargetList, u.forTarget, u.forConstraintSet, u.forScienceData)
     )
 }

@@ -19,7 +19,7 @@ import monocle.Lens
  * the value is directly `set`/`mod`, or when an `undo` or `redo` is executed. This
  * side effect could be, for example, setting the value on a remote DB.
  */
-case class UndoableView[F[_]: Sync, G[_], T](undoCtx: UndoContext[F, G, T]) {
+case class UndoableView[F[_]: Sync, G[_], T](undoCtx: UndoSetter[F, G, T]) {
   def apply[A](get: T => A, mod: (A => A) => T => T, onChange: A => G[Unit]): ViewF[F, A] = {
     val zoomed = undoCtx.model.zoom(get)(mod)
     ViewF[F, A](

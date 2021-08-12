@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.data.NonEmptyList
 import cats.syntax.all._
 import coulomb.Quantity
 import eu.timepit.refined.auto._

@@ -50,11 +50,11 @@ import sttp.model._
 import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
-  obsId:               Observation.Id,
-  scienceRequirements: View[ScienceRequirementsData],
-  undoStacks:          View[UndoStacks[IO, ScienceRequirementsData]],
-  renderInTitle:       Tile.RenderInTitle
-)(implicit val ctx:    AppContextIO)
+  obsId:            Observation.Id,
+  scienceData:      View[ScienceData],
+  undoStacks:       View[UndoStacks[IO, ScienceData]],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
     extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel {
@@ -118,9 +118,9 @@ object ConfigurationPanel {
     private def renderFn(
       props:        Props,
       state:        State,
-      undoCtx:      UndoCtx[ScienceRequirementsData]
+      undoCtx:      UndoCtx[ScienceData]
     )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet = UndoView(props.obsId, undoCtx)
+      val undoViewSet = UndoView(props.obsId, undoCtx.zoom(ScienceData.requirements))
 
       def mode           = undoViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
       val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
@@ -138,7 +138,8 @@ object ConfigurationPanel {
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.ExploreForm,
-          ExploreStyles.ConfigurationForm,
+          ExploreStyles.ConfigurationForm
+        )(
           <.label("Mode", HelpIcon("configuration/mode.md")),
           EnumViewSelect(id = "configuration-mode", value = mode),
           SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
@@ -169,7 +170,7 @@ object ConfigurationPanel {
       renderFn(
         props,
         state,
-        UndoContext(props.undoStacks, props.scienceRequirements)
+        UndoContext(props.undoStacks, props.scienceData)
       )
     }
   }

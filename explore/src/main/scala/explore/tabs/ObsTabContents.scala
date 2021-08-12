@@ -375,9 +375,9 @@ object ObsTabContents {
                   ),
                 ConfigurationTile.configurationTile(
                   obsId,
-                  obsView.map(_.zoom(ObservationData.scienceRequirements)),
+                  obsView.map(_.zoom(scienceDataForObs)),
                   props.undoStacks
-                    .zoom(ModelUndoStacks.forScienceRequirements[IO])
+                    .zoom(ModelUndoStacks.forScienceData[IO])
                     .zoom(atMapWithDefault(obsId, UndoStacks.empty))
                 )
               )
