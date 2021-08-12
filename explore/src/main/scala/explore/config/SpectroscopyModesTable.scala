@@ -198,6 +198,12 @@ object SpectroscopyModesTable {
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
 
+  protected def selectedRow(row: SpectroscopyModeRow): Boolean =
+    row.instrument.instrument === Instrument.GmosSouth && 
+      row.slitWidth.size.toMicroarcseconds === 1000000 && 
+      row.instrument.disperser.asInstanceOf[GmosSouthDisperser] === GmosSouthDisperser.B600_G5323 &&
+      row.focalPlane === FocalPlane.SingleSlit
+
 
   protected val tableComponent =
     ScalaFnComponent[ModesTableProps] { props =>
@@ -215,7 +221,13 @@ object SpectroscopyModesTable {
               ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
               ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
             ),
-          row = (rowData: Row[SpectroscopyModeRow]) => TableRow(disabled = !enabledRow(rowData.original))(props2Attrs(rowData.getRowProps()))
+          row = (rowData: Row[SpectroscopyModeRow]) =>
+            TableRow(
+              disabled = !enabledRow(rowData.original), 
+              clazz = ExploreStyles.ModeSelected.when_(selectedRow(rowData.original))
+            )(
+              props2Attrs(rowData.getRowProps())
+            )
         )(tableInstance)
       )
     }

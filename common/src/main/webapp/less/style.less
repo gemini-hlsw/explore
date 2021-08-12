@@ -1698,6 +1698,13 @@ html {
   border: 0.2px solid var(--site-border-color);
   border-radius: @menuBorderRadius;
   grid-area: table;
+
+  tr.explore-mode-selected {
+    position: sticky;
+    top: 27px;
+    bottom: 0;
+    box-shadow: inset 0 0 0 1px yellow !important; //var(--explore-accent-color); // Important used to override hover.
+  }
 }
 
 .explore-modes-header {
