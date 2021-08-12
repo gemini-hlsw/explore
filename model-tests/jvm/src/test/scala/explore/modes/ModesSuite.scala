@@ -68,7 +68,7 @@ class ModesSuite extends CatsEffectSuite {
     IO(spectroscopyModesFixture())
       // .flatTap(_.matrix.traverse(IO.println))
       .map(_.matrix.length)
-      .assertEquals(323)
+      .assertEquals(445)
   }
 
   test("spectroscopy selection old") {

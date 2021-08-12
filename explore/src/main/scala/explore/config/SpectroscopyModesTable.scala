@@ -127,14 +127,11 @@ object SpectroscopyModesTable {
     case (i, _)                    => i.longName
   }
 
-  def formatFPU(r: NonEmptyList[FocalPlane]): String = r
-    .map {
+  def formatFPU(r: FocalPlane): String = r match {
       case FocalPlane.SingleSlit   => "Single"
       case FocalPlane.MultipleSlit => "Multi"
       case FocalPlane.IFU          => "IFU"
     }
-    .toList
-    .mkString(", ")
 
   def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
@@ -199,7 +196,7 @@ object SpectroscopyModesTable {
 
   protected def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
-      row.focalPlane.contains_(FocalPlane.SingleSlit)
+      row.focalPlane === FocalPlane.SingleSlit
 
 
   protected val tableComponent =

@@ -172,7 +172,7 @@ case class SpectroscopyModeRow(
   id:                Long, // Give them a local id to simplify reusability
   instrument:        InstrumentRow,
   config:            NonEmptyString,
-  focalPlane:        NonEmptyList[FocalPlane],
+  focalPlane:        FocalPlane,
   capabilities:      Option[SpectroscopyCapabilities],
   ao:                ModeAO,
   minWavelength:     ModeWavelength,
@@ -215,7 +215,7 @@ object SpectroscopyModeRow {
   def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
     instrumentRow.andThen(InstrumentRow.disperser)
 
-  def fpu: Lens[SpectroscopyModeRow, NonEmptyList[FocalPlane]] =
+  def fpu: Lens[SpectroscopyModeRow, FocalPlane] =
     GenLens[SpectroscopyModeRow](_.focalPlane)
 
   def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
@@ -291,14 +291,14 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       }
 
   implicit object SpectroscopySpectroscopyModeRowDecoder
-      extends CsvRowDecoder[SpectroscopyModeRow, String] {
-    def apply(row: CsvRow[String]): DecoderResult[SpectroscopyModeRow] =
+      extends CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] {
+    def apply(row: CsvRow[String]): DecoderResult[NonEmptyList[SpectroscopyModeRow]] =
       for {
         di  <- row.as[String]("disperser")
         fi  <- row.as[NonEmptyString]("filter")
         i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi))
         s   <- row.as[NonEmptyString]("Config")
-        f   <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
+        fs   <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
         c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
         a   <- row.as[ModeAO]("AO")
         min <- row.as[ModeWavelength]("wave min")
@@ -308,7 +308,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         r   <- row.as[PosInt]("resolution")
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
-      } yield SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+      } yield fs.map(f => SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw))
   }
 }
 
@@ -327,7 +327,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
     val filter: SpectroscopyModeRow => Boolean = r => {
-      focalPlane.forall(f => r.focalPlane.exists(_ === f)) &&
+      focalPlane.forall(f => r.focalPlane === f) &&
         r.capabilities === capabilities &&
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
@@ -372,7 +372,8 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         .getOrElse(Rational.zero)
       // Slit width match to the seeing (the IFU always matches)
       val slitWidthScore            =
-        if (r.focalPlane.forall(_ === FocalPlane.IFU)) Rational.one
+        if (r.focalPlane === FocalPlane.IFU)
+          Rational.one
         else
           iq.map(i => Rational(i.toArcSeconds.value / (i.toArcSeconds.value + deltaSlitWidth)))
             .getOrElse(Rational.zero)

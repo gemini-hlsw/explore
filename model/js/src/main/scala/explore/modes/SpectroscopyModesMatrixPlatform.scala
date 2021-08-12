@@ -7,11 +7,13 @@ import cats.effect.Concurrent
 import cats.syntax.all._
 import fs2._
 import fs2.data.csv._
+import cats.data.NonEmptyList
 
 trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
   def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[SpectroscopyModeRow]] =
     s
-      .through(decodeUsingHeaders[SpectroscopyModeRow]())
+      .through(decodeUsingHeaders[NonEmptyList[SpectroscopyModeRow]]())
+      .flatMap( l => Stream(l.toList: _*))
       .compile
       .toList
 
