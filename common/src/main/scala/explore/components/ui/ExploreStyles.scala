@@ -182,7 +182,6 @@ object ExploreStyles {
   // The Constraints tab contents
   val ConstraintsGrid                = Css("constraints-grid")
   val ConstraintsNameField           = Css("constraints-name-field")
-  val ConstraintsObsTile             = Css("constraints-obs-tile")
   val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
   val ElevationRangePicker           = Css("elevation-range-picker")
   val ElevationRangeEntry            = Css("elevation-range-entry")

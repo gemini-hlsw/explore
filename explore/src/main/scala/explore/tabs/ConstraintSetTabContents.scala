@@ -9,17 +9,20 @@ import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.UnderConstruction
 import explore.common.ConstraintGroupQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model._
+import explore.model.Focused._
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.optics._
 import explore.undo._
 import explore.observationtree.ConstraintGroupObsList
 import japgolly.scalajs.react._
@@ -39,6 +42,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
+import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
@@ -46,6 +50,8 @@ final case class ConstraintSetTabContents(
   focused:          View[Option[Focused]],
   expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
+  // TODO: Clean up the bulkUndoStack somewhere, somehow?
+  bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
@@ -116,8 +122,35 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide =
-      Tile("constraints", "Constraints", backButton.some)(Reuse.always(_ => UnderConstruction()))
+    val rightSide = props.focused.get
+      .flatMap {
+        case FocusedObs(obsId) => obsId.some
+        case _                 => none
+      }
+      .flatMap(id => constraintsWithObs.get.constraintGroups.find { case (k, _) => k.contains(id) })
+      .fold[VdomNode](
+        <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Select a constraint or observation")
+        )
+      ) { case (obsIds, constraintGroup) =>
+        val constraintSet                               = constraintGroup.constraintSet
+        val cglView                                     = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
+        val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
+        def modCs(mod: ConstraintSet => ConstraintSet): ConstraintGroupList => ConstraintGroupList =
+          cgl =>
+            cgl
+              .get(obsIds)
+              .fold(cgl)(cg => cgl.updated(obsIds, ConstraintGroup.constraintSet.modify(mod)(cg)))
+        val csView: View[ConstraintSet]                 = cglView.zoom(getCs)(modCs)
+        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+          props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
+
+        Tile(NonEmptyString.unsafeFrom(obsIds.mkString("_")), "Constraints", backButton.some)(
+          (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
+            <.div(ConstraintsPanel(obsIds.toList, csView_, csUndo_, renderInTitle))
+          )
+        )
+      }
 
     if (innerWidth <= Constants.TwoPanelCutoff) {
       <.div(

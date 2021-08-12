@@ -7,10 +7,10 @@ import cats.Endo
 import clue.data.syntax._
 import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.model.AirMassRange
+import explore.model.ConstraintSet
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
 import explore.schemas.ObservationDB.Types._
@@ -20,25 +20,25 @@ import monocle.Lens
 
 object ConstraintsQueries {
   case class UndoView(
-    obsId:        Observation.Id,
-    undoCtx:      UndoCtx[ConstraintSetData]
+    obsIds:       List[Observation.Id],
+    undoCtx:      UndoCtx[ConstraintSet]
   )(implicit ctx: AppContextIO) {
     def apply[A](
-      modelGet:  ConstraintSetData => A,
-      modelMod:  (A => A) => ConstraintSetData => ConstraintSetData,
+      modelGet:  ConstraintSet => A,
+      modelMod:  (A => A) => ConstraintSet => ConstraintSet,
       remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
     ): View[A] =
       undoCtx
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateConstraintSetMutation
-            .execute(obsId, remoteSet(value)(EditConstraintSetInput()))
+            .execute(obsIds, remoteSet(value)(EditConstraintSetInput()))
             .void
             .runAsync
         )
 
     def apply[A](
-      lens:      Lens[ConstraintSetData, A],
+      lens:      Lens[ConstraintSet, A],
       remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)

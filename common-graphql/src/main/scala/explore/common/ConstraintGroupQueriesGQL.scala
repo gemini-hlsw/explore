@@ -22,9 +22,8 @@ object ConstraintGroupQueriesGQL {
     val document = """
       query {
         constraintSetGroup(programId: "p-2") {
-	        nodes {
-	          constraintSet {
-              name
+          nodes {
+            constraintSet {
               cloudExtinction
               imageQuality
               skyBackground
@@ -41,7 +40,7 @@ object ConstraintGroupQueriesGQL {
                 }
               }
             }
-	          observations {
+            observations {
               nodes {
                 id
               } 
@@ -49,7 +48,7 @@ object ConstraintGroupQueriesGQL {
           }
         }
             
-	      observations(programId: "p-2") {
+        observations(programId: "p-2") {
           nodes {
             id
             observationTarget {
@@ -69,24 +68,22 @@ object ConstraintGroupQueriesGQL {
               skyBackground
               waterVapor
             }
-	        	status
-	        	activeStatus
-	        	plannedTime {
-	        	  execution {
-	        	    microseconds
-	        	  }
-	        	}
+          	status
+          	activeStatus
+          	plannedTime {
+          	  execution {
+          	    microseconds
+          	  }
+          	}
           }              
-	      }
+        }
       }
       """
 
     object Data {
       object ConstraintSetGroup {
         object Nodes {
-          object ConstraintSet {
-            type ElevationRange = model.ElevationRange
-          }
+          type ConstraintSet = model.ConstraintSet
         }
       }
       object Observations       {

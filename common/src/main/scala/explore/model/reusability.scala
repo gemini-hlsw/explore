@@ -19,26 +19,27 @@ import lucuma.ui.reusability._
  */
 object reusability {
   // Model
-  implicit val pointingReuse: Reusability[Pointing]                                            = Reusability.byEq
+  implicit val pointingReuse: Reusability[Pointing]                                            = Reusability.derive
   implicit val statusReuse: Reusability[PersistentClientStatus]                                = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                            = Reusability.derive
-  implicit val userVaultReuse: Reusability[UserVault]                                          = Reusability.byEq
-  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                            = Reusability.byEq
-  implicit val rootModelReuse: Reusability[RootModel]                                          = Reusability.byEq
+  implicit val userVaultReuse: Reusability[UserVault]                                          = Reusability.derive
+  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                            = Reusability.derive
+  implicit val rootModelReuse: Reusability[RootModel]                                          = Reusability.derive
   implicit val focusedReuse: Reusability[Focused]                                              = Reusability.derive
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]           =
     Reusability.by(_.toList)
-  implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.byEq
-  implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.byEq
-  implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.byEq
+  implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
+  implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive
+  implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.derive
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]                        = Reusability.byEq
+  implicit val constraintsSetReuse: Reusability[ConstraintSet]                                 = Reusability.derive
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                              = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                                    = Reusability.derive
   implicit val obsSummaryReuse: Reusability[ObsSummary]                                        = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints]          =
-    Reusability.byEq
+    Reusability.derive
   implicit val obsSummaryWithPointingAndConstraintsReuse
-    : Reusability[ObsSummaryWithPointingAndConstraints]                                        = Reusability.byEq
+    : Reusability[ObsSummaryWithPointingAndConstraints]                                        = Reusability.derive
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]                         =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
   implicit def undoContextReuse[F[_], G[_], M: Reusability]: Reusability[UndoContext[F, G, M]] =

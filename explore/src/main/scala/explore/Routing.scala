@@ -76,6 +76,7 @@ object Routing {
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
           model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forBulkConstraintSet),
           size
         )
       )
@@ -115,7 +116,7 @@ object Routing {
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
           | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
           | dynamicRouteCT(
-            ("/constraint" / id[Observation.Id]).xmapL(ConstraintsPage.obsId)
+            ("/constraint/obs" / id[Observation.Id]).xmapL(ConstraintsPage.obsId)
           ) ~> renderP(constraintSetTab))
 
       val configuration =

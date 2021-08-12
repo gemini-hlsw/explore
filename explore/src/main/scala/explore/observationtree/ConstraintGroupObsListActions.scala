@@ -36,14 +36,14 @@ object ConstraintGroupObsListActions {
         )
     }
     val editInput                           = EditConstraintSetInput(
-      name = constraints.name.assign,
+      name = clue.data.Ignore,
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,
       skyBackground = constraints.skyBackground.assign,
       waterVapor = constraints.waterVapor.assign,
       elevationRange = createER.assign
     )
-    UpdateConstraintSetMutation.execute[F](obsId, editInput).void
+    UpdateConstraintSetMutation.execute[F](List(obsId), editInput).void
   }
 
   private def getter(obsId: Observation.Id): ConstraintGroupList => Option[ConstraintSetData] =
@@ -75,23 +75,11 @@ object ConstraintGroupObsListActions {
   )(
     eids:  SortedSet[SortedSet[Observation.Id]]
   ) = {
-    // with this version, the undo buttons keep spinning after an undo/redo
     val destIds = cgl.values
       .find(_.constraintSet === cs)
       .map(_.obsIds)
       .getOrElse(SortedSet.empty[Observation.Id])
-    eids.map(ids => if (ids == destIds) destIds + obsId else ids - obsId)
-
-// //     val destIds      = cgl.values.find(_.constraintSet === cs).map(_.obsIds).filter(eids.contains)
-// //     val srcIds  = none[SortedSet[Observation.Id]]
-// //     val destIds      = cgl.find(_._2.constraintSet === cs).map(_._1)
-//     val destIds = cgl.find(_._2.constraintSet === cs).map(_._1).filter(eids.contains)
-// //     val srcIds       = cgl.find(_._2.obsIds.contains(obsId)).map(_._1)
-//     val srcIds  = cgl.find(_._1.contains(obsId)).map(_._1)
-// //     val srcIds       = cgl.keys.find(_.contains(obsId))
-
-//     val updated4dest = destIds.fold(eids)(ids => eids - ids + (ids + obsId))
-//     srcIds.fold(updated4dest)(ids => updated4dest - ids + (ids - obsId))
+    eids.map(ids => if (ids === destIds) destIds + obsId else ids - obsId)
   }
 
   def obsConstraintGroup[F[_]](

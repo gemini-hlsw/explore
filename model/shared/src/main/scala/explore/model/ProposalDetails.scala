@@ -26,6 +26,7 @@ final case class ProposalDetails(
   // as needed. This could shake out differently in the final model
   // depending things such as how the times are calculated from
   // the observations.
+  // TODO: Perhaps use something other than a Double in NonNegHour. Reusability[ProposalDetails] could then be derived and Eq instance changed.
   requestTime1:  NonNegHour,
   requestTime2:  NonNegHour,
   minimumPct1:   IntPercent,

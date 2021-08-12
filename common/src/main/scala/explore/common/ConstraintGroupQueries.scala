@@ -13,6 +13,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.Pointing
 import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._

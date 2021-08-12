@@ -320,7 +320,7 @@ tfoot {
   align-items: baseline;
   gap: 0.3em 0.5em;
 
-  --column-wide-span: 4;
+  --column-wide-span: 3;
 
   grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch, 3fr);
 
@@ -336,11 +336,7 @@ tfoot {
     display: flex;
     gap: 0.3em 0.5em;
     align-items: baseline;
-  }
-
-  .constraints-elevation-range,
-  .constraints-name-field {
-    grid-column: 1 / span var(--column-wide-span);
+    grid-column: 2 / span var(--column-wide-span);
   }
 }
 
@@ -358,14 +354,6 @@ tfoot {
       .field {
         width: 100%;
       }
-    }
-  }
-}
-
-.constraints-obs-tile {
-  .constraints-grid {
-    .constraints-name-field {
-      display: none;
     }
   }
 }

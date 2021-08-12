@@ -122,7 +122,6 @@ object ObsQueriesGQL {
         observation(observationId: $obsId) {
           id
           constraintSet {
-            name
             cloudExtinction
             imageQuality
             skyBackground
@@ -183,9 +182,7 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
-        object ConstraintSet {
-          type ElevationRange = model.ElevationRange
-        }
+        type ConstraintSet = model.ConstraintSet
 
         object ScienceRequirements {
           object SpectroscopyRequirements {
@@ -233,8 +230,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: EditConstraintSetInput!){
-        updateConstraintSet(input: {observationIds: [$obsId], constraintSet: $input}) {
+      mutation ($obsIds: [ObservationId!]!, $input: EditConstraintSetInput!){
+        updateConstraintSet(input: {observationIds: $obsIds, constraintSet: $input}) {
           id
         }
       }

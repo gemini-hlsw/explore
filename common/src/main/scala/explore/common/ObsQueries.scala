@@ -33,8 +33,6 @@ object ObsQueries {
   val WavelengthInput = ObservationDB.Types.WavelengthModelInput
   type ObservationData = ObsEditQuery.Data.Observation
   val ObservationData = ObsEditQuery.Data.Observation
-  type ConstraintSetData = ObservationData.ConstraintSet
-  val ConstraintSetData = ObservationData.ConstraintSet
   type ScienceRequirementsData = ObservationData.ScienceRequirements
   val ScienceRequirementsData = ObservationData.ScienceRequirements
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements

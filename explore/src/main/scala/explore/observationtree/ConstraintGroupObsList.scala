@@ -144,7 +144,6 @@ object ConstraintGroupObsList {
                   props.focused.get.exists(f =>
                     obsIds.unsorted.map(id => FocusedObs(id)).exists(f === _)
                   )
-                val cgSelected  = props.focused.get.exists(_ === FocusedConstraintGroup(obsIds))
 
                 val icon: FontAwesomeIcon = props.expandedIds.get
                   .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
@@ -165,7 +164,7 @@ object ConstraintGroupObsList {
                     val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
                       <.span(ExploreStyles.ObsGroupTitle)(
                         icon,
-                        constraintGroup.constraintSet.name.value
+                        constraintGroup.constraintSet.displayName
                       ),
                       <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
                     )
@@ -180,18 +179,18 @@ object ConstraintGroupObsList {
                       Segment(
                         vertical = true,
                         clazz = ExploreStyles.ObsTreeGroup |+| Option
-                          .when(obsSelected || cgSelected)(ExploreStyles.SelectedObsTreeGroup)
+                          .when(obsSelected)(ExploreStyles.SelectedObsTreeGroup)
                           .orElse(
                             Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
                           )
                           .orEmpty
                       )(^.cursor.pointer,
-                        ^.onClick --> props.focused.set(FocusedConstraintGroup(obsIds).some)
+                        ^.onClick --> props.focused.set(obsIds.headOption.map(FocusedObs))
                       )(
                         csHeader,
                         TagMod.when(props.expandedIds.get.contains(obsIds))(
                           cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                            props.renderObsBadgeItem(selectable = false)(obs, idx)
+                            props.renderObsBadgeItem(selectable = true)(obs, idx)
                           }
                         )
                       )
@@ -217,9 +216,8 @@ object ConstraintGroupObsList {
 
       // Unfocus if focused element is not there
       val unfocus = $.props.focused.mod(_.flatMap {
-        case FocusedObs(obsId) if !observations.contains(obsId)                   => none
-        case FocusedConstraintGroup(obsIds) if !constraintGroups.contains(obsIds) => none
-        case other                                                                => other.some
+        case FocusedObs(obsId) if !observations.contains(obsId) => none
+        case other                                              => other.some
       })
 
       // Expand constraint group with focused observation
