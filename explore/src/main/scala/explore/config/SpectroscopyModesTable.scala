@@ -220,9 +220,10 @@ object SpectroscopyModesTable {
 
   protected val tableComponent =
     ScalaFnComponent[ModesTableProps] { props =>
-      val tableInstance = ModesTableMaker.use(
-        props.options
-      )
+      def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+        rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
+
+      val tableInstance = ModesTableMaker.use(props.options)
       <.div(
         ExploreStyles.ModesTable,
         ModesTableComponent(
@@ -241,7 +242,7 @@ object SpectroscopyModesTable {
                 props.scienceConfiguration.get.exists(conf => equalsConf(rowData.original, conf))
               )
             )(
-              ^.onClick --> props.scienceConfiguration.set(rowToConf(rowData.original)),
+              ^.onClick --> props.scienceConfiguration.set(toggleRow(rowData.original)),
               props2Attrs(rowData.getRowProps())
             )
         )(tableInstance)
