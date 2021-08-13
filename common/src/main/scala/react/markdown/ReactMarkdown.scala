@@ -16,43 +16,22 @@ sealed trait RemarkPlugin extends js.Object
 
 object RemarkPlugin {
 
-  val RemarkGFM =
-    if (scala.scalajs.runtime.linkingInfo.productionMode) RemarkGFMProd else RemarkGFMDev
-
-  @js.native
-  @JSImport("remark-gfm", JSImport.Namespace)
-  object RemarkGFMDev extends js.Object with RemarkPlugin
-
   @js.native
   @JSImport("remark-gfm", JSImport.Default)
-  object RemarkGFMProd extends js.Object with RemarkPlugin
-
-  val RemarkMath =
-    if (scala.scalajs.runtime.linkingInfo.productionMode) RemarkMathProd else RemarkMathDev
-
-  @js.native
-  @JSImport("remark-math", JSImport.Namespace)
-  object RemarkMathDev extends js.Object with RemarkPlugin
+  object RemarkGFM extends js.Object with RemarkPlugin
 
   @js.native
   @JSImport("remark-math", JSImport.Default)
-  object RemarkMathProd extends js.Object with RemarkPlugin
+  object RemarkMath extends js.Object with RemarkPlugin
 
 }
 
 sealed trait RehypePlugin extends js.Object
 
 object RehypePlugin {
-  val RehypeKatex =
-    if (scala.scalajs.runtime.linkingInfo.productionMode) RehypeKatexProd else RehypeKatexDev
-
-  @js.native
-  @JSImport("rehype-katex", JSImport.Namespace)
-  object RehypeKatexDev extends js.Object with RehypePlugin
-
   @js.native
   @JSImport("rehype-katex", JSImport.Default)
-  object RehypeKatexProd extends js.Object with RehypePlugin
+  object RehypeKatex extends js.Object with RehypePlugin
 }
 
 final case class ReactMarkdown(
@@ -71,18 +50,9 @@ final case class ReactMarkdown(
 
 object ReactMarkdown {
 
-  val ReactMarkdown =
-    if (scala.scalajs.runtime.linkingInfo.productionMode) ReactMarkdownProd else ReactMarkdownDev
-
   @js.native
   @JSImport("react-markdown", JSImport.Default)
-  object ReactMarkdownProd extends js.Function1[js.Any, js.Any] {
-    def apply(arg: js.Any): js.Any = js.native
-  }
-
-  @js.native
-  @JSImport("react-markdown", JSImport.Namespace)
-  object ReactMarkdownDev extends js.Function1[js.Any, js.Any] {
+  object ReactMarkdown extends js.Function1[js.Any, js.Any] {
     def apply(arg: js.Any): js.Any = js.native
   }
 

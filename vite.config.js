@@ -51,6 +51,10 @@ export default ({ command, mode }) => {
       dedupe: ["react-is"],
       alias: [
         {
+          find: "process",
+          replacement: "process/browser"
+        },
+        {
           find: "@sjs",
           replacement: sjs,
         },
