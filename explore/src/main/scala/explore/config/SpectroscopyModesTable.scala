@@ -11,11 +11,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore._
 import explore.common.ObsQueries._
 import explore.components.ui.ExploreStyles
-import explore.model.enum.FocalPlane
 import explore.modes._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.FocalPlane
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
@@ -134,7 +134,7 @@ object SpectroscopyModesTable {
   def formatFPU(r: FocalPlane): String = r match {
     case FocalPlane.SingleSlit   => "Single"
     case FocalPlane.MultipleSlit => "Multi"
-    case f                       => f.label
+    case FocalPlane.IFU          => "IFU"
   }
 
   def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
@@ -201,23 +201,6 @@ object SpectroscopyModesTable {
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
 
-  protected def equalsConf(
-    row:  SpectroscopyModeRow,
-    conf: ScienceConfigurationData
-  ): Boolean =
-    rowToConf(row).exists(_ === conf)
-  // (row.instrument, conf) match {
-  //   case (GmosNorthSpectroscopyRow(rowDisperser, rowFilter),
-  //         ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, slitWidth)
-  //       ) =>
-  //     row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
-  //   case (GmosSouthSpectroscopyRow(rowDisperser, rowFilter),
-  //         ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, slitWidth)
-  //       ) =>
-  //     row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
-  //   case _ => false
-  // }
-
   def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
     row.instrument match {
       case GmosNorthSpectroscopyRow(disperser, filter)
@@ -228,6 +211,12 @@ object SpectroscopyModesTable {
         ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
       case _ => none
     }
+
+  protected def equalsConf(
+    row:  SpectroscopyModeRow,
+    conf: ScienceConfigurationData
+  ): Boolean =
+    rowToConf(row).exists(_ === conf)
 
   protected val tableComponent =
     ScalaFnComponent[ModesTableProps] { props =>
