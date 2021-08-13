@@ -22,9 +22,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
-import explore.model.enum.FocalPlane
-import explore.model.enum.ScienceMode
-import explore.model.enum.SpectroscopyCapabilities
+import explore.model.display._
 import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoContext
@@ -32,11 +30,11 @@ import explore.undo.UndoStacks
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
-import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
 import monocle.Focus
@@ -62,15 +60,8 @@ final case class ConfigurationPanel(
 object ConfigurationPanel {
   type Props = ConfigurationPanel
 
-  implicit val modeDisplay: Display[ScienceMode] = Display.byShortName {
-    case ScienceMode.Spectroscopy => "Spectroscopy"
-    case ScienceMode.Imaging      => "Imaging"
-  }
-
-  implicit val specCapabDisplay: Display[SpectroscopyCapabilities] = Display.by(_.label, _.label)
-  implicit val focaLPlaneDisplay: Display[FocalPlane]              = Display.by(_.label, _.label)
-  implicit val propsReuse: Reusability[Props]                      = Reusability.derive
-  implicit val stateReuse: Reusability[State]                      = Reusability.never
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val stateReuse: Reusability[State] = Reusability.never
 
   final case class State(
     mode:           ScienceMode,

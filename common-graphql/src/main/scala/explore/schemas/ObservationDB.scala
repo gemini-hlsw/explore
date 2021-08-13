@@ -75,10 +75,9 @@ trait ObservationDB {
     type SkyBackground            = enum.SkyBackground
     type StepType                 = enum.StepType
     type WaterVapor               = enum.WaterVapor
-    // temporal
-    type ScienceMode              = explore.model.enum.ScienceMode
-    type FocalPlane               = explore.model.enum.FocalPlane
-    type SpectroscopyCapabilities = explore.model.enum.SpectroscopyCapabilities
+    type ScienceMode              = enum.ScienceMode
+    type FocalPlane               = enum.FocalPlane
+    type SpectroscopyCapabilities = enum.SpectroscopyCapabilities
   }
 
   object Types {

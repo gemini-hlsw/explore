@@ -4,8 +4,7 @@
 package explore.model
 
 import explore.model.enum._
-import lucuma.core.enum.MagnitudeBand
-import lucuma.core.enum.MagnitudeSystem
+import lucuma.core.enum._
 import lucuma.core.util.Display
 
 object display {
@@ -26,4 +25,23 @@ object display {
 
   implicit val displayMagnitudeSystem: Display[MagnitudeSystem] =
     Display.byShortName(_.tag)
+
+  implicit val spectroscopyCapabilitiesDisplay: Display[SpectroscopyCapabilities] =
+    Display.byShortName {
+      case SpectroscopyCapabilities.NodAndShuffle => "Nod & Shuffle"
+      case SpectroscopyCapabilities.Polarimetry   => "Polarimetry"
+      case SpectroscopyCapabilities.Coronagraphy  => "Coronagraphy"
+    }
+
+  implicit val focaLPlaneDisplay: Display[FocalPlane] = Display.byShortName {
+    case FocalPlane.SingleSlit   => "Single Slit"
+    case FocalPlane.MultipleSlit => "Multiple Slits"
+    case FocalPlane.IFU          => "IFU"
+  }
+
+  implicit val scienceModeDisplay: Display[ScienceMode] = Display.byShortName {
+    case ScienceMode.Imaging      => "Imaging"
+    case ScienceMode.Spectroscopy => "Spectroscopy"
+  }
+
 }

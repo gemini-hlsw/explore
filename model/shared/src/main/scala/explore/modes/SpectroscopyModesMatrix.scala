@@ -13,21 +13,8 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric._
 import eu.timepit.refined.types.string._
-import explore.model.enum.FocalPlane
-import explore.model.enum.SpectroscopyCapabilities
 import fs2.data.csv._
-import lucuma.core.enum.F2Disperser
-import lucuma.core.enum.F2Filter
-import lucuma.core.enum.GmosNorthDisperser
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosSouthDisperser
-import lucuma.core.enum.GmosSouthFilter
-import lucuma.core.enum.GnirsDisperser
-import lucuma.core.enum.GnirsFilter
-import lucuma.core.enum.GpiDisperser
-import lucuma.core.enum.GpiFilter
-import lucuma.core.enum.ImageQuality
-import lucuma.core.enum.Instrument
+import lucuma.core.enum._
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units._
@@ -299,7 +286,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
     CellDecoder.stringDecoder
       .map {
         case "Nod&Shuffle" => SpectroscopyCapabilities.NodAndShuffle.some
-        case "coronagraph" => SpectroscopyCapabilities.Corongraphy.some
+        case "coronagraph" => SpectroscopyCapabilities.Coronagraphy.some
         case _             => none
       }
 
