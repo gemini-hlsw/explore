@@ -22,23 +22,22 @@ import react.common._
 
 object ConfigurationTile {
   def configurationTile(
-    obsId:       Observation.Id,
-    scienceData: Pot[View[ScienceData]],
-    undoStacks:  View[UndoStacks[IO, ScienceData]]
-  )(implicit ctx: AppContextIO) = {
+    obsId:        Observation.Id,
+    scienceData:  Pot[View[ScienceData]],
+    undoStacks:   View[UndoStacks[IO, ScienceData]]
+  )(implicit ctx: AppContextIO) =
     Tile(
       ObsTabTiles.ConfigurationId,
       "Configuration",
       canMinimize = true
     )(
-      (scienceData, undoStacks).curryReusing.in( (potView, undoStacks_, renderInTitle) =>
+      (scienceData, undoStacks).curryReusing.in((potView, undoStacks_, renderInTitle) =>
         potRender[View[ScienceData]](
-          Reuse.always( scienceData_ => 
+          Reuse.always(scienceData_ =>
             ConfigurationPanel(obsId, UndoContext(undoStacks_, scienceData_), renderInTitle)
           )
         )(potView)
       )
     )
-  }
 
 }

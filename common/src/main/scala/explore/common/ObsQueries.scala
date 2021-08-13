@@ -18,12 +18,12 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import monocle.Focus
 import monocle.Getter
+import monocle.Lens
+import monocle.macros.GenIso
 
 import ObsQueriesGQL._
-import monocle.Lens
-import monocle.Focus
-import monocle.macros.GenIso
 
 object ObsQueries {
 
@@ -42,17 +42,21 @@ object ObsQueries {
   type ScienceConfigurationData = ObservationData.ScienceConfiguration
   val ScienceConfigurationData = ObservationData.ScienceConfiguration
 
-  case class ScienceData(requirements: ScienceRequirementsData, configuration: Option[ScienceConfigurationData])
+  case class ScienceData(
+    requirements:  ScienceRequirementsData,
+    configuration: Option[ScienceConfigurationData]
+  )
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData] = Focus[ScienceData](_.requirements)
-    val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] = Focus[ScienceData](_.configuration)
-    implicit val reusabilityScienceData: Reusability[ScienceData] = Reusability.derive
+    val requirements: Lens[ScienceData, ScienceRequirementsData]           =
+      Focus[ScienceData](_.requirements)
+    val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] =
+      Focus[ScienceData](_.configuration)
+    implicit val reusabilityScienceData: Reusability[ScienceData]          = Reusability.derive
   }
 
-  val scienceDataForObs: Lens[ObservationData, ScienceData] = 
+  val scienceDataForObs: Lens[ObservationData, ScienceData] =
     disjointZip(ObservationData.scienceRequirements, ObservationData.scienceConfiguration)
       .andThen(GenIso.fields[ScienceData].reverse)
-
 
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget

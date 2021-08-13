@@ -28,8 +28,8 @@ object definitions {
   type HeaderCellRender[D, ColumnInstanceD <: ColumnObject[D]] = ColumnInstanceD => TableHeaderCell
   type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
     TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
-      
-  type RowRender[D] = Row[D] => TableRow
+
+  type RowRender[D]   = Row[D] => TableRow
   type RowTemplate[D] = TableRow | RowRender[D]
 
   type BodyCellRender[D] = Cell[D, _] => TableCell
@@ -119,7 +119,7 @@ class SUITable[
         case other        => other.asInstanceOf[TableRender[D, TableInstanceD]]
       }
 
-      val rowRender: RowRender[D] = (props.row : Any) match {
+      val rowRender: RowRender[D] = (props.row: Any) match {
         case row: TableRow => rowData => row(rowData.getRowProps())
         case other         => other.asInstanceOf[RowRender[D]]
       }

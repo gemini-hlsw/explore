@@ -37,6 +37,9 @@ object TargetTile {
     targetViewOptions: View[TargetVisualOptions]
   )(implicit ctx:      AppContextIO) = {
 
+    // FIXME We are having reusability issues here.
+    // If obs status or active is changed in the tree, this is rerendered, when it shouldn't.
+
     def targetRenderFn(
       targetId:      Target.Id,
       undoStacks:    View[UndoStacks[IO, TargetResult]],

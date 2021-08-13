@@ -5,10 +5,13 @@ package explore.config
 
 import cats.syntax.all._
 import coulomb.Quantity
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore._
+import explore.common.ObsQueries._
 import explore.components.ui.ExploreStyles
+import explore.model.enum.FocalPlane
 import explore.modes._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
@@ -22,22 +25,21 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import reactST.reactTable._
-import reactST.reactTable.util._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
+import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
-import explore.common.ObsQueries._
 
 import java.text.DecimalFormat
 
 import scalajs.js.JSConverters._
 
 final case class SpectroscopyModesTable(
-  scienceConfigurationUndo:       UndoSet[Option[ScienceConfigurationData]],
-  matrix:            List[SpectroscopyModeRow],
-  focalPlane:        Option[FocalPlane],
-  centralWavelength: Option[Wavelength]
+  scienceConfiguration: View[Option[ScienceConfigurationData]],
+  matrix:               List[SpectroscopyModeRow],
+  focalPlane:           Option[FocalPlane],
+  centralWavelength:    Option[Wavelength]
 ) extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
 object SpectroscopyModesTable {
@@ -130,16 +132,13 @@ object SpectroscopyModesTable {
   }
 
   def formatFPU(r: FocalPlane): String = r match {
-      case FocalPlane.SingleSlit   => "Single"
-      case FocalPlane.MultipleSlit => "Multi"
-      case FocalPlane.IFU          => "IFU"
-    }
+    case FocalPlane.SingleSlit   => "Single"
+    case FocalPlane.MultipleSlit => "Multi"
+    case f                       => f.label
+  }
 
   def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
-      // column(SelectedColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
-      //   .setCell(c => formatInstrument(c.value))
-      //   .setWidth(30),
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
         .setWidth(30),
@@ -172,7 +171,7 @@ object SpectroscopyModesTable {
         .setCell(_ => "N/A")
         .setWidth(5)
         .setSortType(DefaultSortTypes.number)
-    )//.filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
+    ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   protected val component =
     ScalaComponent
@@ -182,7 +181,7 @@ object SpectroscopyModesTable {
           <.label(ExploreStyles.ModesTableTitle, s"${p.matrix.length} matching configurations"),
           tableComponent(
             ModesTableProps(
-              p.scienceConfigurationUndo,
+              p.scienceConfiguration,
               ModesTableMaker.Options(columns(p.centralWavelength, p.focalPlane).toJSArray,
                                       p.matrix.toJSArray
               )
@@ -194,28 +193,41 @@ object SpectroscopyModesTable {
       .build
 
   protected final case class ModesTableProps(
-    scienceConfigurationUndo:       UndoSet[Option[ScienceConfigurationData]], // maybe use undoableview here when we have side effects
-     options: ModesTableMaker.OptionsType
+    scienceConfiguration: View[Option[ScienceConfigurationData]],
+    options:              ModesTableMaker.OptionsType
   ) extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
-
-  // implicit val reusabilityTableProps: Reusability[ModesTableProps] = Reusability.derive
 
   protected def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
 
-  protected def selectedRow(row: SpectroscopyModeRow, scienceConfiguration:  Option[ScienceConfigurationData]): Boolean =
-    scienceConfiguration.exists(conf =>
-      (row.instrument, conf) match {
-        case (GmosNorthSpectroscopyRow(rowDisperser, rowFilter), ScienceConfigurationData.GmosNorthLongSlit(_, _, filter, disperser, slitWidth) ) =>
-          row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
-        case (GmosSouthSpectroscopyRow(rowDisperser, rowFilter), ScienceConfigurationData.GmosSouthLongSlit(_, _, filter, disperser, slitWidth) ) =>
-          row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
-        case _ => false
-      }
-    
-    )
+  protected def equalsConf(
+    row:  SpectroscopyModeRow,
+    conf: ScienceConfigurationData
+  ): Boolean =
+    rowToConf(row).exists(_ === conf)
+  // (row.instrument, conf) match {
+  //   case (GmosNorthSpectroscopyRow(rowDisperser, rowFilter),
+  //         ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, slitWidth)
+  //       ) =>
+  //     row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
+  //   case (GmosSouthSpectroscopyRow(rowDisperser, rowFilter),
+  //         ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, slitWidth)
+  //       ) =>
+  //     row.slitWidth.size === slitWidth && rowDisperser === disperser && rowFilter === filter && row.focalPlane === FocalPlane.SingleSlit
+  //   case _ => false
+  // }
 
+  def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+    row.instrument match {
+      case GmosNorthSpectroscopyRow(disperser, filter)
+          if row.focalPlane === FocalPlane.SingleSlit =>
+        ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
+      case GmosSouthSpectroscopyRow(disperser, filter)
+          if row.focalPlane === FocalPlane.SingleSlit =>
+        ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
+      case _ => none
+    }
 
   protected val tableComponent =
     ScalaFnComponent[ModesTableProps] { props =>
@@ -235,9 +247,12 @@ object SpectroscopyModesTable {
             ),
           row = (rowData: Row[SpectroscopyModeRow]) =>
             TableRow(
-              disabled = !enabledRow(rowData.original), 
-              clazz = ExploreStyles.ModeSelected.when_(selectedRow(rowData.original, props.scienceConfigurationUndo.model.get))
+              disabled = !enabledRow(rowData.original),
+              clazz = ExploreStyles.ModeSelected.when_(
+                props.scienceConfiguration.get.exists(conf => equalsConf(rowData.original, conf))
+              )
             )(
+              ^.onClick --> props.scienceConfiguration.set(rowToConf(rowData.original)),
               props2Attrs(rowData.getRowProps())
             )
         )(tableInstance)

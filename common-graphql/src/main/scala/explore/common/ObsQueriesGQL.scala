@@ -161,8 +161,6 @@ object ObsQueriesGQL {
             }
           }
           scienceConfiguration {
-            instrument
-            mode
             __typename
             ... on GmosNorthLongSlit {
               filterN:filter
@@ -205,7 +203,7 @@ object ObsQueriesGQL {
           object GmosSouthLongSlit {
             type SlitWidthS = Angle
           }
-}
+        }
       }
     }
   }
@@ -248,6 +246,17 @@ object ObsQueriesGQL {
     val document = """
       mutation ($obsId: ObservationId!, $input: EditScienceRequirementsInput!){
         updateScienceRequirements(input: {observationIds: [$obsId], scienceRequirements: $input}) {
+          id
+        }        
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateScienceConfigurationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($obsId: ObservationId!, $input: CreateObservationConfigInput){
+        updateObservation(input: {observationId: $obsId, scienceConfiguration: {set: $input}}) {
           id
         }
       }

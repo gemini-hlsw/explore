@@ -298,7 +298,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         fi  <- row.as[NonEmptyString]("filter")
         i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi))
         s   <- row.as[NonEmptyString]("Config")
-        fs   <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
+        fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
         c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
         a   <- row.as[ModeAO]("AO")
         min <- row.as[ModeWavelength]("wave min")
@@ -308,7 +308,9 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         r   <- row.as[PosInt]("resolution")
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
-      } yield fs.map(f => SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw))
+      } yield fs.map(f =>
+        SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+      )
   }
 }
 

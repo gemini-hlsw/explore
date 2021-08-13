@@ -6,6 +6,7 @@ package explore.common
 import cats.Endo
 import cats.syntax.all._
 import clue.data.syntax._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.implicits._
 import explore.optics._
@@ -68,18 +69,16 @@ object TargetQueries {
     id:           Target.Id,
     undoCtx:      UndoCtx[TargetResult]
   )(implicit ctx: AppContextIO) {
-    private val undoableView = undoCtx.undoableView
-
     def apply[A](
       modelGet:  TargetResult => A,
       modelMod:  (A => A) => TargetResult => TargetResult,
       remoteSet: A => EditSiderealInput => EditSiderealInput
     ): View[A] =
-      undoableView.apply(
-        modelGet,
-        modelMod,
-        value => TargetMutation.execute(remoteSet(value)(EditSiderealInput(id))).void
-      )
+      undoCtx
+        .undoableView(modelGet, modelMod)
+        .withOnMod(value =>
+          TargetMutation.execute(remoteSet(value)(EditSiderealInput(id))).void.runAsync
+        )
 
     def apply[A](
       modelLens: Lens[TargetResult, A],
