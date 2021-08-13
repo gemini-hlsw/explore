@@ -30,7 +30,7 @@ object display {
     Display.byShortName {
       case SpectroscopyCapabilities.NodAndShuffle => "Nod & Shuffle"
       case SpectroscopyCapabilities.Polarimetry   => "Polarimetry"
-      case SpectroscopyCapabilities.Corongraphy   => "Corongraphy"
+      case SpectroscopyCapabilities.Coronagraphy  => "Coronagraphy"
     }
 
   implicit val focaLPlaneDisplay: Display[FocalPlane] = Display.byShortName {

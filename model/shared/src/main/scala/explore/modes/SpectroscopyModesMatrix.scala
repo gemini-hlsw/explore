@@ -286,7 +286,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
     CellDecoder.stringDecoder
       .map {
         case "Nod&Shuffle" => SpectroscopyCapabilities.NodAndShuffle.some
-        case "coronagraph" => SpectroscopyCapabilities.Corongraphy.some
+        case "coronagraph" => SpectroscopyCapabilities.Coronagraphy.some
         case _             => none
       }
 
