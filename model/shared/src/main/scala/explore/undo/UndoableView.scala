@@ -3,9 +3,12 @@
 
 package explore.undo
 
-import cats.effect.kernel.Sync
 import crystal.ViewF
 import monocle.Lens
+import cats.~>
+import cats.FlatMap
+import cats.syntax.all._
+import cats.Monad
 
 /**
  * Weaves `ViewF` and `UndoSetter` logic.
@@ -19,13 +22,12 @@ import monocle.Lens
  * the value is directly `set`/`mod`, or when an `undo` or `redo` is executed. This
  * side effect could be, for example, setting the value on a remote DB.
  */
-case class UndoableView[F[_]: Sync, G[_], T](undoCtx: UndoSetter[F, G, T]) {
+case class UndoableView[F[_]: Monad, G[_]: FlatMap, T](undoSetter: UndoSetter[F, G, T])(implicit val syncToAsync: F ~> G) {
   def apply[A](get: T => A, mod: (A => A) => T => T, onChange: A => G[Unit]): ViewF[F, A] = {
-    val zoomed = undoCtx.model.zoom(get)(mod)
+    val zoomed = undoSetter.model.zoom(get)(mod)
     ViewF[F, A](
       zoomed.get,
-      // To contemplate callbacks, we would need to pass a way to run an F from within G.
-      (f, _) => undoCtx.mod[A](get, (a: A) => mod(_ => a), a => onChange(a))(f)
+      (f, cb) => undoSetter.mod[A](get, (a: A) => mod(_ => a), (a: A) => syncToAsync(cb(a)) >> onChange(a))(f)
     )
   }
 

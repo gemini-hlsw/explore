@@ -10,6 +10,9 @@ import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Semester
 import lucuma.ui.reusability._
+import explore.undo.UndoContext
+import crystal.react.implicits._
+import explore.undo.UndoSetter
 
 /**
  * Reusability instances for model classes
@@ -38,6 +41,15 @@ object reusability {
     : Reusability[ObsSummaryWithPointingAndConstraints]                               = Reusability.byEq
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]                =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
+  implicit def undoContextReuse[F[_], G[_], M: Reusability]: Reusability[UndoContext[F, G, M]]     = 
+    Reusability.by(x => (x.model, x.stacks))
+
+
+      implicit def undoSetterReuse[F[_], G[_], M: Reusability]: Reusability[UndoSetter[F, G, M]]     = 
+    Reusability.by(_.model)
+
+
+
   implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]]  =
     Reusability.never
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]            = Reusability.derive

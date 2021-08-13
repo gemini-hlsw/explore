@@ -197,6 +197,15 @@ object ObsQueriesGQL {
             type FocalPlaneAngle = lucuma.core.math.Angle
           }
         }
+
+        object ScienceConfiguration {
+          object GmosNorthLongSlit {
+            type SlitWidthN = Angle
+          }
+          object GmosSouthLongSlit {
+            type SlitWidthS = Angle
+          }
+}
       }
     }
   }

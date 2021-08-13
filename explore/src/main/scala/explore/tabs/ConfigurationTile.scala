@@ -8,7 +8,6 @@ import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
-import explore.AppCtx
 import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
@@ -26,26 +25,17 @@ object ConfigurationTile {
     obsId:       Observation.Id,
     scienceData: Pot[View[ScienceData]],
     undoStacks:  View[UndoStacks[IO, ScienceData]]
-  ) = {
-
-    def renderConfiguration(
-      obsId:         Observation.Id,
-      scienceData:   View[ScienceData],
-      undoStacks:    View[UndoStacks[IO, ScienceData]],
-      renderInTitle: Tile.RenderInTitle
-    ): VdomNode =
-      AppCtx.using { implicit ctx =>
-        ConfigurationPanel(obsId, scienceData, undoStacks, renderInTitle)
-      }
-
+  )(implicit ctx: AppContextIO) = {
     Tile(
       ObsTabTiles.ConfigurationId,
       "Configuration",
       canMinimize = true
     )(
-      (scienceData, undoStacks).curryReusing.in((potView, undoStacks_, renderInTitle) =>
+      (scienceData, undoStacks).curryReusing.in( (potView, undoStacks_, renderInTitle) =>
         potRender[View[ScienceData]](
-          Reuse.always( scienceData_ => renderConfiguration(obsId, scienceData_, undoStacks_, renderInTitle) )
+          Reuse.always( scienceData_ => 
+            ConfigurationPanel(obsId, UndoContext(undoStacks_, scienceData_), renderInTitle)
+          )
         )(potView)
       )
     )

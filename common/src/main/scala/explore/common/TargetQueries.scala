@@ -11,7 +11,6 @@ import explore.implicits._
 import explore.optics._
 import explore.schemas.ObservationDB.Types._
 import explore.schemas.implicits._
-import explore.undo.UndoableView
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
@@ -69,7 +68,7 @@ object TargetQueries {
     id:           Target.Id,
     undoCtx:      UndoCtx[TargetResult]
   )(implicit ctx: AppContextIO) {
-    private val undoableView = UndoableView(undoCtx)
+    private val undoableView = undoCtx.undoableView
 
     def apply[A](
       modelGet:  TargetResult => A,

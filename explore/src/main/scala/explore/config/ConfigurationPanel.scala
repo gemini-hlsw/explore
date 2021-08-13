@@ -25,8 +25,6 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
-import explore.undo.UndoContext
-import explore.undo.UndoStacks
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -51,8 +49,7 @@ import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
-  scienceData:      View[ScienceData],
-  undoStacks:       View[UndoStacks[IO, ScienceData]],
+  scienceDataUndo:  UndoCtx[ScienceData],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -147,6 +144,7 @@ object ConfigurationPanel {
           ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
         ),
         SpectroscopyModesTable(
+          props.scienceDataUndo.zoom(ScienceData.configuration),
           state.matrix.toOption
             .map(
               _.filtered(
@@ -170,7 +168,7 @@ object ConfigurationPanel {
       renderFn(
         props,
         state,
-        UndoContext(props.undoStacks, props.scienceData)
+        props.scienceDataUndo
       )
     }
   }

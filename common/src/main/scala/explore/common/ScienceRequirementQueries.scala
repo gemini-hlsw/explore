@@ -16,16 +16,13 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
 import monocle.Lens
-import explore.undo.UndoSetter
-import cats.effect.SyncIO
-import cats.effect.IO
 
 object ScienceRequirementsQueries {
   case class UndoView(
-    obsId:        Observation.Id,
-    undoCtx:      UndoSetter[SyncIO, IO, ScienceRequirementsData]
+    obsId:                    Observation.Id,
+    scienceRequirementsUndo:      UndoSet[ScienceRequirementsData]
   )(implicit ctx: AppContextIO) {
-    private val undoableView = UndoableView(undoCtx)
+    private val undoableView = UndoableView(scienceRequirementsUndo)
 
     def apply[A](
       modelGet:  ScienceRequirementsData => A,

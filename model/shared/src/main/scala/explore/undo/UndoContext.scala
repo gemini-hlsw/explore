@@ -13,6 +13,7 @@ import crystal.ViewF
 import crystal.implicits._
 import monocle.Lens
 
+// Allows modyfing values in an undo context, but doesn't give access to undo and redo operations.
 trait UndoSetter[F[_], G[_], M] { self =>
   def model: ViewF[F, M]
 
@@ -99,7 +100,6 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
   lazy val isUndoEmpty: Boolean = stacks.get.undo.isEmpty
   lazy val isRedoEmpty: Boolean = stacks.get.redo.isEmpty
 
-
   // Unset "working" on callback passed to react to be executed after setState completion...
 
   lazy val working: Boolean = stacks.get.working
@@ -160,4 +160,6 @@ case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
   val undo: F[Unit] = undoStacks >>= restore
 
   val redo: F[Unit] = redoStacks >>= restore
+
+  lazy val undoableView: UndoableView[F, G, M] = UndoableView[F, G, M](this)
 }
