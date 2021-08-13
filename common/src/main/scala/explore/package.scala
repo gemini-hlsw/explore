@@ -10,11 +10,13 @@ package explore {
 
   import cats.effect.SyncIO
   import explore.undo.UndoContext
+  import explore.undo.UndoSetter
   trait ShorthandTypes {
     type AppContextIO = AppContext[IO]
     type View[A]      = ViewF[SyncIO, A]
     type ViewOpt[A]   = ViewOptF[SyncIO, A]
     type UndoCtx[A]   = UndoContext[SyncIO, IO, A]
+    type UndoSet[A]   = UndoSetter[SyncIO, IO, A]
   }
 
 }

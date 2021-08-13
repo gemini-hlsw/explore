@@ -247,6 +247,7 @@ object ExploreStyles {
   val ModesTable: Css                = Css("explore-modes-table")
   val ModesTableTitle: Css           = Css("explore-modes-table-title")
   val ModesHeader: Css               = Css("explore-modes-header")
+  val ModeSelected: Css              = Css("explore-mode-selected")
 
   val ButtonCopy: Css    = Css("explore-button-copy")
   val ButtonsUndo: Css   = Css("explore-buttons-undo")

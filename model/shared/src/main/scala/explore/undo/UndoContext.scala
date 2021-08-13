@@ -12,70 +12,13 @@ import cats.~>
 import crystal.ViewF
 import crystal.implicits._
 
-trait UndoSetter[F[_], G[_], M] {
-  def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit],
-    onRestore: (M, A) => G[Unit]
-  )(v:         A): F[Unit]
-
-  def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     A => G[Unit],
-    onRestore: A => G[Unit]
-  )(v:         A): F[Unit] =
-    set(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(v)
-
-  def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit]
-  )(v:         A): F[Unit] =
-    set(getter, setter, onSet, onSet)(v)
-
-  def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     A => G[Unit]
-  )(v:         A): F[Unit] =
-    set(getter, setter, (_: M, a: A) => onSet(a))(v)
-
-  def mod[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit],
-    onRestore: (M, A) => G[Unit]
-  )(f:         A => A): F[Unit]
-
-  def mod[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     A => G[Unit],
-    onRestore: A => G[Unit]
-  )(f:         A => A): F[Unit] =
-    mod(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(f)
-
-  def mod[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit]
-  )(f:         A => A): F[Unit] =
-    mod(getter, setter, onSet, onSet)(f)
-
-  def mod[A](
-    getter: M => A,
-    setter: A => M => M,
-    onSet:  A => G[Unit]
-  )(f:      A => A): F[Unit] =
-    mod(getter, setter, (_: M, a: A) => onSet(a))(f)
-}
-
-case class UndoContext[F[_]: Monad, G[_]: FlatMap, M](
-  stacks:                  ViewF[F, UndoStacks[G, M]],
-  model:                   ViewF[F, M]
-)(implicit val dispatcher: Dispatcher[G], syncToAsync: F ~> G)
+/*
+ * Combines a view of a model `M` and a view of `UndoStacks` over `M`.
+ */
+case class UndoContext[F[_], G[_], M](
+  stacks:         ViewF[F, UndoStacks[G, M]],
+  model:          ViewF[F, M]
+)(implicit val F: Monad[F], G: FlatMap[G], dispatcher: Dispatcher[G], val syncToAsync: F ~> G)
     extends UndoSetter[F, G, M] {
   private lazy val undoStack: ViewF[F, UndoStack[G, M]] = stacks.zoom(UndoStacks.undo)
   private lazy val redoStack: ViewF[F, UndoStack[G, M]] = stacks.zoom(UndoStacks.redo)

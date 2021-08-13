@@ -3,8 +3,10 @@
 
 package explore.modes
 
+import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.syntax.all._
+import fs2.Stream
 import fs2.data.csv._
 import fs2.io.file._
 import fs2.text
@@ -15,7 +17,8 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
     Files[F]
       .readAll(path)
       .through(text.utf8.decode)
-      .through(decodeUsingHeaders[SpectroscopyModeRow]())
+      .through(decodeUsingHeaders[NonEmptyList[SpectroscopyModeRow]]())
+      .flatMap(l => Stream(l.toList: _*))
       .zipWithIndex
       .map { case (r, i) =>
         r.copy(id = i)

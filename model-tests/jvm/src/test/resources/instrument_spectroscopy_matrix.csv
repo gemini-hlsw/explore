@@ -20,6 +20,13 @@ GMOS-N,"R831 1.0""","singleslit,multislit",1.00arcsec,1.000,330,R831,none,0.36,1
 GMOS-N,"R831 1.5""","singleslit,multislit",1.50arcsec,1.500,330,R831,none,0.36,1.03,0.757,0.235,1465,no,,n
 GMOS-N,"R831 2.0""","singleslit,multislit",2.00arcsec,2.000,330,R831,none,0.36,1.03,0.757,0.235,1099,no,,n
 GMOS-N,"R831 5.0""","singleslit,multislit",5.00arcsec,5.000,330,R831,none,0.36,1.03,0.757,0.235,440,no,,n
+GMOS-N,"B480 0.25""","singleslit,multislit",0.25arcsec,0.250,330,B480,none,0.36,1.03,0.422,0.39,3040,no,,n
+GMOS-N,"B480 0.50""","singleslit,multislit",0.50arcsec,0.500,330,B480,none,0.36,1.03,0.422,0.39,1520,no,,n
+GMOS-N,"B480 0.75""","singleslit,multislit",0.75arcsec,0.750,330,B480,none,0.36,1.03,0.422,0.39,1013,no,,n
+GMOS-N,"B480 1.0""","singleslit,multislit",1.00arcsec,1.000,330,B480,none,0.36,1.03,0.422,0.39,760,no,,n
+GMOS-N,"B480 1.5""","singleslit,multislit",1.50arcsec,1.500,330,B480,none,0.36,1.03,0.422,0.39,507,no,,n
+GMOS-N,"B480 2.0""","singleslit,multislit",2.00arcsec,2.000,330,B480,none,0.36,1.03,0.422,0.39,380,no,,n
+GMOS-N,"B480 5.0""","singleslit,multislit",5.00arcsec,5.000,330,B480,none,0.36,1.03,0.422,0.39,152,no,,n
 GMOS-N,"R400 0.25""","singleslit,multislit",0.25arcsec,0.250,330,R400,none,0.36,1.03,0.764,0.472,3836,no,,n
 GMOS-N,"R400 0.50""","singleslit,multislit",0.50arcsec,0.500,330,R400,none,0.36,1.03,0.764,0.472,1918,no,,n
 GMOS-N,"R400 0.75""","singleslit,multislit",0.75arcsec,0.750,330,R400,none,0.36,1.03,0.764,0.472,1279,no,,n
@@ -57,6 +64,13 @@ GMOS-S,"R831 1.0""","singleslit,multislit",1.00arcsec,1.000,330,R831,none,0.36,1
 GMOS-S,"R831 1.5""","singleslit,multislit",1.50arcsec,1.500,330,R831,none,0.36,1.03,0.757,0.23,1465,no,,s
 GMOS-S,"R831 2.0""","singleslit,multislit",2.00arcsec,2.000,330,R831,none,0.36,1.03,0.757,0.23,1099,no,,s
 GMOS-S,"R831 5.0""","singleslit,multislit",5.00arcsec,5.000,330,R831,none,0.36,1.03,0.757,0.23,440,no,,s
+GMOS-S,"B480 0.25""","singleslit,multislit",0.25arcsec,0.250,330,B480,none,0.36,1.03,0.422,0.39,3040,no,,s
+GMOS-S,"B480 0.50""","singleslit,multislit",0.50arcsec,0.500,330,B480,none,0.36,1.03,0.422,0.39,1520,no,,s
+GMOS-S,"B480 0.75""","singleslit,multislit",0.75arcsec,0.750,330,B480,none,0.36,1.03,0.422,0.39,1013,no,,s
+GMOS-S,"B480 1.0""","singleslit,multislit",1.00arcsec,1.000,330,B480,none,0.36,1.03,0.422,0.39,760,no,,s
+GMOS-S,"B480 1.5""","singleslit,multislit",1.50arcsec,1.500,330,B480,none,0.36,1.03,0.422,0.39,507,no,,s
+GMOS-S,"B480 2.0""","singleslit,multislit",2.00arcsec,2.000,330,B480,none,0.36,1.03,0.422,0.39,380,no,,s
+GMOS-S,"B480 5.0""","singleslit,multislit",5.00arcsec,5.000,330,B480,none,0.36,1.03,0.422,0.39,152,no,,s
 GMOS-S,"R400 0.25""","singleslit,multislit",0.25arcsec,0.250,330,R400,none,0.36,1.03,0.764,0.462,3836,no,,s
 GMOS-S,"R400 0.50""","singleslit,multislit",0.50arcsec,0.500,330,R400,none,0.36,1.03,0.764,0.462,1918,no,,s
 GMOS-S,"R400 0.75""","singleslit,multislit",0.75arcsec,0.750,330,R400,none,0.36,1.03,0.764,0.462,1279,no,,s

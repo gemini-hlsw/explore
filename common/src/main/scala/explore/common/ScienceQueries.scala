@@ -4,12 +4,15 @@
 package explore.common
 
 import cats.Endo
+import cats.effect.IO
+import clue.TransactionalClient
 import clue.data.syntax._
+import crystal.react.implicits._
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
+import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
-import explore.undo.UndoableView
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -17,26 +20,24 @@ import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
 import monocle.Lens
 
-object ScienceRequirementsQueries {
+object ScienceQueries {
   case class UndoView(
-    obsId:        Observation.Id,
-    undoCtx:      UndoCtx[ScienceRequirementsData]
-  )(implicit ctx: AppContextIO) {
-    private val undoableView = UndoableView(undoCtx)
-
+    obsId:                   Observation.Id,
+    scienceRequirementsUndo: UndoSet[ScienceRequirementsData]
+  )(implicit ctx:            AppContextIO) {
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
       remoteSet: A => EditScienceRequirementsInput => EditScienceRequirementsInput
     ): View[A] =
-      undoableView.apply(
-        modelGet,
-        modelMod,
-        value =>
+      scienceRequirementsUndo
+        .undoableView(modelGet, modelMod)
+        .withOnMod(value =>
           UpdateScienceRequirementsMutation
             .execute(obsId, remoteSet(value)(EditScienceRequirementsInput()))
             .void
-      )
+            .runAsync
+        )
 
     def apply[A](
       lens:      Lens[ScienceRequirementsData, A],
@@ -88,4 +89,33 @@ object ScienceRequirementsQueries {
       )
     }
   }
+
+  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfigurationData])(
+    implicit client:                 TransactionalClient[IO, ObservationDB]
+  ): IO[Unit] =
+    UpdateScienceConfigurationMutation
+      .execute[IO](
+        obsId,
+        conf
+          .map(_ match {
+            case ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, slitWidth) =>
+              CreateObservationConfigInput(gmosNorthLongSlit =
+                CreateGmosNorthLongSlit(
+                  filter.orUnassign,
+                  disperser,
+                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign)
+                ).assign
+              )
+            case ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, slitWidth) =>
+              CreateObservationConfigInput(gmosSouthLongSlit =
+                CreateGmosSouthLongSlit(
+                  filter.orUnassign,
+                  disperser,
+                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign)
+                ).assign
+              )
+          })
+          .orUnassign
+      )
+      .void
 }

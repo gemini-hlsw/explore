@@ -160,6 +160,23 @@ object ObsQueriesGQL {
               capabilities
             }
           }
+          scienceConfiguration {
+            __typename
+            ... on GmosNorthLongSlit {
+              filterN:filter
+              disperserN:disperser
+              slitWidthN:slitWidth {
+                microarcseconds
+              }
+            }
+            ... on GmosSouthLongSlit {
+              filterS:filter
+              disperserS:disperser
+              slitWidthS:slitWidth {
+                microarcseconds
+              }
+            }
+          }          
         }
       }
     """
@@ -176,6 +193,15 @@ object ObsQueriesGQL {
             type SignalToNoiseAt = lucuma.core.math.Wavelength
             type WavelengthRange = lucuma.core.math.Wavelength
             type FocalPlaneAngle = lucuma.core.math.Angle
+          }
+        }
+
+        object ScienceConfiguration {
+          object GmosNorthLongSlit {
+            type SlitWidthN = Angle
+          }
+          object GmosSouthLongSlit {
+            type SlitWidthS = Angle
           }
         }
       }
@@ -220,6 +246,17 @@ object ObsQueriesGQL {
     val document = """
       mutation ($obsId: ObservationId!, $input: EditScienceRequirementsInput!){
         updateScienceRequirements(input: {observationIds: [$obsId], scienceRequirements: $input}) {
+          id
+        }        
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateScienceConfigurationMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation ($obsId: ObservationId!, $input: CreateObservationConfigInput){
+        updateObservation(input: {observationId: $obsId, scienceConfiguration: {set: $input}}) {
           id
         }
       }

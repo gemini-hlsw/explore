@@ -14,7 +14,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import explore.AppCtx
 import explore.common.ObsQueries._
-import explore.common.ScienceRequirementsQueries._
+import explore.common.ScienceQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -25,8 +25,6 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
-import explore.undo.UndoContext
-import explore.undo.UndoStacks
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -50,11 +48,10 @@ import sttp.model._
 import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
-  obsId:               Observation.Id,
-  scienceRequirements: View[ScienceRequirementsData],
-  undoStacks:          View[UndoStacks[IO, ScienceRequirementsData]],
-  renderInTitle:       Tile.RenderInTitle
-)(implicit val ctx:    AppContextIO)
+  obsId:            Observation.Id,
+  scienceDataUndo:  UndoCtx[ScienceData],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
     extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel {
@@ -116,36 +113,45 @@ object ConfigurationPanel {
 
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
-      props:        Props,
-      state:        State,
-      undoCtx:      UndoCtx[ScienceRequirementsData]
-    )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet = UndoView(props.obsId, undoCtx)
+      props:           Props,
+      state:           State,
+      scienceDataUndo: UndoCtx[ScienceData]
+    )(implicit ctx:    AppContextIO): VdomNode = {
+      val requirementsCtx = scienceDataUndo.zoom(ScienceData.requirements)
 
-      def mode           = undoViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
+      val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
+
+      def mode           = requirementsViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
       val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
-      val spectroscopy = undoViewSet(
+      val spectroscopy = requirementsViewSet(
         ScienceRequirementsData.spectroscopyRequirements,
         UpdateScienceRequirements.spectroscopyRequirements
       )
       val imaging      = ViewF.fromStateSyncIO($).zoom(State.imagingOptions)
 
+      val configurationView = scienceDataUndo
+        .undoableView(ScienceData.configuration)
+        .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+
       <.div(
         ExploreStyles.ConfigurationGrid,
-        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(undoCtx))),
+        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(scienceDataUndo))),
         Form(size = Small)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,
           ExploreStyles.ExploreForm,
-          ExploreStyles.ConfigurationForm,
+          ExploreStyles.ConfigurationForm
+        )(
           <.label("Mode", HelpIcon("configuration/mode.md")),
           EnumViewSelect(id = "configuration-mode", value = mode),
           SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
             .when(isSpectroscopy),
-          ImagingConfigurationPanel(imaging).unless(isSpectroscopy)
+          ImagingConfigurationPanel(imaging)
+            .unless(isSpectroscopy)
         ),
         SpectroscopyModesTable(
+          configurationView,
           state.matrix.toOption
             .map(
               _.filtered(
@@ -169,7 +175,7 @@ object ConfigurationPanel {
       renderFn(
         props,
         state,
-        UndoContext(props.undoStacks, props.scienceRequirements)
+        props.scienceDataUndo
       )
     }
   }

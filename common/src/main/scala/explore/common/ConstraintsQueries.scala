@@ -5,6 +5,7 @@ package explore.common
 
 import cats.Endo
 import clue.data.syntax._
+import crystal.react.implicits._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
@@ -13,7 +14,6 @@ import explore.model.AirMassRange
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
 import explore.schemas.ObservationDB.Types._
-import explore.undo.UndoableView
 import lucuma.core.enum._
 import lucuma.core.model.Observation
 import monocle.Lens
@@ -23,21 +23,19 @@ object ConstraintsQueries {
     obsId:        Observation.Id,
     undoCtx:      UndoCtx[ConstraintSetData]
   )(implicit ctx: AppContextIO) {
-    private val undoableView = UndoableView(undoCtx)
-
     def apply[A](
       modelGet:  ConstraintSetData => A,
       modelMod:  (A => A) => ConstraintSetData => ConstraintSetData,
       remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
     ): View[A] =
-      undoableView.apply(
-        modelGet,
-        modelMod,
-        value =>
+      undoCtx
+        .undoableView(modelGet, modelMod)
+        .withOnMod(value =>
           UpdateConstraintSetMutation
             .execute(obsId, remoteSet(value)(EditConstraintSetInput()))
             .void
-      )
+            .runAsync
+        )
 
     def apply[A](
       lens:      Lens[ConstraintSetData, A],
