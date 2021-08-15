@@ -114,10 +114,7 @@ object Routing {
             targetTab
           )
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
-          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
-          | dynamicRouteCT(
-            ("/constraint/obs" / id[Observation.Id]).xmapL(ConstraintsPage.obsId)
-          ) ~> renderP(constraintSetTab))
+          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab))
 
       val configuration =
         rules

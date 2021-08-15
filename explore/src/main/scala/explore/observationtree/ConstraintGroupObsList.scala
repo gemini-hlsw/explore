@@ -17,6 +17,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused._
+import explore.model.SelectedPanel
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.undo._
@@ -35,10 +36,13 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 import scala.collection.immutable.SortedSet
+import explore.model.SelectedPanel.Uninitialized
+import explore.model.SelectedPanel.Editor
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
   focused:            View[Option[Focused]],
+  selected:           View[SelectedPanel[ConstraintGroup]],
   expandedIds:        View[SortedSet[SortedSet[Observation.Id]]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
@@ -130,72 +134,74 @@ object ConstraintGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick = props.focused.set(none), clazz = ExploreStyles.ButtonSummary)(
+            Button(onClick = props.selected.set(SelectedPanel.summary),
+                   clazz = ExploreStyles.ButtonSummary
+            )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
               "Constraints Summary"
             )
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              constraintGroups.toTagMod { case (_, constraintGroup) =>
-                val obsIds      = constraintGroup.obsIds
-                val cgObs       = obsIds.toList.map(id => observations.get(id)).flatten
-                val obsSelected =
-                  props.focused.get.exists(f =>
-                    obsIds.unsorted.map(id => FocusedObs(id)).exists(f === _)
-                  )
+              constraintGroups.toTagMod {
+                case (_, constraintGroup) =>
+                  val obsIds        = constraintGroup.obsIds
+                  val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+                  val groupSelected = props.selected.get.optValue.exists(_.obsIds === obsIds)
 
-                val icon: FontAwesomeIcon = props.expandedIds.get
-                  .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
-                  .fold(Icons.ChevronDown, Icons.ChevronRight)
-                  .addModifiers(
-                    Seq(^.cursor.pointer,
-                        ^.onClick ==> { e: ReactEvent =>
-                          e.stopPropagationCB >> toggleExpanded(obsIds, props.expandedIds).toCB
-                            .asEventDefault(e)
-                            .void
-                        }
-                    )
-                  )
-                  .fixedWidth()
-
-                Droppable(obsIdsToString(obsIds), renderClone = renderClone) {
-                  case (provided, snapshot) =>
-                    val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                      <.span(ExploreStyles.ObsGroupTitle)(
-                        icon,
-                        constraintGroup.constraintSet.displayName
-                      ),
-                      <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
-                    )
-
-                    <.div(
-                      provided.innerRef,
-                      provided.droppableProps,
-                      props.getListStyle(
-                        snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
-                      )
-                    )(
-                      Segment(
-                        vertical = true,
-                        clazz = ExploreStyles.ObsTreeGroup |+| Option
-                          .when(obsSelected)(ExploreStyles.SelectedObsTreeGroup)
-                          .orElse(
-                            Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
-                          )
-                          .orEmpty
-                      )(^.cursor.pointer,
-                        ^.onClick --> props.focused.set(obsIds.headOption.map(FocusedObs))
-                      )(
-                        csHeader,
-                        TagMod.when(props.expandedIds.get.contains(obsIds))(
-                          cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                            props.renderObsBadgeItem(selectable = true)(obs, idx)
+                  val icon: FontAwesomeIcon = props.expandedIds.get
+                    .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
+                    .fold(Icons.ChevronDown, Icons.ChevronRight)
+                    .addModifiers(
+                      Seq(^.cursor.pointer,
+                          ^.onClick ==> { e: ReactEvent =>
+                            e.stopPropagationCB >> toggleExpanded(obsIds, props.expandedIds).toCB
+                              .asEventDefault(e)
+                              .void
                           }
+                      )
+                    )
+                    .fixedWidth()
+
+                  Droppable(obsIdsToString(obsIds), renderClone = renderClone) {
+                    case (provided, snapshot) =>
+                      val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+                        <.span(ExploreStyles.ObsGroupTitle)(
+                          icon,
+                          constraintGroup.constraintSet.displayName
+                        ),
+                        <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+                      )
+
+                      <.div(
+                        provided.innerRef,
+                        provided.droppableProps,
+                        props.getListStyle(
+                          snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
+                        )
+                      )(
+                        Segment(
+                          vertical = true,
+                          clazz = ExploreStyles.ObsTreeGroup |+| Option
+                            .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                            .orElse(
+                              Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
+                            )
+                            .orEmpty
+                        )(^.cursor.pointer,
+                          ^.onClick --> props.selected.set(SelectedPanel.editor(constraintGroup))
+                        )(
+                          csHeader,
+                          TagMod.when(props.expandedIds.get.contains(obsIds))(
+                            cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                              props.renderObsBadgeItem(selectable = false,
+                                                       highlightSelected = false
+                              )(obs, idx)
+                            }
+                          )
                         )
                       )
-                    )
-                }
+                  }
               }
             )
           )
@@ -213,6 +219,7 @@ object ConstraintGroupObsList {
       val constraintGroups   = constraintsWithObs.constraintGroups
       val observations       = constraintsWithObs.observations
       val expandedIds        = $.props.expandedIds
+      val selected           = $.props.selected
 
       // Unfocus if focused element is not there
       val unfocus = $.props.focused.mod(_.flatMap {
@@ -220,20 +227,36 @@ object ConstraintGroupObsList {
         case other                                              => other.some
       })
 
-      // Expand constraint group with focused observation
-      val expandForObservation = $.props.focused.get
-        .collect { case FocusedObs(obsId) =>
-          constraintGroups.find(_._1.contains(obsId)).map { case (ids, _) =>
-            expandedIds.mod(_ + ids)
-          }
-        }
-        .flatten
-        .orEmpty
+      val setAndGetSelected = selected.get match {
+        case Uninitialized =>
+          val constraintGroupFromFocused = $.props.focused.get.collect { case FocusedObs(obsId) =>
+            constraintGroups.find(_._1.contains(obsId)).map(_._2)
+          }.flatten
+
+          selected
+            .set(
+              constraintGroupFromFocused.fold(SelectedPanel.tree[ConstraintGroup])(cg =>
+                SelectedPanel.editor(cg)
+              )
+            )
+            .as(constraintGroupFromFocused)
+        case Editor(cg)    => SyncIO.delay(cg.some)
+        case _             => SyncIO.delay(none)
+      }
+
+      def expandSelected(cgOpt: Option[ConstraintGroup]) =
+        cgOpt
+          .map(cg => expandedIds.mod(_ + cg.obsIds))
+          .orEmpty
 
       val cleanupExpandedIds =
         expandedIds.mod(_.filter(ids => constraintGroups.contains(ids)))
-
-      unfocus >> expandForObservation >> cleanupExpandedIds
+      for {
+        _     <- unfocus
+        cgOpt <- setAndGetSelected
+        _     <- expandSelected(cgOpt)
+        _     <- cleanupExpandedIds
+      } yield ()
     }
     .configure(Reusability.shouldComponentUpdate)
     .build

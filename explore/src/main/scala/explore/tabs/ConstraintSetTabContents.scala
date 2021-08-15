@@ -9,7 +9,6 @@ import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.common.UserPreferencesQueries._
@@ -19,7 +18,6 @@ import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model._
-import explore.model.Focused._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.optics._
@@ -54,17 +52,17 @@ final case class ConstraintSetTabContents(
   bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component) {
-  def isSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) =>
-    ()
-  }.isDefined
-}
+    extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
 
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
-  type State = TwoPanelState
+  type State = TwoPanelState[ConstraintGroup]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val stateReuse: Reusability[State] = Reusability.derive
+
+  val treeWidthLens = TwoPanelState.treeWidth[ConstraintGroup]
+  val selectedLens  = TwoPanelState.selected[ConstraintGroup]
 
   def readWidthPreference(
     $ : ComponentDidMount[Props, State, _]
@@ -73,7 +71,7 @@ object ConstraintSetTabContents {
     (UserAreaWidths.queryWithDefault[IO]($.props.userId,
                                          ResizableSection.ConstraintSetsTree,
                                          Constants.InitialTreeWidth.toInt
-    ) >>= $.setStateLIn[IO](TwoPanelState.treeWidth)).runAsyncCB
+    ) >>= $.setStateLIn[IO](treeWidthLens)).runAsyncCB
   }
 
   protected def renderFn(
@@ -84,7 +82,7 @@ object ConstraintSetTabContents {
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
+        (state.zoom(TwoPanelState.treeWidth[ConstraintGroup]).set(d.size.width).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
@@ -103,6 +101,7 @@ object ConstraintSetTabContents {
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(constraintWithObs,
                                props.focused,
+                               state.zoom(selectedLens),
                                props.expandedIds,
                                props.listUndoStacks
         )
@@ -115,24 +114,24 @@ object ConstraintSetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](props.focused.set(none))
+        onClickE = linkOverride[ButtonProps](state.zoom(selectedLens).set(SelectedPanel.tree))
       )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft)
     )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = props.focused.get
-      .flatMap {
-        case FocusedObs(obsId) => obsId.some
-        case _                 => none
-      }
-      .flatMap(id => constraintsWithObs.get.constraintGroups.find { case (k, _) => k.contains(id) })
+    val rightSide = state.get.selected.optValue
       .fold[VdomNode](
-        <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-              <.div("Select a constraint or observation")
+        Tile("constraints", "Constraints Summary", backButton.some)(
+          Reuse.by(constraintsWithObs)((_: Tile.RenderInTitle) =>
+            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                  <.div("Select a constraint or observation")
+            )
+          )
         )
-      ) { case (obsIds, constraintGroup) =>
+      ) { constraintGroup =>
+        val obsIds                                      = constraintGroup.obsIds
         val constraintSet                               = constraintGroup.constraintSet
         val cglView                                     = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
         val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
@@ -145,7 +144,10 @@ object ConstraintSetTabContents {
         val csUndo: View[UndoStacks[IO, ConstraintSet]] =
           props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
 
-        Tile(NonEmptyString.unsafeFrom(obsIds.mkString("_")), "Constraints", backButton.some)(
+        Tile("constraints",
+             s"Editing Constraints for ${obsIds.size} Observations",
+             backButton.some
+        )(
           (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
             <.div(ConstraintsPanel(obsIds.toList, csView_, csUndo_, renderInTitle))
           )
@@ -156,10 +158,10 @@ object ConstraintSetTabContents {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, tree(constraintsWithObs))
-          .when(state.get.leftPanelVisible),
+          .when(state.get.selected.leftPanelVisible),
         <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
-        ).when(state.get.rightPanelVisible)
+        ).when(state.get.selected.rightPanelVisible)
       )
     } else {
       <.div(
@@ -200,14 +202,7 @@ object ConstraintSetTabContents {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
-        s match {
-          case None    => TwoPanelState.initial(p.isSelected)
-          case Some(s) =>
-            if (s.elementSelected =!= p.isSelected) s.copy(elementSelected = p.isSelected)
-            else s
-        }
-      )
+      .initialState(TwoPanelState.initial[ConstraintGroup](SelectedPanel.Uninitialized))
       .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
