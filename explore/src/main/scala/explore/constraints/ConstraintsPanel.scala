@@ -261,9 +261,9 @@ object ConstraintsPanel {
               )
             ).when(state.rangeType === AirMass),
             ReactFragment(
+              <.label("Min"),
               FormInputEV(
                 id = "minha",
-                label = "Min",
                 value = hourAngleView
                   .zoom(HourAngleRange.minHours)
                   .zoomSplitEpi(
@@ -283,9 +283,9 @@ object ConstraintsPanel {
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
+              <.label("Max"),
               FormInputEV(
                 id = "maxha",
-                label = "Max",
                 value = hourAngleView
                   .zoom(HourAngleRange.maxHours)
                   .zoomSplitEpi(
@@ -305,7 +305,7 @@ object ConstraintsPanel {
                 changeAuditor = ChangeAuditor.accept.decimal(1),
                 clazz = ExploreStyles.ElevationRangeEntry
               ),
-              <.div(ExploreStyles.UnitsLabel, "hours")
+              <.label("Hours")
             ).when(state.rangeType === HourAngle)
           )
         )
