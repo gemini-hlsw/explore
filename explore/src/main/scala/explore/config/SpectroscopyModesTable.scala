@@ -209,6 +209,7 @@ object SpectroscopyModesTable {
       .useMemoBy(_.spectroscopyRequirements)(props =>
         s => {
           println("RECOMPUTING ROWS")
+          val rows = 
           props.matrix
             .filtered(
               focalPlane = s.focalPlane,
@@ -219,7 +220,8 @@ object SpectroscopyModesTable {
               range = s.wavelengthRange
                 .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
             )
-            .toJSArray
+            val (enabled, disabled) = rows.partition(enabledRow)
+            (enabled ++ disabled).toJSArray
         }
       )
       .useMemoBy($ =>
