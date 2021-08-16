@@ -115,12 +115,13 @@ class SUITable[
       val tableInstance = props.instance
 
       val tableRender: TableRender[D, TableInstanceD] = (props.table: Any) match {
-        case table: Table => tableInstance => table(tableInstance.getTableProps())
+        case table: Table =>
+          tableInstance => table.copy(as = layout.tag)(tableInstance.getTableProps())
         case other        => other.asInstanceOf[TableRender[D, TableInstanceD]]
       }
 
       val rowRender: RowRender[D] = (props.row: Any) match {
-        case row: TableRow => rowData => row(rowData.getRowProps())
+        case row: TableRow => rowData => row.copy(as = layout.tag)(rowData.getRowProps())
         case other         => other.asInstanceOf[RowRender[D]]
       }
 
@@ -132,17 +133,17 @@ class SUITable[
 
       val headerCellRender: HeaderCellRender[D, ColumnInstanceD] =
         (props.headerCell: Any) match {
-          case headerCell: TableHeaderCell => _ => headerCell
+          case headerCell: TableHeaderCell => _ => headerCell.copy(as = layout.tag)
           case fn                          => fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
         }
 
       val bodyCellRender: BodyCellRender[D] = (props.cell: Any) match {
-        case cell: TableCell => _ => cell
+        case cell: TableCell => _ => cell.copy(as = layout.tag)
         case fn              => fn.asInstanceOf[BodyCellRender[D]]
       }
 
       val footerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.footerCell: Any) match {
-        case footerCell: TableHeaderCell => _ => footerCell
+        case footerCell: TableHeaderCell => _ => footerCell.copy(as = layout.tag)
         case fn                          => fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]]
       }
 

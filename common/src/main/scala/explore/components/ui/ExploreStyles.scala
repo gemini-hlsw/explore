@@ -265,4 +265,12 @@ object ExploreStyles {
   val ModalCloseButton: Css     = Css("modal-close-button")
   val UserSelectionButtons: Css = Css("user-selection-buttons")
   val PaddedRightIcon: Css      = Css("padded-right-icon")
+
+  val Table: Css = Css("tble")
+  val THead: Css = Css("thead")
+  val TBody: Css = Css("tbody")
+  val TFoot: Css = Css("tfoot")
+  val TR: Css    = Css("tr")
+  val TH: Css    = Css("th")
+  val TD: Css    = Css("td")
 }

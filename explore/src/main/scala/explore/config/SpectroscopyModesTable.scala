@@ -52,13 +52,13 @@ object SpectroscopyModesTable {
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
-  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort
+  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort.withBlockLayout
 
   import ModesTableMaker.syntax._
 
   val decFormat = new DecimalFormat("0.###");
 
-  protected val ModesTableComponent = new SUITable(ModesTableMaker)
+  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableMaker)
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
     case ModeDisperser.NoDisperser      => "-"
@@ -144,35 +144,53 @@ object SpectroscopyModesTable {
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
-        .setWidth(30),
+        .setWidth(120)
+        .setMinWidth(50)
+        .setMaxWidth(150),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
-        .setWidth(10)
+        .setWidth(96)
+        .setMinWidth(96)
+        .setMaxWidth(96)
         .setSortType(DefaultSortTypes.number),
       column(SlitLengthColumnId, SpectroscopyModeRow.slitLength.get)
         .setCell(c => formatSlitLength(c.value))
-        .setWidth(10)
+        .setWidth(100)
+        .setMinWidth(100)
+        .setMaxWidth(100)
         .setSortType(DefaultSortTypes.number),
       column(DisperserColumnId, SpectroscopyModeRow.disperser.get)
         .setCell(c => formatDisperser(c.value))
-        .setWidth(10),
+        .setWidth(95)
+        .setMinWidth(95)
+        .setMaxWidth(95),
       column(FilterColumnId, SpectroscopyModeRow.filter.get)
         .setCell(c => formatFilter(c.value))
-        .setWidth(10),
+        .setWidth(69)
+        .setMinWidth(69)
+        .setMaxWidth(69),
       column(FPUColumnId, SpectroscopyModeRow.fpu.get)
         .setCell(c => formatFPU(c.value))
-        .setWidth(10),
+        .setWidth(62)
+        .setMinWidth(62)
+        .setMaxWidth(62),
       column(RangeColumnId, SpectroscopyModeRow.rangeInterval(cw))
         .setCell(c => formatWavelengthRange(c.value))
-        .setWidth(10)
+        .setWidth(74)
+        .setMinWidth(74)
+        .setMaxWidth(74)
         .setSortType(DefaultSortTypes.number),
       column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
         .setCell(c => c.value.toString)
-        .setWidth(5)
+        .setWidth(70)
+        .setMinWidth(70)
+        .setMaxWidth(70)
         .setSortType(DefaultSortTypes.number),
       column(TimeColumnId, _ => "N/A")
         .setCell(_ => "N/A")
-        .setWidth(5)
+        .setWidth(66)
+        .setMinWidth(66)
+        .setMaxWidth(66)
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
@@ -208,26 +226,24 @@ object SpectroscopyModesTable {
       .withHooks[Props]
       .useMemoBy(_.spectroscopyRequirements)(props =>
         s => {
-          println("RECOMPUTING ROWS")
-          val rows = 
-          props.matrix
-            .filtered(
-              focalPlane = s.focalPlane,
-              capabilities = s.capabilities,
-              wavelength = s.wavelength,
-              slitWidth = s.focalPlaneAngle,
-              resolution = s.resolution,
-              range = s.wavelengthRange
-                .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
-            )
-            val (enabled, disabled) = rows.partition(enabledRow)
-            (enabled ++ disabled).toJSArray
+          val rows                =
+            props.matrix
+              .filtered(
+                focalPlane = s.focalPlane,
+                capabilities = s.capabilities,
+                wavelength = s.wavelength,
+                slitWidth = s.focalPlaneAngle,
+                resolution = s.resolution,
+                range = s.wavelengthRange
+                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+              )
+          val (enabled, disabled) = rows.partition(enabledRow)
+          (enabled ++ disabled).toJSArray
         }
       )
       .useMemoBy($ =>
         ($.props.spectroscopyRequirements.wavelength, $.props.spectroscopyRequirements.focalPlane)
       )(_ => { case (wavelength, focalPlane) =>
-        println("RECOMPUTING COLS")
         columns(wavelength, focalPlane).toJSArray
       })
       // .renderWithReuse{ (props, rows, cols) => // Throws Invalid hook call. Reported to japgolly.
@@ -236,8 +252,6 @@ object SpectroscopyModesTable {
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
         val tableInstance = ModesTableMaker.use(ModesTableMaker.Options(cols, rows))
-
-        println("RENDER")
 
         React.Fragment(
           <.label(ExploreStyles.ModesTableTitle, s"${rows.length} matching configurations"),
