@@ -6,6 +6,7 @@ package explore.config
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.refined._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
@@ -20,6 +21,7 @@ import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
+import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -42,9 +44,13 @@ final case class SpectroscopyModesTable(
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
+
   type ColId = NonEmptyString
 
   implicit def render(props: SpectroscopyModesTable): VdomElement = component(props).vdomElement
+
+  implicit val reuseProps: Reusability[Props] =
+    Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
   protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort
 
@@ -193,82 +199,73 @@ object SpectroscopyModesTable {
   //       matrix
   //     else
 
+  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
+    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
+      row.focalPlane === FocalPlane.SingleSlit
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
       .useMemoBy(_.spectroscopyRequirements)(props =>
         s => {
-          println("RECOMPUTING")
-          props.matrix.filtered(
-            focalPlane = s.focalPlane,
-            capabilities = s.capabilities,
-            wavelength = s.wavelength,
-            slitWidth = s.focalPlaneAngle,
-            resolution = s.resolution,
-            range = s.wavelengthRange
-              .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
-          )
+          println("RECOMPUTING ROWS")
+          props.matrix
+            .filtered(
+              focalPlane = s.focalPlane,
+              capabilities = s.capabilities,
+              wavelength = s.wavelength,
+              slitWidth = s.focalPlaneAngle,
+              resolution = s.resolution,
+              range = s.wavelengthRange
+                .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
+            )
+            .toJSArray
         }
       )
-      // .renderWithReuseBy{ (props, filteredMatrix)  =>
-      .render { (props, filteredMatrix) =>
+      .useMemoBy($ =>
+        ($.props.spectroscopyRequirements.wavelength, $.props.spectroscopyRequirements.focalPlane)
+      )(_ => { case (wavelength, focalPlane) =>
+        println("RECOMPUTING COLS")
+        columns(wavelength, focalPlane).toJSArray
+      })
+      // .renderWithReuse{ (props, rows, cols) => // Throws Invalid hook call. Reported to japgolly.
+      .render { (props, rows, cols) =>
+        def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+          rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
+
+        val tableInstance = ModesTableMaker.use(ModesTableMaker.Options(cols, rows))
+
+        println("RENDER")
+
         React.Fragment(
-          <.label(ExploreStyles.ModesTableTitle,
-                  s"${filteredMatrix.length} matching configurations"
-          ),
-          tableComponent(
-            ModesTableProps(
-              props.scienceConfiguration,
-              ModesTableMaker.Options(
-                columns(props.spectroscopyRequirements.wavelength,
-                        props.spectroscopyRequirements.focalPlane
-                ).toJSArray,
-                filteredMatrix.toJSArray
-                // ensureContains(p.matrix, p.scienceConfiguration.get).toJSArray
-              )
-            )
+          <.label(ExploreStyles.ModesTableTitle, s"${rows.length} matching configurations"),
+          <.div(
+            ExploreStyles.ModesTable,
+            ModesTableComponent(
+              table = Table(celled = true,
+                            selectable = true,
+                            striped = true,
+                            compact = TableCompact.Very
+              )(),
+              header = true,
+              headerCell = (c: ModesTableMaker.ColumnType) =>
+                TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
+                  ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
+                  ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
+                ),
+              row = (rowData: Row[SpectroscopyModeRow]) =>
+                TableRow(
+                  disabled = !enabledRow(rowData.original),
+                  clazz = ExploreStyles.ModeSelected.when_(
+                    props.scienceConfiguration.get
+                      .exists(conf => equalsConf(rowData.original, conf))
+                  )
+                )(
+                  ^.onClick --> props.scienceConfiguration.set(toggleRow(rowData.original)),
+                  props2Attrs(rowData.getRowProps())
+                )
+            )(tableInstance)
           )
         )
       }
-
-  protected final case class ModesTableProps(
-    scienceConfiguration: View[Option[ScienceConfigurationData]],
-    options:              ModesTableMaker.OptionsType
-  ) //extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
-
-  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
-    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
-      row.focalPlane === FocalPlane.SingleSlit
-
-  protected val tableComponent =
-    ScalaFnComponent[ModesTableProps] { props =>
-      def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
-        rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
-
-      val tableInstance = ModesTableMaker.use(props.options)
-      <.div(
-        ExploreStyles.ModesTable,
-        ModesTableComponent(
-          table =
-            Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very)(),
-          header = true,
-          headerCell = (c: ModesTableMaker.ColumnType) =>
-            TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
-              ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
-              ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
-            ),
-          row = (rowData: Row[SpectroscopyModeRow]) =>
-            TableRow(
-              disabled = !enabledRow(rowData.original),
-              clazz = ExploreStyles.ModeSelected.when_(
-                props.scienceConfiguration.get.exists(conf => equalsConf(rowData.original, conf))
-              )
-            )(
-              ^.onClick --> props.scienceConfiguration.set(toggleRow(rowData.original)),
-              props2Attrs(rowData.getRowProps())
-            )
-        )(tableInstance)
-      )
-    }
-
 }
