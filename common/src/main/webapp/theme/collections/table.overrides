@@ -1,0 +1,165 @@
+/* Headers */
+.ui.table .thead {
+  box-shadow: @headerBoxShadow;
+}
+.ui.table .thead .tr .th {
+  cursor: auto;
+  background: @headerBackground;
+  text-align: @headerAlign;
+  color: @headerColor;
+  padding: @headerVerticalPadding @headerHorizontalPadding;
+  vertical-align: @headerVerticalAlign;
+  font-style: @headerFontStyle;
+  font-weight: @headerFontWeight;
+  text-transform: @headerTextTransform;
+  border-bottom: @headerBorder;
+  border-left: @headerDivider;
+}
+
+.ui.table .thead .tr .th:first-child {
+  border-left: none;
+}
+
+.ui.table .thead .tr:first-child .th:first-child {
+  border-radius: @borderRadius 0 0 0;
+}
+.ui.table .thead .tr:first-child .th:last-child {
+  border-radius: 0 @borderRadius 0 0;
+}
+.ui.table .thead .tr:first-child .th:only-child {
+  border-radius: @borderRadius @borderRadius 0 0;
+}
+
+/* Footer */
+.ui.table .tfoot {
+  box-shadow: @footerBoxShadow;
+}
+.ui.table .tfoot .tr .th,
+.ui.table .tfoot .tr .td {
+  cursor: auto;
+  border-top: @footerBorder;
+  background: @footerBackground;
+  text-align: @footerAlign;
+  color: @footerColor;
+  padding: @footerVerticalPadding @footerHorizontalPadding;
+  vertical-align: @footerVerticalAlign;
+  font-style: @footerFontStyle;
+  font-weight: @footerFontWeight;
+  text-transform: @footerTextTransform;
+}
+.ui.table .tfoot .tr .th:first-child,
+.ui.table .tfoot .tr .td:first-child {
+  border-left: none;
+}
+.ui.table .tfoot .tr:first-child .th:first-child,
+.ui.table .tfoot .tr:first-child .td:first-child {
+  border-radius: 0 0 0 @borderRadius;
+}
+.ui.table .tfoot .tr:first-child .th:last-child,
+.ui.table .tfoot .tr:first-child .td:last-child {
+  border-radius: 0 0 @borderRadius 0;
+}
+.ui.table .tfoot .tr:first-child .th:only-child,
+.ui.table .tfoot .tr:first-child .td:only-child {
+  border-radius: 0 0 @borderRadius @borderRadius;
+}
+
+/* Table Row */
+.ui.table .tr .td,
+.ui.table .tbody .tr .td {
+  border-top: @rowBorder;
+}
+.ui.table .tr:first-child .td,
+.ui.table .tbody .tr:first-child .td {
+  border-top: none;
+}
+
+/* Repeated tbody */
+.ui.table .tbody + tbody tr:first-child .td {
+  border-top: @rowBorder;
+}
+
+/* Table Cells */
+.ui.table .tbody .tr .td,
+.ui.table .tr .td {
+  padding: @cellVerticalPadding @cellHorizontalPadding;
+  text-align: @cellTextAlign;
+}
+
+/* Table Cells */
+.ui.table .tbody .tr .td,
+.ui.table .tr .td {
+  padding: @cellVerticalPadding @cellHorizontalPadding;
+  text-align: @cellTextAlign;
+}
+
+& when (@variationTableStriped) {
+  /*--------------
+       Striped
+  ---------------*/
+
+  /* Table Striping */
+  .ui.striped.table .tbody > div > div > div:nth-child(2n) {
+    background-color: @stripedBackground;
+  }
+  & when (@variationTableInverted) {
+    /* Stripes */
+    .ui.inverted.striped.table .tbody > div > div > div:nth-child(2n) {
+      background-color: @invertedStripedBackground;
+    }
+  }
+  & when (@variationTableSelectable) {
+    /* Allow striped active hover */
+    .ui.striped.selectable.selectable.selectable.table .tbody .tr.active:hover {
+      background: @activeBackgroundHover;
+      color: @activeColorHover;
+    }
+  }
+}
+
+& when (@variationTableDisabled) {
+  /*--------------
+       Disabled
+  ---------------*/
+
+  .ui.table .tr.disabled .td,
+  .ui.table .tr .td.disabled,
+  .ui.table .tr.disabled:hover,
+  .ui.table .tr:hover .td.disabled {
+    pointer-events: none;
+    color: @disabledTextColor;
+  }
+}
+
+& when (@variationTableCompact) {
+  /*--------------
+       Compact
+  ---------------*/
+
+  .ui.compact.table .tr .th,
+  .ui.compact.table .thead .tr .th,
+  .ui.compact.table .tbody .tr .th,
+  .ui.compact.table .tfoot .tr .th {
+    padding-left: @compactHorizontalPadding;
+    padding-right: @compactHorizontalPadding;
+  }
+  .ui.compact.table .tr .td,
+  .ui.compact.table .tbody .tr .td ,
+  .ui.compact.table .tfoot .tr .td {
+    padding: @compactVerticalPadding @compactHorizontalPadding;
+  }
+
+  /* Very */
+  .ui[class*="very compact"].table .tr .th,
+  .ui[class*="very compact"].table .thead .tr .th,
+  .ui[class*="very compact"].table .tbody .tr .th,
+  .ui[class*="very compact"].table .tfoot .tr .th {
+    padding-left: @veryCompactHorizontalPadding;
+    padding-right: @veryCompactHorizontalPadding;
+  }
+  .ui[class*="very compact"].table .tr .td,
+  .ui[class*="very compact"].table .tbody .tr .td ,
+  .ui[class*="very compact"].table .tfoot .tr .td {
+    padding: @veryCompactVerticalPadding @veryCompactHorizontalPadding;
+  }
+}

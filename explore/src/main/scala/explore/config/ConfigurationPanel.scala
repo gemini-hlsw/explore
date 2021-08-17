@@ -6,12 +6,11 @@ package explore.config
 import cats.effect.IO
 import cats.syntax.all._
 import coulomb.Quantity
-import coulomb.refined._
 import crystal.Pot
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.numeric.Positive
 import explore.AppCtx
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
@@ -25,6 +24,7 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
+import explore.utils._
 import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -128,7 +128,8 @@ object ConfigurationPanel {
         ScienceRequirementsData.spectroscopyRequirements,
         UpdateScienceRequirements.spectroscopyRequirements
       )
-      val imaging      = ViewF.fromStateSyncIO($).zoom(State.imagingOptions)
+
+      val imaging = ViewF.fromStateSyncIO($).zoom(State.imagingOptions)
 
       val configurationView = scienceDataUndo
         .undoableView(ScienceData.configuration)
@@ -150,24 +151,20 @@ object ConfigurationPanel {
           ImagingConfigurationPanel(imaging)
             .unless(isSpectroscopy)
         ),
-        SpectroscopyModesTable(
-          configurationView,
-          state.matrix.toOption
-            .map(
-              _.filtered(
-                focalPlane = spectroscopy.get.focalPlane,
-                capabilities = spectroscopy.get.capabilities,
-                wavelength = spectroscopy.get.wavelength,
-                slitWidth = spectroscopy.get.focalPlaneAngle,
-                resolution = spectroscopy.get.resolution,
-                range = spectroscopy.get.wavelengthRange
-                  .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
-              )
-            )
-            .getOrElse(Nil),
-          spectroscopy.get.focalPlane,
-          spectroscopy.get.wavelength
-        ).when(isSpectroscopy)
+        potRender[SpectroscopyModesMatrix](
+          (
+            (matrix: SpectroscopyModesMatrix) =>
+              SpectroscopyModesTable
+                .component(
+                  SpectroscopyModesTable(
+                    configurationView,
+                    matrix,
+                    spectroscopy.get
+                  )
+                )
+                .vdomElement
+          ).reuseAlways
+        )(state.matrix).when(isSpectroscopy)
       )
     }
 
