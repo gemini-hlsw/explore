@@ -35,7 +35,7 @@
     "react-resizable": "3.0.4",
     "react-resize-detector": "6.7.4",
     "react-table": "7.7.0",
-    "react-virtuoso": "1.10.6",
+    "react-virtuoso": "1.10.7",
     "rehype-katex": "^6.0.0",
     "remark-gfm": "^2.0.0",
     "remark-math": "^5.0.0",
