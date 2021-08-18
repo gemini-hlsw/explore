@@ -24,6 +24,7 @@ import shapeless._
 
 import scala.annotation.unused
 import scala.concurrent.duration
+import org.http4s.Uri
 
 trait ListImplicits {
 
@@ -129,5 +130,9 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
           .setTimeout(duration.Duration.Zero)
           .void
       }
+  }
+
+  implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
+    def /(path: Uri.Path): Uri = uri.withPath(uri.path.concat(path))
   }
 }

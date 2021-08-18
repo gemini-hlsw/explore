@@ -18,7 +18,7 @@ object Settings {
     val fs2               = "3.1.2"
     val fs2Data           = "1.0.1"
     val geminiLocales     = "0.6.0"
-    val http4s            = "1.0.0-M25"
+    val http4s            = "1.0-5887-e292fb9-SNAPSHOT" // "1.0.0-M25"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaCore        = "0.13.2"
@@ -42,7 +42,6 @@ object Settings {
     val reactSemanticUI   = "0.11.1"
     val reactTable        = "0.5.0"
     val scalaJsReact      = "2.0.0-RC3"
-    val sttp              = "3.3.14"
     val pprint            = "0.6.6"
   }
 
@@ -113,10 +112,10 @@ object Settings {
       )
     )
 
-    val GeminiLocales = Def.setting(
+    val FS2Data = Def.setting(
       deps(
-        "edu.gemini" %%% "gemini-locales"
-      )(geminiLocales)
+        "org.gnieh" %%% "fs2-data-csv"
+      )(fs2Data)
     )
 
     val FS2IO = Def.setting(
@@ -125,10 +124,24 @@ object Settings {
       )(fs2)
     )
 
-    val FS2Data = Def.setting(
+    val GeminiLocales = Def.setting(
       deps(
-        "org.gnieh" %%% "fs2-data-csv"
-      )(fs2Data)
+        "edu.gemini" %%% "gemini-locales"
+      )(geminiLocales)
+    )
+
+    val Http4sCore = Def.setting(
+      deps(
+        "org.http4s" %%% "http4s-core",
+        "org.http4s" %%% "http4s-circe"
+      )(http4s)
+    )
+
+    val Http4sClient = Def.setting(
+      deps(
+        "org.http4s" %%% "http4s-dsl",
+        "org.http4s" %%% "http4s-dom-fetch-client"
+      )(http4s)
     )
 
     val Http4sCore = Def.setting(
@@ -294,14 +307,6 @@ object Settings {
       deps(
         "com.github.japgolly.scalajs-react" %%% "test"
       )(scalaJsReact)
-    )
-
-    val Sttp = Def.setting(
-      deps(
-        "com.softwaremill.sttp.client3" %%% "core",
-        "com.softwaremill.sttp.client3" %%% "circe",
-        "com.softwaremill.sttp.client3" %%% "cats"
-      )(sttp)
     )
 
     val PPrint = Def.setting(

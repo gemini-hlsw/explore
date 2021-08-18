@@ -11,6 +11,9 @@ val kindProjectorVersion = "0.13.2"
 ThisBuild / Test / bspEnabled := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
+// TODO Remove this when http4s is released with fetch client with options.
+ThisBuild / evictionErrorLevel := Level.Info
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
@@ -173,7 +176,6 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
-      Sttp.value ++
       Http4sCore.value ++
       Clue.value ++
       PPrint.value ++
@@ -207,6 +209,7 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
+      Http4sClient.value ++
       LucumaUI.value ++
       Log4Cats.value ++
       In(Test)(
