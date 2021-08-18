@@ -33,6 +33,26 @@ body {
   /* mobile viewport bug fix */
   min-height: -webkit-fill-available;
   width: 100vw;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-background);
+}
+
+*::-webkit-scrollbar {
+  width: 0.8em !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-background) !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-background-thumb) !important;
+  border: 1px solid var(--scrollbar-background);
+
+  &:active,
+  &:hover {
+    background: var(--scrollbar-background-thumb-hover) !important;
+  }
 }
 
 a {
@@ -190,9 +210,7 @@ tfoot {
   width: 100%;
   overflow: hidden;
   grid-template-columns: 1fr;
-  grid-template-rows:
-    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr)
-    @topBottom;
+  grid-template-rows: @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
   grid-template-areas:
     "header"
     "body"
@@ -304,11 +322,7 @@ tfoot {
 
   --column-wide-span: 4;
 
-  grid-template-columns:
-    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
-      20ch,
-      3fr
-    );
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch, 3fr);
 
   .elevation-range-picker {
     width: 9em;
