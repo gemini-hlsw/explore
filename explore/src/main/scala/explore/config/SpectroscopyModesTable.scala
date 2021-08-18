@@ -70,28 +70,30 @@ object SpectroscopyModesTable {
       .Column(id, accessor)
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
-  val SelectedColumnId: ColId   = "selected"
-  val InstrumentColumnId: ColId = "instrument"
-  val SlitWidthColumnId: ColId  = "slit_width"
-  val SlitLengthColumnId: ColId = "slit_length"
-  val DisperserColumnId: ColId  = "disperser"
-  val FilterColumnId: ColId     = "filter"
-  val RangeColumnId: ColId      = "range"
-  val FPUColumnId: ColId        = "fpu"
-  val ResolutionColumnId: ColId = "resolution"
-  val TimeColumnId: ColId       = "time"
+  val SelectedColumnId: ColId    = "selected"
+  val InstrumentColumnId: ColId  = "instrument"
+  val SlitWidthColumnId: ColId   = "slit_width"
+  val SlitLengthColumnId: ColId  = "slit_length"
+  val DisperserColumnId: ColId   = "disperser"
+  val FilterColumnId: ColId      = "filter"
+  val RangeColumnId: ColId       = "range"
+  val FPUColumnId: ColId         = "fpu"
+  val ResolutionColumnId: ColId  = "resolution"
+  val AvailablityColumnId: ColId = "availability"
+  val TimeColumnId: ColId        = "time"
 
   private val columnNames: Map[ColId, String] =
     Map[NonEmptyString, String](
-      InstrumentColumnId -> "Instrument",
-      SlitWidthColumnId  -> "Slit Width",
-      SlitLengthColumnId -> "Slit Length",
-      DisperserColumnId  -> "Disperser",
-      FilterColumnId     -> "Filter",
-      FPUColumnId        -> "FPU",
-      RangeColumnId      -> "Range",
-      ResolutionColumnId -> "λ / Δλ",
-      TimeColumnId       -> "Time"
+      InstrumentColumnId  -> "Instrument",
+      SlitWidthColumnId   -> "Slit Width",
+      SlitLengthColumnId  -> "Slit Length",
+      DisperserColumnId   -> "Disperser",
+      FilterColumnId      -> "Filter",
+      FPUColumnId         -> "FPU",
+      RangeColumnId       -> "Range",
+      ResolutionColumnId  -> "λ / Δλ",
+      AvailablityColumnId -> "Avail.",
+      TimeColumnId        -> "Time"
     )
 
   val formatSlitWidth: ModeSlitSize => String = ss =>
@@ -185,6 +187,12 @@ object SpectroscopyModesTable {
         .setWidth(70)
         .setMinWidth(70)
         .setMaxWidth(70)
+        .setSortType(DefaultSortTypes.number),
+      column(AvailablityColumnId, rowToConf)
+        .setCell(_.value.fold("No")(_ => "Yes"))
+        .setWidth(66)
+        .setMinWidth(66)
+        .setMaxWidth(66)
         .setSortType(DefaultSortTypes.number),
       column(TimeColumnId, _ => "N/A")
         .setCell(_ => "N/A")
