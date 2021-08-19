@@ -19,11 +19,11 @@ object MoonCalc {
    *
    * Good enough to display moon phase icon.
    *
-   * For exact calculation, see "Astronomical Algorithms, 2nd. ed" by Jean Meeus,
-   * ISBN 0-943396-61-1, Chapter 49.
-   * For other approximations, see http://www.ben-daglish.net/moon.shtml.
+   * For exact calculation, see "Astronomical Algorithms, 2nd. ed" by Jean Meeus, ISBN
+   * 0-943396-61-1, Chapter 49. For other approximations, see http://www.ben-daglish.net/moon.shtml.
    *
-   * @return A value between 0.0 - 1.0, where 0.0 and 1.0 are a new moon, 0.5 a full moon.
+   * @return
+   *   A value between 0.0 - 1.0, where 0.0 and 1.0 are a new moon, 0.5 a full moon.
    */
   def approxPhase(at: Instant): Double = {
     val partialPhase =

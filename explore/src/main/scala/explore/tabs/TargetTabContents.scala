@@ -196,7 +196,7 @@ object TargetTabContents {
         <.div(^.key := "target-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
-              ^.left := treeWidth.px
+              ^.left  := treeWidth.px
         )(
           rightSide
         )

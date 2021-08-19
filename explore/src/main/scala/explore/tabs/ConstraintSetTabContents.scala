@@ -128,7 +128,7 @@ object ConstraintSetTabContents {
         <.div(^.key := "constraintset-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
-              ^.left := treeWidth.px
+              ^.left  := treeWidth.px
         )(
           rightSide
         )

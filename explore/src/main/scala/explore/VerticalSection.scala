@@ -9,8 +9,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
 /**
- * Component that uses css tricks to support properly rotated components
- * respecting the layout. see:
+ * Component that uses css tricks to support properly rotated components respecting the layout. see:
  * https://stackoverflow.com/questions/16301625/rotated-elements-in-css-that-affect-their-parents-height-correctly
  * It requires css to work properly
  */

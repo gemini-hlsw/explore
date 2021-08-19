@@ -63,13 +63,13 @@ case class AppContext[F[_]](
   val syncLogger: Logger[SyncIO] = {
     def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))
     new Logger[SyncIO] {
-      def error(t:       Throwable)(message:       => String): SyncIO[Unit] =
+      def error(t:       Throwable)(message: => String): SyncIO[Unit] =
         f(logger.error(t)(message))
-      def warn(t:        Throwable)(message:       => String): SyncIO[Unit] =
+      def warn(t:        Throwable)(message: => String): SyncIO[Unit] =
         f(logger.warn(t)(message))
-      def info(t:        Throwable)(message:       => String): SyncIO[Unit] =
+      def info(t:        Throwable)(message: => String): SyncIO[Unit] =
         f(logger.info(t)(message))
-      def debug(t:       Throwable)(message:       => String): SyncIO[Unit] =
+      def debug(t:       Throwable)(message: => String): SyncIO[Unit] =
         f(logger.debug(t)(message))
       def trace(t:       Throwable)(message: => String): SyncIO[Unit] =
         f(logger.trace(t)(message))

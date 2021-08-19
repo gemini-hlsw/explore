@@ -95,7 +95,7 @@ object CataloguesForm {
             label = "Position Angle",
             options = angleItems.toList,
             value = Angle.degrees.get(options.posAngle),
-            onChange = (p: FormDropdownProps) => {
+            onChange = (p: FormDropdownProps) =>
               angleItemsMap
                 .collectFirst {
                   case (a, i) if i.value == p.value => a
@@ -104,7 +104,6 @@ object CataloguesForm {
                   optionsV.zoom(TargetVisualOptions.posAngle).set(a)
                 }
                 .orEmpty
-            }
           )
         )
       }
