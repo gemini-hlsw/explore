@@ -17,27 +17,27 @@ import monocle.Focus
 import scala.collection.immutable.SortedSet
 
 case class ModelUndoStacks[F[_]](
-  forObsList:             UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forTargetList:          UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  forTarget:              Map[Target.Id, UndoStacks[F, TargetResult]] =
+  forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
+  forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
+  forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
     Map.empty[Target.Id, UndoStacks[F, TargetResult]],
-  forConstraintList:      UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
-  forConstraintSet:       Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
+  forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
+  forConstraintSet:     Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
     Map.empty[Observation.Id, UndoStacks[F, ConstraintSet]],
-  forBulkConstraintSet:   Map[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]] =
+  forBulkConstraintSet: Map[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]] =
     Map.empty[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]],
-  forScienceRequirements: Map[Observation.Id, UndoStacks[F, ScienceRequirementsData]] =
-    Map.empty[Observation.Id, UndoStacks[F, ScienceRequirementsData]]
+  forScienceData:       Map[Observation.Id, UndoStacks[F, ScienceData]] =
+    Map.empty[Observation.Id, UndoStacks[F, ScienceData]]
 )
 
 object ModelUndoStacks {
-  def forObsList[F[_]]             = Focus[ModelUndoStacks[F]](_.forObsList)
-  def forTargetList[F[_]]          = Focus[ModelUndoStacks[F]](_.forTargetList)
-  def forTarget[F[_]]              = Focus[ModelUndoStacks[F]](_.forTarget)
-  def forConstraintList[F[_]]      = Focus[ModelUndoStacks[F]](_.forConstraintList)
-  def forConstraintSet[F[_]]       = Focus[ModelUndoStacks[F]](_.forConstraintSet)
-  def forBulkConstraintSet[F[_]]   = Focus[ModelUndoStacks[F]](_.forBulkConstraintSet)
-  def forScienceRequirements[F[_]] = Focus[ModelUndoStacks[F]](_.forScienceRequirements)
+  def forObsList[F[_]]           = Focus[ModelUndoStacks[F]](_.forObsList)
+  def forTargetList[F[_]]        = Focus[ModelUndoStacks[F]](_.forTargetList)
+  def forTarget[F[_]]            = Focus[ModelUndoStacks[F]](_.forTarget)
+  def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
+  def forConstraintSet[F[_]]     = Focus[ModelUndoStacks[F]](_.forConstraintSet)
+  def forBulkConstraintSet[F[_]] = Focus[ModelUndoStacks[F]](_.forBulkConstraintSet)
+  def forScienceData[F[_]]       = Focus[ModelUndoStacks[F]](_.forScienceData)
 
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
@@ -47,7 +47,7 @@ object ModelUndoStacks {
        u.forConstraintList,
        u.forConstraintSet,
        u.forBulkConstraintSet,
-       u.forScienceRequirements
+       u.forScienceData
       )
     )
 }
