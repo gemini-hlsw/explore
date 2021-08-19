@@ -33,7 +33,7 @@ object Settings {
     val reactAtlasKitTree = "0.4.1"
     val reactClipboard    = "1.5.0"
     val reactCommon       = "0.13.0"
-    val reactDatepicker   = "0.3.0"
+    val reactDatepicker   = "0.3.1"
     val reactGridLayout   = "0.14.0"
     val reactHighcharts   = "0.4.1"
     val reactHotkeys      = "0.3.2"

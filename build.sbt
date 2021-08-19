@@ -9,7 +9,7 @@ val FUILess              = "2.8.7"
 val kindProjectorVersion = "0.13.0"
 
 ThisBuild / Test / bspEnabled := false
-ThisBuild / ScalafixConfig / bspEnabled := false
+ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 addCommandAlias(
   "quickTest",
@@ -231,12 +231,12 @@ lazy val esModule = Seq(
 
 val lintCSS = TaskKey[Unit]("lintCSS", "Lint CSS files")
 lintCSS := {
-  if(("npm run lint-dark" #&& "npm run lint-light" !) != 0)
+  if (("npm run lint-dark" #&& "npm run lint-light" !) != 0)
     throw new Exception("Error in CSS format")
 }
 
 val fixCSS = TaskKey[Unit]("fixCSS", "Fix CSS files")
 fixCSS := {
-  if(("npm run fix-dark" #&& "npm run fix-light" !) != 0)
+  if (("npm run fix-dark" #&& "npm run fix-light" !) != 0)
     throw new Exception("Error in CSS fix")
 }
