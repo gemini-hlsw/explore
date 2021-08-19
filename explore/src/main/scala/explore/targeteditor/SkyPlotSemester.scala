@@ -51,23 +51,23 @@ final case class SkyPlotSemester(
     extends ReactProps[SkyPlotSemester](SkyPlotSemester.component)
 
 final case class SemesterPlotCalc(semester: Semester, site: Site) {
-  protected val rate: Duration = Duration.ofMinutes(1)
+  protected val SampleRate: Duration = Duration.ofMinutes(1)
 
-  protected val MinTargetElevation = Declination.Zero
+  protected val MinTargetElevation = Declination.fromDoubleDegrees(30.0).get
 
   val interval: Bounded[Instant] =
     Bounded.unsafeOpenUpper(semester.start.atSite(site).toInstant,
                             semester.end.atSite(site).toInstant
     )
 
-  def samples(coordsForInstant: Instant => Coordinates): Samples[Duration] = {
+  def samples(coordsForInstant: Instant => Coordinates, dayRate: Long): Samples[Duration] = {
     val results = Samples
       .atFixedRate(
         Bounded.unsafeOpenUpper(
           semester.start.atSite(site).toInstant,
           semester.end.atSite(site).toInstant
         ),
-        rate
+        SampleRate
       )(coordsForInstant)
       .toSkyCalResultsAt(site.place)
 
@@ -75,7 +75,7 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
 
     Samples.fromMap(
       Iterator
-        .iterate(semester.start.localDate)(_.plusDays(1))
+        .iterate(semester.start.localDate)(_.plusDays(dayRate))
         .takeWhile(_ < semester.end.localDate)
         .map { date =>
           val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
@@ -98,6 +98,7 @@ object SkyPlotSemester {
 
   case class State(cancelToken: Option[IO[Unit]])
 
+  private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
 
@@ -114,7 +115,7 @@ object SkyPlotSemester {
         val series = chart.series(0)
         val xAxis  = chart.xAxis(0)
         Stream
-          .fromIterator[IO](plotter.samples(_ => props.coords).iterator, 1)
+          .fromIterator[IO](plotter.samples(_ => props.coords, PlotDayRate).iterator, 1)
           .evalMap { case (instant, visibilityDuration) =>
             val value = instant.toEpochMilli.toDouble
             IO(
@@ -122,7 +123,7 @@ object SkyPlotSemester {
                 AxisPlotLinesOptions
                   .XAxisPlotLinesOptions()
                   .setId("progress")
-                  .setValue(value)
+                  .setValue(value - PlotDayRate * MillisPerDay) // Draw line on last drawn point.
                   .setZIndex(1000)
                   .setClassName("plot-plot-line-progress")
               )
@@ -140,7 +141,6 @@ object SkyPlotSemester {
                   animation = false
                 )
               } >>
-              // IO.cede >>
               IO(xAxis.removePlotLine("progress"))
           }
           .compile
