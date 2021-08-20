@@ -25,6 +25,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import react.semanticui.elements.button.Button
+import react.fa.IconSize
 
 final case class SkyPlotSection(
   coords:           Coordinates
@@ -128,13 +130,19 @@ object SkyPlotSection {
                     ^.onClick --> $.setStateL(State.site)(Site.GS)
             )
           ),
-          <.div(
+          <.div(ExploreStyles.SkyPlotDatePickerControls)(
+            Button(onClick = $.modStateL(State.date)(_.minusDays(1)),
+                   clazz = ExploreStyles.SkyPlotDateButton
+            )(Icons.ChevronLeftLight),
             Datepicker(
               onChange = (newValue, _) => $.setStateL(State.date)(newValue.toLocalDateOpt.get)
             )
               .selected(state.date.toJsDate)
               .dateFormat("yyyy-MM-dd")
-              .className(ExploreStyles.SkyPlotDatePicker.htmlClass)
+              .className(ExploreStyles.SkyPlotDatePicker.htmlClass),
+            Button(onClick = $.modStateL(State.date)(_.plusDays(1)),
+                   clazz = ExploreStyles.SkyPlotDateButton
+            )(Icons.ChevronRightLight)
           ),
           <.div(ExploreStyles.PlotToggleCheckbox)(
             <.label(PlotPeriod.Night.toString,

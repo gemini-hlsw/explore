@@ -324,8 +324,7 @@ tfoot {
 
   --column-wide-span: 4;
 
-  grid-template-columns:
-    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
       20ch,
       3fr
     );
@@ -501,8 +500,7 @@ tfoot {
   border-bottom-right-radius: unset;
   background-color: var(--under-tab-background-color);
   font-weight: 300;
-  transition:
-    opacity @defaultDuration @defaultEasing,
+  transition: opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
 }
@@ -820,8 +818,24 @@ tfoot {
   color: var(--plot-text-color);
 }
 
+.sky-plot-datepicker-controls {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
 .sky-plot-datepicker {
   width: 100px;
+  color: var(--plot-text-color);
+  border: 1px;
+  text-align: center;
+}
+
+.sky-plot-date-button {
+  padding: 0 !important;
+  border: 0 !important;
+  margin-left: 0.25em !important;
+  background-color: var(--plot-background-color) !important;
 }
 
 .plot-toggle-checkbox {
@@ -1352,8 +1366,7 @@ i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
   outline: none;
   opacity: 1;
-  box-shadow:
-    0 0 0 0.1rem var(--focus-inner-color),
+  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
     0 0 0 0.2rem var(--focus-outer-color);
 }
 
@@ -1379,7 +1392,9 @@ html {
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-magnitudes-container .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width
+  .explore-magnitudes-container
+  .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
