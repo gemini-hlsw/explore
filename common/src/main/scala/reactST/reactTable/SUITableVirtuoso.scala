@@ -183,11 +183,14 @@ class SUITableVirtuoso[
       }
 
       val bodyElement: TableBody = props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
-        GroupedVirtuoso[Row[D]](
-          data = tableInstance.rows,
-          itemContent = renderRow,
-          groupContent = headerElement.map(header => (_: Int) => header.vdomElement).orUndefined
-        )(ExploreStyles.TBody)
+        TagMod.when(tableInstance.rows.nonEmpty)(
+          GroupedVirtuoso[Row[D]](
+            data = tableInstance.rows,
+            itemContent = renderRow,
+            groupContent = headerElement.map(header => (_: Int) => header.vdomElement).orUndefined
+          )(ExploreStyles.TBody)
+        ),
+        TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
       )
 
       def standardFooter(footerTag: TableFooter) =
