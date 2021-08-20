@@ -18,6 +18,7 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common.ReactProps
 import react.datepicker._
+import react.semanticui.elements.segment.Segment
 import react.semanticui.modules.checkbox.Checkbox
 
 import java.time.LocalDate
@@ -96,7 +97,7 @@ object SkyPlotSection {
     def render(props: Props, state: State) = {
       implicit val ctx = props.ctx
 
-      <.div(ExploreStyles.SkyPlotSection)(
+      Segment(ExploreStyles.SkyPlotSection)(
         <.div(ExploreStyles.SkyPlot) {
           state.plotPeriod match {
             case PlotPeriod.Night    =>

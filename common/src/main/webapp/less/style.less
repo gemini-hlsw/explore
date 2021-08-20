@@ -210,7 +210,9 @@ tfoot {
   width: 100%;
   overflow: hidden;
   grid-template-columns: 1fr;
-  grid-template-rows: @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
+  grid-template-rows:
+    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr)
+    @topBottom;
   grid-template-areas:
     "header"
     "body"
@@ -322,7 +324,11 @@ tfoot {
 
   --column-wide-span: 4;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch, 3fr);
+  grid-template-columns:
+    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+      20ch,
+      3fr
+    );
 
   .elevation-range-picker {
     width: 9em;
@@ -790,10 +796,15 @@ tfoot {
 
 .sky-plot {
   height: 350px;
+
+  .highcharts-xaxis .highcharts-axis-title {
+    fill: hsl(0, 87%, 66%);
+  }
 }
 
 .sky-plot-section {
   height: 390px;
+  padding: 0 !important;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 }
