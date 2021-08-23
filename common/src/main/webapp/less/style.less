@@ -1753,11 +1753,15 @@ html {
 }
 
 .explore-modes-table {
-  overflow-y: scroll;
+  overflow-y: none;
   height: 100%;
   border: 0.2px solid var(--site-border-color);
   border-radius: @menuBorderRadius;
   grid-area: table;
+
+  .table {
+    height: 100%;
+  }
 
   tr.explore-mode-selected,
   .tr.explore-mode-selected {
