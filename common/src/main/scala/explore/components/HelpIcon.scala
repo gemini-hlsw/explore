@@ -15,7 +15,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
-final case class HelpIcon(id: Help.Id)
+import scala.scalajs.js
+
+final case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
 
 object HelpIcon {
   type Props = HelpIcon
@@ -24,17 +26,23 @@ object HelpIcon {
 
   implicit def render(props: HelpIcon): VdomElement = component(props).vdomElement
 
-  val component = ScalaFnComponent[Props] { p =>
-    HelpCtx.usingView { help =>
-      val helpMsg = help.zoom(HelpContext.displayedHelp)
-      <.span(
-        ^.onClick ==> { (e: ReactMouseEvent) =>
-          e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
-        },
-        Icons.Info
-          .fixedWidth()
-          .clazz(ExploreStyles.HelpIcon)
-      )
+  implicit val helpReusability: Reusability[HelpIcon] =
+    Reusability.by(x => (x.id.value, x.clazz.map(_.htmlClass)))
+
+  val component = ScalaFnComponent
+    .withHooks[Props]
+    .renderWithReuse { p =>
+      HelpCtx.usingView { help =>
+        val helpMsg = help.zoom(HelpContext.displayedHelp)
+        <.span(
+          ^.cls :=? p.clazz.map(_.htmlClass),
+          ^.onClick ==> { (e: ReactMouseEvent) =>
+            e.stopPropagationCB *> e.preventDefaultCB *> helpMsg.set(p.id.some)
+          },
+          Icons.Info
+            .fixedWidth()
+            .clazz(ExploreStyles.HelpIcon)
+        )
+      }
     }
-  }
 }
