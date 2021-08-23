@@ -5,7 +5,9 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.syntax.all._
+import eu.timepit.refined.auto._
 import explore._
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.ReactMonocle._
@@ -99,6 +101,7 @@ object SkyPlotSection {
       implicit val ctx = props.ctx
 
       Segment(ExploreStyles.SkyPlotSection)(
+        HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
         <.div(ExploreStyles.SkyPlot) {
           state.plotPeriod match {
             case PlotPeriod.Night    =>
