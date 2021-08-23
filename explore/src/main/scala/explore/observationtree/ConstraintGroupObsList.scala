@@ -166,8 +166,8 @@ object ConstraintGroupObsList {
                   Droppable(obsIdsToString(obsIds), renderClone = renderClone) {
                     case (provided, snapshot) =>
                       val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                        <.span(ExploreStyles.ObsGroupTitle)(
-                          icon,
+                        icon,
+                        <.span(ExploreStyles.ObsGroupTitleWithWrap)(
                           constraintGroup.constraintSet.displayName
                         ),
                         <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")

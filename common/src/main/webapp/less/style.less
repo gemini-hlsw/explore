@@ -751,12 +751,22 @@ tfoot {
   color: var(--negative-icon-color);
 }
 
-.obs-group-title {
+.obs-group-title-mixin() {
   flex-grow: 2;
+  margin-right: 5px;
+}
+
+.obs-group-title {
+  .obs-group-title-mixin();
   white-space: nowrap;
   overflow: hidden;
-  margin-right: 5px;
   text-overflow: ellipsis;
+}
+
+.obs-group-title-with-wrap {
+  .obs-group-title-mixin();
+  white-space: normal;
+  overflow: visible;
 }
 
 .justify-right {
