@@ -56,13 +56,13 @@ final case class ConstraintSetTabContents(
 
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
-  type State = TwoPanelState[ConstraintGroup]
+  type State = TwoPanelState[SortedSet[Observation.Id]]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[ConstraintGroup]
-  val selectedLens  = TwoPanelState.selected[ConstraintGroup]
+  val treeWidthLens = TwoPanelState.treeWidth[SortedSet[Observation.Id]]
+  val selectedLens  = TwoPanelState.selected[SortedSet[Observation.Id]]
 
   def readWidthPreference(
     $ : ComponentDidMount[Props, State, _]
@@ -82,7 +82,7 @@ object ConstraintSetTabContents {
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth[ConstraintGroup]).set(d.size.width).to[IO] *>
+        (state.zoom(treeWidthLens).set(d.size.width).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
@@ -122,6 +122,7 @@ object ConstraintSetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide = state.get.selected.optValue
+      .flatMap(constraintsWithObs.get.constraintGroups.get)
       .fold[VdomNode](
         Tile("constraints", "Constraints Summary", backButton.some)(
           Reuse.by(constraintsWithObs)((_: Tile.RenderInTitle) =>
@@ -202,7 +203,7 @@ object ConstraintSetTabContents {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(TwoPanelState.initial[ConstraintGroup](SelectedPanel.Uninitialized))
+      .initialState(TwoPanelState.initial[SortedSet[Observation.Id]](SelectedPanel.Uninitialized))
       .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)

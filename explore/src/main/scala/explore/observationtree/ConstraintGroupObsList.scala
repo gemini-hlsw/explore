@@ -42,7 +42,7 @@ import explore.model.SelectedPanel.Editor
 final case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
   focused:            View[Option[Focused]],
-  selected:           View[SelectedPanel[ConstraintGroup]],
+  selected:           View[SelectedPanel[SortedSet[Observation.Id]]],
   expandedIds:        View[SortedSet[SortedSet[Observation.Id]]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
@@ -147,7 +147,7 @@ object ConstraintGroupObsList {
                 case (_, constraintGroup) =>
                   val obsIds        = constraintGroup.obsIds
                   val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
-                  val groupSelected = props.selected.get.optValue.exists(_.obsIds === obsIds)
+                  val groupSelected = props.selected.get.optValue.exists(_ === obsIds)
 
                   val icon: FontAwesomeIcon = props.expandedIds.get
                     .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
@@ -189,7 +189,9 @@ object ConstraintGroupObsList {
                             )
                             .orEmpty
                         )(^.cursor.pointer,
-                          ^.onClick --> props.selected.set(SelectedPanel.editor(constraintGroup))
+                          ^.onClick --> props.selected.set(
+                            SelectedPanel.editor(constraintGroup.obsIds)
+                          )
                         )(
                           csHeader,
                           TagMod.when(props.expandedIds.get.contains(obsIds))(
@@ -235,12 +237,12 @@ object ConstraintGroupObsList {
 
           selected
             .set(
-              constraintGroupFromFocused.fold(SelectedPanel.tree[ConstraintGroup])(cg =>
-                SelectedPanel.editor(cg)
+              constraintGroupFromFocused.fold(SelectedPanel.tree[SortedSet[Observation.Id]])(cg =>
+                SelectedPanel.editor(cg.obsIds)
               )
             )
             .as(constraintGroupFromFocused)
-        case Editor(cg)    => SyncIO.delay(cg.some)
+        case Editor(ids)   => SyncIO.delay(constraintGroups.get(ids))
         case _             => SyncIO.delay(none)
       }
 
@@ -251,6 +253,7 @@ object ConstraintGroupObsList {
 
       val cleanupExpandedIds =
         expandedIds.mod(_.filter(ids => constraintGroups.contains(ids)))
+
       for {
         _     <- unfocus
         cgOpt <- setAndGetSelected
