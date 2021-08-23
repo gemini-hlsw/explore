@@ -15,6 +15,8 @@ import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Focus
+import org.http4s._
+import org.http4s.dom.FetchClientBuilder
 import react.common._
 import react.hotkeys._
 import react.markdown.ReactMarkdown
@@ -23,9 +25,9 @@ import react.markdown.RemarkPlugin
 import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import org.http4s._
+
+import scala.concurrent.duration._
 import scala.util.Try
-import org.http4s.dom.FetchClient
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactProps[HelpBody](HelpBody.component) {
@@ -62,7 +64,9 @@ object HelpBody {
   }
 
   def load(uri: Uri): IO[Try[String]] =
-    FetchClient[IO]
+    FetchClientBuilder[IO]
+      .withRequestTimeout(5.seconds)
+      .create
       .get(uri)(r => r.attemptAs[String].value)
       .map(_.toTry)
       .handleError { case x =>

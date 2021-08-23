@@ -20,12 +20,13 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
-import org.http4s
-import org.typelevel.log4cats.Logger
-
-import org.http4s.dom.FetchClient
 import org.http4s._
+import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
+import org.typelevel.log4cats.Logger
+import retry._
+
+import scala.concurrent.duration._
 
 case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   odb:           WebSocketClient[F, ObservationDB],
@@ -50,9 +51,6 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
     ).sequence.void
 }
 object Clients {
-  private def sttpUriToHttp4sUri(uri: Uri): http4s.Uri =
-    http4s.Uri.unsafeFromString(uri.toString)
-
   def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
@@ -60,30 +58,30 @@ object Clients {
   ): F[Clients[F]] =
     for {
       odbClient   <-
-        ApolloWebSocketClient.of[F, ObservationDB](sttpUriToHttp4sUri(odbURI),
-                                                   "ODB",
-                                                   reconnectionStrategy
-        )
+        ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
       prefsClient <-
-        ApolloWebSocketClient.of[F, UserPreferencesDB](sttpUriToHttp4sUri(prefsURI),
-                                                       "PREFS",
-                                                       reconnectionStrategy
-        )
+        ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
     } yield Clients(odbClient, prefsClient)
 }
 
 case class StaticData protected (spectroscopyMatrix: SpectroscopyModesMatrix)
 object StaticData {
   def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[StaticData] = {
-    val spectroscopyMatrix = // FetchClient doesn't seem to support timeout yet.
-      FetchClient[F].run(Request(Method.GET, spectroscopyMatrixUri)).use {
-        case Status.Successful(r) =>
-          SpectroscopyModesMatrix[F](r.bodyText)
-        case fail                 =>
-          // If fetching fails, do we want to continue without the matrix, or do we want to crash?
-          Logger[F].warn(
-            s"Could not retrieve spectroscopy matrix. Code [${fail.status.code}] - Body: [${fail.as[String]}]"
-          ) >> SpectroscopyModesMatrix.empty.pure[F]
+    val client = FetchClientBuilder[F]
+      .withRequestTimeout(5.seconds)
+      .create
+
+    val spectroscopyMatrix =
+      retryingOnAllErrors(retryPolicy[F], logError[F]("Spectroscopy Matrix")) {
+        client.run(Request(Method.GET, spectroscopyMatrixUri)).use {
+          case Status.Successful(r) =>
+            SpectroscopyModesMatrix[F](r.bodyText)
+          case fail                 =>
+            // If fetching fails, do we want to continue without the matrix, or do we want to crash?
+            Logger[F].warn(
+              s"Could not retrieve spectroscopy matrix. Code [${fail.status.code}] - Body: [${fail.as[String]}]"
+            ) >> SpectroscopyModesMatrix.empty.pure[F]
+        }
       }
     spectroscopyMatrix.map(matrix => StaticData(matrix))
   }

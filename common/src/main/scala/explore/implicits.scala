@@ -18,13 +18,13 @@ import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.ui.utils._
+import org.http4s.Uri
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused
 import scala.concurrent.duration
-import org.http4s.Uri
 
 trait ListImplicits {
 

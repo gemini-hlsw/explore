@@ -33,7 +33,10 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
+import org.http4s._
 import org.http4s.circe._
+import org.http4s.dom.FetchClientBuilder
+import org.http4s.implicits._
 import org.scalajs.dom
 import org.scalajs.dom.experimental.RequestCache
 import org.scalajs.dom.raw.Element
@@ -44,11 +47,8 @@ import java.util.concurrent.TimeUnit
 import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.scalajs.js
-import org.http4s._
-import org.http4s.implicits._
 
 import js.annotation._
-import org.http4s.dom.FetchClient
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -82,7 +82,10 @@ object ExploreMain extends IOApp.Simple {
 
     val fetchConfig: IO[AppConfig] =
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
-      FetchClient[IO](cache = RequestCache.`no-store`)
+      FetchClientBuilder[IO]
+        .withRequestTimeout(5.seconds)
+        .withCache(RequestCache.`no-store`)
+        .create
         .get(uri"/conf.json")(_.decodeJson[AppConfig])
         .adaptError { case t =>
           new Exception("Could not retrieve configuration.", t)
@@ -94,8 +97,9 @@ object ExploreMain extends IOApp.Simple {
         if (reason.toOption.flatMap(_.toOption.flatMap(_.code)).exists(_ === 1000))
           none
         else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
-          FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
-                         TimeUnit.SECONDS
+          FiniteDuration(
+            math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
+            TimeUnit.SECONDS
           ).some
 
     def setupDOM(): IO[Element] = IO(

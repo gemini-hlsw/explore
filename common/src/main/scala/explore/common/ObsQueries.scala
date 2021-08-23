@@ -14,8 +14,8 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.AirMassRange
-import explore.model.ConstraintSet
 import explore.model.ConstraintGroup
+import explore.model.ConstraintSet
 import explore.model.HourAngleRange
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing

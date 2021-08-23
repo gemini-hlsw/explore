@@ -3,10 +3,12 @@
 
 package explore.common
 
+import _root_.cats.Applicative
 import cats.effect._
 import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
+import explore.common.RetryHelpers
 import explore.model.SSOConfig
 import explore.model.UserVault
 import io.circe.Decoder
@@ -14,6 +16,8 @@ import io.circe.generic.semiauto._
 import io.circe.parser._
 import lucuma.core.model.User
 import lucuma.sso.client.codec.user._
+import org.http4s._
+import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
@@ -23,11 +27,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 import scala.concurrent.duration._
-import org.http4s._
-import org.http4s.dom.FetchClient
-
-import ju.concurrent.TimeUnit
-import _root_.cats.Applicative
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
@@ -38,8 +37,10 @@ object JwtOrcidProfile {
 case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
   import RetryHelpers._
 
-  // FIXME We need to add this functionality to http4s client, so that it sends cookies.
-  // private val backend = FetchCatsBackend(FetchOptions(RequestCredentials.include.some, none))
+  private val client = FetchClientBuilder[F]
+    .withRequestTimeout(config.readTimeout)
+    .withCredentials(RequestCredentials.include)
+    .resource
 
   // Does a client side redirect to the sso site
   val redirectToLogin: F[Unit] =
@@ -50,27 +51,28 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
     }
 
   val guest: F[UserVault] =
-    retryingOnAllErrors(retryPolicy, logError("Switching to guest")) {
-      FetchClient[F](credentials = RequestCredentials.include)
-        .expect[String](Request[F](Method.POST, config.uri / "api" / "v1" / "auth-as-guest"))
-        .map(body =>
-          (for {
-            k <- Either.catchNonFatal(
-                   ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
-                 )
-            j  = new String(k)
-            p <- parse(j)
-            u <- p.as[JwtOrcidProfile]
-            t <- refineV[NonEmpty](body)
-          } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
-            .getOrElse(throw new RuntimeException("Error decoding the token"))
-        )
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Switching to guest")) {
+      client.use(
+        _.expect[String](Request[F](Method.POST, config.uri / "api" / "v1" / "auth-as-guest"))
+          .map(body =>
+            (for {
+              k <- Either.catchNonFatal(
+                     ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
+                   )
+              j  = new String(k)
+              p <- parse(j)
+              u <- p.as[JwtOrcidProfile]
+              t <- refineV[NonEmpty](body)
+            } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
+              .getOrElse(throw new RuntimeException("Error decoding the token"))
+          )
+      )
     }
 
   val whoami: F[Option[UserVault]] =
-    retryingOnAllErrors(retryPolicy, logError("Calling whoami")) {
-      FetchClient[F](credentials = RequestCredentials.include)
-        .run(Request[F](Method.POST, config.uri / "api" / "v1" / "refresh-token"))
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Calling whoami")) {
+      client
+        .flatMap(_.run(Request[F](Method.POST, config.uri / "api" / "v1" / "refresh-token")))
         .use {
           case Status.Successful(r) =>
             r.attemptAs[String]
@@ -109,10 +111,8 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
   val logout: F[Unit] =
-    retryingOnAllErrors(retryPolicy, logError("Calling logout")) {
-      FetchClient[F](credentials = RequestCredentials.include)
-        .run(Request(Method.POST, config.uri / "api" / "v1" / "logout"))
-        .use_
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Calling logout")) {
+      client.flatMap(_.run(Request(Method.POST, config.uri / "api" / "v1" / "logout"))).use_
     }
 
   val switchToORCID: F[Unit] =

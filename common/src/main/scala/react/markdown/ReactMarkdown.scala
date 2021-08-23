@@ -5,8 +5,8 @@ package react.markdown
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
-import react.common._
 import org.http4s.Uri
+import react.common._
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
