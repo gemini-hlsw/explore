@@ -5,7 +5,9 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.syntax.all._
+import eu.timepit.refined.auto._
 import explore._
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.ReactMonocle._
@@ -18,6 +20,8 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common.ReactProps
 import react.datepicker._
+import react.semanticui.elements.button.Button
+import react.semanticui.elements.segment.Segment
 import react.semanticui.modules.checkbox.Checkbox
 
 import java.time.LocalDate
@@ -96,7 +100,8 @@ object SkyPlotSection {
     def render(props: Props, state: State) = {
       implicit val ctx = props.ctx
 
-      <.div(ExploreStyles.SkyPlotSection)(
+      Segment(ExploreStyles.SkyPlotSection)(
+        HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
         <.div(ExploreStyles.SkyPlot) {
           state.plotPeriod match {
             case PlotPeriod.Night    =>
@@ -127,13 +132,19 @@ object SkyPlotSection {
                     ^.onClick --> $.setStateL(State.site)(Site.GS)
             )
           ),
-          <.div(
+          <.div(ExploreStyles.SkyPlotDatePickerControls)(
+            Button(onClick = $.modStateL(State.date)(_.minusDays(1)),
+                   clazz = ExploreStyles.SkyPlotDateButton
+            )(Icons.ChevronLeftLight),
             Datepicker(
               onChange = (newValue, _) => $.setStateL(State.date)(newValue.toLocalDateOpt.get)
             )
               .selected(state.date.toJsDate)
               .dateFormat("yyyy-MM-dd")
-              .className(ExploreStyles.SkyPlotDatePicker.htmlClass)
+              .className(ExploreStyles.SkyPlotDatePicker.htmlClass),
+            Button(onClick = $.modStateL(State.date)(_.plusDays(1)),
+                   clazz = ExploreStyles.SkyPlotDateButton
+            )(Icons.ChevronRightLight)
           ),
           <.div(ExploreStyles.PlotToggleCheckbox)(
             <.label(PlotPeriod.Night.toString,

@@ -11,41 +11,45 @@ import fs2._
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Target
+import org.typelevel.log4cats.Logger
+import retry._
 import sttp.client3._
 import sttp.client3.impl.cats.FetchCatsBackend
 
 import scala.concurrent.duration._
 
 object SimbadSearch {
-  def search(term: NonEmptyString): IO[Option[Target]] = {
-    val backend  = FetchCatsBackend[IO]()
-    def httpCall =
-      basicRequest
-        .post(
-          uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=$term&output.format=VOTable"
-        )
-        .readTimeout(5.seconds)
-        .send(backend)
+  import RetryHelpers._
 
-    httpCall
-      .flatMap {
-        _.body
-          .traverse(
-            Stream
-              .emit[IO, String](_)
-              .through(VoTableParser.targets(CatalogName.Simbad))
-              .compile
-              .toList
-              .map {
-                _.collect { case Validated.Valid(t) => t }.headOption
-              }
+  def search[F[_]: Async: Logger](term: NonEmptyString): F[Option[Target]] =
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
+      val backend  = FetchCatsBackend[F]()
+      def httpCall =
+        basicRequest
+          .post(
+            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
           )
-          .map {
-            case Right(Some((t))) => t.some
-            case _                => none
-          }
-      }
+          .readTimeout(5.seconds)
+          .send(backend)
 
-  }
+      httpCall
+        .flatMap {
+          _.body
+            .traverse(
+              Stream
+                .emit[F, String](_)
+                .through(VoTableParser.targets(CatalogName.Simbad))
+                .compile
+                .toList
+                .map {
+                  _.collect { case Validated.Valid(t) => t }.headOption
+                }
+            )
+            .map {
+              case Right(Some((t))) => t.some
+              case _                => none
+            }
+        }
+    }
 
 }

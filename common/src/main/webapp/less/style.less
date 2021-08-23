@@ -210,7 +210,9 @@ tfoot {
   width: 100%;
   overflow: hidden;
   grid-template-columns: 1fr;
-  grid-template-rows: @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr) @topBottom;
+  grid-template-rows:
+    @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr)
+    @topBottom;
   grid-template-areas:
     "header"
     "body"
@@ -322,7 +324,11 @@ tfoot {
 
   --column-wide-span: 4;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(20ch, 3fr);
+  grid-template-columns:
+    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+      20ch,
+      3fr
+    );
 
   .elevation-range-picker {
     width: 9em;
@@ -790,10 +796,15 @@ tfoot {
 
 .sky-plot {
   height: 350px;
+
+  .highcharts-xaxis .highcharts-axis-title {
+    fill: hsl(0, 87%, 66%);
+  }
 }
 
 .sky-plot-section {
   height: 390px;
+  padding: 0 !important;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 }
@@ -809,8 +820,24 @@ tfoot {
   color: var(--plot-text-color);
 }
 
+.sky-plot-datepicker-controls {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
 .sky-plot-datepicker {
   width: 100px;
+  color: var(--plot-text-color);
+  border: 1px;
+  text-align: center;
+}
+
+.sky-plot-date-button {
+  padding: 0 !important;
+  border: 0 !important;
+  margin-left: 0.25em !important;
+  background-color: var(--plot-background-color) !important;
 }
 
 .plot-toggle-checkbox {
@@ -892,6 +919,11 @@ tfoot {
 
 .aladin-detail-text {
   color: white;
+}
+
+.aladin-search-icon {
+  align-self: center;
+  margin-left: 0.5em;
 }
 
 .moon-phase {
@@ -1190,11 +1222,19 @@ img.partner-split-flag {
   position: relative;
 }
 
-.explore-input-error-tooltip {
-  position: absolute;
-  transform: translate(0, -33px);
+.explore-input-error-mixin() {
   left: 30%;
   z-index: 3;
+}
+
+.explore-input-error-tooltip {
+  transform: translate(0, -33px);
+  .explore-input-error-mixin();
+}
+
+.explore-input-error-tooltip-below {
+  transform: translate(0, 20px);
+  .explore-input-error-mixin();
 }
 
 .ui.button.blended-button {
@@ -1466,6 +1506,12 @@ html {
   color: var(--site-text-color);
 }
 
+.explore-help-icon-floating {
+  position: absolute;
+  top: 3px;
+  z-index: 10;
+}
+
 .explore-help-sidebar {
   display: flex;
   flex-direction: column;
@@ -1726,11 +1772,15 @@ html {
 }
 
 .explore-modes-table {
-  overflow-y: scroll;
+  overflow-y: none;
   height: 100%;
   border: 0.2px solid var(--site-border-color);
   border-radius: @menuBorderRadius;
   grid-area: table;
+
+  .table {
+    height: 100%;
+  }
 
   tr.explore-mode-selected,
   .tr.explore-mode-selected {
@@ -1760,9 +1810,14 @@ html {
 }
 
 svg.padded-right-icon.svg-inline--fa,
-.ui.icon.button svg.svg-inline--fa,
+.ui.icon.labeled.button svg.svg-inline--fa,
 .ui.menu .ui.dropdown .menu > .item svg.svg-inline--fa {
-  margin-right: 9px;
+  margin-right: 3px;
+}
+
+// Remove the focus on icons
+svg[focusable="false"]:focus {
+  outline: none;
 }
 
 .modal-close-button {

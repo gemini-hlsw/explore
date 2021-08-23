@@ -240,7 +240,7 @@ class SUITableVirtuoso[
     header:     Boolean | TableHeader = false,
     headerRow:  TableRow = TableRow(),
     headerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell(),
-    body:       TableBody = TableBody()(^.height := "350px"),
+    body:       TableBody = TableBody()(^.height := "100%"),
     row:        RowTemplate[D] = TableRow(),
     cell:       BodyCell[D] = TableCell(),
     footer:     Boolean | TableFooter | VdomNode = false,

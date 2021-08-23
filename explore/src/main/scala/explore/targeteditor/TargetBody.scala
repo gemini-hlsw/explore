@@ -147,7 +147,7 @@ object TargetBody {
           s:        SearchCallback
         ): Callback =
           SimbadSearch
-            .search(s.searchTerm)
+            .search[IO](s.searchTerm)
             .runAsyncAndThenCB {
               case Right(r @ Some(Target(n, Right(st), m))) =>
                 allView.set((n, st, m.values.toList)).toCB >> s.onComplete(r)

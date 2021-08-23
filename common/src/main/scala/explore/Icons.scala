@@ -115,8 +115,16 @@ object Icons {
   val faChevronRight: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faChevronRight")
+  val faChevronRightLight: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronLeft")
   val faChevronLeft: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faChevronLeft")
+  val faChevronLeftLight: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronDown")
@@ -137,6 +145,10 @@ object Icons {
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faStar")
   val faStar: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faSpinner")
+  val faSpinner: FAIcon = js.native
 
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
@@ -165,12 +177,15 @@ object Icons {
     faSortUp,
     faSortDown,
     faChevronRight,
+    faChevronRightLight,
     faChevronLeft,
+    faChevronLeftLight,
     faChevronDown,
     faListAlt,
     faCompress,
     faExpand,
-    faStar
+    faStar,
+    faSpinner
   )
 
   val Bars                = FontAwesomeIcon(faBars)
@@ -184,7 +199,9 @@ object Icons {
   val Edit                = FontAwesomeIcon(faEdit)
   val Search              = FontAwesomeIcon(faSearch)
   val ChevronRight        = FontAwesomeIcon(faChevronRight)
+  val ChevronRightLight   = FontAwesomeIcon(faChevronRightLight)
   val ChevronLeft         = FontAwesomeIcon(faChevronLeft)
+  val ChevronLeftLight    = FontAwesomeIcon(faChevronLeftLight)
   val ChevronDown         = FontAwesomeIcon(faChevronDown)
   val Ban                 = FontAwesomeIcon(faBan)
   val Sort                = FontAwesomeIcon(faSort)
@@ -204,4 +221,5 @@ object Icons {
   val Checkmark           = FontAwesomeIcon(faCheck)
   val ListIcon            = FontAwesomeIcon(faListAlt)
   val Star                = FontAwesomeIcon(faStar)
+  val Spinner             = FontAwesomeIcon(faSpinner)
 }

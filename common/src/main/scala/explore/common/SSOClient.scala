@@ -17,8 +17,6 @@ import lucuma.sso.client.codec.user._
 import org.scalajs.dom.experimental.RequestCredentials
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
-import retry.RetryDetails._
-import retry.RetryPolicies._
 import retry._
 import sttp.client3._
 import sttp.client3.impl.cats.FetchCatsBackend
@@ -28,8 +26,6 @@ import java.time.temporal.ChronoUnit
 import java.{ util => ju }
 import scala.concurrent.duration._
 
-import ju.concurrent.TimeUnit
-
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
 object JwtOrcidProfile {
@@ -37,21 +33,9 @@ object JwtOrcidProfile {
 }
 
 case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
-  private val retryPolicy =
-    capDelay(
-      FiniteDuration.apply(5, TimeUnit.SECONDS),
-      fullJitter[F](FiniteDuration.apply(10, TimeUnit.MILLISECONDS))
-    ).join(limitRetries[F](12))
+  import RetryHelpers._
 
   private val backend = FetchCatsBackend(FetchOptions(RequestCredentials.include.some, none))
-
-  def logError(msg: String)(err: Throwable, details: RetryDetails): F[Unit] = details match {
-    case WillDelayAndRetry(_, retriesSoFar, _) =>
-      Logger[F].warn(err)(s"$msg failed - Will retry. Retries so far: [$retriesSoFar]")
-
-    case GivingUp(totalRetries, _) =>
-      Logger[F].error(err)(s"$msg failed - Giving up after [$totalRetries] retries.")
-  }
 
   // Does a client side redirect to the sso site
   val redirectToLogin: F[Unit] =
@@ -61,7 +45,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
     }
 
   val guest: F[UserVault] =
-    retryingOnAllErrors(retryPolicy, logError("Switching to guest")) {
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Switching to guest")) {
       basicRequest
         .post(uri"${config.uri}/api/v1/auth-as-guest")
         .readTimeout(config.readTimeout)
@@ -86,7 +70,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
     }
 
   val whoami: F[Option[UserVault]] =
-    retryingOnAllErrors(retryPolicy, logError("Calling whoami")) {
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Calling whoami")) {
       basicRequest
         .post(uri"${config.uri}/api/v1/refresh-token")
         .readTimeout(config.readTimeout)
@@ -121,7 +105,7 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
     } >> whoami.flatTap(_ => Logger[F].info("User token refreshed"))
 
   val logout: F[Unit] =
-    retryingOnAllErrors(retryPolicy, logError("Calling logout")) {
+    retryingOnAllErrors(retryPolicy[F], logError[F]("Calling logout")) {
       basicRequest
         .post(uri"${config.uri}/api/v1/logout")
         .readTimeout(config.readTimeout)

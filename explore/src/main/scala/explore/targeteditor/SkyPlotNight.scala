@@ -48,7 +48,7 @@ final case class SkyPlotNight(
 object SkyPlotNight {
   type Props = SkyPlotNight
 
-  case class State(shownSeries: HashSet[ElevationSeries] = HashSet(ElevationSeries.Elevation))
+  case class State(shownSeries: HashSet[ElevationSeries] = HashSet.from(ElevationSeries.all))
 
   object State {
     val shownSeries = Focus[State](_.shownSeries)
@@ -164,6 +164,11 @@ object SkyPlotNight {
         .ofInstant(tbNauticalNight.end, props.zoneId)
         .format(dateTimeFormatter)
 
+      val targetBelowHorizon =
+        ElevationSeries.Elevation
+          .data(seriesData)
+          .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
+
       val options = Options()
         .setChart(ChartOptions().setHeight(props.height).setStyledMode(true).setAlignTicks(false))
         .setTitle(
@@ -179,15 +184,20 @@ object SkyPlotNight {
             .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
             .setTickInterval(MillisPerHour)
             .setMinorTickInterval(MillisPerHour / 2)
+            .setTitle(
+              if (targetBelowHorizon) XAxisTitleOptions().setText("Target is below horizon")
+              else XAxisTitleOptions()
+            )
             .setPlotBands(
               List(
                 XAxisPlotBandsOptions()
                   .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
                   .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setClassName("plot-band-twilight-nautical")
+                  .setZIndex(1000)
                   .setLabel(
                     XAxisPlotBandsLabelOptions()
-                      .setText(s"Evening 12° - Twilight: $sunset")
+                      .setText(s"  Evening 12° - Twilight: $sunset")
                       .setRotation(270)
                       .setAlign(AlignValue.left)
                       .setTextAlign(AlignValue.center)
@@ -197,9 +207,10 @@ object SkyPlotNight {
                   .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setClassName("plot-band-twilight-nautical-end")
+                  .setZIndex(1000)
                   .setLabel(
                     XAxisPlotBandsLabelOptions()
-                      .setText(s"Evening 12° - Twilight: $sunrise")
+                      .setText(s"  Morning 12° - Twilight: $sunrise")
                       .setRotation(270)
                       .setAlign(AlignValue.left)
                       .setTextAlign(AlignValue.center)

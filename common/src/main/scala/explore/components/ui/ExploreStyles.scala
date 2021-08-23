@@ -120,12 +120,14 @@ object ExploreStyles {
 
   val DraggingOver: Css = Css("dragging-over")
 
-  val SkyPlot: Css            = Css("sky-plot")
-  val SkyPlotSection: Css     = Css("sky-plot-section")
-  val SkyPlotControls: Css    = Css("sky-plot-controls")
-  val SkyPlotDatePicker: Css  = Css("sky-plot-datepicker")
-  val PlotToggleCheckbox: Css = Css("plot-toggle-checkbox")
-  val PlotToggle: Css         = Css("plot-toggle")
+  val SkyPlot: Css                   = Css("sky-plot")
+  val SkyPlotSection: Css            = Css("sky-plot-section")
+  val SkyPlotControls: Css           = Css("sky-plot-controls")
+  val SkyPlotDatePickerControls: Css = Css("sky-plot-datepicker-controls")
+  val SkyPlotDatePicker: Css         = Css("sky-plot-datepicker")
+  val SkyPlotDateButton: Css         = Css("sky-plot-date-button")
+  val PlotToggleCheckbox: Css        = Css("plot-toggle-checkbox")
+  val PlotToggle: Css                = Css("plot-toggle")
 
   val AladinContainerColumn: Css = Css("aladin-container-column")
   val AladinContainerBody: Css   = Css("aladin-container-body")
@@ -133,6 +135,7 @@ object ExploreStyles {
   val AladinDetailText: Css      = Css("aladin-detail-text")
   val AladinCurrentCoords: Css   = Css("aladin-status-current-coordinates")
   val AladinCenterButton: Css    = Css("aladin-status-center-button")
+  val AladinSearchIcon: Css      = Css("aladin-search-icon")
 
   val MoonPhase: Css = Css("moon-phase")
 
@@ -149,13 +152,14 @@ object ExploreStyles {
   val PartnerSplitsEditorTable: Css = Css("partner-splits-editor-table")
 
   // Semantic UI form overrides and extensions
-  val Grid: Css              = Css("explore-grid")
-  val TwoColumnGrid: Css     = Grid |+| Css("explore-two-columns")
-  val ThreeColumnGrid: Css   = Grid |+| Css("explore-three-columns")
-  val Compact: Css           = Css("explore-compact")
-  val ErrorLabel: Css        = Css("explore-error-label")
-  val InputErrorTooltip: Css = Css("explore-input-error-tooltip")
-  val FlatFormField: Css     = Css("flat-form-field")
+  val Grid: Css                   = Css("explore-grid")
+  val TwoColumnGrid: Css          = Grid |+| Css("explore-two-columns")
+  val ThreeColumnGrid: Css        = Grid |+| Css("explore-three-columns")
+  val Compact: Css                = Css("explore-compact")
+  val ErrorLabel: Css             = Css("explore-error-label")
+  val InputErrorTooltip: Css      = Css("explore-input-error-tooltip")
+  val InputErrorTooltipBelow: Css = Css("explore-input-error-tooltip-below")
+  val FlatFormField: Css          = Css("flat-form-field")
 
   // Clue websocket connection status
   val ConnectionOK: Css      = Css("connection-ok")
@@ -223,6 +227,7 @@ object ExploreStyles {
 
   // Help styles
   val HelpIcon: Css         = Css("explore-help-icon")
+  val HelpIconFloating: Css = Css("explore-help-icon-floating")
   val HelpSidebar: Css      = Css("explore-help-sidebar")
   val HelpTitle: Css        = Css("explore-help-title")
   val HelpTitleLabel: Css   = Css("explore-help-title-label")
