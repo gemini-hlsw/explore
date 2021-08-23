@@ -301,7 +301,7 @@ object TargetObsList {
             mod(targetListMod.upsert(newTarget, props.pointingsWithObs.get.targets.length)).to[IO],
             props.searching.mod(_ + newTarget.id).to[IO] >>
               SimbadSearch
-                .search(name)
+                .search[IO](name)
                 .attempt
                 .guarantee(props.searching.mod(_ - newTarget.id).to[IO])
           ).parTupled.flatMap {
