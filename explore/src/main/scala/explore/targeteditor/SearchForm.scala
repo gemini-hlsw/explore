@@ -102,12 +102,16 @@ object SearchForm {
 
       val searchIcon =
         (if (state.searchEnabled)
-           Icons.Search.addModifiers(
-             Seq(^.onKeyPress ==> iconKeyPress, ^.onClick --> search)
-           )
+           if (props.searching.get.nonEmpty)
+             Icons.Spinner.spin(true)
+           else
+             Icons.Search
+               .addModifiers(
+                 Seq(^.onKeyPress ==> iconKeyPress, ^.onClick --> search)
+               )
          else
            Icons.Ban)
-          .clazz(ExploreStyles.ButtonIcon)(^.tabIndex := 0)
+          .clazz(ExploreStyles.AladinSearchIcon)(^.tabIndex := -1)
 
       val disabled   = props.searching.get.exists(_ === props.id)
 
@@ -120,8 +124,8 @@ object SearchForm {
           error = state.searchError.orUndefined,
           loading = disabled,
           disabled = disabled,
-          errorClazz = ExploreStyles.InputErrorTooltip,
-          errorPointing = LabelPointing.Below,
+          errorClazz = ExploreStyles.InputErrorTooltipBelow,
+          errorPointing = LabelPointing.Above,
           onTextChange = _ => $.setStateL(State.searchError)(none),
           onValidChange = valid => $.setStateL(State.searchEnabled)(valid),
           icon = searchIcon

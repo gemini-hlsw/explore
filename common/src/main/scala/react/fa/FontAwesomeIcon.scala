@@ -56,6 +56,8 @@ final case class FontAwesomeIcon(
 
   def transform(transform: Transform): FontAwesomeIcon = copy(transform = transform)
 
+  def spin(spin: Boolean = false): FontAwesomeIcon = copy(spin = spin)
+
   def fixedWidth(fixedWidth: Boolean = true): FontAwesomeIcon = copy(fixedWidth = fixedWidth)
 }
 

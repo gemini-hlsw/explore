@@ -109,7 +109,9 @@ object AladinCell extends ModelOptics {
                 content = "Center on target",
                 position = PopupPosition.BottomLeft,
                 trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
-                  Icons.Bullseye.transform(Transform(size = 24)).clazz(ExploreStyles.Accented)
+                  Icons.Bullseye
+                    .transform(Transform(size = 24))
+                    .clazz(ExploreStyles.Accented)
                 )
               )
             )
