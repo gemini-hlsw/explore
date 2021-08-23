@@ -18,6 +18,7 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common.ReactProps
 import react.datepicker._
+import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.modules.checkbox.Checkbox
 
@@ -25,8 +26,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import react.semanticui.elements.button.Button
-import react.fa.IconSize
 
 final case class SkyPlotSection(
   coords:           Coordinates

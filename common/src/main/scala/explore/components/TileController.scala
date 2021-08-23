@@ -25,6 +25,7 @@ import react.common._
 import react.gridlayout._
 
 import scala.concurrent.duration._
+import scala.scalajs.js.|
 
 final case class TileController(
   userId:           Option[User.Id],
@@ -72,6 +73,19 @@ object TileController {
       .filter(_.i.forall(_ === id.value))
       .andThen(layoutItemHeight)
 
+  def tileResizable(id: Tile.TileId): Traversal[LayoutsMap, Boolean | Unit] =
+    allTiles
+      .filter(_.i.forall(_ === id.value))
+      .andThen(layoutItemResizable)
+
+  def updateResizableState(p: LayoutsMap): LayoutsMap =
+    allLayouts
+      .andThen(layoutItems)
+      .modify {
+        case r if r.h === 1 => r.copy(isResizable = false)
+        case r              => r
+      }(p)
+
   val component =
     ScalaComponent
       .builder[Props]
@@ -83,11 +97,14 @@ object TileController {
             .mod {
               case l if l.i.forall(_ === id.value) =>
                 if (st === TileSizeState.Minimized)
-                  l.copy(h = 1)
+                  l.copy(h = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight = unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
+                  // restore the resizable state
+                  val resizable     =
+                    tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
                   // TODO: Restore to the previous size
-                  l.copy(h = defaultHeight)
+                  l.copy(h = defaultHeight, isResizable = resizable)
                 } else l
               case l                               => l
             }
@@ -99,7 +116,7 @@ object TileController {
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
           onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(p.userId, b)(p.ctx),
-          layouts = p.layoutMap.get
+          layouts = updateResizableState(p.layoutMap.get)
         )(
           p.tiles.map { t =>
             <.div(
