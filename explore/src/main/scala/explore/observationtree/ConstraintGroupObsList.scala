@@ -201,7 +201,8 @@ object ConstraintGroupObsList {
                                                        highlightSelected = false
                               )(obs, idx)
                             }
-                          )
+                          ),
+                          provided.placeholder
                         )
                       )
                   }
