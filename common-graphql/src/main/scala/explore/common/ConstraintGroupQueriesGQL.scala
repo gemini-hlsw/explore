@@ -6,7 +6,6 @@ package explore.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
-import explore.model.ConstraintsSummary
 import explore.schemas.ObservationDB
 import java.time
 
@@ -62,12 +61,6 @@ object ConstraintGroupQueriesGQL {
                 asterismName: name
               }
             }
-            constraintSet {
-              imageQuality
-              cloudExtinction
-              skyBackground
-              waterVapor
-            }
           	status
           	activeStatus
           	plannedTime {
@@ -88,7 +81,6 @@ object ConstraintGroupQueriesGQL {
       }
       object Observations       {
         object Nodes {
-          trait ConstraintSet extends ConstraintsSummary
           object PlannedTime {
             type Execution = time.Duration
           }

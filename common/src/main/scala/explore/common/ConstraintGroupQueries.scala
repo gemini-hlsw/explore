@@ -13,7 +13,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintSet
 import explore.model.Pointing
-import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.ObsSummaryWithPointingAndConf
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.utils._
@@ -66,8 +66,7 @@ object ConstraintGroupQueries {
   }
 
   type ConstraintGroupList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
-  // Don't really need the constraints in the obs summary, but will need to figure out what to display in the ObsBadge
-  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithPointingAndConstraints]
+  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithPointingAndConf]
 
   case class ConstraintSummaryWithObervations(
     constraintGroups: ConstraintGroupList,
@@ -84,13 +83,12 @@ object ConstraintGroupQueries {
   implicit val constraintsSummWithObsReuse: Reusability[ConstraintSummaryWithObervations] =
     Reusability.derive
 
-  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithPointingAndConstraints =
-    ObsSummaryWithPointingAndConstraints(obsR.id,
-                                         obsR.observationTarget.map(convertPointing),
-                                         obsR.constraintSet,
-                                         obsR.status,
-                                         obsR.activeStatus,
-                                         obsR.plannedTime.execution
+  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithPointingAndConf =
+    ObsSummaryWithPointingAndConf(obsR.id,
+                                  obsR.observationTarget.map(convertPointing),
+                                  obsR.status,
+                                  obsR.activeStatus,
+                                  obsR.plannedTime.execution
     )
 
   private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
@@ -105,7 +103,7 @@ object ConstraintGroupQueries {
           ConstraintGroup.obsIds.get
         ),
         toSortedMap(data.observations.nodes.map(obsResultToSummary),
-                    ObsSummaryWithPointingAndConstraints.id.get
+                    ObsSummaryWithPointingAndConf.id.get
         )
       )
     }
