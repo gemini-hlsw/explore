@@ -13,6 +13,8 @@ import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintSet
 import explore.model.HourAngleRange
+import explore.model.SelectedPanel
+import explore.model.SelectedPanel.Editor
 import explore.schemas.ObservationDB
 import explore.schemas.ObservationDB.Types._
 import explore.undo._
@@ -54,44 +56,56 @@ object ConstraintGroupObsListActions {
     obsId: Observation.Id
   )(ocs:   Option[ConstraintSet]): ConstraintGroupList => ConstraintGroupList = cgl => {
     val constraintGroups = cgl.values
-    val oData            = for {
-      cs    <- ocs
-      oldCg <- constraintGroups.find(_.obsIds.contains(obsId))
-      newCg <- constraintGroups.find(_.constraintSet === cs)
-    } yield (oldCg, newCg)
-    oData
-      .map { case (oldCg, newCg) =>
-        val updatedOldCg = oldCg.removeObsId(obsId)
-        val updatedNewCg = newCg.addObsId(obsId)
-        val newList      = cgl - oldCg.obsIds - newCg.obsIds + updatedNewCg.asKeyValue
-        if (updatedOldCg.obsIds.isEmpty) newList else newList + updatedOldCg.asKeyValue
-      }
-      .getOrElse(cgl)
+
+    val updatedCgl = constraintGroups.find(_.obsIds.contains(obsId)).fold(cgl) { oldCg =>
+      val updatedOldCg = oldCg.removeObsId(obsId)
+      val newList      = cgl - oldCg.obsIds
+      if (updatedOldCg.obsIds.isEmpty) newList else newList + updatedOldCg.asKeyValue
+    }
+
+    ocs.fold(updatedCgl) { cs =>
+      constraintGroups
+        .find(_.constraintSet === cs)
+        .fold(updatedCgl + ConstraintGroup(cs, SortedSet(obsId)).asKeyValue) { newCg =>
+          val updatedNewCg = newCg.addObsId(obsId)
+          updatedCgl - newCg.obsIds + updatedNewCg.asKeyValue
+        }
+    }
   }
 
   private def updateExpandedIds(
-    obsId: Observation.Id,
-    cs:    ConstraintSet,
-    cgl:   ConstraintGroupList
+    obsId:   Observation.Id,
+    destIds: SortedSet[Observation.Id]
   )(
-    eids:  SortedSet[SortedSet[Observation.Id]]
-  ) = {
-    val destIds = cgl.values
-      .find(_.constraintSet === cs)
-      .map(_.obsIds)
-      .getOrElse(SortedSet.empty[Observation.Id])
+    eids:    SortedSet[SortedSet[Observation.Id]]
+  ) =
     eids.map(ids => if (ids === destIds) destIds + obsId else ids - obsId)
-  }
+
+  private def updateSelected(obsId: Observation.Id, destIds: SortedSet[Observation.Id])(
+    selected:                       SelectedPanel[SortedSet[Observation.Id]]
+  ) =
+    selected match {
+      // If in edit mode, always edit the destination.
+      case Editor(_) => Editor(destIds + obsId)
+      case _         => selected
+    }
 
   def obsConstraintGroup[F[_]](
     obsId:          Observation.Id,
-    expandedIds:    View[SortedSet[SortedSet[Observation.Id]]]
+    expandedIds:    View[SortedSet[SortedSet[Observation.Id]]],
+    selected:       View[SelectedPanel[SortedSet[Observation.Id]]]
   )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
     Action[F](getter = getter(obsId), setter = setter(obsId))(
       onSet = (cgl, ocs) =>
         ocs.fold(async.unit) { cs =>
+          // should always find the destIds, but...
+          val destIds = cgl.values
+            .find(_.constraintSet === cs)
+            .map(_.obsIds)
+            .getOrElse(SortedSet.empty[Observation.Id])
           updateConstraintSet[F](obsId, cs) >>
-            expandedIds.mod(updateExpandedIds(obsId, cs, cgl) _).to[F]
+            expandedIds.mod(updateExpandedIds(obsId, destIds) _).to[F] >>
+            selected.mod(updateSelected(obsId, destIds) _).to[F]
         }
     )
 }

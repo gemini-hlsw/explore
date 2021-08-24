@@ -76,7 +76,8 @@ object ConstraintGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoCtx[ConstraintGroupList],
-      expandedIds: View[SortedSet[SortedSet[Observation.Id]]]
+      expandedIds: View[SortedSet[SortedSet[Observation.Id]]],
+      selected:    View[SelectedPanel[SortedSet[Observation.Id]]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
@@ -91,7 +92,7 @@ object ConstraintGroupObsList {
 
         oData.fold(SyncIO.unit) { case (destCg, obsId) =>
           ConstraintGroupObsListActions
-            .obsConstraintGroup[IO](obsId, expandedIds)
+            .obsConstraintGroup[IO](obsId, expandedIds, selected)
             .set(undoCtx)(destCg.constraintSet.some)
         }
       }
@@ -123,7 +124,7 @@ object ConstraintGroupObsList {
         )
       }
 
-      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds)
+      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
 
       DragDropContext(
         onDragStart =
