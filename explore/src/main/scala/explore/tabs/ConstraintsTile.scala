@@ -8,11 +8,10 @@ import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
-import explore.common.ObsQueries._
 import explore.components.Tile
-import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.implicits._
+import explore.model.ConstraintSet
 import explore.model.reusability._
 import explore.undo._
 import explore.utils._
@@ -25,8 +24,8 @@ object ConstraintsTile {
 
   def constraintsTile(
     obsId:      Observation.Id,
-    csPot:      Pot[View[ConstraintSetData]],
-    undoStacks: View[UndoStacks[IO, ConstraintSetData]]
+    csPot:      Pot[View[ConstraintSet]],
+    undoStacks: View[UndoStacks[IO, ConstraintSet]]
   ): Tile =
     Tile(
       ObsTabTiles.ConstraintsId,
@@ -34,11 +33,10 @@ object ConstraintsTile {
       canMinimize = true
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
-        potRender[View[ConstraintSetData]](
+        potRender[View[ConstraintSet]](
           Reuse.always(cs =>
             <.div(
-              ExploreStyles.ConstraintsObsTile,
-              ConstraintsPanel(obsId, cs, undoStacks_, renderInTitle)
+              ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)
             )
           )
         )(csPotView_)

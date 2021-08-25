@@ -18,13 +18,16 @@ import react.beautifuldnd._
 trait ViewCommon {
   def focused: View[Option[Focused]]
 
-  def renderObsBadge(obs: ObsSummary): TagMod =
+  def renderObsBadge(obs: ObsSummary, highlightSelected: Boolean = true): TagMod =
     ObsBadge(
       obs,
-      selected = focused.get.exists(_ === FocusedObs(obs.id))
+      selected = highlightSelected && focused.get.exists(_ === FocusedObs(obs.id))
     )
 
-  def renderObsBadgeItem(selectable: Boolean)(obs: ObsSummary, idx: Int): TagMod =
+  def renderObsBadgeItem(selectable: Boolean, highlightSelected: Boolean = true)(
+    obs:                             ObsSummary,
+    idx:                             Int
+  ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(
@@ -34,7 +37,7 @@ trait ViewCommon {
           (^.onClick ==> { e: ReactEvent =>
             e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some)
           }).when(selectable)
-        )(<.span(provided.dragHandleProps)(renderObsBadge(obs)))
+        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected)))
       }
     )
 

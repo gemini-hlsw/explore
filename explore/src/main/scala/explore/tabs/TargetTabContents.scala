@@ -57,14 +57,16 @@ final case class TargetTabContents(
   size:              ResizeDetector.Dimensions
 )(implicit val ctx:  AppContextIO)
     extends ReactProps[TargetTabContents](TargetTabContents.component) {
-  def isTargetSelected: Boolean = focused.get.collect { case Focused.FocusedTarget(_) =>
-    ()
-  }.isDefined
+  def selectedPanel: SelectedPanel[Target.Id] = focused.get
+    .collect { case Focused.FocusedTarget(id) =>
+      id
+    }
+    .fold(SelectedPanel.tree[Target.Id])(SelectedPanel.editor)
 }
 
 object TargetTabContents {
   type Props = TargetTabContents
-  type State = TwoPanelState
+  type State = TwoPanelState[Target.Id]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -94,7 +96,7 @@ object TargetTabContents {
   )(implicit ctx:     AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(TwoPanelState.treeWidth).set(d.size.width).to[IO] *>
+        (state.zoom(TwoPanelState.treeWidth[Target.Id]).set(d.size.width).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.TargetsTree,
@@ -174,10 +176,10 @@ object TargetTabContents {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(pointingsWithObs))
-          .when(state.get.leftPanelVisible),
+          .when(state.get.selected.leftPanelVisible),
         <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
-        ).when(state.get.rightPanelVisible)
+        ).when(state.get.selected.rightPanelVisible)
       )
     } else {
       <.div(
@@ -216,10 +218,10 @@ object TargetTabContents {
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => TwoPanelState.initial(p.isTargetSelected)
+          case None    => TwoPanelState.initial(p.selectedPanel)
           case Some(s) =>
-            if (s.elementSelected =!= p.isTargetSelected)
-              s.copy(elementSelected = p.isTargetSelected)
+            if (s.selected =!= p.selectedPanel)
+              s.copy(selected = p.selectedPanel)
             else s
         }
       )

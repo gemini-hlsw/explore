@@ -6,21 +6,22 @@ package explore.model
 import cats.Order._
 import cats._
 import lucuma.core.model.Asterism
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
 
 case class ExpandedIds(
-  targetIds:   SortedSet[Target.Id] = SortedSet.empty,
-  asterismIds: SortedSet[Asterism.Id] = SortedSet.empty
-  // constraintSetIds: SortedSet[ConstraintSet.Id] = SortedSet.empty
+  targetIds:           SortedSet[Target.Id] = SortedSet.empty,
+  asterismIds:         SortedSet[Asterism.Id] = SortedSet.empty,
+  constraintSetObsIds: SortedSet[SortedSet[Observation.Id]] = SortedSet.empty
 )
 
 object ExpandedIds {
-  val targetIds   = Focus[ExpandedIds](_.targetIds)
-  val asterismIds = Focus[ExpandedIds](_.asterismIds)
-  // val constraintSetIds = Focus[ExpandedIds](_.constraintSetIds)
+  val targetIds           = Focus[ExpandedIds](_.targetIds)
+  val asterismIds         = Focus[ExpandedIds](_.asterismIds)
+  val constraintSetObsIds = Focus[ExpandedIds](_.constraintSetObsIds)
 
   implicit val eqExpandedIds: Eq[ExpandedIds] = Eq.fromUniversalEquals
 }

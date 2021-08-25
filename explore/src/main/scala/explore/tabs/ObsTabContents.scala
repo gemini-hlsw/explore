@@ -24,7 +24,6 @@ import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.Focused.FocusedObs
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
@@ -64,7 +63,9 @@ final case class ObsTabContents(
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsTabContents](ObsTabContents.component) {
-  def isObsSelected: Boolean = focused.get.collect { case Focused.FocusedObs(_) => () }.isDefined
+  def selectedPanel: SelectedPanel[Observation.Id] = focused.get
+    .collect { case Focused.FocusedObs(id) => id }
+    .fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
 }
 
 object ObsTabTiles {
@@ -187,7 +188,7 @@ object ObsTabContents {
     )
 
   final case class State(
-    panels:  TwoPanelState,
+    panels:  TwoPanelState[Observation.Id],
     layouts: LayoutsMap,
     options: TargetVisualOptions
   ) {
@@ -199,8 +200,8 @@ object ObsTabContents {
     val panels        = Focus[State](_.panels)
     val options       = Focus[State](_.options)
     val layouts       = Focus[State](_.layouts)
-    val panelsWidth   = State.panels.andThen(TwoPanelState.treeWidth)
-    val panelSelected = State.panels.andThen(TwoPanelState.elementSelected)
+    val panelsWidth   = State.panels.andThen(TwoPanelState.treeWidth[Observation.Id])
+    val panelSelected = State.panels.andThen(TwoPanelState.selected[Observation.Id])
     val fovAngle      = State.options.andThen(TargetVisualOptions.fovAngle)
   }
 
@@ -266,9 +267,7 @@ object ObsTabContents {
           )
         )
 
-      val obsIdOpt: Option[Observation.Id] = props.focused.get.collect { case FocusedObs(obsId) =>
-        obsId
-      }
+      val obsIdOpt: Option[Observation.Id] = state.get.panels.selected.optValue
 
       val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
         obsIdOpt.flatMap(observations.get.getElement)
@@ -396,10 +395,10 @@ object ObsTabContents {
         <.div(
           ExploreStyles.TreeRGL,
           <.div(ExploreStyles.Tree, treeInner(observations))
-            .when(state.get.panels.leftPanelVisible),
+            .when(state.get.panels.selected.leftPanelVisible),
           <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
             rightSide
-          ).when(state.get.panels.rightPanelVisible)
+          ).when(state.get.panels.selected.rightPanelVisible)
         )
       } else {
         <.div(
@@ -437,13 +436,13 @@ object ObsTabContents {
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
           case None    =>
-            State(TwoPanelState.initial(p.isObsSelected),
+            State(TwoPanelState.initial(p.selectedPanel),
                   defaultLayout,
                   TargetVisualOptions.Default
             )
           case Some(s) =>
-            if (s.panels.elementSelected =!= p.isObsSelected)
-              State.panelSelected.replace(p.isObsSelected)(s)
+            if (s.panels.selected =!= p.selectedPanel)
+              State.panelSelected.replace(p.selectedPanel)(s)
             else s
         }
       )

@@ -91,3 +91,20 @@ object ObsSummaryWithPointingAndConstraints {
   implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
     Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.activeStatus, o.duration))
 }
+
+case class ObsSummaryWithPointingAndConf(
+  override val id:           Observation.Id,
+  override val pointing:     Option[Pointing],
+  override val status:       ObsStatus,
+  override val activeStatus: ObsActiveStatus,
+  override val duration:     Duration
+) extends ObsSummary
+    with ObsWithPointing
+    with ObsWithConf
+
+object ObsSummaryWithPointingAndConf {
+  val id = Focus[ObsSummaryWithPointingAndConf](_.id)
+
+  implicit val eqObsSummaryWithPointingAndConf: Eq[ObsSummaryWithPointingAndConf] =
+    Eq.by(o => (o.id, o.pointing, o.status, o.activeStatus, o.duration, o.conf))
+}

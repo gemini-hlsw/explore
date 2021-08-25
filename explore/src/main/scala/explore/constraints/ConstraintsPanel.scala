@@ -13,13 +13,13 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
 import explore.common.ConstraintsQueries._
-import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.AirMassRange
+import explore.model.ConstraintSet
 import explore.model.ElevationRange
 import explore.model.Help
 import explore.model.HourAngleRange
@@ -43,14 +43,12 @@ import lucuma.ui.reusability._
 import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
-import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.LabelPointing
-import react.semanticui.shorthand._
 
 final case class ConstraintsPanel(
-  obsId:         Observation.Id,
-  constraintSet: View[ConstraintSetData],
-  undoStacks:    View[UndoStacks[IO, ConstraintSetData]],
+  obsIds:        List[Observation.Id],
+  constraintSet: View[ConstraintSet],
+  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
@@ -110,19 +108,17 @@ object ConstraintsPanel {
     private def renderFn(
       props:        Props,
       state:        State,
-      undoCtx:      UndoCtx[ConstraintSetData]
+      undoCtx:      UndoCtx[ConstraintSet]
     )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet = UndoView(props.obsId, undoCtx)
-
-      val nameView = undoViewSet(ConstraintSetData.name, UpdateConstraintSet.name)
+      val undoViewSet = UndoView(props.obsIds, undoCtx)
 
       val erView =
-        undoViewSet(ConstraintSetData.elevationRange, UpdateConstraintSet.elevationRange)
+        undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
 
       def selectEnum[A: Enumerated: Display](
         label:     String,
         helpId:    Help.Id,
-        lens:      Lens[ConstraintSetData, A],
+        lens:      Lens[ConstraintSet, A],
         remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
       ) = {
         val id = label.toLowerCase().replaceAll(" ", "-")
@@ -174,38 +170,29 @@ object ConstraintsPanel {
           )
         ),
         Form(clazz = ExploreStyles.ConstraintsGrid)(
-          FormInputEV(
-            id = "name",
-            label = Label("Name", HelpIcon("constraints/main/name.md")),
-            clazz = ExploreStyles.ConstraintsNameField,
-            value = nameView,
-            validFormat = ValidFormatInput.nonEmptyValidFormat,
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below
-          ),
           selectEnum("Image Quality",
                      "constraints/main/iq.md",
-                     ConstraintSetData.imageQuality,
+                     ConstraintSet.imageQuality,
                      UpdateConstraintSet.imageQuality
           ),
           selectEnum("Cloud Extinction",
                      "constraints/main/ce.md",
-                     ConstraintSetData.cloudExtinction,
+                     ConstraintSet.cloudExtinction,
                      UpdateConstraintSet.cloudExtinction
           ),
           selectEnum("Water Vapor",
                      "constraints/main/wv.md",
-                     ConstraintSetData.waterVapor,
+                     ConstraintSet.waterVapor,
                      UpdateConstraintSet.waterVapor
           ),
           selectEnum("Sky Background",
                      "constraints/main/sb.md",
-                     ConstraintSetData.skyBackground,
+                     ConstraintSet.skyBackground,
                      UpdateConstraintSet.skyBackground
           ),
+          <.label("Elevation Range", HelpIcon("constraints/main/er.md")),
           <.div(
             ExploreStyles.ConstraintsElevationRangeGroup,
-            <.label("Elevation Range", HelpIcon("constraints/main/er.md")),
             EnumViewSelect(
               id = "ertype",
               value = erTypeView,
