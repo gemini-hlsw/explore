@@ -18,6 +18,7 @@ import explore.implicits._
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.SelectedPanel
+import explore.model.SelectedPanel._
 import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.undo._
@@ -36,8 +37,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 import scala.collection.immutable.SortedSet
-import explore.model.SelectedPanel.Uninitialized
-import explore.model.SelectedPanel.Editor
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
@@ -144,68 +143,68 @@ object ConstraintGroupObsList {
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              constraintGroups.toTagMod {
-                case (_, constraintGroup) =>
-                  val obsIds        = constraintGroup.obsIds
-                  val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
-                  val groupSelected = props.selected.get.optValue.exists(_ === obsIds)
+              constraintGroups.toTagMod { case (_, constraintGroup) =>
+                val obsIds        = constraintGroup.obsIds
+                val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+                val groupSelected = props.selected.get.optValue.exists(_ === obsIds)
 
-                  val icon: FontAwesomeIcon = props.expandedIds.get
-                    .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
-                    .fold(Icons.ChevronDown, Icons.ChevronRight)
-                    .addModifiers(
-                      Seq(^.cursor.pointer,
-                          ^.onClick ==> { e: ReactEvent =>
-                            e.stopPropagationCB >> toggleExpanded(obsIds, props.expandedIds).toCB
-                              .asEventDefault(e)
-                              .void
-                          }
-                      )
+                val icon: FontAwesomeIcon = props.expandedIds.get
+                  .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
+                  .fold(Icons.ChevronDown, Icons.ChevronRight)
+                  .addModifiers(
+                    Seq(^.cursor.pointer,
+                        ^.onClick ==> { e: ReactEvent =>
+                          e.stopPropagationCB >> toggleExpanded(obsIds, props.expandedIds).toCB
+                            .asEventDefault(e)
+                            .void
+                        }
                     )
-                    .fixedWidth()
+                  )
+                  .fixedWidth()
 
-                  Droppable(obsIdsToString(obsIds), renderClone = renderClone) {
-                    case (provided, snapshot) =>
-                      val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                        icon,
-                        <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                          constraintGroup.constraintSet.displayName
-                        ),
-                        <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+                Droppable(obsIdsToString(obsIds), renderClone = renderClone) {
+                  case (provided, snapshot) =>
+                    val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+                      icon,
+                      <.span(ExploreStyles.ObsGroupTitleWithWrap)(
+                        constraintGroup.constraintSet.displayName
+                      ),
+                      <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+                    )
+
+                    <.div(
+                      provided.innerRef,
+                      provided.droppableProps,
+                      props.getListStyle(
+                        snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
                       )
-
-                      <.div(
-                        provided.innerRef,
-                        provided.droppableProps,
-                        props.getListStyle(
-                          snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
+                    )(
+                      Segment(
+                        vertical = true,
+                        clazz = ExploreStyles.ObsTreeGroup |+| Option
+                          .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                          .orElse(
+                            Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
+                          )
+                          .orEmpty
+                      )(^.cursor.pointer,
+                        ^.onClick --> props.selected.set(
+                          SelectedPanel.editor(constraintGroup.obsIds)
                         )
                       )(
-                        Segment(
-                          vertical = true,
-                          clazz = ExploreStyles.ObsTreeGroup |+| Option
-                            .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
-                            .orElse(
-                              Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
-                            )
-                            .orEmpty
-                        )(^.cursor.pointer,
-                          ^.onClick --> props.selected.set(
-                            SelectedPanel.editor(constraintGroup.obsIds)
-                          )
-                        )(
-                          csHeader,
-                          TagMod.when(props.expandedIds.get.contains(obsIds))(
-                            cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                              props.renderObsBadgeItem(selectable = false,
-                                                       highlightSelected = false
-                              )(obs, idx)
-                            }
-                          ),
-                          provided.placeholder
-                        )
+                        csHeader,
+                        TagMod.when(props.expandedIds.get.contains(obsIds))(
+                          cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                            props.renderObsBadgeItem(selectable = false,
+                                                     highlightSelected = false,
+                                                     linkToObsTab = true
+                            )(obs, idx)
+                          }
+                        ),
+                        provided.placeholder
                       )
-                  }
+                    )
+                }
               }
             )
           )

@@ -53,6 +53,7 @@ case class AppContext[F[_]](
   actions:        Actions[F],
   sso:            SSOClient[F],
   pageUrl:        (AppTab, Option[Focused]) => String,
+  setPage:        (AppTab, Option[Focused]) => SyncIO[Unit],
   environment:    ExecutionEnvironment,
   fromSyncIO:     SyncIO ~> F
 )(implicit
@@ -105,6 +106,7 @@ object AppContext {
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String,
+    setPage:              (AppTab, Option[Focused]) => SyncIO[Unit],
     fromSyncIO:           SyncIO ~> F
   ): F[AppContext[F]] =
     for {
@@ -116,6 +118,7 @@ object AppContext {
                           actions,
                           SSOClient(config.sso),
                           pageUrl,
+                          setPage,
                           config.environment,
                           fromSyncIO
     )
