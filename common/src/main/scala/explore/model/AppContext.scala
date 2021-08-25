@@ -17,6 +17,7 @@ import explore.model.reusability._
 import explore.schemas._
 import explore.utils
 import io.circe.Json
+import japgolly.scalajs.react.Callback
 import org.typelevel.log4cats.Logger
 import sttp.model.Uri
 
@@ -53,7 +54,7 @@ case class AppContext[F[_]](
   actions:        Actions[F],
   sso:            SSOClient[F],
   pageUrl:        (AppTab, Option[Focused]) => String,
-  setPage:        (AppTab, Option[Focused]) => SyncIO[Unit],
+  setPage:        (AppTab, Option[Focused]) => Callback,
   environment:    ExecutionEnvironment,
   fromSyncIO:     SyncIO ~> F
 )(implicit
@@ -106,7 +107,7 @@ object AppContext {
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String,
-    setPage:              (AppTab, Option[Focused]) => SyncIO[Unit],
+    setPage:              (AppTab, Option[Focused]) => Callback,
     fromSyncIO:           SyncIO ~> F
   ): F[AppContext[F]] =
     for {

@@ -169,7 +169,7 @@ object ExploreMain extends IOApp.Simple {
           routerCtl.urlFor(RootModelRouting.getPage(tab, focused)).value
 
         def setPage(tab: AppTab, focused: Option[Focused]) =
-          routerCtl.set(RootModelRouting.getPage(tab, focused)).to[SyncIO]
+          routerCtl.set(RootModelRouting.getPage(tab, focused))
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)
