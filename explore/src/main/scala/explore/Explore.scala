@@ -168,12 +168,15 @@ object ExploreMain extends IOApp.Simple {
         def pageUrl(tab: AppTab, focused: Option[Focused]): String =
           routerCtl.urlFor(RootModelRouting.getPage(tab, focused)).value
 
+        def setPage(tab: AppTab, focused: Option[Focused]) =
+          routerCtl.set(RootModelRouting.getPage(tab, focused))
+
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)
           appConfig            <- fetchConfig
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
-          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, syncIOtoIO)
+          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, syncIOtoIO)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {

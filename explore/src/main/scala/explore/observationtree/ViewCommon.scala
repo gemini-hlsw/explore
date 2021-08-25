@@ -24,10 +24,14 @@ trait ViewCommon {
       selected = highlightSelected && focused.get.exists(_ === FocusedObs(obs.id))
     )
 
-  def renderObsBadgeItem(selectable: Boolean, highlightSelected: Boolean = true)(
-    obs:                             ObsSummary,
-    idx:                             Int
-  ): TagMod =
+  def renderObsBadgeItem(
+    selectable:        Boolean,
+    highlightSelected: Boolean = true,
+    linkToObsTab:      Boolean = false
+  )(
+    obs:               ObsSummary,
+    idx:               Int
+  )(implicit ctx:      AppContextIO): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(
@@ -36,7 +40,11 @@ trait ViewCommon {
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactEvent =>
             e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some)
-          }).when(selectable)
+          }).when(selectable),
+          (^.onDoubleClick ==> { e: ReactEvent =>
+            e.stopPropagationCB >>
+              ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some)
+          }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected)))
       }
     )
