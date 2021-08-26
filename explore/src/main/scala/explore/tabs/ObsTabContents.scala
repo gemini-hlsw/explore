@@ -366,7 +366,7 @@ object ObsTabContents {
               )
 
             val constraintsSelector =
-              Reuse.by(constraintGroups)(potRender[View[ObservationData]] {
+              Reuse.by((constraintGroups, obsView))(potRender[View[ObservationData]] {
                 Reuse.always { vod =>
                   val cgOpt: Option[ConstraintGroup] =
                     constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
