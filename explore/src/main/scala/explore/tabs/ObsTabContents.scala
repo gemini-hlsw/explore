@@ -234,6 +234,38 @@ object ObsTabContents {
     def obsIdStringToIds(obsIdStr: String): Option[SortedSet[Observation.Id]] =
       obsIdStr.split(",").toList.map(Observation.Id.parse(_)).sequence.map(SortedSet.from(_))
 
+    def makeConstraintsSelector(
+      constraintGroups: View[ConstraintsList],
+      obsView:          Pot[View[ObservationData]]
+    )(implicit ctx:     AppContextIO): VdomNode =
+      potRender[View[ObservationData]] {
+        Reuse.always { vod =>
+          val cgOpt: Option[ConstraintGroup] =
+            constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
+
+          Select(
+            value = cgOpt.map(cg => obsIdsToString(cg.obsIds)).orEmpty,
+            onChange = (p: Dropdown.DropdownProps) => {
+              val newCgOpt =
+                obsIdStringToIds(p.value.toString).flatMap(ids => constraintGroups.get.get(ids))
+              newCgOpt.map { cg =>
+                vod.zoom(ObservationData.constraintSet).set(cg.constraintSet).toCB >>
+                  ObsQueries
+                    .updateObservationConstraintSet[IO](vod.get.id, cg.constraintSet)
+                    .runAsyncAndForgetCB
+              }.getOrEmpty
+            },
+            options = constraintGroups.get
+              .map(kv =>
+                new SelectItem(value = obsIdsToString(kv._1),
+                               text = kv._2.constraintSet.displayName
+                )
+              )
+              .toList
+          )
+        }
+      }(obsView)
+
     // TODO Use this method
     def readTargetPreferences(targetId: Target.Id)(implicit ctx: AppContextIO): Callback =
       $.props.flatMap { p =>
@@ -365,36 +397,9 @@ object ObsTabContents {
                 view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod)))
               )
 
-            val constraintsSelector =
-              Reuse.by((constraintGroups, obsView))(potRender[View[ObservationData]] {
-                Reuse.always { vod =>
-                  val cgOpt: Option[ConstraintGroup] =
-                    constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
-
-                  Select(
-                    value = cgOpt.map(cg => obsIdsToString(cg.obsIds)).orEmpty,
-                    onChange = (p: Dropdown.DropdownProps) => {
-                      val newCgOpt =
-                        obsIdStringToIds(p.value.toString).flatMap(ids =>
-                          constraintGroups.get.get(ids)
-                        )
-                      (obsIdOpt, newCgOpt).mapN { (obsId, cg) =>
-                        vod.zoom(ObservationData.constraintSet).set(cg.constraintSet).toCB >>
-                          ObsQueries
-                            .updateObservationConstraintSet[IO](obsId, cg.constraintSet)
-                            .runAsyncAndForgetCB
-                      }.getOrEmpty
-                    },
-                    options = constraintGroups.get
-                      .map(kv =>
-                        new SelectItem(value = obsIdsToString(kv._1),
-                                       text = kv._2.constraintSet.displayName
-                        )
-                      )
-                      .toList
-                  )
-                }
-              }(obsView))
+            val constraintsSelector = (constraintGroups, obsView).curryReusing.in((cgs, ov) =>
+              makeConstraintsSelector(cgs, ov)
+            )
 
             TileController(
               props.userId.get,
