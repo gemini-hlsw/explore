@@ -15,6 +15,7 @@ import explore.common.ConstraintGroupQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ConstraintGroup
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.SelectedPanel

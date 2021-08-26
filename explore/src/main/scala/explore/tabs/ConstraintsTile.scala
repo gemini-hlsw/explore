@@ -25,12 +25,14 @@ object ConstraintsTile {
   def constraintsTile(
     obsId:      Observation.Id,
     csPot:      Pot[View[ConstraintSet]],
-    undoStacks: View[UndoStacks[IO, ConstraintSet]]
+    undoStacks: View[UndoStacks[IO, ConstraintSet]],
+    control:    Option[Reuse[VdomNode]] = None
   ): Tile =
     Tile(
       ObsTabTiles.ConstraintsId,
       "Constraints",
-      canMinimize = true
+      canMinimize = true,
+      control = control
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
         potRender[View[ConstraintSet]](
