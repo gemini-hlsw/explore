@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.Order._
 import cats.syntax.all._
 import crystal.Pot
 import crystal.ViewF
@@ -33,6 +34,7 @@ import explore.observationtree.ObsList
 import explore.optics._
 import explore.schemas.ObservationDB
 import explore.undo.UndoStacks
+import explore.utils._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -49,11 +51,16 @@ import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
 import react.resizeDetector.ResizeDetector
+import react.semanticui.addons.select.Select
+import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
+import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
+import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import explore.common.ObsQueries
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -222,6 +229,11 @@ object ObsTabContents {
           case Left(_)       => Callback.empty
         }
 
+    def obsIdsToString(obsIds: SortedSet[Observation.Id]): String = obsIds.mkString(",")
+
+    def obsIdStringToIds(obsIdStr: String): Option[SortedSet[Observation.Id]] =
+      obsIdStr.split(",").toList.map(Observation.Id.parse(_)).sequence.map(SortedSet.from(_))
+
     // TODO Use this method
     def readTargetPreferences(targetId: Target.Id)(implicit ctx: AppContextIO): Callback =
       $.props.flatMap { p =>
@@ -234,10 +246,12 @@ object ObsTabContents {
       }
 
     protected def renderFn(
-      props:        Props,
-      state:        View[State],
-      observations: View[ObservationList]
-    )(implicit ctx: AppContextIO): VdomNode = {
+      props:              Props,
+      state:              View[State],
+      obsWithConstraints: View[ObsSummariesWithConstraints]
+    )(implicit ctx:       AppContextIO): VdomNode = {
+      val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
+      val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
       val treeResize =
         (_: ReactEvent, d: ResizeCallbackData) =>
@@ -342,13 +356,45 @@ object ObsTabContents {
              targetId,
              props.undoStacks,
              props.searching,
-             state.zoom(State.options)
+             state.zoom(State.options),
+             constraintGroups
             )
           ) { (obsViewPot: Pot[View[Pot[ObservationData]]]) =>
             val obsView: Pot[View[ObservationData]] =
               obsViewPot.flatMap(view =>
                 view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod)))
               )
+
+            val constraintsSelector =
+              Reuse.by(constraintGroups)(potRender[View[ObservationData]] {
+                Reuse.always { vod =>
+                  val cgOpt: Option[ConstraintGroup] =
+                    constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
+
+                  Select(
+                    value = cgOpt.map(cg => obsIdsToString(cg.obsIds)).orEmpty,
+                    onChange = (p: Dropdown.DropdownProps) => {
+                      val newCgOpt =
+                        obsIdStringToIds(p.value.toString).flatMap(ids =>
+                          constraintGroups.get.get(ids)
+                        )
+                      (obsIdOpt, newCgOpt).mapN { (obsId, cg) =>
+                        vod.zoom(ObservationData.constraintSet).set(cg.constraintSet).toCB >>
+                          ObsQueries
+                            .updateObservationConstraintSet[IO](obsId, cg.constraintSet)
+                            .runAsyncAndForgetCB
+                      }.getOrEmpty
+                    },
+                    options = constraintGroups.get
+                      .map(kv =>
+                        new SelectItem(value = obsIdsToString(kv._1),
+                                       text = kv._2.constraintSet.displayName
+                        )
+                      )
+                      .toList
+                  )
+                }
+              }(obsView))
 
             TileController(
               props.userId.get,
@@ -370,7 +416,8 @@ object ObsTabContents {
                     obsView.map(_.zoom(ObservationData.constraintSet)),
                     props.undoStacks
                       .zoom(ModelUndoStacks.forConstraintSet[IO])
-                      .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+                      .zoom(atMapWithDefault(obsId, UndoStacks.empty)),
+                    control = constraintsSelector.some
                   ),
                 ConfigurationTile.configurationTile(
                   obsId,

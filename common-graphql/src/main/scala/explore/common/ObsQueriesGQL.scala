@@ -55,7 +55,34 @@ object ObsQueriesGQL {
             }
           }
         }
-      }
+      
+        constraintSetGroup(programId: "p-2") {
+            nodes {
+              constraintSet {
+                cloudExtinction
+                imageQuality
+                skyBackground
+                waterVapor
+                elevationRange {
+                  type: __typename
+                  ... on AirMassRange {
+                    min
+                    max
+                  }
+                  ... on HourAngleRange {
+                    minHours
+                    maxHours
+                  }
+                }
+              }
+              observations {
+                nodes {
+                  id
+                } 
+              }
+            }
+          }
+        }
     """
 
     object Data {
@@ -65,6 +92,12 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
+        }
+      }
+
+      object ConstraintSetGroup {
+        object Nodes {
+          type ConstraintSet = model.ConstraintSet
         }
       }
     }

@@ -3,7 +3,6 @@
 
 package explore.common
 
-import cats.Eq
 import cats.Order
 import cats.effect.IO
 import cats.implicits._
@@ -11,10 +10,9 @@ import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
-import explore.model.ConstraintSet
+import explore.model.ConstraintGroup
 import explore.model.Pointing
 import explore.model.ObsSummaryWithPointingAndConf
-import explore.model.reusability._
 import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._
@@ -49,22 +47,6 @@ object ConstraintGroupQueries {
       Pointing.PointingAsterism(asterismId, asterismName, Nil)
   }
 
-  case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: SortedSet[Observation.Id]) {
-    def addObsId(obsId:    Observation.Id): ConstraintGroup =
-      ConstraintGroup.obsIds.modify(_ + obsId)(this)
-    def removeObsId(obsId: Observation.Id): ConstraintGroup =
-      ConstraintGroup.obsIds.modify(_ - obsId)(this)
-    def asKeyValue: (SortedSet[Observation.Id], ConstraintGroup) = (this.obsIds, this)
-  }
-
-  object ConstraintGroup {
-    val constraintSet = Focus[ConstraintGroup](_.constraintSet)
-    val obsIds        = Focus[ConstraintGroup](_.obsIds)
-
-    def fromConstraintGroupResult(cgr: ConstraintGroupResult): ConstraintGroup =
-      ConstraintGroup(cgr.constraintSet, SortedSet.from(cgr.observations.nodes.map(_.id)))
-  }
-
   type ConstraintGroupList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithPointingAndConf]
 
@@ -78,8 +60,6 @@ object ConstraintGroupQueries {
     val observations     = Focus[ConstraintSummaryWithObervations](_.observations)
   }
 
-  implicit val constraintGroupEq: Eq[ConstraintGroup]                                     = Eq.by(cg => (cg.constraintSet, cg.obsIds))
-  implicit val constraintGroupReuse: Reusability[ConstraintGroup]                         = Reusability.derive
   implicit val constraintsSummWithObsReuse: Reusability[ConstraintSummaryWithObervations] =
     Reusability.derive
 
@@ -99,7 +79,7 @@ object ConstraintGroupQueries {
     data => {
       ConstraintSummaryWithObervations(
         toSortedMap(
-          data.constraintSetGroup.nodes.map(ConstraintGroup.fromConstraintGroupResult(_)),
+          data.constraintSetGroup.nodes.map(_.asConstraintGroup),
           ConstraintGroup.obsIds.get
         ),
         toSortedMap(data.observations.nodes.map(obsResultToSummary),
@@ -111,6 +91,11 @@ object ConstraintGroupQueries {
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
       extends AnyVal {
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
+  }
+
+  implicit class ConstraintGroupResultOps(val self: ConstraintGroupResult) extends AnyVal {
+    def asConstraintGroup =
+      ConstraintGroup(self.constraintSet, SortedSet.from(self.observations.nodes.map(_.id)))
   }
 
   val ConstraintGroupLiveQuery =

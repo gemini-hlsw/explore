@@ -3,31 +3,45 @@
 
 package explore.common
 
+import cats.effect.Async
 import cats.effect.IO
+import cats.implicits._
+import clue.TransactionalClient
+import clue.data.syntax._
 import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
+import explore.model.AirMassRange
+import explore.model.ConstraintSet
+import explore.model.ConstraintGroup
+import explore.model.HourAngleRange
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
 import explore.optics._
 import explore.schemas.ObservationDB
+import explore.schemas.ObservationDB.Types._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenIso
+
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 import ObsQueriesGQL._
 
 object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
+  type ConstraintsList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
 
   type WavelengthInput = ObservationDB.Types.WavelengthModelInput
   val WavelengthInput = ObservationDB.Types.WavelengthModelInput
@@ -56,6 +70,19 @@ object ObsQueries {
     disjointZip(ObservationData.scienceRequirements, ObservationData.scienceConfiguration)
       .andThen(GenIso.fields[ScienceData].reverse)
 
+  case class ObsSummariesWithConstraints(
+    observations:     ObservationList,
+    constraintGroups: ConstraintsList
+  )
+
+  object ObsSummariesWithConstraints {
+    val observations     = Focus[ObsSummariesWithConstraints](_.observations)
+    val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
+
+    implicit val reusabilityObsSummaryWithConstraints: Reusability[ObsSummariesWithConstraints] =
+      Reusability.derive
+  }
+
   private def convertPointing(
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
   ): Pointing =
@@ -66,32 +93,50 @@ object ObsQueries {
         Pointing.PointingAsterism(id, name, Nil)
     }
 
-  private val programObservationsQueryoObservationListGetter
-    : Getter[ProgramObservationsQuery.Data, ObservationList] = data =>
-    KeyedIndexedList.fromList(
-      data.observations.nodes.map(node =>
-        ObsSummaryWithPointingAndConstraints(node.id,
-                                             node.observationTarget.map(convertPointing),
-                                             node.constraintSet,
-                                             node.status,
-                                             node.activeStatus,
-                                             node.plannedTime.execution
-        )
+  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
+    SortedMap.from(list.map(a => (getKey(a), a)))
+
+  private val queryToObsSummariesWithConstraintsGetter
+    : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
+    ObsSummariesWithConstraints(
+      KeyedIndexedList.fromList(
+        data.observations.nodes.map(node =>
+          ObsSummaryWithPointingAndConstraints(node.id,
+                                               node.observationTarget.map(convertPointing),
+                                               node.constraintSet,
+                                               node.status,
+                                               node.activeStatus,
+                                               node.plannedTime.execution
+          )
+        ),
+        ObsSummaryWithPointingAndConstraints.id.get
       ),
-      ObsSummaryWithPointingAndConstraints.id.get
+      toSortedMap(data.constraintSetGroup.nodes.map(_.asConstraintGroup),
+                  ConstraintGroup.obsIds.get
+      )
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
-    def asObservationList = programObservationsQueryoObservationListGetter
+    def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
+  }
+
+  implicit class ConstraintGroupResultOps(
+    val self: ProgramObservationsQuery.Data.ConstraintSetGroup.Nodes
+  ) extends AnyVal {
+    def asConstraintGroup =
+      ConstraintGroup(self.constraintSet, SortedSet.from(self.observations.nodes.map(_.id)))
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[ObservationList] ==> VdomNode](render =>
+    ScalaFnComponent[View[ObsSummariesWithConstraints] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB, ProgramObservationsQuery.Data, ObservationList](
+        LiveQueryRenderMod[ObservationDB,
+                           ProgramObservationsQuery.Data,
+                           ObsSummariesWithConstraints
+        ](
           ProgramObservationsQuery.query().reuseAlways,
-          (ProgramObservationsQuery.Data.asObservationList.get _).reuseAlways,
+          (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
           List(
             ProgramObservationsEditSubscription.subscribe[IO]()
           ).reuseAlways
@@ -99,4 +144,30 @@ object ObsQueries {
       }
     )
 
+  def updateObservationConstraintSet[F[_]: Async](
+    obsId:       Observation.Id,
+    constraints: ConstraintSet
+  )(implicit
+    c:           TransactionalClient[F, ObservationDB]
+  ): F[Unit] = {
+    val createER: CreateElevationRangeInput = constraints.elevationRange match {
+      case AirMassRange(min, max)   =>
+        CreateElevationRangeInput(airmassRange =
+          CreateAirmassRangeInput(min = min.value, max = max.value).assign
+        )
+      case HourAngleRange(min, max) =>
+        CreateElevationRangeInput(hourAngleRange =
+          CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
+        )
+    }
+    val editInput                           = EditConstraintSetInput(
+      name = clue.data.Ignore,
+      imageQuality = constraints.imageQuality.assign,
+      cloudExtinction = constraints.cloudExtinction.assign,
+      skyBackground = constraints.skyBackground.assign,
+      waterVapor = constraints.waterVapor.assign,
+      elevationRange = createER.assign
+    )
+    UpdateConstraintSetMutation.execute[F](List(obsId), editInput).void
+  }
 }

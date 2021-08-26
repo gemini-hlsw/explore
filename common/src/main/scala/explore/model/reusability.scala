@@ -33,6 +33,7 @@ object reusability {
   implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.derive
   implicit val constraintsSummaryReuse: Reusability[ConstraintsSummary]                        = Reusability.byEq
   implicit val constraintsSetReuse: Reusability[ConstraintSet]                                 = Reusability.derive
+  implicit val constraintGroupReuse: Reusability[ConstraintGroup]                              = Reusability.derive
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                              = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                                    = Reusability.derive
   implicit val obsSummaryReuse: Reusability[ObsSummary]                                        = Reusability.byEq
