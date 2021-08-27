@@ -20,9 +20,9 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
+import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.undo._
-import explore.observationtree.ConstraintGroupObsList
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._

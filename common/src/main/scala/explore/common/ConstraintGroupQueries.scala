@@ -19,8 +19,9 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
-import monocle.Getter
 import monocle.Focus
+import monocle.Getter
+
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
