@@ -15,8 +15,8 @@ import scala.scalajs.js.annotation._
 import scala.scalajs.js.|
 
 /**
- * Facade for the react component for FontAwesomeIcons
- * See: https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react
+ * Facade for the react component for FontAwesomeIcons See:
+ * https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react
  */
 final case class FontAwesomeIcon(
   family:                 Family,

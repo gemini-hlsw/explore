@@ -8,7 +8,7 @@ val reactJS              = "17.0.2"
 val FUILess              = "2.8.7"
 val kindProjectorVersion = "0.13.1"
 
-ThisBuild / Test / bspEnabled := false
+ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 addCommandAlias(
@@ -28,15 +28,15 @@ addCommandAlias(
 
 inThisBuild(
   Seq(
-    homepage := Some(url("https://github.com/gemini-hlsw/explore")),
+    homepage                             := Some(url("https://github.com/gemini-hlsw/explore")),
     addCompilerPlugin(
       ("org.typelevel"                    % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
     ),
-    description := "Explore",
+    description                          := "Explore",
     scalacOptions += "-Ymacro-annotations",
-    Global / onChangedBuildSource := ReloadOnSourceChanges,
+    Global / onChangedBuildSource        := ReloadOnSourceChanges,
     scalafixDependencies += "edu.gemini" %% "clue-generator" % Settings.LibraryVersions.clue,
-    scalafixScalaBinaryVersion := "2.13"
+    scalafixScalaBinaryVersion           := "2.13"
   ) ++ lucumaPublishSettings
 )
 
@@ -108,7 +108,7 @@ lazy val common = project
         ReactClipboard.value ++
         ReactCommon.value ++
         ReactTable.value,
-    buildInfoKeys := Seq[BuildInfoKey](
+    buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,
       git.gitHeadCommit,
@@ -155,10 +155,10 @@ lazy val explore: Project = project
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   // don't publish anything
-  publish := {},
-  publishLocal := {},
+  publish         := {},
+  publishLocal    := {},
   publishArtifact := false,
-  Keys.`package` := file(""),
+  Keys.`package`  := file(""),
   scalacOptions --= Seq("-Xfatal-warnings").filterNot(_ => insideCI.value)
 )
 
