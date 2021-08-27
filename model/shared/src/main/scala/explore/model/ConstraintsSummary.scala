@@ -22,8 +22,8 @@ trait ConstraintsSummary {
 object ConstraintsSummary {
   val default: ConstraintsSummary = new ConstraintsSummary {
     // Defaults here should match server defaults for a smooth UI experience.
-    val imageQuality    = ImageQuality.TwoPointZero
-    val cloudExtinction = CloudExtinction.ThreePointZero
+    val imageQuality    = ImageQuality.PointEight
+    val cloudExtinction = CloudExtinction.PointThree
     val skyBackground   = SkyBackground.Bright
     val waterVapor      = WaterVapor.Wet
   }
