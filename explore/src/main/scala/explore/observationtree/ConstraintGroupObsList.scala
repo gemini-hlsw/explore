@@ -3,9 +3,9 @@
 
 package explore.observationtree
 
+import cats.Order._
 import cats.effect.IO
 import cats.effect.SyncIO
-import cats.Order._
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
@@ -37,6 +37,7 @@ import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
+
 import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(

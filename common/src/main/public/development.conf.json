@@ -1,6 +1,6 @@
 {
   "environment": "DEVELOPMENT",
-  "odbURI": "wss://lucuma-odb-development.herokuapp.com/ws",
+  "odbURI": "wss://odb.gpp.lucuma.xyz/ws",
   "preferencesDBURI": "wss://userprefs-hasura-staging.herokuapp.com/v1/graphql",
   "sso": {
     "uri": "https://sso.gpp.lucuma.xyz",

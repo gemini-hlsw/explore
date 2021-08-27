@@ -16,6 +16,7 @@ import explore.model.SelectedPanel.Editor
 import explore.schemas.ObservationDB
 import explore.undo._
 import lucuma.core.model.Observation
+
 import scala.collection.immutable.SortedSet
 
 object ConstraintGroupObsListActions {

@@ -3,13 +3,10 @@
 
 package explore.config
 
-import cats.effect.IO
 import cats.syntax.all._
 import coulomb.Quantity
-import crystal.Pot
 import crystal.ViewF
 import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.AppCtx
 import explore.common.ObsQueries._
@@ -23,9 +20,6 @@ import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
-import explore.modes.SpectroscopyModesMatrix
-import explore.utils._
-import fs2._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
@@ -41,11 +35,6 @@ import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import sttp.client3._
-import sttp.client3.impl.cats.FetchCatsBackend
-import sttp.model._
-
-import scala.concurrent.duration._
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -62,13 +51,11 @@ object ConfigurationPanel {
 
   final case class State(
     mode:           ScienceMode,
-    imagingOptions: ImagingConfigurationOptions,
-    matrix:         Pot[SpectroscopyModesMatrix]
+    imagingOptions: ImagingConfigurationOptions
   )
   object State {
     val mode: Lens[State, ScienceMode]                           = Focus[State](_.mode)
     val imagingOptions: Lens[State, ImagingConfigurationOptions] = Focus[State](_.imagingOptions)
-    val matrix: Lens[State, Pot[SpectroscopyModesMatrix]]        = Focus[State](_.matrix)
   }
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
@@ -114,7 +101,6 @@ object ConfigurationPanel {
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
       props:           Props,
-      state:           State,
       scienceDataUndo: UndoCtx[ScienceData]
     )(implicit ctx:    AppContextIO): VdomNode = {
       val requirementsCtx = scienceDataUndo.zoom(ScienceData.requirements)
@@ -151,58 +137,31 @@ object ConfigurationPanel {
           ImagingConfigurationPanel(imaging)
             .unless(isSpectroscopy)
         ),
-        potRender[SpectroscopyModesMatrix](
-          (
-            (matrix: SpectroscopyModesMatrix) =>
-              SpectroscopyModesTable
-                .component(
-                  SpectroscopyModesTable(
-                    configurationView,
-                    matrix,
-                    spectroscopy.get
-                  )
-                )
-                .vdomElement
-          ).reuseAlways
-        )(state.matrix).when(isSpectroscopy)
+        SpectroscopyModesTable
+          .component(
+            SpectroscopyModesTable(
+              configurationView,
+              props.ctx.staticData.spectroscopyMatrix,
+              spectroscopy.get
+            )
+          )
+          .when(isSpectroscopy)
       )
     }
 
-    def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
+    def render(props: Props) = AppCtx.using { implicit appCtx =>
       renderFn(
         props,
-        state,
         props.scienceDataUndo
       )
     }
   }
 
-  def load(uri: Uri): IO[SpectroscopyModesMatrix] = {
-    val backend = FetchCatsBackend[IO]()
-    basicRequest
-      .get(uri)
-      .readTimeout(5.seconds)
-      .send(backend)
-      .flatMap {
-        _.body.fold(_ => SpectroscopyModesMatrix.empty.pure[IO],
-                    s => SpectroscopyModesMatrix[IO](Stream.emit(s))
-        )
-      }
-  }
-
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(
-        State(ScienceMode.Spectroscopy, ImagingConfigurationOptions.Default, Pot.pending)
-      )
+      .initialState(State(ScienceMode.Spectroscopy, ImagingConfigurationOptions.Default))
       .renderBackend[Backend]
-      .componentDidMount { $ =>
-        implicit val ctx = $.props.ctx
-        load(uri"/instrument_spectroscopy_matrix.csv").flatMap { m =>
-          $.modStateIn[IO](State.matrix.replace(Pot(m)))
-        }.runAsyncAndForgetCB
-      }
       .configure(Reusability.shouldComponentUpdate)
       .build
 }
