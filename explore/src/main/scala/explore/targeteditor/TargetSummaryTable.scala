@@ -189,16 +189,18 @@ object TargetSummaryTable {
         (_, cols, _) => cols,
         (_, _, rows) => rows,
         (props, _, _) =>
-          _.setAutoResetSortBy(false)
-            .setInitialStateFull(
-              TargetTable
-                .State()
-                .setHiddenColumns(
-                  props.hiddenColumns.get.toList
-                    .map(col => col: IdType[TargetResult])
-                    .toJSArray
-                )
-            )
+          options =>
+            options
+              .setAutoResetSortBy(false)
+              .setInitialStateFull(
+                TargetTable
+                  .State()
+                  .setHiddenColumns(
+                    props.hiddenColumns.get.toList
+                      .map(col => col: IdType[TargetResult])
+                      .toJSArray
+                  )
+              )
       )
       .render((props, _, _, tableInstance) =>
         <.div(
@@ -222,8 +224,9 @@ object TargetSummaryTable {
                             label = columnNames(colId),
                             checked = column.isVisible,
                             onChange = (value: Boolean) =>
-                              props.hiddenColumns
-                                .mod(cols => if (value) cols - colId else cols + colId)
+                              Callback(column.toggleHidden()) >>
+                                props.hiddenColumns
+                                  .mod(cols => if (value) cols - colId else cols + colId)
                           )
                         )
                       )
