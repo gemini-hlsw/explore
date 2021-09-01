@@ -24,7 +24,7 @@ object ReactTableHelpers {
 
   /**
    * Create a component which edits the value in a FormInputEv and can be passed
-   * to the TableMaker componentColumn method.
+   * to the TableDef componentColumn method.
    *
    * @param lens Lens to go between the Row value and the Cell value.
    * @param validFormat The ValidFormatInput for the editor.
@@ -57,7 +57,7 @@ object ReactTableHelpers {
 
   /**
    * Create a component which edits the value via a EnumViewSelect and can be passed
-   * to the TableMaker componentColumn method.
+   * to the TableDef componentColumn method.
    *
    * @param lens Lens to go between the Row value and the Cell value.
    * @param disabled Whether editing should be disabled or not.
@@ -89,7 +89,7 @@ object ReactTableHelpers {
 
   /**
    * Create a component containing a button which can be passed to the
-   * TableMaker componentColumn method.
+   * TableDef componentColumn method.
    * The button is passed in to allow maximum flexibility, but the
    * onClick handler should not be specified for the button, since
    * it will be added here.

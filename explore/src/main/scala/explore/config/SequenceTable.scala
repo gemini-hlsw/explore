@@ -27,8 +27,8 @@ import react.semanticui.collections.table._
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import reactST.reactTable.SUITable
+import reactST.reactTable.TableDef
 import reactST.reactTable.TableHooks.Implicits._
-import reactST.reactTable.TableMaker
 import reactST.reactTable.mod.ColumnInterface
 
 import java.text.DecimalFormat
@@ -88,7 +88,7 @@ object SequenceTable {
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val StepTable = TableMaker[StepLine[_]]
+  private val StepTable = TableDef[StepLine[_]]
   import StepTable.syntax._
 
   private def drawBracket(rows: Int): VdomElement =
@@ -182,20 +182,23 @@ object SequenceTable {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useTableBy(StepTable)(
-        _ => columns, // No need to memo columns for now, since it's a static val.
-        _.config match {
-          case Config.GmosSouthConfig(_, _, acquisition, _) => buildLines(acquisition.atoms)
-          case _                                            => List.empty
-        }
+      .useTableBy(props =>
+        StepTable(
+          columns, // No need to memo columns for now, since it's a static val.
+          props.config match {
+            case Config.GmosSouthConfig(_, _, acquisition, _) => buildLines(acquisition.atoms)
+            case _                                            => List.empty
+          }
+        )
       )
-      .useTableBy(StepTable)(
-        (_, _) => columns,
-        (props, _) =>
+      .useTableBy((props, _) =>
+        StepTable(
+          columns,
           props.config match {
             case Config.GmosSouthConfig(_, _, _, science) => buildLines(science.atoms)
             case _                                        => List.empty
           }
+        )
       )
       .render { (_, acquisitionTable, scienceTable) =>
         val bracketDef =

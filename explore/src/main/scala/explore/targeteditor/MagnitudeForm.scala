@@ -32,8 +32,8 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
 import reactST.reactTable.SUITable
+import reactST.reactTable.TableDef
 import reactST.reactTable.TableHooks.Implicits._
-import reactST.reactTable.TableMaker
 import reactST.reactTable.mod.ColumnInterface
 import reactST.reactTable.mod.SortingRule
 
@@ -65,7 +65,7 @@ object MagnitudeForm {
 
   implicit def render(props: Props): VdomElement = component(props).vdomElement
 
-  private val MagTable = TableMaker[View[Magnitude]].withSort
+  private val MagTable = TableDef[View[Magnitude]].withSort
 
   import MagTable.syntax._
 
@@ -149,12 +149,12 @@ object MagnitudeForm {
         }
       }
       .useMemoBy((props, _, _) => props.magnitudes)((_, _, _) => _.toListOfViews(_.band)) // Rows
-      .useTableBy_(MagTable)(
-        (_, _, cols, _) => cols,
-        (_, _, _, rows) => rows,
-        (_, _, _, _) =>
-          _.setRowIdFn(_.get.band.tag)
-            .setInitialStateFull(tableState)
+      .useTableBy((_, _, cols, rows) =>
+        MagTable(cols,
+                 rows,
+                 _.setRowIdFn(_.get.band.tag)
+                   .setInitialStateFull(tableState)
+        )
       )
       .render { (props, state, _, _, tableInstance) =>
         val newBandView: Option[View[MagnitudeBand]] =

@@ -56,7 +56,7 @@ object TargetSummaryTable {
 
   implicit def render(props: Props): VdomElement = component(props).vdomElement
 
-  protected val TargetTable = TableMaker[TargetResult].withSort
+  protected val TargetTable = TableDef[TargetResult].withSort
 
   import TargetTable.syntax._
 
@@ -185,22 +185,21 @@ object TargetSummaryTable {
           )
       }
       .useMemoBy((props, _) => props.pointingsWithObs)((_, _) => _.targets.toList) // Memo rows
-      .useTableBy_(TargetTable)(
-        (_, cols, _) => cols,
-        (_, _, rows) => rows,
-        (props, _, _) =>
-          options =>
-            options
-              .setAutoResetSortBy(false)
-              .setInitialStateFull(
-                TargetTable
-                  .State()
-                  .setHiddenColumns(
-                    props.hiddenColumns.get.toList
-                      .map(col => col: IdType[TargetResult])
-                      .toJSArray
-                  )
-              )
+      .useTableBy((props, cols, rows) =>
+        TargetTable(
+          cols,
+          rows,
+          _.setAutoResetSortBy(false)
+            .setInitialStateFull(
+              TargetTable
+                .State()
+                .setHiddenColumns(
+                  props.hiddenColumns.get.toList
+                    .map(col => col: IdType[TargetResult])
+                    .toJSArray
+                )
+            )
+        )
       )
       .render((props, _, _, tableInstance) =>
         <.div(

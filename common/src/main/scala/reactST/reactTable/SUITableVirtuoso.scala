@@ -46,8 +46,8 @@ class SUITableVirtuoso[
   ColumnOptsD <: ColumnOptions[D],
   ColumnInstanceD <: ColumnObject[D],
   State <: TableState[D] // format: on
-](                       // tableMaker is used to infer types.
-  @unused tableMaker: TableMaker[
+](                       // tableDef is used to infer types.
+  @unused tableDef: TableDef[
     D,
     TableOptsD,
     TableInstanceD,
@@ -57,7 +57,7 @@ class SUITableVirtuoso[
     Layout.NonTable
   ]
 )(implicit
-  sortElements:       SortElements[ColumnInstanceD]
+  sortElements:     SortElements[ColumnInstanceD]
 ) {
   val component = ScalaFnComponent[SUITableVirtuosoProps[D, TableInstanceD, ColumnInstanceD]] {
     case props =>
@@ -164,7 +164,7 @@ class SUITableVirtuoso[
       val headerElement: Option[TableHeader] =
         headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
           headerRowTag(headerRowData.getHeaderGroupProps())(
-            TableMaker
+            TableDef
               .headersFromGroup(headerRowData)
               .toTagMod((col: ColumnInstanceD) =>
                 headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
@@ -201,7 +201,7 @@ class SUITableVirtuoso[
         )
       tableInstance.footerGroups.toTagMod { footerRowData =>
         props.footerRow.copy(as = <.div, cellAs = <.div)(footerRowData.getFooterGroupProps())(
-          TableMaker
+          TableDef
             .headersFromGroup(footerRowData)
             .toTagMod((col: ColumnInstanceD) =>
               footerCellRender(col)(col.getFooterProps())(col.renderFooter)

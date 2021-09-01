@@ -57,13 +57,13 @@ object SpectroscopyModesTable {
   implicit private val dataReuse: Reusability[List[SpectroscopyModeRow]]                 =
     Reusability.byRefOr_==
 
-  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort.withBlockLayout
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
-  import ModesTableMaker.syntax._
+  import ModesTableDef.syntax._
 
   val decFormat = new DecimalFormat("0.###");
 
-  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableMaker)
+  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableDef)
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
     case ModeDisperser.NoDisperser      => "-"
@@ -71,7 +71,7 @@ object SpectroscopyModesTable {
   }
 
   def column[V](id: ColId, accessor: SpectroscopyModeRow => V) =
-    ModesTableMaker
+    ModesTableDef
       .Column(id, accessor)
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
@@ -259,8 +259,8 @@ object SpectroscopyModesTable {
       )(_ => { case (wavelength, focalPlane) =>
         columns(wavelength, focalPlane)
       })
-      .useTableBy(ModesTableMaker)((_, _, cols) => cols, (_, rows, _) => rows)
-      //Why do we need reusability for hooks values?
+      .useTableBy((_, rows, cols) => ModesTableDef(cols, rows))
+      // Why do we need reusability for hooks values?
       // .renderWithReuse { (props, rows, _, tableInstance) =>
       .render { (props, rows, _, tableInstance) =>
         def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
@@ -277,7 +277,7 @@ object SpectroscopyModesTable {
                             compact = TableCompact.Very
               )(),
               header = true,
-              headerCell = (c: ModesTableMaker.ColumnType) =>
+              headerCell = (c: ModesTableDef.ColumnType) =>
                 TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
                   ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
                   ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)

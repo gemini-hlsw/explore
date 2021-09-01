@@ -106,8 +106,8 @@ class SUITable[
   ColumnInstanceD <: ColumnObject[D],
   State <: TableState[D],
   Layout // format: on
-](       // tableMaker is used to infer types.
-  @unused tableMaker: TableMaker[
+](       // tableDef is used to infer types.
+  @unused tableDef: TableDef[
     D,
     TableOptsD,
     TableInstanceD,
@@ -117,8 +117,8 @@ class SUITable[
     Layout
   ]
 )(implicit
-  layout:             LayoutDefaultTag[Layout],
-  sortElements:       SortElements[ColumnInstanceD]
+  layout:           LayoutDefaultTag[Layout],
+  sortElements:     SortElements[ColumnInstanceD]
 ) {
   val component = ScalaFnComponent[SUITableProps[D, TableInstanceD, ColumnInstanceD]] {
     case props =>
@@ -160,7 +160,7 @@ class SUITable[
       val headerElement: Option[TableHeader] =
         headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
           props.headerRow(headerRowData.getHeaderGroupProps())(
-            TableMaker
+            TableDef
               .headersFromGroup(headerRowData)
               .toTagMod((col: ColumnInstanceD) =>
                 headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
@@ -185,7 +185,7 @@ class SUITable[
       def standardFooter(footerTag: TableFooter) =
         footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
           props.footerRow(footerRowData.getFooterGroupProps())(
-            TableMaker
+            TableDef
               .headersFromGroup(footerRowData)
               .toTagMod((col: ColumnInstanceD) =>
                 footerCellRender(col)(col.getFooterProps())(col.renderFooter)
@@ -215,10 +215,10 @@ class SUITable[
   // case class Applied(builder: TableInstanceD => Component) {
   //   def apply(instance: TableInstanceD): Component = builder(instance)
 
-  //   // def apply(options: TableOptsD): Component = builder(tableMaker.use(options))
+  //   // def apply(options: TableOptsD): Component = builder(tableDef.use(options))
 
   //   // def apply(columns: js.Array[_ <: UseTableColumnOptions[D]], data: js.Array[D]): Component =
-  //   //   apply(tableMaker.Options(columns, data))
+  //   //   apply(tableDef.Options(columns, data))
   // }
 
   def apply(
