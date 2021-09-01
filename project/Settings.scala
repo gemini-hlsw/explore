@@ -39,7 +39,7 @@ object Settings {
     val reactHotkeys      = "0.3.2"
     val reactResizable    = "0.6.0"
     val reactSemanticUI   = "0.11.1"
-    val reactTable        = "0.2.1"
+    val reactTable        = "0.2.1+1-776b8fd0+20210831-1648-SNAPSHOT"
     val scalaJsReact      = "2.0.0-RC3"
     val sttp              = "3.3.14"
     val pprint            = "0.6.6"

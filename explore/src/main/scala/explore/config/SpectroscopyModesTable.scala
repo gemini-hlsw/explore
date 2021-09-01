@@ -25,7 +25,9 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
+import reactST.reactTable.TableHooks.Implicits._
 import reactST.reactTable._
+import reactST.reactTable.mod.ColumnInterface
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
@@ -33,8 +35,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
-
-import scalajs.js.JSConverters._
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -51,6 +51,11 @@ object SpectroscopyModesTable {
 
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
+
+  implicit private val colReuse: Reusability[List[ColumnInterface[SpectroscopyModeRow]]] =
+    Reusability.always
+  implicit private val dataReuse: Reusability[List[SpectroscopyModeRow]]                 =
+    Reusability.byRefOr_==
 
   protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort.withBlockLayout
 
@@ -232,7 +237,7 @@ object SpectroscopyModesTable {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_.spectroscopyRequirements)(props =>
+      .useMemoBy(_.spectroscopyRequirements)(props => // Memo Rows
         s => {
           val rows                =
             props.matrix
@@ -246,20 +251,20 @@ object SpectroscopyModesTable {
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)
-          (enabled ++ disabled).toJSArray
+          (enabled ++ disabled)
         }
       )
-      .useMemoBy($ =>
+      .useMemoBy($ => // Memo Cols
         ($.props.spectroscopyRequirements.wavelength, $.props.spectroscopyRequirements.focalPlane)
       )(_ => { case (wavelength, focalPlane) =>
-        columns(wavelength, focalPlane).toJSArray
+        columns(wavelength, focalPlane)
       })
-      // .renderWithReuse{ (props, rows, cols) => // Throws Invalid hook call. Reported to japgolly.
-      .render { (props, rows, cols) =>
+      .useTableBy(ModesTableMaker)((_, _, cols) => cols, (_, rows, _) => rows)
+      //Why do we need reusability for hooks values?
+      // .renderWithReuse { (props, rows, _, tableInstance) =>
+      .render { (props, rows, _, tableInstance) =>
         def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
-
-        val tableInstance = ModesTableMaker.use(ModesTableMaker.Options(cols, rows))
 
         React.Fragment(
           <.label(ExploreStyles.ModesTableTitle, s"${rows.length} matching configurations"),
