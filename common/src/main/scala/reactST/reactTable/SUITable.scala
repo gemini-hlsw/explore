@@ -212,15 +212,6 @@ class SUITable[
 
   type Component = JsFn.UnmountedWithRoot[Props, Unit, Box[Props]]
 
-  // case class Applied(builder: TableInstanceD => Component) {
-  //   def apply(instance: TableInstanceD): Component = builder(instance)
-
-  //   // def apply(options: TableOptsD): Component = builder(tableDef.use(options))
-
-  //   // def apply(columns: js.Array[_ <: UseTableColumnOptions[D]], data: js.Array[D]): Component =
-  //   //   apply(tableDef.Options(columns, data))
-  // }
-
   def apply(
     table:      TableTemplate[D, TableInstanceD] = Table(as = layout.tag),
     header:     Boolean | TableHeader = false,
