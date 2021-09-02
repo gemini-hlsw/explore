@@ -26,15 +26,14 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.Focus
+import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
-import reactST.reactTable.SUITable
-import reactST.reactTable.TableDef
-import reactST.reactTable.implicits._
+import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.HashSet
@@ -43,7 +42,7 @@ final case class MagnitudeForm(
   targetId:   Target.Id,
   magnitudes: View[List[Magnitude]],
   disabled:   Boolean
-) //extends ReactProps[MagnitudeForm](MagnitudeForm.component)
+) extends ReactFnProps[MagnitudeForm](MagnitudeForm.component)
 
 object MagnitudeForm {
   type Props = MagnitudeForm
@@ -62,8 +61,6 @@ object MagnitudeForm {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
-
-  implicit def render(props: Props): VdomElement = component(props).vdomElement
 
   private val MagTable = TableDef[View[Magnitude]].withSort
 

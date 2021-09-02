@@ -18,13 +18,12 @@ import react.common._
 import scala.scalajs.js
 
 final case class HelpIcon(id: Help.Id, clazz: js.UndefOr[Css] = js.undefined)
+    extends ReactFnProps[HelpIcon](HelpIcon.component)
 
 object HelpIcon {
   type Props = HelpIcon
 
   type HelpId = NonEmptyFiniteString[20]
-
-  implicit def render(props: HelpIcon): VdomElement = component(props).vdomElement
 
   implicit val helpReusability: Reusability[HelpIcon] =
     Reusability.by(x => (x.id.value, x.clazz.map(_.htmlClass)))

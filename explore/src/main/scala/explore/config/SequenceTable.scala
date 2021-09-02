@@ -27,19 +27,15 @@ import react.common._
 import react.semanticui.collections.table._
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
-import reactST.reactTable.SUITable
-import reactST.reactTable.TableDef
-import reactST.reactTable.implicits._
+import reactST.reactTable._
 
 import java.text.DecimalFormat
 
 final case class SequenceTable(config: Config)
-// extends ReactProps[SequenceTable](SequenceTable.component)
+    extends ReactFnProps[SequenceTable](SequenceTable.component)
 
 object SequenceTable {
   type Props = SequenceTable
-
-  implicit def render(props: Props): VdomElement = component(props).vdomElement
 
   trait SiteResolver[Site <: SeqSite] {
     def disperserName(disperser: Site#Disperser): String

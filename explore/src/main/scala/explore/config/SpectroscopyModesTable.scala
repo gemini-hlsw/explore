@@ -25,7 +25,6 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
-import reactST.reactTable.implicits._
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
@@ -39,14 +38,12 @@ final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   matrix:                   SpectroscopyModesMatrix,
   spectroscopyRequirements: SpectroscopyRequirementsData
-) //extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+) extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
-
-  implicit def render(props: SpectroscopyModesTable): VdomElement = component(props).vdomElement
 
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))

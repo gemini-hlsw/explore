@@ -35,7 +35,6 @@ import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
-import reactST.reactTable.implicits._
 import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
@@ -49,12 +48,10 @@ final case class TargetSummaryTable(
   focused:          View[Option[Focused]],
   expandedIds:      View[ExpandedIds],
   renderInTitle:    Tile.RenderInTitle
-) //extends ReactProps[TargetSummaryTable](TargetSummaryTable.component)
+) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
 
 object TargetSummaryTable {
   type Props = TargetSummaryTable
-
-  implicit def render(props: Props): VdomElement = component(props).vdomElement
 
   protected val TargetTable = TableDef[TargetResult].withSort
 
