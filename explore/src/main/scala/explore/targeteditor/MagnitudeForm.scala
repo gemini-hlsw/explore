@@ -8,6 +8,7 @@ import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -33,8 +34,7 @@ import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
 import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
-import reactST.reactTable.TableHooks.Implicits._
-import reactST.reactTable.mod.ColumnInterface
+import reactST.reactTable.implicits._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.HashSet
@@ -68,10 +68,6 @@ object MagnitudeForm {
   private val MagTable = TableDef[View[Magnitude]].withSort
 
   import MagTable.syntax._
-
-  implicit private val colReuse: Reusability[List[ColumnInterface[View[Magnitude]]]] =
-    Reusability.always
-  implicit private val dataReuse: Reusability[List[View[Magnitude]]]                 = Reusability.byRefOr_==
 
   private val MagTableComponent = new SUITable(MagTable)
 
@@ -152,23 +148,21 @@ object MagnitudeForm {
       .useTableBy((_, _, cols, rows) =>
         MagTable(cols,
                  rows,
-                 _.setRowIdFn(_.get.band.tag)
-                   .setInitialStateFull(tableState)
+                 ((_: MagTable.OptionsType)
+                   .setRowIdFn(_.get.band.tag)
+                   .setInitialStateFull(tableState))
+                   .reuseAlways
         )
       )
-      .render { (props, state, _, _, tableInstance) =>
+      .renderWithReuse { (props, state, _, _, tableInstance) =>
         val newBandView: Option[View[MagnitudeBand]] =
           state.value.newBand.map(band =>
             ViewF(
               band,
-              (
-                mod,
-                _
-              ) =>
-                SyncIO(
-                  state.modState(State.newBand.some.modify(mod)).runNow()
-                ) // This View will ignore Callbacks
-              // $.modStateInSyncIO(State.newBand.some.modify(mod), _.newBand.map(cb).orEmpty)
+              (mod, _) =>
+                // This View will ignore Callbacks. This is OK as long as noone calls its .withOnMod.
+                // .withOnMod will likely become deprecated in the transition to hooks.
+                SyncIO(state.modState(State.newBand.some.modify(mod)).runNow())
             )
           )
 

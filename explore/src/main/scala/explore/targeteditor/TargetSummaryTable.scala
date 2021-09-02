@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.reuse._
 import explore.Icons
 import explore.common.TargetObsQueries
 import explore.common.TargetObsQueries._
@@ -34,10 +35,9 @@ import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
-import reactST.reactTable.TableHooks.Implicits._
+import reactST.reactTable.implicits._
 import reactST.reactTable._
 import reactST.reactTable.mod.Cell
-import reactST.reactTable.mod.ColumnInterface
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
@@ -63,10 +63,6 @@ object TargetSummaryTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
-
-  implicit private val colReuse: Reusability[List[ColumnInterface[TargetResult]]] =
-    Reusability.always
-  implicit private val dataReuse: Reusability[List[TargetResult]]                 = Reusability.byRefOr_==
 
   private val columnNames: Map[String, String] = Map(
     "type"         -> " ",
@@ -189,16 +185,19 @@ object TargetSummaryTable {
         TargetTable(
           cols,
           rows,
-          _.setAutoResetSortBy(false)
-            .setInitialStateFull(
-              TargetTable
-                .State()
-                .setHiddenColumns(
-                  props.hiddenColumns.get.toList
-                    .map(col => col: IdType[TargetResult])
-                    .toJSArray
-                )
-            )
+          { (hiddenColumns: Set[String], options: TargetTable.OptionsType) =>
+            options
+              .setAutoResetSortBy(false)
+              .setInitialStateFull(
+                TargetTable
+                  .State()
+                  .setHiddenColumns(
+                    hiddenColumns.toList
+                      .map(col => col: IdType[TargetResult])
+                      .toJSArray
+                  )
+              )
+          }.reuseCurrying(props.hiddenColumns.get)
         )
       )
       .render((props, _, _, tableInstance) =>

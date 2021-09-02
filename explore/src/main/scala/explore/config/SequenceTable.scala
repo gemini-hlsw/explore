@@ -4,6 +4,7 @@
 package explore.config
 
 import cats.syntax.all._
+import crystal.react.reuse._
 import explore.Icons
 import explore.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
 import explore.common.SequenceStepsGQL.SequenceSteps._
@@ -28,8 +29,7 @@ import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
-import reactST.reactTable.TableHooks.Implicits._
-import reactST.reactTable.mod.ColumnInterface
+import reactST.reactTable.implicits._
 
 import java.text.DecimalFormat
 
@@ -162,9 +162,8 @@ object SequenceTable {
       .setHeader("S/N")
   )
 
-  implicit private val colReuse: Reusability[List[ColumnInterface[StepLine[_]]]] =
-    Reusability.always
-  implicit private val dataReuse: Reusability[List[StepLine[_]]]                 = Reusability.byRefOr_==
+  // Props are not used directly when computing reusability in render.
+  implicit private val propsReuse: Reusability[Props] = Reusability.always
 
   private def buildLines[Site <: SeqSite: SiteResolver](
     atoms: List[SeqAtom[Site]]
@@ -184,23 +183,23 @@ object SequenceTable {
       .withHooks[Props]
       .useTableBy(props =>
         StepTable(
-          columns, // No need to memo columns for now, since it's a static val.
-          props.config match {
+          columns.reuseAlways,
+          ((_: Config) match {
             case Config.GmosSouthConfig(_, _, acquisition, _) => buildLines(acquisition.atoms)
             case _                                            => List.empty
-          }
+          }).reuseCurrying(props.config)
         )
       )
       .useTableBy((props, _) =>
         StepTable(
-          columns,
-          props.config match {
+          columns.reuseAlways,
+          ((_: Config) match {
             case Config.GmosSouthConfig(_, _, _, science) => buildLines(science.atoms)
             case _                                        => List.empty
-          }
+          }).reuseCurrying(props.config)
         )
       )
-      .render { (_, acquisitionTable, scienceTable) =>
+      .renderWithReuse { (_, acquisitionTable, scienceTable) =>
         val bracketDef =
           svg(^.width := "0", ^.height := "0")(
             defs(

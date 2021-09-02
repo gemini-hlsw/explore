@@ -25,9 +25,8 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
-import reactST.reactTable.TableHooks.Implicits._
+import reactST.reactTable.implicits._
 import reactST.reactTable._
-import reactST.reactTable.mod.ColumnInterface
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
@@ -51,11 +50,6 @@ object SpectroscopyModesTable {
 
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
-
-  implicit private val colReuse: Reusability[List[ColumnInterface[SpectroscopyModeRow]]] =
-    Reusability.always
-  implicit private val dataReuse: Reusability[List[SpectroscopyModeRow]]                 =
-    Reusability.byRefOr_==
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
@@ -260,9 +254,7 @@ object SpectroscopyModesTable {
         columns(wavelength, focalPlane)
       })
       .useTableBy((_, rows, cols) => ModesTableDef(cols, rows))
-      // Why do we need reusability for hooks values?
-      // .renderWithReuse { (props, rows, _, tableInstance) =>
-      .render { (props, rows, _, tableInstance) =>
+      .renderWithReuse { (props, rows, _, tableInstance) =>
         def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
