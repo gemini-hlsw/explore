@@ -19,8 +19,8 @@ final case class SequenceEditor() extends ReactProps[SequenceEditor](SequenceEdi
 object SequenceEditor {
   type Props = SequenceEditor
 
-  private def renderFn(config: SequenceSteps.Data.Observations.Nodes.Config): VdomNode =
-    SequenceTable(config)
+  private def renderFn(config: Option[SequenceSteps.Data.Observations.Nodes.Config]): VdomNode =
+    config.fold[VdomNode](<.div("Default observation not found"))(SequenceTable.apply)
 
   val component =
     ScalaComponent
@@ -29,9 +29,9 @@ object SequenceEditor {
         AppCtx.using { implicit ctx =>
           LiveQueryRender[ObservationDB,
                           SequenceSteps.Data,
-                          SequenceSteps.Data.Observations.Nodes.Config
+                          Option[SequenceSteps.Data.Observations.Nodes.Config]
           ](SequenceSteps.query().reuseAlways,
-            ((_: SequenceSteps.Data).observations.nodes.head.config.get).reuseAlways,
+            ((_: SequenceSteps.Data).observations.nodes.headOption.flatMap(_.config)).reuseAlways,
             List.empty.reuseAlways
           )(
             potRender((renderFn _).reuseAlways)

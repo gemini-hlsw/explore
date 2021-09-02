@@ -34,31 +34,27 @@ import spire.math.Interval
 
 import java.text.DecimalFormat
 
-import scalajs.js.JSConverters._
-
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   matrix:                   SpectroscopyModesMatrix,
   spectroscopyRequirements: SpectroscopyRequirementsData
-) //extends ReactProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+) extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
 
-  implicit def render(props: SpectroscopyModesTable): VdomElement = component(props).vdomElement
-
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
-  protected val ModesTableMaker = TableMaker[SpectroscopyModeRow].withSort.withBlockLayout
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
-  import ModesTableMaker.syntax._
+  import ModesTableDef.syntax._
 
   val decFormat = new DecimalFormat("0.###");
 
-  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableMaker)
+  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableDef)
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
     case ModeDisperser.NoDisperser      => "-"
@@ -66,7 +62,7 @@ object SpectroscopyModesTable {
   }
 
   def column[V](id: ColId, accessor: SpectroscopyModeRow => V) =
-    ModesTableMaker
+    ModesTableDef
       .Column(id, accessor)
       .setHeader(columnNames.getOrElse(id, id.value): String)
 
@@ -232,7 +228,7 @@ object SpectroscopyModesTable {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_.spectroscopyRequirements)(props =>
+      .useMemoBy(_.spectroscopyRequirements)(props => // Memo Rows
         s => {
           val rows                =
             props.matrix
@@ -246,20 +242,18 @@ object SpectroscopyModesTable {
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)
-          (enabled ++ disabled).toJSArray
+          (enabled ++ disabled)
         }
       )
-      .useMemoBy($ =>
+      .useMemoBy($ => // Memo Cols
         ($.props.spectroscopyRequirements.wavelength, $.props.spectroscopyRequirements.focalPlane)
       )(_ => { case (wavelength, focalPlane) =>
-        columns(wavelength, focalPlane).toJSArray
+        columns(wavelength, focalPlane)
       })
-      // .renderWithReuse{ (props, rows, cols) => // Throws Invalid hook call. Reported to japgolly.
-      .render { (props, rows, cols) =>
+      .useTableBy((_, rows, cols) => ModesTableDef(cols, rows))
+      .renderWithReuse { (props, rows, _, tableInstance) =>
         def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
-
-        val tableInstance = ModesTableMaker.use(ModesTableMaker.Options(cols, rows))
 
         React.Fragment(
           <.label(ExploreStyles.ModesTableTitle, s"${rows.length} matching configurations"),
@@ -272,7 +266,7 @@ object SpectroscopyModesTable {
                             compact = TableCompact.Very
               )(),
               header = true,
-              headerCell = (c: ModesTableMaker.ColumnType) =>
+              headerCell = (c: ModesTableDef.ColumnType) =>
                 TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
                   ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
                   ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
