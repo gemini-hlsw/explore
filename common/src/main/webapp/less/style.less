@@ -1869,8 +1869,13 @@ svg[focusable="false"]:focus {
 }
 
 .ui.selectable.table > tbody > tr:hover,
-.ui.selectable.table .tbody .tr:not(.thead > .tr):not(.tfoot > .tr):hover,
+.ui.selectable.table
+  .tbody
+  .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
 .ui.table tbody tr td.selectable:hover,
-.ui.table .tbody .tr .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
+.ui.table
+  .tbody
+  .tr:not(.disabled)
+  .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
   box-shadow: inset 0 0 0 1px var(--explore-accent-color);
 }
