@@ -23,8 +23,8 @@ import scalajs.js
 object ReactTableHelpers {
 
   /**
-   * Create a component which edits the value in a FormInputEv and can be passed to the TableMaker
-   * componentColumn method.
+   * Create a component which edits the value in a FormInputEv and can be passed
+   * to the TableDef componentColumn method.
    *
    * @param lens
    *   Lens to go between the Row value and the Cell value.
@@ -61,8 +61,8 @@ object ReactTableHelpers {
       .raw
 
   /**
-   * Create a component which edits the value via a EnumViewSelect and can be passed to the
-   * TableMaker componentColumn method.
+   * Create a component which edits the value via a EnumViewSelect and can be passed
+   * to the TableDef componentColumn method.
    *
    * @param lens
    *   Lens to go between the Row value and the Cell value.
@@ -98,9 +98,11 @@ object ReactTableHelpers {
       .raw
 
   /**
-   * Create a component containing a button which can be passed to the TableMaker componentColumn
-   * method. The button is passed in to allow maximum flexibility, but the onClick handler should
-   * not be specified for the button, since it will be added here.
+   * Create a component containing a button which can be passed to the
+   * TableDef componentColumn method.
+   * The button is passed in to allow maximum flexibility, but the
+   * onClick handler should not be specified for the button, since
+   * it will be added here.
    *
    * The [A] type is the type of the entire data row.
    *
