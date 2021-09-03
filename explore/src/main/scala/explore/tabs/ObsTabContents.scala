@@ -3,8 +3,8 @@
 
 package explore.tabs
 
-import cats.effect.IO
 import cats.Order._
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.ViewF
@@ -16,6 +16,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.ObsQueries
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.common.UserPreferencesQueries._
@@ -60,7 +61,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import explore.common.ObsQueries
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -83,14 +83,11 @@ object ObsTabTiles {
 }
 
 object ObsTabContents {
-  val NotesMaxHeight: NonNegInt         = 3
-  val NotesMinHeight: NonNegInt         = 1
-  val TargetMinHeight: NonNegInt        = 12
-  val ConstraintsMaxHeight: NonNegInt   = 6
-  val ConstraintsMinHeight: NonNegInt   = 1
-  val ConfigurationMaxHeight: NonNegInt = 8
-  val ConfigurationMinHeight: NonNegInt = 1
-  val DefaultWidth: NonNegInt           = 12
+  private val NotesMaxHeight: NonNegInt         = 3
+  private val TargetMinHeight: NonNegInt        = 12
+  private val ConstraintsMaxHeight: NonNegInt   = 6
+  private val ConfigurationMaxHeight: NonNegInt = 10
+  private val DefaultWidth: NonNegInt           = 12
 
   private val layoutLarge: Layout = Layout(
     List(
@@ -397,9 +394,10 @@ object ObsTabContents {
                 view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod)))
               )
 
-            val constraintsSelector = (constraintGroups, obsView).curryReusing.in((cgs, ov) =>
-              makeConstraintsSelector(cgs, ov)
-            )
+            val constraintsSelector =
+              Reuse.by((constraintGroups, obsView.map(_.get.constraintSet)))(
+                makeConstraintsSelector(constraintGroups, obsView)
+              )
 
             TileController(
               props.userId.get,

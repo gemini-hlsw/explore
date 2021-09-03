@@ -110,7 +110,7 @@
   }
   & when (@variationTableSelectable) {
     /* Allow striped active hover */
-    .ui.striped.selectable.selectable.selectable.table .tbody .tr.active:hover {
+    .ui.striped.selectable.selectable.selectable.table .tbody .tr.active:hover:not(.disabled) {
       background: @activeBackgroundHover;
       color: @activeColorHover;
     }

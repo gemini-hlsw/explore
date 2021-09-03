@@ -50,7 +50,12 @@ object reusability {
     Reusability.by(_.model)
 
   implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]] =
-    Reusability.never
+    Reusability.by[Map[K, UndoStacks[F, M]], Int](_.size) && Reusability[Map[K, UndoStacks[F, M]]](
+      (a, b) =>
+        a.forall { case (k, stacksA) =>
+          b.get(k).exists(stacksB => undoStacksReuse.test(stacksA, stacksB))
+        }
+    )
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.derive
   // Move to lucuma-ui
   implicit val semesterReuse: Reusability[Semester]                                  = Reusability.derive

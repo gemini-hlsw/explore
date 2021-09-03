@@ -256,7 +256,7 @@ object SpectroscopyModesTable {
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
         React.Fragment(
-          <.label(ExploreStyles.ModesTableTitle, s"${rows.length} matching configurations"),
+          <.div(ExploreStyles.ModesTableTitle)(<.label(s"${rows.length} matching configurations")),
           <.div(
             ExploreStyles.ModesTable,
             ModesTableComponent(
