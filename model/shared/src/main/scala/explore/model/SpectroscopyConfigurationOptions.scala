@@ -17,8 +17,8 @@ import lucuma.core.math.units.Micrometer
 import monocle.Focus
 
 /**
- * We want to store wavelengths in units to allow 0 in the UI
- * but later we convert these units for calculations were Wavelength 0 is not allowed
+ * We want to store wavelengths in units to allow 0 in the UI but later we convert these units for
+ * calculations were Wavelength 0 is not allowed
  */
 final case class SpectroscopyConfigurationOptions(
   wavelengthQ:      Option[Quantity[BigDecimal, Micrometer]],
