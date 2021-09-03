@@ -37,9 +37,6 @@ object TargetTile {
     targetViewOptions: View[TargetVisualOptions]
   )(implicit ctx:      AppContextIO) = {
 
-    // FIXME We are having reusability issues here.
-    // If obs status or active is changed in the tree, this is rerendered, when it shouldn't.
-
     def targetRenderFn(
       targetId:      Target.Id,
       undoStacks:    View[UndoStacks[IO, TargetResult]],
@@ -59,12 +56,11 @@ object TargetTile {
       }
 
     def renderTarget(
-      targetId:      Option[Target.Id],
-      undoStacks:    View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
-      renderInTitle: Tile.RenderInTitle
+      targetIdUndoStacks: Option[(Target.Id, View[UndoStacks[IO, TargetResult]])],
+      renderInTitle:      Tile.RenderInTitle
     ): VdomNode =
-      targetId
-        .map[VdomNode] { targetId =>
+      targetIdUndoStacks
+        .map[VdomNode] { case (targetId, undoStacks) =>
           LiveQueryRenderMod[ObservationDB,
                              TargetEditQuery.Data,
                              Option[TargetEditQuery.Data.Target]
@@ -74,10 +70,7 @@ object TargetTile {
             List(TargetEditSubscription.subscribe[IO](targetId)).reuseAlways
           )(
             potRender(
-              Reuse(targetRenderFn _)(targetId,
-                                      undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                                      renderInTitle
-              )
+              Reuse(targetRenderFn _)(targetId, undoStacks, renderInTitle)
             )
           )
             .withKey(s"target-$targetId")
@@ -89,7 +82,12 @@ object TargetTile {
         )
 
     Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)(
-      Reuse(renderTarget _)(targetId, undoStacks)
+      targetId
+        .map(tid =>
+          (tid, undoStacks.zoom(atMapWithDefault(tid, UndoStacks.empty[IO, TargetResult])))
+        )
+        .curryReusing
+        .in(renderTarget _)
     )
   }
 
