@@ -9,11 +9,13 @@ import lucuma.core.util.Enumerated
 /**
  * Describes the application tab buttons in the sidebar
  *
- * @param title The text for the button
- * @param buttonGroup Groups the buttons with the same value together
+ * @param title
+ *   The text for the button
+ * @param buttonGroup
+ *   Groups the buttons with the same value together
  *
- * Within a button group, order is determined by the AppTab Order instance,
- * which is determined by the order in AppTab.all.
+ * Within a button group, order is determined by the AppTab Order instance, which is determined by
+ * the order in AppTab.all.
  */
 sealed abstract class AppTab(
   val title:       String,
