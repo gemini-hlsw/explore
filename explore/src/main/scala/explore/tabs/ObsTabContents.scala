@@ -83,14 +83,11 @@ object ObsTabTiles {
 }
 
 object ObsTabContents {
-  val NotesMaxHeight: NonNegInt         = 3
-  val NotesMinHeight: NonNegInt         = 1
-  val TargetMinHeight: NonNegInt        = 12
-  val ConstraintsMaxHeight: NonNegInt   = 6
-  val ConstraintsMinHeight: NonNegInt   = 1
-  val ConfigurationMaxHeight: NonNegInt = 8
-  val ConfigurationMinHeight: NonNegInt = 1
-  val DefaultWidth: NonNegInt           = 12
+  private val NotesMaxHeight: NonNegInt         = 3
+  private val TargetMinHeight: NonNegInt        = 12
+  private val ConstraintsMaxHeight: NonNegInt   = 6
+  private val ConfigurationMaxHeight: NonNegInt = 10
+  private val DefaultWidth: NonNegInt           = 12
 
   private val layoutLarge: Layout = Layout(
     List(
