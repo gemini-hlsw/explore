@@ -10,12 +10,11 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Redshift
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
@@ -76,21 +75,6 @@ object RVInput {
 
   implicit def propsReuse: Reusability[Props] = Reusability.derive
   implicit def stateReuse: Reusability[State] = Reusability.derive
-
-  private val rvToRedshiftGet: Option[RadialVelocity] => Option[Redshift] =
-    _.flatMap(_.toRedshift)
-
-  private val rvToRedshiftMod
-    : (Option[Redshift] => Option[Redshift]) => Option[RadialVelocity] => Option[RadialVelocity] =
-    modZ => rv => modZ(rv.flatMap(_.toRedshift)).flatMap(_.toRadialVelocity)
-
-  private val rvToARVGet: Option[RadialVelocity] => Option[ApparentRadialVelocity] =
-    rvToRedshiftGet.andThen(_.map(_.toApparentRadialVelocity))
-
-  private val rvToARVMod: (
-    Option[ApparentRadialVelocity] => Option[ApparentRadialVelocity]
-  ) => Option[RadialVelocity] => Option[RadialVelocity] =
-    modZ => rvToRedshiftMod(rsOpt => modZ(rsOpt.map(_.toApparentRadialVelocity)).map(_.toRedshift))
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {

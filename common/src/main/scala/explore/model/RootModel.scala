@@ -29,7 +29,7 @@ case class RootModel(
   searchingTarget:            Set[Target.Id] = HashSet.empty,
   userSelectionMessage:       Option[NonEmptyString] = none,
   targetSummaryHiddenColumns: Set[String] =
-    Set("epoch", "pmra", "pmdec", "parallax", "morphology", "sed") ++
+    Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
       MagnitudeBand.all
         .filterNot(_ === MagnitudeBand.V)
         .map(b => (b.shortName + "mag")),
