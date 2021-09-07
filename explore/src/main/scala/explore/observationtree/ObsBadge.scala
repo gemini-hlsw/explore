@@ -31,6 +31,7 @@ import react.semanticui.collections.form.FormDropdown
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
+import react.semanticui.modules.popup.Popup
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
@@ -119,15 +120,22 @@ object ObsBadge {
                     ReactFragment(obs.id.toString)
                 },
                 props.setActiveStatusCB.map(setActiveStatus =>
-                  Checkbox(
-                    toggle = true,
-                    checked = obs.activeStatus.toBoolean,
-                    onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
-                      e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
-                        ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                      ),
-                    clazz = ExploreStyles.ObsActiveStatusToggle
-                  ): VdomNode
+                  Popup(
+                    clazz = ExploreStyles.Compact,
+                    content = obs.activeStatus match {
+                      case ObsActiveStatus.Active   => "Observation is active"
+                      case ObsActiveStatus.Inactive => "Observation is not active"
+                    },
+                    trigger = Checkbox(
+                      toggle = true,
+                      checked = obs.activeStatus.toBoolean,
+                      onClickE = (e: ReactEvent, _: Checkbox.CheckboxProps) =>
+                        e.preventDefaultCB >> e.stopPropagationCB >> setActiveStatus(
+                          ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
+                        ),
+                      clazz = ExploreStyles.ObsActiveStatusToggle
+                    )
+                  )
                 )
               ),
               CardExtra(clazz = ExploreStyles.ObsBadgeExtra)(

@@ -694,9 +694,10 @@ tfoot {
   margin-bottom: 0.2em;
 }
 
+.card.obs-badge .content .header,
 .card.obs-badge .content .meta,
 .card.obs-badge .content .description,
-.card.obs-badge .content .header {
+.card.obs-badge .content .extra {
   color: var(--obs-badge-color);
 }
 
@@ -1874,4 +1875,8 @@ svg[focusable="false"]:focus {
 .ui.table tbody tr td.selectable:hover,
 .ui.table .tbody .tr:not(.disabled) .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
   box-shadow: inset 0 0 0 1px var(--explore-accent-color);
+}
+
+.ui.popup.explore-compact {
+  padding: 0.5em;
 }
