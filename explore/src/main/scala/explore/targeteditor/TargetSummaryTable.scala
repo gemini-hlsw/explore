@@ -15,6 +15,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExpandedIds
 import explore.model.Focused
+import explore.model.conversions._
 import explore.model.formats._
 import explore.model.reusability._
 import japgolly.scalajs.react._
@@ -72,6 +73,9 @@ object TargetSummaryTable {
     "epoch"        -> "Epoch",
     "pmra"         -> "µ RA",
     "pmdec"        -> "µ Dec",
+    "rv"           -> "RV",
+    "z"            -> "z",
+    "cz"           -> "cz",
     "parallax"     -> "Parallax",
     "morphology"   -> "Morphology",
     "sed"          -> "SED"
@@ -147,6 +151,15 @@ object TargetSummaryTable {
               .setSortByAuto,
             column("pmdec", TargetObsQueries.pmDecLens.get)
               .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
+              .setSortByAuto,
+            column("rv", TargetObsQueries.rvLens.get)
+              .setCell(_.value.map(formatRV.reverseGet).orEmpty)
+              .setSortByAuto,
+            column("z", (TargetObsQueries.rvLens.get _).andThen(rvToRedshiftGet))
+              .setCell(_.value.map(formatZ.reverseGet).orEmpty)
+              .setSortByAuto,
+            column("cz", (TargetObsQueries.rvLens.get _).andThen(rvToARVGet))
+              .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
               .setSortByAuto,
             column("parallax", TargetObsQueries.pxLens.get)
               .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
