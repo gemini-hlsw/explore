@@ -62,6 +62,24 @@ object SkyPlotNight {
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
+  @js.native
+  protected trait PointOptionsWithAirmass extends PointOptionsObject {
+    var airmass: Double
+  }
+
+  @js.native
+  protected trait ElevationPointWithAirmass extends Point {
+    var airmass: Double
+  }
+
+  protected implicit class PointOptionsWithAirmassOps(val x: PointOptionsWithAirmass)
+      extends AnyVal {
+    def setAirMass(value: Double): PointOptionsWithAirmass = {
+      x.airmass = value
+      x
+    }
+  }
+
   protected case class SeriesData(
     targetAltitude:   List[Chart.Data],
     skyBrightness:    List[Chart.Data],
@@ -121,7 +139,10 @@ object SkyPlotNight {
               .setX(millisSinceEpoch)
               .setY(value)
 
-          point(results.altitude.toAngle.toSignedDoubleDegrees) ::
+          def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
+            point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
+
+          pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
             point(-results.totalSkyBrightness) ::
             point(results.parallacticAngle.toSignedDoubleDegrees) ::
             point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
@@ -151,8 +172,10 @@ object SkyPlotNight {
         (ctx: TooltipFormatterContextObject, _: Tooltip) =>
           val time  = timeFormat(ctx.x)
           val value = ctx.series.index match {
+            case 0 =>                      // Target elevation with airmass
+              formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
             case 2 => "%.2f".format(ctx.y) // Sky Brightness
-            case _ => formatAngle(ctx.y)   // Elevations
+            case _ => formatAngle(ctx.y)   // Other elevations
           }
           s"<strong>$time ($timeZone)</strong><br/>${ctx.series.name}: $value"
       }

@@ -76,7 +76,7 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
     Samples.fromMap(
       Iterator
         .iterate(semester.start.localDate)(_.plusDays(dayRate))
-        .takeWhile(_ < semester.end.localDate)
+        .takeWhile(_ <= semester.end.localDate)
         .map { date =>
           val instant = date.atTime(LocalTime.MIDNIGHT).atZone(site.timezone).toInstant
           instant -> Eval.later {
