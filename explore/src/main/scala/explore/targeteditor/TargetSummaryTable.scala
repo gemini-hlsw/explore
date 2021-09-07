@@ -30,7 +30,6 @@ import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
-import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
@@ -40,8 +39,9 @@ import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
-
 import scalajs.js.JSConverters._
+
+import react.common._
 
 final case class TargetSummaryTable(
   pointingsWithObs: PointingsWithObs,

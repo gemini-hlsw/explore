@@ -24,9 +24,12 @@ import scalajs.js.|
 import scalajs.js.JSConverters._
 import definitions._
 
-protected case class SUITableVirtuosoProps[D, TableInstanceD <: TableInstance[
-  D
-], ColumnInstanceD <: ColumnObject[D]](
+// format: off
+protected case class SUITableVirtuosoProps[
+  D, 
+  TableInstanceD <: TableInstance[D],
+  ColumnInstanceD <: ColumnObject[D] // format: on
+](
   table:        TableTemplate[D, TableInstanceD],
   header:       Boolean | TableHeader,
   headerRow:    TableRow = TableRow(),
@@ -37,7 +40,7 @@ protected case class SUITableVirtuosoProps[D, TableInstanceD <: TableInstance[
   footer:       Boolean | TableFooter | VdomNode,
   footerRow:    TableRow,
   footerCell:   HeaderCell[D, ColumnInstanceD]
-)(val instance: TableInstanceD)
+)(val instance: TableInstanceD, val initialIndex: Option[Int] = None)
 
 class SUITableVirtuoso[
   D,
@@ -45,8 +48,8 @@ class SUITableVirtuoso[
   TableInstanceD <: TableInstance[D],
   ColumnOptsD <: ColumnOptions[D],
   ColumnInstanceD <: ColumnObject[D],
-  State <: TableState[D] // format: on
-](                       // tableDef is used to infer types.
+  State <: TableState[D]
+](                                 // tableDef is used to infer types.
   @unused tableDef: TableDef[
     D,
     TableOptsD,
@@ -195,7 +198,8 @@ class SUITableVirtuoso[
           GroupedVirtuoso[Row[D]](
             data = tableInstance.rows,
             itemContent = renderRow,
-            groupContent = headerElement.map(header => (_: Int) => header.vdomElement).orUndefined
+            groupContent = headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
+            initialTopMostItemIndex = props.initialIndex.orUndefined
           )(ExploreStyles.TBody)
         ),
         TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
@@ -245,18 +249,19 @@ class SUITableVirtuoso[
     footer:     Boolean | TableFooter | VdomNode = false,
     footerRow:  TableRow = TableRow(),
     footerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell()
-  ): TableInstanceD => Component = (instance: TableInstanceD) =>
-    component(
-      SUITableVirtuosoProps(table,
-                            header,
-                            headerRow,
-                            headerCell,
-                            body,
-                            row,
-                            cell,
-                            footer,
-                            footerRow,
-                            footerCell
-      )(instance)
-    )
+  ): (TableInstanceD, Option[Int]) => Component =
+    (instance: TableInstanceD, initialIndex: Option[Int]) =>
+      component(
+        SUITableVirtuosoProps(table,
+                              header,
+                              headerRow,
+                              headerCell,
+                              body,
+                              row,
+                              cell,
+                              footer,
+                              footerRow,
+                              footerCell
+        )(instance, initialIndex)
+      )
 }
