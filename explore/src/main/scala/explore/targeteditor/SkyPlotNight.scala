@@ -140,11 +140,7 @@ object SkyPlotNight {
               .setY(value)
 
           def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
-            PointOptionsObject(js.undefined)
-              .asInstanceOf[PointOptionsWithAirmass]
-              .setAirMass(airmass)
-              .setX(millisSinceEpoch)
-              .setY(value)
+            point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
 
           pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
             point(-results.totalSkyBrightness) ::
