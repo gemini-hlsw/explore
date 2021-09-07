@@ -115,19 +115,25 @@ class SUITableVirtuoso[
               )
         }
 
+      def rowIndexCss(index: Int): Css =
+        ExploreStyles.TR |+| (index % 2 match {
+          case 0 => ExploreStyles.EvenRow
+          case 1 => ExploreStyles.OddRow
+        })
+
       val rowRender: RowRender[D] = (props.row: Any) match {
         case row: TableRow =>
           rowData =>
             row.copy(as = <.div,
                      cellAs = <.div,
-                     clazz = addClass(row.className, row.clazz, ExploreStyles.TR)
+                     clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
             )(rowData.getRowProps())
         case fn            =>
           rowData =>
             val row = fn.asInstanceOf[RowRender[D]](rowData)
             row.copy(as = <.div,
                      cellAs = <.div,
-                     clazz = addClass(row.className, row.clazz, ExploreStyles.TR)
+                     clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
             )
       }
 
