@@ -217,7 +217,8 @@ object SkyPlotNight {
                   .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
                   .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setClassName("plot-band-twilight-nautical")
-                  .setZIndex(1000)
+                  // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
+                  .setZIndex(1)
                   .setLabel(
                     XAxisPlotBandsLabelOptions()
                       .setText(s"  Evening 12° - Twilight: $sunset")
@@ -230,7 +231,7 @@ object SkyPlotNight {
                   .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
                   .setClassName("plot-band-twilight-nautical-end")
-                  .setZIndex(1000)
+                  .setZIndex(1)
                   .setLabel(
                     XAxisPlotBandsLabelOptions()
                       .setText(s"  Morning 12° - Twilight: $sunrise")
