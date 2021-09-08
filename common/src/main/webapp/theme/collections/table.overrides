@@ -99,12 +99,12 @@
   ---------------*/
 
   /* Table Striping */
-  .ui.striped.table .tbody > div > div > div:nth-child(2n) {
+  .ui.striped.table .tbody > div > div .tr.even-row {
     background-color: @stripedBackground;
   }
   & when (@variationTableInverted) {
     /* Stripes */
-    .ui.inverted.striped.table .tbody > div > div > div:nth-child(2n) {
+    .ui.inverted.striped.table .tbody > div > div .tr.even-row {
       background-color: @invertedStripedBackground;
     }
   }

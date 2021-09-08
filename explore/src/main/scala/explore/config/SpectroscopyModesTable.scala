@@ -52,7 +52,7 @@ object SpectroscopyModesTable {
 
   import ModesTableDef.syntax._
 
-  val decFormat = new DecimalFormat("0.###");
+  val decFormat = new DecimalFormat("0.###")
 
   protected val ModesTableComponent = new SUITableVirtuoso(ModesTableDef)
 
@@ -215,15 +215,17 @@ object SpectroscopyModesTable {
   ): Boolean =
     rowToConf(row).exists(_ === conf)
 
-  // protected def ensureContains(matrix: List[SpectroscopyModeRow], conf: Option[ScienceConfigurationData]): List[SpectroscopyModeRow] =
-  //   conf.fold(matrix)(c =>
-  //     if(matrix.exists(row => equalsConf(row, c)))
-  //       matrix
-  //     else
-
   protected def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
+
+  protected def selectedRowIndex(
+    scienceConfiguration: Option[ScienceConfigurationData],
+    rows:                 List[SpectroscopyModeRow]
+  ): Option[Int] =
+    scienceConfiguration
+      .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
+      .filterNot(_ == -1)
 
   val component =
     ScalaFnComponent
@@ -245,13 +247,19 @@ object SpectroscopyModesTable {
           (enabled ++ disabled)
         }
       )
-      .useMemoBy($ => // Memo Cols
-        ($.props.spectroscopyRequirements.wavelength, $.props.spectroscopyRequirements.focalPlane)
-      )(_ => { case (wavelength, focalPlane) =>
+      .useMemoBy((props, _) => // Memo Cols
+        (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.focalPlane)
+      )((_, _) => { case (wavelength, focalPlane) =>
         columns(wavelength, focalPlane)
       })
-      .useTableBy((_, rows, cols) => ModesTableDef(cols, rows))
-      .renderWithReuse { (props, rows, _, tableInstance) =>
+      .useStateBy((props, rows, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
+      .useEffectWithDepsBy((props, _, _, _) => // Recompute state if conf or requirements change.
+        (props.scienceConfiguration, props.spectroscopyRequirements)
+      )((_, rows, _, selectedIndex) => { case (scienceConfiguration, _) =>
+        selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
+      })
+      .useTableBy((_, rows, cols, _) => ModesTableDef(cols, rows))
+      .renderWithReuse { (props, rows, _, selectedIndex, tableInstance) =>
         def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
           rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
@@ -275,14 +283,16 @@ object SpectroscopyModesTable {
                 TableRow(
                   disabled = !enabledRow(rowData.original),
                   clazz = ExploreStyles.ModeSelected.when_(
-                    props.scienceConfiguration.get
-                      .exists(conf => equalsConf(rowData.original, conf))
+                    selectedIndex.value.exists(_ === rowData.index.toInt)
                   )
                 )(
-                  ^.onClick --> props.scienceConfiguration.set(toggleRow(rowData.original)),
+                  ^.onClick --> (
+                    props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
+                      selectedIndex.setState(rowData.index.toInt.some)
+                  ),
                   props2Attrs(rowData.getRowProps())
                 )
-            )(tableInstance)
+            )(tableInstance, selectedIndex.value.map(idx => (idx - 2).max(0)))
           )
         )
       }
