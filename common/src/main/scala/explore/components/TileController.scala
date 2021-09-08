@@ -16,23 +16,28 @@ import explore.model.Constants
 import explore.model.GridLayoutSection
 import explore.model.enum.TileSizeState
 import explore.model.layout._
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Traversal
 import react.common._
+import react.common.implicits._
+import react.common.style.Css
 import react.gridlayout._
 
 import scala.concurrent.duration._
 import scala.scalajs.js.|
+import scala.scalajs.js.JSConverters._
 
 final case class TileController(
   userId:           Option[User.Id],
   coreWidth:        Int,
   defaultLayout:    LayoutsMap,
   layoutMap:        View[LayoutsMap],
-  tiles:            List[Tile]
+  tiles:            List[Tile],
+  clazz:            Option[Css] = None
 )(implicit val ctx: AppContextIO)
     extends ReactProps[TileController](TileController.component)
 
@@ -116,11 +121,13 @@ object TileController {
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
           onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(p.userId, b)(p.ctx),
-          layouts = updateResizableState(p.layoutMap.get)
+          layouts = updateResizableState(p.layoutMap.get),
+          className = p.clazz.map(_.htmlClass).orUndefined
         )(
           p.tiles.map { t =>
             <.div(
               ^.key := t.id.value,
+              t.controllerClass.orEmpty,
               t.withState(unsafeSizeToState(p.layoutMap.get, t.id), Reuse(sizeState _)(t.id))
             )
           }.toVdomArray

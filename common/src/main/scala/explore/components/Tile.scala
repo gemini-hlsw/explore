@@ -10,6 +10,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.Constants
+import explore.model.reusability._
 import explore.model.enum.TileSizeState
 import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
@@ -20,6 +21,7 @@ import lucuma.ui.reusability._
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
+import react.common.style._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
@@ -34,7 +36,8 @@ final case class Tile(
   canMaximize:       Boolean = false,
   state:             TileSizeState = TileSizeState.Normal,
   sizeStateCallback: TileSizeState ==> Callback = Reuse.always(_ => Callback.empty),
-  key:               js.UndefOr[Key] = js.undefined
+  key:               js.UndefOr[Key] = js.undefined,
+  controllerClass:   Option[Css] = None // applied to wrapping div when in a TileController.
 )(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactProps[Tile](Tile.component) {
   def showMaximize: Boolean =

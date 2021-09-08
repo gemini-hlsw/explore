@@ -413,6 +413,10 @@ object ObsTabContents {
                   props.searching,
                   state.zoom(State.options)
                 ),
+                // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+                // so that the constraints selector dropdown always appears in front of any other tiles. If more
+                // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+                // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
                 ConstraintsTile
                   .constraintsTile(
                     obsId,
@@ -420,7 +424,8 @@ object ObsTabContents {
                     props.undoStacks
                       .zoom(ModelUndoStacks.forConstraintSet[IO])
                       .zoom(atMapWithDefault(obsId, UndoStacks.empty)),
-                    control = constraintsSelector.some
+                    control = constraintsSelector.some,
+                    clazz = ExploreStyles.ConstraintsTile.some
                   ),
                 ConfigurationTile.configurationTile(
                   obsId,
@@ -429,7 +434,8 @@ object ObsTabContents {
                     .zoom(ModelUndoStacks.forScienceData[IO])
                     .zoom(atMapWithDefault(obsId, UndoStacks.empty))
                 )
-              )
+              ),
+              clazz = ExploreStyles.ObservationTiles.some
             ): VdomNode
           }
         ).withKey(obsId.toString)
