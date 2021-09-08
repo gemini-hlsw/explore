@@ -174,6 +174,10 @@ object ExploreStyles {
   // Edit Warning
   val EditWarning: Css = Css("edit-warning")
 
+  // The Observation tab contents
+  val ObservationTiles: Css = Css("observation-tiles")
+  val ConstraintsTile: Css  = Css("constraints-tile")
+
   // The Target tab contents
   val TargetGrid: Css          = Css("target-grid")
   val TargetAladinCell: Css    = Css("target-aladin-cell")

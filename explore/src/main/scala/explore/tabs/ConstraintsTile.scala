@@ -19,6 +19,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
+import react.common.style.Css
 
 object ConstraintsTile {
 
@@ -26,13 +27,15 @@ object ConstraintsTile {
     obsId:      Observation.Id,
     csPot:      Pot[View[ConstraintSet]],
     undoStacks: View[UndoStacks[IO, ConstraintSet]],
-    control:    Option[Reuse[VdomNode]] = None
+    control:    Option[Reuse[VdomNode]] = None,
+    clazz:      Option[Css] = None
   ): Tile =
     Tile(
       ObsTabTiles.ConstraintsId,
       "Constraints",
       canMinimize = true,
-      control = control
+      control = control,
+      controllerClass = clazz
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
         potRender[View[ConstraintSet]](

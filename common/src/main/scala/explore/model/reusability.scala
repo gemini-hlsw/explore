@@ -13,6 +13,7 @@ import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Semester
 import lucuma.ui.reusability._
+import react.common.style.Css
 
 /**
  * Reusability instances for model classes
@@ -59,4 +60,5 @@ object reusability {
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.derive
   // Move to lucuma-ui
   implicit val semesterReuse: Reusability[Semester]                                  = Reusability.derive
+  implicit val cssReuse: Reusability[Css]                                            = Reusability.by(_.htmlClass)
 }
