@@ -309,6 +309,7 @@ object SkyPlotNight {
       ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
 
       <.span(
+        Chart(options).withKey(props.toString),
         <.div(ExploreStyles.MoonPhase)(
           <.span(
             MoonPhase(phase = moonPhase,
@@ -318,8 +319,7 @@ object SkyPlotNight {
             ),
             <.small("%1.0f%%".format(moonIllum * 100))
           )
-        ),
-        Chart(options).withKey(props.toString)
+        )
       )
     }
   }
