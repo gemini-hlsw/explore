@@ -113,7 +113,7 @@ object UserPreferencesQueriesGQL {
   trait UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query target_preferences($user_id: String! = "", $targetId: String! = "") {
-        lucuma_target_preferences_by_pk(targetId: $targetId, user_id: $user_id) {
+        lucuma_target_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
           fov
         }
       }
@@ -124,7 +124,7 @@ object UserPreferencesQueriesGQL {
   trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {
-        insert_lucuma_target(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: targetId}) {
+        insert_lucuma_target(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: target_id}) {
           affected_rows
         }
       }"""
