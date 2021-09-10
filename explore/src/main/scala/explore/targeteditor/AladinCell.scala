@@ -78,14 +78,16 @@ object AladinCell extends ModelOptics {
     val coordinatesSetter =
       ((coords: Coordinates) => $.setStateL(State.current)(coords)).reuseAlways
 
-    def fovSetter(props: Props, fov: Fov): Callback = {
-      implicit val ctx = props.ctx
-      $.setStateL(State.fov)(fov) >>
-        UserTargetPreferencesUpsert
-          .updateFov[IO](props.uid, props.tid, fov.x)
-          .runAsyncAndForgetCB
-          .debounce(1.seconds)
-    }
+    def fovSetter(props: Props, fov: Fov): Callback =
+      if (fov.x.toMicroarcseconds === 0L) Callback.empty
+      else {
+        implicit val ctx = props.ctx
+        $.setStateL(State.fov)(fov) >>
+          UserTargetPreferencesUpsert
+            .updateFov[IO](props.uid, props.tid, fov.x)
+            .runAsyncAndForgetCB
+            .debounce(1.seconds)
+      }
 
     def render(props: Props, state: State) =
       React.Fragment(
