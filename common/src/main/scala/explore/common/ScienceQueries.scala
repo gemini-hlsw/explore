@@ -67,22 +67,22 @@ object ScienceQueries {
     ): Endo[EditScienceRequirementsInput] = {
       val input =
         for {
-          _ <- SpectroscopyScienceRequirementsInput.wavelength := op.wavelength
+          _ <- SpectroscopyScienceRequirementsInput.wavelength      := op.wavelength
                  .map(wavelength)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.resolution := op.resolution.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.signalToNoise := op.signalToNoise.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.resolution      := op.resolution.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.signalToNoise   := op.signalToNoise.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.signalToNoiseAt := op.signalToNoiseAt
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthRange := op.wavelengthRange
                  .map(wavelength)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.focalPlane := op.focalPlane.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.focalPlane      := op.focalPlane.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.focalPlaneAngle := op.focalPlaneAngle
                  .map(angle)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.capabilities := op.capabilities.orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.capabilities    := op.capabilities.orUnassign
         } yield ()
       EditScienceRequirementsInput.spectroscopyRequirements.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign

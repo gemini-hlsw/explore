@@ -77,7 +77,7 @@ object ConstraintGroupQueries {
 
   private val queryToConstraintsWithObsGetter
     : Getter[ConstraintGroupObsQuery.Data, ConstraintSummaryWithObervations] =
-    data => {
+    data =>
       ConstraintSummaryWithObervations(
         toSortedMap(
           data.constraintSetGroup.nodes.map(_.asConstraintGroup),
@@ -87,7 +87,6 @@ object ConstraintGroupQueries {
                     ObsSummaryWithPointingAndConf.id.get
         )
       )
-    }
 
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
       extends AnyVal {

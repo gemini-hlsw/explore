@@ -471,7 +471,7 @@ object ObsTabContents {
           ),
           <.div(^.key := "obs-right-side",
                 ^.width := coreWidth.px,
-                ^.left := treeWidth.px,
+                ^.left  := treeWidth.px,
                 ExploreStyles.SinglePanelTile
           )(
             rightSide

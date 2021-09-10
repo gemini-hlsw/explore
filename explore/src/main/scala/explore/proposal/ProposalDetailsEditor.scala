@@ -232,12 +232,11 @@ object ProposalDetailsEditor {
           label = "Abstract",
           rows = 10,
           value = details.zoom(ProposalDetails.abstrakt).get,
-          onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) => {
+          onChangeE = (_: TextArea.ReactChangeEvent, tap: TextArea.TextAreaProps) =>
             details
               .zoom(ProposalDetails.abstrakt)
               .set(tap.value.asInstanceOf[String])
               .toCB
-          }
         ).addModifiers(Seq(^.id := "abstract"))
       )
     }

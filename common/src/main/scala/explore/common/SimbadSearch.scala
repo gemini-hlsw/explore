@@ -27,7 +27,7 @@ object SimbadSearch {
       def httpCall =
         basicRequest
           .post(
-            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
+            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=$term&output.format=VOTable"
           )
           .readTimeout(5.seconds)
           .send(backend)
