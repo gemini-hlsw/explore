@@ -3,12 +3,14 @@
 
 package explore.targeteditor
 
+import cats.Eq
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
+import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -16,6 +18,7 @@ import lucuma.core.enum.Site
 import lucuma.core.enum.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.ui.reusability._
@@ -38,11 +41,11 @@ import scala.scalajs.js
 import js.JSConverters._
 
 final case class SkyPlotNight(
-  site:   Site,
-  coords: Coordinates,
-  date:   LocalDate,
-  zoneId: ZoneId,
-  height: Int
+  site:        Site,
+  coords:      Coordinates,
+  date:        LocalDate,
+  timeDisplay: SkyPlotNight.TimeDisplay,
+  height:      Int
 ) extends ReactProps[SkyPlotNight](SkyPlotNight.component)
 
 object SkyPlotNight {
@@ -58,6 +61,16 @@ object SkyPlotNight {
   // State doesn't trigger rerenders. We keep track of what is shown in case there is a
   // rerender due to a change of properties.
   implicit private val stateReuse: Reusability[State] = Reusability.always
+
+  sealed trait TimeDisplay
+  object TimeDisplay {
+    case object UTC      extends TimeDisplay
+    case object Site     extends TimeDisplay
+    case object Sidereal extends TimeDisplay
+
+    implicit val TimeDisplayEq: Eq[TimeDisplay]             = Eq.fromUniversalEquals
+    implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
+  }
 
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
@@ -151,15 +164,31 @@ object SkyPlotNight {
 
       val seriesData = seriesDataGen.from(series.unzipN)
 
-      def timeFormat(value: Double): String =
+      def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
         ZonedDateTime
-          .ofInstant(Instant.ofEpochMilli(value.toLong), props.zoneId)
+          .ofInstant(instant, zoneId)
           .format(dateTimeFormatter)
 
-      val timeZone: String =
-        props.zoneId match {
-          case ZoneOffset.UTC => "UTC"
-          case other          => other.getId
+      def instantFormat(instant: Instant): String =
+        props.timeDisplay match {
+          case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
+          case TimeDisplay.UTC      => timezoneInstantFormat(instant, ZoneOffset.UTC)
+          case TimeDisplay.Sidereal =>
+            val skycalc = ImprovedSkyCalc(props.site.place)
+            val sid     = skycalc.getSiderealTime(instant)
+            val hours   = sid.toInt
+            val minutes = Math.round((sid % 1) * 60).toInt
+            f"$hours%02d:$minutes%02d"
+        }
+
+      def timeFormat(value: Double): String =
+        instantFormat(Instant.ofEpochMilli(value.toLong))
+
+      val timeDisplay: String =
+        props.timeDisplay match {
+          case TimeDisplay.Site     => props.site.timezone.getId
+          case TimeDisplay.UTC      => "UTC"
+          case TimeDisplay.Sidereal => "Site Sidereal"
         }
 
       val tickFormatter: AxisLabelsFormatterCallbackFunction =
@@ -177,15 +206,11 @@ object SkyPlotNight {
             case 2 => "%.2f".format(ctx.y) // Sky Brightness
             case _ => formatAngle(ctx.y)   // Other elevations
           }
-          s"<strong>$time ($timeZone)</strong><br/>${ctx.series.name}: $value"
+          s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
       }
 
-      val sunset  = ZonedDateTime
-        .ofInstant(tbNauticalNight.start, props.zoneId)
-        .format(dateTimeFormatter)
-      val sunrise = ZonedDateTime
-        .ofInstant(tbNauticalNight.end, props.zoneId)
-        .format(dateTimeFormatter)
+      val sunset  = instantFormat(tbNauticalNight.start)
+      val sunrise = instantFormat(tbNauticalNight.end)
 
       val targetBelowHorizon =
         ElevationSeries.Elevation

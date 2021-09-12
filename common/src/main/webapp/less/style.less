@@ -817,8 +817,14 @@ tfoot {
 .sky-plot-controls {
   display: flex;
   justify-content: space-around;
+  align-items: baseline;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+
+  .ui.compact.buttons .button,
+  .ui.compact.button {
+    padding: 0.3em 0.5em 0.3em;
+  }
 }
 
 .sky-plot-datepicker-controls {

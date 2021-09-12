@@ -11,6 +11,8 @@
 .react-datepicker__input-container input {
   background: var(--form-input-background);
   color: var(--form-input-color);
+  text-shadow: 1px 1px 1px rgb(0 0 0 / 30%);
+  font-weight: bold;
 }
 
 // https://stackoverflow.com/questions/63284785/react-datepicker-remove-coloring-of-same-day-in-other-months

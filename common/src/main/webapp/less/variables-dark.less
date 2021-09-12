@@ -239,6 +239,7 @@
 }
 
 .button-dark() {
+  @activeColor: #216ba5;
   @tertiaryTextColor: rgba(0, 0, 0, 0.6);
   @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
   @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
@@ -248,6 +249,7 @@
   --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
   --button-background-color: @color-gray-dark;
   --button-text-color: var(--text-color);
+  --button-active-color: @activeColor;
   --button-tertiary-text-color: var(--button-text-color);
   --button-tertiary-line-color: lighten(@tertiaryTextColor, 20%);
   --button-tertiary-hover-color: @tertiaryHoverColor;
