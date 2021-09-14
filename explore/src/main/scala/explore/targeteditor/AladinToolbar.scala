@@ -31,12 +31,12 @@ object AladinToolbar {
 
   // TODO: We may want to move these to gsp-math
   def formatHMS(hms: HMS): String =
-    f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d"
+    f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
 
   val fromStringDMS: Angle => String =
     dms => {
       val r = Angle.dms.get(dms)
-      f"${r.degrees}%02d:${r.arcminutes}%02d:${r.arcseconds}%02d"
+      f"${r.degrees}%02d:${r.arcminutes}%02d:${r.arcseconds}%02d.${r.milliarcseconds / 10}%02d"
     }
 
   val fromStringSignedDMS: Angle => String =
