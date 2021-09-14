@@ -125,7 +125,7 @@ object ExploreStyles {
   val SkyPlotSection: Css            = Css("sky-plot-section")
   val SkyPlotControls: Css           = Css("sky-plot-controls")
   val SkyPlotDatePickerControls: Css = Css("sky-plot-datepicker-controls")
-  val SkyPlotDatePicker: Css         = Css("sky-plot-datepicker")
+  val SkyPlotDatePicker: Css         = Css("ui input sky-plot-datepicker")
   val SkyPlotDateButton: Css         = Css("sky-plot-date-button")
   val PlotToggleCheckbox: Css        = Css("plot-toggle-checkbox")
   val PlotToggle: Css                = Css("plot-toggle")

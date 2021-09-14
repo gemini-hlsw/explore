@@ -21,6 +21,7 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common.ReactProps
 import react.datepicker._
+import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
 import react.semanticui.elements.segment.Segment
@@ -93,7 +94,7 @@ object SkyPlotSection {
               )
           }
         },
-        <.div(ExploreStyles.SkyPlotControls)(
+        Form(clazz = ExploreStyles.SkyPlotControls)(
           ButtonGroup(compact = true)(
             Button(
               active = state.site === Site.GN,

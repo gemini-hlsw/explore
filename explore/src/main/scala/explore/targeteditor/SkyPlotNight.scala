@@ -221,7 +221,7 @@ object SkyPlotNight {
         .setChart(ChartOptions().setHeight(props.height).setStyledMode(true).setAlignTicks(false))
         .setTitle(
           TitleOptions().setText(
-            s"Sunset ${observingNight.toLocalDate.minusDays(1)} ⟶ Sunrise ${observingNight.toLocalDate} "
+            s"Sunset ${observingNight.toLocalDate.minusDays(1)} ➟ Sunrise ${observingNight.toLocalDate} "
           )
         )
         .setCredits(CreditsOptions().setEnabled(false))
