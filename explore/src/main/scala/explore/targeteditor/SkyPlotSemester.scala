@@ -32,7 +32,6 @@ import spire.math.Bounded
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -45,7 +44,6 @@ final case class SkyPlotSemester(
   site:             Site,
   coords:           Coordinates,
   semester:         Semester,
-  zoneId:           ZoneId,
   height:           Int
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SkyPlotSemester](SkyPlotSemester.component)
@@ -151,7 +149,7 @@ object SkyPlotSemester {
 
       def timeFormat(value: Double): String =
         ZonedDateTime
-          .ofInstant(Instant.ofEpochMilli(value.toLong), props.zoneId)
+          .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
           .format(dateTimeFormatter)
 
       val tickFormatter: AxisLabelsFormatterCallbackFunction =

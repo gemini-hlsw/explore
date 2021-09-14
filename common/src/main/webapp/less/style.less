@@ -817,8 +817,16 @@ tfoot {
 .sky-plot-controls {
   display: flex;
   justify-content: space-around;
+  align-items: baseline;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+
+  .ui.compact.buttons .button,
+  .ui.compact.button {
+    padding: 0.31em 0.5em 0.31em;
+    font-size: small;
+    font-weight: normal;
+  }
 }
 
 .sky-plot-datepicker-controls {
@@ -828,10 +836,10 @@ tfoot {
 }
 
 .sky-plot-datepicker {
-  width: 100px;
-  color: var(--plot-text-color);
-  border: 1px;
+  width: 100px !important;
   text-align: center;
+  font-size: small !important;
+  font-weight: normal !important;
 }
 
 .sky-plot-date-button {

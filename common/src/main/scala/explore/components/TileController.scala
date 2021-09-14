@@ -28,8 +28,8 @@ import react.common.style.Css
 import react.gridlayout._
 
 import scala.concurrent.duration._
-import scala.scalajs.js.|
 import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.|
 
 final case class TileController(
   userId:           Option[User.Id],

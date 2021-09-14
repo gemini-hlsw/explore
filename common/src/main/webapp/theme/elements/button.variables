@@ -5,7 +5,7 @@
 @negativeTextColor: #fff;
 @hoverBackgroundColor: var(--button-hover-background-color);
 @basicHoverBackground: var(--button-basic-hover-background-color);
-@activeBackgroundColor: @blue;
+@activeBackgroundColor: var(--button-active-color);
 @textShadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 @borderColor: var(--form-input-color);
 @formVerticalPadding: (@inputVerticalPadding + ((1em - @inputLineHeight) / 2));
