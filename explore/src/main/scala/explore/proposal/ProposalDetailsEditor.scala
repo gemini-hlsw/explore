@@ -168,10 +168,6 @@ object ProposalDetailsEditor {
             value = details.zoom(ProposalDetails.title),
             label = "Title"
           ).withMods(^.autoFocus := true),
-          EnumViewSelect(id = "proposal-class",
-                         value = details.zoom(ProposalDetails.proposalClass),
-                         label = Label("Class", HelpIcon("proposal/main/class.md"))
-          ),
           <.div(
             ExploreStyles.FlexContainer,
             FormButton(
@@ -183,10 +179,6 @@ object ProposalDetailsEditor {
             ),
             partnerSplits(details.zoom(ProposalDetails.partnerSplits).get),
             makeMinimumPctInput(ProposalDetails.minimumPct1).unless(has2Minimums)
-          ),
-          EnumViewOptionalSelect(id = "category",
-                                 value = details.zoom(ProposalDetails.category),
-                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -201,11 +193,6 @@ object ProposalDetailsEditor {
             minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
             makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
           ),
-          EnumViewSelect(id = "too-activation",
-                         value = details.zoom(ProposalDetails.toOActivation),
-                         label =
-                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
-          ),
           <.div(
             ExploreStyles.FlexContainer,
             FormStaticData(value = formatTime(requestTime2.value.value),
@@ -219,7 +206,20 @@ object ProposalDetailsEditor {
             minimumTime(minimumPct2, requestTime2).unless(has2Minimums),
             makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
           ).when(hasSecondTime),
-          <.span().unless(hasSecondTime)
+          <.span().unless(hasSecondTime),
+          EnumViewSelect(id = "proposal-class",
+                         value = details.zoom(ProposalDetails.proposalClass),
+                         label = Label("Class", HelpIcon("proposal/main/class.md"))
+          ),
+          EnumViewOptionalSelect(id = "category",
+                                 value = details.zoom(ProposalDetails.category),
+                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
+          ),
+          EnumViewSelect(id = "too-activation",
+                         value = details.zoom(ProposalDetails.toOActivation),
+                         label =
+                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
+          )
         ),
         <.div(FomanticStyles.Divider),
         FormTextArea(

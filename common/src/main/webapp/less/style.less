@@ -1089,20 +1089,24 @@ tfoot {
 
 .proposal-details-grid {
   /*
-  When we go to one column, instead of interleaving
-  items, we want to put the second column below the first.
+  Requirement was for the entire second column to go below 
+  the first column for narrow screens. In order to keep tab
+  order consistent, the elements are defined in the single
+  column order in the DOM, and CSS is used to place them in
+  the correct place in the 2 column grid.
   */
   @proposal-details-grid-items: 7;
 
   each(range(1, @proposal-details-grid-items), {
-    @is-odd: boolean(mod(@value, 2) > 0);
-    @odd-value: (@value + 1) / 2;
-    @even-value: ceil((@value + @proposal-details-grid-items) / 2);
-    @row-start: if(@is-odd, @odd-value, @even-value);
+    @num-in-first-col: ceil(@proposal-details-grid-items / 2);
+    @second-col: boolean(@value > @num-in-first-col);
+    @col-start: if(@second-col, 2, 1);
+    @row-start: if(@second-col, @value - @num-in-first-col, @value);
 
     & > *:nth-child(@{value}) {
-      @media (max-width: @two-column-break) {
+      @media not all and (max-width: @two-column-break) {
         grid-row-start: @row-start;
+        grid-column-start: @col-start;
       }
     }
   });
