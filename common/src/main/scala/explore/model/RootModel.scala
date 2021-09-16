@@ -22,29 +22,31 @@ import monocle.Lens
 import scala.collection.immutable.HashSet
 
 case class RootModel(
-  vault:                      Option[UserVault],
-  tabs:                       EnumZipper[AppTab],
-  focused:                    Option[Focused] = none,
-  expandedIds:                ExpandedIds = ExpandedIds(),
-  searchingTarget:            Set[Target.Id] = HashSet.empty,
-  userSelectionMessage:       Option[NonEmptyString] = none,
-  targetSummaryHiddenColumns: Set[String] =
+  vault:                          Option[UserVault],
+  tabs:                           EnumZipper[AppTab],
+  focused:                        Option[Focused] = none,
+  expandedIds:                    ExpandedIds = ExpandedIds(),
+  searchingTarget:                Set[Target.Id] = HashSet.empty,
+  userSelectionMessage:           Option[NonEmptyString] = none,
+  targetSummaryHiddenColumns:     Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
       MagnitudeBand.all
         .filterNot(_ === MagnitudeBand.V)
         .map(b => (b.shortName + "mag")),
-  undoStacks:                 ModelUndoStacks[IO] = ModelUndoStacks[IO]()
+  constraintSummaryHiddenColumns: Set[String] = Set("minam", "minha", "maxha"),
+  undoStacks:                     ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 )
 
 object RootModel {
-  val vault                      = Focus[RootModel](_.vault)
-  val focused                    = Focus[RootModel](_.focused)
-  val userSelectionMessage       = Focus[RootModel](_.userSelectionMessage)
-  val tabs                       = Focus[RootModel](_.tabs)
-  val searchingTarget            = Focus[RootModel](_.searchingTarget)
-  val undoStacks                 = Focus[RootModel](_.undoStacks)
-  val expandedIds                = Focus[RootModel](_.expandedIds)
-  val targetSummaryHiddenColumns = Focus[RootModel](_.targetSummaryHiddenColumns)
+  val vault                          = Focus[RootModel](_.vault)
+  val focused                        = Focus[RootModel](_.focused)
+  val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
+  val tabs                           = Focus[RootModel](_.tabs)
+  val searchingTarget                = Focus[RootModel](_.searchingTarget)
+  val undoStacks                     = Focus[RootModel](_.undoStacks)
+  val expandedIds                    = Focus[RootModel](_.expandedIds)
+  val targetSummaryHiddenColumns     = Focus[RootModel](_.targetSummaryHiddenColumns)
+  val constraintSummaryHiddenColumns = Focus[RootModel](_.constraintSummaryHiddenColumns)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
@@ -69,6 +71,7 @@ object RootModel {
        m.searchingTarget,
        m.userSelectionMessage,
        m.targetSummaryHiddenColumns,
+       m.constraintSummaryHiddenColumns,
        m.undoStacks
       )
     )
