@@ -168,10 +168,6 @@ object ProposalDetailsEditor {
             value = details.zoom(ProposalDetails.title),
             label = "Title"
           ).withMods(^.autoFocus := true),
-          EnumViewSelect(id = "proposal-class",
-                         value = details.zoom(ProposalDetails.proposalClass),
-                         label = Label("Class", HelpIcon("proposal/main/class.md"))
-          ),
           <.div(
             ExploreStyles.FlexContainer,
             FormButton(
@@ -183,10 +179,6 @@ object ProposalDetailsEditor {
             ),
             partnerSplits(details.zoom(ProposalDetails.partnerSplits).get),
             makeMinimumPctInput(ProposalDetails.minimumPct1).unless(has2Minimums)
-          ),
-          EnumViewOptionalSelect(id = "category",
-                                 value = details.zoom(ProposalDetails.category),
-                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -200,12 +192,6 @@ object ProposalDetailsEditor {
             timeSplits(details.zoom(ProposalDetails.partnerSplits).get, requestTime1),
             minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
             makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
-          ),
-          EnumViewMultipleSelect(
-            id = "keywords",
-            value = details.zoom(ProposalDetails.keywords),
-            label = "Keywords",
-            search = true
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -221,6 +207,14 @@ object ProposalDetailsEditor {
             makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
           ).when(hasSecondTime),
           <.span().unless(hasSecondTime),
+          EnumViewSelect(id = "proposal-class",
+                         value = details.zoom(ProposalDetails.proposalClass),
+                         label = Label("Class", HelpIcon("proposal/main/class.md"))
+          ),
+          EnumViewOptionalSelect(id = "category",
+                                 value = details.zoom(ProposalDetails.category),
+                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
+          ),
           EnumViewSelect(id = "too-activation",
                          value = details.zoom(ProposalDetails.toOActivation),
                          label =

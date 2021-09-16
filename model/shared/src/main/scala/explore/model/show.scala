@@ -10,9 +10,6 @@ object show {
   implicit val showProposalClass: Show[ProposalClass] =
     Show.show(_.label)
 
-  implicit val showKeywords: Show[Keyword] =
-    Show.show(_.label)
-
   implicit val showTacCategory: Show[TacCategory] =
     Show.show(_.label)
 

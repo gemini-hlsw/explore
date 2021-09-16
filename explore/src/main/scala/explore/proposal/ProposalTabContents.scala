@@ -49,7 +49,6 @@ object ProposalTabContents {
     ProposalClass.Queue,
     None,
     ToOActivation.None,
-    Set.empty,
     "",
     List.empty,
     7.5.withRefinedUnit[NonNegative, Hour],

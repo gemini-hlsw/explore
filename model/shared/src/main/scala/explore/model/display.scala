@@ -11,9 +11,6 @@ object display {
   implicit val displayProposalClass: Display[ProposalClass] =
     Display.byShortName(_.label)
 
-  implicit val displayKeywords: Display[Keyword] =
-    Display.byShortName(_.label)
-
   implicit val displayTacCategory: Display[TacCategory] =
     Display.byShortName(_.label)
 
