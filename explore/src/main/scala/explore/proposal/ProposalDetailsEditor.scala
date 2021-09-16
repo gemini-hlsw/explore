@@ -201,11 +201,10 @@ object ProposalDetailsEditor {
             minimumTime(minimumPct1, requestTime1).unless(has2Minimums),
             makeMinimumPctInput(ProposalDetails.minimumPct1).when(has2Minimums)
           ),
-          EnumViewMultipleSelect(
-            id = "keywords",
-            value = details.zoom(ProposalDetails.keywords),
-            label = "Keywords",
-            search = true
+          EnumViewSelect(id = "too-activation",
+                         value = details.zoom(ProposalDetails.toOActivation),
+                         label =
+                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
           ),
           <.div(
             ExploreStyles.FlexContainer,
@@ -220,12 +219,7 @@ object ProposalDetailsEditor {
             minimumTime(minimumPct2, requestTime2).unless(has2Minimums),
             makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
           ).when(hasSecondTime),
-          <.span().unless(hasSecondTime),
-          EnumViewSelect(id = "too-activation",
-                         value = details.zoom(ProposalDetails.toOActivation),
-                         label =
-                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
-          )
+          <.span().unless(hasSecondTime)
         ),
         <.div(FomanticStyles.Divider),
         FormTextArea(

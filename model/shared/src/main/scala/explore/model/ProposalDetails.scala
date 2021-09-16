@@ -16,7 +16,6 @@ final case class ProposalDetails(
   proposalClass: ProposalClass,
   category:      Option[TacCategory],
   toOActivation: ToOActivation,
-  keywords:      Set[Keyword],
   abstrakt:      String,
   partnerSplits: List[PartnerSplit],
   // The 2 times represent "Band 1&2" and "Band 3" for queue
@@ -38,7 +37,6 @@ object ProposalDetails {
   val pi            = Focus[ProposalDetails](_.pi)
   val proposalClass = Focus[ProposalDetails](_.proposalClass)
   val toOActivation = Focus[ProposalDetails](_.toOActivation)
-  val keywords      = Focus[ProposalDetails](_.keywords)
   val partnerSplits = Focus[ProposalDetails](_.partnerSplits)
   val category      = Focus[ProposalDetails](_.category)
   val requestTime1  = Focus[ProposalDetails](_.requestTime1)
