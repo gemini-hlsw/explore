@@ -106,7 +106,7 @@ class SUITable[
   ColumnInstanceD <: ColumnObject[D],
   State <: TableState[D],
   Layout // format: on
-](       // tableDef is used to infer types.
+]( // tableDef is used to infer types.
   @unused tableDef: TableDef[
     D,
     TableOptsD,

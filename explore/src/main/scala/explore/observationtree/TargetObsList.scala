@@ -483,7 +483,7 @@ object TargetObsList {
       val unassignedObs = obsByPointing.get(none).orEmpty
 
       val renderClone: Draggable.Render =
-        (provided, snapshot, rubric) => {
+        (provided, snapshot, rubric) =>
           <.div(provided.innerRef,
                 provided.draggableProps,
                 provided.dragHandleProps,
@@ -503,7 +503,6 @@ object TargetObsList {
               case _                 => none
             }).getOrElse(<.span("ERROR"))
           )
-        }
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds)
 

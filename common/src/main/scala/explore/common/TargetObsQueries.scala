@@ -126,7 +126,7 @@ object TargetObsQueries {
     ObsResult.pointing.andThen(optionIso(targetsObsQueryPointingId))
 
   private val targetsObsQueryTargetsWithObs: Getter[TargetsObsQuery.Data, PointingsWithObs] =
-    data => {
+    data =>
       PointingsWithObs(
         KeyedIndexedList.fromList(data.targets.nodes, _.id),
         KeyedIndexedList.fromList(data.asterisms.nodes.map(AsterismIdName.fromAsterismResult),
@@ -134,7 +134,6 @@ object TargetObsQueries {
         ),
         KeyedIndexedList.fromList(data.observations.nodes, ObsResult.id.get)
       )
-    }
 
   implicit class TargetsObsQueryDataOps(val self: TargetsObsQuery.Data.type) extends AnyVal {
     def asTargetsWithObs = targetsObsQueryTargetsWithObs

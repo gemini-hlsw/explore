@@ -10,8 +10,8 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 
 /**
- *  A control similar to a readonly FormInput styled as `static-data`,
- *  except that this control will be only as wide as it needs to be.
+ * A control similar to a readonly FormInput styled as `static-data`, except that this control will
+ * be only as wide as it needs to be.
  */
 
 final case class FormStaticData(

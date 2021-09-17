@@ -111,7 +111,7 @@ object ConstraintGroupObsList {
         props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
       )
 
-      val renderClone: Draggable.Render = (provided, snapshot, rubric) => {
+      val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(provided.innerRef,
               provided.draggableProps,
               provided.dragHandleProps,
@@ -123,7 +123,6 @@ object ConstraintGroupObsList {
             .map(obs => props.renderObsBadge(obs))
             .getOrElse(<.span("ERROR"))
         )
-      }
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
 

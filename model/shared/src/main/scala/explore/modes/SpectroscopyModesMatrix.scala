@@ -328,15 +328,14 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     slitWidth:    Option[Angle] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
-    val filter: SpectroscopyModeRow => Boolean = r => {
+    val filter: SpectroscopyModeRow => Boolean = r =>
       focalPlane.forall(f => r.focalPlane === f) &&
-        r.capabilities === capabilities &&
-        iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
-        wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
-        resolution.forall(_ <= r.resolution) &&
-        range.forall(_ <= r.wavelengthRange) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds)
-    }
+      r.capabilities === capabilities &&
+      iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
+      wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
+      resolution.forall(_ <= r.resolution) &&
+      range.forall(_ <= r.wavelengthRange) &&
+      slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>
