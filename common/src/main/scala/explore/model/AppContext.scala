@@ -21,6 +21,7 @@ import explore.utils
 import fs2.Stream
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import org.http4s
 import org.typelevel.log4cats.Logger
 import retry._
 import sttp.client3._
@@ -52,6 +53,9 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
     ).sequence.void
 }
 object Clients {
+  private def sttpUriToHttp4sUri(uri: Uri): http4s.Uri =
+    http4s.Uri.unsafeFromString(uri.toString)
+
   def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
@@ -59,9 +63,15 @@ object Clients {
   ): F[Clients[F]] =
     for {
       odbClient   <-
-        ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
+        ApolloWebSocketClient.of[F, ObservationDB](sttpUriToHttp4sUri(odbURI),
+                                                   "ODB",
+                                                   reconnectionStrategy
+        )
       prefsClient <-
-        ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
+        ApolloWebSocketClient.of[F, UserPreferencesDB](sttpUriToHttp4sUri(prefsURI),
+                                                       "PREFS",
+                                                       reconnectionStrategy
+        )
     } yield Clients(odbClient, prefsClient)
 }
 

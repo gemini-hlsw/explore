@@ -52,7 +52,6 @@ object ConstraintGroupQueriesGQL {
           nodes {
             id
             observationTarget {
-              type: __typename
               ... on Target {
                 targetId: id
                 targetName: name

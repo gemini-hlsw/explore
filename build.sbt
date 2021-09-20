@@ -174,6 +174,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Crystal.value ++
       Sttp.value ++
+      Http4sCore.value ++
       Clue.value ++
       PPrint.value ++
       FS2Data.value ++
