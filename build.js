@@ -13,13 +13,14 @@ const terserOptions =  {
   nameCache: {},
   format: {
     comments: false,
+    ecma: 2015
   },
   mangle: {
     properties: {
       debug: false,
-      keep_quoted: "strict",
       reserved: ['$classData', 'main', 'toString', 'constructor', 'length', 'call', 'apply', 'NaN', 'Infinity', 'undefined'],
-      regex: /^(\$m_|loadHelp|.*__f\d?_|.*__O|.*L\S+_)/,
+      // Basically, every root package except Lcrystal and Lexplore. For some reason it breaks dynamic import of the help system.
+      regex: /^(\$m_|.*__f_|.*__F\d?_|.*__O_|.*Ljava|.*Lcats|.*Ljapgolly|.*Lfs2|.*Lorg|.*Lcom|.*Lio|.*Leu|.*Lclue|.*Llucuma|.*Lreact)/,
     }
   }
 }
