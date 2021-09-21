@@ -1,7 +1,6 @@
 const path = require("path")
 const fs = require("fs")
 const process = require("process")
-const size = require("human-format")
 const { build } = require("vite")
 const { minify } = require("terser")
 const humanFormat = require("human-format")
