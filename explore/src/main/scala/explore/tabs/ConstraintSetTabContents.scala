@@ -16,6 +16,7 @@ import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
+import explore.constraints.ConstraintsSummaryTable
 import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
@@ -50,6 +51,7 @@ final case class ConstraintSetTabContents(
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the bulkUndoStack somewhere, somehow?
   bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
+  hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
@@ -125,9 +127,14 @@ object ConstraintSetTabContents {
       .flatMap(constraintsWithObs.get.constraintGroups.get)
       .fold[VdomNode](
         Tile("constraints", "Constraints Summary", backButton.some)(
-          Reuse.by(constraintsWithObs)((_: Tile.RenderInTitle) =>
-            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-                  <.div("Select a constraint or observation")
+          Reuse.by((constraintsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
+            ConstraintsSummaryTable(
+              constraintsWithObs.get.constraintGroups,
+              props.hiddenColumns,
+              state.zoom(TwoPanelState.selected),
+              props.focused,
+              props.expandedIds,
+              renderInTitle
             )
           )
         )
