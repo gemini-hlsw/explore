@@ -1,6 +1,10 @@
 name: clubhouse
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [synchronize, opened, reopened]
 
 jobs:
   clubhouse:
