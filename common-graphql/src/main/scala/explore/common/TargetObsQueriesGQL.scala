@@ -75,7 +75,6 @@ object TargetObsQueriesGQL {
           nodes {
             id
             pointing: observationTarget {
-              type: __typename
               ... on Target {
                 targetId: id
               }

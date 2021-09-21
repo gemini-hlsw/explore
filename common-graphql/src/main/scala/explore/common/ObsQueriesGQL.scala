@@ -30,7 +30,6 @@ object ObsQueriesGQL {
           nodes {
             id
             observationTarget {
-              type: __typename
               ... on Target {
                 targetId: id
                 targetName: name
@@ -193,7 +192,6 @@ object ObsQueriesGQL {
             }
           }
           scienceConfiguration {
-            __typename
             ... on GmosNorthLongSlit {
               filterN:filter
               disperserN:disperser
