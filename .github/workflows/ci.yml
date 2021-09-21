@@ -17,4 +17,4 @@ jobs:
         run: |
           rm .npmrc package.json
           npm install react semantic-ui-react react-dom
-          sbt -v -J-Xmx4g compile scalafmtCheckAll headerCheck test:headerCheck test
+          sbt -v -J-Xmx4g compile scalafmtCheckAll headerCheck Test/headerCheck test

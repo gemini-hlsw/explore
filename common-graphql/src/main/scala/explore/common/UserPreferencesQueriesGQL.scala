@@ -11,8 +11,8 @@ import explore.schemas.UserPreferencesDB
 object UserPreferencesQueriesGQL {
 
   /**
-   * Query to create a user, this is called when the app is started.
-   * If the user exists the error is ignored
+   * Query to create a user, this is called when the app is started. If the user exists the error is
+   * ignored
    */
   @GraphQL
   trait UserInsertMutation extends GraphQLOperation[UserPreferencesDB] {

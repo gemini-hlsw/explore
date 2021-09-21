@@ -111,13 +111,12 @@ trait UndoSetter[F[_], G[_], M] { self =>
   /**
    * Allows accessing the `UndoSetter` as a `ViewF`.
    *
-   * When the `ViewF`'s set/mod is invoked, it will be done through the
-   * `UndoSetter`, such that the change is pushed into the undo stack.
+   * When the `ViewF`'s set/mod is invoked, it will be done through the `UndoSetter`, such that the
+   * change is pushed into the undo stack.
    *
-   * Using `zoom` into `N` the resulting `ViewF` will still save the whole of `M`
-   * in the undo stack. To apply a `zoom` while preserving undo granularity you
-   * should `zoom` directly on the `UndoSetter` and create the `undoableView` at
-   * the last possible moment.
+   * Using `zoom` into `N` the resulting `ViewF` will still save the whole of `M` in the undo stack.
+   * To apply a `zoom` while preserving undo granularity you should `zoom` directly on the
+   * `UndoSetter` and create the `undoableView` at the last possible moment.
    */
   def undoableView[N](getN: M => N, modN: (N => N) => M => M): ViewF[F, N] =
     ViewF[F, N](
