@@ -1,11 +1,11 @@
 const path = require("path")
 const fs = require("fs")
 const process = require("process")
-const size = require('human-format');
+const { build } = require("vite")
+const { minify } = require("terser")
+const humanFormat = require("human-format")
+const brotliSize = require("brotli-size")
 const config = require("./vite.config.js")
-const { build } = require('vite')
-const { minify } = require("terser");
-const humanFormat = require("human-format");
 
 const outDir = path.resolve(__dirname, "heroku/static")
 const terserOptions =  {
@@ -35,7 +35,11 @@ function runTerserOn(fileName, length) {
     const fromSize = original.length
     const toSize = minified.code.length
     const ratio = (toSize / fromSize) * 100
-    process.stdout.write(` ${humanFormat.bytes(fromSize, { prefix: 'Ki' })}  --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(2)}%)\n`)
+    const fromBrotli = brotliSize.sync(original)
+    const toBrotli = brotliSize.sync(minified.code)
+    const brotliRatio = (toBrotli / fromBrotli) * 100
+    process.stdout.write(` ${humanFormat.bytes(fromSize, { prefix: 'Ki' })} --> ${humanFormat.bytes(toSize, { prefix: 'Ki' })} (${ratio.toFixed(2)}%)` +
+                          ` / brotli: ${humanFormat.bytes(fromBrotli, { prefix: 'Ki' })} --> ${humanFormat.bytes(toBrotli, { prefix: 'Ki' })} (${brotliRatio.toFixed(2)}%) \n`)
   })
 }
 
