@@ -5,8 +5,8 @@ package react.markdown
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
+import org.http4s.Uri
 import react.common._
-import sttp.model.Uri
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
@@ -89,7 +89,7 @@ object ReactMarkdown {
     linkTarget.foreach(v => p.linkTarget = v)
     transformImageUri.foreach(v =>
       p.transformImageUri =
-        ((u: String) => v(Uri.unsafeParse(u)).toString()): js.Function1[String, String]
+        ((u: String) => v(Uri.unsafeFromString(u)).toString()): js.Function1[String, String]
     )
     remarkPlugins.foreach(l => p.remarkPlugins = l.map(_.asInstanceOf[js.Object]).toJSArray)
     rehypePlugins.foreach(l => p.rehypePlugins = l.map(_.asInstanceOf[js.Object]).toJSArray)

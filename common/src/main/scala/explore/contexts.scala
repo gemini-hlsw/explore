@@ -12,7 +12,7 @@ import explore.model.Help
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.Reusability._
 import monocle.Focus
-import sttp.model.Uri
+import org.http4s.Uri
 
 object AppCtx extends Ctx[SyncIO, AppContextIO]
 

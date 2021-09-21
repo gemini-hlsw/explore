@@ -12,16 +12,19 @@ import explore.common.ConstraintGroupQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
 import explore.model.Focused
 import explore.model.Focused._
+import explore.model.HourAngleRange
 import explore.model.SelectedPanel
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
@@ -31,13 +34,10 @@ import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
-import scalajs.js.JSConverters._
-
-import react.common._
 
 import scala.collection.immutable.SortedSet
-import explore.model.AirMassRange
-import explore.model.HourAngleRange
+
+import scalajs.js.JSConverters._
 
 final case class ConstraintsSummaryTable(
   constraintList: ConstraintGroupList,

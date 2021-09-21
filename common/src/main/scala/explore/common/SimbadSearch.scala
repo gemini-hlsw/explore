@@ -3,18 +3,19 @@
 
 package explore.common
 
+import cats.Applicative
 import cats.data.Validated
 import cats.effect._
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
-import fs2._
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Target
+import org.http4s._
+import org.http4s.dom.FetchClientBuilder
+import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import retry._
-import sttp.client3._
-import sttp.client3.impl.cats.FetchCatsBackend
 
 import scala.concurrent.duration._
 
@@ -23,32 +24,29 @@ object SimbadSearch {
 
   def search[F[_]: Async: Logger](term: NonEmptyString): F[Option[Target]] =
     retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
-      val backend  = FetchCatsBackend[F]()
-      def httpCall =
-        basicRequest
-          .post(
-            uri"https://simbad.u-strasbg.fr/simbad/sim-id?Ident=${term}&output.format=VOTable"
-          )
-          .readTimeout(5.seconds)
-          .send(backend)
-
-      httpCall
-        .flatMap {
-          _.body
-            .traverse(
-              Stream
-                .emit[F, String](_)
-                .through(VoTableParser.targets(CatalogName.Simbad))
-                .compile
-                .toList
-                .map {
-                  _.collect { case Validated.Valid(t) => t }.headOption
-                }
+      FetchClientBuilder[F]
+        .withRequestTimeout(5.seconds)
+        .resource
+        .flatMap(
+          _.run(
+            Request[F](
+              Method.POST,
+              uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+                .withQueryParam("Ident", term.value)
+                .withQueryParam("output.format", "VOTable")
             )
-            .map {
-              case Right(Some((t))) => t.some
-              case _                => none
-            }
+          )
+        )
+        .use {
+          case Status.Successful(r) =>
+            r.bodyText
+              .through(VoTableParser.targets(CatalogName.Simbad))
+              .compile
+              .toList
+              .map {
+                _.collect { case Validated.Valid(t) => t }.headOption
+              }
+          case _                    => Applicative[F].pure(none)
         }
     }
 

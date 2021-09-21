@@ -173,7 +173,6 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Circe.value ++
       Crystal.value ++
-      Sttp.value ++
       Http4sCore.value ++
       Clue.value ++
       PPrint.value ++
@@ -207,6 +206,7 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
+      Http4sClient.value ++
       LucumaUI.value ++
       Log4Cats.value ++
       In(Test)(

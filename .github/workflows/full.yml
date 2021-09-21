@@ -22,6 +22,6 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=6144'
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: |
-          sbt stage
+          sbt -v -J-Xmx6g stage
           npm install
           npm run build
