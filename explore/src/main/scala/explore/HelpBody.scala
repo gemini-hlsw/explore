@@ -15,6 +15,8 @@ import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import monocle.Focus
+import org.http4s._
+import org.http4s.dom.FetchClientBuilder
 import react.common._
 import react.hotkeys._
 import react.markdown.ReactMarkdown
@@ -23,29 +25,26 @@ import react.markdown.RemarkPlugin
 import react.semanticui._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import sttp.client3._
-import sttp.client3.impl.cats.FetchCatsBackend
-import sttp.model.Uri
 
 import scala.concurrent.duration._
 import scala.util.Try
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactProps[HelpBody](HelpBody.component) {
-  private val path        = Uri.relative(helpId.value.split("/").toList)
-  private val rootUrl     = base.rawUrl.addPath(List(base.user.value, base.project.value))
+  private val path        = Uri.Path.unsafeFromString(helpId.value)
+  private val rootUrl     = base.rawUrl / base.user.value / base.project.value
   private val baseUrl     =
-    base.rawUrl.addPath(List(base.user.value, base.project.value, "main") ++ path.path.init)
-  private val url         = rootUrl.addPath("main" :: path.path.toList)
-  private val rootEditUrl = base.editUrl.addPath(List(base.user.value, base.project.value))
-  private val newPage     = rootEditUrl
-    .addPath(List("new", "main"))
-    .addParam("filename", path.path.mkString("/"))
-    .addParam("value", s"# Title")
-    .addParam("message", s"Create $helpId")
-  private val editPage    = rootEditUrl
-    .addPath(List("edit", "main") ++ path.path)
-    .addParam("message", s"Update $helpId")
+    path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
+      (uri, segment) => uri / segment.encoded
+    )
+  private val url         = rootUrl / "main" / path
+  private val rootEditUrl = base.editUrl / base.user.value / base.project.value
+  private val newPage     = (rootEditUrl / "new" / "main")
+    .withQueryParam("filename", path.segments.mkString("/"))
+    .withQueryParam("value", s"# Title")
+    .withQueryParam("message", s"Create $helpId")
+  private val editPage    = (rootEditUrl / "edit" / "main" / path)
+    .withQueryParam("message", s"Update $helpId")
 }
 
 // This is a sort of facade to get dynamic loading boundaries right
@@ -64,26 +63,22 @@ object HelpBody {
     val content = Focus[State](_.content)
   }
 
-  def load(uri: Uri): IO[Try[String]] = {
-    val backend = FetchCatsBackend[IO]()
-    basicRequest
-      .get(uri)
-      .readTimeout(5.seconds)
-      .send(backend)
-      .map {
-        _.body.leftMap(s => new RuntimeException(s)).toTry
-      }
+  def load(uri: Uri): IO[Try[String]] =
+    FetchClientBuilder[IO]
+      .withRequestTimeout(5.seconds)
+      .create
+      .get(uri)(r => r.attemptAs[String].value)
+      .map(_.toTry)
       .handleError { case x =>
         scala.util.Failure(x)
       }
-  }
 
   private val component =
     ScalaComponent
       .builder[Props]
       .initialState(State(Pot.pending))
       .render_PS { (p, s) =>
-        val imageConv = (s: Uri) => p.baseUrl.addPath(s.path)
+        val imageConv = (s: Uri) => p.baseUrl / s.path
 
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)

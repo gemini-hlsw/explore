@@ -1,10 +1,10 @@
-import reactRefresh from "@vitejs/plugin-react-refresh";
-import { visualizer } from 'rollup-plugin-visualizer';
-import path from "path";
-import fs from "fs";
-import ViteFonts from "vite-plugin-fonts";
+const reactRefresh = require('@vitejs/plugin-react-refresh')
+const { visualizer } = require('rollup-plugin-visualizer')
+const path = require("path")
+const fs = require("fs")
+const ViteFonts = require("vite-plugin-fonts")
 
-const fontImport = ViteFonts({
+const fontImport = ViteFonts.Plugin({
   google: {
     families: [
       {
@@ -16,7 +16,7 @@ const fontImport = ViteFonts({
 });
 
 // https://vitejs.dev/config/
-export default ({ command, mode }) => {
+module.exports = ({ command, mode }) => {
   const scalaClassesDir = path.resolve(__dirname, "explore/target/scala-2.13");
   const isProduction = mode == "production";
   const sjs =
@@ -116,11 +116,18 @@ export default ({ command, mode }) => {
       },
     },
     build: {
-      rollupOptions: {
-        plugins: rollupPlugins
-      },
+      emptyOutDir: true,
+      chunkSizeWarningLimit: 20000,
       terserOptions: {
         sourceMap: false,
+        compress: {
+          passes: 2,
+          toplevel: true,
+          ecma: 2015
+        }
+      },
+      rollupOptions: {
+        plugins: rollupPlugins
       },
       outDir: path.resolve(__dirname, "heroku/static"),
     },

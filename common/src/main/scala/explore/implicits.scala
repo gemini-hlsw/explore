@@ -18,6 +18,7 @@ import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.ui.utils._
+import org.http4s.Uri
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import shapeless._
@@ -129,5 +130,9 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
           .setTimeout(duration.Duration.Zero)
           .void
       }
+  }
+
+  implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
+    def /(path: Uri.Path): Uri = uri.withPath(uri.path.concat(path))
   }
 }

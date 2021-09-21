@@ -18,14 +18,13 @@ import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
 import explore.schemas._
 import explore.utils
-import fs2.Stream
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import org.http4s._
+import org.http4s.dom.FetchClientBuilder
+import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import retry._
-import sttp.client3._
-import sttp.client3.impl.cats.FetchCatsBackend
-import sttp.model.Uri
 
 import scala.concurrent.duration._
 
@@ -68,23 +67,19 @@ object Clients {
 case class StaticData protected (spectroscopyMatrix: SpectroscopyModesMatrix)
 object StaticData {
   def build[F[_]: Async: Logger](spectroscopyMatrixUri: Uri): F[StaticData] = {
-    val backend = FetchCatsBackend[F]()
-
-    def httpCall =
-      basicRequest
-        .get(spectroscopyMatrixUri)
-        .readTimeout(5.seconds)
-        .send(backend)
+    val client = FetchClientBuilder[F]
+      .withRequestTimeout(5.seconds)
+      .create
 
     val spectroscopyMatrix =
       retryingOnAllErrors(retryPolicy[F], logError[F]("Spectroscopy Matrix")) {
-        httpCall.flatMap {
-          case Response(Right(body), _, _, _, _, _)           =>
-            SpectroscopyModesMatrix[F](Stream.emit(body))
-          case Response(Left(errorMessage), code, _, _, _, _) =>
+        client.run(Request(Method.GET, spectroscopyMatrixUri)).use {
+          case Status.Successful(r) =>
+            SpectroscopyModesMatrix[F](r.bodyText)
+          case fail                 =>
             // If fetching fails, do we want to continue without the matrix, or do we want to crash?
             Logger[F].warn(
-              s"Could not retrieve spectroscopy matrix. Code [$code] - [$errorMessage]"
+              s"Could not retrieve spectroscopy matrix. Code [${fail.status.code}] - Body: [${fail.as[String]}]"
             ) >> SpectroscopyModesMatrix.empty.pure[F]
         }
       }

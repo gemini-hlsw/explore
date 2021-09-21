@@ -267,9 +267,10 @@ object ExploreStyles {
 
   val SharedEditWarning: Css = Css("explore-shared-edit-warning")
 
-  val Sticky: Css            = Css("sticky")
-  val TargetSummaryType: Css = Css("explore-target-summary-type")
-  val TargetSummaryName: Css = Css("explore-target-summary-name")
+  val Sticky: Css                 = Css("sticky")
+  val TargetSummaryType: Css      = Css("explore-target-summary-type")
+  val TargetSummaryName: Css      = Css("explore-target-summary-name")
+  val ConstraintsSummaryEdit: Css = Css("explore-constraints-summary-edit")
 
   val ModalCloseButton: Css     = Css("modal-close-button")
   val UserSelectionButtons: Css = Css("user-selection-buttons")

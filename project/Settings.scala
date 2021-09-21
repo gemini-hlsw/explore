@@ -7,17 +7,18 @@ object Settings {
 
   object LibraryVersions {
     val cats              = "2.6.1"
-    val catsEffect        = "3.2.8"
+    val catsEffect        = "3.2.9"
     val catsRetry         = "3.1.0"
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
-    val clue              = "0.17.0"
+    val clue              = "0.18.1"
     val crystal           = "0.15.3"
     val discipline        = "1.1.5"
     val disciplineMUnit   = "1.0.9"
     val fs2               = "3.1.2"
     val fs2Data           = "1.0.1"
     val geminiLocales     = "0.6.0"
+    val http4s            = "1.0.0-M27"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaCore        = "0.13.2"
@@ -41,7 +42,6 @@ object Settings {
     val reactSemanticUI   = "0.11.1"
     val reactTable        = "0.5.0"
     val scalaJsReact      = "2.0.0-RC3"
-    val sttp              = "3.3.14"
     val pprint            = "0.6.6"
   }
 
@@ -112,10 +112,10 @@ object Settings {
       )
     )
 
-    val GeminiLocales = Def.setting(
+    val FS2Data = Def.setting(
       deps(
-        "edu.gemini" %%% "gemini-locales"
-      )(geminiLocales)
+        "org.gnieh" %%% "fs2-data-csv"
+      )(fs2Data)
     )
 
     val FS2IO = Def.setting(
@@ -124,10 +124,24 @@ object Settings {
       )(fs2)
     )
 
-    val FS2Data = Def.setting(
+    val GeminiLocales = Def.setting(
       deps(
-        "org.gnieh" %%% "fs2-data-csv"
-      )(fs2Data)
+        "edu.gemini" %%% "gemini-locales"
+      )(geminiLocales)
+    )
+
+    val Http4sClient = Def.setting(
+      deps(
+        "org.http4s" %%% "http4s-dsl",
+        "org.http4s" %%% "http4s-dom-fetch-client"
+      )(http4s)
+    )
+
+    val Http4sCore = Def.setting(
+      deps(
+        "org.http4s" %%% "http4s-core",
+        "org.http4s" %%% "http4s-circe"
+      )(http4s)
     )
 
     val Log4Cats = Def.setting(
@@ -287,14 +301,6 @@ object Settings {
       deps(
         "com.github.japgolly.scalajs-react" %%% "test"
       )(scalaJsReact)
-    )
-
-    val Sttp = Def.setting(
-      deps(
-        "com.softwaremill.sttp.client3" %%% "core",
-        "com.softwaremill.sttp.client3" %%% "circe",
-        "com.softwaremill.sttp.client3" %%% "cats"
-      )(sttp)
     )
 
     val PPrint = Def.setting(

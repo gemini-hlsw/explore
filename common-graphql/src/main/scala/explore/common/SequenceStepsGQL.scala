@@ -30,7 +30,6 @@ object SequenceStepsGQL {
             id
             name
             config:manualConfig {
-              __typename
               instrument
               plannedTime {
                 total {
@@ -87,7 +86,6 @@ object SequenceStepsGQL {
               roi
             }
             stepConfig {
-              __typename
               ... on Gcal {
                 shutter
               }
@@ -135,7 +133,6 @@ object SequenceStepsGQL {
               roi
             }
             stepConfig {
-              __typename
               ... on Gcal {
                 shutter
               }

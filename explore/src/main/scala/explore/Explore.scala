@@ -33,17 +33,15 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
+import org.http4s._
+import org.http4s.circe._
+import org.http4s.dom.FetchClientBuilder
+import org.http4s.implicits._
 import org.scalajs.dom
 import org.scalajs.dom.experimental.RequestCache
-import org.scalajs.dom.experimental.RequestInit
-import org.scalajs.dom.experimental.{ Request => FetchRequest }
 import org.scalajs.dom.raw.Element
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
-import sttp.client3._
-import sttp.client3.circe._
-import sttp.client3.impl.cats.FetchCatsBackend
-import sttp.model.Uri
 
 import java.util.concurrent.TimeUnit
 import scala.annotation.nowarn
@@ -82,34 +80,16 @@ object ExploreMain extends IOApp.Simple {
       tabs = EnumZipper.of[AppTab]
     )
 
-    val fetchConfig: IO[AppConfig] = {
+    val fetchConfig: IO[AppConfig] =
       // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
-      val backend =
-        FetchCatsBackend[IO](customizeRequest = { request =>
-          new FetchRequest(request,
-                           new RequestInit() {
-                             cache = RequestCache.`no-store`
-                           }
-          )
-        })
-
-      // No relative URIs yet in STTP: https://github.com/softwaremill/sttp/issues/285
-      // val uri = uri"/conf.json"
-      val baseURI = Uri.unsafeParse(dom.window.location.href)
-      val path    = List("conf.json")
-      val uri     = baseURI.port.fold(
-        Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, path)
-      )(port => Uri.unsafeApply(baseURI.scheme.orEmpty, baseURI.host.orEmpty, port, path))
-
-      basicRequest
-        .get(uri)
-        .readTimeout(5.seconds)
-        .response(asJson[AppConfig].getRight)
-        .send(backend)
-        .map(_.body)
-    }.adaptError { case t =>
-      new Exception("Could not retrieve configuration.", t)
-    }
+      FetchClientBuilder[IO]
+        .withRequestTimeout(5.seconds)
+        .withCache(RequestCache.`no-store`)
+        .create
+        .get(uri"/conf.json")(_.decodeJson[AppConfig])
+        .adaptError { case t =>
+          new Exception("Could not retrieve configuration.", t)
+        }
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, reason) =>
@@ -117,8 +97,9 @@ object ExploreMain extends IOApp.Simple {
         if (reason.toOption.flatMap(_.toOption.flatMap(_.code)).exists(_ === 1000))
           none
         else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
-          FiniteDuration(math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
-                         TimeUnit.SECONDS
+          FiniteDuration(
+            math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
+            TimeUnit.SECONDS
           ).some
 
     def setupDOM(): IO[Element] = IO(

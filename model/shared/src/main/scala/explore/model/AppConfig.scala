@@ -5,12 +5,11 @@ package explore.model
 
 import cats.Eq
 import cats.Show
-import explore.model.decoders._
-import explore.model.encoders._
 import explore.model.enum.ExecutionEnvironment
 import io.circe._
 import io.circe.generic.semiauto._
-import sttp.model.Uri
+import org.http4s.Uri
+import org.http4s.circe._
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
@@ -29,6 +28,8 @@ case class SSOConfig(
 object SSOConfig {
   implicit val eqSSOConfig: Eq[SSOConfig]     = Eq.fromUniversalEquals
   implicit val showSSOConfig: Show[SSOConfig] = Show.fromToString
+
+  implicitly[Decoder[Uri]]
 
   implicit val encoderSSOConfig: Encoder[SSOConfig] = deriveEncoder[SSOConfig]
   implicit val decoderSSOConfig: Decoder[SSOConfig] = deriveDecoder[SSOConfig]
