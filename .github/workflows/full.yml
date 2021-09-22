@@ -48,3 +48,22 @@ jobs:
         run: yarn bundlemon
         env:
           BUNDLEMON_PROJECT_ID: 614a60c0e759f5000834cacc
+
+      - name: Deploy review app to Firebase
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}'
+          projectId: explore-gemini
+          target: 'staging'
+
+      - name: Deploy staging app to Firebase
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}'
+          projectId: explore-gemini
+          target: 'staging'
+          channelId: live

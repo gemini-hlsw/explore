@@ -40,3 +40,6 @@ common/src/main/publicdev/
 server.cert
 server.key
 stats.html
+
+# Firebase
+.firebase/

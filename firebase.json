@@ -1,0 +1,34 @@
+{
+  "hosting": [
+    {
+      "target": "staging",
+      "public": "heroku/static",
+      "ignore": ["/*.conf.json"],
+      "rewrites": [
+        {
+          "source": "/conf.json",
+          "destination": "/staging.conf.json"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "production",
+      "public": "heroku/static",
+      "ignore": ["/*.conf.json"],
+      "rewrites": [
+        {
+          "source": "/conf.json",
+          "destination": "/production.conf.json"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
+}

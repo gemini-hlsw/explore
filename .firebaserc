@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "explore-gemini"
+  },
+  "targets": {
+    "explore-gemini": {
+      "hosting": {
+        "staging": ["explore-gemini"],
+        "production": ["explore-gemini-prod"]
+      }
+    }
+  }
+}
