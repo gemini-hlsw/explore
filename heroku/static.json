@@ -2,6 +2,7 @@
   "https_only": true,
   "root": "static/",
   "clean_urls": false,
+  "brotli": "on",
   "redirects": {
     "/conf.json": {
       "url": "\" /${ENVIRONMENT}.conf.json\""

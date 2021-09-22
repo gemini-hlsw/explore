@@ -1,0 +1,22 @@
+{
+  "baseDir": "./heroku/static/assets",
+  "files": [
+    {
+      "path": "*.<hash>.js"
+    },
+    {
+      "path": "*.<hash>.css"
+    }
+  ],
+  "defaultCompression": "none",
+  "reportOutput": [
+    [
+      "github",
+      {
+        "checkRun": true,
+        "commitStatus": true,
+        "prComment": true
+      }
+    ]
+  ]
+}

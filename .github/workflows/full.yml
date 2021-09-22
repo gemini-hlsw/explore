@@ -1,6 +1,10 @@
 name: full
 
-on: push
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [synchronize, opened, reopened]
 
 jobs:
   build:
@@ -9,19 +13,38 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Use Node.js 12
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.8.0"
       - uses: coursier/cache-action@v6
       - uses: c-hive/gha-npm-cache@v1
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          
       - name: Set up Scala
         uses: olafurpg/setup-scala@v13
         with:
           java-version: adopt@1.11
+
+          
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=6144'
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-        run: |
+        run: | # https://stackoverflow.com/a/55610612
           sbt -v -J-Xmx6g stage
+          rm .npmrc
+          npm config set "@fortawesome:registry" https://npm.fontawesome.com/
+          npm config set "//npm.fontawesome.com/:_authToken" ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           npm install
           npm run build
+
+      # https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
+      - name: override CI_COMMIT_SHA
+        if: github.event_name == 'pull_request'
+        run: echo "CI_COMMIT_SHA=${{ github.event.pull_request.head.sha}}" >> $GITHUB_ENV
+
+      - name: Run BundleMon
+        run: yarn bundlemon
+        env:
+          BUNDLEMON_PROJECT_ID: 614a60c0e759f5000834cacc
