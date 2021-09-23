@@ -75,8 +75,7 @@ object Routing {
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forBulkConstraintSet),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraints),
           model.zoom(RootModel.constraintSummaryHiddenColumns),
           size
         )

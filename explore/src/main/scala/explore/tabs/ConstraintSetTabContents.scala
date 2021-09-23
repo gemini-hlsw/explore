@@ -22,8 +22,6 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
-import explore.optics._
-import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -48,9 +46,7 @@ final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
   focused:          View[Option[Focused]],
   expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
-  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
-  // TODO: Clean up the bulkUndoStack somewhere, somehow?
-  bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
+  undoStacks:       View[ConstraintsUndoStacks[IO]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -105,7 +101,7 @@ object ConstraintSetTabContents {
                                props.focused,
                                state.zoom(selectedLens),
                                props.expandedIds,
-                               props.listUndoStacks
+                               props.undoStacks
         )
       )
 
@@ -148,16 +144,14 @@ object ConstraintSetTabContents {
             cgl
               .get(obsIds)
               .fold(cgl)(cg => cgl.updated(obsIds, ConstraintGroup.constraintSet.modify(mod)(cg)))
-        val csView: View[ConstraintSet]                 = cglView.zoom(getCs)(modCs)
-        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
-          props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
+        val csView: View[ConstraintSet] = cglView.zoom(getCs)(modCs)
 
         Tile("constraints",
              s"Editing Constraints for ${obsIds.size} Observations",
              backButton.some
         )(
-          (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
-            <.div(ConstraintsPanel(obsIds.toList, csView_, csUndo_, renderInTitle))
+          (csView, props.undoStacks).curryReusing.in((csView_, undoStacks_, renderInTitle) =>
+            <.div(ConstraintsPanel(obsIds, csView_, undoStacks_, renderInTitle))
           )
         )
       }

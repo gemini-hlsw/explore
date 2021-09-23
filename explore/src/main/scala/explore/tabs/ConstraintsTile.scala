@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.implicits._
 import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -12,8 +13,8 @@ import explore.components.Tile
 import explore.constraints.ConstraintsPanel
 import explore.implicits._
 import explore.model.ConstraintSet
+import explore.model.ConstraintsUndoStacks
 import explore.model.reusability._
-import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -21,12 +22,14 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.style.Css
 
+import scala.collection.immutable.SortedSet
+
 object ConstraintsTile {
 
   def constraintsTile(
     obsId:      Observation.Id,
     csPot:      Pot[View[ConstraintSet]],
-    undoStacks: View[UndoStacks[IO, ConstraintSet]],
+    undoStacks: View[ConstraintsUndoStacks[IO]],
     control:    Option[Reuse[VdomNode]] = None,
     clazz:      Option[Css] = None
   ): Tile =
@@ -41,7 +44,7 @@ object ConstraintsTile {
         potRender[View[ConstraintSet]](
           Reuse.always(cs =>
             <.div(
-              ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)
+              ConstraintsPanel(SortedSet(obsId), cs, undoStacks_, renderInTitle)
             )
           )
         )(csPotView_)

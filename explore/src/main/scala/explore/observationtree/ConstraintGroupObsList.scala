@@ -16,6 +16,8 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintGroup
+import explore.model.ConstraintsUndoStacks
+import explore.model.ConstraintsUndoStacks._
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.SelectedPanel
@@ -45,7 +47,7 @@ final case class ConstraintGroupObsList(
   focused:            View[Option[Focused]],
   selected:           View[SelectedPanel[SortedSet[Observation.Id]]],
   expandedIds:        View[SortedSet[SortedSet[Observation.Id]]],
-  undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
+  undoStacks:         View[ConstraintsUndoStacks[IO]]
 )(implicit val ctx:   AppContextIO)
     extends ReactProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
@@ -105,9 +107,14 @@ object ConstraintGroupObsList {
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups
 
+      val listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]] =
+        props.undoStacks.zoom(_.listStacks)(mod =>
+          cus => ConstraintListUndoStacks(mod(cus.listStacks))
+        )
+
       val state   = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
-        props.undoStacks,
+        listUndoStacks,
         props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
       )
 

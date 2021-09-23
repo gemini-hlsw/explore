@@ -20,6 +20,8 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintSet
+import explore.model.ConstraintsUndoStacks
+import explore.model.ConstraintsUndoStacks._
 import explore.model.ElevationRange
 import explore.model.Help
 import explore.model.HourAngleRange
@@ -45,10 +47,12 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 
+import scala.collection.immutable.SortedSet
+
 final case class ConstraintsPanel(
-  obsIds:        List[Observation.Id],
+  obsIds:        SortedSet[Observation.Id],
   constraintSet: View[ConstraintSet],
-  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  undoStacks:    View[ConstraintsUndoStacks[IO]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 
@@ -110,7 +114,7 @@ object ConstraintsPanel {
       state:        State,
       undoCtx:      UndoCtx[ConstraintSet]
     )(implicit ctx: AppContextIO): VdomNode = {
-      val undoViewSet = UndoView(props.obsIds, undoCtx)
+      val undoViewSet = UndoView(props.obsIds.toList, undoCtx)
 
       val erView =
         undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
@@ -300,7 +304,12 @@ object ConstraintsPanel {
     }
 
     def render(props: Props, state: State) = AppCtx.using { implicit appCtx =>
-      renderFn(props, state, UndoContext(props.undoStacks, props.constraintSet))
+      val csUndoView: View[UndoStacks[IO, ConstraintSet]] =
+        props.undoStacks.zoom(_.groupStacks(props.obsIds))(mod =>
+          csus => ConstraintGroupUndoStacks(props.obsIds, mod(csus.groupStacks(props.obsIds)))
+        )
+
+      renderFn(props, state, UndoContext(csUndoView, props.constraintSet))
     }
   }
 

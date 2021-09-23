@@ -422,8 +422,7 @@ object ObsTabContents {
                     obsId,
                     obsView.map(_.zoom(ObservationData.constraintSet)),
                     props.undoStacks
-                      .zoom(ModelUndoStacks.forConstraintSet[IO])
-                      .zoom(atMapWithDefault(obsId, UndoStacks.empty)),
+                      .zoom(ModelUndoStacks.forConstraints[IO]),
                     control = constraintsSelector.some,
                     clazz = ExploreStyles.ConstraintsTile.some
                   ),
