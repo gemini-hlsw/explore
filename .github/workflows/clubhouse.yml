@@ -18,6 +18,7 @@ jobs:
           project-name: Explore
           opened-state-name: In Development
           merged-state-name: Completed
+          closed-state-name: Won't fix
           ignored-users: geminihlswadmin
           user-map: |
             {
