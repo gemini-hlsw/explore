@@ -40,9 +40,9 @@ final case class Tile(
   controllerClass:   Option[Css] = None // applied to wrapping div when in a TileController.
 )(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactProps[Tile](Tile.component) {
-  def showMaximize: Boolean =
+  def showMaximize: Boolean                                                                =
     state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)
-  def showMinimize: Boolean =
+  def showMinimize: Boolean                                                                =
     state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
   def withState(state: TileSizeState, sizeStateCallback: TileSizeState ==> Callback): Tile =
     copy(state = state, sizeStateCallback = sizeStateCallback)(render)
@@ -65,7 +65,7 @@ object Tile {
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
 
-  val widthBreakpoints  =
+  val widthBreakpoints =
     List((300                            -> TileXSW),
          (Constants.TwoPanelCutoff.toInt -> TileSMW),
          (768                            -> TileMDW),

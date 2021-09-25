@@ -48,10 +48,10 @@ object Settings {
   object Libraries {
     import LibraryVersions._
 
-    private def deps(modules: PlatformDepsGroupArtifactID*)(version: String): Seq[ModuleID]        =
+    private def deps(modules: PlatformDepsGroupArtifactID*)(version: String): Seq[ModuleID] =
       modules.map(_ % version)
 
-    def In(configuration:     Configuration)(dependencies:           Seq[ModuleID]): Seq[ModuleID] =
+    def In(configuration: Configuration)(dependencies: Seq[ModuleID]): Seq[ModuleID] =
       dependencies.map(_ % configuration)
 
     val Cats = Def.setting(

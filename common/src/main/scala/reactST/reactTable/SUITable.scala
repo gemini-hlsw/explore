@@ -45,7 +45,7 @@ trait LayoutDefaultTag[Layout] {
   val tag: js.UndefOr[AsC]
 }
 object LayoutDefaultTag        {
-  implicit object TableLayoutDefaultTag extends LayoutDefaultTag[Layout.Table] {
+  implicit object TableLayoutDefaultTag    extends LayoutDefaultTag[Layout.Table]    {
     val tag = js.undefined
   }
 
@@ -106,7 +106,7 @@ class SUITable[
   ColumnInstanceD <: ColumnObject[D],
   State <: TableState[D],
   Layout // format: on
-]( // tableDef is used to infer types.
+](       // tableDef is used to infer types.
   @unused tableDef: TableDef[
     D,
     TableOptsD,

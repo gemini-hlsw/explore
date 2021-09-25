@@ -62,7 +62,7 @@ object TopBar {
     else
       Theme.Dark
 
-  private val component =
+  private val component   =
     ScalaComponent
       .builder[TopBar]
       .initialState(State(false, currentTheme))

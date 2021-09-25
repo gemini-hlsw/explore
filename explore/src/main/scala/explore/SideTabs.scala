@@ -42,7 +42,7 @@ object SideTabs {
           def onClickE[A](tab: AppTab) =
             linkOverride[A](p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)))
 
-          def tabButton(tab:          AppTab): Button       =
+          def tabButton(tab: AppTab): Button =
             Button(
               as = <.a,
               active = tab === focus,
@@ -50,7 +50,7 @@ object SideTabs {
               onClickE = onClickE[ButtonProps](tab)
             )(^.href := ctx.pageUrl(tab, none), tab.title)
 
-          def tab(tab:                AppTab): Label        =
+          def tab(tab: AppTab): Label =
             Label(
               as = <.a,
               active = tab === focus,

@@ -20,7 +20,7 @@ trait ConstraintsSummary {
 }
 
 object ConstraintsSummary {
-  val default: ConstraintsSummary = new ConstraintsSummary {
+  val default: ConstraintsSummary                          = new ConstraintsSummary {
     // Defaults here should match server defaults for a smooth UI experience.
     val imageQuality    = ImageQuality.PointEight
     val cloudExtinction = CloudExtinction.PointThree

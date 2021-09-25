@@ -23,7 +23,7 @@ trait ArbObsSummary {
   import ArbPointing._
   import ArbTime._
 
-  implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
+  implicit val arbObsSummaryWithConstraints                                     = Arbitrary[ObsSummaryWithConstraints] {
     for {
       id           <- arbitrary[Observation.Id]
       constraints  <- arbitrary[ConstraintsSummary]
@@ -33,7 +33,7 @@ trait ArbObsSummary {
     } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration)
   }
 
-  implicit val arbObsSummaryWithPointingAndConstraints =
+  implicit val arbObsSummaryWithPointingAndConstraints                          =
     Arbitrary[ObsSummaryWithPointingAndConstraints] {
       for {
         id           <- arbitrary[Observation.Id]

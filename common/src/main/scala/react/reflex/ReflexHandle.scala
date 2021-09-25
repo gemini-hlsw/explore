@@ -23,8 +23,8 @@ final case class ReflexHandle(
   clazz:                  js.UndefOr[Css] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
 ) extends GenericComponentPAC[ReflexHandle.Props, ReflexHandle] {
-  override protected def cprops    = ReflexHandle.props(this)
-  override protected val component = ReflexHandle.component
+  override protected def cprops                     = ReflexHandle.props(this)
+  override protected val component                  = ReflexHandle.component
   override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
 }
 
@@ -69,5 +69,5 @@ object ReflexHandle {
     p
   }
 
-  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
+  private val component                       = JsComponent[Props, Children.Varargs, Null](RawComponent)
 }

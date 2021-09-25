@@ -11,8 +11,8 @@ import lucuma.core.model.Target
 
 sealed trait Focused extends Product with Serializable
 object Focused {
-  case class FocusedObs(obsId: Observation.Id) extends Focused
-  case class FocusedTarget(targetId: Target.Id) extends Focused
+  case class FocusedObs(obsId: Observation.Id)        extends Focused
+  case class FocusedTarget(targetId: Target.Id)       extends Focused
   case class FocusedAsterism(asterismId: Asterism.Id) extends Focused
 
   implicit val eqFocused: Eq[Focused] = Eq.instance {

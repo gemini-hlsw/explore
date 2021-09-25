@@ -23,7 +23,7 @@ package modes {
     override def toString: String = s"${w.micrometer.value.toDouble} μm"
   }
 
-  case class ModeSlitSize(size: Angle) {
+  case class ModeSlitSize(size: Angle)     {
     override def toString: String = s"${Angle.milliarcseconds.get(size) / 1000.0} arcsec"
   }
 
@@ -49,7 +49,7 @@ package modes {
   }
 
   trait Decoders {
-    implicit val posIntDecoder: CellDecoder[PosInt] =
+    implicit val posIntDecoder: CellDecoder[PosInt]            =
       CellDecoder.intDecoder
         .emap { x =>
           refineV[Positive](x).leftMap(s => new DecoderError(s))
@@ -61,7 +61,7 @@ package modes {
           refineV[NonNegative](x).leftMap(s => new DecoderError(s))
         }
 
-    implicit val instDecoder: CellDecoder[Instrument] =
+    implicit val instDecoder: CellDecoder[Instrument]          =
       CellDecoder.stringDecoder
         .emap {
           case "FLAMINGOS2" => Instrument.Flamingos2.asRight
@@ -76,24 +76,24 @@ package modes {
           case x            => new DecoderError(s"Unknown instrument $x").asLeft
         }
 
-    implicit val modeAODecoder: CellDecoder[ModeAO] =
+    implicit val modeAODecoder: CellDecoder[ModeAO]            =
       CellDecoder.stringDecoder
         .map {
           case "yes" => ModeAO.AO
           case _     => ModeAO.NoAO
         }
 
-    val micrometerDecoder: CellDecoder[Wavelength] =
+    val micrometerDecoder: CellDecoder[Wavelength]                           =
       CellDecoder.bigDecimalDecoder.emap(x =>
         Wavelength.fromPicometers
           .getOption((x * 1000000).intValue)
           .toRight(new DecoderError(s"Invalid wavelength value $x"))
       )
 
-    implicit val wavelength: CellDecoder[ModeWavelength] =
+    implicit val wavelength: CellDecoder[ModeWavelength]                     =
       micrometerDecoder.map(ModeWavelength.apply)
 
-    implicit val posBigDecimalDecoder: CellDecoder[PosBigDecimal] =
+    implicit val posBigDecimalDecoder: CellDecoder[PosBigDecimal]            =
       CellDecoder.bigDecimalDecoder
         .emap { x =>
           refineV[Positive](x).leftMap(s => new DecoderError(s))
@@ -105,7 +105,7 @@ package modes {
           refineV[NonNegative](x).leftMap(s => new DecoderError(s))
         }
 
-    val arcsecDecoder: CellDecoder[Angle] =
+    val arcsecDecoder: CellDecoder[Angle]             =
       CellDecoder.bigDecimalDecoder.map(x => Angle.milliarcseconds.reverseGet((x * 1000).intValue))
 
     implicit val swDecoder: CellDecoder[ModeSlitSize] =

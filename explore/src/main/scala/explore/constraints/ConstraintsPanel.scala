@@ -71,7 +71,7 @@ object ConstraintsPanel {
     implicit val enumeratedElevationRangeType: Enumerated[ElevationRangeType] =
       Enumerated.of(AirMass, HourAngle)
 
-    implicit val displayElevationRangeType: Display[ElevationRangeType] =
+    implicit val displayElevationRangeType: Display[ElevationRangeType]       =
       Display.byShortName(_.label)
   }
 

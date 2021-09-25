@@ -50,7 +50,7 @@ trait ViewCommon {
     )
 
   // Adapted from https://github.com/atlassian/react-beautiful-dnd/issues/374#issuecomment-569817782
-  def getDraggedStyle(style:   TagMod, snapshot: Draggable.StateSnapshot): TagMod =
+  def getDraggedStyle(style: TagMod, snapshot: Draggable.StateSnapshot): TagMod =
     if (!snapshot.isDragging)
       TagMod.empty
     else if (!snapshot.isDropAnimating)

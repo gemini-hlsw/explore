@@ -117,7 +117,7 @@ object ObsQueries {
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
-      extends AnyVal {
+      extends AnyVal                 {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
   }
 

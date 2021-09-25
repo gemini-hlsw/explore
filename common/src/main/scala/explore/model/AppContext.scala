@@ -31,11 +31,11 @@ import scala.concurrent.duration._
 case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   odb:           WebSocketClient[F, ObservationDB],
   preferencesDB: WebSocketClient[F, UserPreferencesDB]
-)              {
+) {
   lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
 
-  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
+  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus]           =
     StreamRenderer.build(odb.statusStream)
 
   def init(payload: Map[String, Json]): F[Unit] =
@@ -50,7 +50,7 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
       odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
 }
-object Clients {
+object Clients    {
   def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
@@ -109,25 +109,25 @@ case class AppContext[F[_]](
   val syncLogger: Logger[SyncIO] = {
     def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))
     new Logger[SyncIO] {
-      def error(t:       Throwable)(message: => String): SyncIO[Unit] =
+      def error(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.error(t)(message))
-      def warn(t:        Throwable)(message: => String): SyncIO[Unit] =
+      def warn(t: Throwable)(message: => String): SyncIO[Unit]  =
         f(logger.warn(t)(message))
-      def info(t:        Throwable)(message: => String): SyncIO[Unit] =
+      def info(t: Throwable)(message: => String): SyncIO[Unit]  =
         f(logger.info(t)(message))
-      def debug(t:       Throwable)(message: => String): SyncIO[Unit] =
+      def debug(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.debug(t)(message))
-      def trace(t:       Throwable)(message: => String): SyncIO[Unit] =
+      def trace(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.trace(t)(message))
-      def error(message: => String): SyncIO[Unit] =
+      def error(message: => String): SyncIO[Unit]               =
         f(logger.error(message))
-      def warn(message:  => String): SyncIO[Unit] =
+      def warn(message: => String): SyncIO[Unit]                =
         f(logger.warn(message))
-      def info(message:  => String): SyncIO[Unit] =
+      def info(message: => String): SyncIO[Unit]                =
         f(logger.info(message))
-      def debug(message: => String): SyncIO[Unit] =
+      def debug(message: => String): SyncIO[Unit]               =
         f(logger.debug(message))
-      def trace(message: => String): SyncIO[Unit] =
+      def trace(message: => String): SyncIO[Unit]               =
         f(logger.trace(message))
     }
   }

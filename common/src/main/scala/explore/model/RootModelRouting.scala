@@ -16,7 +16,7 @@ object RootModelRouting {
   protected def getPage(model: RootModel): Page =
     getPage(model.tabs.focus, model.focused)
 
-  def getPage(tab: AppTab, focused: Option[Focused]): Page =
+  def getPage(tab: AppTab, focused: Option[Focused]): Page  =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage

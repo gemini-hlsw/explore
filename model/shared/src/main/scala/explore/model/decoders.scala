@@ -36,7 +36,7 @@ object decoders {
       Epoch.fromString.getOption(e).toRight(s"Invalid epoch value: $e")
     )
 
-  val rvmsDecoder: Decoder[RadialVelocity] =
+  val rvmsDecoder: Decoder[RadialVelocity]        =
     Decoder.decodeBigDecimal.emap(x =>
       RadialVelocity(x.withUnit[CentimetersPerSecond]).toRight(s"Invalid radial velocity $x")
     )
@@ -46,7 +46,7 @@ object decoders {
       c.downField("centimetersPerSecond").as[RadialVelocity](rvmsDecoder)
   }
 
-  val pxµasDecoder: Decoder[Parallax] =
+  val pxµasDecoder: Decoder[Parallax]       =
     Decoder.decodeLong.map(Parallax.fromMicroarcseconds)
 
   implicit val pxDecoder: Decoder[Parallax] = new Decoder[Parallax] {
@@ -54,7 +54,7 @@ object decoders {
       c.downField("microarcseconds").as[Parallax](pxµasDecoder)
   }
 
-  val raµasDecoder: Decoder[RightAscension] =
+  val raµasDecoder: Decoder[RightAscension]       =
     Decoder.decodeLong
       .map(
         (RightAscension.fromAngleExact.getOption _).compose(Angle.fromMicroarcseconds _)
@@ -66,21 +66,21 @@ object decoders {
       c.downField("microarcseconds").as[RightAscension](raµasDecoder)
   }
 
-  val decµasDecoder: Decoder[Declination] =
+  val decµasDecoder: Decoder[Declination]         =
     Decoder.decodeLong
       .map(
         (Declination.fromAngle.getOption _).compose(Angle.fromMicroarcseconds _)
       )
       .emap(_.toRight("Invalid µarcsec value for declination"))
 
-  implicit val decDecoder: Decoder[Declination] = new Decoder[Declination] {
+  implicit val decDecoder: Decoder[Declination]   = new Decoder[Declination] {
     final def apply(c: HCursor): Decoder.Result[Declination] =
       c.downField("microarcseconds").as[Declination](decµasDecoder)
   }
 
   implicit val coordDecoder: Decoder[Coordinates] = semiauto.deriveDecoder[Coordinates]
 
-  val pmraµasDecoder: Decoder[ProperMotion.RA] =
+  val pmraµasDecoder: Decoder[ProperMotion.RA]       =
     Decoder.decodeLong
       .map(ProperMotion.RA.microarcsecondsPerYear.reverseGet)
 
@@ -89,7 +89,7 @@ object decoders {
       c.downField("microarcsecondsPerYear").as[ProperMotion.RA](pmraµasDecoder)
   }
 
-  val pmdecµasDecoder: Decoder[ProperMotion.Dec] =
+  val pmdecµasDecoder: Decoder[ProperMotion.Dec]       =
     Decoder.decodeLong
       .map(ProperMotion.Dec.microarcsecondsPerYear.reverseGet)
 
@@ -98,9 +98,9 @@ object decoders {
       c.downField("microarcsecondsPerYear").as[ProperMotion.Dec](pmdecµasDecoder)
   }
 
-  implicit val pmDecoder: Decoder[ProperMotion] = semiauto.deriveDecoder[ProperMotion]
+  implicit val pmDecoder: Decoder[ProperMotion]        = semiauto.deriveDecoder[ProperMotion]
 
-  implicit val siderealTrackingDecoder = new Decoder[SiderealTracking] {
+  implicit val siderealTrackingDecoder                        = new Decoder[SiderealTracking] {
     final def apply(c: HCursor): Decoder.Result[SiderealTracking] =
       for {
         bc  <- c.downField("coordinates").as[Coordinates]
@@ -118,7 +118,7 @@ object decoders {
         .flatMap(_.toRight(DecodingFailure("Invalid MagnitudeValue", c.history)))
   }
 
-  implicit val magnitudeDecoder: Decoder[Magnitude] = new Decoder[Magnitude] {
+  implicit val magnitudeDecoder: Decoder[Magnitude]           = new Decoder[Magnitude] {
     final def apply(c: HCursor): Decoder.Result[Magnitude] =
       for {
         v <- c.downField("value").as[MagnitudeValue]
@@ -127,13 +127,13 @@ object decoders {
       } yield Magnitude(v, b, s)
   }
 
-  implicit val durationDecoder: Decoder[Duration] = Decoder.instance(
+  implicit val durationDecoder: Decoder[Duration]             = Decoder.instance(
     _.downField("microseconds")
       .as[Long]
       .map(l => Duration.of(l, ChronoUnit.MICROS))
   )
 
-  implicit val wavelengthDecoder: Decoder[Wavelength] = Decoder.instance(
+  implicit val wavelengthDecoder: Decoder[Wavelength]         = Decoder.instance(
     _.downField("picometers").as[PosInt].map(Wavelength.apply)
   )
 

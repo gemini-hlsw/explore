@@ -158,7 +158,7 @@ object SequenceStepsGQL {
         .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
     )
 
-    implicit val offsetDecoder: Decoder[Offset] = Decoder.instance(c =>
+    implicit val offsetDecoder: Decoder[Offset]                          = Decoder.instance(c =>
       for {
         p <- c.downField("p").as[Offset.P]
         q <- c.downField("q").as[Offset.Q]
@@ -170,7 +170,7 @@ object SequenceStepsGQL {
       type Fpu
       type Filter
     }
-    object SeqSite       {
+    object SeqSite {
       sealed trait North extends SeqSite {
         type Disperser = enum.GmosNorthDisperser
         type Fpu       = enum.GmosNorthFpu

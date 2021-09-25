@@ -89,7 +89,7 @@ object ObsTabContents {
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 12
 
-  private val layoutLarge: Layout = Layout(
+  private val layoutLarge: Layout       = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -120,7 +120,7 @@ object ObsTabContents {
     )
   )
 
-  private val layoutMedium: Layout = Layout(
+  private val layoutMedium: Layout      = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -151,7 +151,7 @@ object ObsTabContents {
     )
   )
 
-  private val layoutSmall: Layout = Layout(
+  private val layoutSmall: Layout       = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -469,7 +469,7 @@ object ObsTabContents {
             resizeHandles = List(ResizeHandleAxis.East),
             content = tree(observations)
           ),
-          <.div(^.key := "obs-right-side",
+          <.div(^.key   := "obs-right-side",
                 ^.width := coreWidth.px,
                 ^.left  := treeWidth.px,
                 ExploreStyles.SinglePanelTile

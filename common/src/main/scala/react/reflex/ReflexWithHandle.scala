@@ -34,7 +34,7 @@ object ReflexWithHandle {
   @js.native
   trait JsProps extends HandleProps with Props
 
-  private val component = ScalaComponent
+  private val component   = ScalaComponent
     .builder[JsProps]
     .render_P(p => p.render(p))
     .build

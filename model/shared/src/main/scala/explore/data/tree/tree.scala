@@ -7,7 +7,7 @@ import cats._
 import cats.syntax.all._
 import monocle.Focus
 
-final case class Tree[A](children: List[Node[A]]) {
+final case class Tree[A](children: List[Node[A]])                        {
   def map[B](f: A => B): Tree[B] =
     Tree(children.map(_.map(f)))
 }
@@ -18,7 +18,7 @@ final case class Node[A](value: A, children: List[Node[A]] = List.empty) {
 }
 
 object Tree {
-  def empty[A]: Tree[A] = Tree(List.empty)
+  def empty[A]: Tree[A]                     = Tree(List.empty)
   def apply[A](children: Node[A]*): Tree[A] = Tree(children.toList)
 
   implicit def eqTree[A: Eq]: Eq[Tree[A]] = Eq.by(_.children)
