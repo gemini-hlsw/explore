@@ -23,7 +23,7 @@ trait Adjuster[From, To] { self =>
   /** compose an [[Adjuster]] with a [[Adjuster]] */
   @inline final def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
     new Adjuster[From, X] {
-      def set(to:   X): From => From      = self.modify(other.set(to))
+      def set(to: X): From => From        = self.modify(other.set(to))
       def modify(f: X => X): From => From = self.modify(other.modify(f))
     }
 
@@ -61,7 +61,7 @@ object Adjuster {
 
   def apply[From, To](_modify: (To => To) => (From => From)): Adjuster[From, To] =
     new Adjuster[From, To] {
-      def set(to:   To): From => From       = modify(_ => to)
+      def set(to: To): From => From         = modify(_ => to)
       def modify(f: To => To): From => From = _modify(f)
     }
 }

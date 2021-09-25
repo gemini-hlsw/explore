@@ -66,7 +66,7 @@ object SearchForm {
     val searchTerm    = Focus[State](_.searchTerm)
   }
 
-  implicit val stateReuse                     = Reusability.derive[State]
+  implicit val stateReuse = Reusability.derive[State]
   implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.id, x.name, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
@@ -113,7 +113,7 @@ object SearchForm {
            Icons.Ban)
           .clazz(ExploreStyles.AladinSearchIcon)(^.tabIndex := -1)
 
-      val disabled   = props.searching.get.exists(_ === props.id)
+      val disabled = props.searching.get.exists(_ === props.id)
 
       Form(clazz = ExploreStyles.SearchForm, onSubmitE = submitForm)(
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
@@ -131,7 +131,7 @@ object SearchForm {
           icon = searchIcon
         ).withMods(^.placeholder := "Name"),
         // We need this hidden control to submit when pressing enter
-        <.input(^.`type` := "submit", ^.hidden := true)
+        <.input(^.`type`         := "submit", ^.hidden := true)
       )
     }
   }

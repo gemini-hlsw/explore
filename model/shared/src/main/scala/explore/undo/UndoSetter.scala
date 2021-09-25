@@ -32,17 +32,17 @@ trait UndoSetter[F[_], G[_], M] { self =>
     set(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(v)
 
   def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit]
-  )(v:         A): F[Unit] =
+    getter: M => A,
+    setter: A => M => M,
+    onSet:  (M, A) => G[Unit]
+  )(v:      A): F[Unit] =
     set(getter, setter, onSet, onSet)(v)
 
   def set[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     A => G[Unit]
-  )(v:         A): F[Unit] =
+    getter: M => A,
+    setter: A => M => M,
+    onSet:  A => G[Unit]
+  )(v:      A): F[Unit] =
     set(getter, setter, (_: M, a: A) => onSet(a))(v)
 
   def mod[A](
@@ -61,17 +61,17 @@ trait UndoSetter[F[_], G[_], M] { self =>
     mod(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(f)
 
   def mod[A](
-    getter:    M => A,
-    setter:    A => M => M,
-    onSet:     (M, A) => G[Unit]
-  )(f:         A => A): F[Unit] =
+    getter: M => A,
+    setter: A => M => M,
+    onSet:  (M, A) => G[Unit]
+  )(f:      A => A): F[Unit] =
     mod(getter, setter, onSet, onSet)(f)
 
   def mod[A](
-    getter:         M => A,
-    setter:         A => M => M,
-    onSet:          A => G[Unit]
-  )(f:              A => A): F[Unit] =
+    getter: M => A,
+    setter: A => M => M,
+    onSet:  A => G[Unit]
+  )(f:      A => A): F[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a))(f)
 
   def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[F, G, N] =

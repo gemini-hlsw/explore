@@ -72,7 +72,7 @@ object SkyPlotNight {
     implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
   }
 
-  private val PlotEvery: Duration   = Duration.ofMinutes(1)
+  private val PlotEvery: Duration = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   @js.native

@@ -34,13 +34,13 @@ object ExploreStyles {
   val FlexContainer: Css = Css("explore-flex-container")
   val FlexWrap: Css      = Css("explore-flex-wrap")
 
-  def FlexGrow(i:   Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-grow-$i")
+  def FlexGrow(i: Int Refined Interval.Closed[0, 4]): Css   = Css(s"explore-grow-$i")
   def FlexShrink(i: Int Refined Interval.Closed[0, 4]): Css = Css(s"explore-shrink-$i")
 
   // Move an element to the end of the flex container
   val FlexEnd: Css = Css("explore-flex-end")
 
-  def Grow(i:       Int Refined Interval.Closed[1, 4]): Css  = Css(s"explore-grow-$i")
+  def Grow(i: Int Refined Interval.Closed[1, 4]): Css        = Css(s"explore-grow-$i")
   def ColumnSpan(i: Int Refined Interval.Closed[1, 16]): Css = Css(s"explore-column-span-$i")
 
   // Change styles for a readonly input

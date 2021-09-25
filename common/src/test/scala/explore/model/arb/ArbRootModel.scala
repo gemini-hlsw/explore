@@ -19,7 +19,7 @@ import org.scalacheck.Gen
 trait ArbRootModel {
   import explore.model.arb.ArbFocused._
 
-  implicit val rootModelArb = Arbitrary[RootModel] {
+  implicit val rootModelArb                     = Arbitrary[RootModel] {
     for {
       vault   <- Gen.option(arbitrary[UserVault])
       tabs    <- arbitrary[EnumZipper[AppTab]]

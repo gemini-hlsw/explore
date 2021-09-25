@@ -61,10 +61,10 @@ object ProposalDetailsEditor {
 
   private def formatTime(time: Double) = f"$time%.2fh"
 
-  private def sortedSplits(splits: List[PartnerSplit]) =
+  private def sortedSplits(splits: List[PartnerSplit])                          =
     splits.sortBy(_.percent.value.value)(Ordering[Int].reverse)
 
-  private def partnerSplits(splits: List[PartnerSplit]): TagMod = splits match {
+  private def partnerSplits(splits: List[PartnerSplit]): TagMod                 = splits match {
     case Nil =>
       <.span(
         Icons.ExclamationTriangle,
@@ -78,13 +78,13 @@ object ProposalDetailsEditor {
       <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def partnerSplit(ps: PartnerSplit): TagMod = {
+  private def partnerSplit(ps: PartnerSplit): TagMod                            = {
     val id   = s"${ps.partner.tag}-split"
     val text = f"${ps.percent.value.value}%%"
     partnerSplitData(ps.partner, id, text)
   }
 
-  private def partnerSplitData(partner: Partner, id: String, data: String) = {
+  private def partnerSplitData(partner: Partner, id: String, data: String)      = {
     val img: TagMod  =
       <.img(^.src := PartnerFlags.smallFlag(partner),
             ^.alt := s"${partner.name}  Flag",
@@ -106,13 +106,13 @@ object ProposalDetailsEditor {
       <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
   }
 
-  private def timeSplit(ps: PartnerSplit, total: NonNegHour) = {
+  private def timeSplit(ps: PartnerSplit, total: NonNegHour)                    = {
     val splitTime = ps.percent.to[Double, Unitless] * total
     val timeText  = formatTime(splitTime.value)
     <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
   }
 
-  private def minimumTime(pct: IntPercent, total: NonNegHour) = {
+  private def minimumTime(pct: IntPercent, total: NonNegHour)                   = {
     val time     = pct.to[Double, Unitless] * total
     val timeText = formatTime(time.value)
     <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.MinimumPercent)

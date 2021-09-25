@@ -16,14 +16,14 @@ import org.scalacheck.Gen._
 import eu.timepit.refined.scalacheck.numeric._
 
 trait ArbElevationRange {
-  implicit val airMassRangeArb: Arbitrary[AirMassRange] = Arbitrary {
+  implicit val airMassRangeArb: Arbitrary[AirMassRange]     = Arbitrary {
     for {
       min <- arbitrary[AirMassRange.DecimalValue]
       max <- arbitrary[AirMassRange.DecimalValue]
     } yield AirMassRange.fromDecimalValues.get((min, max))
   }
 
-  implicit val airMassRangeCogen: Cogen[AirMassRange] =
+  implicit val airMassRangeCogen: Cogen[AirMassRange]       =
     Cogen[(BigDecimal, BigDecimal)].contramap(amr => (amr.min.value, amr.max.value))
 
   implicit val hourAngleRangeArb: Arbitrary[HourAngleRange] = Arbitrary {
@@ -33,13 +33,13 @@ trait ArbElevationRange {
     } yield HourAngleRange.fromDecimalHours.get((min, max))
   }
 
-  implicit val hourAngleRangeCogen: Cogen[HourAngleRange] =
+  implicit val hourAngleRangeCogen: Cogen[HourAngleRange]   =
     Cogen[(BigDecimal, BigDecimal)].contramap(har => (har.minHours.value, har.maxHours.value))
 
   implicit val elevationRangeArb: Arbitrary[ElevationRange] =
     Arbitrary(oneOf(airMassRangeArb.arbitrary, hourAngleRangeArb.arbitrary))
 
-  implicit val elevationRangeCogen: Cogen[ElevationRange] =
+  implicit val elevationRangeCogen: Cogen[ElevationRange]   =
     Cogen[Either[AirMassRange, HourAngleRange]].contramap {
       case amr: AirMassRange   => amr.asLeft
       case har: HourAngleRange => har.asRight

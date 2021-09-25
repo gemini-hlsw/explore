@@ -34,7 +34,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
         _.get(index.childPos.toLong).map(node => (getKey(node.value.elem), node.map(_.elem)))
       )
 
-  private def removeInTree(key: K): Tree[IndexedElem[K, A]] = {
+  private def removeInTree(key: K): Tree[IndexedElem[K, A]]    = {
     def removeInChildren(
       idx:       Index[K]
     )(
@@ -140,6 +140,6 @@ object KeyedIndexedTree {
     KeyedIndexedTree(buildKeyMap(indexedTree, getKey), indexedTree)(getKey)
   }
 
-  implicit def eqKeyedIndexedTree[K, A: Eq]: Eq[KeyedIndexedTree[K, A]] =
+  implicit def eqKeyedIndexedTree[K, A: Eq]: Eq[KeyedIndexedTree[K, A]]         =
     Eq.by(_.toTree)
 }

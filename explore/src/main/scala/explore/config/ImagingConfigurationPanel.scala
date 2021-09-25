@@ -100,7 +100,7 @@ object ImagingConfigurationPanel {
       ("Combination".asLeft.some ::
         combination.map(f => f.asRight.some))
 
-  protected val component =
+  protected val component                                           =
     ScalaComponent
       .builder[Props]
       .stateless

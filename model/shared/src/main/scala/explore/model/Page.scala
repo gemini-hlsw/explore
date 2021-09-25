@@ -13,17 +13,17 @@ import monocle.Iso
 sealed trait Page extends Product with Serializable
 
 object Page {
-  case object HomePage                   extends Page
-  final case object ProposalPage         extends Page
-  final case object ObservationsBasePage extends Page
-  final case class ObsPage(obsId: Observation.Id) extends Page
-  final case class ObsAdvancedConfPage(obsId: Observation.Id) extends Page
-  final case object TargetsBasePage      extends Page
-  final case class TargetPage(targetId: Target.Id) extends Page
+  case object HomePage                                          extends Page
+  final case object ProposalPage                                extends Page
+  final case object ObservationsBasePage                        extends Page
+  final case class ObsPage(obsId: Observation.Id)               extends Page
+  final case class ObsAdvancedConfPage(obsId: Observation.Id)   extends Page
+  final case object TargetsBasePage                             extends Page
+  final case class TargetPage(targetId: Target.Id)              extends Page
   final case class TargetsAsterismPage(asterismId: Asterism.Id) extends Page
-  final case class TargetsObsPage(obsId: Observation.Id) extends Page
-  case object ConfigurationsPage         extends Page
-  final case object ConstraintsBasePage  extends Page
+  final case class TargetsObsPage(obsId: Observation.Id)        extends Page
+  case object ConfigurationsPage                                extends Page
+  final case object ConstraintsBasePage                         extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
     case (HomePage, HomePage)                             => true

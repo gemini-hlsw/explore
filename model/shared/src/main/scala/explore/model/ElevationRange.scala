@@ -22,7 +22,7 @@ private sealed abstract class ElevationRangeType(val typeName: String) { self =>
     Encoder.encodeString.contramap(_.typeName)
 }
 
-private object ElevationRangeType {
+private object ElevationRangeType                                      {
   case object AirMassRange   extends ElevationRangeType("AirMassRange")
   case object HourAngleRange extends ElevationRangeType("HourAngleRange")
 
@@ -46,7 +46,7 @@ object ElevationRange {
   val hourAngle: Prism[ElevationRange, HourAngleRange] =
     GenPrism[ElevationRange, HourAngleRange]
 
-  implicit val ElevationRangeEq: Eq[ElevationRange] = Eq.fromUniversalEquals
+  implicit val ElevationRangeEq: Eq[ElevationRange]    = Eq.fromUniversalEquals
 
   implicit val elevationRangeDecoder: Decoder[ElevationRange] = new Decoder[ElevationRange] {
     final def apply(c: HCursor): Decoder.Result[ElevationRange] =

@@ -30,7 +30,7 @@ trait ArbTargetObsQueries {
   type ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
   val ConstraintSet = TargetObsQueriesGQL.TargetsObsQuery.Data.Observations.Nodes.ConstraintSet
 
-  implicit val arbObsResultPointing =
+  implicit val arbObsResultPointing                              =
     Arbitrary[ObsResult.Pointing] {
       Gen.oneOf(arbitrary[Target.Id].map(ObsResult.Pointing.Target.apply),
                 arbitrary[Asterism.Id].map(ObsResult.Pointing.Asterism.apply)
@@ -44,7 +44,7 @@ trait ArbTargetObsQueries {
         case ObsResult.Pointing.Asterism(id) => id.asLeft
       }
 
-  implicit val arbConstraintSet = buildConstraintsSummaryArb(ConstraintSet.apply)
+  implicit val arbConstraintSet                                  = buildConstraintsSummaryArb(ConstraintSet.apply)
 
   implicit val arbObsResult =
     Arbitrary[ObsResult] {

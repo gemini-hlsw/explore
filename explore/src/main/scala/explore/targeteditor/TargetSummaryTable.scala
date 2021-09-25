@@ -81,12 +81,12 @@ object TargetSummaryTable {
     "sed"          -> "SED"
   ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
 
-  private val columnClasses: Map[String, Css] = Map(
+  private val columnClasses: Map[String, Css]  = Map(
     "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
     "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
   )
 
-  protected val component =
+  protected val component                      =
     ScalaFnComponent
       .withHooks[Props]
       .useMemoBy(_.pointingsWithObs.observations) { props => observations => // Memo cols

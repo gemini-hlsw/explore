@@ -31,11 +31,11 @@ object ResizeDetector {
     val targetRef: Raw.React.RefFn[html.Element]
   }
 
-  trait Dimensions  {
+  trait Dimensions   {
     val height: Option[Int]
     val width: Option[Int]
   }
-  object Dimensions {
+  object Dimensions  {
     implicit val dimensionsReuse: Reusability[Dimensions] = Reusability.by(d => (d.height, d.width))
   }
 
@@ -66,14 +66,14 @@ object ResizeDetector {
 
   sealed trait ObserveBox extends Product with Serializable
 
-  object ObserveBox {
+  object ObserveBox      {
     implicit val enumValue: EnumValue[ObserveBox] = EnumValue.instance(_ match {
       case Content            => "content-box"
       case Border             => "border-box"
       case DevicePixelContent => "device-pixel-content-box"
     })
 
-    case object Content            extends ObserveBox
+    case object Content extends ObserveBox
     case object Border             extends ObserveBox
     case object DevicePixelContent extends ObserveBox
   }
@@ -83,7 +83,7 @@ object ResizeDetector {
     var leading: js.UndefOr[Boolean]
     var trailing: js.UndefOr[Boolean]
   }
-  object RefreshOptions {
+  object RefreshOptions  {
     def apply(
       leading:  js.UndefOr[Boolean] = js.undefined,
       trailing: js.UndefOr[Boolean] = js.undefined

@@ -59,7 +59,7 @@ object ExploreMain extends IOApp.Simple {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  val syncIOtoIO: SyncIO ~> IO = new ~>[SyncIO, IO] {
+  val syncIOtoIO: SyncIO ~> IO     = new ~>[SyncIO, IO] {
     def apply[A](fa: SyncIO[A]): IO[A] = fa.to[IO]
   }
 

@@ -33,21 +33,21 @@ case class UndoContext[F[_], G[_], M](
   private def push(stack: ViewF[F, UndoStack[G, M]]): Restorer[G, M] => F[Unit] =
     restorer => stack.mod(s => restorer +: s)
 
-  private def undoStacks: F[Option[Restorer[G, M]]] =
+  private def undoStacks: F[Option[Restorer[G, M]]]                             =
     stacks.get.undo match {
       case head :: tail =>
         stacks.set(UndoStacks(tail, head.onModel(model.get) +: stacks.get.redo, true)).as(head.some)
       case Nil          => Applicative[F].pure(none)
     }
 
-  private def redoStacks: F[Option[Restorer[G, M]]] =
+  private def redoStacks: F[Option[Restorer[G, M]]]                             =
     stacks.get.redo match {
       case head :: tail =>
         stacks.set(UndoStacks(head.onModel(model.get) +: stacks.get.undo, tail, true)).as(head.some)
       case Nil          => Applicative[F].pure(none)
     }
 
-  private def reset(stack: ViewF[F, UndoStack[G, M]]): F[Unit] =
+  private def reset(stack: ViewF[F, UndoStack[G, M]]): F[Unit]                  =
     stack.set(List.empty)
 
   def restore(restorerOpt: Option[Restorer[G, M]]): F[Unit] =

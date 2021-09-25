@@ -21,7 +21,7 @@ class TestUndoable[F[_]: Monad, M](
 )(implicit val dispatcher: Dispatcher[F]) {
   def get: F[M] = valueRef.get
 
-  def set[A](getAdjust: GetAdjust[M, A], v: A): F[Unit]      =
+  def set[A](getAdjust: GetAdjust[M, A], v: A): F[Unit] =
     context >>= (_.set(getAdjust.get, getAdjust.set, (_: A) => Applicative[F].unit)(v))
 
   def mod[A](getAdjust: GetAdjust[M, A], f: A => A): F[Unit] =
@@ -34,7 +34,7 @@ class TestUndoable[F[_]: Monad, M](
   private def refView[A](ref: Ref[F, A]): F[ViewF[F, A]] =
     ref.get.map(a => ViewF(a, refModCB(ref)))
 
-  implicit private val syncToAsync: F ~> F = FunctionK.id[F]
+  implicit private val syncToAsync: F ~> F               = FunctionK.id[F]
 
   val context: F[UndoContext[F, F, M]] =
     for {

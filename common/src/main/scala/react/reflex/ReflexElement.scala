@@ -29,8 +29,8 @@ final case class ReflexElement(
   withHandle:              js.UndefOr[Boolean] = js.undefined,
   override val modifiers:  Seq[TagMod] = Seq.empty
 ) extends GenericComponentPAC[ReflexElement.Props, ReflexElement] {
-  override protected def cprops    = ReflexElement.props(this)
-  override protected val component = ReflexElement.component
+  override protected def cprops                     = ReflexElement.props(this)
+  override protected val component                  = ReflexElement.component
   override def addModifiers(modifiers: Seq[TagMod]) = copy(modifiers = this.modifiers ++ modifiers)
 }
 
@@ -111,6 +111,6 @@ object ReflexElement {
     p
   }
 
-  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
+  private val component                        = JsComponent[Props, Children.Varargs, Null](RawComponent)
 
 }

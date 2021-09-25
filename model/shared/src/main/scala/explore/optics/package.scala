@@ -16,25 +16,25 @@ import monocle._
 import monocle.function.At.atMap
 
 package object optics {
-  implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
+  implicit class IsoOps[From, To](val self: Iso[From, To])                        extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]          =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.replace(to)
+        def set(to: To): From => From         = self.replace(to)
       }
   }
 
-  implicit class LensOps[From, To](val self: Lens[From, To]) extends AnyVal {
+  implicit class LensOps[From, To](val self: Lens[From, To])                      extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]          =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.replace(to)
+        def set(to: To): From => From         = self.replace(to)
       }
 
     def composeGetAdjust[X](other: GetAdjust[To, X]): GetAdjust[From, X] =
@@ -42,48 +42,48 @@ package object optics {
                              asAdjuster.andThen(other.adjuster)
       )
 
-    @inline final def asGetAdjust: GetAdjust[From, To] =
+    @inline final def asGetAdjust: GetAdjust[From, To]                   =
       new GetAdjust[From, To](self.asGetter, asAdjuster)
   }
 
-  implicit class PrismOps[From, To](val self: Prism[From, To]) extends AnyVal {
+  implicit class PrismOps[From, To](val self: Prism[From, To])                    extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]          =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.replace(to)
+        def set(to: To): From => From         = self.replace(to)
       }
   }
 
-  implicit class OptionalOps[From, To](val self: Optional[From, To]) extends AnyVal {
+  implicit class OptionalOps[From, To](val self: Optional[From, To])              extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]          =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.replace(to)
+        def set(to: To): From => From         = self.replace(to)
       }
   }
 
-  implicit class TraversalOps[From, To](val self: Traversal[From, To]) extends AnyVal {
+  implicit class TraversalOps[From, To](val self: Traversal[From, To])            extends AnyVal {
     def composeAdjuster[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]                  =
       Adjuster(self.modify)
   }
 
-  implicit class SetterOps[From, To](val self: Setter[From, To]) extends AnyVal {
+  implicit class SetterOps[From, To](val self: Setter[From, To])                  extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
 
-    @inline final def asAdjuster: Adjuster[From, To] =
+    @inline final def asAdjuster: Adjuster[From, To]          =
       new Adjuster[From, To] {
         def modify(f: To => To): From => From = self.modify(f)
-        def set(to:   To): From => From       = self.replace(to)
+        def set(to: To): From => From         = self.replace(to)
       }
   }
 
@@ -99,7 +99,7 @@ package object optics {
       )
   }
 
-  implicit class GetterOptionOps[S, A](val getter: Getter[S, Option[A]]) extends AnyVal {
+  implicit class GetterOptionOps[S, A](val getter: Getter[S, Option[A]])          extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): Getter[S, Option[B]] =
       composeOptionGetter(other.asGetter)
 
@@ -109,7 +109,7 @@ package object optics {
       )
   }
 
-  implicit class AdjusterOptionOps[S, A](val setter: Adjuster[S, Option[A]]) extends AnyVal {
+  implicit class AdjusterOptionOps[S, A](val setter: Adjuster[S, Option[A]])      extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): Adjuster[S, Option[B]] =
       composeOptionGetAdjust(other.asGetAdjust)
 

@@ -11,8 +11,8 @@ import scala.collection.immutable.TreeSeqMap
 // Efficient loookup of elements and positions by Key.
 case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, Int)]) {
   def getElemAndIndex(key: K): Option[(A, Int)] = list.get(key)
-  def getElement(key:      K): Option[A]        = list.get(key).map(_._1)
-  def getIndex(key:        K): Option[Int]      = list.get(key).map(_._2)
+  def getElement(key: K): Option[A]             = list.get(key).map(_._1)
+  def getIndex(key: K): Option[Int]             = list.get(key).map(_._2)
 
   def elements: Iterable[A] = list.values.map(_._1)
 
@@ -83,6 +83,6 @@ object KeyedIndexedList {
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
-  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
+  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]]                 =
     Eq.by(_.list: Map[K, (A, Int)])
 }

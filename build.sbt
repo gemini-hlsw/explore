@@ -67,7 +67,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
-lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
+lazy val modelTestkit        = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("model-testkit"))
   .dependsOn(model)
@@ -77,7 +77,7 @@ lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
-lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
+lazy val modelTests          = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("model-tests"))
   .dependsOn(modelTestkit)
@@ -86,14 +86,14 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
-lazy val graphql = project
+lazy val graphql             = project
   .in(file("common-graphql"))
   .dependsOn(model.jvm)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .enablePlugins(ScalaJSPlugin)
 
-lazy val common = project
+lazy val common              = project
   .in(file("common"))
   .dependsOn(modelTestkit.js)
   .settings(commonSettings: _*)
@@ -132,7 +132,7 @@ lazy val common = project
   )
   .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
 
-lazy val explore: Project = project
+lazy val explore: Project    = project
   .in(file("explore"))
   .dependsOn(model.js, common)
   .settings(commonSettings: _*)
@@ -154,7 +154,7 @@ lazy val explore: Project = project
     scalacOptions ~= (_.filterNot(Set("-Vtype-diffs")))
   )
 
-lazy val commonSettings = lucumaGlobalSettings ++ Seq(
+lazy val commonSettings      = lucumaGlobalSettings ++ Seq(
   // don't publish anything
   publish         := {},
   publishLocal    := {},
@@ -163,7 +163,7 @@ lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   scalacOptions --= Seq("-Xfatal-warnings").filterNot(_ => insideCI.value)
 )
 
-lazy val commonLibSettings = Seq(
+lazy val commonLibSettings   = Seq(
   libraryDependencies ++=
     LucumaCore.value ++
       Cats.value ++
@@ -187,13 +187,13 @@ lazy val commonLibSettings = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-lazy val testkitLibSettings = Seq(
+lazy val testkitLibSettings  = Seq(
   libraryDependencies ++= Discipline.value ++
     MonocleLaw.value ++
     LucumaCoreTestKit.value
 )
 
-lazy val commonJVMSettings = Seq(
+lazy val commonJVMSettings   = Seq(
   libraryDependencies ++=
     FS2IO.value ++
       In(Test)(
@@ -215,11 +215,11 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
   dependencyOverrides ++= ScalaJSReact.value
 )
 
-lazy val commonModuleTest = Seq(
+lazy val commonModuleTest    = Seq(
   Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
 )
 
-lazy val esModule = Seq(
+lazy val esModule            = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },

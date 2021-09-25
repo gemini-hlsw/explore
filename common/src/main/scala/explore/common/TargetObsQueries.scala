@@ -122,7 +122,7 @@ object TargetObsQueries {
       case PointingId.AsterismId(id) => PointingAsterismResult(id)
     }
 
-  val targetsObsQueryObsPointingId: Lens[ObsResult, Option[PointingId]] =
+  val targetsObsQueryObsPointingId: Lens[ObsResult, Option[PointingId]]                     =
     ObsResult.pointing.andThen(optionIso(targetsObsQueryPointingId))
 
   private val targetsObsQueryTargetsWithObs: Getter[TargetsObsQuery.Data, PointingsWithObs] =
@@ -139,9 +139,9 @@ object TargetObsQueries {
     def asTargetsWithObs = targetsObsQueryTargetsWithObs
   }
 
-  implicit val TargetResultReusability: Reusability[TargetResult]     =
+  implicit val TargetResultReusability: Reusability[TargetResult] =
     Reusability.by(x => (x.id, x.name))
-  implicit val AsterismIdNameReusability: Reusability[AsterismIdName] =
+  implicit val AsterismIdNameReusability: Reusability[AsterismIdName]   =
     Reusability.by(x => (x.id, x.name, x.targets))
 
   implicit val targetsWithObsReusability: Reusability[PointingsWithObs] =

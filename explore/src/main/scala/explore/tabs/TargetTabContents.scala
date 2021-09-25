@@ -195,7 +195,7 @@ object TargetTabContents {
           content = tree(pointingsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
-        <.div(^.key := "target-right-side",
+        <.div(^.key   := "target-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
               ^.left  := treeWidth.px
@@ -213,7 +213,7 @@ object TargetTabContents {
     }
   }
 
-  protected val component =
+  protected val component                                                   =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>

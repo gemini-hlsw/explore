@@ -90,10 +90,10 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
     }
 
     // Start Position Operations
-    def mod(f:   Idx => Idx): Operation =
+    def mod(f: Idx => Idx): Operation =
       _.map { case (value, idx) => (value, f(idx)) }
 
-    def set(idx: Idx): Operation        =
+    def set(idx: Idx): Operation =
       mod(_ => idx)
     // End Position Operations
   }

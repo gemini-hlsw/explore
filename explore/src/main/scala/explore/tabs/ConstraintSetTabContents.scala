@@ -139,17 +139,17 @@ object ConstraintSetTabContents {
           )
         )
       ) { constraintGroup =>
-        val obsIds                                      = constraintGroup.obsIds
-        val constraintSet                               = constraintGroup.constraintSet
-        val cglView                                     = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
-        val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
+        val obsIds                                                                                 = constraintGroup.obsIds
+        val constraintSet                                                                          = constraintGroup.constraintSet
+        val cglView                                                                                = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
+        val getCs: ConstraintGroupList => ConstraintSet                                            = _ => constraintSet
         def modCs(mod: ConstraintSet => ConstraintSet): ConstraintGroupList => ConstraintGroupList =
           cgl =>
             cgl
               .get(obsIds)
               .fold(cgl)(cg => cgl.updated(obsIds, ConstraintGroup.constraintSet.modify(mod)(cg)))
-        val csView: View[ConstraintSet]                 = cglView.zoom(getCs)(modCs)
-        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+        val csView: View[ConstraintSet]                                                            = cglView.zoom(getCs)(modCs)
+        val csUndo: View[UndoStacks[IO, ConstraintSet]]                                            =
           props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
 
         Tile("constraints",
@@ -185,7 +185,7 @@ object ConstraintSetTabContents {
           content = tree(constraintsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
-        <.div(^.key := "constraintset-right-side",
+        <.div(^.key   := "constraintset-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
               ^.left  := treeWidth.px

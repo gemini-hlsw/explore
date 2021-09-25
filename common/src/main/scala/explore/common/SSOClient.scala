@@ -30,7 +30,7 @@ import scala.concurrent.duration._
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
-object JwtOrcidProfile {
+object JwtOrcidProfile                                       {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
