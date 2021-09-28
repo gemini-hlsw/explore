@@ -150,8 +150,7 @@ lazy val explore: Project    = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactResizable.value ++
-        ReactHotkeys.value,
-    scalacOptions ~= (_.filterNot(Set("-Vtype-diffs")))
+        ReactHotkeys.value
   )
 
 lazy val commonSettings      = lucumaGlobalSettings ++ Seq(
@@ -160,6 +159,7 @@ lazy val commonSettings      = lucumaGlobalSettings ++ Seq(
   publishLocal    := {},
   publishArtifact := false,
   Keys.`package`  := file(""),
+  scalacOptions ~= (_.filterNot(Set("-Vtype-diffs"))),
   scalacOptions --= Seq("-Xfatal-warnings").filterNot(_ => insideCI.value)
 )
 

@@ -31,8 +31,11 @@ import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
+import react.virtuoso._
+import react.virtuoso.raw.ListRange
 
 import java.text.DecimalFormat
+import react.semanticui.elements.button.Button
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -45,16 +48,19 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val reuseProps: Reusability[Props] =
+  implicit val reuseProps: Reusability[Props]         =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
-  protected val ModesTableDef                 = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
+  implicit val listRangeReuse: Reusability[ListRange] =
+    Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
+
+  protected val ModesTableDef                         = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
   import ModesTableDef.syntax._
 
   val decFormat = new DecimalFormat("0.###")
 
-  protected val ModesTableComponent = new SUITableVirtuoso(ModesTableDef)
+  protected val ModesTable = new SUITableVirtuoso(ModesTableDef)
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
     case ModeDisperser.NoDisperser      => "-"
@@ -230,7 +236,8 @@ object SpectroscopyModesTable {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(_.spectroscopyRequirements)(props => // Memo Rows
+      // rows
+      .useMemoBy(_.spectroscopyRequirements)(props =>
         s => {
           val rows                =
             props.matrix
@@ -247,53 +254,111 @@ object SpectroscopyModesTable {
           (enabled ++ disabled)
         }
       )
+      // cols
       .useMemoBy((props, _) => // Memo Cols
         (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.focalPlane)
       )((_, _) => { case (wavelength, focalPlane) =>
         columns(wavelength, focalPlane)
       })
+      // selectedIndex
       .useStateBy((props, rows, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
       .useEffectWithDepsBy((props, _, _, _) => // Recompute state if conf or requirements change.
         (props.scienceConfiguration, props.spectroscopyRequirements)
       )((_, rows, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
       })
+      // tableInstance
       .useTableBy((_, rows, cols, _) => ModesTableDef(cols, rows))
-      .renderWithReuse { (props, rows, _, selectedIndex, tableInstance) =>
-        def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
-          rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
+      // virtuosoRef
+      // If useRef can be used here, I'm not figuring out how to do that.
+      // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
+      .useMemo(())(_ => ModesTable.createRef)
+      // visibleRange
+      .useState(none[ListRange])
+      // atTop
+      .useState(false)
+      .renderWithReuse {
+        (props, rows, _, selectedIndex, tableInstance, virtuosoRef, visibleRange, atTop) =>
+          def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+            rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
-        React.Fragment(
-          <.div(ExploreStyles.ModesTableTitle)(<.label(s"${rows.length} matching configurations")),
-          <.div(
-            ExploreStyles.ModesTable,
-            ModesTableComponent(
-              table = Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very
-              )(),
-              header = true,
-              headerCell = (c: ModesTableDef.ColumnType) =>
-                TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
-                  ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
-                  ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
-                ),
-              row = (rowData: Row[SpectroscopyModeRow]) =>
-                TableRow(
-                  disabled = !enabledRow(rowData.original),
-                  clazz = ExploreStyles.ModeSelected.when_(
-                    selectedIndex.value.exists(_ === rowData.index.toInt)
+          def scrollButton(
+            content:        VdomNode,
+            style:          Css,
+            indexDiff:      Int => Int,
+            indexCondition: Int => Boolean
+          ): TagMod =
+            selectedIndex.value.whenDefined(idx =>
+              Button(
+                compact = true,
+                onClick = virtuosoRef.foreach(
+                  _.raw.scrollIntoView(
+                    ScrollIntoViewLocation(index = indexDiff(idx - 2),
+                                           behavior = ScrollBehavior.Smooth
+                    )
                   )
-                )(
-                  ^.onClick --> (
-                    props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
-                      selectedIndex.setState(rowData.index.toInt.some)
-                  ),
-                  props2Attrs(rowData.getRowProps())
                 )
-            )(tableInstance, selectedIndex.value.map(idx => (idx - 2).max(0)))
+              )(
+                ExploreStyles.ScrollButton,
+                style
+              )(content).when(indexCondition(idx))
+            )
+
+          React.Fragment(
+            <.div(ExploreStyles.ModesTableTitle)(
+              <.label(s"${rows.length} matching configurations")
+            ),
+            <.div(
+              ExploreStyles.ModesTable,
+              ModesTable
+                .Component(
+                  table = Table(celled = true,
+                                selectable = true,
+                                striped = true,
+                                compact = TableCompact.Very
+                  )(),
+                  header = true,
+                  headerCell = (c: ModesTableDef.ColumnType) =>
+                    TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
+                      ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
+                      ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
+                    ),
+                  row = (rowData: Row[SpectroscopyModeRow]) =>
+                    TableRow(
+                      disabled = !enabledRow(rowData.original),
+                      clazz = ExploreStyles.ModeSelected.when_(
+                        selectedIndex.value.exists(_ === rowData.index.toInt)
+                      )
+                    )(
+                      ^.onClick --> (
+                        props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
+                          selectedIndex.setState(rowData.index.toInt.some)
+                      ),
+                      props2Attrs(rowData.getRowProps())
+                    )
+                )(
+                  tableInstance,
+                  initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
+                  rangeChanged = ((range: ListRange) => visibleRange.setState(range.some)).some,
+                  atTopChange = ((value: Boolean) => atTop.setState(value)).some
+                )
+                .withRef(virtuosoRef),
+              scrollButton(
+                Icons.ChevronDoubleUp,
+                ExploreStyles.SelectedUp,
+                _ - 1,
+                idx =>
+                  visibleRange.value.exists(range =>
+                    (range.startIndex.toInt > 0 || !atTop.value) && range.startIndex > idx - 2
+                  )
+              ),
+              scrollButton(
+                Icons.ChevronDoubleDown,
+                ExploreStyles.SelectedDown,
+                _ + 1,
+                idx => visibleRange.value.exists(_.endIndex < idx - 1)
+              )
+            )
           )
-        )
       }
 }

@@ -6,13 +6,12 @@ package reactST.reactTable
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.JsFn
-import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.implicits._
 import react.common.style.Css
 import react.semanticui.collections.table._
-import react.virtuoso.GroupedVirtuoso
+import react.virtuoso._
+import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.{ ^ => _, _ }
 import reactST.reactTable.syntax._
@@ -23,24 +22,7 @@ import scalajs.js
 import scalajs.js.|
 import scalajs.js.JSConverters._
 import definitions._
-
-// format: off
-protected case class SUITableVirtuosoProps[
-  D,
-  TableInstanceD <: TableInstance[D],
-  ColumnInstanceD <: ColumnObject[D]
-]( // format: on
-  table:        TableTemplate[D, TableInstanceD],
-  header:       Boolean | TableHeader,
-  headerRow:    TableRow = TableRow(),
-  headerCell:   HeaderCell[D, ColumnInstanceD],
-  body:         TableBody,
-  row:          RowTemplate[D],
-  cell:         BodyCell[D],
-  footer:       Boolean | TableFooter | VdomNode,
-  footerRow:    TableRow,
-  footerCell:   HeaderCell[D, ColumnInstanceD]
-)(val instance: TableInstanceD, val initialIndex: Option[Int] = None)
+import react.common._
 
 class SUITableVirtuoso[
   D,
@@ -62,8 +44,35 @@ class SUITableVirtuoso[
 )(implicit
   sortElements:     SortElements[ColumnInstanceD]
 ) {
-  val component = ScalaFnComponent[SUITableVirtuosoProps[D, TableInstanceD, ColumnInstanceD]] {
-    case props =>
+  // I expect this to be inferred in Scala 3
+  type RefType = facade.React.Component[
+    GroupedVirtuoso.GroupedVirtuosoProps[Row[D]],
+    Null
+  ] with VirtuosoComponent
+
+  case class Component(
+    table:              TableTemplate[D, TableInstanceD] = Table(): TableTemplate[D, TableInstanceD],
+    header:             Boolean | TableHeader = false,
+    headerRow:          TableRow = TableRow(),
+    headerCell:         HeaderCell[D, ColumnInstanceD] = TableHeaderCell(): HeaderCell[D, ColumnInstanceD],
+    body:               TableBody = TableBody()(^.height := "100%"),
+    row:                RowTemplate[D] = TableRow(): RowTemplate[D],
+    cell:               BodyCell[D] = TableCell(): BodyCell[D],
+    footer:             Boolean | TableFooter | VdomNode = false,
+    footerRow:          TableRow = TableRow(),
+    footerCell:         HeaderCell[D, ColumnInstanceD] = TableHeaderCell(): HeaderCell[D, ColumnInstanceD]
+  )(
+    val instance:       TableInstanceD,
+    val initialIndex:   Option[Int] = None,
+    val rangeChanged:   Option[ListRange => Callback] = None,
+    val atTopChange:    Option[Boolean => Callback] = None,
+    val atBottomChange: Option[Boolean => Callback] = None
+  ) extends ReactPropsForwardRef[Component, RefType](component)
+
+  def createRef = Ref.toJsComponent(GroupedVirtuoso.component[Row[D]])
+
+  val component =
+    React.forwardRef.toJsComponent(GroupedVirtuoso.component[Row[D]])[Component] { (props, ref) =>
       val tableInstance = props.instance
 
       def addClass(className: js.UndefOr[String], clazz: js.UndefOr[Css], newClass: Css): Css =
@@ -105,16 +114,17 @@ class SUITableVirtuoso[
         (props.headerCell: Any) match {
           case headerCell: TableHeaderCell =>
             _ =>
-              headerCell.copy(as = <.div,
-                              clazz =
-                                addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
+              headerCell.copy(
+                as = <.div,
+                clazz = addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
               )
           case fn                          =>
             colInstance =>
-              val headerCell = fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
-              headerCell.copy(as = <.div,
-                              clazz =
-                                addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
+              val headerCell =
+                fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
+              headerCell.copy(
+                as = <.div,
+                clazz = addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
               )
         }
 
@@ -154,21 +164,23 @@ class SUITableVirtuoso[
             )
       }
 
-      val footerCellRender: HeaderCellRender[D, ColumnInstanceD] = (props.footerCell: Any) match {
-        case footerCell: TableHeaderCell =>
-          _ =>
-            footerCell.copy(as = <.div,
-                            clazz =
-                              addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
-            )
-        case fn                          =>
-          colInstance =>
-            val footerCell = fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
-            footerCell.copy(as = <.div,
-                            clazz =
-                              addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
-            )
-      }
+      val footerCellRender: HeaderCellRender[D, ColumnInstanceD] =
+        (props.footerCell: Any) match {
+          case footerCell: TableHeaderCell =>
+            _ =>
+              footerCell.copy(
+                as = <.div,
+                clazz = addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
+              )
+          case fn                          =>
+            colInstance =>
+              val footerCell =
+                fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
+              footerCell.copy(
+                as = <.div,
+                clazz = addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
+              )
+        }
 
       val headerElement: Option[TableHeader] =
         headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
@@ -193,17 +205,22 @@ class SUITableVirtuoso[
         ).render.vdomElement
       }
 
-      val bodyElement: TableBody = props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
-        TagMod.when(tableInstance.rows.nonEmpty)(
-          GroupedVirtuoso[Row[D]](
-            data = tableInstance.rows,
-            itemContent = renderRow,
-            groupContent = headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
-            initialTopMostItemIndex = props.initialIndex.orUndefined
-          )(ExploreStyles.TBody)
-        ),
-        TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
-      )
+      val bodyElement: TableBody =
+        props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
+          TagMod.when(tableInstance.rows.nonEmpty)(
+            GroupedVirtuoso[Row[D]](
+              data = tableInstance.rows,
+              itemContent = renderRow,
+              groupContent =
+                headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
+              initialTopMostItemIndex = props.initialIndex.orUndefined,
+              rangeChanged = props.rangeChanged.orUndefined,
+              atTopStateChange = props.atTopChange.orUndefined,
+              atBottomStateChange = props.atBottomChange.orUndefined
+            )(ExploreStyles.TBody).withOptionalRef(ref)
+          ),
+          TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
+        )
 
       def standardFooter(footerTag: TableFooter) =
         footerTag.copy(as = <.div,
@@ -228,40 +245,8 @@ class SUITableVirtuoso[
       }
 
       tableRender(tableInstance)(
-        // headerElement,
         bodyElement,
         footerElement
       ).vdomElement
-  }
-
-  type Props = SUITableVirtuosoProps[D, TableInstanceD, ColumnInstanceD]
-
-  type Component = JsFn.UnmountedWithRoot[Props, Unit, Box[Props]]
-
-  def apply(
-    table:      TableTemplate[D, TableInstanceD] = Table(),
-    header:     Boolean | TableHeader = false,
-    headerRow:  TableRow = TableRow(),
-    headerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell(),
-    body:       TableBody = TableBody()(^.height := "100%"),
-    row:        RowTemplate[D] = TableRow(),
-    cell:       BodyCell[D] = TableCell(),
-    footer:     Boolean | TableFooter | VdomNode = false,
-    footerRow:  TableRow = TableRow(),
-    footerCell: HeaderCell[D, ColumnInstanceD] = TableHeaderCell()
-  ): (TableInstanceD, Option[Int]) => Component =
-    (instance: TableInstanceD, initialIndex: Option[Int]) =>
-      component(
-        SUITableVirtuosoProps(table,
-                              header,
-                              headerRow,
-                              headerCell,
-                              body,
-                              row,
-                              cell,
-                              footer,
-                              footerRow,
-                              footerCell
-        )(instance, initialIndex)
-      )
+    }
 }
