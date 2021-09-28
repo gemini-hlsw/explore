@@ -39,9 +39,9 @@ object ProposalTabContents {
 
   private val profileId =
     OrcidId.fromUri(new URI("https://orcid.org/0000-0001-5148-9668")).toOption.get
-  private val roleId    = StandardRole.Id(23L)
-  private val profile   = OrcidProfile(profileId, Some("Edmund"), Some("Stargazer"), None, None)
-  private val pi        = StandardUser(User.Id(666L), StandardRole.Pi(roleId), Nil, profile)
+  private val roleId  = StandardRole.Id(23L)
+  private val profile = OrcidProfile(profileId, Some("Edmund"), Some("Stargazer"), None, None)
+  private val pi      = StandardUser(User.Id(666L), StandardRole.Pi(roleId), Nil, profile)
 
   private val proposalDetails = ProposalDetails(
     "",

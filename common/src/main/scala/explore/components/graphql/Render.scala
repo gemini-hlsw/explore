@@ -33,7 +33,7 @@ object Render {
     implicit val reuse: Reusability[A]
   }
 
-  type StreamRendererProps[G[_], A]     = Pot[G[A]] ==> VdomNode
+  type StreamRendererProps[G[_], A] = Pot[G[A]] ==> VdomNode
   type StreamRendererComponent[G[_], A] =
     CtorType.Props[StreamRendererProps[G, A], UnmountedWithRoot[
       StreamRendererProps[G, A],
@@ -104,13 +104,13 @@ object Render {
       def apply[P <: Props[F, G, S, D, A], ST <: State[F, G, S, D, A]](
         componentName: String,
         buildRenderer: (fs2.Stream[F, A], P) => StreamRendererComponent[G, A],
-        buildState:    (
+        buildState: (
           Queue[F, A],
           List[GraphQLSubscription[F, _]],
           F[Unit],
           StreamRendererComponent[G, A]
         ) => ST
-      )($            : ComponentDidMount[P, Option[ST], Unit]): Callback = {
+      )($ : ComponentDidMount[P, Option[ST], Unit]): Callback = {
         implicit val F          = $.props.F
         implicit val dispatcher = $.props.dispatcher
         implicit val logger     = $.props.logger
@@ -129,7 +129,7 @@ object Render {
         ): F[Unit] =
           subscriptions match {
             case Nil => F.unit
-            case _   =>
+            case _ =>
               subscriptions
                 .map(_.stream)
                 .reduceLeft(_ merge _)
@@ -156,13 +156,13 @@ object Render {
             queue                   <- Queue.unbounded[F, A]
             subscriptions           <- $.props.changeSubscriptions.value.sequence
             cancelConnectionTracker <- runCancelableWithLog(trackConnection(queue))
-            renderer                 = buildRenderer(fs2.Stream.fromQueueUnterminated(queue), $.props)
-            _                       <-
+            renderer = buildRenderer(fs2.Stream.fromQueueUnterminated(queue), $.props)
+            _ <-
               $.setStateIn[F](
                 buildState(queue, subscriptions, cancelConnectionTracker, renderer).some
               )
-            _                       <- queryAndEnqueue(queue)
-            _                       <- runCancelableWithLog(trackChanges(subscriptions, queue))
+            _ <- queryAndEnqueue(queue)
+            _ <- runCancelableWithLog(trackChanges(subscriptions, queue))
           } yield ()
 
         init

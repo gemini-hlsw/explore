@@ -29,9 +29,9 @@ trait ViewCommon {
     highlightSelected: Boolean = true,
     linkToObsTab:      Boolean = false
   )(
-    obs:               ObsSummary,
-    idx:               Int
-  )(implicit ctx:      AppContextIO): TagMod =
+    obs:          ObsSummary,
+    idx:          Int
+  )(implicit ctx: AppContextIO): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
       Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
         <.div(

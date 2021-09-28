@@ -42,22 +42,22 @@ object layout {
   def breakpointWidth(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._1)
 
-  def breakpointCols(b: BreakpointName): Int                    =
+  def breakpointCols(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._2)
 
   implicit val nes: Ordering[NonEmptyString]                    = Order[NonEmptyString].toOrdering
   implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
   implicit val breakpointNameOrdering: Ordering[BreakpointName] = breakpointNameOrder.toOrdering
-  val allLayouts: Traversal[LayoutsMap, Layout]                 =
+  val allLayouts: Traversal[LayoutsMap, Layout] =
     each[LayoutsMap, LayoutEntry].andThen(Focus[LayoutEntry](_._3))
-  val layoutItem: Lens[Layout, List[LayoutItem]]                = Focus[Layout](_.l)
-  val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.each
-  val layoutItemName                                            = Focus[LayoutItem](_.i)
-  val layoutItemHeight                                          = Focus[LayoutItem](_.h)
-  val layoutItemWidth                                           = Focus[LayoutItem](_.w)
-  val layoutItemX                                               = Focus[LayoutItem](_.x)
-  val layoutItemY                                               = Focus[LayoutItem](_.y)
-  val layoutItemResizable                                       = Focus[LayoutItem](_.isResizable)
+  val layoutItem: Lens[Layout, List[LayoutItem]] = Focus[Layout](_.l)
+  val layoutItems: Traversal[Layout, LayoutItem] = layoutItem.each
+  val layoutItemName                             = Focus[LayoutItem](_.i)
+  val layoutItemHeight                           = Focus[LayoutItem](_.h)
+  val layoutItemWidth                            = Focus[LayoutItem](_.w)
+  val layoutItemX                                = Focus[LayoutItem](_.x)
+  val layoutItemY                                = Focus[LayoutItem](_.y)
+  val layoutItemResizable                        = Focus[LayoutItem](_.isResizable)
 
   implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
   implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq
@@ -65,7 +65,7 @@ object layout {
   implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.byEq
 
   object unsafe {
-    implicit val layoutSemigroup: Semigroup[Layout]                  = Semigroup.instance { case (a, b) =>
+    implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
       val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
         b.l
           .find(_.i.exists(_ === la.i.get))
@@ -77,7 +77,7 @@ object layout {
       Layout(result)
     }
 
-    implicit val layoutItemSemigroup: Semigroup[LayoutItem]          = Semigroup.instance { case (a, b) =>
+    implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
       a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
     }
 

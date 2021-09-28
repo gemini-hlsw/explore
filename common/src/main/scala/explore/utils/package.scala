@@ -41,7 +41,7 @@ package object utils {
     NonEmptyString.unsafeFrom(
       (environment match {
         case Development => versionDateTimeFormatter.format(instant)
-        case _           =>
+        case _ =>
           versionDateFormatter.format(instant) +
             "-" + gitHash.map(_.take(7)).getOrElse("NONE")
       })

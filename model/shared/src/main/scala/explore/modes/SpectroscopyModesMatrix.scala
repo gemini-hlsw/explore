@@ -57,21 +57,21 @@ final case class GmosSouthSpectroscopyRow(
 }
 
 final case class Flamingos2SpectroscopyRow(disperser: F2Disperser, filter: F2Filter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = F2Disperser
   type Filter    = F2Filter
   val instrument = Instrument.Flamingos2
 }
 
 final case class GpiSpectroscopyRow(disperser: GpiDisperser, filter: GpiFilter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = GpiDisperser
   type Filter    = GpiFilter
   val instrument = Instrument.Gpi
 }
 
 final case class GnirsSpectroscopyRow(disperser: GnirsDisperser, filter: GnirsFilter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = GnirsDisperser
   type Filter    = GnirsFilter
   val instrument = Instrument.Gnirs
@@ -136,11 +136,11 @@ object InstrumentRow {
     filter0:     NonEmptyString
   ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
-      case Instrument.GmosNorth  =>
+      case Instrument.GmosNorth =>
         (decodeGmosNorthDisperser(disperser0), decodeGmosNorthFilter(filter0)).mapN(
           GmosNorthSpectroscopyRow.apply
         )
-      case Instrument.GmosSouth  =>
+      case Instrument.GmosSouth =>
         (decodeGmosSouthDisperser(disperser0), decodeGmosSouthFilter(filter0)).mapN(
           GmosSouthSpectroscopyRow.apply
         )
@@ -148,13 +148,13 @@ object InstrumentRow {
         (decodeF2Disperser(disperser0), decodeF2Filter(filter0)).mapN(
           Flamingos2SpectroscopyRow.apply
         )
-      case Instrument.Gpi        =>
+      case Instrument.Gpi =>
         (decodeGpiDisperser(disperser0), decodeGpiFilter(filter0)).mapN(GpiSpectroscopyRow.apply)
-      case Instrument.Gnirs      =>
+      case Instrument.Gnirs =>
         (decodeGnirsDisperser(disperser0), decodeGnirsFilter(filter0)).mapN(
           GnirsSpectroscopyRow.apply
         )
-      case i                     => GenericSpectroscopyRow(i, disperser0, filter0).asRight
+      case i => GenericSpectroscopyRow(i, disperser0, filter0).asRight
     }
 
   val instrument: Getter[InstrumentRow, Instrument] =
@@ -232,14 +232,14 @@ object SpectroscopyModeRow {
       ) { w =>
         import spire.std.bigDecimal._
 
-        val λr     = r.wavelengthRange.toValue[BigDecimal]
+        val λr = r.wavelengthRange.toValue[BigDecimal]
         // Range of allowed wavelength
-        val λmin   = r.minWavelength.w.micrometer
-        val λmax   = r.maxWavelength.w.micrometer
-        val Δ      = λr / TwoFactor
-        val λ      = w.micrometer
-        val λa     = λ - Δ
-        val λb     = λ + Δ
+        val λmin = r.minWavelength.w.micrometer
+        val λmax = r.maxWavelength.w.micrometer
+        val Δ    = λr / TwoFactor
+        val λ    = w.micrometer
+        val λa   = λ - Δ
+        val λb   = λ + Δ
         // if we are below min clip but shift the range
         // same if we are above max
         // At any event we clip at min/max
@@ -258,13 +258,13 @@ object SpectroscopyModeRow {
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
-  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString]                 =
+  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString] =
     CellDecoder.stringDecoder
       .emap { x =>
         refineV[NonEmpty](x).leftMap(s => new DecoderError(s))
       }
 
-  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]]           =
+  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]] =
     CellDecoder.stringDecoder
       .emap { r =>
         r.toLowerCase
@@ -340,24 +340,24 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>
       // Difference in wavelength
-      val deltaWave: Rational       =
+      val deltaWave: Rational =
         wavelength
           .map(w => (r.optimalWavelength.w.nanometer - w.nanometer).value.abs)
           .getOrElse(Rational.zero)
       // Difference in slit width
-      val deltaSlitWidth: Rational  =
+      val deltaSlitWidth: Rational =
         iq.map(i =>
           (Rational(r.slitWidth.size.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
-      val deltaRes: BigDecimal      =
+      val deltaRes: BigDecimal =
         resolution.foldMap(re => (re.value - r.resolution.value).abs)
       // give a bumpp to non-AO modes (but don't discard them)
-      val aoScore: Rational         =
+      val aoScore: Rational =
         if (iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo))) ScoreBump
         else Rational.zero
       // If wavelength > 0.65mu, then prefer settings with a filter to avoid 2nd order contamination
-      val filterScore: Rational     =
+      val filterScore: Rational =
         (wavelength, FilterLimit)
           .mapN { (w, l) =>
             if (w >= l && r.hasFilter) ScoreBump else Rational.zero
@@ -372,7 +372,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         .map(r => Rational(r.value / (r.value + deltaRes)))
         .getOrElse(Rational.zero)
       // Slit width match to the seeing (the IFU always matches)
-      val slitWidthScore            =
+      val slitWidthScore =
         if (r.focalPlane === FocalPlane.IFU)
           Rational.one
         else

@@ -11,7 +11,7 @@ sealed trait Theme extends Product with Serializable {
 }
 
 object Theme {
-  case object Dark  extends Theme {
+  case object Dark extends Theme {
     val clazz = Css("dark-theme")
   }
   case object Light extends Theme {

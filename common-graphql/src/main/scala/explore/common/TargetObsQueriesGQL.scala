@@ -101,7 +101,7 @@ object TargetObsQueriesGQL {
     """
 
     object Data {
-      object Targets      {
+      object Targets {
         object Nodes {
           type Tracking   = lucuma.core.model.SiderealTracking
           type Magnitudes = lucuma.core.model.Magnitude

@@ -136,7 +136,7 @@ object TargetTabContents {
 
     val targetIdOpt = props.focused.get.collect {
       case FocusedTarget(targetId) => targetId.some
-      case FocusedObs(obsId)       =>
+      case FocusedObs(obsId) =>
         pointingsWithObs.get.observations
           .getElement(obsId)
           .flatMap(_.pointing.collect { case PointingTargetResult(targetId) => targetId })
@@ -156,7 +156,7 @@ object TargetTabContents {
               props.searching
             )
           )
-        case None             =>
+        case None =>
           Tile("target", s"Targets Summary", backButton.some)(
             Reuse.by((pointingsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
               TargetSummaryTable(pointingsWithObs.get,
@@ -195,7 +195,7 @@ object TargetTabContents {
           content = tree(pointingsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
-        <.div(^.key   := "target-right-side",
+        <.div(^.key := "target-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
               ^.left  := treeWidth.px
@@ -213,12 +213,12 @@ object TargetTabContents {
     }
   }
 
-  protected val component                                                   =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    => TwoPanelState.initial(p.selectedPanel)
+          case None => TwoPanelState.initial(p.selectedPanel)
           case Some(s) =>
             if (s.selected =!= p.selectedPanel)
               s.copy(selected = p.selectedPanel)

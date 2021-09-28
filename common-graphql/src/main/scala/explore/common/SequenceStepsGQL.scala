@@ -158,7 +158,7 @@ object SequenceStepsGQL {
         .map(Angle.signedMicroarcseconds.reverse.andThen(Offset.Component.angle[T].reverse).get)
     )
 
-    implicit val offsetDecoder: Decoder[Offset]                          = Decoder.instance(c =>
+    implicit val offsetDecoder: Decoder[Offset] = Decoder.instance(c =>
       for {
         p <- c.downField("p").as[Offset.P]
         q <- c.downField("q").as[Offset.Q]
@@ -183,14 +183,14 @@ object SequenceStepsGQL {
       }
     }
 
-    trait SeqGrating[Site <: SeqSite]          {
+    trait SeqGrating[Site <: SeqSite] {
       val disperser: Site#Disperser
       val wavelength: math.Wavelength
     }
-    trait SeqFpu[Site <: SeqSite]              {
+    trait SeqFpu[Site <: SeqSite] {
       val builtin: Site#Fpu
     }
-    trait SeqReadout                           {
+    trait SeqReadout {
       val xBin: enum.GmosXBinning
       val yBin: enum.GmosYBinning
     }
@@ -203,22 +203,22 @@ object SequenceStepsGQL {
       val roi: enum.GmosRoi
     }
     sealed trait SeqStepConfig
-    object SeqStepConfig                       {
+    object SeqStepConfig {
       trait SeqScienceStep extends SeqStepConfig {
         val offset: Offset
       }
     }
-    trait SeqStep[Site <: SeqSite]             {
+    trait SeqStep[Site <: SeqSite] {
       val id: Step.Id
       val instrumentConfig: SeqInstrumentConfig[Site]
       val stepType: enum.StepType
       val stepConfig: SeqStepConfig
     }
-    trait SeqAtom[Site <: SeqSite]             {
+    trait SeqAtom[Site <: SeqSite] {
       val id: Atom.Id
       val steps: List[SeqStep[Site]]
     }
-    trait Sequence[Site <: SeqSite]            {
+    trait Sequence[Site <: SeqSite] {
       val atoms: List[SeqAtom[Site]]
     }
 
@@ -241,11 +241,11 @@ object SequenceStepsGQL {
                       object Grating {
                         type Wavelength = math.Wavelength
                       }
-                      trait Fpu extends SeqFpu[SeqSite.North]
+                      trait Fpu     extends SeqFpu[SeqSite.North]
                       trait Readout extends SeqReadout
                     }
                     trait StepConfig extends SeqStepConfig
-                    object StepConfig       {
+                    object StepConfig {
                       trait Science extends SeqStepConfig.SeqScienceStep
                       object Science {
                         type Offset = lucuma.core.math.Offset
@@ -255,7 +255,7 @@ object SequenceStepsGQL {
                 }
               }
               trait ScienceN extends Sequence[SeqSite.North]
-              object ScienceN     {
+              object ScienceN {
                 trait Atoms extends SeqAtom[SeqSite.North]
                 object Atoms {
                   trait Steps extends SeqStep[SeqSite.North]
@@ -268,11 +268,11 @@ object SequenceStepsGQL {
                       object Grating {
                         type Wavelength = math.Wavelength
                       }
-                      trait Fpu extends SeqFpu[SeqSite.North]
+                      trait Fpu     extends SeqFpu[SeqSite.North]
                       trait Readout extends SeqReadout
                     }
                     trait StepConfig extends SeqStepConfig
-                    object StepConfig       {
+                    object StepConfig {
                       trait Science extends SeqStepConfig.SeqScienceStep
                       object Science {
                         type Offset = lucuma.core.math.Offset
@@ -298,11 +298,11 @@ object SequenceStepsGQL {
                       object Grating {
                         type Wavelength = math.Wavelength
                       }
-                      trait Fpu extends SeqFpu[SeqSite.South]
+                      trait Fpu     extends SeqFpu[SeqSite.South]
                       trait Readout extends SeqReadout
                     }
                     trait StepConfig extends SeqStepConfig
-                    object StepConfig       {
+                    object StepConfig {
                       trait Science extends SeqStepConfig.SeqScienceStep
                       object Science {
                         type Offset = lucuma.core.math.Offset
@@ -312,7 +312,7 @@ object SequenceStepsGQL {
                 }
               }
               trait ScienceS extends Sequence[SeqSite.South]
-              object ScienceS     {
+              object ScienceS {
                 trait Atoms extends SeqAtom[SeqSite.South]
                 object Atoms {
                   trait Steps extends SeqStep[SeqSite.South]
@@ -325,11 +325,11 @@ object SequenceStepsGQL {
                       object Grating {
                         type Wavelength = math.Wavelength
                       }
-                      trait Fpu extends SeqFpu[SeqSite.South]
+                      trait Fpu     extends SeqFpu[SeqSite.South]
                       trait Readout extends SeqReadout
                     }
                     trait StepConfig extends SeqStepConfig
-                    object StepConfig       {
+                    object StepConfig {
                       trait Science extends SeqStepConfig.SeqScienceStep
                       object Science {
                         type Offset = lucuma.core.math.Offset

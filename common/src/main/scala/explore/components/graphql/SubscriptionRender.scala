@@ -19,12 +19,12 @@ import org.typelevel.log4cats.Logger
 import react.common._
 
 final case class SubscriptionRender[D, A](
-  subscribe:      Reuse[IO[GraphQLSubscription[IO, D]]],
+  subscribe: Reuse[IO[GraphQLSubscription[IO, D]]],
   streamModifier: fs2.Stream[IO, D] ==> fs2.Stream[IO, A] =
     Reuse.always(identity[fs2.Stream[IO, D]] _)
 )(
-  val render:     Pot[A] ==> VdomNode,
-  val onNewData:  Reuse[IO[Unit]] = Reuse.always(IO.unit)
+  val render:    Pot[A] ==> VdomNode,
+  val onNewData: Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:          Async[IO],
   val dispatcher: Dispatcher[IO],

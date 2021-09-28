@@ -20,7 +20,7 @@ case class SSOConfig(
   refreshTimeoutDeltaSeconds: Long = 10, // time before expiration to renew
   refreshIntervalFactor:      Long = 1
 ) {
-  val readTimeout: FiniteDuration         = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
+  val readTimeout: FiniteDuration = FiniteDuration(readTimeoutSeconds, TimeUnit.SECONDS)
   val refreshTimeoutDelta: FiniteDuration =
     FiniteDuration(refreshTimeoutDeltaSeconds, TimeUnit.SECONDS)
 }

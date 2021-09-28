@@ -28,8 +28,8 @@ object ConnectionsStatus {
 
   private def renderStatus(name: String, status: Pot[PersistentClientStatus]): VdomNode = {
     val (message, (clazz, show)) = status match {
-      case Error(t)     => (t.getMessage, (ConnectionError, true))
-      case Pending(_)   => ("Mounting...", (ConnectionWarning, true))
+      case Error(t)   => (t.getMessage, (ConnectionError, true))
+      case Pending(_) => ("Mounting...", (ConnectionWarning, true))
       case Ready(value) =>
         (value.toString,
          value match {

@@ -60,7 +60,7 @@ object TacCategory {
   case object ClustersOfGalaxies extends TacCategory("Clusters/Groups of Galaxies", Extragalactic)
   case object HighZUniverse      extends TacCategory("High-z Universe", Extragalactic)
   case object LowZUniverse       extends TacCategory("Low-z Universe", Extragalactic)
-  case object ActiveGalaxies     extends TacCategory("Active Galaxies, Quasars, SMBH", Extragalactic)
+  case object ActiveGalaxies extends TacCategory("Active Galaxies, Quasars, SMBH", Extragalactic)
   case object ExtragalacticOther extends TacCategory("Extragalactic Other", Extragalactic)
 
   implicit val TacCategoryEnumerated: Enumerated[TacCategory] =

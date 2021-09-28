@@ -50,9 +50,9 @@ object SSOManager {
       for {
         vaultOpt <- ctx.sso.refreshToken(expiration)
         _        <- setVault(vaultOpt).to[IO]
-        _        <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
-                      tokenRefresher(vault.expiration, setVault, setMessage)
-                    )
+        _ <- vaultOpt.fold(setMessage("Your session has expired").to[IO])(vault =>
+          tokenRefresher(vault.expiration, setVault, setMessage)
+        )
       } yield ()
 
     // This is a "phantom" component. Doesn't render anything.

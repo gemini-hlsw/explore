@@ -26,10 +26,10 @@ final case class ProposalDetails(
   // depending things such as how the times are calculated from
   // the observations.
   // TODO: Perhaps use something other than a Double in NonNegHour. Reusability[ProposalDetails] could then be derived and Eq instance changed.
-  requestTime1:  NonNegHour,
-  requestTime2:  NonNegHour,
-  minimumPct1:   IntPercent,
-  minimumPct2:   IntPercent
+  requestTime1: NonNegHour,
+  requestTime2: NonNegHour,
+  minimumPct1:  IntPercent,
+  minimumPct2:  IntPercent
 )
 
 object ProposalDetails {

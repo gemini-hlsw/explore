@@ -43,7 +43,7 @@ object RVInput {
     case object RV extends RVView {
       override val tag = "RV"
     }
-    case object Z  extends RVView {
+    case object Z extends RVView {
       override val tag = "z"
     }
     case object CZ extends RVView {
@@ -59,7 +59,7 @@ object RVInput {
 
   final case class State(rvView: RVView) {
     val units = rvView match {
-      case RVView.Z              =>
+      case RVView.Z =>
         <.div()
       case RVView.CZ | RVView.RV =>
         <.div(
@@ -79,8 +79,8 @@ object RVInput {
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
       val rvView = ViewF.fromStateSyncIO($).zoom(State.rvView)
-      val input  = state.rvView match {
-        case RVView.Z  =>
+      val input = state.rvView match {
+        case RVView.Z =>
           FormInputEV(
             id = state.rvView.tag,
             value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
@@ -114,8 +114,8 @@ object RVInput {
             disabled = props.disabled
           )
       }
-      val label  = state.rvView match {
-        case RVView.Z  =>
+      val label = state.rvView match {
+        case RVView.Z =>
           state.rvView.tag.value
         case RVView.CZ =>
           state.rvView.tag.value

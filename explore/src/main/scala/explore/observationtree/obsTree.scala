@@ -12,7 +12,7 @@ import java.util.UUID
 sealed trait ObsNode {
   val id: UUID
 }
-object ObsNode       {
+object ObsNode {
   final case class Obs(id: UUID, value: ObsSummary) extends ObsNode
 
   object Obs {
@@ -25,7 +25,7 @@ object ObsNode       {
   }
 
   final case class Or(id: UUID, orParams: String) extends ObsNode
-  object Or  {
+  object Or {
     val id: Lens[Or, UUID] = GenLens[Or](_.id)
   }
 

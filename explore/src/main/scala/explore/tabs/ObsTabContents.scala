@@ -89,7 +89,7 @@ object ObsTabContents {
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 12
 
-  private val layoutLarge: Layout       = Layout(
+  private val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -120,7 +120,7 @@ object ObsTabContents {
     )
   )
 
-  private val layoutMedium: Layout      = Layout(
+  private val layoutMedium: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -151,7 +151,7 @@ object ObsTabContents {
     )
   )
 
-  private val layoutSmall: Layout       = Layout(
+  private val layoutSmall: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
@@ -223,7 +223,7 @@ object ObsTabContents {
         .runAsyncAndThenCB {
           case Right((w, l)) =>
             $.modState((s: State) => State.panelsWidth.replace(w)(s.updateLayouts(l)))
-          case Left(_)       => Callback.empty
+          case Left(_) => Callback.empty
         }
 
     def obsIdsToString(obsIds: SortedSet[Observation.Id]): String = obsIds.mkString(",")
@@ -491,7 +491,7 @@ object ObsTabContents {
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
         s match {
-          case None    =>
+          case None =>
             State(TwoPanelState.initial(p.selectedPanel),
                   defaultLayout,
                   TargetVisualOptions.Default

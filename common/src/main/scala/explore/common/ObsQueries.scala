@@ -59,11 +59,11 @@ object ObsQueries {
     configuration: Option[ScienceConfigurationData]
   )
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]           =
+    val requirements: Lens[ScienceData, ScienceRequirementsData] =
       Focus[ScienceData](_.requirements)
     val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] =
       Focus[ScienceData](_.configuration)
-    implicit val reusabilityScienceData: Reusability[ScienceData]          = Reusability.derive
+    implicit val reusabilityScienceData: Reusability[ScienceData] = Reusability.derive
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
@@ -87,7 +87,7 @@ object ObsQueries {
     pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
   ): Pointing =
     pointing match {
-      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name)   =>
+      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name) =>
         Pointing.PointingTarget(id, name)
       case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Asterism(id, name) =>
         Pointing.PointingAsterism(id, name, Nil)
@@ -117,7 +117,7 @@ object ObsQueries {
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
-      extends AnyVal                 {
+      extends AnyVal {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
   }
 
@@ -148,10 +148,10 @@ object ObsQueries {
     obsId:       Observation.Id,
     constraints: ConstraintSet
   )(implicit
-    c:           TransactionalClient[F, ObservationDB]
+    c: TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
     val createER: CreateElevationRangeInput = constraints.elevationRange match {
-      case AirMassRange(min, max)   =>
+      case AirMassRange(min, max) =>
         CreateElevationRangeInput(airmassRange =
           CreateAirmassRangeInput(min = min.value, max = max.value).assign
         )
@@ -160,7 +160,7 @@ object ObsQueries {
           CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
         )
     }
-    val editInput                           = EditConstraintSetInput(
+    val editInput = EditConstraintSetInput(
       name = clue.data.Ignore,
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,

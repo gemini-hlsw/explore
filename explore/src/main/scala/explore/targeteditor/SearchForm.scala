@@ -66,7 +66,7 @@ object SearchForm {
     val searchTerm    = Focus[State](_.searchTerm)
   }
 
-  implicit val stateReuse = Reusability.derive[State]
+  implicit val stateReuse                     = Reusability.derive[State]
   implicit val propsReuse: Reusability[Props] = Reusability.by(x => (x.id, x.name, x.searching))
 
   class Backend($ : BackendScope[Props, State]) {
@@ -131,7 +131,7 @@ object SearchForm {
           icon = searchIcon
         ).withMods(^.placeholder := "Name"),
         // We need this hidden control to submit when pressing enter
-        <.input(^.`type`         := "submit", ^.hidden := true)
+        <.input(^.`type` := "submit", ^.hidden := true)
       )
     }
   }
@@ -142,7 +142,7 @@ object SearchForm {
       .getDerivedStateFromPropsAndState[State] { (props, stateOpt) =>
         stateOpt match {
           case Some(state) if state.initialName === props.name => state
-          case _                                               => // Initialize or reset.
+          case _ => // Initialize or reset.
             State(
               initialName = props.name,
               searchTerm = props.name,

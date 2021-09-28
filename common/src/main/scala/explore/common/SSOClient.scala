@@ -30,7 +30,7 @@ import scala.concurrent.duration._
 
 final case class JwtOrcidProfile(exp: Long, `lucuma-user`: User)
 
-object JwtOrcidProfile                                       {
+object JwtOrcidProfile {
   implicit val decoder: Decoder[JwtOrcidProfile] = deriveDecoder
 }
 
@@ -57,9 +57,9 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
           .map(body =>
             (for {
               k <- Either.catchNonFatal(
-                     ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
-                   )
-              j  = new String(k)
+                ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
+              )
+              j = new String(k)
               p <- parse(j)
               u <- p.as[JwtOrcidProfile]
               t <- refineV[NonEmpty](body)
@@ -82,18 +82,18 @@ case class SSOClient[F[_]: Async: Logger](config: SSOConfig) {
                 _.flatMap(body =>
                   (for {
                     k <- Either
-                           .catchNonFatal(
-                             ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
-                           )
-                           .leftMap(_.getMessage)
-                    j  = new String(k)
+                      .catchNonFatal(
+                        ju.Base64.getDecoder.decode(body.split('.')(1).replace("-", "+"))
+                      )
+                      .leftMap(_.getMessage)
+                    j = new String(k)
                     p <- parse(j).leftMap(_.message)
                     u <- p.as[JwtOrcidProfile].leftMap(_.message)
                     t <- refineV[NonEmpty](body)
                   } yield UserVault(u.`lucuma-user`, Instant.ofEpochSecond(u.exp), t))
                 ).fold(msg => throw new RuntimeException(s"Error decoding the token: $msg"), _.some)
               )
-          case r                    =>
+          case r =>
             println(r)
             Applicative[F].pure(none[UserVault])
         }

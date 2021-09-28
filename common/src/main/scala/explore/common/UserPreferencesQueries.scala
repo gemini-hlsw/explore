@@ -27,7 +27,7 @@ import UserPreferencesQueriesGQL._
 
 object UserPreferencesQueries {
 
-  implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type)         extends AnyVal {
+  implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
     import self._
 
     def storeWidthPreference[F[_]: ApplicativeError[*[_], Throwable]](
@@ -35,14 +35,14 @@ object UserPreferencesQueries {
       section: ResizableSection,
       width:   Int
     )(implicit
-      cl:      TransactionalClient[F, UserPreferencesDB]
+      cl: TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       userId.traverse { i =>
         execute[F](WidthUpsertInput(i, section, width)).attempt
       }.void
   }
 
-  implicit class UserAreaWidthsOps(val self: UserAreaWidths.type)                 extends AnyVal {
+  implicit class UserAreaWidthsOps(val self: UserAreaWidths.type) extends AnyVal {
     import self._
 
     // Gets the width of a section.
@@ -55,7 +55,7 @@ object UserPreferencesQueries {
     )(implicit cl:  TransactionalClient[F, UserPreferencesDB]): F[Int] =
       (for {
         uid <- OptionT.fromOption[F](userId)
-        w   <-
+        w <-
           OptionT
             .liftF[F, Option[Int]] {
               query[F](uid.show, area.value)
@@ -87,24 +87,24 @@ object UserPreferencesQueries {
     // This is coded to return a default in case
     // there is no data or errors
     def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
-      userId:        Option[User.Id],
+      userId: Option[User.Id],
       // layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
     )(implicit cl:   TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
       (for {
         uid <- OptionT.fromOption[F](userId)
-        c   <-
+        c <-
           OptionT.pure(
             GridLayoutPositionsBoolExp(user_id = StringComparisonExp(uid.show.assign).assign)
           )
-        r   <-
+        r <-
           OptionT
             .liftF[F, (Int, SortedMap[react.gridlayout.BreakpointName, (Int, Int, Layout)])] {
               query[F](uid.show, c, resizableArea.value).map { r =>
                 (r.explore_resizable_width_by_pk.map(_.width), r.grid_layout_positions) match {
                   case (w, l) if l.isEmpty => (w.getOrElse(defaultValue._1), defaultValue._2)
-                  case (w, l)              =>
+                  case (w, l) =>
                     (w.getOrElse(defaultValue._1),
                      SortedMap(l.groupBy(_.breakpoint_name).map(positions2LayoutMap).toList: _*)
                     )
@@ -115,7 +115,7 @@ object UserPreferencesQueries {
       } yield r).getOrElse(defaultValue)
   }
 
-  implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type)     extends AnyVal {
+  implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
     import self._
 
     def storeLayoutsPreference[F[_]: ApplicativeError[*[_], Throwable]](
@@ -123,7 +123,7 @@ object UserPreferencesQueries {
       section: GridLayoutSection,
       layouts: Layouts
     )(implicit
-      cl:      TransactionalClient[F, UserPreferencesDB]
+      cl: TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       userId.traverse { uid =>
         execute[F](
@@ -178,7 +178,7 @@ object UserPreferencesQueries {
       targetId: Target.Id,
       fov:      Angle
     )(implicit
-      cl:       TransactionalClient[F, UserPreferencesDB]
+      cl: TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       execute[F](
         LucumaTargetInsertInput(

@@ -56,7 +56,7 @@ object ReflexHandle {
     provided.foreach { v =>
       import cats.syntax.all._
       (v.index.toOption, v.events.toOption).tupled match {
-        case None                  =>
+        case None =>
           throw new Exception(
             "ReflexHandle received provided property without injected properties. Did you specify \"withHandle = true\" on enclosing ReflexElement?"
           )
@@ -69,5 +69,5 @@ object ReflexHandle {
     p
   }
 
-  private val component                       = JsComponent[Props, Children.Varargs, Null](RawComponent)
+  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
 }

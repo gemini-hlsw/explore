@@ -24,19 +24,19 @@ trait ObservationDB {
     type TargetId         = Target.Id
     type ExecutionEventId = String
     // Basic types
-    type BigDecimal       = scala.BigDecimal
-    type Long             = scala.Long
+    type BigDecimal = scala.BigDecimal
+    type Long       = scala.Long
     // Formatted strings
-    type DmsString        = String
-    type EpochString      = String
-    type HmsString        = String
-    type DatasetFilename  = String
+    type DmsString       = String
+    type EpochString     = String
+    type HmsString       = String
+    type DatasetFilename = String
     // Refined
-    type NonEmptyString   = eu.timepit.refined.types.string.NonEmptyString
-    type PosInt           = eu.timepit.refined.types.numeric.PosInt
-    type PosBigDecimal    = eu.timepit.refined.types.numeric.PosBigDecimal
+    type NonEmptyString = eu.timepit.refined.types.string.NonEmptyString
+    type PosInt         = eu.timepit.refined.types.numeric.PosInt
+    type PosBigDecimal  = eu.timepit.refined.types.numeric.PosBigDecimal
     // Time
-    type Instant          = java.time.Instant
+    type Instant = java.time.Instant
   }
 
   object Enums {

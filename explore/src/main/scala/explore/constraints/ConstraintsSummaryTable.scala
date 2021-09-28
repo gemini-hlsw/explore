@@ -73,7 +73,7 @@ object ConstraintsSummaryTable {
     "observations" -> "Observations"
   )
 
-  private val columnClasses: Map[String, Css]  = Map(
+  private val columnClasses: Map[String, Css] = Map(
     "edit" -> (ExploreStyles.Sticky |+| ExploreStyles.ConstraintsSummaryEdit)
   )
 

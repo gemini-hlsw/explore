@@ -46,7 +46,7 @@ object SimbadSearch {
               .map {
                 _.collect { case Validated.Valid(t) => t }.headOption
               }
-          case _                    => Applicative[F].pure(none)
+          case _ => Applicative[F].pure(none)
         }
     }
 

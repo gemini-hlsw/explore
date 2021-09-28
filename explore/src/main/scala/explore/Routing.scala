@@ -38,7 +38,7 @@ object Routing {
       )
     }
 
-  private def targetTab(model: View[RootModel]): VdomElement                     =
+  private def targetTab(model: View[RootModel]): VdomElement =
     withSize { size =>
       AppCtx.using(implicit ctx =>
         TargetTabContents(
@@ -54,7 +54,7 @@ object Routing {
       )
     }
 
-  private def obsTab(model: View[RootModel]): VdomElement                        =
+  private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
         ObsTabContents(model.zoom(RootModel.userId),
@@ -66,7 +66,7 @@ object Routing {
       )
     )
 
-  private def constraintSetTab(model: View[RootModel]): VdomElement              =
+  private def constraintSetTab(model: View[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
@@ -129,7 +129,7 @@ object Routing {
             case (None, next, view) =>
               // Set the model if none was previously set
               view.zoom(RootModelRouting.lens).set(next)
-            case _                  => SyncIO.unit
+            case _ => SyncIO.unit
           }
           .renderWithP(layout)
       // .logToConsole

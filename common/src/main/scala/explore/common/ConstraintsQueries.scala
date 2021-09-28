@@ -62,7 +62,7 @@ object ConstraintsQueries {
 
     def elevationRange(er: ElevationRange): Endo[EditConstraintSetInput] = {
       val createER: CreateElevationRangeInput = er match {
-        case AirMassRange(min, max)   =>
+        case AirMassRange(min, max) =>
           CreateElevationRangeInput(airmassRange =
             CreateAirmassRangeInput(min = min.value, max = max.value).assign
           )

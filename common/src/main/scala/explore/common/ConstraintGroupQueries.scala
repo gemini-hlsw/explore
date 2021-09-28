@@ -72,7 +72,7 @@ object ConstraintGroupQueries {
                                   obsR.plannedTime.execution
     )
 
-  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K)                 =
+  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
     SortedMap.from(list.map(a => (getKey(a), a)))
 
   private val queryToConstraintsWithObsGetter

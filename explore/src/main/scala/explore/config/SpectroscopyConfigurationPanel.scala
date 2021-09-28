@@ -39,13 +39,13 @@ object SpectroscopyConfigurationPanel {
       .builder[Props]
       .stateless
       .render_P { p =>
-        val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthQ)
-        val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
-        val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
-        val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAtQ)
-        val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRangeQ)
-        val focalPlane               = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
-        val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
+        val wv              = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthQ)
+        val resolution      = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
+        val signalToNoise   = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
+        val signalToNoiseAt = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAtQ)
+        val wavelengthRange = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRangeQ)
+        val focalPlane      = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
+        val focalPlaneAngle = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
         val spectroscopyCapabilities =
           p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
 

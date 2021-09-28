@@ -11,7 +11,7 @@ import java.time.ZonedDateTime
 object MoonCalc {
   val MeanLunationDays: Double    = 29.530588861
   val MeanLunationSeconds: Double = MeanLunationDays * 24 * 60 * 60
-  val LunationZeroStart: Instant  =
+  val LunationZeroStart: Instant =
     ZonedDateTime.of(2000, 1, 6, 18, 14, 0, 0, ZoneOffset.UTC).toInstant
 
   /**

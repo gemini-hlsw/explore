@@ -55,7 +55,7 @@ final case class ConstraintsPanel(
 object ConstraintsPanel {
   type Props = ConstraintsPanel
 
-  val airMassErrorMsg   = NonEmptyString.unsafeFrom(
+  val airMassErrorMsg = NonEmptyString.unsafeFrom(
     f"Must be ${AirMassRange.MinValue.toDouble}%.1f to ${AirMassRange.MaxValue.toDouble}%.1f"
   )
   val hourAngleErrorMsg = NonEmptyString.unsafeFrom(
@@ -71,7 +71,7 @@ object ConstraintsPanel {
     implicit val enumeratedElevationRangeType: Enumerated[ElevationRangeType] =
       Enumerated.of(AirMass, HourAngle)
 
-    implicit val displayElevationRangeType: Display[ElevationRangeType]       =
+    implicit val displayElevationRangeType: Display[ElevationRangeType] =
       Display.byShortName(_.label)
   }
 

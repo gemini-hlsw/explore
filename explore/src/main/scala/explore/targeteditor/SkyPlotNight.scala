@@ -72,7 +72,7 @@ object SkyPlotNight {
     implicit val TimeDisplayReuse: Reusability[TimeDisplay] = Reusability.byEq
   }
 
-  private val PlotEvery: Duration = Duration.ofMinutes(1)
+  private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   @js.native
@@ -139,11 +139,11 @@ object SkyPlotNight {
       val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightType.Official)
       val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
 
-      val start          = tbOfficialNight.start
-      val end            = tbOfficialNight.end
+      val start = tbOfficialNight.start
+      val end   = tbOfficialNight.end
       val skyCalcResults =
         SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
-      val series         = skyCalcResults
+      val series = skyCalcResults
         .map { case (instant, results) =>
           val millisSinceEpoch = instant.toEpochMilli.toDouble
 
@@ -171,8 +171,8 @@ object SkyPlotNight {
 
       def instantFormat(instant: Instant): String =
         props.timeDisplay match {
-          case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
-          case TimeDisplay.UTC      => timezoneInstantFormat(instant, ZoneOffset.UTC)
+          case TimeDisplay.Site => timezoneInstantFormat(instant, props.site.timezone)
+          case TimeDisplay.UTC  => timezoneInstantFormat(instant, ZoneOffset.UTC)
           case TimeDisplay.Sidereal =>
             val skycalc = ImprovedSkyCalc(props.site.place)
             val sid     = skycalc.getSiderealTime(instant)
@@ -199,9 +199,9 @@ object SkyPlotNight {
 
       val tooltipFormatter: TooltipFormatterCallbackFunction = {
         (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-          val time  = timeFormat(ctx.x)
+          val time = timeFormat(ctx.x)
           val value = ctx.series.index match {
-            case 0 =>                      // Target elevation with airmass
+            case 0 => // Target elevation with airmass
               formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
             case 2 => "%.2f".format(ctx.y) // Sky Brightness
             case _ => formatAngle(ctx.y)   // Other elevations

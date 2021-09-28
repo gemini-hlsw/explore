@@ -63,42 +63,42 @@ object SequenceTable {
         .andThen(Angle.signedDecimalArcseconds.get)
         .andThen(_.setScale(1, BigDecimal.RoundingMode.HALF_UP))
 
-    lazy val id: String                                                 = s"$atomId-${step.id}"
-    lazy val exposureSecs: Long                                         = step.instrumentConfig.exposure.getSeconds
+    lazy val id: String         = s"$atomId-${step.id}"
+    lazy val exposureSecs: Long = step.instrumentConfig.exposure.getSeconds
     // TODO Not in model yet, we are just simulating
-    lazy val guided: Boolean                                            = step.stepType === StepType.Science
-    lazy val (p, q): (BigDecimal, BigDecimal)                           = step.stepConfig match {
+    lazy val guided: Boolean = step.stepType === StepType.Science
+    lazy val (p, q): (BigDecimal, BigDecimal) = step.stepConfig match {
       case science: SeqStepConfig.SeqScienceStep =>
         (science.offset.p, science.offset.q).bimap(componentToArcSec, componentToArcSec)
-      case _                                     => (0, 0)
+      case _ => (0, 0)
     }
-    lazy val wavelength: Option[BigDecimal]                             = step.instrumentConfig.grating
+    lazy val wavelength: Option[BigDecimal] = step.instrumentConfig.grating
       .map(Wavelength.decimalNanometers.reverseGet.compose(_.wavelength))
-    lazy val disperserName: Option[String]                              =
+    lazy val disperserName: Option[String] =
       step.instrumentConfig.grating.map(grating => resolver.disperserName(grating.disperser))
-    lazy val fpuName: Option[String]                                    =
+    lazy val fpuName: Option[String] =
       step.instrumentConfig.fpu.map(fpu => resolver.fpuName(fpu.builtin))
-    lazy val filterName: Option[String]                                 =
+    lazy val filterName: Option[String] =
       step.instrumentConfig.filter.map(resolver.filterName)
   }
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val StepTable                           = TableDef[StepLine[_]]
+  private val StepTable = TableDef[StepLine[_]]
   import StepTable.syntax._
 
   private def drawBracket(rows: Int): VdomElement =
-    svg(^.width   := "1px", ^.height := "15px", ^.overflow.visible)(
+    svg(^.width := "1px", ^.height := "15px", ^.overflow.visible)(
       use(
         transform := s"scale(1, $rows)",
         xlinkHref := "#bracket"
       )
     )
 
-  private def rightAligned(value: Any)            =
+  private def rightAligned(value: Any) =
     <.div(^.textAlign.right)(value.toString)
 
-  private val columns                             = List(
+  private val columns = List(
     StepTable
       .Column("atomSteps", _.firstOf)
       .setHeader(" ")
@@ -203,8 +203,8 @@ object SequenceTable {
                 transform   := "scale(1, 0.28)",
                 fill        := "white", // FIXME Use CSS
                 strokeWidth := "0",
-                d           := "M 2.5255237,42.511266 C 2.9018235,41.543703 2.9183988,40.479268 2.9295801,39.441167 3.0257633,30.51126 3.0823959,21.580072 2.947325,12.650669 2.9231886,11.055039 2.8933167,9.4523308 3.1035398,7.8704257 3.3137629,6.2885207 3.7758163,4.7150177 4.6625942,3.3882765 5.8680949,1.5846823 7.8548731,0.32344155 10,0 9.1651831,0.77722338 8.4802709,1.7148791 7.9937845,2.746541 6.9576584,4.9437899 6.8533308,7.4514513 6.8235522,9.8805609 6.7206706,18.272857 7.2905092,26.672179 6.8823909,35.055177 6.8167718,36.403033 6.7250316,37.755886 6.4343209,39.073653 6.1436102,40.39142 5.6454801,41.680731 4.8313656,42.756947 4.0971435,43.727549 3.1128448,44.507326 2,45 c 1.2050792,0.603993 2.2555169,1.513477 3.0257355,2.619726 0.967061,1.388969 1.4785617,3.053394 1.7173188,4.728935 0.2387572,1.675541 0.2181075,3.375775 0.2046929,5.068188 -0.065798,8.301234 0.054193,16.603325 -0.040718,24.904278 -0.019251,1.683679 -0.035532,3.428545 0.6452292,4.968581 C 8.0528414,88.422141 8.9242492,89.387018 10,90 8.1813551,89.702562 6.4820251,88.725349 5.3102118,87.3031 4.2259102,85.987066 3.606374,84.337657 3.2912749,82.661838 2.9761757,80.986019 2.9488582,79.270938 2.9359838,77.565801 2.869984,68.824508 3.1582519,60.082204 3.0067424,51.341975 2.9840763,50.034421 2.9431715,48.687654 2.4144109,47.491567 1.9369295,46.411476 1.0645415,45.51121 0,45 1.1412417,44.575325 2.0841488,43.646153 2.5255237,42.511266",
-                id          := "bracket"
+                d := "M 2.5255237,42.511266 C 2.9018235,41.543703 2.9183988,40.479268 2.9295801,39.441167 3.0257633,30.51126 3.0823959,21.580072 2.947325,12.650669 2.9231886,11.055039 2.8933167,9.4523308 3.1035398,7.8704257 3.3137629,6.2885207 3.7758163,4.7150177 4.6625942,3.3882765 5.8680949,1.5846823 7.8548731,0.32344155 10,0 9.1651831,0.77722338 8.4802709,1.7148791 7.9937845,2.746541 6.9576584,4.9437899 6.8533308,7.4514513 6.8235522,9.8805609 6.7206706,18.272857 7.2905092,26.672179 6.8823909,35.055177 6.8167718,36.403033 6.7250316,37.755886 6.4343209,39.073653 6.1436102,40.39142 5.6454801,41.680731 4.8313656,42.756947 4.0971435,43.727549 3.1128448,44.507326 2,45 c 1.2050792,0.603993 2.2555169,1.513477 3.0257355,2.619726 0.967061,1.388969 1.4785617,3.053394 1.7173188,4.728935 0.2387572,1.675541 0.2181075,3.375775 0.2046929,5.068188 -0.065798,8.301234 0.054193,16.603325 -0.040718,24.904278 -0.019251,1.683679 -0.035532,3.428545 0.6452292,4.968581 C 8.0528414,88.422141 8.9242492,89.387018 10,90 8.1813551,89.702562 6.4820251,88.725349 5.3102118,87.3031 4.2259102,85.987066 3.606374,84.337657 3.2912749,82.661838 2.9761757,80.986019 2.9488582,79.270938 2.9359838,77.565801 2.869984,68.824508 3.1582519,60.082204 3.0067424,51.341975 2.9840763,50.034421 2.9431715,48.687654 2.4144109,47.491567 1.9369295,46.411476 1.0645415,45.51121 0,45 1.1412417,44.575325 2.0841488,43.646153 2.5255237,42.511266",
+                id := "bracket"
               )
             )
           )

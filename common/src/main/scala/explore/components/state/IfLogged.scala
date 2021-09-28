@@ -33,7 +33,7 @@ object IfLogged {
   private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =
     UserInsertMutation.execute(Input(vault.user.id.toString)).start.void
 
-  private val component                                                               =
+  private val component =
     ScalaComponent
       .builder[IfLogged]
       .stateless

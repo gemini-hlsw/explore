@@ -61,7 +61,7 @@ object SideTabs {
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
             case justOne :: Nil => VerticalSection()(tabButton(justOne))
-            case _              =>
+            case _ =>
               VerticalSection()(
                 ButtonGroup(tabs.reverse.map(tabButton).toTagMod)
               )

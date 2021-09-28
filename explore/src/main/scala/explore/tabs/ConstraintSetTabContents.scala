@@ -45,10 +45,10 @@ import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
-  userId:           Option[User.Id],
-  focused:          View[Option[Focused]],
-  expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
-  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
+  userId:         Option[User.Id],
+  focused:        View[Option[Focused]],
+  expandedIds:    View[SortedSet[SortedSet[Observation.Id]]],
+  listUndoStacks: View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the bulkUndoStack somewhere, somehow?
   bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
   hiddenColumns:    View[Set[String]],
@@ -139,17 +139,17 @@ object ConstraintSetTabContents {
           )
         )
       ) { constraintGroup =>
-        val obsIds                                                                                 = constraintGroup.obsIds
-        val constraintSet                                                                          = constraintGroup.constraintSet
-        val cglView                                                                                = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
-        val getCs: ConstraintGroupList => ConstraintSet                                            = _ => constraintSet
+        val obsIds        = constraintGroup.obsIds
+        val constraintSet = constraintGroup.constraintSet
+        val cglView = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
+        val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
         def modCs(mod: ConstraintSet => ConstraintSet): ConstraintGroupList => ConstraintGroupList =
           cgl =>
             cgl
               .get(obsIds)
               .fold(cgl)(cg => cgl.updated(obsIds, ConstraintGroup.constraintSet.modify(mod)(cg)))
-        val csView: View[ConstraintSet]                                                            = cglView.zoom(getCs)(modCs)
-        val csUndo: View[UndoStacks[IO, ConstraintSet]]                                            =
+        val csView: View[ConstraintSet] = cglView.zoom(getCs)(modCs)
+        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
           props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
 
         Tile("constraints",
@@ -185,7 +185,7 @@ object ConstraintSetTabContents {
           content = tree(constraintsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
-        <.div(^.key   := "constraintset-right-side",
+        <.div(^.key := "constraintset-right-side",
               ExploreStyles.SinglePanelTile,
               ^.width := coreWidth.px,
               ^.left  := treeWidth.px

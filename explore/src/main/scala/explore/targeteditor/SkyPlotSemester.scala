@@ -80,7 +80,7 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
           instant -> Eval.later {
             // We could increment a progress bar here.
             // Better yet, let's do a "point producer" that runs an effect for each produced point, which could be to add it to the chart.
-            val night     = TwilightBoundedNight
+            val night = TwilightBoundedNight
               .fromTwilightTypeAndSiteAndLocalDateUnsafe(TwilightType.Nautical, site, date)
             val intervals = targetVisible(night.interval)
             intervals.duration

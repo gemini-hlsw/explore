@@ -80,7 +80,7 @@ object ConstraintGroupObsList {
       expandedIds: View[SortedSet[SortedSet[Observation.Id]]],
       selected:    View[SelectedPanel[SortedSet[Observation.Id]]]
     )(implicit
-      c:           TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
       $.propsIn[SyncIO].flatMap { props =>
         val oData = for {
@@ -88,7 +88,7 @@ object ConstraintGroupObsList {
           destIds     <- obsIdStringToIds(destination.droppableId)
           obsId       <- Observation.Id.parse(result.draggableId)
           if !destIds.contains(obsId)
-          destCg      <- props.constraintsWithObs.get.constraintGroups.get(destIds)
+          destCg <- props.constraintsWithObs.get.constraintGroups.get(destIds)
         } yield (destCg, obsId)
 
         oData.fold(SyncIO.unit) { case (destCg, obsId) =>
@@ -105,7 +105,7 @@ object ConstraintGroupObsList {
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups
 
-      val state   = ViewF.fromStateSyncIO($)
+      val state = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
         props.undoStacks,
         props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
@@ -244,8 +244,8 @@ object ConstraintGroupObsList {
               )
             )
             .as(constraintGroupFromFocused)
-        case Editor(ids)   => SyncIO.delay(constraintGroups.get(ids))
-        case _             => SyncIO.delay(none)
+        case Editor(ids) => SyncIO.delay(constraintGroups.get(ids))
+        case _           => SyncIO.delay(none)
       }
 
       def expandSelected(cgOpt: Option[ConstraintGroup]) =

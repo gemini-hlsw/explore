@@ -27,7 +27,7 @@ object ResponsiveComponent {
         ResizeDetector() { s =>
           val heightClass =
             p.heightBreakpoints.findLast(_._1 < s.height.orEmpty).foldMap(_._2)
-          val widthClass  =
+          val widthClass =
             p.widthBreakpoints.findLast(_._1 < s.width.orEmpty).foldMap(_._2)
           <.div(p.clazz |+| widthClass |+| heightClass, s.targetRef, c)
         }

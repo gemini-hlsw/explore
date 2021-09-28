@@ -10,9 +10,9 @@ import monocle.Focus
 import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: SortedSet[Observation.Id]) {
-  def addObsId(obsId: Observation.Id): ConstraintGroup         =
+  def addObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_ + obsId)(this)
-  def removeObsId(obsId: Observation.Id): ConstraintGroup      =
+  def removeObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_ - obsId)(this)
   def asKeyValue: (SortedSet[Observation.Id], ConstraintGroup) = (this.obsIds, this)
 }

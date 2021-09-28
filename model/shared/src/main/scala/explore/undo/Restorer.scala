@@ -9,7 +9,7 @@ import cats.Eq
 sealed trait Restorer[F[_], M] { // M = (Local) Model
   type T // T = Value type
 
-  val value: T       // Value that will be restored upon undo/redo
+  val value: T // Value that will be restored upon undo/redo
   val getter: M => T // How to refresh the value from the model. Used when going from undo=>redo or viceversa.
   val setter: T => M => M
 
@@ -18,7 +18,7 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
   def onModel(m: M): Restorer[F, M] =
     Restorer[F, M, T](m, getter, setter, onRestore)
 
-  override def toString(): String   = s"Restorer($value, ...)"
+  override def toString(): String = s"Restorer($value, ...)"
 }
 
 object Restorer {

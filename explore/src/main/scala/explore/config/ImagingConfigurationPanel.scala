@@ -45,9 +45,9 @@ object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities]               = Display.by(_.label, _.label)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]   = Reusability.derive
-  implicit val avalableFiltersReuse: Reusability[AvailableFilter]       = Reusability.by(_.tag)
+  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
+  implicit val avalableFiltersReuse: Reusability[AvailableFilter]     = Reusability.by(_.tag)
   implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
   implicit val propsReuse: Reusability[Props]                           = Reusability.derive
 
@@ -79,7 +79,7 @@ object ImagingConfigurationPanel {
       value = f.fold(identity, _.tag),
       text = f.fold(identity, _.shortName),
       content = f match {
-        case Left(f)  =>
+        case Left(f) =>
           MenuHeader(f): VdomNode
         case Right(f) =>
           <.div(
@@ -100,7 +100,7 @@ object ImagingConfigurationPanel {
       ("Combination".asLeft.some ::
         combination.map(f => f.asRight.some))
 
-  protected val component                                           =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .stateless
@@ -126,7 +126,7 @@ object ImagingConfigurationPanel {
                   ((r: Any) match {
                     case v: js.Array[_] =>
                       filters.set(valuesToFilters(v.collect { case s: String => s }))
-                    case _              => SyncIO.unit
+                    case _ => SyncIO.unit
                   })
                 )
                 .map(_.toCB)

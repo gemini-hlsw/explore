@@ -54,7 +54,7 @@ object InputModal {
       val cleanInput = $.setStateL(State.inputValue)("")
 
       Modal(
-        as = <.form,      // This lets us sumbit on enter
+        as = <.form, // This lets us sumbit on enter
         actions = List(
           Button(
             size = Small,

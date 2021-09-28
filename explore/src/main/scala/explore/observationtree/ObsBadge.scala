@@ -54,21 +54,21 @@ object ObsBadge {
     <.progress(^.width := "100%", ^.max := all.length - 1, ^.value := all.indexOf(value))
   }
 
-  private val idIso                                                 = Gid[Observation.Id].isoPosLong
+  private val idIso = Gid[Observation.Id].isoPosLong
 
   protected val component =
     ScalaComponent
       .builder[Props]
       .render_P { props =>
-        val obs         = props.obs
-        val conf        = obs match {
+        val obs = props.obs
+        val conf = obs match {
           case withConf: ObsWithConf => (withConf.conf: VdomNode).some
           case _                     => none
         }
         val constraints = obs match {
           case withConstraints: ObsWithConstraints =>
             (withConstraints.constraintsSummary: VdomNode).some
-          case _                                   => none
+          case _ => none
         }
 
         val deleteButton =
@@ -101,8 +101,8 @@ object ObsBadge {
                   obs match {
                     case withPointing: ObsWithPointing =>
                       nameAndId(withPointing.pointingName.toString)
-                    case withConf: ObsWithConf         => withConf.conf
-                    case _                             => nameAndId("")
+                    case withConf: ObsWithConf => withConf.conf
+                    case _                     => nameAndId("")
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
@@ -112,11 +112,11 @@ object ObsBadge {
               ),
               CardDescription()(ExploreStyles.ObsBadgeDescription)(
                 obs match {
-                  case _: ObsWithPointing                  =>
+                  case _: ObsWithPointing =>
                     ReactFragment(List(conf, constraints).flatten: _*)
                   case withConstraints: ObsWithConstraints =>
                     ReactFragment(withConstraints.constraintsSummary)
-                  case _                                   =>
+                  case _ =>
                     ReactFragment(obs.id.toString)
                 },
                 props.setActiveStatusCB.map(setActiveStatus =>

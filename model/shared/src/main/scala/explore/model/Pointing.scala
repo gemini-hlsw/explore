@@ -14,7 +14,7 @@ sealed trait Pointing
 object Pointing {
 
   case class PointingTarget(id: Target.Id, name: NonEmptyString) extends Pointing
-  object PointingTarget   {
+  object PointingTarget {
     implicit val eqPointingTarget: Eq[PointingTarget] = Eq.by(t => (t.id, t.name))
   }
 

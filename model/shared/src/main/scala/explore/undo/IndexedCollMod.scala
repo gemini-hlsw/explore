@@ -34,13 +34,13 @@ trait IndexedCollMod[Coll[_, _], Idx, A, N[_], K] { // N = Type of internal Node
   def insertWithIdx(col: Collection, idx: Idx, node: N[A]): Collection
 
   protected def adjusterForKey(
-    key:      K,
-    getter:   Getter[Collection, ElemWithIndexOpt],
+    key:    K,
+    getter: Getter[Collection, ElemWithIndexOpt],
     preserve: Boolean // If true, won't modify an existing element, just its location. Deletion is still possible.
   ): Adjuster[Collection, ElemWithIndexOpt] =
     Adjuster[Collection, ElemWithIndexOpt] { mod => coll =>
-      val oldElemAndIndex        = getter.get(coll)
-      val newElemAndIndex        = mod(oldElemAndIndex)
+      val oldElemAndIndex = getter.get(coll)
+      val newElemAndIndex = mod(oldElemAndIndex)
       val newElemAndIndexWithKey =
         ElemWithIndexOptKey.replace(key)(newElemAndIndex) // Reinstate key
 

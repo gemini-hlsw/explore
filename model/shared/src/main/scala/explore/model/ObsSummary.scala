@@ -24,11 +24,11 @@ trait ObsSummary {
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
-    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                       =>
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints) =>
       a === b
     case (a: ObsSummaryWithPointingAndConstraints, b: ObsSummaryWithPointingAndConstraints) =>
       a === b
-    case _                                                                                  =>
+    case _ =>
       false
   })
 }
@@ -48,8 +48,8 @@ trait ObsWithPointing extends ObsSummary {
 
   lazy val pointingName: NonEmptyString =
     pointing match {
-      case None                                              => "<No Target>"
-      case Some(Pointing.PointingTarget(_, name))            => name
+      case None                                   => "<No Target>"
+      case Some(Pointing.PointingTarget(_, name)) => name
       case Some(Pointing.PointingAsterism(_, name, targets)) =>
         name match {
           case Some(aname) => aname

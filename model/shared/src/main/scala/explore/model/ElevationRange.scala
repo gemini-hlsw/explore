@@ -22,7 +22,7 @@ private sealed abstract class ElevationRangeType(val typeName: String) { self =>
     Encoder.encodeString.contramap(_.typeName)
 }
 
-private object ElevationRangeType                                      {
+private object ElevationRangeType {
   case object AirMassRange   extends ElevationRangeType("AirMassRange")
   case object HourAngleRange extends ElevationRangeType("HourAngleRange")
 
@@ -32,7 +32,7 @@ private object ElevationRangeType                                      {
         .flatMap(_ match {
           case AirMassRange.typeName   => AirMassRange.asRight
           case HourAngleRange.typeName => HourAngleRange.asRight
-          case _                       => DecodingFailure("Unsupported elevation range type", c.history).asLeft
+          case _ => DecodingFailure("Unsupported elevation range type", c.history).asLeft
         })
     }
 }
@@ -46,12 +46,12 @@ object ElevationRange {
   val hourAngle: Prism[ElevationRange, HourAngleRange] =
     GenPrism[ElevationRange, HourAngleRange]
 
-  implicit val ElevationRangeEq: Eq[ElevationRange]    = Eq.fromUniversalEquals
+  implicit val ElevationRangeEq: Eq[ElevationRange] = Eq.fromUniversalEquals
 
   implicit val elevationRangeDecoder: Decoder[ElevationRange] = new Decoder[ElevationRange] {
     final def apply(c: HCursor): Decoder.Result[ElevationRange] =
       c.downField("type").as[ElevationRangeType].flatMap {
-        case ElevationRangeType.AirMassRange   =>
+        case ElevationRangeType.AirMassRange =>
           for {
             min <- c.downField("min").as[AirMassRange.DecimalValue]
             max <- c.downField("max").as[AirMassRange.DecimalValue]
@@ -80,11 +80,11 @@ object AirMassRange extends AirmassRangeOptics {
     Refined.unsafeApply[BigDecimal, Value](BigDecimal(1.0))
   val DefaultMax: DecimalValue =
     Refined.unsafeApply[BigDecimal, Value](BigDecimal(2.0))
-  val Default: AirMassRange    = apply(DefaultMin, DefaultMax)
+  val Default: AirMassRange = apply(DefaultMin, DefaultMax)
 
   implicit val airmassRangeDecoder: Decoder[AirMassRange] = deriveDecoder
   implicit val airmassRangeEncoder: Encoder[AirMassRange] = deriveEncoder
-  implicit val airmassRangeEq: Eq[AirMassRange]           = Eq.by(ar => (ar.min.value, ar.max.value))
+  implicit val airmassRangeEq: Eq[AirMassRange] = Eq.by(ar => (ar.min.value, ar.max.value))
 }
 
 trait AirmassRangeOptics {
@@ -123,7 +123,7 @@ object HourAngleRange extends HourAngleRangeOptics {
 
   implicit val hourAngleRangeDecoder: Decoder[HourAngleRange] = deriveDecoder
   implicit val hourAngleRangeEncoder: Encoder[HourAngleRange] = deriveEncoder
-  implicit val hourAngleRangeEq: Eq[HourAngleRange]           =
+  implicit val hourAngleRangeEq: Eq[HourAngleRange] =
     Eq.by(hr => (hr.minHours.value, hr.maxHours.value))
 }
 

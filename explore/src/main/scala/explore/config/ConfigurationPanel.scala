@@ -63,18 +63,18 @@ object ConfigurationPanel {
       def wavelengthToMicro(w: Wavelength) = w.micrometer.toValue[BigDecimal]
 
       val op = for {
-        _ <- SpectroscopyConfigurationOptions.wavelengthQ      := s.wavelength.map(wavelengthToMicro)
-        _ <- SpectroscopyConfigurationOptions.resolution       := s.resolution
-        _ <- SpectroscopyConfigurationOptions.signalToNoise    := s.signalToNoise
+        _ <- SpectroscopyConfigurationOptions.wavelengthQ   := s.wavelength.map(wavelengthToMicro)
+        _ <- SpectroscopyConfigurationOptions.resolution    := s.resolution
+        _ <- SpectroscopyConfigurationOptions.signalToNoise := s.signalToNoise
         _ <- SpectroscopyConfigurationOptions.signalToNoiseAtQ := s.signalToNoiseAt.map(
-               wavelengthToMicro
-             )
+          wavelengthToMicro
+        )
         _ <- SpectroscopyConfigurationOptions.wavelengthRangeQ := s.wavelengthRange.map(
-               wavelengthToMicro
-             )
-        _ <- SpectroscopyConfigurationOptions.focalPlane       := s.focalPlane
-        _ <- SpectroscopyConfigurationOptions.focalPlaneAngle  := s.focalPlaneAngle
-        _ <- SpectroscopyConfigurationOptions.capabilities     := s.capabilities
+          wavelengthToMicro
+        )
+        _ <- SpectroscopyConfigurationOptions.focalPlane      := s.focalPlane
+        _ <- SpectroscopyConfigurationOptions.focalPlaneAngle := s.focalPlaneAngle
+        _ <- SpectroscopyConfigurationOptions.capabilities    := s.capabilities
       } yield ()
       op.runS(SpectroscopyConfigurationOptions.Default).value
     } { s =>
@@ -82,15 +82,15 @@ object ConfigurationPanel {
         Wavelength.decimalMicrometers.getOption(m.value)
 
       val op = for {
-        _ <- SpectroscopyRequirementsData.wavelength      := s.wavelengthQ.flatMap(microToWavelength)
-        _ <- SpectroscopyRequirementsData.resolution      := s.resolution
-        _ <- SpectroscopyRequirementsData.signalToNoise   := s.signalToNoise
+        _ <- SpectroscopyRequirementsData.wavelength    := s.wavelengthQ.flatMap(microToWavelength)
+        _ <- SpectroscopyRequirementsData.resolution    := s.resolution
+        _ <- SpectroscopyRequirementsData.signalToNoise := s.signalToNoise
         _ <- SpectroscopyRequirementsData.signalToNoiseAt := s.signalToNoiseAtQ.flatMap(
-               microToWavelength
-             )
+          microToWavelength
+        )
         _ <- SpectroscopyRequirementsData.wavelengthRange := s.wavelengthRangeQ.flatMap(
-               microToWavelength
-             )
+          microToWavelength
+        )
         _ <- SpectroscopyRequirementsData.focalPlane      := s.focalPlane
         _ <- SpectroscopyRequirementsData.focalPlaneAngle := s.focalPlaneAngle
         _ <- SpectroscopyRequirementsData.capabilities    := s.capabilities
@@ -107,7 +107,7 @@ object ConfigurationPanel {
 
       val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
 
-      def mode           = requirementsViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
+      def mode = requirementsViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
       val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
       val spectroscopy = requirementsViewSet(

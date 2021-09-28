@@ -22,13 +22,13 @@ import monocle.Lens
 import scala.collection.immutable.HashSet
 
 case class RootModel(
-  vault:                          Option[UserVault],
-  tabs:                           EnumZipper[AppTab],
-  focused:                        Option[Focused] = none,
-  expandedIds:                    ExpandedIds = ExpandedIds(),
-  searchingTarget:                Set[Target.Id] = HashSet.empty,
-  userSelectionMessage:           Option[NonEmptyString] = none,
-  targetSummaryHiddenColumns:     Set[String] =
+  vault:                Option[UserVault],
+  tabs:                 EnumZipper[AppTab],
+  focused:              Option[Focused] = none,
+  expandedIds:          ExpandedIds = ExpandedIds(),
+  searchingTarget:      Set[Target.Id] = HashSet.empty,
+  userSelectionMessage: Option[NonEmptyString] = none,
+  targetSummaryHiddenColumns: Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
       MagnitudeBand.all
         .filterNot(_ === MagnitudeBand.V)
@@ -57,7 +57,7 @@ object RootModel {
       }
   )
 
-  val userId                              =
+  val userId =
     RootModel.vault.some
       .andThen(UserVault.user)
       .andThen(userUserId)

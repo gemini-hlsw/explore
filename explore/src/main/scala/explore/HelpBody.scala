@@ -31,19 +31,19 @@ import scala.util.Try
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactProps[HelpBody](HelpBody.component) {
-  private val path        = Uri.Path.unsafeFromString(helpId.value)
-  private val rootUrl     = base.rawUrl / base.user.value / base.project.value
-  private val baseUrl     =
+  private val path    = Uri.Path.unsafeFromString(helpId.value)
+  private val rootUrl = base.rawUrl / base.user.value / base.project.value
+  private val baseUrl =
     path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
       (uri, segment) => uri / segment.encoded
     )
   private val url         = rootUrl / "main" / path
   private val rootEditUrl = base.editUrl / base.user.value / base.project.value
-  private val newPage     = (rootEditUrl / "new" / "main")
+  private val newPage = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
     .withQueryParam("value", s"# Title")
     .withQueryParam("message", s"Create $helpId")
-  private val editPage    = (rootEditUrl / "edit" / "main" / path)
+  private val editPage = (rootEditUrl / "edit" / "main" / path)
     .withQueryParam("message", s"Update $helpId")
 }
 
@@ -73,7 +73,7 @@ object HelpBody {
         scala.util.Failure(x)
       }
 
-  private val component               =
+  private val component =
     ScalaComponent
       .builder[Props]
       .initialState(State(Pot.pending))
@@ -82,7 +82,7 @@ object HelpBody {
 
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-          val editUrl  = s.content match {
+          val editUrl = s.content match {
             case Ready(_) => p.editPage
             case _        => p.newPage
           }
@@ -108,7 +108,7 @@ object HelpBody {
               <.div(
                 ExploreStyles.HelpBody,
                 s.content match {
-                  case Ready(a)                                         =>
+                  case Ready(a) =>
                     ReactMarkdown(
                       content = a,
                       clazz = ExploreStyles.HelpMarkdownBody,
@@ -117,14 +117,14 @@ object HelpBody {
                       remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
                       rehypePlugins = List(RehypePlugin.RehypeKatex)
                     ): VdomNode
-                  case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+                  case Pending(_) => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
                   case crystal.Error(o) if o.getMessage.contains("404") =>
                     <.div(
                       ExploreStyles.HelpMarkdownBody,
                       "Not found, maybe you want to create it ",
                       <.a(^.href := p.newPage.toString(), ^.target := "_blank", Icons.Edit)
                     )
-                  case crystal.Error(_)                                 =>
+                  case crystal.Error(_) =>
                     <.div(
                       ExploreStyles.HelpMarkdownBody,
                       "We encountered an error trying to read the help file"

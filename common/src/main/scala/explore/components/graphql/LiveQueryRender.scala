@@ -24,14 +24,14 @@ final case class LiveQueryRender[S, D, A](
   extract:             D ==> A,
   changeSubscriptions: Reuse[List[IO[GraphQLSubscription[IO, _]]]]
 )(
-  val render:          Pot[A] ==> VdomNode,
-  val onNewData:       Reuse[IO[Unit]] = Reuse.always(IO.unit)
+  val render:    Pot[A] ==> VdomNode,
+  val onNewData: Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
-  val F:               Async[IO],
-  val dispatcher:      Dispatcher[IO],
-  val logger:          Logger[IO],
-  val reuse:           Reusability[A],
-  val client:          WebSocketClient[IO, S]
+  val F:          Async[IO],
+  val dispatcher: Dispatcher[IO],
+  val logger:     Logger[IO],
+  val reuse:      Reusability[A],
+  val client:     WebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRender.component)
     with LiveQueryRender.Props[IO, S, D, A]
 

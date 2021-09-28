@@ -57,7 +57,7 @@ object LogoutTracker {
             (x.event match {
               case ExploreEvent.Logout.event =>
                 $.props.setVault(none) >> $.props.setMessage("You logged out in another instance")
-              case _                         => SyncIO.unit
+              case _ => SyncIO.unit
             })
           bc
         }.flatMap(bc => $.modStateIn[SyncIO](State.bc.replace(bc.some)))

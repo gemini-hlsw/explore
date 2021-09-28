@@ -67,7 +67,7 @@ object ObsList {
       focused: View[Option[Focused]],
       undoCtx: UndoCtx[ObservationList]
     )(implicit
-      c:       TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = SyncIO(Random.nextInt(0xfff)).map(int =>
@@ -170,7 +170,7 @@ object ObsList {
                 observations.toList.get(math.min(idx, observations.length - 1).toLong)
               }
               .map(newObs => FocusedObs(newObs.id))
-          case other                                          => other.some
+          case other => other.some
         })
       }
       .configure(Reusability.shouldComponentUpdate)

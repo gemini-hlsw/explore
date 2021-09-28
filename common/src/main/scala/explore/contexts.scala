@@ -27,8 +27,8 @@ case class HelpContext(
 object HelpContext {
   val displayedHelp = Focus[HelpContext](_.displayedHelp)
 
-  implicit val helpIdReuse: Reusability[Help.Id]          = Reusability.by(_.value)
-  implicit val uriReuse: Reusability[Uri]                 = Reusability.by(_.toString)
+  implicit val helpIdReuse: Reusability[Help.Id] = Reusability.by(_.value)
+  implicit val uriReuse: Reusability[Uri]        = Reusability.by(_.toString)
   implicit val helpContextReuse: Reusability[HelpContext] =
     Reusability.by(x => (x.rawUrl, x.editUrl, x.user.value, x.project.value, x.displayedHelp))
 }

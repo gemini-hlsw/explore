@@ -13,7 +13,7 @@ import lucuma.core.model.Target
 sealed trait PointingId
 object PointingId {
   case class TargetId(id: Target.Id) extends PointingId
-  object TargetId   {
+  object TargetId {
     implicit val eqTargetId: Eq[TargetId] = Eq.by(_.id)
   }
 

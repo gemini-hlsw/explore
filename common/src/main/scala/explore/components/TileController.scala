@@ -106,12 +106,12 @@ object TileController {
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight = unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
                   // restore the resizable state
-                  val resizable     =
+                  val resizable =
                     tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
                   // TODO: Restore to the previous size
                   l.copy(h = defaultHeight, isResizable = resizable)
                 } else l
-              case l                               => l
+              case l => l
             }
 
         ResponsiveReactGridLayout(

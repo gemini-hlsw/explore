@@ -48,7 +48,7 @@ object ConstraintGroupObsListActions {
     obsId:   Observation.Id,
     destIds: SortedSet[Observation.Id]
   )(
-    eids:    SortedSet[SortedSet[Observation.Id]]
+    eids: SortedSet[SortedSet[Observation.Id]]
   ) =
     eids.map(ids => if (ids === destIds) destIds + obsId else ids - obsId)
 

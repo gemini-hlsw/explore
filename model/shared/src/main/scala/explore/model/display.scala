@@ -8,22 +8,22 @@ import lucuma.core.enum._
 import lucuma.core.util.Display
 
 object display {
-  implicit val displayProposalClass: Display[ProposalClass]                       =
+  implicit val displayProposalClass: Display[ProposalClass] =
     Display.byShortName(_.label)
 
-  implicit val displayTacGroup: Display[TacGroup]                                 =
+  implicit val displayTacGroup: Display[TacGroup] =
     Display.byShortName(_.label)
 
-  implicit val displayTacCategory: Display[TacCategory]                           =
+  implicit val displayTacCategory: Display[TacCategory] =
     Display.byShortName(_.label)
 
-  implicit val displayToOActivation: Display[ToOActivation]                       =
+  implicit val displayToOActivation: Display[ToOActivation] =
     Display.byShortName(_.label)
 
-  implicit val displayMagnitudeBand: Display[MagnitudeBand]                       =
+  implicit val displayMagnitudeBand: Display[MagnitudeBand] =
     Display.by(_.shortName, _.longName)
 
-  implicit val displayMagnitudeSystem: Display[MagnitudeSystem]                   =
+  implicit val displayMagnitudeSystem: Display[MagnitudeSystem] =
     Display.byShortName(_.tag)
 
   implicit val spectroscopyCapabilitiesDisplay: Display[SpectroscopyCapabilities] =
@@ -33,13 +33,13 @@ object display {
       case SpectroscopyCapabilities.Coronagraphy  => "Coronagraphy"
     }
 
-  implicit val focaLPlaneDisplay: Display[FocalPlane]                             = Display.byShortName {
+  implicit val focaLPlaneDisplay: Display[FocalPlane] = Display.byShortName {
     case FocalPlane.SingleSlit   => "Single Slit"
     case FocalPlane.MultipleSlit => "Multiple Slits"
     case FocalPlane.IFU          => "IFU"
   }
 
-  implicit val scienceModeDisplay: Display[ScienceMode]                           = Display.byShortName {
+  implicit val scienceModeDisplay: Display[ScienceMode] = Display.byShortName {
     case ScienceMode.Imaging      => "Imaging"
     case ScienceMode.Spectroscopy => "Spectroscopy"
   }

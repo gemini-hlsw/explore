@@ -83,7 +83,7 @@ object SkyPlotSection {
         HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
         <.div(ExploreStyles.SkyPlot) {
           state.plotPeriod match {
-            case PlotPeriod.Night    =>
+            case PlotPeriod.Night =>
               SkyPlotNight(state.site, props.coords, state.date, state.timeDisplay, 350)
             case PlotPeriod.Semester =>
               val site     = state.site

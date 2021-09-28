@@ -97,9 +97,9 @@ object TargetObsList {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  val obsListMod            = new KIListMod[ObsResult, Observation.Id](ObsResult.id)
-  val targetListMod         = new KIListMod[TargetResult, Target.Id](TargetResult.id)
-  val asterismListMod       = new KIListMod[AsterismIdName, Asterism.Id](AsterismIdName.id)
+  val obsListMod      = new KIListMod[ObsResult, Observation.Id](ObsResult.id)
+  val targetListMod   = new KIListMod[TargetResult, Target.Id](TargetResult.id)
+  val asterismListMod = new KIListMod[AsterismIdName, Asterism.Id](AsterismIdName.id)
   val asterismTargetListMod =
     new KIListMod[AsterismResultTarget, Target.Id](AsterismResultTarget.id)
 
@@ -110,11 +110,11 @@ object TargetObsList {
       c:               TransactionalClient[IO, ObservationDB]
     ): IO[Unit] =
       (to match {
-        case Some(PointingId.TargetId(targetId))     =>
+        case Some(PointingId.TargetId(targetId)) =>
           AssignTargetToObs.execute(targetId, obsId)
         case Some(PointingId.AsterismId(asterismId)) =>
           AssignAsterismToObs.execute(asterismId, obsId)
-        case None                                    => UnassignObs.execute(obsId)
+        case None => UnassignObs.execute(obsId)
       }).void
 
     def updateObs(input: EditObservationInput)(implicit
@@ -176,7 +176,7 @@ object TargetObsList {
       setter:      UndoCtx[PointingsWithObs],
       expandedIds: View[ExpandedIds]
     )(implicit
-      c:           TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => SyncIO[Unit] =
       (result, _) =>
         $.propsIn[SyncIO].flatMap { props =>
@@ -212,9 +212,9 @@ object TargetObsList {
                       )
 
                   destination.droppableId match {
-                    case UnassignedObsId            =>
+                    case UnassignedObsId =>
                       set(none.some)
-                    case Target.Id(newTargetId)     =>
+                    case Target.Id(newTargetId) =>
                       expandedIds.zoom(ExpandedIds.targetIds).mod(_ + newTargetId) >>
                         set(PointingId.TargetId(newTargetId).some.some)
                     case Asterism.Id(newAsterismId) =>
@@ -222,9 +222,9 @@ object TargetObsList {
                         .zoom(ExpandedIds.asterismIds)
                         .mod(_ + newAsterismId) >>
                         set(PointingId.AsterismId(newAsterismId).some.some)
-                    case _                          => SyncIO.unit // Report error?
+                    case _ => SyncIO.unit // Report error?
                   }
-                case None        =>
+                case None =>
                   Target.Id.parse(result.draggableId) match {
                     case Some(targetId) =>
                       // Target dragged to asterism.
@@ -243,9 +243,9 @@ object TargetObsList {
                                                     setter
                                 )
                             )
-                        case None             => SyncIO.unit
+                        case None => SyncIO.unit
                       }
-                    case None           => SyncIO.unit
+                    case None => SyncIO.unit
                   }
               })
             )
@@ -257,7 +257,7 @@ object TargetObsList {
       focusSet: Option[Focused] => SyncIO[Unit],
       targetId: Target.Id
     )(implicit
-      c:        TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): targetListMod.Operation => SyncIO[Unit] = {
       val getAdjust: GetAdjust[PointingsWithObs, targetListMod.ElemWithIndexOpt] =
         PointingsWithObs.targets.composeGetAdjust(
@@ -296,7 +296,7 @@ object TargetObsList {
                          SiderealTracking.const(Coordinates.Zero),
                          List.empty
             )
-          val mod       = targetMod(setter, props.focused.set, newTarget.id)
+          val mod = targetMod(setter, props.focused.set, newTarget.id)
           (
             mod(targetListMod.upsert(newTarget, props.pointingsWithObs.get.targets.length)).to[IO],
             props.searching.mod(_ + newTarget.id).to[IO] >>
@@ -309,7 +309,7 @@ object TargetObsList {
               val update = TargetQueries.UpdateSiderealTracking(st) >>>
                 TargetQueries.replaceMagnitudes(m.values.toList)
               TargetQueriesGQL.TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
-            case _                                         =>
+            case _ =>
               IO.unit
           }.runAsync
         }
@@ -318,7 +318,7 @@ object TargetObsList {
       targetId: Target.Id,
       setter:   UndoCtx[PointingsWithObs]
     )(implicit
-      c:        TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] =
       $.propsIn[SyncIO].flatMap { props =>
         val mod = targetMod(setter, props.focused.set, targetId)
@@ -350,7 +350,7 @@ object TargetObsList {
       asterismId: Asterism.Id,
       setter:     UndoCtx[PointingsWithObs]
     )(implicit
-      c:          TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] =
       $.propsIn[SyncIO].flatMap { props =>
         val mod = asterismMod(setter, props.focused.set, asterismId)
@@ -362,7 +362,7 @@ object TargetObsList {
       focusSet:   Option[Focused] => SyncIO[Unit],
       asterismId: Asterism.Id
     )(implicit
-      c:          TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): asterismListMod.Operation => SyncIO[Unit] = {
       val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndexOpt] =
         PointingsWithObs.asterisms.composeGetAdjust(
@@ -392,7 +392,7 @@ object TargetObsList {
       targetId:   Target.Id,
       asterismId: Asterism.Id
     )(implicit
-      c:          TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): asterismTargetListMod.Operation => SyncIO[Unit] = {
       val getAdjust: GetAdjust[PointingsWithObs, asterismListMod.ElemWithIndexOpt] =
         PointingsWithObs.asterisms.composeGetAdjust(asterismListMod.withKey(asterismId))
@@ -429,7 +429,7 @@ object TargetObsList {
       asterismId:       Asterism.Id,
       setter:           UndoCtx[PointingsWithObs]
     )(implicit
-      c:                TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] = {
       val mod = asterismTargetMod(setter, target.id, asterismId)
       mod(
@@ -445,7 +445,7 @@ object TargetObsList {
       asterismId: Asterism.Id,
       setter:     UndoCtx[PointingsWithObs]
     )(implicit
-      c:          TransactionalClient[IO, ObservationDB]
+      c: TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] = {
       val mod = asterismTargetMod(setter, targetId, asterismId)
       mod(asterismTargetListMod.delete)
@@ -492,7 +492,7 @@ object TargetObsList {
             (Target.Id
               .parse(rubric.draggableId)
               .toRight(Observation.Id.parse(rubric.draggableId)) match {
-              case Right(targetId)   =>
+              case Right(targetId) =>
                 targets
                   .getElement(targetId)
                   .map(target => Card(raised = true)(CardContent(target.name.value)).vdomElement)
@@ -500,7 +500,7 @@ object TargetObsList {
                 observations
                   .getElement(obsId)
                   .map(obs => props.renderObsBadge(obsResultToObsSummary(obs)))
-              case _                 => none
+              case _ => none
             }).getOrElse(<.span("ERROR"))
           )
 
@@ -569,7 +569,7 @@ object TargetObsList {
                       val targetId  = target.id
                       val targetObs = obsByPointing.get(PointingTargetResult(targetId).some).orEmpty
 
-                      val expandedTargetIds       =
+                      val expandedTargetIds =
                         props.expandedIds.zoom(ExpandedIds.targetIds)
                       val opIcon: FontAwesomeIcon =
                         targetObs.nonEmpty
@@ -695,12 +695,12 @@ object TargetObsList {
                       val asterismId = asterism.id
 
                       val asterismTargets = asterism.targets.toList
-                      val asterismObs     =
+                      val asterismObs =
                         obsByPointing.get(PointingAsterismResult(asterismId).some).orEmpty
 
                       val expandedAsterismIds =
                         props.expandedIds.zoom(ExpandedIds.asterismIds)
-                      val opIcon              =
+                      val opIcon =
                         (asterismObs.nonEmpty || asterismTargets.nonEmpty)
                           .fold(
                             expandedAsterismIds.get
@@ -923,7 +923,7 @@ object TargetObsList {
         // If focused observation does not exist anymore, then focus on closest one.
         val refocus =
           $.currentProps.focused.mod(_.flatMap {
-            case FocusedTarget(tid) if !targets.contains(tid)     =>
+            case FocusedTarget(tid) if !targets.contains(tid) =>
               prevPointingsWithObs.targets
                 .getIndex(tid)
                 .flatMap(idx => targets.toList.get(math.min(idx, targets.length - 1).toLong))
@@ -933,7 +933,7 @@ object TargetObsList {
                 .getIndex(aid)
                 .flatMap(idx => asterisms.toList.get(math.min(idx, asterisms.length - 1).toLong))
                 .map(newAsterism => FocusedAsterism(newAsterism.id))
-            case FocusedObs(oid) if !observations.contains(oid)   =>
+            case FocusedObs(oid) if !observations.contains(oid) =>
               prevPointingsWithObs.observations
                 .getElement(oid)
                 .flatMap(obs =>
@@ -942,7 +942,7 @@ object TargetObsList {
                     case PointingAsterismResult(aid) => FocusedAsterism(aid)
                   }
                 )
-            case other                                            => other.some
+            case other => other.some
           })
 
         refocus

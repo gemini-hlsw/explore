@@ -103,7 +103,7 @@ object AladinContainer {
             e.classList.remove("visualization-display"),
             e.classList.add("visualization-display")
           )
-        case _          => ()
+        case _ => ()
       }
 
     /**
@@ -153,7 +153,7 @@ object AladinContainer {
             // Delete any viz previously rendered
             val previous = Option(div.querySelector(".aladin-visualization"))
             previous.foreach(div.removeChild)
-            val g        = document.createElement("div")
+            val g = document.createElement("div")
             g.classList.add("aladin-visualization")
             visualization.geometryForAladin(svgBase,
                                             g,
@@ -169,7 +169,7 @@ object AladinContainer {
             toggleVisibility(g, "#probe", options.probe)
             div.appendChild(g)
             ()
-          case _                                            =>
+          case _ =>
         }
 
     def includeSvg(v: JsAladin): Callback =
@@ -210,8 +210,8 @@ object AladinContainer {
       $.props
         .zip($.state)
         .flatMap { case (p, s) =>
-          val size     = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
-          val div      = v.getParentDiv()
+          val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+          val div  = v.getParentDiv()
           // Update the existing visualization in place
           val previous = Option(div.querySelector(".aladin-visualization"))
           (s.svg, previous).mapN { case (svg, previous) =>
@@ -232,7 +232,7 @@ object AladinContainer {
                                       off
                       )
                   }
-                case _         => Callback.empty
+                case _ => Callback.empty
               }
               .toCallback
           }.getOrEmpty

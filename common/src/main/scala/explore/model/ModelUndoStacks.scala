@@ -17,16 +17,16 @@ import monocle.Focus
 import scala.collection.immutable.SortedSet
 
 case class ModelUndoStacks[F[_]](
-  forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
+  forObsList:    UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
+  forTargetList: UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
+  forTarget: Map[Target.Id, UndoStacks[F, TargetResult]] =
     Map.empty[Target.Id, UndoStacks[F, TargetResult]],
-  forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
-  forConstraintSet:     Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
+  forConstraintList: UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
+  forConstraintSet: Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
     Map.empty[Observation.Id, UndoStacks[F, ConstraintSet]],
   forBulkConstraintSet: Map[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]] =
     Map.empty[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]],
-  forScienceData:       Map[Observation.Id, UndoStacks[F, ScienceData]] =
+  forScienceData: Map[Observation.Id, UndoStacks[F, ScienceData]] =
     Map.empty[Observation.Id, UndoStacks[F, ScienceData]]
 )
 

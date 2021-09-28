@@ -12,8 +12,8 @@ import scala.collection.immutable.HashSet
 import KeyedIndexedTree._
 
 case class KeyedIndexedTree[K: Eq, A] private (
-  private val byKey:  Map[K, Node[IndexedElem[K, A]]],
-  private val tree:   Tree[IndexedElem[K, A]]
+  private val byKey: Map[K, Node[IndexedElem[K, A]]],
+  private val tree:  Tree[IndexedElem[K, A]]
 )(
   private val getKey: A => K // Having in another param set keeps this out of equality
 ) {
@@ -34,9 +34,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
         _.get(index.childPos.toLong).map(node => (getKey(node.value.elem), node.map(_.elem)))
       )
 
-  private def removeInTree(key: K): Tree[IndexedElem[K, A]]    = {
+  private def removeInTree(key: K): Tree[IndexedElem[K, A]] = {
     def removeInChildren(
-      idx:       Index[K]
+      idx: Index[K]
     )(
       children:  List[Node[IndexedElem[K, A]]],
       parentKey: Option[K] = None
@@ -140,6 +140,6 @@ object KeyedIndexedTree {
     KeyedIndexedTree(buildKeyMap(indexedTree, getKey), indexedTree)(getKey)
   }
 
-  implicit def eqKeyedIndexedTree[K, A: Eq]: Eq[KeyedIndexedTree[K, A]]         =
+  implicit def eqKeyedIndexedTree[K, A: Eq]: Eq[KeyedIndexedTree[K, A]] =
     Eq.by(_.toTree)
 }

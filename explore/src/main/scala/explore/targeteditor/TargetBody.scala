@@ -151,12 +151,12 @@ object TargetBody {
             .runAsyncAndThenCB {
               case Right(r @ Some(Target(n, Right(st), m))) =>
                 allView.set((n, st, m.values.toList)).toCB >> s.onComplete(r)
-              case Right(Some(r))                           =>
+              case Right(Some(r)) =>
                 Callback.log(s"Unknown target type $r") >>
                   nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-              case Right(None)                              =>
+              case Right(None) =>
                 nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-              case Left(t)                                  =>
+              case Left(t) =>
                 nameView.set(s.searchTerm).toCB >> s.onError(t)
             }
 

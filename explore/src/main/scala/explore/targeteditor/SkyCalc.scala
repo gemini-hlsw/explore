@@ -22,7 +22,7 @@ object SkyCalc {
     every:            Duration,
     coordsForInstant: Instant => Coordinates
   ): List[(Instant, SkyCalcResults)] = {
-    val calc     = ImprovedSkyCalc(site.place)
+    val calc = ImprovedSkyCalc(site.place)
     val instants =
       List.unfold(start)(prev =>
         prev.plus(every).some.filter(_.isBefore(end)).map(i => (i, i))

@@ -79,7 +79,7 @@ object ConstraintGroupQueriesGQL {
           type ConstraintSet = model.ConstraintSet
         }
       }
-      object Observations       {
+      object Observations {
         object Nodes {
           object PlannedTime {
             type Execution = time.Duration

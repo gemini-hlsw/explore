@@ -25,17 +25,17 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
+import react.semanticui.elements.button.Button
+import react.virtuoso._
+import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
-import react.virtuoso._
-import react.virtuoso.raw.ListRange
 
 import java.text.DecimalFormat
-import react.semanticui.elements.button.Button
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -48,13 +48,13 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val reuseProps: Reusability[Props]         =
+  implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
-  protected val ModesTableDef                         = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
   import ModesTableDef.syntax._
 
@@ -129,7 +129,7 @@ object SpectroscopyModesTable {
       List(a, b)
         .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
         .mkString(" - ")
-    case _                =>
+    case _ =>
       "-"
   }
 
@@ -144,7 +144,7 @@ object SpectroscopyModesTable {
     case FocalPlane.IFU          => "IFU"
   }
 
-  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane])                        =
+  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
@@ -221,7 +221,7 @@ object SpectroscopyModesTable {
   ): Boolean =
     rowToConf(row).exists(_ === conf)
 
-  protected def enabledRow(row: SpectroscopyModeRow): Boolean                         =
+  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
 
@@ -239,7 +239,7 @@ object SpectroscopyModesTable {
       // rows
       .useMemoBy(_.spectroscopyRequirements)(props =>
         s => {
-          val rows                =
+          val rows =
             props.matrix
               .filtered(
                 focalPlane = s.focalPlane,

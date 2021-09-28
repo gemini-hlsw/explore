@@ -27,12 +27,12 @@ final case class ConstraintSet(
       case AirMassRange(min, max)
           if min === AirMassRange.DefaultMin && max === AirMassRange.DefaultMax =>
         ""
-      case AirMassRange(min, max) if min === AirMassRange.DefaultMin     => f" AM<${max.value}%.1f"
-      case AirMassRange(min, max) if max === AirMassRange.DefaultMax     => f" ${min.value}%.1f<AM"
-      case AirMassRange(min, max)                                        => f" ${min.value}%.1f<AM<${max.value}%.1f"
+      case AirMassRange(min, max) if min === AirMassRange.DefaultMin => f" AM<${max.value}%.1f"
+      case AirMassRange(min, max) if max === AirMassRange.DefaultMax => f" ${min.value}%.1f<AM"
+      case AirMassRange(min, max) => f" ${min.value}%.1f<AM<${max.value}%.1f"
       case HourAngleRange(min, max) if min === HourAngleRange.DefaultMin => f" HA<${max.value}%.1f"
       case HourAngleRange(min, max) if max === HourAngleRange.DefaultMax => f" ${min.value}%.1f<HA"
-      case HourAngleRange(min, max)                                      => f" ${min.value}%.1f<HA<${max.value}%.1f"
+      case HourAngleRange(min, max) => f" ${min.value}%.1f<HA<${max.value}%.1f"
     }
 
     s"${imageQuality.label} ${cloudExtinction.label} ${skyBackground.label}$wv$er"

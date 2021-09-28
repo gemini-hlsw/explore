@@ -35,7 +35,7 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
 
-  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus]           =
+  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
   def init(payload: Map[String, Json]): F[Unit] =
@@ -50,14 +50,14 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
       odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
 }
-object Clients    {
+object Clients {
   def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     reconnectionStrategy: WebSocketReconnectionStrategy
   ): F[Clients[F]] =
     for {
-      odbClient   <-
+      odbClient <-
         ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
       prefsClient <-
         ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
@@ -76,7 +76,7 @@ object StaticData {
         client.run(Request(Method.GET, spectroscopyMatrixUri)).use {
           case Status.Successful(r) =>
             SpectroscopyModesMatrix[F](r.bodyText)
-          case fail                 =>
+          case fail =>
             // If fetching fails, do we want to continue without the matrix, or do we want to crash?
             Logger[F].warn(
               s"Could not retrieve spectroscopy matrix. Code [${fail.status.code}] - Body: [${fail.as[String]}]"
@@ -92,15 +92,15 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  version:        NonEmptyString,
-  clients:        Clients[F],
-  staticData:     StaticData,
-  actions:        Actions[F],
-  sso:            SSOClient[F],
-  pageUrl:        (AppTab, Option[Focused]) => String,
-  setPage:        (AppTab, Option[Focused]) => Callback,
-  environment:    ExecutionEnvironment,
-  fromSyncIO:     SyncIO ~> F
+  version:     NonEmptyString,
+  clients:     Clients[F],
+  staticData:  StaticData,
+  actions:     Actions[F],
+  sso:         SSOClient[F],
+  pageUrl:     (AppTab, Option[Focused]) => String,
+  setPage:     (AppTab, Option[Focused]) => Callback,
+  environment: ExecutionEnvironment,
+  fromSyncIO:  SyncIO ~> F
 )(implicit
   val F:          Applicative[F],
   val dispatcher: Dispatcher[F],
@@ -111,23 +111,23 @@ case class AppContext[F[_]](
     new Logger[SyncIO] {
       def error(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.error(t)(message))
-      def warn(t: Throwable)(message: => String): SyncIO[Unit]  =
+      def warn(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.warn(t)(message))
-      def info(t: Throwable)(message: => String): SyncIO[Unit]  =
+      def info(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.info(t)(message))
       def debug(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.debug(t)(message))
       def trace(t: Throwable)(message: => String): SyncIO[Unit] =
         f(logger.trace(t)(message))
-      def error(message: => String): SyncIO[Unit]               =
+      def error(message: => String): SyncIO[Unit] =
         f(logger.error(message))
-      def warn(message: => String): SyncIO[Unit]                =
+      def warn(message: => String): SyncIO[Unit] =
         f(logger.warn(message))
-      def info(message: => String): SyncIO[Unit]                =
+      def info(message: => String): SyncIO[Unit] =
         f(logger.info(message))
-      def debug(message: => String): SyncIO[Unit]               =
+      def debug(message: => String): SyncIO[Unit] =
         f(logger.debug(message))
-      def trace(message: => String): SyncIO[Unit]               =
+      def trace(message: => String): SyncIO[Unit] =
         f(logger.trace(message))
     }
   }
@@ -144,8 +144,8 @@ object AppContext {
     for {
       clients    <- Clients.build[F](config.odbURI, config.preferencesDBURI, reconnectionStrategy)
       staticData <- StaticData.build[F](uri"/instrument_spectroscopy_matrix.csv")
-      version     = utils.version(config.environment)
-      actions     = Actions[F]()
+      version = utils.version(config.environment)
+      actions = Actions[F]()
     } yield AppContext[F](version,
                           clients,
                           staticData,

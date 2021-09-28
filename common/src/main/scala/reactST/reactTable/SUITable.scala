@@ -23,12 +23,12 @@ import scalajs.js.|
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {
-  type TableRender[D, TableInstanceD <: TableInstance[D]]   = TableInstanceD => Table
+  type TableRender[D, TableInstanceD <: TableInstance[D]] = TableInstanceD => Table
   type TableTemplate[D, TableInstanceD <: TableInstance[D]] =
     Table | TableRender[D, TableInstanceD]
 
   type HeaderCellRender[D, ColumnInstanceD <: ColumnObject[D]] = ColumnInstanceD => TableHeaderCell
-  type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]]       =
+  type HeaderCell[D, ColumnInstanceD <: ColumnObject[D]] =
     TableHeaderCell | HeaderCellRender[D, ColumnInstanceD]
 
   type RowRender[D]   = Row[D] => TableRow
@@ -44,8 +44,8 @@ import definitions._
 trait LayoutDefaultTag[Layout] {
   val tag: js.UndefOr[AsC]
 }
-object LayoutDefaultTag        {
-  implicit object TableLayoutDefaultTag    extends LayoutDefaultTag[Layout.Table]    {
+object LayoutDefaultTag {
+  implicit object TableLayoutDefaultTag extends LayoutDefaultTag[Layout.Table] {
     val tag = js.undefined
   }
 
@@ -54,7 +54,7 @@ object LayoutDefaultTag        {
   }
 }
 
-trait SortElements[Col]       {
+trait SortElements[Col] {
   val props: Col => TagMod
   val indicator: Col => TagMod
 }
@@ -72,10 +72,10 @@ object SortElements extends LowPrioritySortElements {
 
   implicit def sortableColElements[C <: UseSortByColumnProps[_]]: SortElements[C] =
     new SortElements[C] {
-      val props     = _.getSortByToggleProps()
+      val props = _.getSortByToggleProps()
       val indicator = col =>
         if (col.isSorted) {
-          val index             = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
+          val index = if (col.sortedIndex > 0) s"${col.sortedIndex + 1}" else ""
           val ascDesc: VdomNode =
             if (col.isSortedDesc.getOrElse(false)) sortDown else sortUp
           <.span(ascDesc, <.small(index))
@@ -117,8 +117,8 @@ class SUITable[
     Layout
   ]
 )(implicit
-  layout:           LayoutDefaultTag[Layout],
-  sortElements:     SortElements[ColumnInstanceD]
+  layout:       LayoutDefaultTag[Layout],
+  sortElements: SortElements[ColumnInstanceD]
 ) {
   val component = ScalaFnComponent[SUITableProps[D, TableInstanceD, ColumnInstanceD]] {
     case props =>
@@ -127,7 +127,7 @@ class SUITable[
       val tableRender: TableRender[D, TableInstanceD] = (props.table: Any) match {
         case table: Table =>
           tableInstance => table.copy(as = layout.tag)(tableInstance.getTableProps())
-        case other        => other.asInstanceOf[TableRender[D, TableInstanceD]]
+        case other => other.asInstanceOf[TableRender[D, TableInstanceD]]
       }
 
       val rowRender: RowRender[D] = (props.row: Any) match {

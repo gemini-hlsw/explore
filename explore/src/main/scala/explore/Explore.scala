@@ -59,7 +59,7 @@ object ExploreMain extends IOApp.Simple {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  val syncIOtoIO: SyncIO ~> IO     = new ~>[SyncIO, IO] {
+  val syncIOtoIO: SyncIO ~> IO = new ~>[SyncIO, IO] {
     def apply[A](fa: SyncIO[A]): IO[A] = fa.to[IO]
   }
 
@@ -153,12 +153,12 @@ object ExploreMain extends IOApp.Simple {
           routerCtl.set(RootModelRouting.getPage(tab, focused))
 
         for {
-          _                    <- utils.setupScheme[IO](Theme.Dark)
-          appConfig            <- fetchConfig
-          _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
-          _                    <- logger.info(s"Config: ${appConfig.show}")
-          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, syncIOtoIO)
-          r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
+          _         <- utils.setupScheme[IO](Theme.Dark)
+          appConfig <- fetchConfig
+          _         <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
+          _         <- logger.info(s"Config: ${appConfig.show}")
+          ctx <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, syncIOtoIO)
+          r   <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {
           val RootComponent =
