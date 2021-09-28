@@ -50,7 +50,7 @@ jobs:
           BUNDLEMON_PROJECT_ID: 614a60c0e759f5000834cacc
 
       - name: Deploy review app to Firebase
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
