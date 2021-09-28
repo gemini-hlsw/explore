@@ -281,6 +281,18 @@ tfoot {
   z-index: 1000;
 }
 
+// Used as part of creating headers in a FormSelect.
+// Selector is very specific to avoid affecting other controls
+.ui.dropdown.selection .menu .item.header.disabled {
+  text-align: right;
+  color: var(--dropdown-item-color);
+  
+  &:hover {
+    color: var(--dropdown-item-color);
+    background: unset;
+  }
+}
+
 .ui.menu:not(.vertical) .right.menu.main-menu {
   margin-left: 0 !important; //SUI has !imporant
 }
