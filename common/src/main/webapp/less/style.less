@@ -282,11 +282,15 @@ tfoot {
 }
 
 // Used as part of creating headers in a FormSelect.
+// Selector is very specific to avoid affecting other controls
 .ui.dropdown.selection .menu .item.header.disabled {
-  // This needs !important because SUIR sets it to 'all' via inline style.
-  // Selector is very specific to avoid affecting other controls
-  pointer-events: none !important;
   text-align: right;
+  color: var(--dropdown-item-color);
+  
+  &:hover {
+    color: var(--dropdown-item-color);
+    background: unset;
+  }
 }
 
 .ui.menu:not(.vertical) .right.menu.main-menu {
