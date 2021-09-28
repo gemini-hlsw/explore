@@ -26,10 +26,10 @@ import definitions._
 
 // format: off
 protected case class SUITableVirtuosoProps[
-  D, 
+  D,
   TableInstanceD <: TableInstance[D],
-  ColumnInstanceD <: ColumnObject[D] // format: on
-](
+  ColumnInstanceD <: ColumnObject[D]
+]( // format: on
   table:        TableTemplate[D, TableInstanceD],
   header:       Boolean | TableHeader,
   headerRow:    TableRow = TableRow(),
