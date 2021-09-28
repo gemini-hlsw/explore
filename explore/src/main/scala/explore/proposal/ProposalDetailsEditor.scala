@@ -3,8 +3,8 @@
 
 package explore.proposal
 
-import cats.data.Chain
 import cats.Order._
+import cats.data.Chain
 import cats.syntax.all._
 import coulomb._
 import coulomb.accepted._
@@ -40,12 +40,13 @@ import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
-import react.semanticui.modules.dropdown._
 import react.semanticui.elements.label.Label
+import react.semanticui.modules.dropdown._
 import react.semanticui.shorthand._
 import spire.std.any._
 
 import scala.annotation.unused
+
 import scalajs.js.JSConverters._
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
