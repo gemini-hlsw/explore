@@ -281,6 +281,14 @@ tfoot {
   z-index: 1000;
 }
 
+// Used as part of creating headers in a FormSelect. 
+.ui.dropdown.selection .menu .item.header.disabled {
+  // This needs !important because SUIR sets it to 'all' via inline style.
+  // Selector is very specific to avoid affecting other controls
+  pointer-events: none !important;
+  text-align: right;
+}
+
 .ui.menu:not(.vertical) .right.menu.main-menu {
   margin-left: 0 !important; //SUI has !imporant
 }

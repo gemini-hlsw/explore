@@ -3,6 +3,8 @@
 
 package explore.proposal
 
+import cats.data.Chain
+import cats.Order._
 import cats.syntax.all._
 import coulomb._
 import coulomb.accepted._
@@ -21,12 +23,14 @@ import explore.implicits._
 import explore.model._
 import explore.model.display._
 import explore.model.enum.ProposalClass._
+import explore.model.enum.TacCategory
 import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
+import lucuma.core.util.Enumerated
 import lucuma.ui.forms._
 import lucuma.ui.optics._
 import lucuma.ui.reusability._
@@ -36,11 +40,13 @@ import react.common.ReactProps
 import react.common.implicits._
 import react.semanticui.addons.textarea.TextArea
 import react.semanticui.collections.form._
+import react.semanticui.modules.dropdown._
 import react.semanticui.elements.label.Label
 import react.semanticui.shorthand._
 import spire.std.any._
 
 import scala.annotation.unused
+import scalajs.js.JSConverters._
 
 final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
     extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)
@@ -117,6 +123,19 @@ object ProposalDetailsEditor {
     val timeText = formatTime(time.value)
     <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.MinimumPercent)
   }
+
+  private val categoryOptions                                                   = Enumerated[TacCategory].all
+    .groupBy(_.group)
+    .toList
+    .sortBy(_._1)
+    .foldRight(Chain.empty[DropdownItem]) { case ((group, cats), acc) =>
+      val groupItem =
+        DropdownItem(text = group.label, value = group.label, className = "header", disabled = true)
+      val catItems  =
+        Chain.fromSeq(cats.map(cat => DropdownItem(text = cat.label, value = cat.label)))
+      groupItem +: (catItems ++ acc)
+    }
+    .toList
 
   class Backend($ : BackendScope[Props, State]) {
 
@@ -211,9 +230,19 @@ object ProposalDetailsEditor {
                          value = details.zoom(ProposalDetails.proposalClass),
                          label = Label("Class", HelpIcon("proposal/main/class.md"))
           ),
-          EnumViewOptionalSelect(id = "category",
-                                 value = details.zoom(ProposalDetails.category),
-                                 label = Label("Category", HelpIcon("proposal/main/category.md"))
+          FormSelect(
+            label = Label("Category", HelpIcon("proposal/main/category.md")),
+            value = details.get.category.map(_.label).orUndefined,
+            options = categoryOptions,
+            onChange = (ddp: FormDropdown.FormDropdownProps) =>
+              ddp.value.toOption
+                .map(v =>
+                  details
+                    .zoom(ProposalDetails.category)
+                    .set(Enumerated[TacCategory].fromTag(v.asInstanceOf[String]))
+                )
+                .orEmpty,
+            modifiers = List(^.id := "category")
           ),
           EnumViewSelect(id = "too-activation",
                          value = details.zoom(ProposalDetails.toOActivation),
