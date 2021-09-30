@@ -14,11 +14,11 @@ import explore.implicits._
 import explore.model.Focused
 import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.optics.GetAdjust
-import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
 import explore.undo.Action
 import explore.undo.KIListMod
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types._
 import monocle.Focus
 
 object ObsListActions {

@@ -13,11 +13,11 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsSummaryWithPointingAndConf
 import explore.model.Pointing
-import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter

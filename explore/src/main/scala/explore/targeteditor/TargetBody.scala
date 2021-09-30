@@ -24,7 +24,6 @@ import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.utils._
-import explore.schemas.ObservationDB.Types._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
@@ -34,6 +33,7 @@ import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor

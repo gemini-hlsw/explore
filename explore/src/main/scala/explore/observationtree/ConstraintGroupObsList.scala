@@ -21,11 +21,11 @@ import explore.model.Focused._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.reusability._
-import explore.schemas.ObservationDB
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens

@@ -33,7 +33,6 @@ import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
-import explore.schemas.ObservationDB
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.ReactMonocle._
@@ -42,6 +41,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.Focus

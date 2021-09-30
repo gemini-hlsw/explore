@@ -5,7 +5,7 @@ package explore.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import explore.schemas._
+import lucuma.schemas.ObservationDB
 // gql: import explore.model.decoders._
 // gql: import io.circe.refined._
 // gql: import lucuma.ui.reusability._

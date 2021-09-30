@@ -23,7 +23,6 @@ import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
-import explore.schemas.ObservationDB
 import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
@@ -32,6 +31,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._

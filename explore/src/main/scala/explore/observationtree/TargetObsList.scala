@@ -36,8 +36,6 @@ import explore.model.PointingId
 import explore.model.reusability._
 import explore.optics.GetAdjust
 import explore.optics._
-import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
 import explore.undo.KIListMod
 import explore.undo._
 import japgolly.scalajs.react._
@@ -48,6 +46,8 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types._
 import monocle.Focus
 import monocle.Getter
 import monocle.Lens

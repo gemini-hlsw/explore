@@ -7,6 +7,7 @@ import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import react.common._
 import react.common.implicits._
 import react.common.style.Css
 import react.semanticui.collections.table._
@@ -22,7 +23,6 @@ import scalajs.js
 import scalajs.js.|
 import scalajs.js.JSConverters._
 import definitions._
-import react.common._
 
 class SUITableVirtuoso[
   D,

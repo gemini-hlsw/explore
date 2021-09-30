@@ -6,7 +6,7 @@ package explore.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model.ConstraintsSummary
-import explore.schemas.ObservationDB
+import lucuma.schemas.ObservationDB
 
 import java.time
 // gql: import explore.model.decoders._

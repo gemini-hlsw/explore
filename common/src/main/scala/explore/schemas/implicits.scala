@@ -5,10 +5,10 @@ package explore.schemas
 
 import clue.data.syntax._
 import lucuma.core.model.Magnitude
+import lucuma.schemas.ObservationDB.Types.MagnitudeCreateInput
 
 import java.math.MathContext
 
-import ObservationDB.Types.MagnitudeCreateInput
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 object implicits {

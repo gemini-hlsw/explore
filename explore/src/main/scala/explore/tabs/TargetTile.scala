@@ -17,13 +17,13 @@ import explore.implicits._
 import explore.model._
 import explore.model.reusability._
 import explore.optics._
-import explore.schemas.ObservationDB
 import explore.targeteditor.TargetBody
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
