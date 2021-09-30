@@ -34,6 +34,8 @@ import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
+import reactST.reactTable.mod.SortingRule
+import reactST.reactTable.mod.TableState
 
 import scala.collection.immutable.SortedSet
 
@@ -42,6 +44,7 @@ import scalajs.js.JSConverters._
 final case class ConstraintsSummaryTable(
   constraintList: ConstraintGroupList,
   hiddenColumns:  View[Set[String]],
+  summarySorting: View[List[(String, Boolean)]],
   selectedPanel:  View[SelectedPanel[SortedSet[Observation.Id]]],
   focused:        View[Option[Focused]],
   expandedIds:    View[SortedSet[SortedSet[Observation.Id]]],
@@ -59,7 +62,7 @@ object ConstraintsSummaryTable {
 
   implicit protected val reuseProps: Reusability[Props] = Reusability.derive
 
-  private val columnNames: Map[String, String] = Map(
+  private val columnNames: Map[String, String]                                            = Map(
     "edit"         -> " ",
     "iq"           -> "IQ",
     "cc"           -> "CC",
@@ -73,9 +76,19 @@ object ConstraintsSummaryTable {
     "observations" -> "Observations"
   )
 
-  private val columnClasses: Map[String, Css]  = Map(
+  private val columnClasses: Map[String, Css]                                             = Map(
     "edit" -> (ExploreStyles.Sticky |+| ExploreStyles.ConstraintsSummaryEdit)
   )
+
+  private def toSortingRules(tuples: List[(String, Boolean)])                             = tuples.map { case (id, b) =>
+    SortingRule[ConstraintGroup](id).setDesc(b)
+  }.toJSArray
+
+  private def fromTableState(state: TableState[ConstraintGroup]): List[(String, Boolean)] = state
+    .asInstanceOf[ConstraintsTable.StateType]
+    .sortBy
+    .toList
+    .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
 
   val component =
     ScalaFnComponent
@@ -178,9 +191,13 @@ object ConstraintsSummaryTable {
                   .setHiddenColumns(
                     hiddenColumns.toList.map(col => col: IdType[ConstraintGroup]).toJSArray
                   )
+                  .setSortBy(toSortingRules(props.summarySorting.get))
               )
           }.reuseCurrying(props.hiddenColumns.get)
         )
+      )
+      .useEffectWithDepsBy((_, _, _, tableInstance) => fromTableState(tableInstance.state))(
+        (props, _, _, _) => rules => props.summarySorting.set(rules)
       )
       .render((props, _, _, tableInstance) =>
         <.div(

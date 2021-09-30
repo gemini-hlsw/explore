@@ -34,6 +34,7 @@ case class RootModel(
         .filterNot(_ === MagnitudeBand.V)
         .map(b => (b.shortName + "mag")),
   constraintSummaryHiddenColumns: Set[String] = Set("minam", "minha", "maxha"),
+  constraintSummarySorting:       List[(String, Boolean)] = List.empty,
   undoStacks:                     ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 )
 
@@ -47,6 +48,7 @@ object RootModel {
   val expandedIds                    = Focus[RootModel](_.expandedIds)
   val targetSummaryHiddenColumns     = Focus[RootModel](_.targetSummaryHiddenColumns)
   val constraintSummaryHiddenColumns = Focus[RootModel](_.constraintSummaryHiddenColumns)
+  val constraintSummarySorting       = Focus[RootModel](_.constraintSummarySorting)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
@@ -72,6 +74,7 @@ object RootModel {
        m.userSelectionMessage,
        m.targetSummaryHiddenColumns,
        m.constraintSummaryHiddenColumns,
+       m.constraintSummarySorting,
        m.undoStacks
       )
     )

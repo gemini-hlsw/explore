@@ -52,6 +52,7 @@ final case class ConstraintSetTabContents(
   // TODO: Clean up the bulkUndoStack somewhere, somehow?
   bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
   hiddenColumns:    View[Set[String]],
+  summarySorting:   View[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
@@ -131,6 +132,7 @@ object ConstraintSetTabContents {
             ConstraintsSummaryTable(
               constraintsWithObs.get.constraintGroups,
               props.hiddenColumns,
+              props.summarySorting,
               state.zoom(TwoPanelState.selected),
               props.focused,
               props.expandedIds,
