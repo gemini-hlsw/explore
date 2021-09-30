@@ -8,10 +8,10 @@ import explore.AppCtx
 import explore.common.SequenceStepsGQL._
 import explore.components.graphql.LiveQueryRender
 import explore.implicits._
-import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.schemas.ObservationDB
 import react.common._
 
 final case class SequenceEditor() extends ReactProps[SequenceEditor](SequenceEditor.component)

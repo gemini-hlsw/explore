@@ -28,15 +28,15 @@ addCommandAlias(
 
 inThisBuild(
   Seq(
-    homepage                             := Some(url("https://github.com/gemini-hlsw/explore")),
+    homepage                      := Some(url("https://github.com/gemini-hlsw/explore")),
     addCompilerPlugin(
-      ("org.typelevel"                    % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
+      ("org.typelevel"             % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
     ),
-    description                          := "Explore",
+    description                   := "Explore",
     scalacOptions += "-Ymacro-annotations",
-    Global / onChangedBuildSource        := ReloadOnSourceChanges,
-    scalafixDependencies += "edu.gemini" %% "clue-generator" % Settings.LibraryVersions.clue,
-    scalafixScalaBinaryVersion           := "2.13"
+    Global / onChangedBuildSource := ReloadOnSourceChanges,
+    scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value,
+    scalafixScalaBinaryVersion    := "2.13"
   ) ++ lucumaPublishSettings
 )
 
@@ -91,6 +91,9 @@ lazy val graphql             = project
   .dependsOn(model.jvm)
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
+  .settings(
+    libraryDependencies ++= LucumaSchemas.value
+  )
   .enablePlugins(ScalaJSPlugin)
 
 lazy val common              = project
@@ -104,6 +107,7 @@ lazy val common              = project
       LucumaSSO.value ++
         LucumaBC.value ++
         LucumaCatalog.value ++
+        LucumaSchemas.value ++
         ReactGridLayout.value ++
         ReactClipboard.value ++
         ReactCommon.value ++

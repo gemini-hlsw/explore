@@ -17,6 +17,7 @@ import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
+import lucuma.schemas._
 import lucuma.ui.utils._
 import org.http4s.Uri
 import org.scalajs.dom

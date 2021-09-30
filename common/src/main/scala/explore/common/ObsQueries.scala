@@ -21,12 +21,12 @@ import explore.model.ObsSummaryWithPointingAndConstraints
 import explore.model.Pointing
 import explore.model.reusability._
 import explore.optics._
-import explore.schemas.ObservationDB
-import explore.schemas.ObservationDB.Types._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter

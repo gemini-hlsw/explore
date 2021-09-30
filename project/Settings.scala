@@ -21,11 +21,12 @@ object Settings {
     val http4s            = "1.0.0-M27"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
+    val lucumaBC          = "0.3.0"
     val lucumaCore        = "0.13.2"
     val lucumaCatalog     = "0.5.1"
     val lucumaUI          = "0.17.1"
+    val lucumaSchemas     = "0.0.2"
     val lucumaSSO         = "0.0.10"
-    val lucumaBC          = "0.3.0"
     val monocle           = "3.1.0"
     val mouse             = "1.0.5"
     val mUnit             = "0.7.29"
@@ -93,6 +94,12 @@ object Settings {
       )(clue)
     )
 
+    val ClueGenerator = Def.setting(
+      deps(
+        "edu.gemini" %%% "clue-generator"
+      )(clue)
+    )
+
     val ClueScalaJS = Def.setting(
       deps(
         "edu.gemini" %%% "clue-scalajs"
@@ -151,10 +158,10 @@ object Settings {
       )
     )
 
-    val LucumaCore = Def.setting(
+    val LucumaBC = Def.setting(
       deps(
-        "edu.gemini" %%% "lucuma-core"
-      )(lucumaCore)
+        "edu.gemini" %%% "lucuma-broadcast-channel"
+      )(lucumaBC)
     )
 
     val LucumaCatalog = Def.setting(
@@ -163,10 +170,22 @@ object Settings {
       )(lucumaCatalog)
     )
 
+    val LucumaCore = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-core"
+      )(lucumaCore)
+    )
+
     val LucumaCoreTestKit = Def.setting(
       deps(
         "edu.gemini" %%% "lucuma-core-testkit"
       )(lucumaCore)
+    )
+
+    val LucumaSchemas = Def.setting(
+      deps(
+        "edu.gemini" %%% "lucuma-schemas"
+      )(lucumaSchemas)
     )
 
     val LucumaUI = Def.setting(
@@ -179,12 +198,6 @@ object Settings {
       deps(
         "edu.gemini" %%% "lucuma-sso-frontend-client"
       )(lucumaSSO)
-    )
-
-    val LucumaBC = Def.setting(
-      deps(
-        "edu.gemini" %%% "lucuma-broadcast-channel"
-      )(lucumaBC)
     )
 
     val Monocle = Def.setting(

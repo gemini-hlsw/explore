@@ -13,7 +13,6 @@ import explore.implicits._
 import explore.model.PointingId
 import explore.model.reusability._
 import explore.optics._
-import explore.schemas.ObservationDB
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -28,6 +27,7 @@ import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter

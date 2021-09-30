@@ -25,17 +25,17 @@ import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
+import react.semanticui.elements.button.Button
+import react.virtuoso._
+import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
-import react.virtuoso._
-import react.virtuoso.raw.ListRange
 
 import java.text.DecimalFormat
-import react.semanticui.elements.button.Button
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],

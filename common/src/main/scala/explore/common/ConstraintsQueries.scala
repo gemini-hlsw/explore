@@ -13,9 +13,9 @@ import explore.model.AirMassRange
 import explore.model.ConstraintSet
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
-import explore.schemas.ObservationDB.Types._
 import lucuma.core.enum._
 import lucuma.core.model.Observation
+import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
 object ConstraintsQueries {

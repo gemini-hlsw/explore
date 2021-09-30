@@ -20,6 +20,7 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._

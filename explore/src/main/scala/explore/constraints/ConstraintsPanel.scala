@@ -24,7 +24,6 @@ import explore.model.ElevationRange
 import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._
-import explore.schemas.ObservationDB.Types._
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -32,6 +31,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._

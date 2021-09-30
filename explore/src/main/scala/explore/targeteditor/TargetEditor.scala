@@ -17,13 +17,13 @@ import explore.implicits._
 import explore.model.Constants
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import explore.schemas.ObservationDB
 import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._

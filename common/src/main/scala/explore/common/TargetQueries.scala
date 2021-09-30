@@ -10,7 +10,6 @@ import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.implicits._
 import explore.optics._
-import explore.schemas.ObservationDB.Types._
 import explore.schemas.implicits._
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
@@ -24,6 +23,7 @@ import lucuma.core.model.CatalogId
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
 import TargetQueriesGQL._
