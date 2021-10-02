@@ -45,7 +45,7 @@ trait LayoutDefaultTag[Layout] {
   val tag: js.UndefOr[AsC]
 }
 object LayoutDefaultTag        {
-  implicit object TableLayoutDefaultTag    extends LayoutDefaultTag[Layout.Table]    {
+  implicit object TableLayoutDefaultTag extends LayoutDefaultTag[Layout.Table] {
     val tag = js.undefined
   }
 

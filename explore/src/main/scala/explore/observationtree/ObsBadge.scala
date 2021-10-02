@@ -54,7 +54,7 @@ object ObsBadge {
     <.progress(^.width := "100%", ^.max := all.length - 1, ^.value := all.indexOf(value))
   }
 
-  private val idIso                                                 = Gid[Observation.Id].isoPosLong
+  private val idIso = Gid[Observation.Id].isoPosLong
 
   protected val component =
     ScalaComponent

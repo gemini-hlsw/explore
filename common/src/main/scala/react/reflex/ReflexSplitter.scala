@@ -59,5 +59,5 @@ object ReflexSplitter {
     p
   }
 
-  private val component                         = JsComponent[Props, Children.None, Null](RawComponent)
+  private val component = JsComponent[Props, Children.None, Null](RawComponent)
 }

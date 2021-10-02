@@ -40,7 +40,7 @@ object SelectedPanel {
   def summary[A]: SelectedPanel[A]          = Summary
   def editor[A](value: A): SelectedPanel[A] = Editor(value)
 
-  implicit def eqSelectedPanel[A: Eq]: Eq[SelectedPanel[A]]             = Eq.instance {
+  implicit def eqSelectedPanel[A: Eq]: Eq[SelectedPanel[A]] = Eq.instance {
     case (Uninitialized, Uninitialized) => true
     case (Tree, Tree)                   => true
     case (Summary, Summary)             => true
@@ -65,7 +65,7 @@ object TwoPanelState {
     else if (sp.rightPanelVisible) 0
     else window.innerWidth
 
-  def initial[A](sp: SelectedPanel[A]): TwoPanelState[A]                        =
+  def initial[A](sp: SelectedPanel[A]): TwoPanelState[A] =
     TwoPanelState(initialPanelWidth(sp), sp)
 
   implicit def stateReuse[A](implicit ev: Eq[A]): Reusability[TwoPanelState[A]] =

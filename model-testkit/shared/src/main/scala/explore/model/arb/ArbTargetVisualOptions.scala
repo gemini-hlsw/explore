@@ -15,7 +15,7 @@ import org.scalacheck.Cogen._
 
 trait ArbTargetVisualOptions {
 
-  implicit val targetVisualOptionsArb                               = Arbitrary[TargetVisualOptions] {
+  implicit val targetVisualOptionsArb = Arbitrary[TargetVisualOptions] {
     for {
       f  <- arbitrary[Visible]
       fa <- arbitrary[Angle]

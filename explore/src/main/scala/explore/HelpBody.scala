@@ -73,7 +73,7 @@ object HelpBody {
         scala.util.Failure(x)
       }
 
-  private val component               =
+  private val component =
     ScalaComponent
       .builder[Props]
       .initialState(State(Pot.pending))

@@ -83,6 +83,6 @@ object KeyedIndexedList {
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, Int)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)
 
-  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]]                 =
+  implicit def eqKeyedIndexedList[K, A: Eq]: Eq[KeyedIndexedList[K, A]] =
     Eq.by(_.list: Map[K, (A, Int)])
 }

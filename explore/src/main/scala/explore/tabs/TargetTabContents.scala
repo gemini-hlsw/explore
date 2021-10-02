@@ -213,7 +213,7 @@ object TargetTabContents {
     }
   }
 
-  protected val component                                                   =
+  protected val component =
     ScalaComponent
       .builder[Props]
       .getDerivedStateFromPropsAndState((p, s: Option[State]) =>

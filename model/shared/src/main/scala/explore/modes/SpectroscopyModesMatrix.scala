@@ -57,21 +57,21 @@ final case class GmosSouthSpectroscopyRow(
 }
 
 final case class Flamingos2SpectroscopyRow(disperser: F2Disperser, filter: F2Filter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = F2Disperser
   type Filter    = F2Filter
   val instrument = Instrument.Flamingos2
 }
 
 final case class GpiSpectroscopyRow(disperser: GpiDisperser, filter: GpiFilter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = GpiDisperser
   type Filter    = GpiFilter
   val instrument = Instrument.Gpi
 }
 
 final case class GnirsSpectroscopyRow(disperser: GnirsDisperser, filter: GnirsFilter)
-    extends InstrumentRow  {
+    extends InstrumentRow {
   type Disperser = GnirsDisperser
   type Filter    = GnirsFilter
   val instrument = Instrument.Gnirs
@@ -258,13 +258,13 @@ object SpectroscopyModeRow {
 }
 
 trait SpectroscopyModesMatrixDecoders extends Decoders {
-  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString]                 =
+  implicit val nonEmptyStringDecoder: CellDecoder[NonEmptyString] =
     CellDecoder.stringDecoder
       .emap { x =>
         refineV[NonEmpty](x).leftMap(s => new DecoderError(s))
       }
 
-  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]]           =
+  implicit val focalPlaneDecoder: CellDecoder[NonEmptyList[FocalPlane]] =
     CellDecoder.stringDecoder
       .emap { r =>
         r.toLowerCase

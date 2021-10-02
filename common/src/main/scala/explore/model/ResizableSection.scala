@@ -10,10 +10,10 @@ sealed trait ResizableSection extends Product with Serializable {
 }
 
 object ResizableSection {
-  case object TargetsTree        extends ResizableSection {
+  case object TargetsTree      extends ResizableSection {
     val value = "targets_tree"
   }
-  case object ObservationsTree   extends ResizableSection {
+  case object ObservationsTree extends ResizableSection {
     val value = "observations_tree"
   }
 

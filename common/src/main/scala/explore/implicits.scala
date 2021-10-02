@@ -42,9 +42,9 @@ trait ListImplicits {
         (f1.head |+| f2.head) :: (f1.tail |+| f2.tail)
     }
 
-  private object singleton   extends Poly1        { implicit def anything[A] = at[A](List(_)) }
+  private object singleton extends Poly1 { implicit def anything[A] = at[A](List(_)) }
 
-  implicit class UnzipListOpts[L <: HList](hlists: List[L])            {
+  implicit class UnzipListOpts[L <: HList](hlists: List[L]) {
     def unzipN[Out <: HList](implicit
       mapper: ops.hlist.Mapper.Aux[singleton.type, L, Out],
       monoid: Monoid[Out]
@@ -84,7 +84,7 @@ trait ContextImplicits {
 
 object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {
   // View Optics implicits
-  implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A])          extends AnyVal {
+  implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
     def zoomGetAdjust[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
       view.zoom(getAdjust.get)(getAdjust.mod)
 
@@ -133,7 +133,7 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
       }
   }
 
-  implicit class Http4sUriOps(val uri: Uri)     extends AnyVal {
+  implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
     def /(path: Uri.Path): Uri = uri.withPath(uri.path.concat(path))
   }
 }

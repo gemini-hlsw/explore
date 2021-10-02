@@ -31,19 +31,19 @@ trait ArbFocused {
   val focusedTargetGen: Gen[Focused.FocusedTarget] =
     arbitrary[Target.Id].map(FocusedTarget.apply)
 
-  val focusedAsterismGen: Gen[Focused.FocusedAsterism]              =
+  val focusedAsterismGen: Gen[Focused.FocusedAsterism] =
     arbitrary[Asterism.Id].map(FocusedAsterism.apply)
 
-  implicit val focusedObsCogen: Cogen[Focused.FocusedObs]           =
+  implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
     Cogen[Observation.Id].contramap(_.obsId)
 
-  implicit val focusedTargetCogen: Cogen[Focused.FocusedTarget]     =
+  implicit val focusedTargetCogen: Cogen[Focused.FocusedTarget] =
     Cogen[Target.Id].contramap(_.targetId)
 
   implicit val focusedAsterismCogen: Cogen[Focused.FocusedAsterism] =
     Cogen[Asterism.Id].contramap(_.asterismId)
 
-  implicit val focusedCogen: Cogen[Focused]                         =
+  implicit val focusedCogen: Cogen[Focused] =
     Cogen[Either[Either[FocusedObs, FocusedTarget], FocusedAsterism]]
       .contramap {
         case a: Focused.FocusedObs      => a.asLeft.asLeft

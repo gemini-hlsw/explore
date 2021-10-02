@@ -7,7 +7,7 @@ import cats._
 import cats.syntax.all._
 import monocle.Focus
 
-final case class Tree[A](children: List[Node[A]])                        {
+final case class Tree[A](children: List[Node[A]]) {
   def map[B](f: A => B): Tree[B] =
     Tree(children.map(_.map(f)))
 }

@@ -42,7 +42,7 @@ object layout {
   def breakpointWidth(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._1)
 
-  def breakpointCols(b: BreakpointName): Int                    =
+  def breakpointCols(b: BreakpointName): Int =
     breakpoints.get(b).foldMap(_._2)
 
   implicit val nes: Ordering[NonEmptyString]                    = Order[NonEmptyString].toOrdering
@@ -65,7 +65,7 @@ object layout {
   implicit val layoutsMapReuse: Reusability[LayoutsMap]         = Reusability.byEq
 
   object unsafe {
-    implicit val layoutSemigroup: Semigroup[Layout]                  = Semigroup.instance { case (a, b) =>
+    implicit val layoutSemigroup: Semigroup[Layout] = Semigroup.instance { case (a, b) =>
       val result = a.l.foldLeft(List.empty[LayoutItem]) { case (l, la) =>
         b.l
           .find(_.i.exists(_ === la.i.get))
@@ -77,7 +77,7 @@ object layout {
       Layout(result)
     }
 
-    implicit val layoutItemSemigroup: Semigroup[LayoutItem]          = Semigroup.instance { case (a, b) =>
+    implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
       a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
     }
 
