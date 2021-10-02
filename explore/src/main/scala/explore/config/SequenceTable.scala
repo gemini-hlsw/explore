@@ -63,28 +63,28 @@ object SequenceTable {
         .andThen(Angle.signedDecimalArcseconds.get)
         .andThen(_.setScale(1, BigDecimal.RoundingMode.HALF_UP))
 
-    lazy val id: String                                                 = s"$atomId-${step.id}"
-    lazy val exposureSecs: Long                                         = step.instrumentConfig.exposure.getSeconds
+    lazy val id: String                       = s"$atomId-${step.id}"
+    lazy val exposureSecs: Long               = step.instrumentConfig.exposure.getSeconds
     // TODO Not in model yet, we are just simulating
-    lazy val guided: Boolean                                            = step.stepType === StepType.Science
-    lazy val (p, q): (BigDecimal, BigDecimal)                           = step.stepConfig match {
+    lazy val guided: Boolean                  = step.stepType === StepType.Science
+    lazy val (p, q): (BigDecimal, BigDecimal) = step.stepConfig match {
       case science: SeqStepConfig.SeqScienceStep =>
         (science.offset.p, science.offset.q).bimap(componentToArcSec, componentToArcSec)
       case _                                     => (0, 0)
     }
-    lazy val wavelength: Option[BigDecimal]                             = step.instrumentConfig.grating
+    lazy val wavelength: Option[BigDecimal]   = step.instrumentConfig.grating
       .map(Wavelength.decimalNanometers.reverseGet.compose(_.wavelength))
-    lazy val disperserName: Option[String]                              =
+    lazy val disperserName: Option[String]    =
       step.instrumentConfig.grating.map(grating => resolver.disperserName(grating.disperser))
-    lazy val fpuName: Option[String]                                    =
+    lazy val fpuName: Option[String]          =
       step.instrumentConfig.fpu.map(fpu => resolver.fpuName(fpu.builtin))
-    lazy val filterName: Option[String]                                 =
+    lazy val filterName: Option[String]       =
       step.instrumentConfig.filter.map(resolver.filterName)
   }
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  private val StepTable                           = TableDef[StepLine[_]]
+  private val StepTable = TableDef[StepLine[_]]
   import StepTable.syntax._
 
   private def drawBracket(rows: Int): VdomElement =
@@ -95,10 +95,10 @@ object SequenceTable {
       )
     )
 
-  private def rightAligned(value: Any)            =
+  private def rightAligned(value: Any) =
     <.div(^.textAlign.right)(value.toString)
 
-  private val columns                             = List(
+  private val columns = List(
     StepTable
       .Column("atomSteps", _.firstOf)
       .setHeader(" ")

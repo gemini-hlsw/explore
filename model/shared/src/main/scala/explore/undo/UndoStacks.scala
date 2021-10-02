@@ -17,7 +17,7 @@ object UndoStacks {
   def redo[F[_], M]    = Focus[UndoStacks[F, M]](_.redo)
   def working[F[_], M] = Focus[UndoStacks[F, M]](_.working)
 
-  def empty[F[_], M]: UndoStacks[F, M]                     =
+  def empty[F[_], M]: UndoStacks[F, M] =
     UndoStacks(List.empty[Restorer[F, M]], List.empty[Restorer[F, M]], false)
 
   implicit def eqUndoStacks[F[_], M]: Eq[UndoStacks[F, M]] =

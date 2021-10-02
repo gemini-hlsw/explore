@@ -96,5 +96,5 @@ object ReactMarkdown {
     p
   }
 
-  private val component                        = JsFnComponent[Props, Children.None](ReactMarkdown)
+  private val component = JsFnComponent[Props, Children.None](ReactMarkdown)
 }

@@ -48,13 +48,13 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val reuseProps: Reusability[Props]         =
+  implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
-  protected val ModesTableDef                         = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
   import ModesTableDef.syntax._
 
@@ -144,7 +144,7 @@ object SpectroscopyModesTable {
     case FocalPlane.IFU          => "IFU"
   }
 
-  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane])                        =
+  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
@@ -221,7 +221,7 @@ object SpectroscopyModesTable {
   ): Boolean =
     rowToConf(row).exists(_ === conf)
 
-  protected def enabledRow(row: SpectroscopyModeRow): Boolean                         =
+  protected def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
       row.focalPlane === FocalPlane.SingleSlit
 

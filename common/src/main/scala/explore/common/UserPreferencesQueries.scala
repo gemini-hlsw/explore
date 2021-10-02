@@ -27,7 +27,7 @@ import UserPreferencesQueriesGQL._
 
 object UserPreferencesQueries {
 
-  implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type)         extends AnyVal {
+  implicit class UserWidthsCreationOps(val self: UserWidthsCreation.type) extends AnyVal {
     import self._
 
     def storeWidthPreference[F[_]: ApplicativeError[*[_], Throwable]](
@@ -42,7 +42,7 @@ object UserPreferencesQueries {
       }.void
   }
 
-  implicit class UserAreaWidthsOps(val self: UserAreaWidths.type)                 extends AnyVal {
+  implicit class UserAreaWidthsOps(val self: UserAreaWidths.type) extends AnyVal {
     import self._
 
     // Gets the width of a section.
@@ -115,7 +115,7 @@ object UserPreferencesQueries {
       } yield r).getOrElse(defaultValue)
   }
 
-  implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type)     extends AnyVal {
+  implicit class UserGridLayoutUpsertOps(val self: UserGridLayoutUpsert.type) extends AnyVal {
     import self._
 
     def storeLayoutsPreference[F[_]: ApplicativeError[*[_], Throwable]](

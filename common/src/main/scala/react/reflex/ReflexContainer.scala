@@ -56,5 +56,5 @@ object ReflexContainer {
     p
   }
 
-  private val component                          = JsComponent[Props, Children.Varargs, Null](RawComponent)
+  private val component = JsComponent[Props, Children.Varargs, Null](RawComponent)
 }

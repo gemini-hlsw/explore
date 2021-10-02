@@ -62,7 +62,7 @@ object ConstraintsSummaryTable {
 
   implicit protected val reuseProps: Reusability[Props] = Reusability.derive
 
-  private val columnNames: Map[String, String]                                            = Map(
+  private val columnNames: Map[String, String] = Map(
     "edit"         -> " ",
     "iq"           -> "IQ",
     "cc"           -> "CC",
@@ -76,11 +76,11 @@ object ConstraintsSummaryTable {
     "observations" -> "Observations"
   )
 
-  private val columnClasses: Map[String, Css]                                             = Map(
+  private val columnClasses: Map[String, Css] = Map(
     "edit" -> (ExploreStyles.Sticky |+| ExploreStyles.ConstraintsSummaryEdit)
   )
 
-  private def toSortingRules(tuples: List[(String, Boolean)])                             = tuples.map { case (id, b) =>
+  private def toSortingRules(tuples: List[(String, Boolean)]) = tuples.map { case (id, b) =>
     SortingRule[ConstraintGroup](id).setDesc(b)
   }.toJSArray
 

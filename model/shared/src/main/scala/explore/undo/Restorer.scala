@@ -18,7 +18,7 @@ sealed trait Restorer[F[_], M] { // M = (Local) Model
   def onModel(m: M): Restorer[F, M] =
     Restorer[F, M, T](m, getter, setter, onRestore)
 
-  override def toString(): String   = s"Restorer($value, ...)"
+  override def toString(): String = s"Restorer($value, ...)"
 }
 
 object Restorer {

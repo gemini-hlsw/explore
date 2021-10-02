@@ -29,7 +29,7 @@ trait ArbConstraintsSummary {
     } yield build(iq, ce, sb, wv)
   }
 
-  implicit val constraintsSummaryArb                              = buildConstraintsSummaryArb((iq, ce, sb, wv) =>
+  implicit val constraintsSummaryArb = buildConstraintsSummaryArb((iq, ce, sb, wv) =>
     new ConstraintsSummary {
       val imageQuality    = iq
       val cloudExtinction = ce

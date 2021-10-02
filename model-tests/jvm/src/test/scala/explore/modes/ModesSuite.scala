@@ -40,7 +40,7 @@ class ModesSuite extends CatsEffectSuite {
     Resource.make(spectroscopyPath.flatMap(SpectroscopyModesMatrix[IO]))(_ => IO.unit)
   )
 
-  override def munitFixtures   = List(allModesFixture, spectroscopyModesFixture)
+  override def munitFixtures = List(allModesFixture, spectroscopyModesFixture)
 
   test("csv loading") {
     IO(allModesFixture()).map(_.matrix.length).assertEquals(101)

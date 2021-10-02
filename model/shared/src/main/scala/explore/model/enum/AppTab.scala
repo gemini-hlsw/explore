@@ -23,7 +23,7 @@ sealed abstract class AppTab(
 ) extends Product
     with Serializable
 
-object AppTab   {
+object AppTab {
   case object Proposal       extends AppTab("Proposal", 1)
   case object Overview       extends AppTab("Overview", 2)
   case object Observations   extends AppTab("Observations", 3)

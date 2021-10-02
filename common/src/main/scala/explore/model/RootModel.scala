@@ -59,7 +59,7 @@ object RootModel {
       }
   )
 
-  val userId                              =
+  val userId =
     RootModel.vault.some
       .andThen(UserVault.user)
       .andThen(userUserId)

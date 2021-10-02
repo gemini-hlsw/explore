@@ -25,7 +25,7 @@ object ObsNode       {
   }
 
   final case class Or(id: UUID, orParams: String) extends ObsNode
-  object Or  {
+  object Or {
     val id: Lens[Or, UUID] = GenLens[Or](_.id)
   }
 

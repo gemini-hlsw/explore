@@ -34,7 +34,7 @@ class TestUndoable[F[_]: Monad, M](
   private def refView[A](ref: Ref[F, A]): F[ViewF[F, A]] =
     ref.get.map(a => ViewF(a, refModCB(ref)))
 
-  implicit private val syncToAsync: F ~> F               = FunctionK.id[F]
+  implicit private val syncToAsync: F ~> F = FunctionK.id[F]
 
   val context: F[UndoContext[F, F, M]] =
     for {

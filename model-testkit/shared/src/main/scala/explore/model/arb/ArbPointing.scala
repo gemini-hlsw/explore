@@ -19,7 +19,7 @@ import eu.timepit.refined.scalacheck.string._
 import eu.timepit.refined.types.string._
 
 trait ArbPointing {
-  implicit val arbPointingTarget                                       =
+  implicit val arbPointingTarget =
     Arbitrary[Pointing.PointingTarget] {
       for {
         id   <- arbitrary[Target.Id]
@@ -27,7 +27,7 @@ trait ArbPointing {
       } yield Pointing.PointingTarget(id, name)
     }
 
-  implicit val arbPointingAsterism                                     =
+  implicit val arbPointingAsterism =
     Arbitrary[Pointing.PointingAsterism] {
       for {
         id      <- arbitrary[Asterism.Id]
@@ -36,12 +36,12 @@ trait ArbPointing {
       } yield Pointing.PointingAsterism(id, name, targets)
     }
 
-  implicit val arbPointing                                             =
+  implicit val arbPointing =
     Arbitrary[Pointing] {
       Gen.oneOf(arbitrary[Pointing.PointingTarget], arbitrary[Pointing.PointingAsterism])
     }
 
-  implicit val cogenPointingTarget: Cogen[Pointing.PointingTarget]     =
+  implicit val cogenPointingTarget: Cogen[Pointing.PointingTarget] =
     Cogen[(Target.Id, NonEmptyString)].contramap(t => (t.id, t.name))
 
   implicit val cogenPointingAsterism: Cogen[Pointing.PointingAsterism] =
@@ -49,7 +49,7 @@ trait ArbPointing {
       (a.id, a.name, a.targets)
     )
 
-  implicit val cogenPointing: Cogen[Pointing]                          =
+  implicit val cogenPointing: Cogen[Pointing] =
     Cogen[Either[Pointing.PointingAsterism, Pointing.PointingTarget]]
       .contramap {
         case t: Pointing.PointingTarget   => t.asRight

@@ -76,7 +76,7 @@ object MagnitudeForm {
     Icons.Trash
   )
 
-  private val tableState   = MagTable.State().setSortByVarargs(SortingRule("band"))
+  private val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
 
   val component =
     ScalaFnComponent

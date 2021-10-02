@@ -36,7 +36,7 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
 
-  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus]           =
+  lazy val ODBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(odb.statusStream)
 
   def init(payload: Map[String, Json]): F[Unit] =
@@ -51,7 +51,7 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
       odb.terminate() >> odb.disconnect(WebSocketCloseParams(code = 1000))
     ).sequence.void
 }
-object Clients    {
+object Clients {
   def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,

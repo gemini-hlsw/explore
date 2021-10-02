@@ -17,7 +17,7 @@ import lucuma.core.model.Asterism
 
 trait ArbPointingId {
 
-  implicit val arbPointingId                      =
+  implicit val arbPointingId =
     Arbitrary[PointingId] {
       Gen.oneOf(arbitrary[Target.Id].map(PointingId.TargetId.apply),
                 arbitrary[Asterism.Id].map(PointingId.AsterismId.apply)

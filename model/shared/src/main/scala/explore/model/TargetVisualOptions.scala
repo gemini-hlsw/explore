@@ -26,7 +26,7 @@ object TargetVisualOptions {
   val probe    = Focus[TargetVisualOptions](_.probe)
   val posAngle = Focus[TargetVisualOptions](_.posAngle)
 
-  val Default                                                 =
+  val Default =
     TargetVisualOptions(Visible.Hidden,
                         Constants.InitialFov,
                         Visible.Hidden,
