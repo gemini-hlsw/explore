@@ -12,6 +12,7 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
 import explore._
 import explore.common.ObsQueries._
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.modes._
 import japgolly.scalajs.react._
@@ -78,7 +79,7 @@ object SpectroscopyModesTable {
   val SlitLengthColumnId: ColId  = "slit_length"
   val DisperserColumnId: ColId   = "disperser"
   val FilterColumnId: ColId      = "filter"
-  val RangeColumnId: ColId       = "range"
+  val CoverageColumnId: ColId    = "coverage"
   val FPUColumnId: ColId         = "fpu"
   val ResolutionColumnId: ColId  = "resolution"
   val AvailablityColumnId: ColId = "availability"
@@ -92,7 +93,7 @@ object SpectroscopyModesTable {
       DisperserColumnId   -> "Disperser",
       FilterColumnId      -> "Filter",
       FPUColumnId         -> "FPU",
-      RangeColumnId       -> "Range",
+      CoverageColumnId    -> "Coverage",
       ResolutionColumnId  -> "λ / Δλ",
       AvailablityColumnId -> "Avail.",
       TimeColumnId        -> "Time"
@@ -124,7 +125,7 @@ object SpectroscopyModesTable {
     case r                        => r.toString
   }
 
-  def formatWavelengthRange(r: Interval[Quantity[BigDecimal, Micrometer]]): String = r match {
+  def formatWavelengthCoverage(r: Interval[Quantity[BigDecimal, Micrometer]]): String = r match {
     case Bounded(a, b, _) =>
       List(a, b)
         .map(q => decFormat.format(q.value.setScale(3, BigDecimal.RoundingMode.DOWN)))
@@ -178,11 +179,11 @@ object SpectroscopyModesTable {
         .setWidth(62)
         .setMinWidth(62)
         .setMaxWidth(62),
-      column(RangeColumnId, SpectroscopyModeRow.rangeInterval(cw))
-        .setCell(c => formatWavelengthRange(c.value))
-        .setWidth(74)
-        .setMinWidth(74)
-        .setMaxWidth(74)
+      column(CoverageColumnId, SpectroscopyModeRow.coverageInterval(cw))
+        .setCell(c => formatWavelengthCoverage(c.value))
+        .setWidth(100)
+        .setMinWidth(100)
+        .setMaxWidth(100)
         .setSortType(DefaultSortTypes.number),
       column(ResolutionColumnId, SpectroscopyModeRow.resolution.get)
         .setCell(c => c.value.toString)
@@ -247,7 +248,7 @@ object SpectroscopyModesTable {
                 wavelength = s.wavelength,
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
-                range = s.wavelengthRange
+                coverage = s.wavelengthRange
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)
@@ -262,7 +263,8 @@ object SpectroscopyModesTable {
       })
       // selectedIndex
       .useStateBy((props, rows, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
-      .useEffectWithDepsBy((props, _, _, _) => // Recompute state if conf or requirements change.
+      // Recompute state if conf or requirements change.
+      .useEffectWithDepsBy((props, _, _, _) =>
         (props.scienceConfiguration, props.spectroscopyRequirements)
       )((_, rows, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
@@ -306,7 +308,7 @@ object SpectroscopyModesTable {
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
-              <.label(s"${rows.length} matching configurations")
+              <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
             ),
             <.div(
               ExploreStyles.ModesTable,
