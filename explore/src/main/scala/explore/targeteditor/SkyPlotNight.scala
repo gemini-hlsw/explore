@@ -156,7 +156,7 @@ object SkyPlotNight {
             point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
 
           pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
-            point(-results.totalSkyBrightness) ::
+            point(results.totalSkyBrightness) ::
             point(results.parallacticAngle.toSignedDoubleDegrees) ::
             point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
             HNil
@@ -290,8 +290,9 @@ object SkyPlotNight {
             YAxisOptions()
               .setOpposite(true)
               .setTitle(YAxisTitleOptions().setText("Brightness (mags/arcsec²)"))
-              .setMin(-22)
-              .setMax(-17)
+              .setMin(17)
+              .setMax(22)
+              .setReversed(true)
               .setTickInterval(1)
               .setClassName("plot-axis-sky-brightness")
               .setShowEmpty(false)
