@@ -61,7 +61,7 @@
     "stylelint-config-standard": "^22.0.0",
     "stylelint-value-no-unknown-custom-properties": "^3.0.0",
     "terser": "5.9.0",
-    "vite": "2.5.10",
+    "vite": "2.6.2",
     "vite-plugin-fonts": "^0.2.2"
   },
   "scripts": {
