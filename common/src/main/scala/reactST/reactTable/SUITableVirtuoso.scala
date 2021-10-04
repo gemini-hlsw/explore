@@ -196,7 +196,8 @@ class SUITableVirtuoso[
           )
         }))
 
-      val renderRow = (_: Int, _: Int, rowData: Row[D]) => {
+      val renderRow = (index: Int, _: Int, _: Row[D]) => {
+        val rowData = tableInstance.rows(index)
         tableInstance.prepareRow(rowData)
         rowRender(rowData)(
           rowData.cells.toTagMod(cellData =>
@@ -209,8 +210,8 @@ class SUITableVirtuoso[
         props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
           TagMod.when(tableInstance.rows.nonEmpty)(
             GroupedVirtuoso[Row[D]](
-              data = tableInstance.rows,
               itemContent = renderRow,
+              groupCounts = List(tableInstance.rows.length),
               groupContent =
                 headerElement.map(header => (_: Int) => header.vdomElement).orUndefined,
               initialTopMostItemIndex = props.initialIndex.orUndefined,

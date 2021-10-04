@@ -169,21 +169,21 @@ object InstrumentRow {
 }
 
 case class SpectroscopyModeRow(
-  id:                Long, // Give them a local id to simplify reusability
-  instrument:        InstrumentRow,
-  config:            NonEmptyString,
-  focalPlane:        FocalPlane,
-  capabilities:      Option[SpectroscopyCapabilities],
-  ao:                ModeAO,
-  minWavelength:     ModeWavelength,
-  maxWavelength:     ModeWavelength,
-  optimalWavelength: ModeWavelength,
-  wavelengthRange:   Quantity[NonNegBigDecimal, Micrometer],
-  resolution:        PosInt,
-  slitLength:        ModeSlitSize,
-  slitWidth:         ModeSlitSize
+  id:                 Long, // Give them a local id to simplify reusability
+  instrument:         InstrumentRow,
+  config:             NonEmptyString,
+  focalPlane:         FocalPlane,
+  capabilities:       Option[SpectroscopyCapabilities],
+  ao:                 ModeAO,
+  minWavelength:      ModeWavelength,
+  maxWavelength:      ModeWavelength,
+  optimalWavelength:  ModeWavelength,
+  wavelengthCoverage: Quantity[NonNegBigDecimal, Micrometer],
+  resolution:         PosInt,
+  slitLength:         ModeSlitSize,
+  slitWidth:          ModeSlitSize
 ) {
-  def calculatedRange: Quantity[NonNegBigDecimal, Micrometer] = wavelengthRange
+  def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthCoverage
 
   val hasFilter: Boolean = instrument.filter match {
     case _: None.type => false
@@ -223,24 +223,24 @@ object SpectroscopyModeRow {
 
   val TwoFactor = BigDecimal(2).withUnit[Unitless]
 
-  def rangeInterval(
+  def coverageInterval(
     cw: Option[Wavelength]
   ): SpectroscopyModeRow => Interval[Quantity[BigDecimal, Micrometer]] =
     r =>
       cw.fold(
-        Interval.point(r.wavelengthRange.toValue[BigDecimal])
+        Interval.point(r.wavelengthCoverage.toValue[BigDecimal])
       ) { w =>
         import spire.std.bigDecimal._
 
-        val λr     = r.wavelengthRange.toValue[BigDecimal]
-        // Range of allowed wavelength
+        val λr     = r.wavelengthCoverage.toValue[BigDecimal]
+        // Coverage of allowed wavelength
         val λmin   = r.minWavelength.w.micrometer
         val λmax   = r.maxWavelength.w.micrometer
         val Δ      = λr / TwoFactor
         val λ      = w.micrometer
         val λa     = λ - Δ
         val λb     = λ + Δ
-        // if we are below min clip but shift the range
+        // if we are below min clip but shift the coverage
         // same if we are above max
         // At any event we clip at min/max
         val (a, b) = if (λa < λmin) {
@@ -304,7 +304,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         min <- row.as[ModeWavelength]("wave min")
         max <- row.as[ModeWavelength]("wave max")
         wo  <- row.as[ModeWavelength]("wave optimal")
-        wr  <- row.as[NonNegBigDecimal]("wave range").map(_.withUnit[Micrometer])
+        wr  <- row.as[NonNegBigDecimal]("wave coverage").map(_.withUnit[Micrometer])
         r   <- row.as[PosInt]("resolution")
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
@@ -324,7 +324,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     iq:           Option[ImageQuality] = None,
     wavelength:   Option[Wavelength] = None,
     resolution:   Option[PosInt] = None,
-    range:        Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
+    coverage:     Option[Quantity[NonNegBigDecimal, Micrometer]] = None,
     slitWidth:    Option[Angle] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
@@ -334,7 +334,7 @@ final case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.minWavelength.w && w <= r.maxWavelength.w) &&
         resolution.forall(_ <= r.resolution) &&
-        range.forall(_ <= r.wavelengthRange) &&
+        coverage.forall(_ <= r.wavelengthCoverage) &&
         slitWidth.forall(_.toMicroarcseconds <= r.slitLength.size.toMicroarcseconds)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this

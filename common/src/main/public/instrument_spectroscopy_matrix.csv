@@ -1,4 +1,4 @@
-instrument,Config,Focal Plane,fpu,slit width,slit length,disperser,filter,wave min,wave max,wave optimal,wave range,resolution,AO,capabilities,site
+instrument,Config,Focal Plane,fpu,slit width,slit length,disperser,filter,wave min,wave max,wave optimal,wave coverage,resolution,AO,capabilities,site
 GMOS-N,"B1200 0.25""","singleslit,multislit",0.25arcsec,0.250,330,B1200,none,0.36,1.03,0.463,0.164,7488,no,,n
 GMOS-N,"B1200 0.50""","singleslit,multislit",0.50arcsec,0.500,330,B1200,none,0.36,1.03,0.463,0.164,3744,no,,n
 GMOS-N,"B1200 0.75""","singleslit,multislit",0.75arcsec,0.750,330,B1200,none,0.36,1.03,0.463,0.164,2496,no,,n
