@@ -43,7 +43,8 @@ object SpectroscopyConfigurationPanel {
         val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
         val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
         val signalToNoiseAt          = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoiseAtQ)
-        val wavelengthRange          = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthRangeQ)
+        val wavelengthCoverage       =
+          p.options.zoom(SpectroscopyConfigurationOptions.wavelengthCoverageQ)
         val focalPlane               = p.options.zoom(SpectroscopyConfigurationOptions.focalPlane)
         val focalPlaneAngle          = p.options.zoom(SpectroscopyConfigurationOptions.focalPlaneAngle)
         val spectroscopyCapabilities =
@@ -94,15 +95,15 @@ object SpectroscopyConfigurationPanel {
               disabled = false
             )
           ),
-          <.label("λ Range",
-                  HelpIcon("configuration/wavelength_range.md"),
+          <.label("λ Coverage",
+                  HelpIcon("configuration/wavelength_coverage.md"),
                   ExploreStyles.SkipToNext
           ),
           InputWithUnits(
-            id = "wavelength-range",
+            id = "wavelength-coverage",
             clazz = Css.Empty,
             inline = true,
-            value = wavelengthRange,
+            value = wavelengthCoverage,
             units = "μm",
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor,

@@ -21,14 +21,14 @@ import monocle.Focus
  * calculations were Wavelength 0 is not allowed
  */
 final case class SpectroscopyConfigurationOptions(
-  wavelengthQ:      Option[Quantity[BigDecimal, Micrometer]],
-  resolution:       Option[PosInt],
-  signalToNoise:    Option[PosBigDecimal],
-  signalToNoiseAtQ: Option[Quantity[BigDecimal, Micrometer]],
-  wavelengthRangeQ: Option[Quantity[BigDecimal, Micrometer]],
-  focalPlane:       Option[FocalPlane],
-  focalPlaneAngle:  Option[Angle],
-  capabilities:     Option[SpectroscopyCapabilities]
+  wavelengthQ:         Option[Quantity[BigDecimal, Micrometer]],
+  resolution:          Option[PosInt],
+  signalToNoise:       Option[PosBigDecimal],
+  signalToNoiseAtQ:    Option[Quantity[BigDecimal, Micrometer]],
+  wavelengthCoverageQ: Option[Quantity[BigDecimal, Micrometer]],
+  focalPlane:          Option[FocalPlane],
+  focalPlaneAngle:     Option[Angle],
+  capabilities:        Option[SpectroscopyCapabilities]
 ) {
   def wavelength: Option[Wavelength] =
     wavelengthQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
@@ -37,18 +37,18 @@ final case class SpectroscopyConfigurationOptions(
     signalToNoiseAtQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
 
   def wavelengthRange: Option[Wavelength] =
-    wavelengthRangeQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
+    wavelengthCoverageQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
 }
 
 object SpectroscopyConfigurationOptions {
-  val wavelengthQ      = Focus[SpectroscopyConfigurationOptions](_.wavelengthQ)
-  val resolution       = Focus[SpectroscopyConfigurationOptions](_.resolution)
-  val signalToNoise    = Focus[SpectroscopyConfigurationOptions](_.signalToNoise)
-  val signalToNoiseAtQ = Focus[SpectroscopyConfigurationOptions](_.signalToNoiseAtQ)
-  val wavelengthRangeQ = Focus[SpectroscopyConfigurationOptions](_.wavelengthRangeQ)
-  val focalPlane       = Focus[SpectroscopyConfigurationOptions](_.focalPlane)
-  val focalPlaneAngle  = Focus[SpectroscopyConfigurationOptions](_.focalPlaneAngle)
-  val capabilities     = Focus[SpectroscopyConfigurationOptions](_.capabilities)
+  val wavelengthQ         = Focus[SpectroscopyConfigurationOptions](_.wavelengthQ)
+  val resolution          = Focus[SpectroscopyConfigurationOptions](_.resolution)
+  val signalToNoise       = Focus[SpectroscopyConfigurationOptions](_.signalToNoise)
+  val signalToNoiseAtQ    = Focus[SpectroscopyConfigurationOptions](_.signalToNoiseAtQ)
+  val wavelengthCoverageQ = Focus[SpectroscopyConfigurationOptions](_.wavelengthCoverageQ)
+  val focalPlane          = Focus[SpectroscopyConfigurationOptions](_.focalPlane)
+  val focalPlaneAngle     = Focus[SpectroscopyConfigurationOptions](_.focalPlaneAngle)
+  val capabilities        = Focus[SpectroscopyConfigurationOptions](_.capabilities)
 
   val Default = SpectroscopyConfigurationOptions(None, None, None, None, None, None, None, None)
 
@@ -57,7 +57,7 @@ object SpectroscopyConfigurationOptions {
      x.resolution,
      x.signalToNoise,
      x.signalToNoiseAtQ,
-     x.wavelengthRangeQ,
+     x.wavelengthCoverageQ,
      x.focalPlane,
      x.focalPlaneAngle,
      x.capabilities

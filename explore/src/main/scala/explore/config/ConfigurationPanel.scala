@@ -63,18 +63,18 @@ object ConfigurationPanel {
       def wavelengthToMicro(w: Wavelength) = w.micrometer.toValue[BigDecimal]
 
       val op = for {
-        _ <- SpectroscopyConfigurationOptions.wavelengthQ      := s.wavelength.map(wavelengthToMicro)
-        _ <- SpectroscopyConfigurationOptions.resolution       := s.resolution
-        _ <- SpectroscopyConfigurationOptions.signalToNoise    := s.signalToNoise
-        _ <- SpectroscopyConfigurationOptions.signalToNoiseAtQ := s.signalToNoiseAt.map(
+        _ <- SpectroscopyConfigurationOptions.wavelengthQ         := s.wavelength.map(wavelengthToMicro)
+        _ <- SpectroscopyConfigurationOptions.resolution          := s.resolution
+        _ <- SpectroscopyConfigurationOptions.signalToNoise       := s.signalToNoise
+        _ <- SpectroscopyConfigurationOptions.signalToNoiseAtQ    := s.signalToNoiseAt.map(
                wavelengthToMicro
              )
-        _ <- SpectroscopyConfigurationOptions.wavelengthRangeQ := s.wavelengthRange.map(
+        _ <- SpectroscopyConfigurationOptions.wavelengthCoverageQ := s.wavelengthRange.map(
                wavelengthToMicro
              )
-        _ <- SpectroscopyConfigurationOptions.focalPlane       := s.focalPlane
-        _ <- SpectroscopyConfigurationOptions.focalPlaneAngle  := s.focalPlaneAngle
-        _ <- SpectroscopyConfigurationOptions.capabilities     := s.capabilities
+        _ <- SpectroscopyConfigurationOptions.focalPlane          := s.focalPlane
+        _ <- SpectroscopyConfigurationOptions.focalPlaneAngle     := s.focalPlaneAngle
+        _ <- SpectroscopyConfigurationOptions.capabilities        := s.capabilities
       } yield ()
       op.runS(SpectroscopyConfigurationOptions.Default).value
     } { s =>
@@ -88,7 +88,7 @@ object ConfigurationPanel {
         _ <- SpectroscopyRequirementsData.signalToNoiseAt := s.signalToNoiseAtQ.flatMap(
                microToWavelength
              )
-        _ <- SpectroscopyRequirementsData.wavelengthRange := s.wavelengthRangeQ.flatMap(
+        _ <- SpectroscopyRequirementsData.wavelengthRange := s.wavelengthCoverageQ.flatMap(
                microToWavelength
              )
         _ <- SpectroscopyRequirementsData.focalPlane      := s.focalPlane
