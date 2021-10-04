@@ -42,6 +42,7 @@ object Settings {
     val reactResizable    = "0.6.0"
     val reactSemanticUI   = "0.12.0"
     val reactTable        = "0.5.1"
+    val reactVirtuoso     = "0.2.0"
     val scalaJsReact      = "2.0.0-RC3"
     val pprint            = "0.6.6"
   }
@@ -298,6 +299,12 @@ object Settings {
       deps(
         "io.github.toddburnside" %%% "scalajs-react-table"
       )(reactTable)
+    )
+
+    val ReactVirtuoso = Def.setting(
+      deps(
+        "io.github.toddburnside" %%% "scalajs-react-virtuoso"
+      )(reactVirtuoso)
     )
 
     val ScalaJSReact = Def.setting(

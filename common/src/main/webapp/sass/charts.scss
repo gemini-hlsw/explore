@@ -50,8 +50,10 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 }
 
 /* Sky Brightness */
-.highcharts-color-2 {
-  fill: #7cb5ec;
+.highcharts-color-2,
+.plot-sky-brightness-percentile,
+.highcharts-plot-line-label {
+  fill: #7cb5ec !important;
   stroke: #7cb5ec;
 }
 
@@ -100,4 +102,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 .plot-plot-line-progress {
   stroke-width: 2 !important;
   stroke: green !important;
+}
+
+.plot-sky-brightness-percentile {
+  stroke-dasharray: 3, 5;
 }
