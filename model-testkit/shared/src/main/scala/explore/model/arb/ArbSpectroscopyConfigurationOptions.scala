@@ -68,7 +68,7 @@ trait ArbSpectroscopyConfigurationOptions {
          cs.resolution.map(_.value),
          cs.signalToNoise.map(_.value),
          cs.signalToNoiseAtQ,
-         cs.wavelengthRangeQ,
+         cs.wavelengthCoverageQ,
          cs.focalPlane,
          cs.focalPlaneAngle,
          cs.capabilities
