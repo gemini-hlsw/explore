@@ -24,6 +24,7 @@ object Page {
   final case class TargetsObsPage(obsId: Observation.Id)        extends Page
   case object ConfigurationsPage                                extends Page
   final case object ConstraintsBasePage                         extends Page
+  final case class ConstraintsObsPage(obsId: Observation.Id)    extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
     case (HomePage, HomePage)                             => true
@@ -37,6 +38,7 @@ object Page {
     case (TargetsObsPage(a), TargetsObsPage(b))           => a === b
     case (ConfigurationsPage, ConfigurationsPage)         => true
     case (ConstraintsBasePage, ConstraintsBasePage)       => true
+    case (ConstraintsObsPage(a), ConstraintsObsPage(b))   => a === b
     case _                                                => false
   }
 
@@ -63,5 +65,10 @@ object Page {
   object TargetsObsPage {
     final val obsId: Iso[Observation.Id, TargetsObsPage] =
       Iso[Observation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
+  }
+
+  object ConstraintsObsPage {
+    final val obsId: Iso[Observation.Id, ConstraintsObsPage] =
+      Iso[Observation.Id, ConstraintsObsPage](ConstraintsObsPage.apply)(_.obsId)
   }
 }

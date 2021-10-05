@@ -105,6 +105,9 @@ object ConstraintGroupObsList {
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups
 
+      // if a single observation is selected
+      val singleObsSelected = props.focused.get.collect { case FocusedObs(_) => true }.nonEmpty
+
       val state   = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
         props.undoStacks,
@@ -125,6 +128,11 @@ object ConstraintGroupObsList {
         )
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
+
+      def unfocusIfObs(of: Option[Focused]) = of match {
+        case Some(FocusedObs(_)) => none
+        case _                   => of
+      }
 
       DragDropContext(
         onDragStart =
@@ -147,18 +155,19 @@ object ConstraintGroupObsList {
               constraintGroups.toTagMod { case (_, constraintGroup) =>
                 val obsIds        = constraintGroup.obsIds
                 val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
-                val groupSelected = props.selected.get.optValue.exists(_ === obsIds)
+                // if this group or something in it is selected
+                val groupSelected = props.selected.get.optValue.exists(_.intersect(obsIds).nonEmpty)
 
                 val icon: FontAwesomeIcon = props.expandedIds.get
                   .exists((ids: SortedSet[Observation.Id]) => ids === obsIds)
                   .fold(Icons.ChevronDown, Icons.ChevronRight)
                   .addModifiers(
-                    Seq(^.cursor.pointer,
-                        ^.onClick ==> { e: ReactEvent =>
-                          e.stopPropagationCB >> toggleExpanded(obsIds, props.expandedIds).toCB
-                            .asEventDefault(e)
-                            .void
-                        }
+                    Seq(
+                      ^.cursor.pointer,
+                      ^.onClick ==> { e: ReactEvent =>
+                        e.stopPropagationCB >>
+                          toggleExpanded(obsIds, props.expandedIds).toCB.asEventDefault(e).void
+                      }
                     )
                   )
                   .fixedWidth()
@@ -189,16 +198,21 @@ object ConstraintGroupObsList {
                           )
                           .orEmpty
                       )(^.cursor.pointer,
-                        ^.onClick --> props.selected.set(
-                          SelectedPanel.editor(constraintGroup.obsIds)
-                        )
+                        ^.onClick --> {
+                          props.focused.mod(unfocusIfObs) >>
+                            props.selected.set(SelectedPanel.editor(constraintGroup.obsIds))
+                        }
                       )(
                         csHeader,
                         TagMod.when(props.expandedIds.get.contains(obsIds))(
                           cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                            props.renderObsBadgeItem(selectable = false,
-                                                     highlightSelected = false,
-                                                     linkToObsTab = true
+                            props.renderObsBadgeItem(
+                              selectable = true,
+                              highlightSelected = true,
+                              forceHighlight = groupSelected && !singleObsSelected,
+                              linkToObsTab = false,
+                              onSelect =
+                                id => props.selected.set(SelectedPanel.editor(SortedSet(id)))
                             )(obs, idx)
                           }
                         ),
@@ -233,18 +247,20 @@ object ConstraintGroupObsList {
 
       val setAndGetSelected = selected.get match {
         case Uninitialized =>
-          val constraintGroupFromFocused = $.props.focused.get.collect { case FocusedObs(obsId) =>
-            constraintGroups.find(_._1.contains(obsId)).map(_._2)
-          }.flatten
+          val infoFromFocused: Option[(Observation.Id, ConstraintGroup)] =
+            $.props.focused.get.collect { case FocusedObs(obsId) =>
+              constraintGroups.find(_._1.contains(obsId)).map { case (_, cg) => (obsId, cg) }
+            }.flatten
 
           selected
             .set(
-              constraintGroupFromFocused.fold(SelectedPanel.tree[SortedSet[Observation.Id]])(cg =>
-                SelectedPanel.editor(cg.obsIds)
-              )
+              infoFromFocused.fold(SelectedPanel.tree[SortedSet[Observation.Id]]) { case (id, _) =>
+                SelectedPanel.editor(SortedSet(id))
+              }
             )
-            .as(constraintGroupFromFocused)
-        case Editor(ids)   => SyncIO.delay(constraintGroups.get(ids))
+            .as(infoFromFocused.map(_._2))
+        case Editor(ids)   =>
+          SyncIO.delay(constraintGroups.find(_._1.intersect(ids).nonEmpty).map(_._2))
         case _             => SyncIO.delay(none)
       }
 
