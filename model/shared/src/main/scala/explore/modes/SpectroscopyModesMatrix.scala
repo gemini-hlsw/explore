@@ -244,9 +244,9 @@ object SpectroscopyModeRow {
         // same if we are above max
         // At any event we clip at min/max
         val (a, b) = if (λa < λmin) {
-          (λmin, λmax + λmin - λa)
+          (λmin, λmin + λr)
         } else if (λb > λmax) {
-          (λmin - λb + λmax, λmax)
+          (λmax - λr, λmax)
         } else {
           (λa, λb)
         }
