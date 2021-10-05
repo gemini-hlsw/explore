@@ -40,7 +40,7 @@ object reusability {
   implicit val obsSummaryReuse: Reusability[ObsSummary]                                        = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints]          =
     Reusability.derive
-  implicit val obsSummaryWithPointingAndConstraintsReuse
+  implicit val obsSummaryWithTargetsAndConstraintsReuse
     : Reusability[ObsSummaryWithTargetsAndConstraints] = Reusability.derive
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]                         =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))

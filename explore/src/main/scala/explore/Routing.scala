@@ -24,6 +24,7 @@ import react.resizeDetector.ResizeDetector
 
 import scala.scalajs.LinkingInfo
 import scala.util.Random
+import scala.annotation.unused
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -38,21 +39,22 @@ object Routing {
       )
     }
 
-  private def targetTab(model: View[RootModel]): VdomElement =
-    withSize { size =>
-      AppCtx.using(implicit ctx =>
-        TargetTabContents(
-          model.zoom(RootModel.userId).get,
-          model.zoom(RootModel.focused),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTarget),
-          model.zoom(RootModel.searchingTarget),
-          model.zoom(RootModel.expandedIds),
-          model.zoom(RootModel.targetSummaryHiddenColumns),
-          size
-        )
-      )
-    }
+  private def targetTab(@unused model: View[RootModel]): VdomElement =
+    <.div("Target Tab")
+  // withSize { size =>
+  //   AppCtx.using(implicit ctx =>
+  //     TargetTabContents(
+  //       model.zoom(RootModel.userId).get,
+  //       model.zoom(RootModel.focused),
+  //       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetList),
+  //       model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTarget),
+  //       model.zoom(RootModel.searchingTarget),
+  //       model.zoom(RootModel.expandedIds),
+  //       model.zoom(RootModel.targetSummaryHiddenColumns),
+  //       size
+  //     )
+  //   )
+  // }
 
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>

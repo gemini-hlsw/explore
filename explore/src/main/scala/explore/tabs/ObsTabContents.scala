@@ -312,17 +312,11 @@ object ObsTabContents {
 
       val obsIdOpt: Option[Observation.Id] = state.get.panels.selected.optValue
 
-      val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
+      val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
         obsIdOpt.flatMap(observations.get.getElement)
 
       val targetId = obsSummaryOpt.collect {
-        case ObsSummaryWithPointingAndConstraints(_,
-                                                  Some(Pointing.PointingTarget(tid, _)),
-                                                  _,
-                                                  _,
-                                                  _,
-                                                  _
-            ) =>
+        case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
           tid
       }
 
@@ -406,13 +400,13 @@ object ObsTabContents {
               layouts,
               List(
                 notesTile,
-                TargetTile.targetTile(
-                  props.userId.get,
-                  targetId,
-                  props.undoStacks.zoom(ModelUndoStacks.forTarget),
-                  props.searching,
-                  state.zoom(State.options)
-                ),
+                // TargetTile.targetTile(
+                //   props.userId.get,
+                //   targetId,
+                //   props.undoStacks.zoom(ModelUndoStacks.forTarget),
+                //   props.searching,
+                //   state.zoom(State.options)
+                // ),
                 // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
                 // so that the constraints selector dropdown always appears in front of any other tiles. If more
                 // than one tile ends up having dropdowns in the tile header, we'll need something more complex such

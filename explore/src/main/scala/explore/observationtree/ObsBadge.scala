@@ -13,7 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
-import explore.model.ObsWithPointing
+import explore.model.ObsWithTargets
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -99,10 +99,10 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObsBadgeHeader,
                   obs match {
-                    case withPointing: ObsWithPointing =>
-                      nameAndId(withPointing.pointingName.toString)
-                    case withConf: ObsWithConf         => withConf.conf
-                    case _                             => nameAndId("")
+                    case withTargets: ObsWithTargets =>
+                      nameAndId(withTargets.targetNames.toString)
+                    case withConf: ObsWithConf       => withConf.conf
+                    case _                           => nameAndId("")
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
@@ -112,7 +112,7 @@ object ObsBadge {
               ),
               CardDescription()(ExploreStyles.ObsBadgeDescription)(
                 obs match {
-                  case _: ObsWithPointing                  =>
+                  case _: ObsWithTargets                   =>
                     ReactFragment(List(conf, constraints).flatten: _*)
                   case withConstraints: ObsWithConstraints =>
                     ReactFragment(withConstraints.constraintsSummary)

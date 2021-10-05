@@ -3,30 +3,30 @@
 
 package explore.common
 
-import cats.Endo
-import cats.syntax.all._
-import clue.data.syntax._
-import crystal.react.implicits._
-import eu.timepit.refined.auto._
-import explore.implicits._
-import explore.optics._
-import explore.schemas.implicits._
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.Epoch
-import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion
-import lucuma.core.math.RadialVelocity
-import lucuma.core.math.RightAscension
-import lucuma.core.math.units.CentimetersPerSecond
-import lucuma.core.model.CatalogId
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SiderealTracking
-import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB.Types._
-import monocle.Lens
+// import cats.Endo
+// import cats.syntax.all._
+// import clue.data.syntax._
+// import crystal.react.implicits._
+// import eu.timepit.refined.auto._
+// import explore.implicits._
+// import explore.optics._
+// import explore.schemas.implicits._
+// import lucuma.core.math.Coordinates
+// import lucuma.core.math.Declination
+// import lucuma.core.math.Epoch
+// import lucuma.core.math.Parallax
+// import lucuma.core.math.ProperMotion
+// import lucuma.core.math.RadialVelocity
+// import lucuma.core.math.RightAscension
+// import lucuma.core.math.units.CentimetersPerSecond
+// import lucuma.core.model.CatalogId
+// import lucuma.core.model.Magnitude
+// import lucuma.core.model.SiderealTracking
+// import lucuma.core.model.Target
+// import lucuma.schemas.ObservationDB.Types._
+// import monocle.Lens
 
-import TargetQueriesGQL._
+// import TargetQueriesGQL._
 
 object TargetQueries {
 

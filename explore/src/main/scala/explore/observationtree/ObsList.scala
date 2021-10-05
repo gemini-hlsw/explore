@@ -19,7 +19,7 @@ import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.Focused
 import explore.model.Focused.FocusedObs
-import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
@@ -57,8 +57,8 @@ object ObsList {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
-    KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
-      ObsSummaryWithPointingAndConstraints.id
+    KIListMod[ObsSummaryWithTargetsAndConstraints, Observation.Id](
+      ObsSummaryWithTargetsAndConstraints.id
     )
 
   protected class Backend {
@@ -71,9 +71,9 @@ object ObsList {
     ): SyncIO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = SyncIO(Random.nextInt(0xfff)).map(int =>
-        ObsSummaryWithPointingAndConstraints(
+        ObsSummaryWithTargetsAndConstraints(
           Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-          pointing = none,
+          targets = List.empty,
           constraints = ConstraintsSummary.default,
           ObsStatus.New,
           ObsActiveStatus.Active,

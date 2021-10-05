@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import io.chrisdavenport.cats.time._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
@@ -46,8 +45,8 @@ trait ObsWithConf extends ObsSummary {
 trait ObsWithTargets extends ObsSummary {
   val targets: List[TargetSummary]
 
-  lazy val targetNames: NonEmptyString =
-    NonEmptyString.unsafeFrom(targets.map(_.name).mkString(";"))
+  lazy val targetNames: String =
+    targets.map(_.name).mkString(";")
 }
 
 case class ObsSummaryWithConstraints(
