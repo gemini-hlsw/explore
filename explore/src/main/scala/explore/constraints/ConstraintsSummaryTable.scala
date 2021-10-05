@@ -166,7 +166,7 @@ object ConstraintsSummaryTable {
                       ^.onClick ==> (_ =>
                         (props.focused.set(FocusedObs(obsId).some)
                           >> props.expandedIds.mod(_ + cell.value)
-                          >> props.selectedPanel.set(SelectedPanel.editor(cell.value)))
+                          >> props.selectedPanel.set(SelectedPanel.editor(SortedSet(obsId))))
                       ),
                       obsId.toString
                     )

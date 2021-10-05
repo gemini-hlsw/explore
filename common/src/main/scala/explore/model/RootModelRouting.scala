@@ -33,7 +33,10 @@ object RootModelRouting {
           }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
-      case AppTab.Constraints    => ConstraintsBasePage
+      case AppTab.Constraints    =>
+        focused
+          .collect { case FocusedObs(obsId) => ConstraintsObsPage(obsId) }
+          .getOrElse(ConstraintsBasePage)
     }
 
   protected def setTab(tab: AppTab): RootModel => RootModel =
@@ -58,6 +61,8 @@ object RootModelRouting {
         setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ConstraintsBasePage             =>
         setTab(AppTab.Constraints)
+      case ConstraintsObsPage(obsId)       =>
+        setTab(AppTab.Constraints) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ConfigurationsPage              =>
         setTab(AppTab.Configurations)
       case HomePage                        =>

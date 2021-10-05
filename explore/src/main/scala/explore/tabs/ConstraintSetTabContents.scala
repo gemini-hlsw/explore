@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -49,8 +50,8 @@ final case class ConstraintSetTabContents(
   focused:          View[Option[Focused]],
   expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
-  // TODO: Clean up the bulkUndoStack somewhere, somehow?
-  bulkUndoStack:    View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
+  // TODO: Clean up the groupUndoStack somewhere, somehow?
+  groupUndoStack:   View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
   hiddenColumns:    View[Set[String]],
   summarySorting:   View[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
@@ -110,6 +111,48 @@ object ConstraintSetTabContents {
         )
       )
 
+    def findConstraintGroup(
+      obsIds: SortedSet[Observation.Id],
+      cgl:    ConstraintGroupList
+    ): Option[ConstraintGroup] =
+      cgl.find(_._1.intersect(obsIds).nonEmpty).map(_._2)
+
+    def onModSummaryWithObs(
+      groupObsIds:  SortedSet[Observation.Id],
+      editedObsIds: SortedSet[Observation.Id]
+    )(cswo:         ConstraintSummaryWithObervations): SyncIO[Unit] = {
+      val groupList = cswo.constraintGroups
+
+      // If we're editing at the group level (even a group of 1) and it no longer exists
+      // (probably due to a merger), just go to the summary.
+      val updateSelection = props.focused.get match {
+        case Some(Focused.FocusedObs(_)) => SyncIO.unit
+        case _                           =>
+          groupList
+            .get(editedObsIds)
+            .fold(state.zoom(selectedLens).set(SelectedPanel.summary))(_ => SyncIO.unit)
+      }
+
+      val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(SyncIO.unit) { cg =>
+        // We should always find the constraint group.
+        // If a group was edited while closed and it didn't create a merger, keep it closed,
+        // otherwise expand all affected groups.
+        props.expandedIds
+          .mod { eids =>
+            val withOld       =
+              if (groupObsIds === editedObsIds) eids
+              else eids + (groupObsIds -- editedObsIds)
+            val withOldAndNew =
+              if (editedObsIds === cg.obsIds && editedObsIds === groupObsIds) withOld
+              else withOld + cg.obsIds
+
+            withOldAndNew.filter(ids => groupList.contains(ids)) // clean up
+          }
+      }
+
+      updateSelection >> updateExpanded
+    }
+
     val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
@@ -125,7 +168,9 @@ object ConstraintSetTabContents {
     val coreHeight = props.size.height.getOrElse(0)
 
     val rightSide = state.get.selected.optValue
-      .flatMap(constraintsWithObs.get.constraintGroups.get)
+      .flatMap(ids =>
+        findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
+      )
       .fold[VdomNode](
         Tile("constraints", "Constraints Summary", backButton.some)(
           Reuse.by((constraintsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
@@ -140,26 +185,68 @@ object ConstraintSetTabContents {
             )
           )
         )
-      ) { constraintGroup =>
-        val obsIds                                                                                 = constraintGroup.obsIds
-        val constraintSet                                                                          = constraintGroup.constraintSet
-        val cglView                                                                                = constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
-        val getCs: ConstraintGroupList => ConstraintSet                                            = _ => constraintSet
+      ) { case (idsToEdit, constraintGroup) =>
+        val groupObsIds   = constraintGroup.obsIds
+        val constraintSet = constraintGroup.constraintSet
+        val cglView       = constraintsWithObs
+          .withOnMod(onModSummaryWithObs(groupObsIds, idsToEdit))
+          .zoom(ConstraintSummaryWithObervations.constraintGroups)
+
+        val getCs: ConstraintGroupList => ConstraintSet = _ => constraintSet
+
         def modCs(mod: ConstraintSet => ConstraintSet): ConstraintGroupList => ConstraintGroupList =
           cgl =>
-            cgl
-              .get(obsIds)
-              .fold(cgl)(cg => cgl.updated(obsIds, ConstraintGroup.constraintSet.modify(mod)(cg)))
-        val csView: View[ConstraintSet]                                                            = cglView.zoom(getCs)(modCs)
-        val csUndo: View[UndoStacks[IO, ConstraintSet]]                                            =
-          props.bulkUndoStack.zoom(atMapWithDefault(obsIds, UndoStacks.empty))
+            findConstraintGroup(idsToEdit, cgl)
+              .map { cg =>
+                val newCg        = ConstraintGroup.constraintSet.modify(mod)(cg)
+                // see if the edit caused a merger
+                val mergeWithIds = cgl
+                  .find { case (ids, group) =>
+                    ids
+                      .intersect(idsToEdit)
+                      .isEmpty && group.constraintSet === newCg.constraintSet
+                  }
+                  .map(_._1)
 
-        Tile("constraints",
-             s"Editing Constraints for ${obsIds.size} Observations",
-             backButton.some
-        )(
+                // If we're editing an observation within a larger group, we need a split
+                val splitList =
+                  if (idsToEdit === groupObsIds)
+                    cgl.updated(groupObsIds, newCg) // otherwise, just update current group
+                  else {
+                    val diffIds = groupObsIds -- idsToEdit
+                    cgl
+                      .removed(groupObsIds)
+                      .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
+                      .updated(diffIds, ConstraintGroup(cg.constraintSet, diffIds))
+                  }
+
+                mergeWithIds.fold(splitList) { idsToMerge =>
+                  val combined = idsToMerge ++ idsToEdit
+                  splitList
+                    .removed(idsToMerge)
+                    .removed(idsToEdit)
+                    .updated(combined, ConstraintGroup(newCg.constraintSet, combined))
+                }
+              }
+              .getOrElse(cgl) // shouldn't happen
+
+        val csView: View[ConstraintSet] =
+          cglView
+            .zoom(getCs)(modCs)
+
+        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+          props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
+
+        val title = props.focused.get match {
+          case Some(Focused.FocusedObs(id)) => s"Observation $id"
+          case _                            =>
+            val titleSfx = if (idsToEdit.size == 1) "" else "s"
+            s"Editing Constraints for ${idsToEdit.size} Observation$titleSfx"
+        }
+
+        Tile("constraints", title, backButton.some)(
           (csView, csUndo).curryReusing.in((csView_, csUndo_, renderInTitle) =>
-            <.div(ConstraintsPanel(obsIds.toList, csView_, csUndo_, renderInTitle))
+            <.div(ConstraintsPanel(idsToEdit.toList, csView_, csUndo_, renderInTitle))
           )
         )
       }
