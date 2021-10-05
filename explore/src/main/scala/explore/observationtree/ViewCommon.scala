@@ -20,15 +20,21 @@ import react.beautifuldnd._
 trait ViewCommon {
   def focused: View[Option[Focused]]
 
-  def renderObsBadge(obs: ObsSummary, highlightSelected: Boolean = true): TagMod =
+  def renderObsBadge(
+    obs:               ObsSummary,
+    highlightSelected: Boolean = true,
+    forceHighlight:    Boolean = false // if true, overrides highlightSelected
+  ): TagMod =
     ObsBadge(
       obs,
-      selected = highlightSelected && focused.get.exists(_ === FocusedObs(obs.id))
+      selected =
+        forceHighlight || (highlightSelected && focused.get.exists(_ === FocusedObs(obs.id)))
     )
 
   def renderObsBadgeItem(
     selectable:        Boolean,
     highlightSelected: Boolean = true,
+    forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
     onSelect:          Observation.Id => Callback = _ => Callback.empty
   )(
@@ -48,7 +54,7 @@ trait ViewCommon {
             e.stopPropagationCB >>
               ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some)
           }).when(linkToObsTab)
-        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected)))
+        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }
     )
 
