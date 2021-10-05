@@ -17,8 +17,8 @@ import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
 import explore.model.HourAngleRange
-import explore.model.ObsSummaryWithPointingAndConstraints
-import explore.model.Pointing
+import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
 import explore.utils._
@@ -40,7 +40,7 @@ import ObsQueriesGQL._
 
 object ObsQueries {
 
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints]
   type ConstraintsList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
 
   type WavelengthInput = ObservationDB.Types.WavelengthModelInput
@@ -83,15 +83,10 @@ object ObsQueries {
       Reusability.derive
   }
 
-  private def convertPointing(
-    pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
-  ): Pointing =
-    pointing match {
-      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name)   =>
-        Pointing.PointingTarget(id, name)
-      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Asterism(id, name) =>
-        Pointing.PointingAsterism(id, name, Nil)
-    }
+  private def convertTarget(
+    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.ScienceTargets
+  ): TargetSummary =
+    TargetSummary(target.id, target.name)
 
   private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
     SortedMap.from(list.map(a => (getKey(a), a)))
@@ -101,15 +96,16 @@ object ObsQueries {
     ObsSummariesWithConstraints(
       KeyedIndexedList.fromList(
         data.observations.nodes.map(node =>
-          ObsSummaryWithPointingAndConstraints(node.id,
-                                               node.observationTarget.map(convertPointing),
-                                               node.constraintSet,
-                                               node.status,
-                                               node.activeStatus,
-                                               node.plannedTime.execution
+          ObsSummaryWithTargetsAndConstraints(
+            node.id,
+            node.targets.foldMap(_.scienceTargets.map(convertTarget)),
+            node.constraintSet,
+            node.status,
+            node.activeStatus,
+            node.plannedTime.execution
           )
         ),
-        ObsSummaryWithPointingAndConstraints.id.get
+        ObsSummaryWithTargetsAndConstraints.id.get
       ),
       toSortedMap(data.constraintSetGroup.nodes.map(_.asConstraintGroup),
                   ConstraintGroup.obsIds.get
@@ -161,7 +157,6 @@ object ObsQueries {
         )
     }
     val editInput                           = EditConstraintSetInput(
-      name = clue.data.Ignore,
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,
       skyBackground = constraints.skyBackground.assign,

@@ -14,6 +14,5 @@ object all
     with ArbObsSummary
     with ArbConstraintsSummary
     with ArbElevationRange
-    with ArbPointingId
-    with ArbPointing
+    with ArbTargetSummary
     with ArbSpectroscopyConfigurationOptions

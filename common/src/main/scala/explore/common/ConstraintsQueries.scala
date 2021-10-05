@@ -6,7 +6,6 @@ package explore.common
 import cats.Endo
 import clue.data.syntax._
 import crystal.react.implicits._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.model.AirMassRange
@@ -45,9 +44,6 @@ object ConstraintsQueries {
   }
 
   object UpdateConstraintSet {
-    def name(n: NonEmptyString): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.name.replace(n.assign)
-
     def imageQuality(iq: ImageQuality): Endo[EditConstraintSetInput] =
       EditConstraintSetInput.imageQuality.replace(iq.assign)
 

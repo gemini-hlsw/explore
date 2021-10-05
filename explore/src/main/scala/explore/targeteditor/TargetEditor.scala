@@ -38,66 +38,66 @@ final case class TargetEditor(
     extends ReactProps[TargetEditor](TargetEditor.component)
 
 object TargetEditor {
-  type Props = TargetEditor
+  // type Props = TargetEditor
 
-  final case class State(options: TargetVisualOptions)
+  // final case class State(options: TargetVisualOptions)
 
-  object State {
-    val options  = Focus[State](_.options)
-    val fovAngle = options.andThen(TargetVisualOptions.fovAngle)
-  }
+  // object State {
+  //   val options  = Focus[State](_.options)
+  //   val fovAngle = options.andThen(TargetVisualOptions.fovAngle)
+  // }
 
-  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-  protected implicit val stateReuse: Reusability[State] = Reusability.derive
+  // protected implicit val propsReuse: Reusability[Props] = Reusability.derive
+  // protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  protected class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props) = {
-      implicit val ctx = props.ctx
+  // protected class Backend($ : BackendScope[Props, State]) {
+  //   def render(props: Props) = {
+  //     implicit val ctx = props.ctx
 
-      LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
-        TargetEditQuery.query(props.tid).reuseAlways,
-        (TargetEditQuery.Data.target.get _).reuseAlways,
-        List(TargetEditSubscription.subscribe[IO](props.tid)).reuseAlways
-      )(
-        potRender(
-          Reuse
-            .currying(props, ViewF.fromStateSyncIO($))
-            .in(
-              (
-                props,
-                state,
-                targetOpt: View[Option[TargetEditQuery.Data.Target]]
-              ) =>
-                targetOpt.get.map { _ =>
-                  TargetBody(props.uid,
-                             props.tid,
-                             targetOpt.zoom(_.get)(f => _.map(f)),
-                             props.undoStacks,
-                             props.searching,
-                             state.zoom(State.options),
-                             props.renderInTitle
-                  )
-                }
-            )
-        )
-      )
-    }
-  }
+  //     LiveQueryRenderMod[ObservationDB, TargetEditQuery.Data, Option[TargetEditQuery.Data.Target]](
+  //       TargetEditQuery.query(props.tid).reuseAlways,
+  //       (TargetEditQuery.Data.target.get _).reuseAlways,
+  //       List(TargetEditSubscription.subscribe[IO](props.tid)).reuseAlways
+  //     )(
+  //       potRender(
+  //         Reuse
+  //           .currying(props, ViewF.fromStateSyncIO($))
+  //           .in(
+  //             (
+  //               props,
+  //               state,
+  //               targetOpt: View[Option[TargetEditQuery.Data.Target]]
+  //             ) =>
+  //               targetOpt.get.map { _ =>
+  //                 TargetBody(props.uid,
+  //                            props.tid,
+  //                            targetOpt.zoom(_.get)(f => _.map(f)),
+  //                            props.undoStacks,
+  //                            props.searching,
+  //                            state.zoom(State.options),
+  //                            props.renderInTitle
+  //                 )
+  //               }
+  //           )
+  //       )
+  //     )
+  //   }
+  // }
 
-  val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(State(TargetVisualOptions.Default))
-      .renderBackend[Backend]
-      .componentDidMount { $ =>
-        val p            = $.props
-        implicit val ctx = p.ctx
-        UserTargetPreferencesQuery
-          .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
-          .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
-          .runAsyncAndForgetCB
-      }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+  // val component =
+  //   ScalaComponent
+  //     .builder[Props]
+  //     .initialState(State(TargetVisualOptions.Default))
+  //     .renderBackend[Backend]
+  //     .componentDidMount { $ =>
+  //       val p            = $.props
+  //       implicit val ctx = p.ctx
+  //       UserTargetPreferencesQuery
+  //         .queryWithDefault[IO](p.uid, p.tid, Constants.InitialFov)
+  //         .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
+  //         .runAsyncAndForgetCB
+  //     }
+  //     .configure(Reusability.shouldComponentUpdate)
+  //     .build
 
 }

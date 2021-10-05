@@ -7,8 +7,8 @@ import cats.Eq
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
-import explore.common.TargetObsQueries.PointingsWithObs
-import explore.common.TargetQueries.TargetResult
+// import explore.common.TargetObsQueries.PointingsWithObs
+// import explore.common.TargetQueries.TargetResult
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -18,9 +18,11 @@ import scala.collection.immutable.SortedSet
 
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
-    Map.empty[Target.Id, UndoStacks[F, TargetResult]],
+  forTargetList:        UndoStacks[F, Nothing] = UndoStacks.empty[F, Nothing],
+  forTarget:            Map[Target.Id, UndoStacks[F, Nothing]] = Map.empty[Target.Id, UndoStacks[F, Nothing]],
+  // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
+  // forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
+  //   Map.empty[Target.Id, UndoStacks[F, TargetResult]],
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintSet:     Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
     Map.empty[Observation.Id, UndoStacks[F, ConstraintSet]],

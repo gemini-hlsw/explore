@@ -36,7 +36,7 @@ final case class SpectroscopyConfigurationOptions(
   def signalToNoiseAt: Option[Wavelength] =
     signalToNoiseAtQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
 
-  def wavelengthRange: Option[Wavelength] =
+  def wavelengthCoverage: Option[Wavelength] =
     wavelengthCoverageQ.flatMap(d => Wavelength.decimalMicrometers.getOption(d.value))
 }
 

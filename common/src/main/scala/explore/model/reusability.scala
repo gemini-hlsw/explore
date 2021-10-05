@@ -20,7 +20,7 @@ import react.common.style.Css
  */
 object reusability {
   // Model
-  implicit val pointingReuse: Reusability[Pointing]                                            = Reusability.derive
+  implicit val targetSummaryReuse: Reusability[TargetSummary]                                  = Reusability.derive
   implicit val statusReuse: Reusability[PersistentClientStatus]                                = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                            = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                          = Reusability.derive
@@ -41,7 +41,7 @@ object reusability {
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints]          =
     Reusability.derive
   implicit val obsSummaryWithPointingAndConstraintsReuse
-    : Reusability[ObsSummaryWithPointingAndConstraints] = Reusability.derive
+    : Reusability[ObsSummaryWithTargetsAndConstraints] = Reusability.derive
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]                         =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
   implicit def undoContextReuse[F[_], G[_], M: Reusability]: Reusability[UndoContext[F, G, M]] =

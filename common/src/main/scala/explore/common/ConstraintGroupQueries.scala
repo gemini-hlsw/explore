@@ -11,8 +11,8 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintGroup
-import explore.model.ObsSummaryWithPointingAndConf
-import explore.model.Pointing
+import explore.model.ObsSummaryWithTargetsAndConf
+import explore.model.TargetSummary
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -37,19 +37,12 @@ object ConstraintGroupQueries {
   type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
 
-  private def convertPointing(
-    pointing: ConstraintGroupObsQuery.Data.Observations.Nodes.ObservationTarget
-  ): Pointing = pointing match {
-    case ConstraintGroupObsQuery.Data.Observations.Nodes.ObservationTarget
-          .Target(targetId, targetName) =>
-      Pointing.PointingTarget(targetId, targetName)
-    case ConstraintGroupObsQuery.Data.Observations.Nodes.ObservationTarget
-          .Asterism(asterismId, asterismName) =>
-      Pointing.PointingAsterism(asterismId, asterismName, Nil)
-  }
+  private def convertTarget(
+    target: ConstraintGroupObsQuery.Data.Observations.Nodes.Targets.ScienceTargets
+  ): TargetSummary = TargetSummary(target.id, target.name)
 
   type ConstraintGroupList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
-  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithPointingAndConf]
+  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTargetsAndConf]
 
   case class ConstraintSummaryWithObervations(
     constraintGroups: ConstraintGroupList,
@@ -64,12 +57,12 @@ object ConstraintGroupQueries {
   implicit val constraintsSummWithObsReuse: Reusability[ConstraintSummaryWithObervations] =
     Reusability.derive
 
-  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithPointingAndConf =
-    ObsSummaryWithPointingAndConf(obsR.id,
-                                  obsR.observationTarget.map(convertPointing),
-                                  obsR.status,
-                                  obsR.activeStatus,
-                                  obsR.plannedTime.execution
+  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTargetsAndConf =
+    ObsSummaryWithTargetsAndConf(obsR.id,
+                                 obsR.targets.foldMap(_.scienceTargets.map(convertTarget)),
+                                 obsR.status,
+                                 obsR.activeStatus,
+                                 obsR.plannedTime.execution
     )
 
   private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
@@ -84,7 +77,7 @@ object ConstraintGroupQueries {
           ConstraintGroup.obsIds.get
         ),
         toSortedMap(data.observations.nodes.map(obsResultToSummary),
-                    ObsSummaryWithPointingAndConf.id.get
+                    ObsSummaryWithTargetsAndConf.id.get
         )
       )
 

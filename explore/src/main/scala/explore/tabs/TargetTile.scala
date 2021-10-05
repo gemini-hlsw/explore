@@ -29,66 +29,66 @@ import react.common._
 import react.common.implicits._
 
 object TargetTile {
-  def targetTile(
-    userId:            Option[User.Id],
-    targetId:          Option[Target.Id],
-    undoStacks:        View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
-    searching:         View[Set[Target.Id]],
-    targetViewOptions: View[TargetVisualOptions]
-  )(implicit ctx:      AppContextIO) = {
+  // def targetTile(
+  //   userId:            Option[User.Id],
+  //   targetId:          Option[Target.Id],
+  //   undoStacks:        View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
+  //   searching:         View[Set[Target.Id]],
+  //   targetViewOptions: View[TargetVisualOptions]
+  // )(implicit ctx:      AppContextIO) = {
 
-    def targetRenderFn(
-      targetId:      Target.Id,
-      undoStacks:    View[UndoStacks[IO, TargetResult]],
-      renderInTitle: Tile.RenderInTitle,
-      targetOpt:     View[Option[TargetEditQuery.Data.Target]]
-    ): VdomNode =
-      (userId, targetOpt.get).mapN { case (uid, _) =>
-        TargetBody(
-          uid,
-          targetId,
-          targetOpt.zoom(_.get)(f => _.map(f)),
-          undoStacks,
-          searching,
-          targetViewOptions,
-          renderInTitle
-        )
-      }
+  //   def targetRenderFn(
+  //     targetId:      Target.Id,
+  //     undoStacks:    View[UndoStacks[IO, TargetResult]],
+  //     renderInTitle: Tile.RenderInTitle,
+  //     targetOpt:     View[Option[TargetEditQuery.Data.Target]]
+  //   ): VdomNode =
+  //     (userId, targetOpt.get).mapN { case (uid, _) =>
+  //       TargetBody(
+  //         uid,
+  //         targetId,
+  //         targetOpt.zoom(_.get)(f => _.map(f)),
+  //         undoStacks,
+  //         searching,
+  //         targetViewOptions,
+  //         renderInTitle
+  //       )
+  //     }
 
-    def renderTarget(
-      targetIdUndoStacks: Option[(Target.Id, View[UndoStacks[IO, TargetResult]])],
-      renderInTitle:      Tile.RenderInTitle
-    ): VdomNode =
-      targetIdUndoStacks
-        .map[VdomNode] { case (targetId, undoStacks) =>
-          LiveQueryRenderMod[ObservationDB,
-                             TargetEditQuery.Data,
-                             Option[TargetEditQuery.Data.Target]
-          ](
-            TargetEditQuery.query(targetId).reuseAlways,
-            (TargetEditQuery.Data.target.get _).reuseAlways,
-            List(TargetEditSubscription.subscribe[IO](targetId)).reuseAlways
-          )(
-            potRender(
-              Reuse(targetRenderFn _)(targetId, undoStacks, renderInTitle)
-            )
-          )
-            .withKey(s"target-$targetId")
-        }
-        .getOrElse(
-          <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-                <.div("No target assigned")
-          )
-        )
+  //   def renderTarget(
+  //     targetIdUndoStacks: Option[(Target.Id, View[UndoStacks[IO, TargetResult]])],
+  //     renderInTitle:      Tile.RenderInTitle
+  //   ): VdomNode =
+  //     targetIdUndoStacks
+  //       .map[VdomNode] { case (targetId, undoStacks) =>
+  //         LiveQueryRenderMod[ObservationDB,
+  //                            TargetEditQuery.Data,
+  //                            Option[TargetEditQuery.Data.Target]
+  //         ](
+  //           TargetEditQuery.query(targetId).reuseAlways,
+  //           (TargetEditQuery.Data.target.get _).reuseAlways,
+  //           List(TargetEditSubscription.subscribe[IO](targetId)).reuseAlways
+  //         )(
+  //           potRender(
+  //             Reuse(targetRenderFn _)(targetId, undoStacks, renderInTitle)
+  //           )
+  //         )
+  //           .withKey(s"target-$targetId")
+  //       }
+  //       .getOrElse(
+  //         <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+  //               <.div("No target assigned")
+  //         )
+  //       )
 
-    Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)(
-      targetId
-        .map(tid =>
-          (tid, undoStacks.zoom(atMapWithDefault(tid, UndoStacks.empty[IO, TargetResult])))
-        )
-        .curryReusing
-        .in(renderTarget _)
-    )
-  }
+  //   Tile(ObsTabTiles.TargetId, "Target", canMinimize = true)(
+  //     targetId
+  //       .map(tid =>
+  //         (tid, undoStacks.zoom(atMapWithDefault(tid, UndoStacks.empty[IO, TargetResult])))
+  //       )
+  //       .curryReusing
+  //       .in(renderTarget _)
+  //   )
+  // }
 
 }

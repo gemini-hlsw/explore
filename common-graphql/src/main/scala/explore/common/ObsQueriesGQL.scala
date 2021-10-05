@@ -29,14 +29,10 @@ object ObsQueriesGQL {
         observations(programId: "p-2") {
           nodes {
             id
-            observationTarget {
-              ... on Target {
-                targetId: id
-                targetName: name
-              }
-              ... on Asterism {
-                asterismId: id
-                asterismName: name
+            targets {
+              scienceTargets {
+                id
+                name
               }
             }
             constraintSet {
@@ -181,7 +177,7 @@ object ObsQueriesGQL {
               signalToNoiseAt {
                 picometers
               }
-              wavelengthRange {
+              wavelengthCoverage {
                 picometers
               }
               focalPlane
@@ -217,10 +213,10 @@ object ObsQueriesGQL {
 
         object ScienceRequirements {
           object SpectroscopyRequirements {
-            type Wavelength      = lucuma.core.math.Wavelength
-            type SignalToNoiseAt = lucuma.core.math.Wavelength
-            type WavelengthRange = lucuma.core.math.Wavelength
-            type FocalPlaneAngle = lucuma.core.math.Angle
+            type Wavelength         = lucuma.core.math.Wavelength
+            type SignalToNoiseAt    = lucuma.core.math.Wavelength
+            type WavelengthCoverage = lucuma.core.math.Wavelength
+            type FocalPlaneAngle    = lucuma.core.math.Angle
           }
         }
 

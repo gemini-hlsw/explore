@@ -248,7 +248,7 @@ object SpectroscopyModesTable {
                 wavelength = s.wavelength,
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
-                coverage = s.wavelengthRange
+                coverage = s.wavelengthCoverage
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)

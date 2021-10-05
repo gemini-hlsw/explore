@@ -24,11 +24,11 @@ trait ObsSummary {
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
-    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                       =>
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                     =>
       a === b
-    case (a: ObsSummaryWithPointingAndConstraints, b: ObsSummaryWithPointingAndConstraints) =>
+    case (a: ObsSummaryWithTargetsAndConstraints, b: ObsSummaryWithTargetsAndConstraints) =>
       a === b
-    case _                                                                                  =>
+    case _                                                                                =>
       false
   })
 }
@@ -43,19 +43,11 @@ trait ObsWithConf extends ObsSummary {
   val conf: String = "GMOS-N R831 1x300"
 }
 
-trait ObsWithPointing extends ObsSummary {
-  val pointing: Option[Pointing]
+trait ObsWithTargets extends ObsSummary {
+  val targets: List[TargetSummary]
 
-  lazy val pointingName: NonEmptyString =
-    pointing match {
-      case None                                              => "<No Target>"
-      case Some(Pointing.PointingTarget(_, name))            => name
-      case Some(Pointing.PointingAsterism(_, name, targets)) =>
-        name match {
-          case Some(aname) => aname
-          case None        => NonEmptyString.unsafeFrom(targets.map(_.name).mkString("-"))
-        }
-    }
+  lazy val targetNames: NonEmptyString =
+    NonEmptyString.unsafeFrom(targets.map(_.name).mkString(";"))
 }
 
 case class ObsSummaryWithConstraints(
@@ -72,39 +64,39 @@ object ObsSummaryWithConstraints {
     Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
-case class ObsSummaryWithPointingAndConstraints(
+case class ObsSummaryWithTargetsAndConstraints(
   override val id:           Observation.Id,
-  override val pointing:     Option[Pointing],
+  override val targets:      List[TargetSummary],
   override val constraints:  ConstraintsSummary,
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithPointing
+    with ObsWithTargets
     with ObsWithConstraints
 
-object ObsSummaryWithPointingAndConstraints {
-  val id           = Focus[ObsSummaryWithPointingAndConstraints](_.id)
-  val status       = Focus[ObsSummaryWithPointingAndConstraints](_.status)
-  val activeStatus = Focus[ObsSummaryWithPointingAndConstraints](_.activeStatus)
+object ObsSummaryWithTargetsAndConstraints {
+  val id           = Focus[ObsSummaryWithTargetsAndConstraints](_.id)
+  val status       = Focus[ObsSummaryWithTargetsAndConstraints](_.status)
+  val activeStatus = Focus[ObsSummaryWithTargetsAndConstraints](_.activeStatus)
 
-  implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
-    Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.activeStatus, o.duration))
+  implicit val eqObsSummaryWithTargetsAndConstraints: Eq[ObsSummaryWithTargetsAndConstraints] =
+    Eq.by(o => (o.id, o.targets, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
-case class ObsSummaryWithPointingAndConf(
+case class ObsSummaryWithTargetsAndConf(
   override val id:           Observation.Id,
-  override val pointing:     Option[Pointing],
+  override val targets:      List[TargetSummary],
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithPointing
+    with ObsWithTargets
     with ObsWithConf
 
-object ObsSummaryWithPointingAndConf {
-  val id = Focus[ObsSummaryWithPointingAndConf](_.id)
+object ObsSummaryWithTargetsAndConf {
+  val id = Focus[ObsSummaryWithTargetsAndConf](_.id)
 
-  implicit val eqObsSummaryWithPointingAndConf: Eq[ObsSummaryWithPointingAndConf] =
-    Eq.by(o => (o.id, o.pointing, o.status, o.activeStatus, o.duration, o.conf))
+  implicit val eqObsSummaryWithTargetsAndConf: Eq[ObsSummaryWithTargetsAndConf] =
+    Eq.by(o => (o.id, o.targets, o.status, o.activeStatus, o.duration, o.conf))
 }

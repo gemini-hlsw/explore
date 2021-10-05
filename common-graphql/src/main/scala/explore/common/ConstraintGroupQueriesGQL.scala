@@ -51,14 +51,10 @@ object ConstraintGroupQueriesGQL {
         observations(programId: "p-2") {
           nodes {
             id
-            observationTarget {
-              ... on Target {
-                targetId: id
-                targetName: name
-              }
-              ... on Asterism {
-                asterismId: id
-                asterismName: name
+            targets {
+              scienceTargets {
+                id
+                name
               }
             }
           	status
