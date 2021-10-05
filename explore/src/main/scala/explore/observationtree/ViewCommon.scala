@@ -10,9 +10,11 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
@@ -27,7 +29,8 @@ trait ViewCommon {
   def renderObsBadgeItem(
     selectable:        Boolean,
     highlightSelected: Boolean = true,
-    linkToObsTab:      Boolean = false
+    linkToObsTab:      Boolean = false,
+    onSelect:          Observation.Id => Callback = _ => Callback.empty
   )(
     obs:               ObsSummary,
     idx:               Int
@@ -39,7 +42,7 @@ trait ViewCommon {
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactEvent =>
-            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some)
+            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some) >> onSelect(obs.id)
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
