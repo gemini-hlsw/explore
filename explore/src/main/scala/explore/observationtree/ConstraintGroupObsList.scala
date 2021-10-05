@@ -105,6 +105,9 @@ object ConstraintGroupObsList {
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups
 
+      // if a single observation is selected
+      val singleObsSelected = props.focused.get.collect { case FocusedObs(_) => true }.nonEmpty
+
       val state   = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
         props.undoStacks,
@@ -152,6 +155,7 @@ object ConstraintGroupObsList {
               constraintGroups.toTagMod { case (_, constraintGroup) =>
                 val obsIds        = constraintGroup.obsIds
                 val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+                // if this group or something in it is selected
                 val groupSelected = props.selected.get.optValue.exists(_.intersect(obsIds).nonEmpty)
 
                 val icon: FontAwesomeIcon = props.expandedIds.get
@@ -205,6 +209,7 @@ object ConstraintGroupObsList {
                             props.renderObsBadgeItem(
                               selectable = true,
                               highlightSelected = true,
+                              forceHighlight = groupSelected && !singleObsSelected,
                               linkToObsTab = false,
                               onSelect =
                                 id => props.selected.set(SelectedPanel.editor(SortedSet(id)))
