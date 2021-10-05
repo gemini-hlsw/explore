@@ -111,7 +111,8 @@ lazy val common = project
         ReactGridLayout.value ++
         ReactClipboard.value ++
         ReactCommon.value ++
-        ReactTable.value,
+        ReactTable.value ++
+        ReactVirtuoso.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,

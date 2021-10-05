@@ -51,7 +51,9 @@ final case class SkyPlotNight(
 object SkyPlotNight {
   type Props = SkyPlotNight
 
-  case class State(shownSeries: HashSet[ElevationSeries] = HashSet.from(ElevationSeries.all))
+  case class State(
+    shownSeries: HashSet[ElevationSeries] = HashSet.from(Enumerated[ElevationSeries].all)
+  )
 
   object State {
     val shownSeries = Focus[State](_.shownSeries)
@@ -86,7 +88,7 @@ object SkyPlotNight {
   }
 
   protected implicit class PointOptionsWithAirmassOps(val x: PointOptionsWithAirmass)
-      extends AnyVal {
+      extends AnyVal     {
     def setAirMass(value: Double): PointOptionsWithAirmass = {
       x.airmass = value
       x
@@ -104,8 +106,9 @@ object SkyPlotNight {
     val name:  String,
     val yAxis: Int,
     val data:  SeriesData => List[Chart.Data]
-  )
-  object ElevationSeries extends Enumerated[ElevationSeries] {
+  ) extends Product
+      with Serializable
+  object ElevationSeries {
     case object Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
     case object ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
     case object SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
@@ -113,14 +116,15 @@ object SkyPlotNight {
 
     def tag(a: ElevationSeries) = a.name
 
-    val all = List(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
+    implicit val ElevationSeriesEnumerated: Enumerated[ElevationSeries] =
+      Enumerated.of(Elevation, ParallacticAngle, SkyBrightness, LunarElevation)
   }
 
   private val seriesDataGen = Generic[SeriesData]
 
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+  private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-  def formatAngle(degs: Double): String = {
+  private def formatAngle(degs: Double): String = {
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
     val degrees = if (dms.degrees > 180) s"-${360 - dms.degrees}" else dms.degrees.toString
     val minutes = "%02d".format(dms.arcminutes)
@@ -128,11 +132,58 @@ object SkyPlotNight {
     s"$degrees°$minutes′$seconds″"
   }
 
+  private val skyBrightnessPercentiles =
+    List(
+      YAxisPlotLinesOptions()
+        .setId("sky-brightness-20")
+        .setLabel(
+          YAxisPlotLinesLabelOptions().setText("20%").setAlign(AlignValue.right)
+        )
+        .setValue(21.37)
+        .setClassName("plot-sky-brightness-percentile")
+        .setDashStyle(DashStyleValue.Dot)
+        .setZIndex(1),
+      YAxisPlotLinesOptions()
+        .setId("sky-brightness-50")
+        .setLabel(
+          YAxisPlotLinesLabelOptions().setText("50%").setAlign(AlignValue.right)
+        )
+        .setValue(20.78)
+        .setClassName("plot-sky-brightness-percentile")
+        .setDashStyle(DashStyleValue.Dot)
+        .setZIndex(1),
+      YAxisPlotLinesOptions()
+        .setId("sky-brightness-80")
+        .setLabel(
+          YAxisPlotLinesLabelOptions()
+            .setText("80%")
+            .setAlign(AlignValue.right)
+        )
+        .setValue(19.61)
+        .setClassName("plot-sky-brightness-percentile")
+        .setDashStyle(DashStyleValue.Dot)
+        .setZIndex(1)
+    )
+
   class Backend($ : BackendScope[Props, State]) {
-    def toggleSeriesVisibility(series: ElevationSeries): Callback =
-      $.modStateL(State.shownSeries)(shownSeries =>
-        if (shownSeries.contains(series)) shownSeries - series else shownSeries + series
-      )
+    def hideSeries(series: ElevationSeries, chart: Chart_): Callback =
+      $.modStateL(State.shownSeries)(_ - series) >>
+        Callback(
+          skyBrightnessPercentiles
+            .flatMap(_.id.toList)
+            .foreach(id => chart.yAxis(2).removePlotLine(id))
+        )
+          .when(series === ElevationSeries.SkyBrightness)
+          .void
+
+    def showSeries(series: ElevationSeries, chart: Chart_): Callback =
+      $.modStateL(State.shownSeries)(_ + series) >>
+        Callback(
+          skyBrightnessPercentiles
+            .foreach(line => chart.yAxis(2).addPlotLine(line))
+        )
+          .when(series === ElevationSeries.SkyBrightness)
+          .void
 
     def render(props: Props, state: State) = {
       val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
@@ -297,6 +348,12 @@ object SkyPlotNight {
               .setClassName("plot-axis-sky-brightness")
               .setShowEmpty(false)
               .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+              .setPlotLines(
+                if (state.shownSeries.contains(ElevationSeries.SkyBrightness))
+                  skyBrightnessPercentiles.toJSArray
+                else
+                  js.Array()
+              )
           ).toJSArray
         )
         .setPlotOptions(
@@ -312,7 +369,7 @@ object SkyPlotNight {
             )
         )
         .setSeries(
-          ElevationSeries.all
+          Enumerated[ElevationSeries].all
             .map(series =>
               SeriesLineOptions(line)
                 .setName(series.name)
@@ -321,9 +378,8 @@ object SkyPlotNight {
                 .setVisible(state.shownSeries.contains(series))
                 .setEvents(
                   SeriesEventsOptionsObject()
-                    .setLegendItemClick((_: Series, _: SeriesLegendItemClickEventObject) =>
-                      toggleSeriesVisibility(series).runNow()
-                    )
+                    .setHide((s, _) => hideSeries(series, s.chart).runNow())
+                    .setShow((s, _) => showSeries(series, s.chart).runNow())
                 )
             )
             .map(_.asInstanceOf[SeriesOptionsType])

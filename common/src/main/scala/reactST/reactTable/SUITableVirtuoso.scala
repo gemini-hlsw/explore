@@ -45,10 +45,8 @@ class SUITableVirtuoso[
   sortElements:     SortElements[ColumnInstanceD]
 ) {
   // I expect this to be inferred in Scala 3
-  type RefType = facade.React.Component[
-    GroupedVirtuoso.GroupedVirtuosoProps[Row[D]],
-    Null
-  ] with VirtuosoComponent
+  type RefType =
+    facade.React.Component[GroupedVirtuoso.GroupedVirtuosoProps, Null] with VirtuosoComponent
 
   case class Component(
     table:              TableTemplate[D, TableInstanceD] = Table(): TableTemplate[D, TableInstanceD],
@@ -69,10 +67,10 @@ class SUITableVirtuoso[
     val atBottomChange: Option[Boolean => Callback] = None
   ) extends ReactPropsForwardRef[Component, RefType](component)
 
-  def createRef = Ref.toJsComponent(GroupedVirtuoso.component[Row[D]])
+  def createRef = Ref.toJsComponent(GroupedVirtuoso.component)
 
   val component =
-    React.forwardRef.toJsComponent(GroupedVirtuoso.component[Row[D]])[Component] { (props, ref) =>
+    React.forwardRef.toJsComponent(GroupedVirtuoso.component)[Component] { (props, ref) =>
       val tableInstance = props.instance
 
       def addClass(className: js.UndefOr[String], clazz: js.UndefOr[Css], newClass: Css): Css =
@@ -196,7 +194,7 @@ class SUITableVirtuoso[
           )
         }))
 
-      val renderRow = (index: Int, _: Int, _: Row[D]) => {
+      val renderRow = (index: Int, _: Int) => {
         val rowData = tableInstance.rows(index)
         tableInstance.prepareRow(rowData)
         rowRender(rowData)(
@@ -209,7 +207,7 @@ class SUITableVirtuoso[
       val bodyElement: TableBody =
         props.body.copy(as = <.div)(tableInstance.getTableBodyProps())(
           TagMod.when(tableInstance.rows.nonEmpty)(
-            GroupedVirtuoso[Row[D]](
+            GroupedVirtuoso(
               itemContent = renderRow,
               groupCounts = List(tableInstance.rows.length),
               groupContent =
