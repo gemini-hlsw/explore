@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.Focused.FocusedAsterism
 import explore.model.Focused.FocusedObs
 import explore.model.Focused.FocusedTarget
 import explore.model.Page._
@@ -27,9 +26,8 @@ object RootModelRouting {
       case AppTab.Targets        =>
         focused
           .collect {
-            case FocusedObs(obsId)           => TargetsObsPage(obsId)
-            case FocusedAsterism(asterismId) => TargetsAsterismPage(asterismId)
-            case FocusedTarget(targetId)     => TargetPage(targetId)
+            case FocusedObs(obsId)       => TargetsObsPage(obsId)
+            case FocusedTarget(targetId) => TargetPage(targetId)
           }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
@@ -41,26 +39,24 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage                    => setTab(AppTab.Proposal) >>> RootModel.focused.replace(none)
-      case ObservationsBasePage            =>
+      case ProposalPage               => setTab(AppTab.Proposal) >>> RootModel.focused.replace(none)
+      case ObservationsBasePage       =>
         setTab(AppTab.Observations) >>> RootModel.focused.replace(none)
-      case ObsPage(obsId)                  =>
+      case ObsPage(obsId)             =>
         setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case ObsAdvancedConfPage(obsId)      =>
+      case ObsAdvancedConfPage(obsId) =>
         setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case TargetsBasePage                 =>
+      case TargetsBasePage            =>
         setTab(AppTab.Targets) >>> RootModel.focused.replace(none)
-      case TargetPage(targetId)            =>
+      case TargetPage(targetId)       =>
         setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedTarget(targetId).some)
-      case TargetsAsterismPage(asterismId) =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedAsterism(asterismId).some)
-      case TargetsObsPage(obsId)           =>
+      case TargetsObsPage(obsId)      =>
         setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case ConstraintsBasePage             =>
+      case ConstraintsBasePage        =>
         setTab(AppTab.Constraints)
-      case ConfigurationsPage              =>
+      case ConfigurationsPage         =>
         setTab(AppTab.Configurations)
-      case HomePage                        =>
+      case HomePage                   =>
         setTab(AppTab.Overview)
     }
 

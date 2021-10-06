@@ -149,6 +149,45 @@ object ObsQueriesGQL {
       query($obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
+          targets {
+            id
+            scienceTargets {
+              id
+              name
+              tracking {
+                ... on Sidereal {
+                  coordinates {
+                    ra {
+                      microarcseconds
+                    }
+                    dec {
+                      microarcseconds
+                    }
+                  }
+                  epoch
+                  properMotion {
+                    ra {
+                      microarcsecondsPerYear
+                    }
+                    dec {
+                      microarcsecondsPerYear
+                    }
+                  }
+                  radialVelocity {
+                    centimetersPerSecond
+                  }
+                  parallax {
+                    microarcseconds
+                  }
+                }
+              }
+              magnitudes {
+                value
+                band
+                system
+              }                
+            }
+          }
           constraintSet {
             cloudExtinction
             imageQuality
@@ -209,6 +248,8 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
+        type Targets = model.TargetEnv
+
         type ConstraintSet = model.ConstraintSet
 
         object ScienceRequirements {

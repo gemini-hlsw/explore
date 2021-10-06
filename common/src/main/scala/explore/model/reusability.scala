@@ -14,6 +14,8 @@ import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Semester
 import lucuma.ui.reusability._
 import react.common.style.Css
+import lucuma.core.model.Target
+import lucuma.core.model.EphemerisKey
 
 /**
  * Reusability instances for model classes
@@ -29,6 +31,9 @@ object reusability {
   implicit val focusedReuse: Reusability[Focused]                                              = Reusability.derive
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]           =
     Reusability.by(_.toList)
+  implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                                    = Reusability.derive
+  implicit val targetReuse: Reusability[Target]                                                = Reusability.derive
+  implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive
   implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.derive

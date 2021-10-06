@@ -1,34 +1,75 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-// package explore.tabs
+package explore.tabs
 
 // import cats.effect.IO
 // import cats.syntax.all._
-// import crystal.react.implicits._
-// import crystal.react.reuse._
+import crystal.react.implicits._
+import crystal.react.reuse._
 // import eu.timepit.refined.auto._
 // import explore.common.TargetQueries.TargetResult
-// import explore.common.TargetQueriesGQL._
-// import explore.components.Tile
+import explore.common.TargetEnvQueriesGQL._
+import explore.components.Tile
 // import explore.components.graphql.LiveQueryRenderMod
 // import explore.components.ui.ExploreStyles
-// import explore.implicits._
+import explore.implicits._
 // import explore.model._
-// import explore.model.reusability._
+import explore.model.reusability._
 // import explore.optics._
 // import explore.targeteditor.TargetBody
 // import explore.undo.UndoStacks
 // import explore.utils._
-// import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 // import lucuma.core.model.Target
-// import lucuma.core.model.User
+import lucuma.core.model.User
 // import lucuma.schemas.ObservationDB
-// import lucuma.ui.reusability._
+// import lucuma.core.model.TargetEnvironment
+import crystal.Pot
+import explore.model.TargetEnv
+import lucuma.ui.reusability._
 // import react.common._
 // import react.common.implicits._
 
-// object TargetTile {
+object TargetTile {
+
+  protected def renderFn(
+    targetOpt: View[Option[TargetEnvQuery.Data.TargetEnvironment]]
+  ): VdomNode =
+    <.div(targetOpt.toString)
+
+  def targetTile(
+    userId:       Option[User.Id],
+    tePot:        Pot[View[Option[TargetEnv]]]
+  )(implicit ctx: AppContextIO) =
+    Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
+      ((te: Pot[View[Option[TargetEnv]]], _: Tile.RenderInTitle) => te.toString: VdomNode)
+        .reuseCurrying(tePot)
+    )
+
+  // def targetTile(
+  //   userId:       Option[User.Id],
+  //   targetEnvId:  TargetEnvironment.Id
+  // )(implicit ctx: AppContextIO) =
+  //   Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
+  //     (
+  //       (_: Tile.RenderInTitle) =>
+  //         LiveQueryRenderMod[ObservationDB,
+  //                            TargetEnvQuery.Data,
+  //                            Option[TargetEnvQuery.Data.TargetEnvironment]
+  //         ](
+  //           TargetEnvQuery.query(targetEnvId).reuseAlways,
+  //           (TargetEnvQuery.Data.targetEnvironment.get _).reuseAlways,
+  //           List(TargetEnvEditSubscription.subscribe[IO](targetEnvId)).reuseAlways
+  //         )(
+  //           potRender(
+  //             (renderFn _).reuseAlways
+  //           )
+  //         )
+  //           .withKey(s"targetEnv-$targetEnvId"): VdomNode
+  //     ).reuseAlways
+  // )
+
 // def targetTile(
 //   userId:            Option[User.Id],
 //   targetId:          Option[Target.Id],
@@ -91,4 +132,4 @@
 //   )
 // }
 
-// }
+}

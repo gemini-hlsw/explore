@@ -16,7 +16,6 @@ import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
@@ -105,11 +104,6 @@ object Routing {
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
           | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
-            targetTab
-          )
-          | dynamicRouteCT(
-            ("/asterism" / id[Asterism.Id]).xmapL(TargetsAsterismPage.asterismId)
-          ) ~> renderP(
             targetTab
           )
           | dynamicRouteCT(
