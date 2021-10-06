@@ -22,7 +22,7 @@ object Settings {
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaBC          = "0.3.0"
-    val lucumaCore        = "0.13.3+3-a4225d5f-SNAPSHOT"
+    val lucumaCore        = "0.13.4"
     val lucumaCatalog     = "0.5.1"
     val lucumaUI          = "0.17.1"
     val lucumaSchemas     = "0.1.0"
