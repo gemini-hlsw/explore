@@ -18,7 +18,7 @@ object Settings {
     val fs2               = "3.1.4"
     val fs2Data           = "1.1.0"
     val geminiLocales     = "0.6.0"
-    val http4s            = "1.0.0-M27"
+    val http4s            = "1.0.0-M28"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaBC          = "0.3.0"
