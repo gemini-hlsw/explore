@@ -9,7 +9,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 // import eu.timepit.refined.auto._
 // import explore.common.TargetQueries.TargetResult
-import explore.common.TargetEnvQueriesGQL._
+// import explore.common.TargetEnvQueriesGQL._
 import explore.components.Tile
 // import explore.components.graphql.LiveQueryRenderMod
 // import explore.components.ui.ExploreStyles
@@ -20,7 +20,7 @@ import explore.optics._
 // import explore.targeteditor.TargetBody
 import explore.undo.UndoStacks
 import explore.utils._
-import japgolly.scalajs.react._
+// import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -34,8 +34,8 @@ import explore.model.TargetVisualOptions
 import lucuma.core.model.SiderealTarget
 // import react.common._
 // import react.common.implicits._
-import monocle.function.At._
-import monocle.function.At.at
+// import monocle.function.At._
+// import monocle.function.At.at
 import explore.model.ScienceTarget
 
 object TargetTile {
@@ -57,7 +57,7 @@ object TargetTile {
     undoStacks:   View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
     searching:    View[Set[Target.Id]],
     options:      View[TargetVisualOptions]
-  )(implicit ctx: AppContextIO) =
+  ) = //(implicit ctx: AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
       Reuse.by((userId, targetEnvPot, undoStacks, searching, options))(
         (renderInTitle: Tile.RenderInTitle) =>
