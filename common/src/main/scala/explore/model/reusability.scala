@@ -14,8 +14,10 @@ import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Semester
 import lucuma.ui.reusability._
 import react.common.style.Css
-import lucuma.core.model.Target
 import lucuma.core.model.EphemerisKey
+import lucuma.core.model.NonsiderealTarget
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 
 /**
  * Reusability instances for model classes
@@ -32,6 +34,8 @@ object reusability {
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]           =
     Reusability.by(_.toList)
   implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                                    = Reusability.derive
+  implicit val siderealTargetReuse: Reusability[SiderealTarget]                                = Reusability.derive
+  implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                          = Reusability.derive
   implicit val targetReuse: Reusability[Target]                                                = Reusability.derive
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive

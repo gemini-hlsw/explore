@@ -11,6 +11,7 @@ import java.math.MathContext
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
+// TODO Move to lucuma-schemas
 object implicits {
   implicit class MagnitudeOps(m: Magnitude) {
     def toCreateInput: MagnitudeCreateInput =

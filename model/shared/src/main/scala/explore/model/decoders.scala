@@ -29,8 +29,10 @@ import lucuma.core.model.SiderealTracking
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import lucuma.core.model.Target
 import lucuma.core.model.EphemerisKey
+import lucuma.core.model.NonsiderealTarget
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import eu.timepit.refined.types.string
 import scala.collection.immutable.SortedMap
 
@@ -143,16 +145,29 @@ object decoders {
 
   implicit val ephemerisKeyDecoder: Decoder[EphemerisKey] = semiauto.deriveDecoder
 
-  implicit val trackingDecoder: Decoder[Either[EphemerisKey, SiderealTracking]] =
-    ephemerisKeyDecoder.map(Left.apply).or(siderealTrackingDecoder.map(Right.apply))
-
-  implicit val targetDecoder: Decoder[Target] = Decoder.instance(c =>
+  implicit val siderealTargetDecoder: Decoder[SiderealTarget] = Decoder.instance(c =>
     for {
       name       <- c.downField("name").as[string.NonEmptyString]
-      track      <- c.downField("tracking").as[Either[EphemerisKey, SiderealTracking]]
+      tracking   <- c.downField("tracking").as[SiderealTracking]
       magnitudes <- c.downField("magnitudes")
                       .as[List[Magnitude]]
                       .map(mags => SortedMap(mags.map(mag => mag.band -> mag): _*))
-    } yield Target(name, track, magnitudes)
+    } yield SiderealTarget(name, tracking, magnitudes)
   )
+
+  implicit val nonsiderealTargetDecoder: Decoder[NonsiderealTarget] = Decoder.instance(c =>
+    for {
+      name         <- c.downField("name").as[string.NonEmptyString]
+      ephemerisKey <- c.downField("ephemerisKey").as[EphemerisKey]
+      magnitudes   <- c.downField("magnitudes")
+                        .as[List[Magnitude]]
+                        .map(mags => SortedMap(mags.map(mag => mag.band -> mag): _*))
+    } yield NonsiderealTarget(name, ephemerisKey, magnitudes)
+  )
+
+  implicit val targetDecoder: Decoder[Target] =
+    List[Decoder[Target]](
+      Decoder[SiderealTarget].widen,
+      Decoder[NonsiderealTarget].widen
+    ).reduceLeft(_ or _)
 }

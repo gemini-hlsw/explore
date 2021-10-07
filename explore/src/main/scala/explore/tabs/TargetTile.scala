@@ -21,7 +21,7 @@ import explore.model.reusability._
 // import explore.undo.UndoStacks
 // import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
-// import lucuma.core.model.Target
+import lucuma.core.model.Target
 import lucuma.core.model.User
 // import lucuma.schemas.ObservationDB
 // import lucuma.core.model.TargetEnvironment
@@ -40,10 +40,11 @@ object TargetTile {
 
   def targetTile(
     userId:       Option[User.Id],
-    tePot:        Pot[View[Option[TargetEnv]]]
+    tePot:        Pot[View[TargetEnv]],
+    searching:    View[Set[Target.Id]]
   )(implicit ctx: AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
-      ((te: Pot[View[Option[TargetEnv]]], _: Tile.RenderInTitle) => te.toString: VdomNode)
+      ((te: Pot[View[TargetEnv]], _: Tile.RenderInTitle) => te.toString: VdomNode)
         .reuseCurrying(tePot)
     )
 

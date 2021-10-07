@@ -59,7 +59,7 @@ object ConstraintGroupQueries {
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTargetsAndConf =
     ObsSummaryWithTargetsAndConf(obsR.id,
-                                 obsR.targets.foldMap(_.scienceTargets.map(convertTarget)),
+                                 obsR.targets.scienceTargets.map(convertTarget),
                                  obsR.status,
                                  obsR.activeStatus,
                                  obsR.plannedTime.execution

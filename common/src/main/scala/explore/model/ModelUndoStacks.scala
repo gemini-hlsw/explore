@@ -19,7 +19,7 @@ import scala.collection.immutable.SortedSet
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetList:        UndoStacks[F, Nothing] = UndoStacks.empty[F, Nothing],
-  forTarget:            Map[Target.Id, UndoStacks[F, Nothing]] = Map.empty[Target.Id, UndoStacks[F, Nothing]],
+  forTarget:            Map[Target.Id, UndoStacks[F, Target]] = Map.empty[Target.Id, UndoStacks[F, Target]],
   // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
   // forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
   //   Map.empty[Target.Id, UndoStacks[F, TargetResult]],

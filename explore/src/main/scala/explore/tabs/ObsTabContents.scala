@@ -402,10 +402,10 @@ object ObsTabContents {
                 notesTile,
                 TargetTile.targetTile(
                   props.userId.get,
-                  obsView.map(_.zoom(ObservationData.targets))
+                  obsView.map(_.zoom(ObservationData.targets)),
                   // targetId,
                   // props.undoStacks.zoom(ModelUndoStacks.forTarget),
-                  // props.searching,
+                  props.searching
                   // state.zoom(State.options)
                 ),
                 // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

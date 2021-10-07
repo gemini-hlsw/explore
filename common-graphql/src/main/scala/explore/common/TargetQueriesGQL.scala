@@ -3,12 +3,10 @@
 
 package explore.common
 
-// import clue.GraphQLOperation
-// import clue.annotation.GraphQL
-// import lucuma.schemas.ObservationDB
-// // gql: import explore.model.decoders._
-// // gql: import io.circe.refined._
-// // gql: import lucuma.ui.reusability._
+import clue.GraphQLOperation
+import clue.annotation.GraphQL
+import lucuma.schemas.ObservationDB
+// gql: import lucuma.ui.reusability._
 
 object TargetQueriesGQL {
 
@@ -74,14 +72,18 @@ object TargetQueriesGQL {
   //     """
   // }
 
-  // @GraphQL
-  // trait TargetMutation extends GraphQLOperation[ObservationDB] {
-  //   val document = """
-  //     mutation($input: EditSiderealInput!) {
-  //       updateSiderealTarget(input: $input) {
-  //         id
-  //       }
-  //     }
-  //   """
-  // }
+  @GraphQL
+  trait SiderealTargetMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: EditSiderealInput!) {
+        updateScienceTarget(input: { editSidereal: $input} ) {
+          edits {
+            target {
+              id
+            }
+          }
+        }
+      }
+    """
+  }
 }

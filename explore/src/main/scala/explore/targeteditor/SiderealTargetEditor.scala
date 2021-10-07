@@ -3,47 +3,52 @@
 
 package explore.targeteditor
 
-// import cats.effect.IO
-// import cats.syntax.all._
-// import clue.data.syntax._
-// import crystal.react.implicits._
-// import crystal.react.reuse._
-// import eu.timepit.refined.auto._
+import cats.effect.IO
+import cats.syntax.all._
+import clue.data.syntax._
+import crystal.react.implicits._
+import crystal.react.reuse._
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
-// import explore.AppCtx
-// import explore.View
-// import explore.common.SimbadSearch
-// import explore.common.TargetQueries
-// import explore.common.TargetQueries._
-// import explore.components.HelpIcon
+import explore.AppCtx
+import explore.View
+import explore.common.SimbadSearch
+import explore.common.TargetQueries
+import explore.common.TargetQueries._
+import explore.components.HelpIcon
 // import explore.components.Tile
-// import explore.components.ui.ExploreStyles
+import explore.components.ui.ExploreStyles
 // import explore.components.undo.UndoButtons
-// import explore.implicits._
+import explore.implicits._
 // import explore.model.TargetVisualOptions
 // import explore.model.formats._
-// import explore.model.reusability._
+import explore.model.reusability._
 // import explore.model.utils._
-// import explore.undo.UndoContext
-// import explore.undo.UndoStacks
+import explore.undo.UndoContext
+import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-// import japgolly.scalajs.react.vdom.html_<^._
-// import lucuma.core.math._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math._
 // import lucuma.core.model.Magnitude
 // import lucuma.core.model.SiderealTracking
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
-// import lucuma.core.model.User
-// import lucuma.schemas.ObservationDB.Types._
-// import lucuma.ui.forms.FormInputEV
-// import lucuma.ui.implicits._
-// import lucuma.ui.optics.ChangeAuditor
-// import lucuma.ui.optics.TruncatedDec
-// import lucuma.ui.optics.TruncatedRA
-// import lucuma.ui.optics.ValidFormatInput
-// import lucuma.ui.reusability._
-// import react.common._
+import lucuma.core.model.User
+import lucuma.schemas.ObservationDB.Types._
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.implicits._
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
+import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.reusability._
+import react.common._
+// import lucuma.core.model.EphemerisKey
+// import lucuma.core.enum.MagnitudeBand
+// import scala.collection.immutable.SortedMap
+import monocle.Iso
 // import react.semanticui.collections.form.Form
-// import react.semanticui.elements.label.LabelPointing
+import react.semanticui.elements.label.LabelPointing
 // import react.semanticui.sizes.Small
 
 final case class SearchCallback(
@@ -52,6 +57,17 @@ final case class SearchCallback(
   onError:    Throwable => Callback
 ) {
   def run: Callback = Callback.empty
+}
+
+final case class SiderealTargetEditor(
+  uid:        User.Id,
+  id:         Target.Id,
+  target:     View[SiderealTarget],
+  undoStacks: View[UndoStacks[IO, SiderealTarget]],
+  searching:  View[Set[Target.Id]]
+) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
+  val baseCoordinates: Coordinates =
+    target.zoom(SiderealTarget.baseCoordinates).get
 }
 
 // final case class TargetBody(
@@ -67,34 +83,34 @@ final case class SearchCallback(
 //     target.zoom(TargetQueries.baseCoordinates).get
 // }
 
-// object TargetBody {
+object SiderealTargetEditor {
 
-//   type Props = TargetBody
+  type Props = SiderealTargetEditor
 
-//   implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-//   val AladinRef = AladinCell.component
+  val AladinRef = AladinCell.component
 
-//   class Backend() {
-//     def render(props: Props) =
-//       AppCtx.using { implicit appCtx =>
-//         val undoCtx     = UndoContext(props.undoStacks, props.target)
-//         val target      = props.target.get
-//         val undoViewSet = UndoView(props.id, undoCtx)
+  class Backend() {
+    def render(props: Props) =
+      AppCtx.using { implicit appCtx =>
+        val undoCtx     = UndoContext(props.undoStacks, props.target)
+        val target      = props.target.get
+        val undoViewSet = UndoView(props.id, undoCtx)
 
-//         val allView = undoViewSet(
-//           targetPropsL,
-//           { args: (NonEmptyString, SiderealTracking, List[Magnitude]) =>
-//             EditSiderealInput.name.replace(args._1.value.assign) >>>
-//               TargetQueries.UpdateSiderealTracking(args._2) >>>
-//               TargetQueries.replaceMagnitudes(args._3)
-//           }
-//         )
+        val allView = undoViewSet(
+          Iso.id.asLens,
+          { t: SiderealTarget =>
+            EditSiderealInput.name.replace(t.name.assign) >>>
+              TargetQueries.UpdateSiderealTracking(t.tracking) >>>
+              TargetQueries.replaceMagnitudes(t.magnitudes.values.toList)
+          }
+        )
 
-//         val coordsRAView = undoViewSet(
-//           TargetQueries.baseCoordinatesRa,
-//           (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
-//         )
+        val coordsRAView = undoViewSet(
+          SiderealTarget.baseRA,
+          (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
+        )
 
 //         val coordsDecView = undoViewSet(
 //           TargetQueries.baseCoordinatesDec,
@@ -110,10 +126,10 @@ final case class SearchCallback(
 //         val magnitudesView =
 //           undoViewSet(TargetResult.magnitudes, TargetQueries.replaceMagnitudes)
 
-//         val nameView = undoViewSet(
-//           TargetResult.name,
-//           (EditSiderealInput.name.replace _).compose((_: NonEmptyString).value.assign)
-//         )
+        val nameView = undoViewSet(
+          SiderealTarget.name,
+          (EditSiderealInput.name.replace _).compose((_: NonEmptyString).assign)
+        )
 
 //         val properMotionRAView = undoViewSet(
 //           TargetQueries.pmRALens,
@@ -141,51 +157,51 @@ final case class SearchCallback(
 //           TargetQueries.UpdateSiderealTracking.radialVelocity
 //         )
 
-//         def searchAndSet(
-//           allView:  View[(NonEmptyString, SiderealTracking, List[Magnitude])],
-//           nameView: View[NonEmptyString],
-//           s:        SearchCallback
-//         ): Callback =
-//           SimbadSearch
-//             .search[IO](s.searchTerm)
-//             .runAsyncAndThenCB {
-//               case Right(r @ Some(Target(n, Right(st), m))) =>
-//                 allView.set((n, st, m.values.toList)).toCB >> s.onComplete(r)
-//               case Right(Some(r))                           =>
-//                 Callback.log(s"Unknown target type $r") >>
-//                   nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-//               case Right(None)                              =>
-//                 nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-//               case Left(t)                                  =>
-//                 nameView.set(s.searchTerm).toCB >> s.onError(t)
-//             }
+        def searchAndSet(
+          allView:  View[SiderealTarget],
+          nameView: View[NonEmptyString],
+          s:        SearchCallback
+        ): Callback =
+          SimbadSearch
+            .search[IO](s.searchTerm)
+            .runAsyncAndThenCB {
+              case Right(r @ Some(t)) =>
+                allView.set(t).toCB >> s.onComplete(r)
+              // case Right(Some(r))     =>
+              //   Callback.log(s"Unknown target type $r") >>
+              //     nameView.set(s.searchTerm).toCB >> s.onComplete(none)
+              case Right(None)        =>
+                nameView.set(s.searchTerm).toCB >> s.onComplete(none)
+              case Left(t)            =>
+                nameView.set(s.searchTerm).toCB >> s.onError(t)
+            }
 
-//         val disabled = props.searching.get.exists(_ === props.id)
+        val disabled = props.searching.get.exists(_ === props.id)
 
-//         React.Fragment(
-//           <.div(ExploreStyles.TargetGrid)(
-//             <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
-//               // Keep the search field and the coords always together
-//               SearchForm(
-//                 props.id,
-//                 // SearchForm doesn't edit the name directly. It will set it atomically, together
-//                 // with coords & magnitudes from the catalog search, so that all 3 fields are
-//                 // a single undo/redo operation.
-//                 props.target.zoom(TargetResult.name).get,
-//                 props.searching,
-//                 Reuse.currying(allView, nameView).in(searchAndSet _)
-//               ),
-//               <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-//               FormInputEV(
-//                 id = "ra",
-//                 value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-//                 validFormat = ValidFormatInput.truncatedRA,
-//                 changeAuditor = ChangeAuditor.truncatedRA,
-//                 clazz = ExploreStyles.TargetRaDecMinWidth,
-//                 errorPointing = LabelPointing.Below,
-//                 errorClazz = ExploreStyles.InputErrorTooltip,
-//                 disabled = disabled
-//               ),
+        React.Fragment(
+          <.div(ExploreStyles.TargetGrid)(
+            <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
+              // Keep the search field and the coords always together
+              SearchForm(
+                props.id,
+                // SearchForm doesn't edit the name directly. It will set it atomically, together
+                // with coords & magnitudes from the catalog search, so that all 3 fields are
+                // a single undo/redo operation.
+                props.target.zoom(SiderealTarget.name).get,
+                props.searching,
+                Reuse.currying(allView, nameView).in(searchAndSet _)
+              ),
+              <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+              FormInputEV(
+                id = "ra",
+                value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                validFormat = ValidFormatInput.truncatedRA,
+                changeAuditor = ChangeAuditor.truncatedRA,
+                clazz = ExploreStyles.TargetRaDecMinWidth,
+                errorPointing = LabelPointing.Below,
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                disabled = disabled
+              )
 //               <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
 //               FormInputEV(
 //                 id = "dec",
@@ -253,17 +269,17 @@ final case class SearchCallback(
 //             ),
 //             props.renderInTitle(
 //               <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
-//             )
-//           )
-//         )
-//       }
-//   }
+            )
+          )
+        )
+      }
+  }
 
-//   val component =
-//     ScalaComponent
-//       .builder[Props]
-//       .renderBackend[Backend]
-//       .configure(Reusability.shouldComponentUpdate)
-//       .build
+  val component =
+    ScalaComponent
+      .builder[Props]
+      .renderBackend[Backend]
+      .configure(Reusability.shouldComponentUpdate)
+      .build
 
-// }
+}
