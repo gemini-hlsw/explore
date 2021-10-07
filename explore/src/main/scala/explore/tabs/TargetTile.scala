@@ -3,7 +3,7 @@
 
 package explore.tabs
 
-// import cats.effect.IO
+import cats.effect.IO
 // import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -16,10 +16,11 @@ import explore.components.Tile
 import explore.implicits._
 // import explore.model._
 import explore.model.reusability._
-// import explore.optics._
+import explore.optics._
 // import explore.targeteditor.TargetBody
-// import explore.undo.UndoStacks
-// import explore.utils._
+import explore.undo.UndoStacks
+import explore.utils._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -28,48 +29,106 @@ import lucuma.core.model.User
 import crystal.Pot
 import explore.model.TargetEnv
 import lucuma.ui.reusability._
+import explore.targeteditor.SiderealTargetEditor
+import explore.model.TargetVisualOptions
+import lucuma.core.model.SiderealTarget
 // import react.common._
 // import react.common.implicits._
+import monocle.function.At._
+import monocle.function.At.at
+import explore.model.ScienceTarget
 
 object TargetTile {
 
-  protected def renderFn(
-    targetOpt: View[Option[TargetEnvQuery.Data.TargetEnvironment]]
-  ): VdomNode =
-    <.div(targetOpt.toString)
+  // protected def renderFn(
+  //   uid:           User.Id,
+  //   targetId:      Target.Id,
+  //   target:        View[SiderealTarget],
+  //   undoStacks:    View[UndoStacks[IO, SiderealTarget]],
+  //   searching:     View[Set[Target.Id]],
+  //   options:       View[TargetVisualOptions],
+  //   renderInTitle: Tile.RenderInTitle
+  // ): VdomNode =
+  //   SiderealTarget(uid, targetId, target, undoStacks, searching, options, renderInTitle)
 
   def targetTile(
     userId:       Option[User.Id],
-    tePot:        Pot[View[TargetEnv]],
-    searching:    View[Set[Target.Id]]
+    targetEnvPot: Pot[View[TargetEnv]],
+    undoStacks:   View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+    searching:    View[Set[Target.Id]],
+    options:      View[TargetVisualOptions]
   )(implicit ctx: AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
-      ((te: Pot[View[TargetEnv]], _: Tile.RenderInTitle) => te.toString: VdomNode)
-        .reuseCurrying(tePot)
+      Reuse.by((userId, targetEnvPot, undoStacks, searching, options))(
+        (renderInTitle: Tile.RenderInTitle) =>
+          potRender[View[TargetEnv]](
+            (
+              (targetEnv: View[TargetEnv]) =>
+                userId.map(uid =>
+                  <.div(
+                    targetEnv.toString,
+                    SiderealTargetEditor(
+                      uid,
+                      targetEnv.get.scienceTargets.head.id,
+                      targetEnv
+                        .zoom(TargetEnv.scienceTargets)
+                        .zoom(_.head.target.asInstanceOf[SiderealTarget])(mod =>
+                          list =>
+                            ScienceTarget(list.head.id,
+                                          mod(list.head.target.asInstanceOf[SiderealTarget])
+                            ) +: list.tail
+                        ),
+                      undoStacks
+                        .zoom(
+                          atMapWithDefault(targetEnv.get.scienceTargets.head.id, UndoStacks.empty)
+                        ),
+                      searching,
+                      options,
+                      renderInTitle
+                    )
+                  )
+                ): VdomNode
+            ).reuseAlways
+          )(
+            targetEnvPot
+          )
+      )
+      // (
+      //   (renderFn _).reuseCurrying(
+      //     userId,
+      //     targetId,
+      //     tePot.zoom(???),
+      //     undoStacks.zoom(???),
+      //     searching,
+      //     options
+      //   )
+      // )
     )
 
-  // def targetTile(
-  //   userId:       Option[User.Id],
-  //   targetEnvId:  TargetEnvironment.Id
-  // )(implicit ctx: AppContextIO) =
-  //   Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
-  //     (
-  //       (_: Tile.RenderInTitle) =>
-  //         LiveQueryRenderMod[ObservationDB,
-  //                            TargetEnvQuery.Data,
-  //                            Option[TargetEnvQuery.Data.TargetEnvironment]
-  //         ](
-  //           TargetEnvQuery.query(targetEnvId).reuseAlways,
-  //           (TargetEnvQuery.Data.targetEnvironment.get _).reuseAlways,
-  //           List(TargetEnvEditSubscription.subscribe[IO](targetEnvId)).reuseAlways
-  //         )(
-  //           potRender(
-  //             (renderFn _).reuseAlways
-  //           )
-  //         )
-  //           .withKey(s"targetEnv-$targetEnvId"): VdomNode
-  //     ).reuseAlways
-  // )
+}
+
+// def targetTile(
+//   userId:       Option[User.Id],
+//   targetEnvId:  TargetEnvironment.Id
+// )(implicit ctx: AppContextIO) =
+//   Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
+//     (
+//       (_: Tile.RenderInTitle) =>
+//         LiveQueryRenderMod[ObservationDB,
+//                            TargetEnvQuery.Data,
+//                            Option[TargetEnvQuery.Data.TargetEnvironment]
+//         ](
+//           TargetEnvQuery.query(targetEnvId).reuseAlways,
+//           (TargetEnvQuery.Data.targetEnvironment.get _).reuseAlways,
+//           List(TargetEnvEditSubscription.subscribe[IO](targetEnvId)).reuseAlways
+//         )(
+//           potRender(
+//             (renderFn _).reuseAlways
+//           )
+//         )
+//           .withKey(s"targetEnv-$targetEnvId"): VdomNode
+//     ).reuseAlways
+// )
 
 // def targetTile(
 //   userId:            Option[User.Id],
@@ -133,4 +192,4 @@ object TargetTile {
 //   )
 // }
 
-}
+// }

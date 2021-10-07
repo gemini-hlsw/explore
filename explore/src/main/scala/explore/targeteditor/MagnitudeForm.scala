@@ -36,11 +36,11 @@ import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
-import scala.collection.immutable.HashSet
+import scala.collection.immutable.SortedMap
 
 final case class MagnitudeForm(
   targetId:   Target.Id,
-  magnitudes: View[List[Magnitude]],
+  magnitudes: View[SortedMap[MagnitudeBand, Magnitude]],
   disabled:   Boolean
 ) extends ReactFnProps[MagnitudeForm](MagnitudeForm.component)
 
@@ -53,8 +53,8 @@ object MagnitudeForm {
     val usedBands = Focus[State](_.usedBands)
     val newBand   = Focus[State](_.newBand)
 
-    def fromUsedMagnitudes(magnitudes: List[Magnitude]): State = {
-      val usedBands = HashSet.from(magnitudes.map(_.band))
+    def fromUsedMagnitudes(magnitudes: SortedMap[MagnitudeBand, Magnitude]): State = {
+      val usedBands = magnitudes.keySet
       State(usedBands, MagnitudeBand.all.diff(usedBands.toList).headOption)
     }
   }
@@ -88,10 +88,10 @@ object MagnitudeForm {
       .useMemoBy((props, _) => (props.magnitudes, props.disabled)) { (_, _) => // Memo cols
         { case (magnitudes, disabled) =>
           val deleteFn: View[Magnitude] => Callback =
-            mag => magnitudes.mod(_.filterNot(_.band === mag.get.band))
+            mag => magnitudes.mod(_.filterNot(_._1 === mag.get.band))
 
           val excludeFn: View[Magnitude] => Set[MagnitudeBand] =
-            mag => HashSet.from(magnitudes.get.map(_.band)) - mag.get.band
+            mag => magnitudes.get.keySet - mag.get.band
 
           List(
             MagTable
@@ -141,7 +141,10 @@ object MagnitudeForm {
           )
         }
       }
-      .useMemoBy((props, _, _) => props.magnitudes)((_, _, _) => _.toListOfViews(_.band)) // Rows
+      // rows
+      .useMemoBy((props, _, _) => props.magnitudes)((_, _, _) =>
+        _.widen[Map[MagnitudeBand, Magnitude]].toListOfViews
+      )
       .useTableBy((_, _, cols, rows) =>
         MagTable(cols,
                  rows,
@@ -170,9 +173,11 @@ object MagnitudeForm {
                 ExploreStyles.MagnitudesTableFooter,
                 newBandView.whenDefined { view =>
                   val addMagnitude =
-                    props.magnitudes.mod(list =>
-                      (list :+ Magnitude(MagnitudeValue(0), view.get, view.get.magnitudeSystem))
-                        .sortBy(_.band)
+                    props.magnitudes.mod(mags =>
+                      (mags + (view.get -> Magnitude(MagnitudeValue(0),
+                                                     view.get,
+                                                     view.get.magnitudeSystem
+                      )))
                     )
 
                   React.Fragment(

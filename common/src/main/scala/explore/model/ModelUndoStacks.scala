@@ -7,11 +7,10 @@ import cats.Eq
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
-// import explore.common.TargetObsQueries.PointingsWithObs
-// import explore.common.TargetQueries.TargetResult
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.SiderealTarget
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
@@ -19,10 +18,9 @@ import scala.collection.immutable.SortedSet
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetList:        UndoStacks[F, Nothing] = UndoStacks.empty[F, Nothing],
-  forTarget:            Map[Target.Id, UndoStacks[F, Target]] = Map.empty[Target.Id, UndoStacks[F, Target]],
   // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  // forTarget:            Map[Target.Id, UndoStacks[F, TargetResult]] =
-  //   Map.empty[Target.Id, UndoStacks[F, TargetResult]],
+  forSiderealTarget:    Map[Target.Id, UndoStacks[F, SiderealTarget]] =
+    Map.empty[Target.Id, UndoStacks[F, SiderealTarget]],
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintSet:     Map[Observation.Id, UndoStacks[F, ConstraintSet]] =
     Map.empty[Observation.Id, UndoStacks[F, ConstraintSet]],
@@ -35,7 +33,7 @@ case class ModelUndoStacks[F[_]](
 object ModelUndoStacks {
   def forObsList[F[_]]           = Focus[ModelUndoStacks[F]](_.forObsList)
   def forTargetList[F[_]]        = Focus[ModelUndoStacks[F]](_.forTargetList)
-  def forTarget[F[_]]            = Focus[ModelUndoStacks[F]](_.forTarget)
+  def forSiderealTarget[F[_]]    = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
   def forConstraintList[F[_]]    = Focus[ModelUndoStacks[F]](_.forConstraintList)
   def forConstraintSet[F[_]]     = Focus[ModelUndoStacks[F]](_.forConstraintSet)
   def forBulkConstraintSet[F[_]] = Focus[ModelUndoStacks[F]](_.forBulkConstraintSet)
@@ -45,7 +43,7 @@ object ModelUndoStacks {
     Eq.by(u =>
       (u.forObsList,
        u.forTargetList,
-       u.forTarget,
+       u.forSiderealTarget,
        u.forConstraintList,
        u.forConstraintSet,
        u.forBulkConstraintSet,
