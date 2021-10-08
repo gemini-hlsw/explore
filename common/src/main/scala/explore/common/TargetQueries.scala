@@ -7,11 +7,8 @@ import cats.Endo
 import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.implicits._
-// import eu.timepit.refined.auto._
 import explore.implicits._
-// import explore.optics._
 import explore.schemas.implicits._
-// import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
@@ -28,44 +25,10 @@ import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
 import TargetQueriesGQL._
+import scala.collection.immutable.SortedMap
+import lucuma.core.enum.MagnitudeBand
 
 object TargetQueries {
-
-  // type TargetResult = TargetEditQuery.Data.Target
-  // val TargetResult = TargetEditQuery.Data.Target
-
-  // /**
-  //  * Lens for the base coordinates of TargetResult.Tracking
-  //  */
-  // val baseCoordinates: Lens[Target, Coordinates] =
-  //   Target.track.andThen(SiderealTracking.baseCoordinates)
-
-  // val baseCoordinatesRa: Lens[Target, RightAscension] =
-  //   baseCoordinates.andThen(Coordinates.rightAscension)
-
-  // val baseCoordinatesDec: Lens[Target, Declination] =
-  //   baseCoordinates.andThen(Coordinates.declination)
-
-  /**
-   * Lens used to change name and coordinates of a target
-   */
-
-  // val targetPropsL = disjointZip(Target.name, Target.track, Target.magnitudes)
-
-  // val pmRALens: Lens[TargetResult, Option[ProperMotion.RA]] =
-  //   TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMRALensO)
-
-  // val pmDecLens: Lens[TargetResult, Option[ProperMotion.Dec]] =
-  //   TargetResult.tracking.andThen(SiderealTracking.properMotion).andThen(unsafePMDecLensO)
-
-  // val epoch: Lens[TargetResult, Epoch] =
-  //   TargetResult.tracking.andThen(SiderealTracking.epoch)
-
-  // val pxLens: Lens[TargetResult, Option[Parallax]] =
-  //   TargetResult.tracking.andThen(SiderealTracking.parallax)
-
-  // val rvLens: Lens[TargetResult, Option[RadialVelocity]] =
-  //   TargetResult.tracking.andThen(SiderealTracking.radialVelocity)
 
   case class UndoView(
     id:           Target.Id,
@@ -156,8 +119,8 @@ object TargetQueries {
         parallax(t.parallax)
   }
 
-  def replaceMagnitudes(mags: List[Magnitude]): Endo[EditSiderealInput] =
+  def replaceMagnitudes(mags: SortedMap[MagnitudeBand, Magnitude]): Endo[EditSiderealInput] =
     EditSiderealInput.magnitudes.replace(
-      MagnitudeEditList(replaceList = mags.map(_.toCreateInput).assign).assign
+      MagnitudeEditList(replaceList = mags.values.toList.map(_.toCreateInput).assign).assign
     )
 }

@@ -5,10 +5,8 @@ package explore
 
 import cats.syntax.all._
 import coulomb._
-import explore.model.utils._
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.units._
@@ -133,16 +131,6 @@ package object optics {
   def disjointZip[S, A, B, C](l1: Lens[S, A], l2: Lens[S, B], l3: Lens[S, C]): Lens[S, (A, B, C)] =
     Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s)))((abc: (A, B, C)) =>
       (s: S) => l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s)))
-    )
-
-  val unsafePMDecLensO: Lens[Option[ProperMotion], Option[ProperMotion.Dec]] =
-    Lens[Option[ProperMotion], Option[ProperMotion.Dec]](_.map(ProperMotion.dec.get))(s =>
-      a => buildProperMotion(a.map(_.ra), s)
-    )
-
-  val unsafePMRALensO: Lens[Option[ProperMotion], Option[ProperMotion.RA]] =
-    Lens[Option[ProperMotion], Option[ProperMotion.RA]](_.map(ProperMotion.ra.get))(s =>
-      a => buildProperMotion(s, a.map(_.dec))
     )
 
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =

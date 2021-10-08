@@ -1,8 +1,9 @@
-// // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
-// // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 package explore.targeteditor
 
+import cats.Endo
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
@@ -16,21 +17,19 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
-// import explore.components.Tile
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
-// import explore.components.undo.UndoButtons
+import explore.components.undo.UndoButtons
 import explore.implicits._
-// import explore.model.TargetVisualOptions
-// import explore.model.formats._
+import explore.model.TargetVisualOptions
+import explore.model.formats._
 import explore.model.reusability._
-// import explore.model.utils._
+import explore.model.utils._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-// import lucuma.core.model.Magnitude
-// import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -43,13 +42,10 @@ import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-// import lucuma.core.model.EphemerisKey
-// import lucuma.core.enum.MagnitudeBand
-// import scala.collection.immutable.SortedMap
 import monocle.Iso
-// import react.semanticui.collections.form.Form
+import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
-// import react.semanticui.sizes.Small
+import react.semanticui.sizes.Small
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -60,28 +56,17 @@ final case class SearchCallback(
 }
 
 final case class SiderealTargetEditor(
-  uid:        User.Id,
-  id:         Target.Id,
-  target:     View[SiderealTarget],
-  undoStacks: View[UndoStacks[IO, SiderealTarget]],
-  searching:  View[Set[Target.Id]]
+  uid:           User.Id,
+  id:            Target.Id,
+  target:        View[SiderealTarget],
+  undoStacks:    View[UndoStacks[IO, SiderealTarget]],
+  searching:     View[Set[Target.Id]],
+  options:       View[TargetVisualOptions],
+  renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(SiderealTarget.baseCoordinates).get
 }
-
-// final case class TargetBody(
-//   uid:           User.Id,
-//   id:            Target.Id,
-//   target:        View[TargetResult],
-//   undoStacks:    View[UndoStacks[IO, TargetResult]],
-//   searching:     View[Set[Target.Id]],
-//   options:       View[TargetVisualOptions],
-//   renderInTitle: Tile.RenderInTitle
-// ) extends ReactProps[TargetBody](TargetBody.component) {
-//   val baseCoordinates: Coordinates =
-//     target.zoom(TargetQueries.baseCoordinates).get
-// }
 
 object SiderealTargetEditor {
 
@@ -103,7 +88,7 @@ object SiderealTargetEditor {
           { t: SiderealTarget =>
             EditSiderealInput.name.replace(t.name.assign) >>>
               TargetQueries.UpdateSiderealTracking(t.tracking) >>>
-              TargetQueries.replaceMagnitudes(t.magnitudes.values.toList)
+              TargetQueries.replaceMagnitudes(t.magnitudes)
           }
         )
 
@@ -112,50 +97,54 @@ object SiderealTargetEditor {
           (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
         )
 
-//         val coordsDecView = undoViewSet(
-//           TargetQueries.baseCoordinatesDec,
-//           (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
-//         )
+        val coordsDecView = undoViewSet(
+          SiderealTarget.baseDec,
+          (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
+        )
 
-//         val epochView =
-//           undoViewSet(
-//             TargetQueries.epoch,
-//             (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
-//           )
+        val epochView =
+          undoViewSet(
+            SiderealTarget.epoch,
+            (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
+          )
 
-//         val magnitudesView =
-//           undoViewSet(TargetResult.magnitudes, TargetQueries.replaceMagnitudes)
+        val magnitudesView =
+          undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
 
         val nameView = undoViewSet(
           SiderealTarget.name,
           (EditSiderealInput.name.replace _).compose((_: NonEmptyString).assign)
         )
 
-//         val properMotionRAView = undoViewSet(
-//           TargetQueries.pmRALens,
-//           (pmRA: Option[ProperMotion.RA]) =>
-//             TargetQueries.UpdateSiderealTracking.properMotion(
-//               buildProperMotion(pmRA, TargetQueries.pmDecLens.get(target))
-//             )
-//         )
+        val properMotionRAView = undoViewSet(
+          SiderealTarget.properMotionRA.getOption,
+          (f: Endo[Option[ProperMotion.RA]]) =>
+            SiderealTarget.properMotionRA.modify(unsafeOptionFnUnlift(f)),
+          (pmRA: Option[ProperMotion.RA]) =>
+            TargetQueries.UpdateSiderealTracking.properMotion(
+              buildProperMotion(pmRA, SiderealTarget.properMotionDec.getOption(target))
+            )
+        )
 
-//         val properMotionDecView = undoViewSet(
-//           TargetQueries.pmDecLens,
-//           (pmDec: Option[ProperMotion.Dec]) =>
-//             TargetQueries.UpdateSiderealTracking.properMotion(
-//               buildProperMotion(TargetQueries.pmRALens.get(target), pmDec)
-//             )
-//         )
+        val properMotionDecView = undoViewSet(
+          SiderealTarget.properMotionDec.getOption,
+          (f: Endo[Option[ProperMotion.Dec]]) =>
+            SiderealTarget.properMotionDec.modify(unsafeOptionFnUnlift(f)),
+          (pmDec: Option[ProperMotion.Dec]) =>
+            TargetQueries.UpdateSiderealTracking.properMotion(
+              buildProperMotion(SiderealTarget.properMotionRA.getOption(target), pmDec)
+            )
+        )
 
-//         val parallaxView = undoViewSet(
-//           TargetQueries.pxLens,
-//           TargetQueries.UpdateSiderealTracking.parallax
-//         )
+        val parallaxView = undoViewSet(
+          SiderealTarget.parallax,
+          TargetQueries.UpdateSiderealTracking.parallax
+        )
 
-//         val radialVelocityView = undoViewSet(
-//           TargetQueries.rvLens,
-//           TargetQueries.UpdateSiderealTracking.radialVelocity
-//         )
+        val radialVelocityView = undoViewSet(
+          SiderealTarget.radialVelocity,
+          TargetQueries.UpdateSiderealTracking.radialVelocity
+        )
 
         def searchAndSet(
           allView:  View[SiderealTarget],
@@ -167,9 +156,6 @@ object SiderealTargetEditor {
             .runAsyncAndThenCB {
               case Right(r @ Some(t)) =>
                 allView.set(t).toCB >> s.onComplete(r)
-              // case Right(Some(r))     =>
-              //   Callback.log(s"Unknown target type $r") >>
-              //     nameView.set(s.searchTerm).toCB >> s.onComplete(none)
               case Right(None)        =>
                 nameView.set(s.searchTerm).toCB >> s.onComplete(none)
               case Left(t)            =>
@@ -201,74 +187,74 @@ object SiderealTargetEditor {
                 errorPointing = LabelPointing.Below,
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 disabled = disabled
+              ),
+              <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+              FormInputEV(
+                id = "dec",
+                value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                validFormat = ValidFormatInput.truncatedDec,
+                changeAuditor = ChangeAuditor.truncatedDec,
+                clazz = ExploreStyles.TargetRaDecMinWidth,
+                errorPointing = LabelPointing.Below,
+                errorClazz = ExploreStyles.InputErrorTooltip,
+                disabled = disabled
               )
-//               <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-//               FormInputEV(
-//                 id = "dec",
-//                 value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-//                 validFormat = ValidFormatInput.truncatedDec,
-//                 changeAuditor = ChangeAuditor.truncatedDec,
-//                 clazz = ExploreStyles.TargetRaDecMinWidth,
-//                 errorPointing = LabelPointing.Below,
-//                 errorClazz = ExploreStyles.InputErrorTooltip,
-//                 disabled = disabled
-//               )
-//             ),
-//             AladinCell(
-//               props.uid,
-//               props.target.get.id,
-//               props.target.zoom(TargetQueries.baseCoordinates),
-//               props.options
-//             ),
-//             CataloguesForm(props.options).when(false),
-//             Form(as = <.div, size = Small)(
-//               ExploreStyles.Grid,
-//               ExploreStyles.Compact,
-//               ExploreStyles.ExploreForm,
-//               <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
-//               InputWithUnits(
-//                 epochView,
-//                 ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-//                 ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
-//                 id = "epoch",
-//                 units = "years",
-//                 disabled = disabled
-//               ),
-//               <.label("µ RA", ExploreStyles.SkipToNext),
-//               InputWithUnits(
-//                 properMotionRAView,
-//                 ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
-//                 ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
-//                 id = "raPM",
-//                 units = "mas/y",
-//                 disabled = disabled
-//               ),
-//               <.label("µ Dec", ExploreStyles.SkipToNext),
-//               InputWithUnits(
-//                 properMotionDecView,
-//                 ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
-//                 ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
-//                 id = "raDec",
-//                 units = "mas/y",
-//                 disabled = disabled
-//               ),
-//               <.label("Parallax", ExploreStyles.SkipToNext),
-//               InputWithUnits(
-//                 parallaxView,
-//                 ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
-//                 ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
-//                 id = "parallax",
-//                 units = "mas",
-//                 disabled = disabled
-//               ),
-//               RVInput(radialVelocityView, disabled)
-//             ),
-//             MagnitudeForm(target.id, magnitudesView, disabled = disabled),
-//             <.div(ExploreStyles.TargetSkyplotCell)(
-//               SkyPlotSection(props.baseCoordinates)
-//             ),
-//             props.renderInTitle(
-//               <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
+            ),
+            AladinCell(
+              props.uid,
+              props.id,
+              props.target.zoom(SiderealTarget.baseCoordinates),
+              props.options
+            ),
+            CataloguesForm(props.options).when(false),
+            Form(as = <.div, size = Small)(
+              ExploreStyles.Grid,
+              ExploreStyles.Compact,
+              ExploreStyles.ExploreForm,
+              <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
+              InputWithUnits(
+                epochView,
+                ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
+                ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                id = "epoch",
+                units = "years",
+                disabled = disabled
+              ),
+              <.label("µ RA", ExploreStyles.SkipToNext),
+              InputWithUnits(
+                properMotionRAView,
+                ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                id = "raPM",
+                units = "mas/y",
+                disabled = disabled
+              ),
+              <.label("µ Dec", ExploreStyles.SkipToNext),
+              InputWithUnits(
+                properMotionDecView,
+                ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                id = "raDec",
+                units = "mas/y",
+                disabled = disabled
+              ),
+              <.label("Parallax", ExploreStyles.SkipToNext),
+              InputWithUnits(
+                parallaxView,
+                ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                id = "parallax",
+                units = "mas",
+                disabled = disabled
+              ),
+              RVInput(radialVelocityView, disabled)
+            ),
+            MagnitudeForm(props.id, magnitudesView, disabled = disabled),
+            <.div(ExploreStyles.TargetSkyplotCell)(
+              SkyPlotSection(props.baseCoordinates)
+            ),
+            props.renderInTitle(
+              <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
             )
           )
         )

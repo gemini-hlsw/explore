@@ -37,6 +37,7 @@ object reusability {
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                = Reusability.derive
   implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                          = Reusability.derive
   implicit val targetReuse: Reusability[Target]                                                = Reusability.derive
+  implicit val scienceTargetReuse: Reusability[ScienceTarget]                                  = Reusability.derive
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive
