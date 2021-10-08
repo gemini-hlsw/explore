@@ -299,7 +299,7 @@ object ObsQueriesGQL {
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($obsIds: [ObservationId!]!, $input: EditConstraintSetInput!){
-        updateConstraintSet(input: {observationIds: $obsIds, constraintSet: $input}) {
+        updateConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
           id
         }
       }
