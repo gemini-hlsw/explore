@@ -77,7 +77,7 @@ object Routing {
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
           model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forBulkConstraintSet),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forConstraintGroup),
           model.zoom(RootModel.constraintSummaryHiddenColumns),
           model.zoom(RootModel.constraintSummarySorting),
           size
@@ -112,7 +112,10 @@ object Routing {
             targetTab
           )
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
-          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab))
+          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
+          | dynamicRouteCT(
+            ("/constraints/obs" / id[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
+          ) ~> renderP(constraintSetTab))
 
       val configuration =
         rules

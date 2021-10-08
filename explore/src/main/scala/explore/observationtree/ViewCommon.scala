@@ -10,24 +10,33 @@ import explore.components.ui.ExploreStyles
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.ObsSummary
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
   def focused: View[Option[Focused]]
 
-  def renderObsBadge(obs: ObsSummary, highlightSelected: Boolean = true): TagMod =
+  def renderObsBadge(
+    obs:               ObsSummary,
+    highlightSelected: Boolean = true,
+    forceHighlight:    Boolean = false // if true, overrides highlightSelected
+  ): TagMod =
     ObsBadge(
       obs,
-      selected = highlightSelected && focused.get.exists(_ === FocusedObs(obs.id))
+      selected =
+        forceHighlight || (highlightSelected && focused.get.exists(_ === FocusedObs(obs.id)))
     )
 
   def renderObsBadgeItem(
     selectable:        Boolean,
     highlightSelected: Boolean = true,
-    linkToObsTab:      Boolean = false
+    forceHighlight:    Boolean = false,
+    linkToObsTab:      Boolean = false,
+    onSelect:          Observation.Id => Callback = _ => Callback.empty
   )(
     obs:               ObsSummary,
     idx:               Int
@@ -39,13 +48,13 @@ trait ViewCommon {
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactEvent =>
-            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some)
+            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some) >> onSelect(obs.id)
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
               ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some)
           }).when(linkToObsTab)
-        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected)))
+        )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }
     )
 
