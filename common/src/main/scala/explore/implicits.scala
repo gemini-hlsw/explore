@@ -77,6 +77,10 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): WebSocketClient[F, ObservationDB] =
     ctx.clients.odb
+  implicit def appContext2ITC[F[_]](implicit
+    ctx: AppContext[F]
+  ): TransactionalClient[F, ITC] =
+    ctx.clients.itc
   implicit def appContext2fromSync[F[_]](implicit
     ctx: AppContext[F]
   ): SyncIO ~> F = ctx.fromSyncIO

@@ -48,6 +48,7 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
+import clue.js.AjaxJSBackend
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -127,6 +128,7 @@ object ExploreMain extends IOApp.Simple {
     Dispatcher[IO].allocated
       .map(_._1)
       .flatMap { implicit dispatcher =>
+        implicit val ajaxBackend: AjaxJSBackend[IO]              = AjaxJSBackend[IO]
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 

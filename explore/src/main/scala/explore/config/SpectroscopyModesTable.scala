@@ -3,17 +3,25 @@
 
 package explore.config
 
+import cats.MonadError
 import cats.syntax.all._
+import cats.effect.std.Dispatcher
 import coulomb.Quantity
 import coulomb.refined._
+import clue.data.syntax._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
-import explore._
+import explore.Icons
+import explore.AppCtx
+import explore.View
 import explore.common.ObsQueries._
+import explore.common.ITCQueriesGQL._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.schemas.ITC
+import explore.implicits._
 import explore.modes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -22,7 +30,9 @@ import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
+import lucuma.core.model.SpatialProfile
 import lucuma.ui.reusability._
+import lucuma.core.optics.syntax.lens._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -48,6 +58,16 @@ object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
+
+  type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
+  type ITCWavelengthInput   = ITC.Types.WavelengthModelInput
+
+  def wavelength(w: Wavelength): ITCWavelengthInput =
+    (ITC.Types.WavelengthModelInput.nanometers := Wavelength.decimalNanometers
+      .reverseGet(w)
+      .assign)
+      .runS(ITC.Types.WavelengthModelInput())
+      .value
 
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
@@ -234,6 +254,51 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
+  def queryItc[
+    F[_]: Dispatcher: MonadError[*[_], Throwable]: clue.TransactionalClient[
+      *[_],
+      explore.schemas.ITC
+    ]
+  ] =
+    SpectroscopyITCQuery
+      .query(
+        new ITCSpectroscopyInput(
+          wavelength(Wavelength.decimalNanometers.getOption(BigDecimal(600.1)).get),
+          2,
+          SpatialProfile.PointSource,
+          ITC.Types
+            .SpectralDistributionInput(stellar = ITC.Enums.StellarLibrarySpectrum.A0i.assign),
+          ITC.Types.MagnitudeCreateInput(MagnitudeBand.I,
+                                         BigDecimal(6),
+                                         none.orUnassign,
+                                         ITC.Enums.MagnitudeSystem.Vega.assign
+          ),
+          BigDecimal(0.1),
+          ITC.Types.ConstraintsSetInput(
+            ImageQuality.PointEight,
+            CloudExtinction.PointFive,
+            SkyBackground.Dark,
+            WaterVapor.Dry,
+            ITC.Types.ElevationRangeInput(airmassRange =
+              ITC.Types.AirmassRangeInput(BigDecimal(1), BigDecimal(2)).assign
+            )
+          ),
+          List(
+            ITC.Types
+              .InstrumentModes(
+                ITC.Types
+                  .GmosNITCInput(GmosNorthDisperser.B480_G5309,
+                                 GmosNorthFpu.Ifu2Slits.assign,
+                                 GmosNorthFilter.GPrime_GG455.assign
+                  )
+                  .assign
+              )
+              .assign
+          )
+        ).assign
+      )
+      .runAsyncAndForgetCB
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -308,7 +373,13 @@ object SpectroscopyModesTable {
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
-              <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
+              <.label(s"${rows.length} matching configurations",
+                      HelpIcon("configuration/table.md")
+              ),
+              AppCtx.using { implicit ctx =>
+                // implicit val itc = ctx.clients.itc
+                Button(onClick = queryItc)("Query ITC")
+              }
             ),
             <.div(
               ExploreStyles.ModesTable,
