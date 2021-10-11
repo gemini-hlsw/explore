@@ -10,6 +10,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import monocle.Lens
 import monocle.Focus
+import eu.timepit.refined.types.string.NonEmptyString
 
 case class TargetEnv(id: TargetEnvironment.Id, scienceTargets: List[ScienceTarget])
 
@@ -38,6 +39,7 @@ object ScienceTarget {
     } yield ScienceTarget(id, target)
   )
 
-  val id: Lens[ScienceTarget, Target.Id]  = Focus[ScienceTarget](_.id)
-  val target: Lens[ScienceTarget, Target] = Focus[ScienceTarget](_.target)
+  val id: Lens[ScienceTarget, Target.Id]        = Focus[ScienceTarget](_.id)
+  val target: Lens[ScienceTarget, Target]       = Focus[ScienceTarget](_.target)
+  val name: Lens[ScienceTarget, NonEmptyString] = target.andThen(Target.name)
 }
