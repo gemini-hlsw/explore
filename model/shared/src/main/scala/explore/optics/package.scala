@@ -11,8 +11,9 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.units._
 import monocle._
-import monocle.function.At.atMap
 import monocle.function.At
+import monocle.function.At.atMap
+
 import scala.collection.immutable.TreeSeqMap
 
 package object optics {

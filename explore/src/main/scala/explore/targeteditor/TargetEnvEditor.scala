@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import explore.components.Tile
 import explore.implicits._
 import explore.model.ScienceTarget
+import explore.model.SiderealScienceTarget
 import explore.model.TargetEnv
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
@@ -67,23 +68,23 @@ object TargetEnvEditor {
               val selectedTargetView =
                 props.targetEnv
                   .zoom(TargetEnv.scienceTargets)
-                  .zoom(at(targetId)(atTreeSeqMap[Target.Id, ScienceTarget[Target]]))
+                  .zoom(at(targetId)(atTreeSeqMap[Target.Id, ScienceTarget]))
 
               selectedTargetView.mapValue(targetView =>
-                targetView.get.target match {
-                  case SiderealTarget(_, _, _) =>
+                targetView.get match {
+                  case SiderealScienceTarget(_, _) =>
                     SiderealTargetEditor(
                       props.userId,
                       targetId,
                       targetView
-                        .unsafeNarrow[ScienceTarget[SiderealTarget]]
-                        .zoom(ScienceTarget.target),
+                        .unsafeNarrow[SiderealScienceTarget]
+                        .zoom(SiderealScienceTarget.target),
                       props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                       props.searching,
                       props.options,
                       props.renderInTitle
                     )
-                  case _                       =>
+                  case _                           =>
                     <.div("Non-sidereal targets not supported")
                 }
               )
