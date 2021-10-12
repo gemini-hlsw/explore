@@ -12,6 +12,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceTarget
+import explore.model.SiderealScienceTarget
 import explore.model.conversions._
 import explore.model.formats._
 import explore.model.reusability._
@@ -22,8 +23,6 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
-import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
@@ -42,7 +41,7 @@ import reactST.reactTable.mod.IdType
 import scalajs.js.JSConverters._
 
 final case class TargetTable(
-  targets:       List[ScienceTarget[Target]],
+  targets:       List[ScienceTarget],
   hiddenColumns: View[Set[String]],
   renderInTitle: Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
@@ -51,13 +50,11 @@ final case class TargetTable(
 object TargetTable {
   type Props = TargetTable
 
-  protected val TargetTable = TableDef[ScienceTarget[SiderealTarget]].withSort
+  protected val TargetTable = TableDef[SiderealScienceTarget].withSort
 
   import TargetTable.syntax._
 
   protected val TargetTableComponent = new SUITable(TargetTable)
-
-  implicitly[Reusability[ScienceTarget[Target]]]
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -90,7 +87,7 @@ object TargetTable {
       .withHooks[Props]
       // cols
       .useMemo(()) { _ =>
-        def column[V](id: String, accessor: ScienceTarget[SiderealTarget] => V) =
+        def column[V](id: String, accessor: SiderealScienceTarget => V) =
           TargetTable
             .Column(id, accessor)
             .setHeader(columnNames(id))
@@ -104,14 +101,14 @@ object TargetTable {
             .setSortByFn(_.toString),
           column(
             "ra",
-            ScienceTarget.Sidereal.baseRA.get
+            SiderealScienceTarget.baseRA.get
           ).setCell(cell =>
             TruncatedRA.rightAscension.get
               .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
           ).setSortByAuto,
           column[Declination](
             "dec",
-            ScienceTarget.Sidereal.baseDec.get
+            SiderealScienceTarget.baseDec.get
           ).setCell(cell =>
             TruncatedDec.declination.get
               .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
@@ -125,29 +122,29 @@ object TargetTable {
             ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
           ) ++
           List(
-            column("epoch", ScienceTarget.Sidereal.epoch.get)
+            column("epoch", SiderealScienceTarget.epoch.get)
               .setCell(cell =>
                 s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
               )
               .setSortByAuto,
-            column("pmra", ScienceTarget.Sidereal.properMotionRA.getOption)
+            column("pmra", SiderealScienceTarget.properMotionRA.getOption)
               .setCell(
                 _.value.map(pmRAFormat.reverseGet).orEmpty
               )
               .setSortByAuto,
-            column("pmdec", ScienceTarget.Sidereal.properMotionDec.getOption)
+            column("pmdec", SiderealScienceTarget.properMotionDec.getOption)
               .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
               .setSortByAuto,
-            column("rv", ScienceTarget.Sidereal.radialVelocity.get)
+            column("rv", SiderealScienceTarget.radialVelocity.get)
               .setCell(_.value.map(formatRV.reverseGet).orEmpty)
               .setSortByAuto,
-            column("z", (ScienceTarget.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet))
+            column("z", (SiderealScienceTarget.radialVelocity.get _).andThen(rvToRedshiftGet))
               .setCell(_.value.map(formatZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("cz", (ScienceTarget.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
+            column("cz", (SiderealScienceTarget.radialVelocity.get _).andThen(rvToARVGet))
               .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("parallax", ScienceTarget.Sidereal.parallax.get)
+            column("parallax", SiderealScienceTarget.parallax.get)
               .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
               .setSortByAuto,
             column("morphology", _ => ""),
@@ -156,9 +153,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.collect { case st @ ScienceTarget(_, SiderealTarget(_, _, _)) =>
-          st.asInstanceOf[ScienceTarget[SiderealTarget]]
-        }
+        _.collect { case st @ SiderealScienceTarget(_, _) => st }
       )
       .useTableBy((props, cols, rows) =>
         TargetTable(
@@ -172,7 +167,7 @@ object TargetTable {
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList
-                      .map(col => col: IdType[ScienceTarget[SiderealTarget]])
+                      .map(col => col: IdType[SiderealScienceTarget])
                       .toJSArray
                   )
               )

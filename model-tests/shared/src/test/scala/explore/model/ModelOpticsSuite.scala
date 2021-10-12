@@ -13,7 +13,6 @@ import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.math.arb.ArbRightAscension
 import lucuma.core.model.arb.ArbSiderealTracking
 import monocle.law.discipline.IsoTests
-// import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary._
 
