@@ -4,24 +4,25 @@
 package explore.model
 
 import cats.Eq
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.decoders._
 import io.circe.Decoder
-import lucuma.core.model.Target
-import lucuma.core.model.TargetEnvironment
-import monocle.Lens
-import monocle.Focus
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.MagnitudeBand
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SiderealTarget
-import lucuma.core.math.RightAscension
-import scala.collection.immutable.SortedMap
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import monocle.Optional
+import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Parallax
+import lucuma.core.math.RightAscension
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
+import lucuma.core.model.TargetEnvironment
+import monocle.Focus
+import monocle.Lens
+import monocle.Optional
+
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.TreeSeqMap
 
 case class TargetEnv(

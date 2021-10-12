@@ -1,27 +1,27 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targeteditor
 
-import explore.implicits._
-import lucuma.core.model.User
-import explore.model.TargetEnv
-import lucuma.core.model.Target
-import explore.undo.UndoStacks
-import explore.model.TargetVisualOptions
 import cats.effect.IO
-import lucuma.core.model.SiderealTarget
+import crystal.ViewF
+import crystal.react.implicits._
+import explore.components.Tile
+import explore.implicits._
+import explore.model.ScienceTarget
+import explore.model.TargetEnv
+import explore.model.TargetVisualOptions
+import explore.model.reusability._
+import explore.optics._
+import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import explore.components.Tile
-import react.common.ReactFnProps
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
+import lucuma.core.model.User
 import lucuma.ui.reusability._
-import crystal.react.implicits._
-import explore.model.reusability._
 import monocle.function.At._
-import explore.model.ScienceTarget
-import scala.collection.immutable.TreeSeqMap
-import monocle.function.At
-import monocle.Lens
-import crystal.ViewF
-import explore.optics._
+import react.common.ReactFnProps
 
 final case class TargetEnvEditor(
   userId:        User.Id,
@@ -38,21 +38,16 @@ object TargetEnvEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  implicit def atTreeSeqMap[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
-    At(i =>
-      Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
-    )
-
+  // This can go into crystal.
   implicit class ViewFOptOps[F[_], A](val view: ViewF[F, Option[A]]) extends AnyVal {
     def mapValue[B](f: ViewF[F, A] => B): Option[B] =
       view.get.map(a => f(view.zoom(_ => a)(f => _.map(f))))
   }
 
+  // This can go into crystal.
   implicit class ViewFOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
     def unsafeNarrow[B <: A]: ViewF[F, B] =
       view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
-    // def mapValue[B](f: ViewF[F, A] => B): Option[B] =
-    //   view.get.map(a => f(view.zoom(_ => a)(f => _.map(f))))
   }
 
   protected val component =

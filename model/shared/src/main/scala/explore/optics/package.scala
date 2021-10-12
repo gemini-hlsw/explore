@@ -12,6 +12,8 @@ import lucuma.core.math.Redshift
 import lucuma.core.math.units._
 import monocle._
 import monocle.function.At.atMap
+import monocle.function.At
+import scala.collection.immutable.TreeSeqMap
 
 package object optics {
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
@@ -159,4 +161,9 @@ package object optics {
   // This should be safe to use with Maps that have .withDefault(...)
   def atMapWithDefault[K, V](k: K, default: => V): Lens[Map[K, V], V] =
     atMap.at(k).andThen(getWithDefault(default))
+
+  implicit def atTreeSeqMap[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
+    At(i =>
+      Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
+    )
 }

@@ -1,9 +1,7 @@
-package explore.targeteditor
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-import lucuma.core.model.SiderealTarget
-import explore.model.ScienceTarget
-import reactST.reactTable.TableDef
-import reactST.reactTable.SUITable
+package explore.targeteditor
 
 import cats.Order._
 import cats.syntax.all._
@@ -13,6 +11,7 @@ import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ScienceTarget
 import explore.model.conversions._
 import explore.model.formats._
 import explore.model.reusability._
@@ -23,6 +22,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
@@ -33,6 +33,8 @@ import react.semanticui.collections.table._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
+import reactST.reactTable.SUITable
+import reactST.reactTable.TableDef
 import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.IdType

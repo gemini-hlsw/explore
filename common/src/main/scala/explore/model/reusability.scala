@@ -11,13 +11,14 @@ import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
-import lucuma.core.model.Semester
-import lucuma.ui.reusability._
-import react.common.style.Css
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.NonsiderealTarget
+import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
+import lucuma.ui.reusability._
+import react.common.style.Css
+
 import scala.annotation.unused
 import scala.collection.immutable.TreeSeqMap
 

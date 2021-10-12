@@ -4,40 +4,23 @@
 package explore.tabs
 
 import cats.effect.IO
-// import cats.syntax.all._
+import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
-// import eu.timepit.refined.auto._
-// import explore.common.TargetQueries.TargetResult
-// import explore.common.TargetEnvQueriesGQL._
 import explore.components.Tile
-// import explore.components.graphql.LiveQueryRenderMod
-// import explore.components.ui.ExploreStyles
 import explore.implicits._
-// import explore.model._
+import explore.model.TargetEnv
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
-// import explore.optics._
-// import explore.targeteditor.TargetBody
+import explore.targeteditor.TargetEnvEditor
 import explore.undo.UndoStacks
 import explore.utils._
-// import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
-// import lucuma.schemas.ObservationDB
-// import lucuma.core.model.TargetEnvironment
-import crystal.Pot
-import explore.model.TargetEnv
 import lucuma.ui.reusability._
-// import explore.targeteditor.SiderealTargetEditor
-import explore.model.TargetVisualOptions
-import lucuma.core.model.SiderealTarget
 import react.common._
-// import react.common.implicits._
-// import monocle.function.At._
-// import monocle.function.At.at
-// import explore.model.ScienceTarget
-import explore.targeteditor.TargetEnvEditor
 
 object TargetTile {
 

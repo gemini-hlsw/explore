@@ -9,6 +9,7 @@ import clue.data.syntax._
 import crystal.react.implicits._
 import explore.implicits._
 import explore.schemas.implicits._
+import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
@@ -24,9 +25,9 @@ import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
-import TargetQueriesGQL._
 import scala.collection.immutable.SortedMap
-import lucuma.core.enum.MagnitudeBand
+
+import TargetQueriesGQL._
 
 object TargetQueries {
 
