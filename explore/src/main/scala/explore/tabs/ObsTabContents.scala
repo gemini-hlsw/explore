@@ -67,6 +67,7 @@ final case class ObsTabContents(
   focused:          View[Option[Focused]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
+  hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsTabContents](ObsTabContents.component) {
@@ -405,7 +406,8 @@ object ObsTabContents {
                   obsView.map(_.zoom(ObservationData.targets)),
                   props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
                   props.searching,
-                  state.zoom(State.options)
+                  state.zoom(State.options),
+                  props.hiddenColumns
                 ),
                 // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
                 // so that the constraints selector dropdown always appears in front of any other tiles. If more

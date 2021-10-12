@@ -18,26 +18,32 @@ import lucuma.core.model.EphemerisKey
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
+import scala.annotation.unused
+import scala.collection.immutable.TreeSeqMap
 
 /**
  * Reusability instances for model classes
  */
 object reusability {
   // Model
-  implicit val targetSummaryReuse: Reusability[TargetSummary]                                  = Reusability.derive
-  implicit val statusReuse: Reusability[PersistentClientStatus]                                = Reusability.derive
-  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                            = Reusability.derive
-  implicit val userVaultReuse: Reusability[UserVault]                                          = Reusability.derive
-  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                            = Reusability.derive
-  implicit val rootModelReuse: Reusability[RootModel]                                          = Reusability.derive
-  implicit val focusedReuse: Reusability[Focused]                                              = Reusability.derive
-  implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]           =
+  implicit val targetSummaryReuse: Reusability[TargetSummary]                                 = Reusability.derive
+  implicit val statusReuse: Reusability[PersistentClientStatus]                               = Reusability.derive
+  implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                           = Reusability.derive
+  implicit val userVaultReuse: Reusability[UserVault]                                         = Reusability.derive
+  implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                           = Reusability.derive
+  implicit val rootModelReuse: Reusability[RootModel]                                         = Reusability.derive
+  implicit val focusedReuse: Reusability[Focused]                                             = Reusability.derive
+  implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]          =
     Reusability.by(_.toList)
-  implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                                    = Reusability.derive
-  implicit val siderealTargetReuse: Reusability[SiderealTarget]                                = Reusability.derive
-  implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                          = Reusability.derive
-  implicit val targetReuse: Reusability[Target]                                                = Reusability.derive
-  implicit val scienceTargetReuse: Reusability[ScienceTarget]                                  = Reusability.derive
+  implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                                   = Reusability.derive
+  implicit val siderealTargetReuse: Reusability[SiderealTarget]                               = Reusability.derive
+  implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                         = Reusability.derive
+  implicit val targetReuse: Reusability[Target]                                               = Reusability.derive
+  implicit def scienceTargetReuse[T]( // format: off
+    implicit @unused ev: Reusability[T] // We need the implicit parameter, but compiler complains it's unused.
+  ): Reusability[ScienceTarget[T]] = Reusability.derive // format: on
+  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[Target.Id, ScienceTarget[Target]]] =
+    Reusability.never // It's faster to rerender than to compare the whole thing.
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive

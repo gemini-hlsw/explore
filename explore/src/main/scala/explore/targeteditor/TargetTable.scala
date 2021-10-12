@@ -1,39 +1,61 @@
 package explore.targeteditor
 
-import cats.syntax.all._
-import explore.implicits._
-import lucuma.core.model.User
-import explore.model.TargetEnv
-import lucuma.core.model.Target
-import explore.undo.UndoStacks
-import explore.model.TargetVisualOptions
-import cats.effect.IO
 import lucuma.core.model.SiderealTarget
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
 import explore.model.ScienceTarget
 import reactST.reactTable.TableDef
 import reactST.reactTable.SUITable
-import explore.model.reusability._
+
+import cats.Order._
+import cats.syntax.all._
 import crystal.react.implicits._
-import lucuma.core.enum.MagnitudeBand
-import react.common.style.Css
-import explore.components.ui.ExploreStyles
+import crystal.react.reuse._
 import explore.Icons
+import explore.components.Tile
+import explore.components.ui.ExploreStyles
+import explore.implicits._
+import explore.model.conversions._
+import explore.model.formats._
+import explore.model.reusability._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.math.Declination
+import lucuma.core.math.Epoch
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Parallax
+import lucuma.core.model.Target
+import lucuma.ui.optics.TruncatedDec
+import lucuma.ui.optics.TruncatedRA
+import lucuma.ui.optics.ValidFormatInput
+import react.common._
+import react.common.implicits._
+import react.semanticui.collections.table._
+import react.semanticui.modules.checkbox.Checkbox
+import react.semanticui.modules.dropdown.DropdownItem
+import react.semanticui.modules.dropdown._
+import reactST.reactTable._
+import reactST.reactTable.mod.Cell
+import reactST.reactTable.mod.IdType
+
+import scalajs.js.JSConverters._
 
 final case class TargetTable(
-  targets: List[ScienceTarget]
+  targets:       List[ScienceTarget[Target]],
+  hiddenColumns: View[Set[String]],
+  renderInTitle: Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
-)
+) extends ReactFnProps[TargetTable](TargetTable.component)
 
 object TargetTable {
   type Props = TargetTable
 
-  protected val TargetTable = TableDef[ScienceTarget].withSort
+  protected val TargetTable = TableDef[ScienceTarget[SiderealTarget]].withSort
 
   import TargetTable.syntax._
 
   protected val TargetTableComponent = new SUITable(TargetTable)
+
+  implicitly[Reusability[ScienceTarget[Target]]]
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -66,7 +88,7 @@ object TargetTable {
       .withHooks[Props]
       // cols
       .useMemo(()) { _ =>
-        def column[V](id: String, accessor: ScienceTarget => V) =
+        def column[V](id: String, accessor: ScienceTarget[SiderealTarget] => V) =
           TargetTable
             .Column(id, accessor)
             .setHeader(columnNames(id))
@@ -76,91 +98,66 @@ object TargetTable {
             .setCell(_ => Icons.Star)
             .setWidth(30),
           column("name", ScienceTarget.name.get)
-            .setCell(cell =>
-              <.a(^.onClick ==> (_ =>
-                    props.focused.set(Focused.FocusedTarget(cell.row.original.id).some)
-                  ),
-                  cell.value.toString
-              )
-            )
+            .setCell(cell => cell.value.toString)
             .setSortByFn(_.toString),
           column(
             "ra",
-            TargetObsQueries.baseCoordinatesRa.get
+            ScienceTarget.Sidereal.baseRA.get
           ).setCell(cell =>
             TruncatedRA.rightAscension.get
               .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
           ).setSortByAuto,
           column[Declination](
             "dec",
-            TargetObsQueries.baseCoordinatesDec.get
+            ScienceTarget.Sidereal.baseDec.get
           ).setCell(cell =>
             TruncatedDec.declination.get
               .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
           ).setSortByAuto,
           column("priority", _ => "")
         ) ++
-          MagnitudeBand.all.map(m =>
+          MagnitudeBand.all.map(band =>
             column(
-              m.shortName + "mag",
-              _.magnitudes.collectFirst {
-                case Magnitude(value, band, _, _) if band === m => value
-              }
+              band.shortName + "mag",
+              _.target.magnitudes.get(band).map(_.value)
             ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
           ) ++
           List(
-            column("epoch", TargetObsQueries.epoch.get)
+            column("epoch", ScienceTarget.Sidereal.epoch.get)
               .setCell(cell =>
                 s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
               )
               .setSortByAuto,
-            column("pmra", TargetObsQueries.pmRALens.get)
+            column("pmra", ScienceTarget.Sidereal.properMotionRA.getOption)
               .setCell(
                 _.value.map(pmRAFormat.reverseGet).orEmpty
               )
               .setSortByAuto,
-            column("pmdec", TargetObsQueries.pmDecLens.get)
+            column("pmdec", ScienceTarget.Sidereal.properMotionDec.getOption)
               .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
               .setSortByAuto,
-            column("rv", TargetObsQueries.rvLens.get)
+            column("rv", ScienceTarget.Sidereal.radialVelocity.get)
               .setCell(_.value.map(formatRV.reverseGet).orEmpty)
               .setSortByAuto,
-            column("z", (TargetObsQueries.rvLens.get _).andThen(rvToRedshiftGet))
+            column("z", (ScienceTarget.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet))
               .setCell(_.value.map(formatZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("cz", (TargetObsQueries.rvLens.get _).andThen(rvToARVGet))
+            column("cz", (ScienceTarget.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
               .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("parallax", TargetObsQueries.pxLens.get)
+            column("parallax", ScienceTarget.Sidereal.parallax.get)
               .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
               .setSortByAuto,
             column("morphology", _ => ""),
-            column("sed", _ => ""),
-            column(
-              "count",
-              target => targetObservations(target.id).length
-            ).setSortType(DefaultSortTypes.number),
-            column("observations", target => targetObservations(target.id))
-              .setCell(cell =>
-                <.span(
-                  cell.value
-                    .map(obs =>
-                      <.a(
-                        ^.onClick ==> (_ =>
-                          (props.focused
-                            .set(Focused.FocusedObs(obs.id).some) >> props.expandedIds
-                            .mod(ExpandedIds.targetIds.modify(_ + cell.row.original.id)))
-                        ),
-                        obs.id.toString()
-                      )
-                    )
-                    .mkReactFragment(", ")
-                )
-              )
-              .setDisableSortBy(true)
+            column("sed", _ => "")
           )
       }
-      .useMemoBy((props, _) => props.pointingsWithObs)((_, _) => _.targets.toList) // Memo rows
+      // rows
+      .useMemoBy((props, _) => props.targets)((_, _) =>
+        _.collect { case st @ ScienceTarget(_, SiderealTarget(_, _, _)) =>
+          st.asInstanceOf[ScienceTarget[SiderealTarget]]
+        }
+      )
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,
@@ -173,7 +170,7 @@ object TargetTable {
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList
-                      .map(col => col: IdType[TargetResult])
+                      .map(col => col: IdType[ScienceTarget[SiderealTarget]])
                       .toJSArray
                   )
               )
@@ -225,7 +222,7 @@ object TargetTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            cell = (cell: Cell[TargetResult, _]) =>
+            cell = (cell: Cell[_, _]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                 ^.whiteSpace.nowrap
               )
