@@ -41,8 +41,8 @@ import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import react.common._
 import monocle.Iso
+import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small

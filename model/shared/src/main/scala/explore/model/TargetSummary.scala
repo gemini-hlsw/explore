@@ -4,10 +4,8 @@
 package explore.model
 
 import cats.Eq
-// import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-// import lucuma.core.model.Asterism
 import lucuma.core.model.Target
 
 // trait TargetSummary {

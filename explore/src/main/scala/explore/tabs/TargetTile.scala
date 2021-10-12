@@ -4,39 +4,23 @@
 package explore.tabs
 
 import cats.effect.IO
-// import cats.syntax.all._
+import crystal.Pot
 import crystal.react.implicits._
 import crystal.react.reuse._
-// import eu.timepit.refined.auto._
-// import explore.common.TargetQueries.TargetResult
-// import explore.common.TargetEnvQueriesGQL._
 import explore.components.Tile
-// import explore.components.graphql.LiveQueryRenderMod
-// import explore.components.ui.ExploreStyles
 import explore.implicits._
-// import explore.model._
+import explore.model.TargetEnv
+import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import explore.optics._
-// import explore.targeteditor.TargetBody
+import explore.targeteditor.TargetEnvEditor
 import explore.undo.UndoStacks
 import explore.utils._
-// import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
-// import lucuma.schemas.ObservationDB
-// import lucuma.core.model.TargetEnvironment
-import crystal.Pot
-import explore.model.TargetEnv
 import lucuma.ui.reusability._
-import explore.targeteditor.SiderealTargetEditor
-import explore.model.TargetVisualOptions
-import lucuma.core.model.SiderealTarget
-// import react.common._
-// import react.common.implicits._
-// import monocle.function.At._
-// import monocle.function.At.at
-import explore.model.ScienceTarget
+import react.common._
 
 object TargetTile {
 
@@ -52,11 +36,12 @@ object TargetTile {
   //   SiderealTarget(uid, targetId, target, undoStacks, searching, options, renderInTitle)
 
   def targetTile(
-    userId:       Option[User.Id],
-    targetEnvPot: Pot[View[TargetEnv]],
-    undoStacks:   View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
-    searching:    View[Set[Target.Id]],
-    options:      View[TargetVisualOptions]
+    userId:        Option[User.Id],
+    targetEnvPot:  Pot[View[TargetEnv]],
+    undoStacks:    View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+    searching:     View[Set[Target.Id]],
+    options:       View[TargetVisualOptions],
+    hiddenColumns: View[Set[String]]
   ) = //(implicit ctx: AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
       Reuse.by((userId, targetEnvPot, undoStacks, searching, options))(
@@ -66,26 +51,33 @@ object TargetTile {
               (targetEnv: View[TargetEnv]) =>
                 userId.map(uid =>
                   <.div(
-                    targetEnv.toString,
-                    SiderealTargetEditor(
-                      uid,
-                      targetEnv.get.scienceTargets.head.id,
-                      targetEnv
-                        .zoom(TargetEnv.scienceTargets)
-                        .zoom(_.head.target.asInstanceOf[SiderealTarget])(mod =>
-                          list =>
-                            ScienceTarget(list.head.id,
-                                          mod(list.head.target.asInstanceOf[SiderealTarget])
-                            ) +: list.tail
-                        ),
-                      undoStacks
-                        .zoom(
-                          atMapWithDefault(targetEnv.get.scienceTargets.head.id, UndoStacks.empty)
-                        ),
-                      searching,
-                      options,
-                      renderInTitle
+                    TargetEnvEditor(uid,
+                                    targetEnv,
+                                    undoStacks,
+                                    searching,
+                                    options,
+                                    hiddenColumns,
+                                    renderInTitle
                     )
+                    // SiderealTargetEditor(
+                    //   uid,
+                    //   targetEnv.get.scienceTargets.head.id,
+                    //   targetEnv
+                    //     .zoom(TargetEnv.scienceTargets)
+                    //     .zoom(_.head.target.asInstanceOf[SiderealTarget])(mod =>
+                    //       list =>
+                    //         ScienceTarget(list.head.id,
+                    //                       mod(list.head.target.asInstanceOf[SiderealTarget])
+                    //         ) +: list.tail
+                    //     ),
+                    //   undoStacks
+                    //     .zoom(
+                    //       atMapWithDefault(targetEnv.get.scienceTargets.head.id, UndoStacks.empty)
+                    //     ),
+                    //   searching,
+                    //   options,
+                    //   renderInTitle
+                    // )
                   )
                 ): VdomNode
             ).reuseAlways

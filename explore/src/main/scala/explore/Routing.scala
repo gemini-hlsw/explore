@@ -21,9 +21,9 @@ import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
 
+import scala.annotation.unused
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import scala.annotation.unused
 
 sealed trait ElementItem  extends Product with Serializable
 case object IconsElement  extends ElementItem
@@ -58,11 +58,13 @@ object Routing {
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
-        ObsTabContents(model.zoom(RootModel.userId),
-                       model.zoom(RootModel.focused),
-                       model.zoom(RootModel.undoStacks),
-                       model.zoom(RootModel.searchingTarget),
-                       size
+        ObsTabContents(
+          model.zoom(RootModel.userId),
+          model.zoom(RootModel.focused),
+          model.zoom(RootModel.undoStacks),
+          model.zoom(RootModel.searchingTarget),
+          model.zoom(RootModel.targetSummaryHiddenColumns),
+          size
         )
       )
     )

@@ -6,6 +6,7 @@ package explore.model
 import cats.syntax.all._
 import coulomb._
 import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.string
 import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.HCursor
@@ -24,16 +25,15 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
+import lucuma.core.model.NonsiderealTarget
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import lucuma.core.model.EphemerisKey
-import lucuma.core.model.NonsiderealTarget
-import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
-import eu.timepit.refined.types.string
 import scala.collection.immutable.SortedMap
 
 object decoders {

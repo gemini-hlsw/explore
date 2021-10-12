@@ -9,8 +9,8 @@ import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
-import lucuma.core.model.Target
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
