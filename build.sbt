@@ -211,7 +211,7 @@ lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq
     ScalaJSReact.value ++
       ReactSemanticUI.value ++
       ClueScalaJS.value ++
-      Http4sClient.value ++
+      Http4sDom.value ++
       LucumaUI.value ++
       Log4Cats.value ++
       In(Test)(
