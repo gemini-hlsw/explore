@@ -9,10 +9,13 @@ import cats.effect.std.Dispatcher
 import coulomb.Quantity
 import coulomb.refined._
 import clue.data.syntax._
+import clue.TransactionalClient
 import crystal.react.implicits._
+import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.Icons
 import explore.AppCtx
 import explore.View
@@ -31,8 +34,8 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
 import lucuma.core.model.SpatialProfile
+import lucuma.core.model.SpectralDistribution
 import lucuma.ui.reusability._
-import lucuma.core.optics.syntax.lens._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -47,6 +50,12 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
+import lucuma.core.math.Angle
+import explore.model.ConstraintSet
+import explore.model.AirMassRange
+import explore.schemas.implicits._
+import lucuma.core.model.Magnitude
+import lucuma.core.math.MagnitudeValue
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -58,16 +67,6 @@ object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
-
-  type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
-  type ITCWavelengthInput   = ITC.Types.WavelengthModelInput
-
-  def wavelength(w: Wavelength): ITCWavelengthInput =
-    (ITC.Types.WavelengthModelInput.nanometers := Wavelength.decimalNanometers
-      .reverseGet(w)
-      .assign)
-      .runS(ITC.Types.WavelengthModelInput())
-      .value
 
   implicit val reuseProps: Reusability[Props] =
     Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
@@ -254,47 +253,39 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
-  def queryItc[
-    F[_]: Dispatcher: MonadError[*[_], Throwable]: clue.TransactionalClient[
-      *[_],
-      explore.schemas.ITC
-    ]
-  ] =
+  def queryItc[F[_]: Dispatcher: MonadError[*[_], Throwable]: TransactionalClient[*[_], ITC]](
+    wavelength:    Wavelength,
+    signalToNoise: PosBigDecimal,
+    signalToNoise: PosBigDecimal,
+    modes:         List[SpectroscopyModeRow]
+  ) =
     SpectroscopyITCQuery
       .query(
         new ITCSpectroscopyInput(
-          wavelength(Wavelength.decimalNanometers.getOption(BigDecimal(600.1)).get),
-          2,
-          SpatialProfile.PointSource,
-          ITC.Types
-            .SpectralDistributionInput(stellar = ITC.Enums.StellarLibrarySpectrum.A0i.assign),
-          ITC.Types.MagnitudeCreateInput(MagnitudeBand.I,
-                                         BigDecimal(6),
-                                         none.orUnassign,
-                                         ITC.Enums.MagnitudeSystem.Vega.assign
-          ),
+          wavelength.toITCInput,
+          refineV[Positive](signalToNoise.value.toInt).toOption.get,
+          SpatialProfile.GaussianSource(Angle.fromMicroarcseconds(1000)),
+          SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
+          Magnitude(MagnitudeValue(6), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
           BigDecimal(0.1),
-          ITC.Types.ConstraintsSetInput(
+          ConstraintSet(
             ImageQuality.PointEight,
             CloudExtinction.PointFive,
             SkyBackground.Dark,
             WaterVapor.Dry,
-            ITC.Types.ElevationRangeInput(airmassRange =
-              ITC.Types.AirmassRangeInput(BigDecimal(1), BigDecimal(2)).assign
+            AirMassRange(
+              AirMassRange.DefaultMin,
+              AirMassRange.DefaultMax
             )
           ),
-          List(
-            ITC.Types
-              .InstrumentModes(
-                ITC.Types
-                  .GmosNITCInput(GmosNorthDisperser.B480_G5309,
-                                 GmosNorthFpu.Ifu2Slits.assign,
-                                 GmosNorthFilter.GPrime_GG455.assign
-                  )
-                  .assign
-              )
-              .assign
-          )
+          modes.map(_.instrument).collect { case m: GmosNorthSpectroscopyRow =>
+            new InstrumentModes(
+              new GmosNITCInput(m.disperser,
+                                GmosNorthFpu.Ifu2Slits.assign,
+                                GmosNorthFilter.GPrime_GG455.assign
+              ).assign
+            ).assign
+          }
         ).assign
       )
       .runAsyncAndForgetCB
@@ -349,6 +340,13 @@ object SpectroscopyModesTable {
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
+          val s = visibleRange.value.map(_.startIndex).foldMap(_.toInt)
+          val e = visibleRange.value.map(_.endIndex).foldMap(_.toInt)
+
+          val visibleRows =
+            (for { i <- s to e } yield Either.catchNonFatal(tableInstance.rows(i).original))
+              .collect { case Right(m) => m }
+
           def scrollButton(
             content:        VdomNode,
             style:          Css,
@@ -378,7 +376,13 @@ object SpectroscopyModesTable {
               ),
               AppCtx.using { implicit ctx =>
                 // implicit val itc = ctx.clients.itc
-                Button(onClick = queryItc)("Query ITC")
+                Button(onClick =
+                  (props.spectroscopyRequirements.wavelength,
+                   props.spectroscopyRequirements.signalToNoise
+                  )
+                    .mapN((w, sn) => queryItc(w, sn, visibleRows.toList))
+                    .getOrEmpty
+                )("Query ITC")
               }
             ),
             <.div(

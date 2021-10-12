@@ -8,34 +8,74 @@ import lucuma.core.model
 import clue.annotation.GraphQLSchema
 import io.circe.Encoder
 import io.circe.Json
+import io.circe.syntax._
+import io.circe.generic.semiauto._
+import explore.model.ElevationRange
+import explore.model.AirMassRange
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema
 trait ITC {
-  implicit val bdEncoder: Encoder[BigDecimal] =
-    Encoder.encodeString.contramap[BigDecimal](_.toString)
-
   implicit val piEncoder: Encoder[eu.timepit.refined.types.numeric.PosInt] =
-    Encoder.encodeString.contramap[eu.timepit.refined.types.numeric.PosInt](_.toString)
+    Encoder.encodeInt.contramap[eu.timepit.refined.types.numeric.PosInt](_.value)
 
   implicit val spEncoder: Encoder[model.SpatialProfile] = new Encoder[model.SpatialProfile] {
     final def apply(a: model.SpatialProfile): Json = Json.obj(
       ("sourceType",
        Json.fromString(a match {
          case model.SpatialProfile.PointSource       => "POINT_SOURCE"
-         case model.SpatialProfile.UniformSource     => "UNIFORm_SOURCE"
+         case model.SpatialProfile.UniformSource     => "UNIFORM_SOURCE"
          case model.SpatialProfile.GaussianSource(_) => "GAUSSIAN_SOURCE"
        })
       ),
       ("fwhm",
        a match {
          case model.SpatialProfile.GaussianSource(f) =>
-           Json.obj(("microarcseconds", Json.fromLong(f.toMicroarcseconds)))
+           Json.obj(("microarcseconds", Json.fromString(f.toMicroarcseconds.toString)))
          case _                                      => Json.Null
        }
       )
     )
   }
+
+  implicit val bbEncoder: Encoder[model.SpectralDistribution.BlackBody] =
+    new Encoder[model.SpectralDistribution.BlackBody] {
+      final def apply(a: model.SpectralDistribution.BlackBody): Json = Json.obj(
+        ("blackBody", Json.obj(("temperature", Json.fromBigDecimal(a.temperature.value.value))))
+      )
+    }
+  implicit val plEncoder: Encoder[model.SpectralDistribution.PowerLaw]  =
+    new Encoder[model.SpectralDistribution.PowerLaw] {
+      final def apply(a: model.SpectralDistribution.PowerLaw): Json = Json.obj(
+        ("powerLaw", Json.obj(("index", Json.fromBigDecimal(a.index))))
+      )
+    }
+  implicit val lEncoder: Encoder[model.SpectralDistribution.Library]    =
+    new Encoder[model.SpectralDistribution.Library] {
+      final def apply(a: model.SpectralDistribution.Library): Json =
+        a.librarySpectrum match {
+          case Left(s: enum.StellarLibrarySpectrum)     =>
+            Json.obj(("stellar", Json.fromString(s.ocs2Tag)))
+          case Right(n: enum.NonStellarLibrarySpectrum) =>
+            Json.obj(("nonStellar", Json.fromString(n.ocs2Tag)))
+        }
+    }
+
+  implicit val sdEncoder: Encoder[model.SpectralDistribution] = Encoder.instance {
+    case bb: model.SpectralDistribution.BlackBody => bb.asJson
+    case pl: model.SpectralDistribution.PowerLaw  => pl.asJson
+    case l: model.SpectralDistribution.Library    => l.asJson
+  }
+
+  implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance { case AirMassRange(mi, ma) =>
+    Json.obj(
+      ("airmassRange",
+       Json.obj(("min", Json.fromBigDecimal(mi.value)), ("max", Json.fromBigDecimal(ma.value)))
+      )
+    )
+  }
+
+  implicit val csEncoder: Encoder[explore.model.ConstraintSet] = deriveEncoder
 
   object Scalars {
     // Basic types
@@ -46,20 +86,26 @@ trait ITC {
     // Refined
     type PosInt     = eu.timepit.refined.types.numeric.PosInt
   }
-  object Enums   {
-    type MagnitudeBand       = enum.MagnitudeBand
-    type ImageQuality        = enum.ImageQuality
-    type CloudExtinction     = enum.CloudExtinction
-    type WaterVapor          = enum.WaterVapor
-    type SkyBackground       = enum.SkyBackground
-    type GmosNorthDisperser  = enum.GmosNorthDisperser
-    type GmosNorthFilter     = enum.GmosNorthFilter
-    type GmosNorthFpu        = enum.GmosNorthFpu
-    type GmosCustomSlitWidth = enum.GmosCustomSlitWidth
+
+  object Enums {
+    type MagnitudeBand              = enum.MagnitudeBand
+    type MagnitudeSystem            = enum.MagnitudeSystem
+    type ImageQuality               = enum.ImageQuality
+    type CloudExtinction            = enum.CloudExtinction
+    type WaterVapor                 = enum.WaterVapor
+    type SkyBackground              = enum.SkyBackground
+    type GmosNorthDisperser         = enum.GmosNorthDisperser
+    type GmosNorthFilter            = enum.GmosNorthFilter
+    type GmosNorthFpu               = enum.GmosNorthFpu
+    type GmosCustomSlitWidth        = enum.GmosCustomSlitWidth
+    type StellarLibrarySpectrum     = enum.StellarLibrarySpectrum
+    type NoneStellarLibrarySpectrum = enum.NonStellarLibrarySpectrum
   }
 
   object Types {
-    type SpatialProfileModelInput = model.SpatialProfile
+    type SpatialProfileModelInput  = model.SpatialProfile
+    type SpectralDistributionInput = model.SpectralDistribution
+    type ConstraintsSetInput       = explore.model.ConstraintSet
   }
 
 }
