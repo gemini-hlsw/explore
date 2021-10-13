@@ -39,11 +39,16 @@ import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.IdType
 
 import scalajs.js.JSConverters._
+import crystal.ViewF
+
+import reactST.reactTable.mod.Row
+import reactST.reactTable.util._
 
 final case class TargetTable(
-  targets:       List[ScienceTarget],
-  hiddenColumns: View[Set[String]],
-  renderInTitle: Tile.RenderInTitle
+  targets:        List[ScienceTarget],
+  hiddenColumns:  View[Set[String]],
+  selectedTarget: ViewF[CallbackTo, Option[ScienceTarget.Id]],
+  renderInTitle:  Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
 ) extends ReactFnProps[TargetTable](TargetTable.component)
 
@@ -175,7 +180,7 @@ object TargetTable {
         )
       )
       .render((props, _, _, tableInstance) =>
-        <.div(
+        <.div(ExploreStyles.ExploreTable)(
           props.renderInTitle(
             <.span(ExploreStyles.TitleStrip)(
               Dropdown(item = true,
@@ -218,6 +223,15 @@ object TargetTable {
               TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
+              ),
+            row = (rowData: Row[SiderealScienceTarget]) =>
+              TableRow(
+                clazz = ExploreStyles.TableRowSelected.when_(
+                  props.selectedTarget.get.exists(_ === rowData.original.id)
+                )
+              )(
+                ^.onClick --> props.selectedTarget.set(rowData.original.id.some),
+                props2Attrs(rowData.getRowProps())
               ),
             cell = (cell: Cell[_, _]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(

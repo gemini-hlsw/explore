@@ -311,7 +311,7 @@ object SpectroscopyModesTable {
               <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
             ),
             <.div(
-              ExploreStyles.ModesTable,
+              ExploreStyles.ExploreTable,
               ModesTable
                 .Component(
                   table = Table(celled = true,
@@ -328,7 +328,7 @@ object SpectroscopyModesTable {
                   row = (rowData: Row[SpectroscopyModeRow]) =>
                     TableRow(
                       disabled = !enabledRow(rowData.original),
-                      clazz = ExploreStyles.ModeSelected.when_(
+                      clazz = ExploreStyles.TableRowSelected.when_(
                         selectedIndex.value.exists(_ === rowData.index.toInt)
                       )
                     )(

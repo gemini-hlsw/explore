@@ -22,6 +22,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.function.At._
 import react.common.ReactFnProps
+import japgolly.scalajs.react.callback.CallbackCats._
 
 final case class TargetEnvEditor(
   userId:        User.Id,
@@ -59,6 +60,8 @@ object TargetEnvEditor {
           TargetTable(
             props.targetEnv.get.scienceTargets.toList.map(_._2),
             props.hiddenColumns,
+            ViewF(selectedTargetId.value, (mod, _) => selectedTargetId.modState(mod)),
+            // selectedTargetId,
             props.renderInTitle
             // onSelect
           ),
