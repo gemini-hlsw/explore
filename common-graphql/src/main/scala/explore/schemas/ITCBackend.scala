@@ -12,12 +12,16 @@ import io.circe.syntax._
 import io.circe.generic.semiauto._
 import explore.model.ElevationRange
 import explore.model.AirMassRange
+import explore.model.HourAngleRange
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema
 trait ITC {
   implicit val piEncoder: Encoder[eu.timepit.refined.types.numeric.PosInt] =
     Encoder.encodeInt.contramap[eu.timepit.refined.types.numeric.PosInt](_.value)
+
+  implicit val pdEncoder: Encoder[eu.timepit.refined.types.numeric.PosBigDecimal] =
+    Encoder.encodeBigDecimal.contramap[eu.timepit.refined.types.numeric.PosBigDecimal](_.value)
 
   implicit val spEncoder: Encoder[model.SpatialProfile] = new Encoder[model.SpatialProfile] {
     final def apply(a: model.SpatialProfile): Json = Json.obj(
@@ -67,24 +71,34 @@ trait ITC {
     case l: model.SpectralDistribution.Library    => l.asJson
   }
 
-  implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance { case AirMassRange(mi, ma) =>
-    Json.obj(
-      ("airmassRange",
-       Json.obj(("min", Json.fromBigDecimal(mi.value)), ("max", Json.fromBigDecimal(ma.value)))
+  implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance {
+    case AirMassRange(mi, ma)   =>
+      Json.obj(
+        ("airmassRange",
+         Json.obj(("min", Json.fromBigDecimal(mi.value)), ("max", Json.fromBigDecimal(ma.value)))
+        )
       )
-    )
+    case HourAngleRange(mi, ma) =>
+      Json.obj(
+        ("hourAngleRange",
+         Json.obj(("minHours", Json.fromBigDecimal(mi.value)),
+                  ("maxHours", Json.fromBigDecimal(ma.value))
+         )
+        )
+      )
   }
 
   implicit val csEncoder: Encoder[explore.model.ConstraintSet] = deriveEncoder
 
   object Scalars {
     // Basic types
-    type BigDecimal = scala.BigDecimal
-    type Long       = scala.Long
+    type BigDecimal    = scala.BigDecimal
+    type Long          = scala.Long
     // Time
-    type Instant    = java.time.Instant
+    type Instant       = java.time.Instant
     // Refined
-    type PosInt     = eu.timepit.refined.types.numeric.PosInt
+    type PosInt        = eu.timepit.refined.types.numeric.PosInt
+    type PosBigDecimal = eu.timepit.refined.types.numeric.PosBigDecimal
   }
 
   object Enums {

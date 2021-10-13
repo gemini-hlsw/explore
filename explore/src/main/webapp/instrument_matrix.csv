@@ -48,7 +48,7 @@ FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2800,1.25,0.16,1.17,1.33,J,R3K,2pixel,0.
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2800,1.65,0.29,1.49,1.78,H,R3K,2pixel,0.36,no,1,no,normal,no,0.5,s
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2900,2.157,0.329,1.991,2.32,Ks,R3K,2pixel,0.36,no,1,no,normal,no,0.5,s
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2900,2.06,0.183,1.934,2.117,K-blue,R3K,2pixel,0.36,no,1,no,normal,no,0.5,s
-FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2900,2.31,0.265,2.181,2.446,K-red,R3K,2pixel,0.36,no,1,no,normal,no,0.5,s
+FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2900,2.31,0.265,2.181,2.446,K-red,R3K,2pixel,0.36,no,1,no,nor al,no,0.5,s
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,900,1.39,0.835,0.97,1.805,JH,JH,2pixel,0.36,no,1,no,normal,no,0.5,s
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,900,1.871,1.29,1.261,2.551,HK,HK,2pixel,0.36,no,1,no,normal,no,0.5,s
 FLAMINGOS2,spec,0.178,0.178,263,0.25,10,2800,1.25,0.16,1.17,1.33,J,R3K,MOS,0.36,no,1,no,normal,yes,0.5,s

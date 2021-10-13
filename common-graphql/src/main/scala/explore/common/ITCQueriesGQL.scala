@@ -10,38 +10,40 @@ import explore.schemas.ITC
 
 object ITCQueriesGQL {
 
+  val cleanupRegex = "(\\s{2,})".r
   @GraphQL
   trait SpectroscopyITCQuery extends GraphQLOperation[ITC] {
-    val document = """
+    val document =
+      """
       query($input: SpectroscopyModeInput) {
         spectroscopy(input: $input) {
           results {
             mode {
               instrument
+              params {
+                ... on GmosNITCParams {
+                  disperser
+                  fpu
+                  filter
+                }
+              }
+            }
+            itc {
+              ... on ItcSuccess {
+                exposures
+                exposureTime {
+                  microseconds
+                }
+              }
+              ... on ItcError {
+                msg
+                resultType
+              }
             }
           }
         }
       }
     """
-    // case class Variables(input: SpectroscopyModeInput)
-
-    object Data {
-      // object Observations {
-      //   object Nodes {
-      //   //   trait ConstraintSet extends ConstraintsSummary
-      //   //   object PlannedTime {
-      //   //     type Execution = time.Duration
-      //   //   }
-      //   // }
-      // }
-      //
-      // object ConstraintSetGroup {
-      //   object Nodes {
-      //     type ConstraintSet = model.ConstraintSet
-      //   }
-      // }
-    }
-
   }
 
 }

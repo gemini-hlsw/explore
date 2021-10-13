@@ -49,6 +49,7 @@ import scala.scalajs.js
 
 import js.annotation._
 import clue.js.AjaxJSBackend
+import clue.js.AjaxMethod
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -73,7 +74,7 @@ object ExploreMain extends IOApp.Simple {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run: IO[Unit] = {
-    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+    // japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     def initialModel(vault: Option[UserVault]) = RootModel(
       vault = vault,
@@ -128,7 +129,7 @@ object ExploreMain extends IOApp.Simple {
     Dispatcher[IO].allocated
       .map(_._1)
       .flatMap { implicit dispatcher =>
-        implicit val ajaxBackend: AjaxJSBackend[IO]              = AjaxJSBackend[IO]
+        implicit val ajaxBackend: AjaxJSBackend[IO]              = AjaxJSBackend[IO](AjaxMethod.GET)
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 

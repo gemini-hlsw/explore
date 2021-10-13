@@ -3,15 +3,15 @@
 
 package explore.config
 
-import cats.MonadError
+import cats.data._
 import cats.syntax.all._
+import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import coulomb.Quantity
 import coulomb.refined._
 import clue.data.syntax._
 import clue.TransactionalClient
 import crystal.react.implicits._
-import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
@@ -25,6 +25,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.schemas.ITC
 import explore.implicits._
+import explore.schemas.itcschema.implicits._
 import explore.modes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -53,15 +54,72 @@ import java.text.DecimalFormat
 import lucuma.core.math.Angle
 import explore.model.ConstraintSet
 import explore.model.AirMassRange
-import explore.schemas.implicits._
 import lucuma.core.model.Magnitude
 import lucuma.core.math.MagnitudeValue
+import scala.concurrent.duration._
+import clue.data.Input
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   matrix:                   SpectroscopyModesMatrix,
   spectroscopyRequirements: SpectroscopyRequirementsData
 ) extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+
+sealed trait ItcQueryProblems
+
+object ItcQueryProblems {
+  case object UnsupportedMode          extends ItcQueryProblems
+  case object MissingWavelength        extends ItcQueryProblems
+  case object MissingSignalToNoise     extends ItcQueryProblems
+  case class GenericError(msg: String) extends ItcQueryProblems
+}
+
+sealed trait ItcResult
+
+object ItcResult {
+  case object SourceTooBright                                     extends ItcResult
+  case object Pending                                             extends ItcResult
+  case class Result(exposureTime: FiniteDuration, exposures: Int) extends ItcResult
+}
+
+final case class ItcResultsCache(
+  cache: Map[(Wavelength, PosBigDecimal, InstrumentModes), EitherNec[ItcQueryProblems, ItcResult]]
+) {
+  import ItcResultsCache._
+
+  def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
+    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
+
+  def signalToNoise(w: Option[PosBigDecimal]): EitherNec[ItcQueryProblems, PosBigDecimal] =
+    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
+
+  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentModes] =
+    Either.fromOption(r.toMode, NonEmptyChain.of(ItcQueryProblems.UnsupportedMode))
+
+  def forRow(
+    w:  Option[Wavelength],
+    sn: Option[PosBigDecimal],
+    r:  SpectroscopyModeRow
+  ): EitherNec[ItcQueryProblems, ItcResult] = {
+    println(s"cache $w $sn $r")
+    (wavelength(w), signalToNoise(sn), mode(r)).parMapN { (w, sn, im) =>
+      println(s"cache ${cache.get((w, sn, im))}")
+      cache.get((w, sn, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
+    }.flatten
+  }
+}
+
+object ItcResultsCache {
+  implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
+    def toMode: Option[InstrumentModes] = r.instrument match {
+      case GmosNorthSpectroscopyRow(d, f, fi) =>
+        (new InstrumentModes(
+          new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
+        )).some
+      case _                                  => none
+    }
+  }
+}
 
 object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
@@ -73,6 +131,9 @@ object SpectroscopyModesTable {
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
+
+  implicit val itcReuse: Reusability[ItcResultsCache] =
+    Reusability.byRef
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
@@ -164,13 +225,34 @@ object SpectroscopyModesTable {
     case FocalPlane.IFU          => "IFU"
   }
 
-  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
+  def columns(
+    cw:  Option[Wavelength],
+    fpu: Option[FocalPlane],
+    sn:  Option[PosBigDecimal],
+    itc: ItcResultsCache
+  ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
         .setWidth(120)
         .setMinWidth(50)
         .setMaxWidth(150),
+      column(TimeColumnId, itc.forRow(cw, sn, _))
+        .setCell { c =>
+          println(s"varue ${c.value}")
+          c.value match {
+            case Left(_)                       => "M/V"
+            case Right(ItcResult.Result(t, c)) =>
+              println("AHA")
+              s"$c/$t"
+            case Right(ItcResult.Pending)      => s"Pending"
+            case Right(_)                      => s"N/A"
+          }
+        }
+        .setWidth(66)
+        .setMinWidth(66)
+        .setMaxWidth(66)
+        .setSortType(DefaultSortTypes.number),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
         .setWidth(96)
@@ -215,21 +297,15 @@ object SpectroscopyModesTable {
         .setWidth(66)
         .setMinWidth(66)
         .setMaxWidth(66)
-        .setSortType(DefaultSortTypes.number),
-      column(TimeColumnId, _ => "N/A")
-        .setCell(_ => "N/A")
-        .setWidth(66)
-        .setMinWidth(66)
-        .setMaxWidth(66)
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
     row.instrument match {
-      case GmosNorthSpectroscopyRow(disperser, filter)
+      case GmosNorthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
         ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
-      case GmosSouthSpectroscopyRow(disperser, filter)
+      case GmosSouthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
         ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
       case _ => none
@@ -253,18 +329,18 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
-  def queryItc[F[_]: Dispatcher: MonadError[*[_], Throwable]: TransactionalClient[*[_], ITC]](
+  def queryItc[F[_]: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
-    signalToNoise: PosBigDecimal,
-    modes:         List[SpectroscopyModeRow]
+    modes:         List[SpectroscopyModeRow],
+    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
   ) =
     SpectroscopyITCQuery
       .query(
         new ITCSpectroscopyInput(
           wavelength.toITCInput,
-          refineV[Positive](signalToNoise.value.toInt).toOption.get,
-          SpatialProfile.GaussianSource(Angle.fromMicroarcseconds(1000)),
+          signalToNoise,
+          SpatialProfile.GaussianSource(Angle.fromDoubleArcseconds(10)),
           SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
           Magnitude(MagnitudeValue(6), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
           BigDecimal(0.1),
@@ -279,15 +355,31 @@ object SpectroscopyModesTable {
             )
           ),
           modes.map(_.instrument).collect { case m: GmosNorthSpectroscopyRow =>
-            new InstrumentModes(
-              new GmosNITCInput(m.disperser,
-                                GmosNorthFpu.Ifu2Slits.assign,
-                                GmosNorthFilter.GPrime_GG455.assign
-              ).assign
-            ).assign
+            new InstrumentModes(m.toGmosNITCInput).assign
           }
         ).assign
       )
+      .flatMap { x =>
+        val update = x.spectroscopy.flatMap(_.results).map { r =>
+          val im = new InstrumentModes(
+            GmosNITCInput(r.mode.params.disperser,
+                          r.mode.params.fpu,
+                          r.mode.params.filter.orIgnore
+            ).assign
+          )
+          val m  = r.itc match {
+            case ItcError(m, _)   => ItcQueryProblems.GenericError(m).leftNec
+            case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+          }
+          println(m)
+          (wavelength, signalToNoise, im) -> m
+        }
+        println(update)
+        update.foreach(a => println(a._2))
+        itcResults
+          .modState { p => println("update chache"); p.copy(cache = p.cache ++ update) }
+          .to[F]
+      }
       .runAsyncAndForgetCB
 
   val component =
@@ -311,22 +403,34 @@ object SpectroscopyModesTable {
           (enabled ++ disabled)
         }
       )
+      // itc results cache
+      .useState(
+        ItcResultsCache(
+          Map.empty[(Wavelength, PosBigDecimal, InstrumentModes), EitherNec[ItcQueryProblems,
+                                                                            ItcResult
+          ]]
+        )
+      )
       // cols
-      .useMemoBy((props, _) => // Memo Cols
-        (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.focalPlane)
-      )((_, _) => { case (wavelength, focalPlane) =>
-        columns(wavelength, focalPlane)
+      .useMemoBy { (props, _, itc) => // Memo Cols
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.focalPlane,
+         props.spectroscopyRequirements.signalToNoise,
+         itc.value
+        )
+      }((_, _, _) => { case (wavelength, focalPlane, sn, itc) =>
+        columns(wavelength, focalPlane, sn, itc)
       })
       // selectedIndex
-      .useStateBy((props, rows, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
+      .useStateBy((props, rows, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _) =>
         (props.scienceConfiguration, props.spectroscopyRequirements)
-      )((_, rows, _, selectedIndex) => { case (scienceConfiguration, _) =>
+      )((_, rows, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
       })
       // tableInstance
-      .useTableBy((_, rows, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // If useRef can be used here, I'm not figuring out how to do that.
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
@@ -335,8 +439,18 @@ object SpectroscopyModesTable {
       .useState(none[ListRange])
       // atTop
       .useState(false)
-      .renderWithReuse {
-        (props, rows, _, selectedIndex, tableInstance, virtuosoRef, visibleRange, atTop) =>
+      .render {
+        (
+          props,
+          rows,
+          itcResults,
+          _,
+          selectedIndex,
+          tableInstance,
+          virtuosoRef,
+          visibleRange,
+          atTop
+        ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
@@ -375,12 +489,11 @@ object SpectroscopyModesTable {
                       HelpIcon("configuration/table.md")
               ),
               AppCtx.using { implicit ctx =>
-                // implicit val itc = ctx.clients.itc
                 Button(onClick =
                   (props.spectroscopyRequirements.wavelength,
                    props.spectroscopyRequirements.signalToNoise
                   )
-                    .mapN((w, sn) => queryItc(w, sn, visibleRows.toList))
+                    .mapN((w, sn) => queryItc(w, sn, visibleRows.toList, itcResults.withEffect))
                     .getOrEmpty
                 )("Query ITC")
               }

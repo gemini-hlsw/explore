@@ -547,10 +547,16 @@ input AirmassRangeInput {
   max: BigDecimal!
 }
 
+# Hour Angle creation parameters
+input HourAngleRangeInput {
+  minHours: BigDecimal!
+  maxHours: BigDecimal!
+}
+
 # Elevation range creation parameters
 input ElevationRangeInput {
   airmassRange: AirmassRangeInput
-  # hourAngleRange: CreateHourAngleRangeInput
+  hourAngleRange: HourAngleRangeInput
 }
 
 # Constraint set creation parameters
@@ -596,7 +602,7 @@ type ItcSuccess implements ItcResult {
   exposures: Int!
 
   # Signal/Noise ratio
-  signalToNoise: Int!
+  signalToNoise: PosBigDecimal!
 
   # Result type
   resultType: String!
@@ -619,7 +625,14 @@ type ObservingModeSpectroscopy {
 # An `Int` in the range from 1 to `Int.MaxValue`
 scalar PosInt
 
+# A `BigDecimal` above 0
+scalar PosBigDecimal
+
 type Query {
+  basiccase(
+    # Configuration alternatives search parameters.
+    input: QueryConfigurationAlternativeSearchInput!
+  ): SpectroscopyResult!
 
   spectroscopy(
     # Query multiple modes in spectroscopy mode
@@ -643,7 +656,7 @@ input GmosSITCInput {
   disperser: GmosNorthDisperser!
 
   # Gmos North Focal plane unit
-  fpu: GmosNorthFpu
+  fpu: GmosNorthFpu!
 
   # Gmos North filter
   filter: GmosNorthFilter
@@ -654,9 +667,9 @@ type GmosNITCParams {
   disperser: GmosNorthDisperser!
 
   # Gmos North Focal plane unit
-  # customMask: GmosCustomMask
+  customMask: GmosCustomMask
 
-  fpu: GmosNorthFpu
+  fpu: GmosNorthFpu!
 
   # Gmos North filter
   filter: GmosNorthFilter
@@ -667,9 +680,7 @@ input GmosNITCInput {
   disperser: GmosNorthDisperser!
 
   # Gmos North Focal plane unit
-  # customMask: GmosCustomMask
-
-  fpu: GmosNorthFpu
+  fpu: GmosNorthFpu!
 
   # Gmos North filter
   filter: GmosNorthFilter
@@ -689,7 +700,7 @@ input SpectroscopyModeInput {
   wavelength: WavelengthModelInput!
 
   # Minimum desired signal-to-noise ratio.
-  signalToNoise: PosInt!
+  signalToNoise: PosBigDecimal!
 
   # Spatial profile PointSource/UniformSource/GaussianSource.
   spatialProfile: SpatialProfileModelInput!
@@ -708,6 +719,33 @@ input SpectroscopyModeInput {
 
   # Instrument modes
   modes: [InstrumentModes]!
+}
+
+# Configuration alternatives query
+input QueryConfigurationAlternativeSearchInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput!
+
+  # Minimum desired simultaneous wavelength coverage.
+  simultaneousCoverage: WavelengthModelInput!
+
+  # Minimum desired resolution.
+  resolution: PosInt!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosBigDecimal!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput!
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpectralDistributionInput!
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeCreateInput!
+
+  # Target redshift.
+  redshift: BigDecimal!
 }
 
 type Result {
