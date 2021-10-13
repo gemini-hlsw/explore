@@ -21,6 +21,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ScienceTarget
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
@@ -57,10 +58,10 @@ final case class SearchCallback(
 
 final case class SiderealTargetEditor(
   uid:           User.Id,
-  id:            Target.Id,
+  id:            ScienceTarget.Id,
   target:        View[SiderealTarget],
   undoStacks:    View[UndoStacks[IO, SiderealTarget]],
-  searching:     View[Set[Target.Id]],
+  searching:     View[Set[ScienceTarget.Id]],
   options:       View[TargetVisualOptions],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {

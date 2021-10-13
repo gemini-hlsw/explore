@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.implicits._
 import explore.implicits._
+import explore.model.ScienceTarget
 import explore.schemas.implicits._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
@@ -21,7 +22,6 @@ import lucuma.core.model.CatalogId
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
-import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
@@ -32,7 +32,7 @@ import TargetQueriesGQL._
 object TargetQueries {
 
   case class UndoView(
-    id:           Target.Id,
+    id:           ScienceTarget.Id,
     undoCtx:      UndoCtx[SiderealTarget]
   )(implicit ctx: AppContextIO) {
     def apply[A](
@@ -45,7 +45,7 @@ object TargetQueries {
         .withOnMod(value =>
           SiderealTargetMutation
             .execute(
-              remoteSet(value)(EditSiderealInput(SelectTargetInput(targetIds = List(id).assign)))
+              remoteSet(value)(EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign)))
             )
             .void
             .runAsync

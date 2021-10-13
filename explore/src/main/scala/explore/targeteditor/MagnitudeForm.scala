@@ -13,14 +13,15 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ScienceTarget
 import explore.model.display._
+import explore.model.reusability._
 import explore.utils.ReactTableHelpers
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.model.Magnitude
-import lucuma.core.model.Target
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
@@ -39,7 +40,7 @@ import reactST.reactTable.mod.SortingRule
 import scala.collection.immutable.SortedMap
 
 final case class MagnitudeForm(
-  targetId:   Target.Id,
+  targetId:   ScienceTarget.Id,
   magnitudes: View[SortedMap[MagnitudeBand, Magnitude]],
   disabled:   Boolean
 ) extends ReactFnProps[MagnitudeForm](MagnitudeForm.component)
