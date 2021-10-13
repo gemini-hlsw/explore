@@ -9,6 +9,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
 import explore.implicits._
+import explore.model.ScienceTarget
 import explore.model.TargetEnv
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
@@ -17,7 +18,6 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
@@ -38,8 +38,8 @@ object TargetTile {
   def targetTile(
     userId:        Option[User.Id],
     targetEnvPot:  Pot[View[TargetEnv]],
-    undoStacks:    View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
-    searching:     View[Set[Target.Id]],
+    undoStacks:    View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
+    searching:     View[Set[ScienceTarget.Id]],
     options:       View[TargetVisualOptions],
     hiddenColumns: View[Set[String]]
   ) = //(implicit ctx: AppContextIO) =

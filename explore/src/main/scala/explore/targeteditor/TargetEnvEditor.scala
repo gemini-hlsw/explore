@@ -18,7 +18,6 @@ import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.function.At._
@@ -27,8 +26,8 @@ import react.common.ReactFnProps
 final case class TargetEnvEditor(
   userId:        User.Id,
   targetEnv:     View[TargetEnv],
-  undoStacks:    View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
-  searching:     View[Set[Target.Id]],
+  undoStacks:    View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
+  searching:     View[Set[ScienceTarget.Id]],
   options:       View[TargetVisualOptions],
   hiddenColumns: View[Set[String]],
   renderInTitle: Tile.RenderInTitle
@@ -68,7 +67,7 @@ object TargetEnvEditor {
               val selectedTargetView =
                 props.targetEnv
                   .zoom(TargetEnv.scienceTargets)
-                  .zoom(at(targetId)(atTreeSeqMap[Target.Id, ScienceTarget]))
+                  .zoom(at(targetId)(atTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {

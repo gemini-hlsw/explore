@@ -7,10 +7,10 @@ import cats.Eq
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
+import explore.model.ScienceTarget
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
@@ -19,8 +19,8 @@ case class ModelUndoStacks[F[_]](
   forObsList:         UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetList:      UndoStacks[F, Nothing] = UndoStacks.empty[F, Nothing],
   // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  forSiderealTarget:  Map[Target.Id, UndoStacks[F, SiderealTarget]] =
-    Map.empty[Target.Id, UndoStacks[F, SiderealTarget]],
+  forSiderealTarget:  Map[ScienceTarget.Id, UndoStacks[F, SiderealTarget]] =
+    Map.empty[ScienceTarget.Id, UndoStacks[F, SiderealTarget]],
   forConstraintList:  UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup: Map[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]] =
     Map.empty[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]],

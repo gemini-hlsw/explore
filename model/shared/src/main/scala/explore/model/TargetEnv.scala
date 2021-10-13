@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import io.circe.Decoder
-import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 import monocle.Lens
@@ -14,7 +13,7 @@ import scala.collection.immutable.TreeSeqMap
 
 case class TargetEnv(
   id:             TargetEnvironment.Id,
-  scienceTargets: TreeSeqMap[Target.Id, ScienceTarget]
+  scienceTargets: TreeSeqMap[ScienceTarget.Id, ScienceTarget]
 )
 
 object TargetEnv {
@@ -30,7 +29,7 @@ object TargetEnv {
     } yield TargetEnv(id, scienceTargets)
   )
 
-  val id: Lens[TargetEnv, TargetEnvironment.Id]                             = Focus[TargetEnv](_.id)
-  val scienceTargets: Lens[TargetEnv, TreeSeqMap[Target.Id, ScienceTarget]] =
+  val id: Lens[TargetEnv, TargetEnvironment.Id]                                    = Focus[TargetEnv](_.id)
+  val scienceTargets: Lens[TargetEnv, TreeSeqMap[ScienceTarget.Id, ScienceTarget]] =
     Focus[TargetEnv](_.scienceTargets)
 }

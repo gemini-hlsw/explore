@@ -14,7 +14,6 @@ import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
@@ -26,7 +25,7 @@ case class RootModel(
   tabs:                           EnumZipper[AppTab],
   focused:                        Option[Focused] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
-  searchingTarget:                Set[Target.Id] = HashSet.empty,
+  searchingTarget:                Set[ScienceTarget.Id] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
   targetSummaryHiddenColumns:     Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
