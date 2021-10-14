@@ -29,6 +29,19 @@ object TargetEnvQueriesGQL {
   }
 
   @GraphQL
+  trait AddSiderealTarget extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($targetEnvironments: [TargetEnvironmentId!]!, $targetInput: CreateSiderealInput!) {
+        updateScienceTargetList(input: { select: { targetEnvironments: $targetEnvironments}, edits: { addSidereal: $targetInput } }) {
+          targetEnvironment {
+            id
+          }
+        }
+      }
+      """
+  }
+
+  @GraphQL
   trait TargetEnvEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription($id: TargetEnvironmentId!) {
