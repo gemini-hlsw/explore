@@ -100,11 +100,11 @@ object TargetListGroupObsList {
           if !destIds.contains(targetEnvId)
           destTlg     <-
             props.targetListsWithObs.get.targetListGroups.values.find(_.targetEnvIds === destIds)
-        } yield (destTlg, obsId, targetEnvId, destIds)
+        } yield (destTlg, obsId, targetEnvId)
 
-        oData.fold(SyncIO.unit) { case (destTlg, obsId, targetEnvId, destIds) =>
+        oData.fold(SyncIO.unit) { case (destTlg, obsId, targetEnvId) =>
           TargetListGroupObsListActions
-            .obsTargetListGroup[IO](obsId, targetEnvId, destIds, expandedIds, selected)
+            .obsTargetListGroup[IO](obsId, targetEnvId, expandedIds, selected)
             .set(undoCtx)(destTlg.targets.some)
         }
       }

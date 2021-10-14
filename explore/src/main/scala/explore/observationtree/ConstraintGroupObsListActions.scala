@@ -50,7 +50,7 @@ object ConstraintGroupObsListActions {
   )(
     eids:    SortedSet[SortedSet[Observation.Id]]
   ) =
-    eids.map(ids => if (ids === destIds) destIds + obsId else ids - obsId)
+    eids.map(ids => if (ids === destIds) destIds + obsId else ids - obsId) + (destIds + obsId)
 
   private def updateSelected(obsId: Observation.Id, destIds: SortedSet[Observation.Id])(
     selected:                       SelectedPanel[SortedSet[Observation.Id]]
@@ -70,6 +70,8 @@ object ConstraintGroupObsListActions {
       onSet = (cgl, ocs) =>
         ocs.fold(async.unit) { cs =>
           // should always find the destIds, but...
+          // Need to find them here rather that pass them in so that it
+          // works for undo.
           val destIds = cgl.values
             .find(_.constraintSet === cs)
             .map(_.obsIds)

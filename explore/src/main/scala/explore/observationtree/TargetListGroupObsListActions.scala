@@ -58,7 +58,9 @@ object TargetListGroupObsListActions {
   )(
     eids:        SortedSet[SortedSet[TargetEnvironment.Id]]
   ) =
-    eids.map(ids => if (ids === destIds) destIds + targetEnvId else ids - targetEnvId)
+    eids.map(ids =>
+      if (ids === destIds) destIds + targetEnvId else ids - targetEnvId
+    ) + (destIds + targetEnvId) // always expand the destination, even if it wasn't expanded.
 
   private def updateSelected(
     targetEnvId: TargetEnvironment.Id,
@@ -75,13 +77,19 @@ object TargetListGroupObsListActions {
   def obsTargetListGroup[F[_]](
     obsId:          Observation.Id,
     targetEnvId:    TargetEnvironment.Id,
-    destIds:        SortedSet[TargetEnvironment.Id],
     expandedIds:    View[SortedSet[SortedSet[TargetEnvironment.Id]]],
     selected:       View[SelectedPanel[SortedSet[TargetEnvironment.Id]]]
   )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
     Action[F](getter = getter(targetEnvId), setter = setter(obsId, targetEnvId))(
-      onSet = (_, otl) =>
+      onSet = (tlgl, otl) =>
         otl.fold(async.unit) { tl =>
+          // Should always find the destIds, but...
+          // Need to find them here rather that pass them in so that it
+          // works for undo.
+          val destIds = tlgl.values
+            .find(_.targets === tl)
+            .map(_.targetEnvIds)
+            .getOrElse(SortedSet.empty[TargetEnvironment.Id])
           TargetListGroupQueries.replaceObservationScienceTargetList[F](obsId, tl) >>
             expandedIds.mod(updateExpandedIds(targetEnvId, destIds) _).to[F] >>
             selected.mod(updateSelected(targetEnvId, destIds) _).to[F]
