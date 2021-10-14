@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.TargetEnvQueriesGQL
@@ -36,6 +37,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
+import explore.components.InputModal
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -68,13 +70,14 @@ object TargetEnvEditor {
   private def newTarget(name: NonEmptyString): SiderealTarget =
     SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
 
-  def insertSiderealTarget(
-    targetEnvironments: List[TargetEnvironment.Id]
+  private def insertSiderealTarget(
+    targetEnvironments: List[TargetEnvironment.Id],
+    name:               NonEmptyString
   )(implicit ctx:       AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
         targetEnvironments,
-        newTarget(NonEmptyString("<UNNAMED>")).toCreateInput
+        newTarget(name).toCreateInput
       )
       .void
 
@@ -85,6 +88,7 @@ object TargetEnvEditor {
       .useStateBy(_.targetEnv.get.scienceTargets.headOption.map(_._1))
       // adding
       .useState(false)
+      // reset "loading" for add button when science targets change
       .useEffectWithDepsBy((props, _, _) => props.targetEnv.get.scienceTargets)((_, _, adding) =>
         _ => adding.setState(false)
       )
@@ -93,17 +97,28 @@ object TargetEnvEditor {
 
         <.div(
           props.renderInTitle(
-            Button(
-              onClick = adding.setState(true) >>
-                insertSiderealTarget(List(props.targetEnv.get.id)).runAsyncAndForget,
-              size = Tiny,
-              compact = true,
-              clazz = ExploreStyles.VeryCompact,
-              disabled = adding.value,
-              icon = Icons.New,
-              loading = adding.value,
-              content = "Add",
-              labelPosition = LabelPosition.Left
+            InputModal(
+              "Create new Target",
+              initialValue = None,
+              label = "Name",
+              placeholder = "Target name",
+              okLabel = "Create",
+              onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
+                adding.setState(true) >>
+                  insertSiderealTarget(List(props.targetEnv.get.id), name).runAsyncAndForget
+              ),
+              trigger = Reuse.by(adding.value)(
+                Button(
+                  size = Tiny,
+                  compact = true,
+                  clazz = ExploreStyles.VeryCompact,
+                  disabled = adding.value,
+                  icon = Icons.New,
+                  loading = adding.value,
+                  content = "Add",
+                  labelPosition = LabelPosition.Left
+                ): VdomNode
+              )
             )
           ),
           TargetTable(
