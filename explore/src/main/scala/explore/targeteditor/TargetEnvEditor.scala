@@ -10,6 +10,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.TargetEnvQueriesGQL
+import explore.components.InputModal
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -37,7 +38,6 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
-import explore.components.InputModal
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -122,7 +122,7 @@ object TargetEnvEditor {
             )
           ),
           TargetTable(
-            props.targetEnv.get.scienceTargets.toList.map(_._2),
+            props.targetEnv.zoom(TargetEnv.scienceTargets),
             props.hiddenColumns,
             ViewF(selectedTargetId.value, (mod, _) => selectedTargetId.modState(mod)),
             // selectedTargetId,

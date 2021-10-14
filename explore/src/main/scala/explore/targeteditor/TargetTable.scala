@@ -4,11 +4,13 @@
 package explore.targeteditor
 
 import cats.Order._
+import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
+import explore.common.TargetEnvQueriesGQL
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -30,9 +32,12 @@ import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
+import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
+import react.semanticui.shorthand._
+import react.semanticui.sizes._
 import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
 import reactST.reactTable._
@@ -41,15 +46,18 @@ import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 
+import scala.collection.immutable.TreeSeqMap
+
 import scalajs.js.JSConverters._
 
 final case class TargetTable(
-  targets:        List[ScienceTarget],
-  hiddenColumns:  View[Set[String]],
-  selectedTarget: ViewF[CallbackTo, Option[ScienceTarget.Id]],
-  renderInTitle:  Tile.RenderInTitle
+  targets:          View[TreeSeqMap[ScienceTarget.Id, ScienceTarget]],
+  hiddenColumns:    View[Set[String]],
+  selectedTarget:   ViewF[CallbackTo, Option[ScienceTarget.Id]],
+  renderInTitle:    Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
-) extends ReactFnProps[TargetTable](TargetTable.component)
+)(implicit val ctx: AppContextIO)
+    extends ReactFnProps[TargetTable](TargetTable.component)
 
 object TargetTable {
   type Props = TargetTable
@@ -63,6 +71,7 @@ object TargetTable {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private val columnNames: Map[String, String] = Map(
+    "delete"       -> " ",
     "type"         -> " ",
     "name"         -> "Name",
     "ra"           -> "RA",
@@ -86,17 +95,42 @@ object TargetTable {
     "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
   )
 
+  private def deleteSiderealTarget(
+    targetId:     ScienceTarget.Id
+  )(implicit ctx: AppContextIO): IO[Unit] =
+    TargetEnvQueriesGQL.RemoveSiderealTarget
+      .execute(targetId.toList)
+      .void
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // cols
-      .useMemo(()) { _ =>
+      .useMemoBy(_ => ()) { props => _ =>
+        implicit val ctx = props.ctx
+
         def column[V](id: String, accessor: SiderealScienceTarget => V) =
           TargetTable
             .Column(id, accessor)
             .setHeader(columnNames(id))
 
         List(
+          column("delete", ScienceTarget.id.get)
+            .setCell(cell =>
+              Button(
+                size = Tiny,
+                compact = true,
+                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+                icon = Icons.Trash,
+                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                  e.preventDefaultCB >>
+                    e.stopPropagationCB >>
+                    props.targets.mod(_ - cell.value) >>
+                    deleteSiderealTarget(cell.value).runAsyncAndForget
+              )
+            )
+            .setWidth(30)
+            .setDisableSortBy(true),
           column("type", _ => ())
             .setCell(_ => Icons.Star)
             .setWidth(30),
@@ -157,7 +191,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.collect { case st @ SiderealScienceTarget(_, _) => st }
+        _.get.collect { case (_, st @ SiderealScienceTarget(_, _)) => st }.toList
       )
       .useTableBy((props, cols, rows) =>
         TargetTable(
