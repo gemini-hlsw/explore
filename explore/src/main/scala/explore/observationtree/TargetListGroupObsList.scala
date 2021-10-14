@@ -193,7 +193,7 @@ object TargetListGroupObsList {
                       <.span(ExploreStyles.ObsGroupTitleWithWrap)(
                         targetListGroup.name
                       ),
-                      Icons.Anchor.when(obsIds.size < targetEnvIds.size),
+                      Icons.Thumbtack.when(obsIds.size < targetEnvIds.size),
                       <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
                     )
 
