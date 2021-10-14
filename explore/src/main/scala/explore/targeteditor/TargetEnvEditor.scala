@@ -6,7 +6,11 @@ package explore.targeteditor
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
+import explore.common.TargetEnvQueriesGQL
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceTarget
 import explore.model.SiderealScienceTarget
@@ -14,39 +18,35 @@ import explore.model.TargetEnv
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics._
+import explore.schemas.implicits._
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.TargetEnvironment
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.function.At._
 import react.common.ReactFnProps
-import japgolly.scalajs.react.callback.CallbackCats._
-import react.semanticui.elements.button.Button
-import eu.timepit.refined.types.string.NonEmptyString
-// import clue.TransactionalClient
-// import cats.effect.std.Dispatcher
-// import org.typelevel.log4cats.Logger
-// import cats.effect.SyncIO
-// import eu.timepit.refined.types.numeric.PosLong
-// import scala.util.Random
-// import lucuma.schemas.ObservationDB
-// import explore.common.SimbadSearch
-import lucuma.core.math.Coordinates
-import lucuma.core.model.SiderealTracking
+import react.semanticui.elements.button._
+import react.semanticui.shorthand._
+import react.semanticui.sizes._
+
 import scala.collection.immutable.SortedMap
-// import explore.common.TargetEnvQueriesGQL
 
 final case class TargetEnvEditor(
-  userId:        User.Id,
-  targetEnv:     View[TargetEnv],
-  undoStacks:    View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
-  searching:     View[Set[ScienceTarget.Id]],
-  options:       View[TargetVisualOptions],
-  hiddenColumns: View[Set[String]],
-  renderInTitle: Tile.RenderInTitle
-) extends ReactFnProps[TargetEnvEditor](TargetEnvEditor.component)
+  userId:           User.Id,
+  targetEnv:        View[TargetEnv],
+  undoStacks:       View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
+  searching:        View[Set[ScienceTarget.Id]],
+  options:          View[TargetVisualOptions],
+  hiddenColumns:    View[Set[String]],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
+    extends ReactFnProps[TargetEnvEditor](TargetEnvEditor.component)
 
 object TargetEnvEditor {
   type Props = TargetEnvEditor
@@ -65,65 +65,47 @@ object TargetEnvEditor {
       view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
   }
 
-  // def insertTarget(target: TargetResult)(implicit
-  //   c:                     TransactionalClient[IO, ObservationDB]
-  // ): IO[Unit] =
-  //   AddTarget
-  //     .execute(target.id, target.name)
-  //     .handleErrorWith { _ =>
-  //       UndeleteTarget.execute(target.id)
-  //     }
-  //     .void
-
-  // protected def insertTarget(
-  //   setter:     UndoCtx[TargetEnv]
-  // )(name:       NonEmptyString)(implicit
-  //   c:          TransactionalClient[IO, ObservationDB],
-  //   dispatcher: Dispatcher[IO],
-  //   logger:     Logger[IO]
-  // ): SyncIO[Unit] =
-  //   ($.propsIn[SyncIO], SyncIO(PosLong.unsafeFrom(Random.nextInt(0xfff).abs.toLong + 1))).tupled
-  //     .flatMap { case (props, posLong) =>
-  //       val newTarget =
-  //         TargetResult(Target.Id(posLong),
-  //                      name,
-  //                      SiderealTracking.const(Coordinates.Zero),
-  //                      List.empty
-  //         )
-  //       val mod       = targetMod(setter, props.focused.set, newTarget.id)
-  //       (
-  //         mod(targetListMod.upsert(newTarget, props.pointingsWithObs.get.targets.length)).to[IO],
-  //         props.searching.mod(_ + newTarget.id).to[IO] >>
-  //           SimbadSearch
-  //             .search[IO](name)
-  //             .attempt
-  //             .guarantee(props.searching.mod(_ - newTarget.id).to[IO])
-  //       ).parTupled.flatMap {
-  //         case (_, Right(Some(Target(_, Right(st), m)))) =>
-  //           val update = TargetQueries.UpdateSiderealTracking(st) >>>
-  //             TargetQueries.replaceMagnitudes(m.values.toList)
-  //           TargetQueriesGQL.TargetMutation.execute(update(EditSiderealInput(newTarget.id))).void
-  //         case _                                         =>
-  //           IO.unit
-  //       }.runAsync
-  //     }
-
-  // def createTarget(name: NonEmptyString): Callback =
-  //   insertTarget(undoCtx)(name)
-
-  def newTarget(name: NonEmptyString): SiderealTarget =
+  private def newTarget(name: NonEmptyString): SiderealTarget =
     SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
 
-  // def insertSiderealTarget(target: SiderealTarget): IO[Unit] =
-  //   TargetEnvQueriesGQL.AddSiderealTarget()
+  def insertSiderealTarget(
+    targetEnvironments: List[TargetEnvironment.Id]
+  )(implicit ctx:       AppContextIO): IO[Unit] =
+    TargetEnvQueriesGQL.AddSiderealTarget
+      .execute(
+        targetEnvironments,
+        newTarget(NonEmptyString("<UNNAMED>")).toCreateInput
+      )
+      .void
 
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
+      // selectedTargetId
       .useStateBy(_.targetEnv.get.scienceTargets.headOption.map(_._1))
-      .renderWithReuse { (props, selectedTargetId) =>
+      // adding
+      .useState(false)
+      .useEffectWithDepsBy((props, _, _) => props.targetEnv.get.scienceTargets)((_, _, adding) =>
+        _ => adding.setState(false)
+      )
+      .renderWithReuse { (props, selectedTargetId, adding) =>
+        implicit val ctx = props.ctx
+
         <.div(
-          props.renderInTitle(Button(onClick = Callback.log("CLICK"))("+ Add")),
+          props.renderInTitle(
+            Button(
+              onClick = adding.setState(true) >>
+                insertSiderealTarget(List(props.targetEnv.get.id)).runAsyncAndForget,
+              size = Tiny,
+              compact = true,
+              clazz = ExploreStyles.VeryCompact,
+              disabled = adding.value,
+              icon = Icons.New,
+              loading = adding.value,
+              content = "Add",
+              labelPosition = LabelPosition.Left
+            )
+          ),
           TargetTable(
             props.targetEnv.get.scienceTargets.toList.map(_._2),
             props.hiddenColumns,

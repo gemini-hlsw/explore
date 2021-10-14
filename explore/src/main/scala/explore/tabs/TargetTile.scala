@@ -42,7 +42,7 @@ object TargetTile {
     searching:     View[Set[ScienceTarget.Id]],
     options:       View[TargetVisualOptions],
     hiddenColumns: View[Set[String]]
-  ) = //(implicit ctx: AppContextIO) =
+  )(implicit ctx:  AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
       Reuse.by((userId, targetEnvPot, undoStacks, searching, options))(
         (renderInTitle: Tile.RenderInTitle) =>

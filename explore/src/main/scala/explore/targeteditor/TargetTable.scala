@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.Order._
 import cats.syntax.all._
+import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -37,12 +38,10 @@ import reactST.reactTable.TableDef
 import reactST.reactTable._
 import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.IdType
-
-import scalajs.js.JSConverters._
-import crystal.ViewF
-
 import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
+
+import scalajs.js.JSConverters._
 
 final case class TargetTable(
   targets:        List[ScienceTarget],
