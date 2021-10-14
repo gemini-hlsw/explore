@@ -14,6 +14,7 @@ import explore.Icons
 import explore.common.TargetEnvQueriesGQL
 import explore.components.InputModal
 import explore.components.Tile
+import explore.optics._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceTarget
@@ -25,15 +26,13 @@ import explore.optics._
 import explore.schemas.implicits._
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
-import lucuma.core.model.TargetEnvironment
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.function.At._
+import monocle.function.Index._
 import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
@@ -44,6 +43,10 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
 import lucuma.schemas.ObservationDB.Types._
 import explore.common.TargetQueries
+import cats.effect.SyncIO
+import crystal.ViewOptF
+import cats.Monoid
+import cats.Monad
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -67,6 +70,11 @@ object TargetEnvEditor {
       view.get.map(a => f(view.zoom(_ => a)(f => _.map(f))))
   }
 
+  implicit class ViewOptFOps[F[_], A](val view: ViewOptF[F, A]) extends AnyVal {
+    def mapValue[B](f: ViewF[F, A] => B)(implicit F: Monad[F], ev: Monoid[F[Unit]]): Option[B] =
+      view.get.map(a => f(ViewF[F, A](a, (mod, cb) => view.modCB(mod, _.foldMap(cb)))))
+  }
+
   // This can go into crystal.
   implicit class ViewFOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
     def unsafeNarrow[B <: A]: ViewF[F, B] =
@@ -77,22 +85,23 @@ object TargetEnvEditor {
     SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
 
   private def insertSiderealTarget(
-    targetEnvironments: List[TargetEnvironment.Id],
-    name:               NonEmptyString,
-    searching:          View[Set[ScienceTarget.Id]]
-  )(implicit ctx:       AppContextIO): IO[Unit] =
+    targetEnv:      View[TargetEnv],
+    name:           NonEmptyString,
+    searching:      View[Set[ScienceTarget.Id]],
+    selectedTarget: View[Option[ScienceTarget.Id]]
+  )(implicit ctx:   AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
-        targetEnvironments,
+        List(targetEnv.get.id),
         newTarget(name).toCreateInput
       ) >>= { response =>
       val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
 
-      // IO.println(targetIds)
       ScienceTarget.Id
         .fromTargetIdList(targetIds)
         .map(id =>
-          searching.mod(_ + id).to[IO] >>
+          selectedTarget.set(id.some).to[IO] >>
+            searching.mod(_ + id).to[IO] >>
             SimbadSearch
               .search[IO](name)
               .attempt
@@ -100,14 +109,24 @@ object TargetEnvEditor {
               .guarantee(searching.mod(_ - id).to[IO])
               .flatMap {
                 case Some(SiderealTarget(_, st, m)) =>
-                  TargetQueriesGQL.SiderealTargetMutation
-                    .execute(
-                      (TargetQueries.UpdateSiderealTracking(st) >>>
-                        TargetQueries.replaceMagnitudes(m))(
-                        EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign))
-                      )
+                  // Set locally
+                  targetEnv
+                    .zoom(TargetEnv.scienceTargets)
+                    .zoom(index(id)(indexTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
+                    .zoom(ScienceTarget.sidereal)
+                    .zoom(
+                      disjointZip(SiderealScienceTarget.tracking, SiderealScienceTarget.magnitudes)
                     )
-                    .void
+                    .set((st, m))
+                    .to[IO] >> // Set remotely
+                    TargetQueriesGQL.SiderealTargetMutation
+                      .execute(
+                        (TargetQueries.UpdateSiderealTracking(st) >>>
+                          TargetQueries.replaceMagnitudes(m))(
+                          EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign))
+                        )
+                      )
+                      .void
                 case _                              =>
                   IO.unit
               }
@@ -118,7 +137,7 @@ object TargetEnvEditor {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      // selectedTargetId
+      // selectedTargetIdState
       .useStateBy(_.targetEnv.get.scienceTargets.headOption.map(_._1))
       // adding
       .useState(false)
@@ -126,8 +145,15 @@ object TargetEnvEditor {
       .useEffectWithDepsBy((props, _, _) => props.targetEnv.get.scienceTargets)((_, _, adding) =>
         _ => adding.setState(false)
       )
-      .renderWithReuse { (props, selectedTargetId, adding) =>
+      .renderWithReuse { (props, selectedTargetIdState, adding) =>
         implicit val ctx = props.ctx
+
+        // TODO We will add this generic state => view conversion in crystal
+        val selectedTargetId =
+          ViewF[SyncIO, Option[ScienceTarget.Id]](
+            selectedTargetIdState.value,
+            (mod, _) => selectedTargetIdState.modState(mod).to[SyncIO]
+          )
 
         <.div(
           props.renderInTitle(
@@ -139,9 +165,10 @@ object TargetEnvEditor {
               okLabel = "Create",
               onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
                 adding.setState(true) >>
-                  insertSiderealTarget(List(props.targetEnv.get.id),
+                  insertSiderealTarget(props.targetEnv,
                                        name,
-                                       props.searching
+                                       props.searching,
+                                       selectedTargetId
                   ).runAsyncAndForget
               ),
               trigger = Reuse.by(adding.value)(
@@ -161,17 +188,18 @@ object TargetEnvEditor {
           TargetTable(
             props.targetEnv.zoom(TargetEnv.scienceTargets),
             props.hiddenColumns,
-            ViewF(selectedTargetId.value, (mod, _) => selectedTargetId.modState(mod)),
+            selectedTargetId,
             // selectedTargetId,
             props.renderInTitle
             // onSelect
           ),
-          selectedTargetId.value
+          selectedTargetId.get
             .flatMap[VdomElement] { targetId =>
               val selectedTargetView =
                 props.targetEnv
                   .zoom(TargetEnv.scienceTargets)
-                  .zoom(at(targetId)(atTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
+                  .zoom(index(targetId)(indexTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
+              // .zoom(at(targetId)(atTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {

@@ -6,7 +6,6 @@ package explore.targeteditor
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -53,7 +52,7 @@ import scalajs.js.JSConverters._
 final case class TargetTable(
   targets:          View[TreeSeqMap[ScienceTarget.Id, ScienceTarget]],
   hiddenColumns:    View[Set[String]],
-  selectedTarget:   ViewF[CallbackTo, Option[ScienceTarget.Id]],
+  selectedTarget:   View[Option[ScienceTarget.Id]],
   renderInTitle:    Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
 )(implicit val ctx: AppContextIO)
@@ -263,7 +262,7 @@ object TargetTable {
                   props.selectedTarget.get.exists(_ === rowData.original.id)
                 )
               )(
-                ^.onClick --> props.selectedTarget.set(rowData.original.id.some),
+                ^.onClick --> props.selectedTarget.set(rowData.original.id.some).toCB,
                 props2Attrs(rowData.getRowProps())
               ),
             cell = (cell: Cell[_, _]) =>

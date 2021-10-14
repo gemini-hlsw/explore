@@ -26,6 +26,9 @@ import monocle.Lens
 import monocle.Optional
 
 import scala.collection.immutable.SortedMap
+import monocle.macros.GenPrism
+import monocle.Prism
+import lucuma.core.model.SiderealTracking
 
 /**
  * Target.Id(s) + Target
@@ -50,6 +53,9 @@ object SiderealScienceTarget {
   val name: Lens[SiderealScienceTarget, NonEmptyString]                            = target.andThen(SiderealTarget.name)
   val magnitudes: Lens[SiderealScienceTarget, SortedMap[MagnitudeBand, Magnitude]] =
     target.andThen(SiderealTarget.magnitudes)
+
+  val tracking: Lens[SiderealScienceTarget, SiderealTracking] =
+    target.andThen(SiderealTarget.tracking)
 
   val baseRA: Lens[SiderealScienceTarget, RightAscension]                 =
     target.andThen(SiderealTarget.baseRA)
@@ -142,6 +148,12 @@ object ScienceTarget {
     List[Decoder[ScienceTarget]](Decoder[SiderealScienceTarget].widen,
                                  Decoder[NonsiderealScienceTarget].widen
     ).reduceLeft(_ or _)
+
+  val sidereal: Prism[ScienceTarget, SiderealScienceTarget] =
+    GenPrism[ScienceTarget, SiderealScienceTarget]
+
+  val nonsidereal: Prism[ScienceTarget, NonsiderealScienceTarget] =
+    GenPrism[ScienceTarget, NonsiderealScienceTarget]
 
   val id: Lens[ScienceTarget, ScienceTarget.Id] =
     Lens[ScienceTarget, ScienceTarget.Id](_.id)(v => {
