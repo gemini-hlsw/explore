@@ -17,7 +17,6 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
-import lucuma.core.math.units.CentimetersPerSecond
 import lucuma.core.model.CatalogId
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SiderealTarget
@@ -59,53 +58,29 @@ object TargetQueries {
 
   object UpdateSiderealTracking {
     def catalogId(cid: Option[CatalogId]): Endo[EditSiderealInput] =
-      EditSiderealInput.catalogId.replace(
-        cid.map(cid => CatalogIdInput(cid.catalog, cid.id.value)).orUnassign
-      )
+      EditSiderealInput.catalogId.replace(cid.map(_.toInput).orUnassign)
 
     def epoch(epoch: Option[Epoch]): Endo[EditSiderealInput] =
       EditSiderealInput.epoch.replace(epoch.map(Epoch.fromString.reverseGet).orUnassign)
 
     def ra(ra: Option[RightAscension]): Endo[EditSiderealInput] =
-      EditSiderealInput.ra.replace(
-        ra.map(r => RightAscensionInput(microarcseconds = r.toAngle.toMicroarcseconds.assign))
-          .orUnassign
-      )
+      EditSiderealInput.ra.replace(ra.map(_.toInput).orUnassign)
 
     def dec(dec: Option[Declination]): Endo[EditSiderealInput] =
-      EditSiderealInput.dec.replace(
-        dec
-          .map(d => DeclinationInput(microarcseconds = d.toAngle.toMicroarcseconds.assign))
-          .orUnassign
-      )
+      EditSiderealInput.dec.replace(dec.map(_.toInput).orUnassign)
 
     def properMotion(
       pm: Option[ProperMotion]
     ): Endo[EditSiderealInput] =
-      EditSiderealInput.properMotion.replace(
-        pm.map(p =>
-          ProperMotionInput(
-            ra = ProperMotionComponentInput(microarcsecondsPerYear = p.ra.μasy.value.assign),
-            dec = ProperMotionComponentInput(microarcsecondsPerYear = p.dec.μasy.value.assign)
-          )
-        ).orUnassign
-      )
+      EditSiderealInput.properMotion.replace(pm.map(_.toInput).orUnassign)
 
     def radialVelocity(
       rv: Option[RadialVelocity]
     ): Endo[EditSiderealInput] =
-      EditSiderealInput.radialVelocity.replace(
-        rv.map(r =>
-          RadialVelocityInput(
-            metersPerSecond = r.rv.withUnit[CentimetersPerSecond].value.value.assign
-          )
-        ).orUnassign
-      )
+      EditSiderealInput.radialVelocity.replace(rv.map(_.toInput).orUnassign)
 
     def parallax(p: Option[Parallax]): Endo[EditSiderealInput] =
-      EditSiderealInput.parallax.replace(
-        p.map(p => ParallaxModelInput(microarcseconds = p.μas.value.value.assign)).orUnassign
-      )
+      EditSiderealInput.parallax.replace(p.map(_.toInput).orUnassign)
 
     /**
      * Updates all the fields of sideral tracking
