@@ -10,6 +10,7 @@ import io.chrisdavenport.cats.time._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 
 import java.time.Duration
@@ -34,6 +35,7 @@ object ObsSummary {
 
 trait ObsWithConstraints extends ObsSummary {
   val constraints: ConstraintsSummary
+  // val targetEnvId: TargetEnvironment.Id
 
   lazy val constraintsSummary = constraints.summaryString
 }
@@ -54,13 +56,17 @@ case class ObsSummaryWithConstraints(
   override val constraints:  ConstraintsSummary,
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration
+  override val duration:     Duration,
+  targetEnvId:               TargetEnvironment.Id
 ) extends ObsSummary
     with ObsWithConstraints
 
 object ObsSummaryWithConstraints {
+  val id          = Focus[ObsSummaryWithConstraints](_.id)
+  val targetEnvId = Focus[ObsSummaryWithConstraints](_.targetEnvId)
+
   implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
-    Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration))
+    Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.targetEnvId))
 }
 
 case class ObsSummaryWithTargetsAndConstraints(

@@ -7,6 +7,7 @@ import cats.Eq
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
+import explore.common.TargetListGroupQueries.TargetListGroupList
 import explore.model.ScienceTarget
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
@@ -17,7 +18,7 @@ import scala.collection.immutable.SortedSet
 
 case class ModelUndoStacks[F[_]](
   forObsList:         UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forTargetList:      UndoStacks[F, Nothing] = UndoStacks.empty[F, Nothing],
+  forTargetListList:  UndoStacks[F, TargetListGroupList] = UndoStacks.empty[F, TargetListGroupList],
   // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
   forSiderealTarget:  Map[ScienceTarget.Id, UndoStacks[F, SiderealTarget]] =
     Map.empty[ScienceTarget.Id, UndoStacks[F, SiderealTarget]],
@@ -30,7 +31,7 @@ case class ModelUndoStacks[F[_]](
 
 object ModelUndoStacks {
   def forObsList[F[_]]         = Focus[ModelUndoStacks[F]](_.forObsList)
-  def forTargetList[F[_]]      = Focus[ModelUndoStacks[F]](_.forTargetList)
+  def forTargetListList[F[_]]  = Focus[ModelUndoStacks[F]](_.forTargetListList)
   def forSiderealTarget[F[_]]  = Focus[ModelUndoStacks[F]](_.forSiderealTarget)
   def forConstraintList[F[_]]  = Focus[ModelUndoStacks[F]](_.forConstraintList)
   def forConstraintGroup[F[_]] = Focus[ModelUndoStacks[F]](_.forConstraintGroup)
@@ -39,7 +40,7 @@ object ModelUndoStacks {
   implicit def eqModelUndoStacks[F[_]]: Eq[ModelUndoStacks[F]] =
     Eq.by(u =>
       (u.forObsList,
-       u.forTargetList,
+       u.forTargetListList,
        u.forSiderealTarget,
        u.forConstraintList,
        u.forConstraintGroup,

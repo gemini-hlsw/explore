@@ -88,9 +88,6 @@ object ObsQueries {
   ): TargetSummary =
     TargetSummary(target.id, target.name)
 
-  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
-    SortedMap.from(list.map(a => (getKey(a), a)))
-
   private val queryToObsSummariesWithConstraintsGetter
     : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
     ObsSummariesWithConstraints(
@@ -107,9 +104,7 @@ object ObsQueries {
         ),
         ObsSummaryWithTargetsAndConstraints.id.get
       ),
-      toSortedMap(data.constraintSetGroup.nodes.map(_.asConstraintGroup),
-                  ConstraintGroup.obsIds.get
-      )
+      data.constraintSetGroup.nodes.map(_.asConstraintGroup).toSortedMap(ConstraintGroup.obsIds.get)
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)

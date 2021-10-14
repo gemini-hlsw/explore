@@ -26,6 +26,7 @@ import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration
 
 trait ListImplicits {
@@ -68,6 +69,10 @@ trait ListImplicits {
       viewMap.get.keys.toList.map(k =>
         viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
       )
+  }
+
+  implicit class ListOps[A](val list: List[A]) {
+    def toSortedMap[K: Ordering](getKey: A => K) = SortedMap.from(list.map(a => (getKey(a), a)))
   }
 }
 
