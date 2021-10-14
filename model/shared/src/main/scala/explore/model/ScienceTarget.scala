@@ -119,6 +119,13 @@ object ScienceTarget {
   }
 
   object Id {
+    def fromTargetIdList(targetIds: List[Target.Id]): Option[ScienceTarget.Id] =
+      targetIds match {
+        case Nil             => none
+        case targetId :: Nil => SingleId(targetId).some
+        case head :: tail    => MultipleId(NonEmptySet.of(head, tail: _*)).some
+      }
+
     implicit val eqId: Eq[Id] = Eq.instance {
       case (a @ SingleId(_), b @ SingleId(_))     => a === b
       case (a @ MultipleId(_), b @ MultipleId(_)) => a === b

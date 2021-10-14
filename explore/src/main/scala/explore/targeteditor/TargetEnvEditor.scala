@@ -3,10 +3,12 @@
 
 package explore.targeteditor
 
+import cats.syntax.all._
 import cats.effect.IO
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
+import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.TargetEnvQueriesGQL
@@ -38,6 +40,10 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
+import explore.common.SimbadSearch
+import explore.common.TargetQueriesGQL
+import lucuma.schemas.ObservationDB.Types._
+import explore.common.TargetQueries
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -72,14 +78,42 @@ object TargetEnvEditor {
 
   private def insertSiderealTarget(
     targetEnvironments: List[TargetEnvironment.Id],
-    name:               NonEmptyString
+    name:               NonEmptyString,
+    searching:          View[Set[ScienceTarget.Id]]
   )(implicit ctx:       AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
         targetEnvironments,
         newTarget(name).toCreateInput
-      )
-      .void
+      ) >>= { response =>
+      val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
+
+      // IO.println(targetIds)
+      ScienceTarget.Id
+        .fromTargetIdList(targetIds)
+        .map(id =>
+          searching.mod(_ + id).to[IO] >>
+            SimbadSearch
+              .search[IO](name)
+              .attempt
+              .map(_.toOption.flatten)
+              .guarantee(searching.mod(_ - id).to[IO])
+              .flatMap {
+                case Some(SiderealTarget(_, st, m)) =>
+                  TargetQueriesGQL.SiderealTargetMutation
+                    .execute(
+                      (TargetQueries.UpdateSiderealTracking(st) >>>
+                        TargetQueries.replaceMagnitudes(m))(
+                        EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign))
+                      )
+                    )
+                    .void
+                case _                              =>
+                  IO.unit
+              }
+        )
+        .orEmpty
+    }
 
   protected val component =
     ScalaFnComponent
@@ -105,7 +139,10 @@ object TargetEnvEditor {
               okLabel = "Create",
               onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
                 adding.setState(true) >>
-                  insertSiderealTarget(List(props.targetEnv.get.id), name).runAsyncAndForget
+                  insertSiderealTarget(List(props.targetEnv.get.id),
+                                       name,
+                                       props.searching
+                  ).runAsyncAndForget
               ),
               trigger = Reuse.by(adding.value)(
                 Button(

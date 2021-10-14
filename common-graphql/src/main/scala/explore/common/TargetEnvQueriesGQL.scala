@@ -33,8 +33,10 @@ object TargetEnvQueriesGQL {
     val document = """
       mutation($targetEnvironmentIds: [TargetEnvironmentId!]!, $targetInput: CreateSiderealInput!) {
         updateScienceTargetList(input: { select: { targetEnvironments: $targetEnvironmentIds}, edits: { addSidereal: $targetInput } }) {
-          targetEnvironment {
-            id
+          edits {
+            target {
+              id
+            }
           }
         }
       }
@@ -46,8 +48,10 @@ object TargetEnvQueriesGQL {
     val document = """
       mutation($targetIds: [TargetId!]!) {
         updateScienceTargetList(input: { edits: { delete: { targetIds: $targetIds } } }) {
-          targetEnvironment {
-            id
+          edits {
+            target {
+              id
+            }
           }
         }
       }
