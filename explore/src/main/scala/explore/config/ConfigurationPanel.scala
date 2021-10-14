@@ -123,7 +123,7 @@ object ConfigurationPanel {
 
       <.div(
         ExploreStyles.ConfigurationGrid,
-        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(scienceDataUndo))),
+        props.renderInTitle(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(scienceDataUndo))),
         Form(size = Small)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,

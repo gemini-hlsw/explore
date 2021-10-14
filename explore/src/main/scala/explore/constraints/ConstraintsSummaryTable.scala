@@ -202,7 +202,7 @@ object ConstraintsSummaryTable {
       .render((props, _, _, tableInstance) =>
         <.div(
           props.renderInTitle(
-            <.span(ExploreStyles.TitleStrip)(
+            <.span(ExploreStyles.TitleSelectColumns)(
               Dropdown(item = true,
                        simple = true,
                        pointing = Pointing.TopRight,

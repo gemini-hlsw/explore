@@ -20,15 +20,15 @@ import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import monocle.Prism
+import monocle.macros.GenPrism
 
 import scala.collection.immutable.SortedMap
-import monocle.macros.GenPrism
-import monocle.Prism
-import lucuma.core.model.SiderealTracking
 
 /**
  * Target.Id(s) + Target

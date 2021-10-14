@@ -214,7 +214,7 @@ object TargetTable {
       .render((props, _, _, tableInstance) =>
         <.div(ExploreStyles.ExploreTable)(
           props.renderInTitle(
-            <.span(ExploreStyles.TitleStrip)(
+            <.span(ExploreStyles.TitleSelectColumns)(
               Dropdown(item = true,
                        simple = true,
                        pointing = Pointing.TopRight,

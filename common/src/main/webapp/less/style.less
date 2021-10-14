@@ -309,8 +309,14 @@ tfoot {
   }
 }
 
-.explore-tile-title-info {
+.explore-tile-title-strip {
   flex-grow: 2;
+  display: flex;
+  align-items: center;
+}
+
+.explore-fixed-size-tile-title {
+  margin-right: 1em;
 }
 
 .ui.menu.explore-tile-title-menu {
@@ -1590,13 +1596,6 @@ html {
   }
 }
 
-.title-strip {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5em;
-}
-
 .ui.wide.right.sidebar {
   max-width: 100%;
 }
@@ -1736,10 +1735,6 @@ html {
   width: 100%;
 }
 
-.explore-tile-title-button-new {
-  margin-left: 1em !important; // important to override SUI's style.
-}
-
 .ui.labeled.icon.button.verycompact {
   padding-left: 2.3em !important;
   padding-right: 0.5em !important;
@@ -1753,10 +1748,17 @@ html {
   text-align: center;
 }
 
-.explore-select-columns {
-  margin-left: auto;
-  margin-right: 1em;
+.explore-title-undo-buttons {
+  flex-grow: 2;
+  text-align: right;
+}
 
+.explore-title-select-columns {
+  flex-grow: 2;
+  text-align: right;
+}
+
+.explore-select-columns {
   .menu {
     max-height: 30em !important;
 

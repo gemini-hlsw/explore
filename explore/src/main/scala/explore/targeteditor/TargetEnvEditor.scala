@@ -3,18 +3,24 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
+import cats.Monad
+import cats.Monoid
 import cats.effect.IO
+import cats.effect.SyncIO
+import cats.syntax.all._
+import clue.data.syntax._
 import crystal.ViewF
+import crystal.ViewOptF
 import crystal.react.implicits._
 import crystal.react.reuse._
-import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.SimbadSearch
 import explore.common.TargetEnvQueriesGQL
+import explore.common.TargetQueries
+import explore.common.TargetQueriesGQL
 import explore.components.InputModal
 import explore.components.Tile
-import explore.optics._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceTarget
@@ -31,6 +37,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.User
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import monocle.function.Index._
 import react.common.ReactFnProps
@@ -39,14 +46,6 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
-import explore.common.SimbadSearch
-import explore.common.TargetQueriesGQL
-import lucuma.schemas.ObservationDB.Types._
-import explore.common.TargetQueries
-import cats.effect.SyncIO
-import crystal.ViewOptF
-import cats.Monoid
-import cats.Monad
 
 final case class TargetEnvEditor(
   userId:           User.Id,
