@@ -58,13 +58,12 @@ final case class SearchCallback(
 }
 
 final case class SiderealTargetEditor(
-  uid:           User.Id,
-  id:            ScienceTarget.Id,
-  target:        View[SiderealTarget],
-  undoStacks:    View[UndoStacks[IO, SiderealTarget]],
-  searching:     View[Set[ScienceTarget.Id]],
-  options:       View[TargetVisualOptions],
-  renderInTitle: Tile.RenderInTitle
+  uid:        User.Id,
+  id:         ScienceTarget.Id,
+  target:     View[SiderealTarget],
+  undoStacks: View[UndoStacks[IO, SiderealTarget]],
+  searching:  View[Set[ScienceTarget.Id]],
+  options:    View[TargetVisualOptions]
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(SiderealTarget.baseCoordinates).get
@@ -257,9 +256,6 @@ object SiderealTargetEditor {
             <.div(ExploreStyles.TargetSkyplotCell)(
               SkyPlotSection(props.baseCoordinates)
             )
-            // props.renderInTitle(
-            //   <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
-            // )
           )
         )
       }

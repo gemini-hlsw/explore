@@ -140,7 +140,7 @@ object TargetEnvEditor {
       .useStateBy(_.targetEnv.get.scienceTargets.headOption.map(_._1))
       // adding
       .useState(false)
-      // reset "loading" for add button when science targets change
+      // reset "loading" for add button when science targets change, which indicates server roundtrip is over
       .useEffectWithDepsBy((props, _, _) => props.targetEnv.get.scienceTargets)((_, _, adding) =>
         _ => adding.setState(false)
       )
@@ -198,7 +198,6 @@ object TargetEnvEditor {
                 props.targetEnv
                   .zoom(TargetEnv.scienceTargets)
                   .zoom(index(targetId)(indexTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
-              // .zoom(at(targetId)(atTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
@@ -211,8 +210,7 @@ object TargetEnvEditor {
                         .zoom(SiderealScienceTarget.target),
                       props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                       props.searching,
-                      props.options,
-                      props.renderInTitle
+                      props.options
                     )
                   case _                           =>
                     <.div("Non-sidereal targets not supported")
