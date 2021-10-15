@@ -8,7 +8,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.implicits._
 import explore.implicits._
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.schemas.implicits._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
@@ -31,7 +31,7 @@ import TargetQueriesGQL._
 object TargetQueries {
 
   case class UndoView(
-    id:           ScienceTarget.Id,
+    id:           TargetIdSet,
     undoCtx:      UndoCtx[SiderealTarget]
   )(implicit ctx: AppContextIO) {
     def apply[A](

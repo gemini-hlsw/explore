@@ -26,7 +26,7 @@ import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
@@ -67,7 +67,7 @@ final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
   focused:          View[Option[Focused]],
   undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[ScienceTarget.Id]],
+  searching:        View[Set[TargetIdSet]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)

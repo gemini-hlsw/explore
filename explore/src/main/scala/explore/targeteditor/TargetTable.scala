@@ -13,8 +13,9 @@ import explore.common.TargetEnvQueriesGQL
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ScienceTarget
-import explore.model.SiderealScienceTarget
+import explore.model.SiderealTargetWithId
+import explore.model.TargetIdSet
+import explore.model.TargetWithId
 import explore.model.conversions._
 import explore.model.formats._
 import explore.model.reusability._
@@ -25,6 +26,8 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
@@ -50,9 +53,9 @@ import scala.collection.immutable.TreeSeqMap
 import scalajs.js.JSConverters._
 
 final case class TargetTable(
-  targets:          View[TreeSeqMap[ScienceTarget.Id, ScienceTarget]],
+  targets:          View[TreeSeqMap[TargetIdSet, Target]],
   hiddenColumns:    View[Set[String]],
-  selectedTarget:   View[Option[ScienceTarget.Id]],
+  selectedTarget:   View[Option[TargetIdSet]],
   renderInTitle:    Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
 )(implicit val ctx: AppContextIO)
@@ -61,7 +64,7 @@ final case class TargetTable(
 object TargetTable {
   type Props = TargetTable
 
-  protected val TargetTable = TableDef[SiderealScienceTarget].withSort
+  protected val TargetTable = TableDef[SiderealTargetWithId].withSort
 
   import TargetTable.syntax._
 
@@ -95,7 +98,7 @@ object TargetTable {
   )
 
   private def deleteSiderealTarget(
-    targetId:     ScienceTarget.Id
+    targetId:     TargetIdSet
   )(implicit ctx: AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.RemoveSiderealTarget
       .execute(targetId.toList)
@@ -108,13 +111,13 @@ object TargetTable {
       .useMemoBy(_ => ()) { props => _ =>
         implicit val ctx = props.ctx
 
-        def column[V](id: String, accessor: SiderealScienceTarget => V) =
+        def column[V](id: String, accessor: SiderealTargetWithId => V) =
           TargetTable
             .Column(id, accessor)
             .setHeader(columnNames(id))
 
         List(
-          column("delete", ScienceTarget.id.get)
+          column("delete", TargetWithId.id.get)
             .setCell(cell =>
               Button(
                 size = Tiny,
@@ -133,19 +136,19 @@ object TargetTable {
           column("type", _ => ())
             .setCell(_ => Icons.Star)
             .setWidth(30),
-          column("name", ScienceTarget.name.get)
+          column("name", TargetWithId.name.get)
             .setCell(cell => cell.value.toString)
             .setSortByFn(_.toString),
           column(
             "ra",
-            SiderealScienceTarget.baseRA.get
+            SiderealTargetWithId.baseRA.get
           ).setCell(cell =>
             TruncatedRA.rightAscension.get
               .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
           ).setSortByAuto,
           column[Declination](
             "dec",
-            SiderealScienceTarget.baseDec.get
+            SiderealTargetWithId.baseDec.get
           ).setCell(cell =>
             TruncatedDec.declination.get
               .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
@@ -155,33 +158,33 @@ object TargetTable {
           MagnitudeBand.all.map(band =>
             column(
               band.shortName + "mag",
-              _.target.magnitudes.get(band).map(_.value)
+              t => TargetWithId.magnitudes.get(t).get(band).map(_.value)
             ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
           ) ++
           List(
-            column("epoch", SiderealScienceTarget.epoch.get)
+            column("epoch", SiderealTargetWithId.epoch.get)
               .setCell(cell =>
                 s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
               )
               .setSortByAuto,
-            column("pmra", SiderealScienceTarget.properMotionRA.getOption)
+            column("pmra", SiderealTargetWithId.properMotionRA.getOption)
               .setCell(
                 _.value.map(pmRAFormat.reverseGet).orEmpty
               )
               .setSortByAuto,
-            column("pmdec", SiderealScienceTarget.properMotionDec.getOption)
+            column("pmdec", SiderealTargetWithId.properMotionDec.getOption)
               .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
               .setSortByAuto,
-            column("rv", SiderealScienceTarget.radialVelocity.get)
+            column("rv", SiderealTargetWithId.radialVelocity.get)
               .setCell(_.value.map(formatRV.reverseGet).orEmpty)
               .setSortByAuto,
-            column("z", (SiderealScienceTarget.radialVelocity.get _).andThen(rvToRedshiftGet))
+            column("z", (SiderealTargetWithId.radialVelocity.get _).andThen(rvToRedshiftGet))
               .setCell(_.value.map(formatZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("cz", (SiderealScienceTarget.radialVelocity.get _).andThen(rvToARVGet))
+            column("cz", (SiderealTargetWithId.radialVelocity.get _).andThen(rvToARVGet))
               .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
               .setSortByAuto,
-            column("parallax", SiderealScienceTarget.parallax.get)
+            column("parallax", SiderealTargetWithId.parallax.get)
               .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
               .setSortByAuto,
             column("morphology", _ => ""),
@@ -190,7 +193,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.get.collect { case (_, st @ SiderealScienceTarget(_, _)) => st }.toList
+        _.get.collect { case (id, st @ SiderealTarget(_, _, _)) => id -> st }.toList
       )
       .useTableBy((props, cols, rows) =>
         TargetTable(
@@ -204,7 +207,7 @@ object TargetTable {
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList
-                      .map(col => col: IdType[SiderealScienceTarget])
+                      .map(col => col: IdType[SiderealTargetWithId])
                       .toJSArray
                   )
               )
@@ -256,13 +259,15 @@ object TargetTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            row = (rowData: Row[SiderealScienceTarget]) =>
+            row = (rowData: Row[SiderealTargetWithId]) =>
               TableRow(
                 clazz = ExploreStyles.TableRowSelected.when_(
-                  props.selectedTarget.get.exists(_ === rowData.original.id)
+                  props.selectedTarget.get.exists(_ === TargetWithId.id.get(rowData.original))
                 )
               )(
-                ^.onClick --> props.selectedTarget.set(rowData.original.id.some).toCB,
+                ^.onClick --> props.selectedTarget
+                  .set(TargetWithId.id.get(rowData.original).some)
+                  .toCB,
                 props2Attrs(rowData.getRowProps())
               ),
             cell = (cell: Cell[_, _]) =>

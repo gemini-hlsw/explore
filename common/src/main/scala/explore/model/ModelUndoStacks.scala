@@ -8,7 +8,7 @@ import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
 import explore.common.TargetListGroupQueries.TargetListGroupList
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
@@ -20,8 +20,8 @@ case class ModelUndoStacks[F[_]](
   forObsList:         UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetListList:  UndoStacks[F, TargetListGroupList] = UndoStacks.empty[F, TargetListGroupList],
   // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
-  forSiderealTarget:  Map[ScienceTarget.Id, UndoStacks[F, SiderealTarget]] =
-    Map.empty[ScienceTarget.Id, UndoStacks[F, SiderealTarget]],
+  forSiderealTarget:  Map[TargetIdSet, UndoStacks[F, SiderealTarget]] =
+    Map.empty[TargetIdSet, UndoStacks[F, SiderealTarget]],
   forConstraintList:  UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup: Map[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]] =
     Map.empty[SortedSet[Observation.Id], UndoStacks[F, ConstraintSet]],

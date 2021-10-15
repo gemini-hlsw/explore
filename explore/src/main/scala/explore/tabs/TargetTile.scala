@@ -9,8 +9,8 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
 import explore.implicits._
-import explore.model.ScienceTarget
 import explore.model.TargetEnv
+import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.targeteditor.TargetEnvEditor
@@ -27,8 +27,8 @@ object TargetTile {
   def targetTile(
     userId:        Option[User.Id],
     targetEnvPot:  Pot[View[TargetEnv]],
-    undoStacks:    View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
-    searching:     View[Set[ScienceTarget.Id]],
+    undoStacks:    View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
+    searching:     View[Set[TargetIdSet]],
     options:       View[TargetVisualOptions],
     hiddenColumns: View[Set[String]]
   )(implicit ctx:  AppContextIO) =
