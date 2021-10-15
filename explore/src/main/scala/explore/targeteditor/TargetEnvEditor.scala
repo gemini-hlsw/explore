@@ -188,9 +188,7 @@ object TargetEnvEditor {
             props.targetEnv.zoom(TargetEnv.scienceTargets),
             props.hiddenColumns,
             selectedTargetId,
-            // selectedTargetId,
             props.renderInTitle
-            // onSelect
           ),
           selectedTargetId.get
             .flatMap[VdomElement] { targetId =>
