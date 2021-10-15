@@ -25,6 +25,9 @@ import monocle.Optional
 import monocle.Prism
 
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.TargetEnvironment
+import lucuma.core.model.Observation
+import cats.Order
 
 package object model {
   // It'd be nice to make these opaque
@@ -32,6 +35,11 @@ package object model {
   type TargetWithId            = (TargetIdSet, Target)
   type SiderealTargetWithId    = (TargetIdSet, SiderealTarget)
   type NonsiderealTargetWithId = (TargetIdSet, NonsiderealTarget)
+
+  type TargetEnvId    = (TargetEnvironment.Id, Option[Observation.Id])
+  type TargetEnvIdSet = NonEmptySet[TargetEnvId]
+
+  implicit val orderTargetnEnvId: Order[TargetEnvId] = Order.by(_._1)
 
   object TargetIdSet {
     def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =

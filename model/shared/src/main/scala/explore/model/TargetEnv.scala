@@ -7,15 +7,17 @@ import cats.Eq
 import cats.data.NonEmptySet
 import explore.model.decoders._
 import io.circe.Decoder
+import io.circe.Decoder._
 import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 import monocle.Lens
 
 import scala.collection.immutable.TreeSeqMap
+import lucuma.core.model.Observation
 
 case class TargetEnv(
-  id:             TargetEnvironment.Id,
+  id:             TargetEnvIdSet,
   scienceTargets: TreeSeqMap[TargetIdSet, Target]
 )
 
@@ -38,14 +40,35 @@ object TargetEnv {
     } yield (id, target)
   )
 
-  implicit val decoderTargetEnv: Decoder[TargetEnv] = Decoder.instance(c =>
+  private val obsIdDecoder: Decoder[Observation.Id] = Decoder.instance(_.get[Observation.Id]("id"))
+
+  private implicit val targetEnvIdDecoder: Decoder[TargetEnvId] = Decoder.instance(c =>
     for {
-      id             <- c.get[TargetEnvironment.Id]("id")
+      targetEnvId <- c.get[TargetEnvironment.Id]("id")
+      obsId       <- c.get[Option[Observation.Id]]("observation")(decodeOption(obsIdDecoder))
+    } yield (targetEnvId, obsId)
+  )
+
+  private val singleTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
+    for {
+      id             <- c.as[TargetEnvId].map(id => NonEmptySet.one(id))
       scienceTargets <- c.get[List[TargetWithId]]("scienceTargets").map(TreeSeqMap.from)
     } yield TargetEnv(id, scienceTargets)
   )
 
-  val id: Lens[TargetEnv, TargetEnvironment.Id]                        = Focus[TargetEnv](_.id)
+  private val groupTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
+    for {
+      id             <- c.downField("targetEnvironments")
+                          .get[List[TargetEnvId]]("targetEnvironments")
+                          .map(list => NonEmptySet.of(list.head, list.tail: _*))
+      scienceTargets <- c.get[List[TargetWithId]]("commonTargetList").map(TreeSeqMap.from)
+    } yield TargetEnv(id, scienceTargets)
+  )
+
+  implicit val decoderTargetEnv: Decoder[TargetEnv] =
+    singleTargetEnvDecoder.or(groupTargetEnvDecoder)
+
+  val id: Lens[TargetEnv, TargetEnvIdSet]                              = Focus[TargetEnv](_.id)
   val scienceTargets: Lens[TargetEnv, TreeSeqMap[TargetIdSet, Target]] =
     Focus[TargetEnv](_.scienceTargets)
 }
