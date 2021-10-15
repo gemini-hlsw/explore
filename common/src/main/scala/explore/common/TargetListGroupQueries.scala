@@ -7,9 +7,9 @@ import cats.Order
 import cats.effect.Async
 import cats.effect.IO
 import cats.implicits._
-import crystal.react.reuse._
-import clue.data.syntax._
 import clue.TransactionalClient
+import clue.data.syntax._
+import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
