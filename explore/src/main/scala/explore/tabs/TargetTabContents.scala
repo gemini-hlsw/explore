@@ -4,28 +4,19 @@
 package explore.tabs
 
 import cats.effect.IO
-// import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
-// import explore.AppCtx
-// import explore.Icons
 import explore.common.TargetListGroupQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
-// import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-// import explore.model.Focused._
 import explore.model._
-// import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetListGroupObsList
-// import explore.optics._
-// import explore.targeteditor.TargetEditor
-// import explore.targeteditor.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
@@ -34,16 +25,12 @@ import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-// import lucuma.ui.utils._
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
 import react.resizeDetector.ResizeDetector
-// import react.semanticui.elements.button.Button
-// import react.semanticui.elements.button.Button.ButtonProps
-// import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._

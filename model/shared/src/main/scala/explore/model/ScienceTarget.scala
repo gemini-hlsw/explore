@@ -20,10 +20,13 @@ import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import monocle.Prism
+import monocle.macros.GenPrism
 
 import scala.collection.immutable.SortedMap
 
@@ -50,6 +53,9 @@ object SiderealScienceTarget {
   val name: Lens[SiderealScienceTarget, NonEmptyString]                            = target.andThen(SiderealTarget.name)
   val magnitudes: Lens[SiderealScienceTarget, SortedMap[MagnitudeBand, Magnitude]] =
     target.andThen(SiderealTarget.magnitudes)
+
+  val tracking: Lens[SiderealScienceTarget, SiderealTracking] =
+    target.andThen(SiderealTarget.tracking)
 
   val baseRA: Lens[SiderealScienceTarget, RightAscension]                 =
     target.andThen(SiderealTarget.baseRA)
@@ -119,6 +125,13 @@ object ScienceTarget {
   }
 
   object Id {
+    def fromTargetIdList(targetIds: List[Target.Id]): Option[ScienceTarget.Id] =
+      targetIds match {
+        case Nil             => none
+        case targetId :: Nil => SingleId(targetId).some
+        case head :: tail    => MultipleId(NonEmptySet.of(head, tail: _*)).some
+      }
+
     implicit val eqId: Eq[Id] = Eq.instance {
       case (a @ SingleId(_), b @ SingleId(_))     => a === b
       case (a @ MultipleId(_), b @ MultipleId(_)) => a === b
@@ -135,6 +148,12 @@ object ScienceTarget {
     List[Decoder[ScienceTarget]](Decoder[SiderealScienceTarget].widen,
                                  Decoder[NonsiderealScienceTarget].widen
     ).reduceLeft(_ or _)
+
+  val sidereal: Prism[ScienceTarget, SiderealScienceTarget] =
+    GenPrism[ScienceTarget, SiderealScienceTarget]
+
+  val nonsidereal: Prism[ScienceTarget, NonsiderealScienceTarget] =
+    GenPrism[ScienceTarget, NonsiderealScienceTarget]
 
   val id: Lens[ScienceTarget, ScienceTarget.Id] =
     Lens[ScienceTarget, ScienceTarget.Id](_.id)(v => {

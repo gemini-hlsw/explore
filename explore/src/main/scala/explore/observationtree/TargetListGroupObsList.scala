@@ -15,11 +15,11 @@ import explore.common.TargetListGroupQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.TargetListGroup
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
+import explore.model.TargetListGroup
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._

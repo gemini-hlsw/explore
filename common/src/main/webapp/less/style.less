@@ -309,8 +309,14 @@ tfoot {
   }
 }
 
-.explore-tile-title-info {
+.explore-tile-title-strip {
   flex-grow: 2;
+  display: flex;
+  align-items: center;
+}
+
+.explore-fixed-size-tile-title {
+  margin-right: 1em;
 }
 
 .ui.menu.explore-tile-title-menu {
@@ -628,6 +634,7 @@ tfoot {
   position: absolute;
   top: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 // Inner area of the tree
@@ -738,7 +745,7 @@ tfoot {
   padding: 0.5em 0.5em !important;
   align-content: center;
 
-  .fa-thumbtack { 
+  .fa-thumbtack {
     margin-right: 1em;
     margin-left: 0.5em;
   }
@@ -1589,13 +1596,6 @@ html {
   }
 }
 
-.title-strip {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5em;
-}
-
 .ui.wide.right.sidebar {
   max-width: 100%;
 }
@@ -1735,10 +1735,6 @@ html {
   width: 100%;
 }
 
-.explore-tile-title-button-new {
-  margin-left: 1em !important; // important to override SUI's style.
-}
-
 .ui.labeled.icon.button.verycompact {
   padding-left: 2.3em !important;
   padding-right: 0.5em !important;
@@ -1752,10 +1748,17 @@ html {
   text-align: center;
 }
 
-.explore-select-columns {
-  margin-left: auto;
-  margin-right: 1em;
+.explore-title-undo-buttons {
+  flex-grow: 2;
+  text-align: right;
+}
 
+.explore-title-select-columns {
+  flex-grow: 2;
+  text-align: right;
+}
+
+.explore-select-columns {
   .menu {
     max-height: 30em !important;
 
@@ -1783,11 +1786,10 @@ html {
   grid-area: form;
 }
 
-.explore-modes-table {
+.explore-table {
   position: relative;
   grid-area: table;
   overflow-y: hidden;
-  overflow-x: scroll;
   height: 100%;
   border: 0.2px solid var(--site-border-color);
   border-radius: @menuBorderRadius;
@@ -1796,8 +1798,8 @@ html {
     height: 100%;
   }
 
-  tr.explore-mode-selected,
-  .tr.explore-mode-selected {
+  tr.explore-table-row-selected,
+  .tr.explore-table-row-selected {
     box-shadow: inset 0 0 0 1px var(--explore-selected-box-color) !important; // Important used to override hover.
     background: var(--table-selected-background) !important;
   }

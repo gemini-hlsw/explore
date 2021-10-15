@@ -13,6 +13,8 @@ import lucuma.core.math.units._
 import monocle._
 import monocle.function.At
 import monocle.function.At.atMap
+import monocle.function.Index
+import monocle.function.Index.fromAt
 
 import scala.collection.immutable.TreeSeqMap
 
@@ -167,4 +169,8 @@ package object optics {
     At(i =>
       Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
     )
+
+  implicit def indexTreeSeqMap[K, V]: Index[TreeSeqMap[K, V], K, V] =
+    fromAt(atTreeSeqMap)
+
 }

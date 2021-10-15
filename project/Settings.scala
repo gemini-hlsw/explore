@@ -313,7 +313,8 @@ object Settings {
         "com.github.japgolly.scalajs-react" %%% "extra",
         "com.github.japgolly.scalajs-react" %%% "extra-ext-monocle3",
         "com.github.japgolly.scalajs-react" %%% "core-ext-cats",
-        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect"
+        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect",
+        "com.github.japgolly.scalajs-react" %%% "callback-ext-cats"
       )(scalaJsReact)
     )
 

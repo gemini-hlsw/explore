@@ -17,7 +17,6 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -45,6 +44,7 @@ import lucuma.ui.reusability._
 import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.divider._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
@@ -57,13 +57,12 @@ final case class SearchCallback(
 }
 
 final case class SiderealTargetEditor(
-  uid:           User.Id,
-  id:            ScienceTarget.Id,
-  target:        View[SiderealTarget],
-  undoStacks:    View[UndoStacks[IO, SiderealTarget]],
-  searching:     View[Set[ScienceTarget.Id]],
-  options:       View[TargetVisualOptions],
-  renderInTitle: Tile.RenderInTitle
+  uid:        User.Id,
+  id:         ScienceTarget.Id,
+  target:     View[SiderealTarget],
+  undoStacks: View[UndoStacks[IO, SiderealTarget]],
+  searching:  View[Set[ScienceTarget.Id]],
+  options:    View[TargetVisualOptions]
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(SiderealTarget.baseCoordinates).get
@@ -166,6 +165,8 @@ object SiderealTargetEditor {
         val disabled = props.searching.get.exists(_ === props.id)
 
         React.Fragment(
+          Divider(hidden = true, fitted = true),
+          <.span(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
           <.div(ExploreStyles.TargetGrid)(
             <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
@@ -253,9 +254,6 @@ object SiderealTargetEditor {
             MagnitudeForm(props.id, magnitudesView, disabled = disabled),
             <.div(ExploreStyles.TargetSkyplotCell)(
               SkyPlotSection(props.baseCoordinates)
-            ),
-            props.renderInTitle(
-              <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
             )
           )
         )
