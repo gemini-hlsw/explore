@@ -28,6 +28,8 @@ import scala.collection.immutable.SortedMap
 import lucuma.core.model.TargetEnvironment
 import lucuma.core.model.Observation
 import cats.Order
+import cats.Eq
+import scala.collection.immutable.TreeSeqMap
 
 package object model {
   // It'd be nice to make these opaque
@@ -39,8 +41,15 @@ package object model {
   type TargetEnvId    = (TargetEnvironment.Id, Option[Observation.Id])
   type TargetEnvIdSet = NonEmptySet[TargetEnvId]
 
-  implicit val orderTargetnEnvId: Order[TargetEnvId] = Order.by(_._1)
+  object implicits   {
+    implicit val orderTargetnEnvId: Order[TargetEnvId] = Order.by(_._1)
 
+    implicit val orderNESTargetEnvId: Order[NonEmptySet[TargetEnvironment.Id]] =
+      Order.by(_.toSortedSet)
+
+    implicit val eqScienceTargets: Eq[TreeSeqMap[TargetIdSet, Target]] =
+      Eq.by(_.toMap)
+  }
   object TargetIdSet {
     def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =
       targetIds match {

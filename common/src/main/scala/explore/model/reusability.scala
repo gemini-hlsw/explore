@@ -43,7 +43,7 @@ object reusability {
   implicit val scienceTargetsReuse: Reusability[TreeSeqMap[TargetIdSet, Target]]               =
     Reusability.by((_: TreeSeqMap[TargetIdSet, Target]).toMap)(Reusability.map)
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
-  implicit val targetListGroupReuse: Reusability[TargetListGroup]                              = Reusability.derive
+  // implicit val targetListGroupReuse: Reusability[TargetListGroup]                              = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive
   implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.derive

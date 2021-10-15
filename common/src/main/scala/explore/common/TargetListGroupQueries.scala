@@ -14,7 +14,6 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
-import explore.model.TargetListGroup
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -31,6 +30,7 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 import TargetListGroupQueriesGQL._
+import explore.model.TargetEnv
 
 object TargetListGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
@@ -41,7 +41,7 @@ object TargetListGroupQueries {
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
 
-  type TargetListGroupList = SortedMap[SortedSet[Observation.Id], TargetListGroup]
+  type TargetListGroupList = SortedMap[SortedSet[Observation.Id], TargetEnv]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
   case class TargetListGroupWithObs(
@@ -69,7 +69,7 @@ object TargetListGroupQueries {
   private val queryToTargetListGroupWithObsGetter
     : Getter[TargetListGroupObsQuery.Data, TargetListGroupWithObs] = data =>
     TargetListGroupWithObs(
-      data.scienceTargetListGroup.toSortedMap(TargetListGroup.obsIds.get),
+      data.scienceTargetListGroup.toSortedMap(_.obsIds),
       data.observations.nodes.map(obsResultToSummary).toSortedMap(ObsSummaryWithConstraints.id.get)
     )
 
