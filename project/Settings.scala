@@ -11,14 +11,15 @@ object Settings {
     val catsRetry         = "3.1.0"
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
-    val clue              = "0.18.2"
+    val clue              = "0.18.4"
     val crystal           = "0.16.1"
     val discipline        = "1.1.5"
     val disciplineMUnit   = "1.0.9"
-    val fs2               = "3.1.4"
+    val fs2               = "3.1.5"
     val fs2Data           = "1.1.0"
     val geminiLocales     = "0.6.0"
-    val http4s            = "1.0.0-M27"
+    val http4s            = "0.23.6"
+    val http4sDom         = "0.1.0"
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaBC          = "0.3.0"
@@ -28,7 +29,7 @@ object Settings {
     val lucumaSchemas     = "0.1.1"
     val lucumaSSO         = "0.0.10"
     val monocle           = "3.1.0"
-    val mouse             = "1.0.5"
+    val mouse             = "1.0.6"
     val mUnit             = "0.7.29"
     val mUnitCatsEffect   = "1.0.6"
     val reactAladin       = "0.6.0"
@@ -138,11 +139,10 @@ object Settings {
       )(geminiLocales)
     )
 
-    val Http4sClient = Def.setting(
+    val Http4sDom = Def.setting(
       deps(
-        "org.http4s" %%% "http4s-dsl",
-        "org.http4s" %%% "http4s-dom-fetch-client"
-      )(http4s)
+        "org.http4s" %%% "http4s-dom"
+      )(http4sDom)
     )
 
     val Http4sCore = Def.setting(
