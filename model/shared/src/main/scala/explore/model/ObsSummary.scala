@@ -35,7 +35,6 @@ object ObsSummary {
 
 trait ObsWithConstraints extends ObsSummary {
   val constraints: ConstraintsSummary
-  // val targetEnvId: TargetEnvironment.Id
 
   lazy val constraintsSummary = constraints.summaryString
 }
