@@ -156,6 +156,10 @@ object ObsQueriesGQL {
               name
               tracking {
                 ... on Sidereal {
+                  catalogId {
+                    name
+                    id
+                  }
                   coordinates {
                     ra {
                       microarcseconds

@@ -12,6 +12,7 @@ import io.circe.DecodingFailure
 import io.circe.HCursor
 import io.circe.generic.semiauto
 import io.circe.refined._
+import lucuma.core.enum.CatalogName
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.enum.MagnitudeSystem
 import lucuma.core.math.Angle
@@ -25,6 +26,7 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.CentimetersPerSecond
+import lucuma.core.model.CatalogId
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
@@ -106,15 +108,23 @@ object decoders {
 
   implicit val pmDecoder: Decoder[ProperMotion] = semiauto.deriveDecoder[ProperMotion]
 
-  implicit val siderealTrackingDecoder = new Decoder[SiderealTracking] {
+  implicit val catalogIdDecoder: Decoder[CatalogId] = new Decoder[CatalogId] {
+    final def apply(c: HCursor): Decoder.Result[CatalogId] =
+      for {
+        name <- c.downField("name").as[CatalogName]
+        id   <- c.downField("id").as[string.NonEmptyString]
+      } yield CatalogId(name, id)
+  }
+  implicit val siderealTrackingDecoder              = new Decoder[SiderealTracking] {
     final def apply(c: HCursor): Decoder.Result[SiderealTracking] =
       for {
+        ci  <- c.downField("catalogId").as[Option[CatalogId]]
         bc  <- c.downField("coordinates").as[Coordinates]
         ep  <- c.downField("epoch").as[Epoch]
         pm  <- c.downField("properMotion").as[Option[ProperMotion]]
         rv  <- c.downField("radialVelocity").as[Option[RadialVelocity]]
         par <- c.downField("parallax").as[Option[Parallax]]
-      } yield SiderealTracking(none, bc, ep, pm, rv, par)
+      } yield SiderealTracking(ci, bc, ep, pm, rv, par)
   }
 
   implicit val magnitudeValueDecoder: Decoder[MagnitudeValue] = new Decoder[MagnitudeValue] {
