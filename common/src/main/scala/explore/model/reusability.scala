@@ -40,10 +40,8 @@ object reusability {
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                                = Reusability.derive
   implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                          = Reusability.derive
   implicit val targetReuse: Reusability[Target]                                                = Reusability.derive
-  implicit val scienceIdTargetReuse: Reusability[ScienceTarget.Id]                             = Reusability.derive
-  implicit val scienceTargetReuse: Reusability[ScienceTarget]                                  = Reusability.derive
-  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[ScienceTarget.Id, ScienceTarget]]   =
-    Reusability.by((_: TreeSeqMap[ScienceTarget.Id, ScienceTarget]).toMap)(Reusability.map)
+  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[TargetIdSet, Target]]               =
+    Reusability.by((_: TreeSeqMap[TargetIdSet, Target]).toMap)(Reusability.map)
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
   implicit val targetListGroupReuse: Reusability[TargetListGroup]                              = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive

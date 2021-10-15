@@ -13,7 +13,7 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.model.display._
 import explore.model.reusability._
 import explore.utils.ReactTableHelpers
@@ -40,7 +40,7 @@ import reactST.reactTable.mod.SortingRule
 import scala.collection.immutable.SortedMap
 
 final case class MagnitudeForm(
-  targetId:   ScienceTarget.Id,
+  targetId:   TargetIdSet,
   magnitudes: View[SortedMap[MagnitudeBand, Magnitude]],
   disabled:   Boolean
 ) extends ReactFnProps[MagnitudeForm](MagnitudeForm.component)

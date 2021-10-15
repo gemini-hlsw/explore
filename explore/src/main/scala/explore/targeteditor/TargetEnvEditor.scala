@@ -23,9 +23,8 @@ import explore.components.InputModal
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ScienceTarget
-import explore.model.SiderealScienceTarget
 import explore.model.TargetEnv
+import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics._
@@ -36,6 +35,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
@@ -50,8 +50,8 @@ import scala.collection.immutable.SortedMap
 final case class TargetEnvEditor(
   userId:           User.Id,
   targetEnv:        View[TargetEnv],
-  undoStacks:       View[Map[ScienceTarget.Id, UndoStacks[IO, SiderealTarget]]],
-  searching:        View[Set[ScienceTarget.Id]],
+  undoStacks:       View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
+  searching:        View[Set[TargetIdSet]],
   options:          View[TargetVisualOptions],
   hiddenColumns:    View[Set[String]],
   renderInTitle:    Tile.RenderInTitle
@@ -86,8 +86,8 @@ object TargetEnvEditor {
   private def insertSiderealTarget(
     targetEnv:      View[TargetEnv],
     name:           NonEmptyString,
-    searching:      View[Set[ScienceTarget.Id]],
-    selectedTarget: View[Option[ScienceTarget.Id]]
+    searching:      View[Set[TargetIdSet]],
+    selectedTarget: View[Option[TargetIdSet]]
   )(implicit ctx:   AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
@@ -96,7 +96,7 @@ object TargetEnvEditor {
       ) >>= { response =>
       val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
 
-      ScienceTarget.Id
+      TargetIdSet
         .fromTargetIdList(targetIds)
         .map(id =>
           selectedTarget.set(id.some).to[IO] >>
@@ -111,10 +111,10 @@ object TargetEnvEditor {
                   // Set locally
                   targetEnv
                     .zoom(TargetEnv.scienceTargets)
-                    .zoom(index(id)(indexTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
-                    .zoom(ScienceTarget.sidereal)
+                    .zoom(index(id)(indexTreeSeqMap[TargetIdSet, Target]))
+                    .zoom(Target.sidereal)
                     .zoom(
-                      disjointZip(SiderealScienceTarget.tracking, SiderealScienceTarget.magnitudes)
+                      disjointZip(SiderealTarget.tracking, SiderealTarget.magnitudes)
                     )
                     .set((st, m))
                     .to[IO] >> // Set remotely
@@ -149,7 +149,7 @@ object TargetEnvEditor {
 
         // TODO We will add this generic state => view conversion in crystal
         val selectedTargetId =
-          ViewF[SyncIO, Option[ScienceTarget.Id]](
+          ViewF[SyncIO, Option[TargetIdSet]](
             selectedTargetIdState.value,
             (mod, _) => selectedTargetIdState.modState(mod).to[SyncIO]
           )
@@ -195,22 +195,21 @@ object TargetEnvEditor {
               val selectedTargetView =
                 props.targetEnv
                   .zoom(TargetEnv.scienceTargets)
-                  .zoom(index(targetId)(indexTreeSeqMap[ScienceTarget.Id, ScienceTarget]))
+                  .zoom(index(targetId)(indexTreeSeqMap[TargetIdSet, Target]))
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case SiderealScienceTarget(_, _) =>
+                  case SiderealTarget(_, _, _) =>
                     SiderealTargetEditor(
                       props.userId,
                       targetId,
                       targetView
-                        .unsafeNarrow[SiderealScienceTarget]
-                        .zoom(SiderealScienceTarget.target),
+                        .unsafeNarrow[SiderealTarget],
                       props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                       props.searching,
                       props.options
                     )
-                  case _                           =>
+                  case _                       =>
                     <.div("Non-sidereal targets not supported")
                 }
               )

@@ -15,7 +15,7 @@ import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelOptics
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._
@@ -38,7 +38,7 @@ import scala.concurrent.duration._
 
 final case class AladinCell(
   uid:              User.Id,
-  tid:              ScienceTarget.Id,
+  tid:              TargetIdSet,
   target:           View[Coordinates],
   options:          View[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)

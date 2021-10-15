@@ -25,7 +25,7 @@ case class RootModel(
   tabs:                           EnumZipper[AppTab],
   focused:                        Option[Focused] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
-  searchingTarget:                Set[ScienceTarget.Id] = HashSet.empty,
+  searchingTarget:                Set[TargetIdSet] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
   targetSummaryHiddenColumns:     Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++

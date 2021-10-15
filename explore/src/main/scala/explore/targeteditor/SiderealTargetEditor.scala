@@ -20,7 +20,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.ScienceTarget
+import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
@@ -58,10 +58,10 @@ final case class SearchCallback(
 
 final case class SiderealTargetEditor(
   uid:        User.Id,
-  id:         ScienceTarget.Id,
+  id:         TargetIdSet,
   target:     View[SiderealTarget],
   undoStacks: View[UndoStacks[IO, SiderealTarget]],
-  searching:  View[Set[ScienceTarget.Id]],
+  searching:  View[Set[TargetIdSet]],
   options:    View[TargetVisualOptions]
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
