@@ -298,6 +298,6 @@ object TargetListGroupObsList {
         _      <- cleanupExpandedIds
       } yield ()
     }
-    // .configure(Reusability.shouldComponentUpdate)
+    .configure(Reusability.shouldComponentUpdate)
     .build
 }
