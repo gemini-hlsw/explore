@@ -45,6 +45,7 @@ object reusability {
   implicit val scienceTargetsReuse: Reusability[TreeSeqMap[ScienceTarget.Id, ScienceTarget]] =
     Reusability.never // It's faster to rerender than to compare the whole thing.
   implicit val targetEnvReuse: Reusability[TargetEnv]                                          = Reusability.derive
+  implicit val targetListGroupReuse: Reusability[TargetListGroup]                              = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                                    = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                                = Reusability.derive
   implicit val elevationRangeReuse: Reusability[ElevationRange]                                = Reusability.derive

@@ -7,18 +7,21 @@ import cats.Order._
 import cats._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
 
 case class ExpandedIds(
   targetIds:           SortedSet[Target.Id] = SortedSet.empty,
-  constraintSetObsIds: SortedSet[SortedSet[Observation.Id]] = SortedSet.empty
+  constraintSetObsIds: SortedSet[SortedSet[Observation.Id]] = SortedSet.empty,
+  targetListObsIds:    SortedSet[SortedSet[TargetEnvironment.Id]] = SortedSet.empty
 )
 
 object ExpandedIds {
   val targetIds           = Focus[ExpandedIds](_.targetIds)
   val constraintSetObsIds = Focus[ExpandedIds](_.constraintSetObsIds)
+  val targetListObsIds    = Focus[ExpandedIds](_.targetListObsIds)
 
   implicit val eqExpandedIds: Eq[ExpandedIds] = Eq.fromUniversalEquals
 }

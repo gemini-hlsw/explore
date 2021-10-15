@@ -38,4 +38,15 @@ object TargetEnvQueriesGQL {
       }
       """
   }
+
+  @GraphQL
+  trait ProgramTargetEnvEditSubscription extends GraphQLOperation[ObservationDB] {
+    val document = """
+      subscription {
+        targetEnvironmentEdit(programId: "p-2") {
+          id
+        }
+      }
+      """
+  }
 }

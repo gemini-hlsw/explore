@@ -65,20 +65,16 @@ object ConstraintGroupQueries {
                                  obsR.plannedTime.execution
     )
 
-  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
-    SortedMap.from(list.map(a => (getKey(a), a)))
-
   private val queryToConstraintsWithObsGetter
     : Getter[ConstraintGroupObsQuery.Data, ConstraintSummaryWithObervations] =
     data =>
       ConstraintSummaryWithObervations(
-        toSortedMap(
-          data.constraintSetGroup.nodes.map(_.asConstraintGroup),
-          ConstraintGroup.obsIds.get
-        ),
-        toSortedMap(data.observations.nodes.map(obsResultToSummary),
-                    ObsSummaryWithTargetsAndConf.id.get
-        )
+        data.constraintSetGroup.nodes
+          .map(_.asConstraintGroup)
+          .toSortedMap(ConstraintGroup.obsIds.get),
+        data.observations.nodes
+          .map(obsResultToSummary)
+          .toSortedMap(ObsSummaryWithTargetsAndConf.id.get)
       )
 
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
