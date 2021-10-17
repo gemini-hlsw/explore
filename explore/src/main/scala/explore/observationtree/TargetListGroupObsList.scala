@@ -116,7 +116,7 @@ object TargetListGroupObsList {
       implicit val ctx = props.ctx
 
       val observations     = props.targetListsWithObs.get.observations
-      val targetListGroups = props.targetListsWithObs.get.targetListGroups
+      val targetListGroups = props.targetListsWithObs.get.targetListGroups.map(_._2)
 
       // if a single observation is selected
       val singleObsSelected = props.focused.get.collect { case FocusedObs(_) => true }.nonEmpty
@@ -147,6 +147,82 @@ object TargetListGroupObsList {
         case _                   => of
       }
 
+      def renderGroup(targetListGroup: TargetEnv): VdomNode = {
+        val obsIds        = targetListGroup.obsIds
+        val targetEnvIds  = targetListGroup.targetEnvIds
+        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+        // if this group or something in it is selected
+        val groupSelected = props.selected.get.optValue.exists(_.intersect(targetEnvIds).nonEmpty)
+
+        val icon: FontAwesomeIcon = props.expandedIds.get
+          .exists(_ === targetEnvIds)
+          .fold(Icons.ChevronDown, Icons.ChevronRight)
+          .addModifiers(
+            Seq(
+              ^.cursor.pointer,
+              ^.onClick ==> { e: ReactEvent =>
+                e.stopPropagationCB >>
+                  toggleExpanded(targetEnvIds, props.expandedIds).toCB
+                    .asEventDefault(e)
+                    .void
+              }
+            )
+          )
+          .fixedWidth()
+
+        Droppable(targetEnvIdsToString(targetEnvIds), renderClone = renderClone) {
+          case (provided, snapshot) =>
+            val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+              icon,
+              <.span(ExploreStyles.ObsGroupTitleWithWrap)(
+                targetListGroup.name
+              ),
+              Icons.Thumbtack.when(obsIds.size < targetEnvIds.size),
+              <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+            )
+
+            <.div(
+              provided.innerRef,
+              provided.droppableProps,
+              props.getListStyle(
+                snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
+              )
+            )(
+              Segment(
+                vertical = true,
+                clazz = ExploreStyles.ObsTreeGroup |+| Option
+                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                  .orElse(
+                    Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
+                  )
+                  .orEmpty
+              )(^.cursor.pointer,
+                ^.onClick --> {
+                  props.focused.mod(unfocusIfObs) >>
+                    props.selected.set(SelectedPanel.editor(targetEnvIds))
+                }
+              )(
+                csHeader,
+                TagMod.when(props.expandedIds.get.contains(targetEnvIds))(
+                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                    props.renderObsBadgeItem(
+                      selectable = true,
+                      highlightSelected = true,
+                      forceHighlight = groupSelected && !singleObsSelected,
+                      linkToObsTab = false,
+                      onSelect = _ =>
+                        props.selected.set(
+                          SelectedPanel.editor(NonEmptySet.one(obs.targetEnvId))
+                        )
+                    )(obs, idx)
+                  }
+                ),
+                provided.placeholder
+              )
+            )
+        }
+      }
+
       DragDropContext(
         onDragStart =
           (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).toCB,
@@ -165,82 +241,7 @@ object TargetListGroupObsList {
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
-              targetListGroups.toTagMod { case (_, targetListGroup) =>
-                val obsIds        = targetListGroup.obsIds
-                val targetEnvIds  = targetListGroup.targetEnvIds
-                val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
-                // if this group or something in it is selected
-                val groupSelected =
-                  props.selected.get.optValue.exists(_.intersect(targetEnvIds).nonEmpty)
-
-                val icon: FontAwesomeIcon = props.expandedIds.get
-                  .exists(_ === targetEnvIds)
-                  .fold(Icons.ChevronDown, Icons.ChevronRight)
-                  .addModifiers(
-                    Seq(
-                      ^.cursor.pointer,
-                      ^.onClick ==> { e: ReactEvent =>
-                        e.stopPropagationCB >>
-                          toggleExpanded(targetEnvIds, props.expandedIds).toCB
-                            .asEventDefault(e)
-                            .void
-                      }
-                    )
-                  )
-                  .fixedWidth()
-
-                Droppable(targetEnvIdsToString(targetEnvIds), renderClone = renderClone) {
-                  case (provided, snapshot) =>
-                    val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-                      icon,
-                      <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                        targetListGroup.name
-                      ),
-                      Icons.Thumbtack.when(obsIds.size < targetEnvIds.size),
-                      <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
-                    )
-
-                    <.div(
-                      provided.innerRef,
-                      provided.droppableProps,
-                      props.getListStyle(
-                        snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
-                      )
-                    )(
-                      Segment(
-                        vertical = true,
-                        clazz = ExploreStyles.ObsTreeGroup |+| Option
-                          .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
-                          .orElse(
-                            Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
-                          )
-                          .orEmpty
-                      )(^.cursor.pointer,
-                        ^.onClick --> {
-                          props.focused.mod(unfocusIfObs) >>
-                            props.selected.set(SelectedPanel.editor(targetEnvIds))
-                        }
-                      )(
-                        csHeader,
-                        TagMod.when(props.expandedIds.get.contains(targetEnvIds))(
-                          cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                            props.renderObsBadgeItem(
-                              selectable = true,
-                              highlightSelected = true,
-                              forceHighlight = groupSelected && !singleObsSelected,
-                              linkToObsTab = false,
-                              onSelect = _ =>
-                                props.selected.set(
-                                  SelectedPanel.editor(NonEmptySet.one(obs.targetEnvId))
-                                )
-                            )(obs, idx)
-                          }
-                        ),
-                        provided.placeholder
-                      )
-                    )
-                }
-              }
+              targetListGroups.toTagMod(renderGroup)
             )
           )
         )
