@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.Order._
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
@@ -19,6 +20,7 @@ import explore.model.Focused
 import explore.model.Focused._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
+import explore.model.TargetEnv
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -39,8 +41,6 @@ import react.semanticui.elements.segment.Segment
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
-import explore.model.TargetEnv
-import cats.data.NonEmptySet
 
 final case class TargetListGroupObsList(
   targetListsWithObs: View[TargetListGroupWithObs],

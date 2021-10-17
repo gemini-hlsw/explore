@@ -14,6 +14,7 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
+import explore.model.TargetEnv
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -30,7 +31,6 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 import TargetListGroupQueriesGQL._
-import explore.model.TargetEnv
 
 object TargetListGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.

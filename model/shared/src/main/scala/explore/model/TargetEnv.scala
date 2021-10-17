@@ -4,19 +4,19 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all._
 import cats.data.NonEmptySet
+import cats.syntax.all._
 import explore.model.decoders._
 import io.circe.Decoder
 import io.circe.Decoder._
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 import monocle.Lens
 
-import scala.collection.immutable.TreeSeqMap
-import lucuma.core.model.Observation
 import scala.collection.immutable.SortedSet
+import scala.collection.immutable.TreeSeqMap
 
 case class TargetEnv(
   id:             TargetEnvIdSet,
@@ -79,8 +79,7 @@ object TargetEnv {
 
   private val groupTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
     for {
-      id             <- c.downField("targetEnvironments")
-                          .get[List[TargetEnvId]]("targetEnvironments")
+      id             <- c.get[List[TargetEnvId]]("targetEnvironments")
                           .map(list => NonEmptySet.of(list.head, list.tail: _*))
       scienceTargets <- c.get[List[TargetWithId]]("commonTargetList").map(TreeSeqMap.from)
     } yield TargetEnv(id, scienceTargets)

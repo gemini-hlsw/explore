@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
@@ -34,7 +35,6 @@ import react.resizeDetector.ResizeDetector
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import cats.data.NonEmptySet
 
 final case class TargetTabContents(
   userId:           Option[User.Id],

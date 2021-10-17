@@ -5,11 +5,11 @@ package explore.model
 
 import cats.Order._
 import cats._
+import cats.data.NonEmptySet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import monocle.Focus
-import cats.data.NonEmptySet
 
 import scala.collection.immutable.SortedSet
 

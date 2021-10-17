@@ -3,6 +3,9 @@
 
 package explore.observationtree
 
+import cats.Monoid
+import cats.Order._
+import cats.data.NonEmptySet
 import cats.effect.Async
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -11,6 +14,9 @@ import explore.common.TargetListGroupQueries._
 import explore.implicits._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
+import explore.model.TargetEnv
+import explore.model.TargetIdSet
+import explore.model.implicits._
 import explore.undo._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -18,12 +24,7 @@ import lucuma.core.model.TargetEnvironment
 import lucuma.schemas.ObservationDB
 
 import scala.collection.immutable.SortedSet
-import cats.data.NonEmptySet
-import explore.model.TargetEnv
 import scala.collection.immutable.TreeSeqMap
-import explore.model.TargetIdSet
-import explore.model.implicits._
-import cats.Order._
 
 object TargetListGroupObsListActions {
   private def getter(
@@ -64,9 +65,11 @@ object TargetListGroupObsListActions {
   )(
     eids:        SortedSet[NonEmptySet[TargetEnvironment.Id]]
   ) =
-    eids.map(ids =>
-      if (ids === destIds) destIds.add(targetEnvId)
-      else NonEmptySet.fromSetUnsafe(ids - targetEnvId) // TODO Deal with possible empty set?
+    eids.flatMap(ids =>
+      if (ids === destIds) destIds.add(targetEnvId).some
+      else if (ids.size > 1)
+        NonEmptySet.fromSetUnsafe(ids - targetEnvId).some
+      else none
     ) + (destIds.add(targetEnvId)) // always expand the destination, even if it wasn't expanded.
 
   private def updateSelected(
@@ -86,20 +89,21 @@ object TargetListGroupObsListActions {
     targetEnvId:    TargetEnvironment.Id,
     expandedIds:    View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
     selected:       View[SelectedPanel[NonEmptySet[TargetEnvironment.Id]]]
-  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
+  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB], ev: Monoid[F[Unit]]) =
     Action[F](getter = getter(targetEnvId), setter = setter(obsId, targetEnvId))(
       onSet = (tlgl, otl) =>
         otl.fold(async.unit) { tl =>
-          // Should always find the destIds, but...
-          // Need to find them here rather that pass them in so that it
-          // works for undo.
-          val destIds = tlgl.values
-            .find(_.scienceTargets === tl)
-            .map(_.targetEnvIds)
-            .get //OrElse(SortedSet.empty[TargetEnvironment.Id])
           TargetListGroupQueries.replaceObservationScienceTargetList[F](obsId, tl.values.toList) >>
-            expandedIds.mod(updateExpandedIds(targetEnvId, destIds) _).to[F] >>
-            selected.mod(updateSelected(targetEnvId, destIds) _).to[F]
+            // Should always find the destIds, but...
+            // Need to find them here rather that pass them in so that it
+            // works for undo.
+            tlgl.values
+              .find(_.scienceTargets === tl)
+              .map(_.targetEnvIds)
+              .foldMap(destIds =>
+                expandedIds.mod(updateExpandedIds(targetEnvId, destIds) _).to[F] >>
+                  selected.mod(updateSelected(targetEnvId, destIds) _).to[F]
+              )
         }
     )
 }
