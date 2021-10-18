@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
@@ -23,7 +22,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
-import lucuma.core.model.TargetEnvironment
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import org.scalajs.dom.window
@@ -42,7 +40,7 @@ final case class TargetTabContents(
   listUndoStacks:   View[UndoStacks[IO, TargetListGroupList]],
   // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
   // searching:         View[Set[Target.Id]],
-  expandedIds:      View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
+  expandedIds:      View[SortedSet[TargetEnvIdSet]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -56,12 +54,12 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
-  type State = TwoPanelState[NonEmptySet[TargetEnvironment.Id]]
+  type State = TwoPanelState[TargetEnvIdSet]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[NonEmptySet[TargetEnvironment.Id]]
-  val selectedLens  = TwoPanelState.selected[NonEmptySet[TargetEnvironment.Id]]
+  val treeWidthLens = TwoPanelState.treeWidth[TargetEnvIdSet]
+  val selectedLens  = TwoPanelState.selected[TargetEnvIdSet]
 
   def readWidthPreference($ : ComponentDidMount[Props, State, _]): Callback = {
     implicit val ctx = $.props.ctx
@@ -107,7 +105,7 @@ object TargetTabContents {
       )
 
     def findTargetListGroup(
-      targetEnvIds: NonEmptySet[TargetEnvironment.Id],
+      targetEnvIds: TargetEnvIdSet,
       tlgl:         TargetListGroupList
     ): Option[TargetEnv] = tlgl.values.find(_.targetEnvIds.intersect(targetEnvIds).nonEmpty)
 
@@ -242,7 +240,7 @@ object TargetTabContents {
     ScalaComponent
       .builder[Props]
       .initialState(
-        TwoPanelState.initial[NonEmptySet[TargetEnvironment.Id]](SelectedPanel.Uninitialized)
+        TwoPanelState.initial[TargetEnvIdSet](SelectedPanel.Uninitialized)
       )
       .renderBackend[Backend]
       .componentDidMount(readWidthPreference)

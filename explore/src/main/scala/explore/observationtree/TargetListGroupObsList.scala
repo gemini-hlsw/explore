@@ -21,6 +21,7 @@ import explore.model.Focused._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.TargetEnv
+import explore.model.TargetEnvIdSet
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -45,8 +46,8 @@ import scala.collection.immutable.SortedSet
 final case class TargetListGroupObsList(
   targetListsWithObs: View[TargetListGroupWithObs],
   focused:            View[Option[Focused]],
-  selected:           View[SelectedPanel[NonEmptySet[TargetEnvironment.Id]]],
-  expandedIds:        View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
+  selected:           View[SelectedPanel[TargetEnvIdSet]],
+  expandedIds:        View[SortedSet[TargetEnvIdSet]],
   undoStacks:         View[UndoStacks[IO, TargetListGroupList]]
 )(implicit val ctx:   AppContextIO)
     extends ReactProps[TargetListGroupObsList](TargetListGroupObsList.component)
@@ -65,12 +66,12 @@ object TargetListGroupObsList {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def targetEnvIdsToString(obsIds: NonEmptySet[TargetEnvironment.Id]): String =
+    def targetEnvIdsToString(obsIds: TargetEnvIdSet): String =
       obsIds.toSortedSet.mkString(",")
 
     def targetEnvIdsStringToIds(
       targetEnvIdsString: String
-    ): Option[NonEmptySet[TargetEnvironment.Id]] =
+    ): Option[TargetEnvIdSet] =
       targetEnvIdsString
         .split(",")
         .toList
@@ -79,8 +80,8 @@ object TargetListGroupObsList {
         .map(list => NonEmptySet.fromSetUnsafe(SortedSet.from(list)))
 
     def toggleExpanded(
-      targetEnvIds: NonEmptySet[TargetEnvironment.Id],
-      expandedIds:  View[SortedSet[NonEmptySet[TargetEnvironment.Id]]]
+      targetEnvIds: TargetEnvIdSet,
+      expandedIds:  View[SortedSet[TargetEnvIdSet]]
     ): SyncIO[Unit] =
       expandedIds.mod { expanded =>
         expanded.exists(_ === targetEnvIds).fold(expanded - targetEnvIds, expanded + targetEnvIds)
@@ -88,8 +89,8 @@ object TargetListGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoCtx[TargetListGroupList],
-      expandedIds: View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
-      selected:    View[SelectedPanel[NonEmptySet[TargetEnvironment.Id]]]
+      expandedIds: View[SortedSet[TargetEnvIdSet]],
+      selected:    View[SelectedPanel[TargetEnvIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
@@ -277,8 +278,8 @@ object TargetListGroupObsList {
             }.flatten
 
           selected
-            .set(infoFromFocused.fold(SelectedPanel.tree[NonEmptySet[TargetEnvironment.Id]]) {
-              case (id, _) => SelectedPanel.editor(NonEmptySet.one(id))
+            .set(infoFromFocused.fold(SelectedPanel.tree[TargetEnvIdSet]) { case (id, _) =>
+              SelectedPanel.editor(NonEmptySet.one(id))
             })
             .as(infoFromFocused.map(_._2))
         case Editor(ids)   =>
