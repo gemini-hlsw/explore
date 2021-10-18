@@ -91,7 +91,7 @@ object TargetEnvEditor {
   )(implicit ctx:   AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
-        List(targetEnv.get.id),
+        targetEnv.get.id.map(_._1).toList,
         newTarget(name).toCreateInput
       ) >>= { response =>
       val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
@@ -162,7 +162,7 @@ object TargetEnvEditor {
               label = "Name",
               placeholder = "Target name",
               okLabel = "Create",
-              onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
+              onComplete = Reuse.by(props.targetEnv.get.id.toSortedSet)((name: NonEmptyString) =>
                 adding.setState(true) >>
                   insertSiderealTarget(props.targetEnv,
                                        name,

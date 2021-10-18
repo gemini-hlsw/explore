@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
@@ -41,7 +42,7 @@ final case class TargetTabContents(
   listUndoStacks:   View[UndoStacks[IO, TargetListGroupList]],
   // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
   // searching:         View[Set[Target.Id]],
-  expandedIds:      View[SortedSet[SortedSet[TargetEnvironment.Id]]],
+  expandedIds:      View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -55,12 +56,12 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
-  type State = TwoPanelState[SortedSet[TargetEnvironment.Id]]
+  type State = TwoPanelState[NonEmptySet[TargetEnvironment.Id]]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[SortedSet[TargetEnvironment.Id]]
-  val selectedLens  = TwoPanelState.selected[SortedSet[TargetEnvironment.Id]]
+  val treeWidthLens = TwoPanelState.treeWidth[NonEmptySet[TargetEnvironment.Id]]
+  val selectedLens  = TwoPanelState.selected[NonEmptySet[TargetEnvironment.Id]]
 
   def readWidthPreference($ : ComponentDidMount[Props, State, _]): Callback = {
     implicit val ctx = $.props.ctx
@@ -106,9 +107,9 @@ object TargetTabContents {
       )
 
     def findTargetListGroup(
-      targetEnvIds: SortedSet[TargetEnvironment.Id],
+      targetEnvIds: NonEmptySet[TargetEnvironment.Id],
       tlgl:         TargetListGroupList
-    ): Option[TargetListGroup] = tlgl.values.find(_.targetEnvIds.intersect(targetEnvIds).nonEmpty)
+    ): Option[TargetEnv] = tlgl.values.find(_.targetEnvIds.intersect(targetEnvIds).nonEmpty)
 
     // def onModTargetsWithObs(
     //   groupObsIds:  SortedSet[Observation.Id],
@@ -241,7 +242,7 @@ object TargetTabContents {
     ScalaComponent
       .builder[Props]
       .initialState(
-        TwoPanelState.initial[SortedSet[TargetEnvironment.Id]](SelectedPanel.Uninitialized)
+        TwoPanelState.initial[NonEmptySet[TargetEnvironment.Id]](SelectedPanel.Uninitialized)
       )
       .renderBackend[Backend]
       .componentDidMount(readWidthPreference)

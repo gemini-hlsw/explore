@@ -3,6 +3,8 @@
 
 package explore
 
+import cats.Eq
+import cats.Order
 import cats.data.NonEmptySet
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -16,15 +18,18 @@ import lucuma.core.math.RightAscension
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
+import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
 import monocle.Prism
 
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.TreeSeqMap
 
 package object model {
   // It'd be nice to make these opaque
@@ -33,6 +38,18 @@ package object model {
   type SiderealTargetWithId    = (TargetIdSet, SiderealTarget)
   type NonsiderealTargetWithId = (TargetIdSet, NonsiderealTarget)
 
+  type TargetEnvId    = (TargetEnvironment.Id, Option[Observation.Id])
+  type TargetEnvIdSet = NonEmptySet[TargetEnvId]
+
+  object implicits   {
+    implicit val orderTargetnEnvId: Order[TargetEnvId] = Order.by(_._1)
+
+    implicit val orderNESTargetEnvId: Order[NonEmptySet[TargetEnvironment.Id]] =
+      Order.by(_.toSortedSet)
+
+    implicit val eqScienceTargets: Eq[TreeSeqMap[TargetIdSet, Target]] =
+      Eq.by(_.toMap)
+  }
   object TargetIdSet {
     def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =
       targetIds match {

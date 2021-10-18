@@ -151,6 +151,9 @@ object ObsQueriesGQL {
           id
           targets {
             id
+            observation {
+              id
+            }
             scienceTargets {
               id
               name

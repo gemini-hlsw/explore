@@ -14,7 +14,7 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
-import explore.model.TargetListGroup
+import explore.model.TargetEnv
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -41,7 +41,7 @@ object TargetListGroupQueries {
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
 
-  type TargetListGroupList = SortedMap[SortedSet[Observation.Id], TargetListGroup]
+  type TargetListGroupList = SortedMap[SortedSet[Observation.Id], TargetEnv]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
   case class TargetListGroupWithObs(
@@ -69,7 +69,7 @@ object TargetListGroupQueries {
   private val queryToTargetListGroupWithObsGetter
     : Getter[TargetListGroupObsQuery.Data, TargetListGroupWithObs] = data =>
     TargetListGroupWithObs(
-      data.scienceTargetListGroup.toSortedMap(TargetListGroup.obsIds.get),
+      data.scienceTargetListGroup.toSortedMap(_.obsIds),
       data.observations.nodes.map(obsResultToSummary).toSortedMap(ObsSummaryWithConstraints.id.get)
     )
 

@@ -21,9 +21,14 @@ object TargetListGroupQueriesGQL {
     val document: String = """
       query {
         scienceTargetListGroup(programId: "p-2") {
-          observationIds
-          targetEnvironmentIds
+          targetEnvironments {
+            id
+            observation {
+              id
+            }
+          }
           commonTargetList {
+            ids
             name
             tracking {
               ... on Sidereal {
@@ -89,7 +94,7 @@ object TargetListGroupQueriesGQL {
     """
 
     object Data {
-      type ScienceTargetListGroup = model.TargetListGroup
+      type ScienceTargetListGroup = model.TargetEnv
       object Observations {
         object Nodes {
           trait ConstraintSet extends model.ConstraintsSummary
