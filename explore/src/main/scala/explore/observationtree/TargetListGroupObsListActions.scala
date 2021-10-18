@@ -15,6 +15,7 @@ import explore.implicits._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
 import explore.model.TargetEnv
+import explore.model.TargetEnvIdSet
 import explore.model.TargetIdSet
 import explore.model.implicits._
 import explore.undo._
@@ -61,9 +62,9 @@ object TargetListGroupObsListActions {
 
   private def updateExpandedIds(
     targetEnvId: TargetEnvironment.Id,
-    destIds:     NonEmptySet[TargetEnvironment.Id]
+    destIds:     TargetEnvIdSet
   )(
-    eids:        SortedSet[NonEmptySet[TargetEnvironment.Id]]
+    eids:        SortedSet[TargetEnvIdSet]
   ) =
     eids.flatMap(ids =>
       if (ids === destIds) destIds.add(targetEnvId).some
@@ -74,9 +75,9 @@ object TargetListGroupObsListActions {
 
   private def updateSelected(
     targetEnvId: TargetEnvironment.Id,
-    destIds:     NonEmptySet[TargetEnvironment.Id]
+    destIds:     TargetEnvIdSet
   )(
-    selected:    SelectedPanel[NonEmptySet[TargetEnvironment.Id]]
+    selected:    SelectedPanel[TargetEnvIdSet]
   ) =
     selected match {
       // If in edit mode, always edit the destination.
@@ -87,8 +88,8 @@ object TargetListGroupObsListActions {
   def obsTargetListGroup[F[_]](
     obsId:          Observation.Id,
     targetEnvId:    TargetEnvironment.Id,
-    expandedIds:    View[SortedSet[NonEmptySet[TargetEnvironment.Id]]],
-    selected:       View[SelectedPanel[NonEmptySet[TargetEnvironment.Id]]]
+    expandedIds:    View[SortedSet[TargetEnvIdSet]],
+    selected:       View[SelectedPanel[TargetEnvIdSet]]
   )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB], ev: Monoid[F[Unit]]) =
     Action[F](getter = getter(targetEnvId), setter = setter(obsId, targetEnvId))(
       onSet = (tlgl, otl) =>

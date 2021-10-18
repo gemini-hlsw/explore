@@ -38,13 +38,15 @@ package object model {
   type SiderealTargetWithId    = (TargetIdSet, SiderealTarget)
   type NonsiderealTargetWithId = (TargetIdSet, NonsiderealTarget)
 
-  type TargetEnvId    = (TargetEnvironment.Id, Option[Observation.Id])
-  type TargetEnvIdSet = NonEmptySet[TargetEnvId]
+  type TargetEnvIdSet = NonEmptySet[TargetEnvironment.Id]
+
+  type TargetEnvIdObsId    = (TargetEnvironment.Id, Option[Observation.Id])
+  type TargetEnvIdObsIdSet = NonEmptySet[TargetEnvIdObsId]
 
   object implicits   {
-    implicit val orderTargetnEnvId: Order[TargetEnvId] = Order.by(_._1)
+    implicit val orderTargetnEnvId: Order[TargetEnvIdObsId] = Order.by(_._1)
 
-    implicit val orderNESTargetEnvId: Order[NonEmptySet[TargetEnvironment.Id]] =
+    implicit val orderNESTargetEnvId: Order[TargetEnvIdSet] =
       Order.by(_.toSortedSet)
 
     implicit val eqScienceTargets: Eq[TreeSeqMap[TargetIdSet, Target]] =

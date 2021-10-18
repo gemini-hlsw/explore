@@ -19,20 +19,20 @@ import scala.collection.immutable.SortedSet
 import scala.collection.immutable.TreeSeqMap
 
 case class TargetEnv(
-  id:             TargetEnvIdSet,
+  id:             TargetEnvIdObsIdSet,
   scienceTargets: TreeSeqMap[TargetIdSet, Target]
 ) {
-  lazy val targetEnvIds: NonEmptySet[TargetEnvironment.Id] = id.map(_._1)
-  lazy val obsIds: SortedSet[Observation.Id]               = id.collect { case (_, Some(obsId)) => obsId }
+  lazy val targetEnvIds: TargetEnvIdSet      = id.map(_._1)
+  lazy val obsIds: SortedSet[Observation.Id] = id.collect { case (_, Some(obsId)) => obsId }
 
   lazy val name: String =
     if (scienceTargets.isEmpty) "<No Targets>"
     else scienceTargets.map(TargetWithId.name.get).mkString(";")
 
-  def addId(newId: TargetEnvId): TargetEnv =
+  def addId(newId: TargetEnvIdObsId): TargetEnv =
     this.copy(id = id.add(newId))
 
-  def removeId(oldId: TargetEnvId): TargetEnv =
+  def removeId(oldId: TargetEnvIdObsId): TargetEnv =
     // TODO Deal with this better. Maybe return an Option[TargetEnv] ?
     if (id.length === 1) this
     else
@@ -63,7 +63,7 @@ object TargetEnv {
 
   private val obsIdDecoder: Decoder[Observation.Id] = Decoder.instance(_.get[Observation.Id]("id"))
 
-  private implicit val targetEnvIdDecoder: Decoder[TargetEnvId] = Decoder.instance(c =>
+  private implicit val targetEnvIdDecoder: Decoder[TargetEnvIdObsId] = Decoder.instance(c =>
     for {
       targetEnvId <- c.get[TargetEnvironment.Id]("id")
       obsId       <- c.get[Option[Observation.Id]]("observation")(decodeOption(obsIdDecoder))
@@ -72,14 +72,14 @@ object TargetEnv {
 
   private val singleTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
     for {
-      id             <- c.as[TargetEnvId].map(id => NonEmptySet.one(id))
+      id             <- c.as[TargetEnvIdObsId].map(id => NonEmptySet.one(id))
       scienceTargets <- c.get[List[TargetWithId]]("scienceTargets").map(TreeSeqMap.from)
     } yield TargetEnv(id, scienceTargets)
   )
 
   private val groupTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
     for {
-      id             <- c.get[List[TargetEnvId]]("targetEnvironments")
+      id             <- c.get[List[TargetEnvIdObsId]]("targetEnvironments")
                           .map(list => NonEmptySet.of(list.head, list.tail: _*))
       scienceTargets <- c.get[List[TargetWithId]]("commonTargetList").map(TreeSeqMap.from)
     } yield TargetEnv(id, scienceTargets)
@@ -88,7 +88,7 @@ object TargetEnv {
   implicit val decoderTargetEnv: Decoder[TargetEnv] =
     singleTargetEnvDecoder.or(groupTargetEnvDecoder)
 
-  val id: Lens[TargetEnv, TargetEnvIdSet]                              = Focus[TargetEnv](_.id)
+  val id: Lens[TargetEnv, TargetEnvIdObsIdSet]                         = Focus[TargetEnv](_.id)
   val scienceTargets: Lens[TargetEnv, TreeSeqMap[TargetIdSet, Target]] =
     Focus[TargetEnv](_.scienceTargets)
 }
