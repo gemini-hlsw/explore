@@ -17,6 +17,7 @@ import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
 import explore.model.HourAngleRange
+import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.TargetSummary
 import explore.model.reusability._
@@ -34,14 +35,13 @@ import monocle.Lens
 import monocle.macros.GenIso
 
 import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
 
 import ObsQueriesGQL._
 
 object ObsQueries {
 
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints]
-  type ConstraintsList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
+  type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   type WavelengthInput = ObservationDB.Types.WavelengthModelInput
   val WavelengthInput = ObservationDB.Types.WavelengthModelInput
@@ -104,19 +104,12 @@ object ObsQueries {
         ),
         ObsSummaryWithTargetsAndConstraints.id.get
       ),
-      data.constraintSetGroup.nodes.map(_.asConstraintGroup).toSortedMap(ConstraintGroup.obsIds.get)
+      data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get)
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
-  }
-
-  implicit class ConstraintGroupResultOps(
-    val self: ProgramObservationsQuery.Data.ConstraintSetGroup.Nodes
-  ) extends AnyVal {
-    def asConstraintGroup =
-      ConstraintGroup(self.constraintSet, SortedSet.from(self.observations.nodes.map(_.id)))
   }
 
   val ObsLiveQuery =

@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
@@ -28,7 +29,6 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -48,10 +48,10 @@ import scala.concurrent.duration._
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
   focused:          View[Option[Focused]],
-  expandedIds:      View[SortedSet[SortedSet[Observation.Id]]],
+  expandedIds:      View[SortedSet[ObsIdSet]],
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack:   View[Map[SortedSet[Observation.Id], UndoStacks[IO, ConstraintSet]]],
+  groupUndoStack:   View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
   hiddenColumns:    View[Set[String]],
   summarySorting:   View[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
@@ -60,13 +60,13 @@ final case class ConstraintSetTabContents(
 
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
-  type State = TwoPanelState[SortedSet[Observation.Id]]
+  type State = TwoPanelState[ObsIdSet]
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[SortedSet[Observation.Id]]
-  val selectedLens  = TwoPanelState.selected[SortedSet[Observation.Id]]
+  val treeWidthLens = TwoPanelState.treeWidth[ObsIdSet]
+  val selectedLens  = TwoPanelState.selected[ObsIdSet]
 
   def readWidthPreference(
     $ : ComponentDidMount[Props, State, _]
@@ -112,14 +112,14 @@ object ConstraintSetTabContents {
       )
 
     def findConstraintGroup(
-      obsIds: SortedSet[Observation.Id],
+      obsIds: ObsIdSet,
       cgl:    ConstraintGroupList
     ): Option[ConstraintGroup] =
       cgl.find(_._1.intersect(obsIds).nonEmpty).map(_._2)
 
     def onModSummaryWithObs(
-      groupObsIds:  SortedSet[Observation.Id],
-      editedObsIds: SortedSet[Observation.Id]
+      groupObsIds:  ObsIdSet,
+      editedObsIds: ObsIdSet
     )(cswo:         ConstraintSummaryWithObervations): SyncIO[Unit] = {
       val groupList = cswo.constraintGroups
 
@@ -141,7 +141,7 @@ object ConstraintSetTabContents {
           .mod { eids =>
             val withOld       =
               if (groupObsIds === editedObsIds) eids
-              else eids + (groupObsIds -- editedObsIds)
+              else eids + (NonEmptySet.fromSetUnsafe(groupObsIds -- editedObsIds))
             val withOldAndNew =
               if (editedObsIds === cg.obsIds && editedObsIds === groupObsIds) withOld
               else withOld + cg.obsIds
@@ -213,7 +213,7 @@ object ConstraintSetTabContents {
                   if (idsToEdit === groupObsIds)
                     cgl.updated(groupObsIds, newCg) // otherwise, just update current group
                   else {
-                    val diffIds = groupObsIds -- idsToEdit
+                    val diffIds = NonEmptySet.fromSetUnsafe(groupObsIds -- idsToEdit)
                     cgl
                       .removed(groupObsIds)
                       .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))
@@ -299,7 +299,7 @@ object ConstraintSetTabContents {
   protected val component =
     ScalaComponent
       .builder[Props]
-      .initialState(TwoPanelState.initial[SortedSet[Observation.Id]](SelectedPanel.Uninitialized))
+      .initialState(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
       .renderBackend[Backend]
       .componentDidMount(readWidthPreference)
       .configure(Reusability.shouldComponentUpdate)
