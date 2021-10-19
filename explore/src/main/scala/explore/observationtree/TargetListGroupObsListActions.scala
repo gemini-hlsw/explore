@@ -61,13 +61,13 @@ object TargetListGroupObsListActions {
 
   private def updateExpandedIds(
     targetEnvId: TargetEnvironment.Id,
-    destIds:     Option[TargetEnvIdSet]
+    optDestIds:  Option[TargetEnvIdSet]
   )(
     eids:        SortedSet[TargetEnvIdSet]
   ) = {
     val setOfOne = NonEmptySet.one(targetEnvId)
 
-    destIds.fold(
+    optDestIds.fold(
       eids.map(ids =>
         if (ids =!= setOfOne) NonEmptySet.fromSetUnsafe(ids - targetEnvId)
         else ids
@@ -82,13 +82,13 @@ object TargetListGroupObsListActions {
 
   private def updateSelected(
     targetEnvId: TargetEnvironment.Id,
-    destIds:     Option[TargetEnvIdSet]
+    optDestIds:  Option[TargetEnvIdSet]
   )(
     selected:    SelectedPanel[TargetEnvIdSet]
   ) =
     selected match {
       // If in edit mode, always edit the destination.
-      case Editor(_) => Editor(destIds.fold(NonEmptySet.one(targetEnvId))(_.add(targetEnvId)))
+      case Editor(_) => Editor(optDestIds.fold(NonEmptySet.one(targetEnvId))(_.add(targetEnvId)))
       case _         => selected
     }
 
@@ -101,11 +101,11 @@ object TargetListGroupObsListActions {
     Action[F](getter = getter(targetEnvId), setter = setter(obsId, targetEnvId))(
       onSet = (tlgl, otl) =>
         otl.fold(async.unit) { tl =>
-          // destination ids won't be found when undoing
-          val destIds = tlgl.values.find(_.scienceTargets === tl).map(_.targetEnvIds)
+          // destination ids may not be found when undoing
+          val optDestIds = tlgl.values.find(_.scienceTargets === tl).map(_.targetEnvIds)
           TargetListGroupQueries.replaceObservationScienceTargetList[F](obsId, tl.values.toList) >>
-            expandedIds.mod(updateExpandedIds(targetEnvId, destIds) _).to[F] >>
-            selected.mod(updateSelected(targetEnvId, destIds) _).to[F]
+            expandedIds.mod(updateExpandedIds(targetEnvId, optDestIds) _).to[F] >>
+            selected.mod(updateSelected(targetEnvId, optDestIds) _).to[F]
         }
     )
 }

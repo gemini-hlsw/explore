@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Order._
 import cats._
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
 
@@ -13,7 +12,7 @@ import scala.collection.immutable.SortedSet
 
 case class ExpandedIds(
   targetIds:           SortedSet[Target.Id] = SortedSet.empty,
-  constraintSetObsIds: SortedSet[SortedSet[Observation.Id]] = SortedSet.empty,
+  constraintSetObsIds: SortedSet[ObsIdSet] = SortedSet.empty,
   targetListObsIds:    SortedSet[TargetEnvIdSet] = SortedSet.empty
 )
 

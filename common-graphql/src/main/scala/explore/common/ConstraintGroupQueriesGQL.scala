@@ -71,9 +71,7 @@ object ConstraintGroupQueriesGQL {
 
     object Data {
       object ConstraintSetGroup {
-        object Nodes {
-          type ConstraintSet = model.ConstraintSet
-        }
+        type Nodes = model.ConstraintGroup
       }
       object Observations       {
         object Nodes {

@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.Order._
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -228,10 +229,15 @@ object ObsTabContents {
           case Left(_)       => Callback.empty
         }
 
-    def obsIdsToString(obsIds: SortedSet[Observation.Id]): String = obsIds.mkString(",")
+    def obsIdsToString(obsIds: ObsIdSet): String = obsIds.toSortedSet.mkString(",")
 
-    def obsIdStringToIds(obsIdStr: String): Option[SortedSet[Observation.Id]] =
-      obsIdStr.split(",").toList.map(Observation.Id.parse(_)).sequence.map(SortedSet.from(_))
+    def obsIdStringToIds(obsIdStr: String): Option[ObsIdSet] =
+      obsIdStr
+        .split(",")
+        .toList
+        .map(Observation.Id.parse(_))
+        .sequence
+        .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)))
 
     def makeConstraintsSelector(
       constraintGroups: View[ConstraintsList],
@@ -420,7 +426,7 @@ object ObsTabContents {
                     obsView.map(_.zoom(ObservationData.constraintSet)),
                     props.undoStacks
                       .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                      .zoom(atMapWithDefault(SortedSet(obsId), UndoStacks.empty)),
+                      .zoom(atMapWithDefault(NonEmptySet.one(obsId), UndoStacks.empty)),
                     control = constraintsSelector.some,
                     clazz = ExploreStyles.ConstraintsTile.some
                   ),

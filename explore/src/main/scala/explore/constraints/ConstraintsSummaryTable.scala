@@ -4,6 +4,7 @@
 package explore.constraints
 
 import cats.Order._
+import cats.data.NonEmptySet
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -18,11 +19,11 @@ import explore.model.ConstraintSet
 import explore.model.Focused
 import explore.model.Focused._
 import explore.model.HourAngleRange
+import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -45,9 +46,9 @@ final case class ConstraintsSummaryTable(
   constraintList: ConstraintGroupList,
   hiddenColumns:  View[Set[String]],
   summarySorting: View[List[(String, Boolean)]],
-  selectedPanel:  View[SelectedPanel[SortedSet[Observation.Id]]],
+  selectedPanel:  View[SelectedPanel[ObsIdSet]],
   focused:        View[Option[Focused]],
-  expandedIds:    View[SortedSet[SortedSet[Observation.Id]]],
+  expandedIds:    View[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
 
@@ -160,13 +161,13 @@ object ConstraintsSummaryTable {
           column("observations", ConstraintGroup.obsIds.get)
             .setCell(cell =>
               <.span(
-                cell.value.toList
+                cell.value.toSortedSet.toList
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
                         (props.focused.set(FocusedObs(obsId).some)
                           >> props.expandedIds.mod(_ + cell.value)
-                          >> props.selectedPanel.set(SelectedPanel.editor(SortedSet(obsId))))
+                          >> props.selectedPanel.set(SelectedPanel.editor(NonEmptySet.one(obsId))))
                       ),
                       obsId.toString
                     )

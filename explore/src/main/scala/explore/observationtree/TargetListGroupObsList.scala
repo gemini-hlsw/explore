@@ -77,7 +77,7 @@ object TargetListGroupObsList {
         .toList
         .map(TargetEnvironment.Id.parse(_))
         .sequence
-        .map(list => NonEmptySet.fromSetUnsafe(SortedSet.from(list)))
+        .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)))
 
     def toggleExpanded(
       targetEnvIds: TargetEnvIdSet,

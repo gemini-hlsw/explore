@@ -43,6 +43,8 @@ package object model {
   type TargetEnvIdObsId    = (TargetEnvironment.Id, Option[Observation.Id])
   type TargetEnvIdObsIdSet = NonEmptySet[TargetEnvIdObsId]
 
+  type ObsIdSet = NonEmptySet[Observation.Id]
+
   object implicits   {
     implicit val orderTargetnEnvId: Order[TargetEnvIdObsId] = Order.by(_._1)
 

@@ -91,9 +91,7 @@ object ObsQueriesGQL {
       }
 
       object ConstraintSetGroup {
-        object Nodes {
-          type ConstraintSet = model.ConstraintSet
-        }
+        type Nodes = model.ConstraintGroup
       }
     }
 

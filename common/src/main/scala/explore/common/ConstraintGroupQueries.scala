@@ -11,6 +11,7 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintGroup
+import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConf
 import explore.model.TargetSummary
 import explore.utils._
@@ -23,16 +24,12 @@ import monocle.Focus
 import monocle.Getter
 
 import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
 
 import ConstraintGroupQueriesGQL._
 
 object ConstraintGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
-  implicit val orderSortedSet: Order[SortedSet[Observation.Id]] = Order.by(_.toList)
-
-  type ConstraintGroupResult = ConstraintGroupObsQuery.Data.ConstraintSetGroup.Nodes
-  val ConstraintGroupResult = ConstraintGroupObsQuery.Data.ConstraintSetGroup.Nodes
+  implicit val orderSortedSet: Order[ObsIdSet] = Order.by(_.toList)
 
   type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
@@ -41,7 +38,7 @@ object ConstraintGroupQueries {
     target: ConstraintGroupObsQuery.Data.Observations.Nodes.Targets.ScienceTargets
   ): TargetSummary = TargetSummary(target.id, target.name)
 
-  type ConstraintGroupList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
+  type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintGroup]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTargetsAndConf]
 
   case class ConstraintSummaryWithObervations(
@@ -70,7 +67,6 @@ object ConstraintGroupQueries {
     data =>
       ConstraintSummaryWithObervations(
         data.constraintSetGroup.nodes
-          .map(_.asConstraintGroup)
           .toSortedMap(ConstraintGroup.obsIds.get),
         data.observations.nodes
           .map(obsResultToSummary)
@@ -80,11 +76,6 @@ object ConstraintGroupQueries {
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
       extends AnyVal {
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
-  }
-
-  implicit class ConstraintGroupResultOps(val self: ConstraintGroupResult) extends AnyVal {
-    def asConstraintGroup =
-      ConstraintGroup(self.constraintSet, SortedSet.from(self.observations.nodes.map(_.id)))
   }
 
   val ConstraintGroupLiveQuery =
