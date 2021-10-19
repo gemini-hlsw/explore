@@ -131,7 +131,7 @@ object InstrumentRow {
     decodeEnum[GmosNorthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthFPU(fpu: NonEmptyString): Either[DecoderError, GmosNorthFpu] =
-    decodeEnum[GmosNorthFpu, String](fpu.value, (i, f) => { println(s"fpu $i"); i === f.shortName })
+    decodeEnum[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
 
   def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
     decodeEnum[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)

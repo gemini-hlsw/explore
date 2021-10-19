@@ -58,6 +58,8 @@ import lucuma.core.model.Magnitude
 import lucuma.core.math.MagnitudeValue
 import scala.concurrent.duration._
 import clue.data.Input
+import monocle.Focus
+import cats.Parallel
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -83,7 +85,7 @@ object ItcResult {
 }
 
 final case class ItcResultsCache(
-  cache: Map[(Wavelength, PosBigDecimal, InstrumentModes), EitherNec[ItcQueryProblems, ItcResult]]
+  cache: Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
   import ItcResultsCache._
 
@@ -100,16 +102,15 @@ final case class ItcResultsCache(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
     r:  SpectroscopyModeRow
-  ): EitherNec[ItcQueryProblems, ItcResult] = {
-    println(s"cache $w $sn $r")
+  ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r)).parMapN { (w, sn, im) =>
-      println(s"cache ${cache.get((w, sn, im))}")
       cache.get((w, sn, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
-  }
 }
 
 object ItcResultsCache {
+  type CacheKey = (Wavelength, PosBigDecimal, InstrumentModes)
+
   implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
     def toMode: Option[InstrumentModes] = r.instrument match {
       case GmosNorthSpectroscopyRow(d, f, fi) =>
@@ -119,6 +120,9 @@ object ItcResultsCache {
       case _                                  => none
     }
   }
+
+  val cache = Focus[ItcResultsCache](_.cache)
+
 }
 
 object SpectroscopyModesTable {
@@ -329,57 +333,61 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
-  def queryItc[F[_]: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+  def queryItc[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     modes:         List[SpectroscopyModeRow],
     itcResults:    hooks.Hooks.UseState[ItcResultsCache]
   ) =
-    SpectroscopyITCQuery
-      .query(
-        new ITCSpectroscopyInput(
-          wavelength.toITCInput,
-          signalToNoise,
-          SpatialProfile.GaussianSource(Angle.fromDoubleArcseconds(10)),
-          SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
-          Magnitude(MagnitudeValue(6), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
-          BigDecimal(0.1),
-          ConstraintSet(
-            ImageQuality.PointEight,
-            CloudExtinction.PointFive,
-            SkyBackground.Dark,
-            WaterVapor.Dry,
-            AirMassRange(
-              AirMassRange.DefaultMin,
-              AirMassRange.DefaultMax
-            )
-          ),
-          modes.map(_.instrument).collect { case m: GmosNorthSpectroscopyRow =>
-            new InstrumentModes(m.toGmosNITCInput).assign
-          }
-        ).assign
-      )
-      .flatMap { x =>
-        val update = x.spectroscopy.flatMap(_.results).map { r =>
-          val im = new InstrumentModes(
-            GmosNITCInput(r.mode.params.disperser,
-                          r.mode.params.fpu,
-                          r.mode.params.filter.orIgnore
+    modes
+      .map(_.instrument)
+      .collect { case m: GmosNorthSpectroscopyRow =>
+        new InstrumentModes(m.toGmosNITCInput)
+      }
+      // ITC supports sending many modes at once, but sending them one by one
+      // maximizes cache hits
+      .parTraverse_(m =>
+        SpectroscopyITCQuery
+          .query(
+            new ITCSpectroscopyInput(
+              wavelength.toITCInput,
+              signalToNoise,
+              SpatialProfile.GaussianSource(Angle.fromDoubleArcseconds(10)),
+              SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
+              Magnitude(MagnitudeValue(6), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
+              BigDecimal(0.1),
+              ConstraintSet(
+                ImageQuality.PointEight,
+                CloudExtinction.PointFive,
+                SkyBackground.Dark,
+                WaterVapor.Dry,
+                AirMassRange(
+                  AirMassRange.DefaultMin,
+                  AirMassRange.DefaultMax
+                )
+              ),
+              List(m.assign)
             ).assign
           )
-          val m  = r.itc match {
-            case ItcError(m, _)   => ItcQueryProblems.GenericError(m).leftNec
-            case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+          .flatMap { x =>
+            val update = x.spectroscopy.flatMap(_.results).map { r =>
+              val im = new InstrumentModes(
+                GmosNITCInput(r.mode.params.disperser,
+                              r.mode.params.fpu,
+                              r.mode.params.filter.orIgnore
+                ).assign
+              )
+              val m  = r.itc match {
+                case ItcError(m, _)   => ItcQueryProblems.GenericError(m).leftNec
+                case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+              }
+              (wavelength, signalToNoise, im) -> m
+            }
+            itcResults
+              .modState(ItcResultsCache.cache.modify(_ ++ update))
+              .to[F]
           }
-          println(m)
-          (wavelength, signalToNoise, im) -> m
-        }
-        println(update)
-        update.foreach(a => println(a._2))
-        itcResults
-          .modState { p => println("update chache"); p.copy(cache = p.cache ++ update) }
-          .to[F]
-      }
+      )
       .runAsyncAndForgetCB
 
   val component =
@@ -405,11 +413,7 @@ object SpectroscopyModesTable {
       )
       // itc results cache
       .useState(
-        ItcResultsCache(
-          Map.empty[(Wavelength, PosBigDecimal, InstrumentModes), EitherNec[ItcQueryProblems,
-                                                                            ItcResult
-          ]]
-        )
+        ItcResultsCache(Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]])
       )
       // cols
       .useMemoBy { (props, _, itc) => // Memo Cols

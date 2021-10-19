@@ -110,7 +110,8 @@ case class AppContext[F[_]](
 )(implicit
   val F:          Applicative[F],
   val dispatcher: Dispatcher[F],
-  val logger:     Logger[F]
+  val logger:     Logger[F],
+  val P:          Parallel[F]
 ) {
   val syncLogger: Logger[SyncIO] = {
     def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))

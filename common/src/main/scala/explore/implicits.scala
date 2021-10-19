@@ -67,6 +67,8 @@ trait ListImplicits {
 trait ContextImplicits {
   implicit def appContext2Dispatcher[F[_]](implicit ctx: AppContext[F]): Dispatcher[F] =
     ctx.dispatcher
+  implicit def appContext2Parallel[F[_]](implicit ctx: AppContext[F]): Parallel[F]     =
+    ctx.P
   implicit def appContext2Logger[F[_]](implicit ctx: AppContext[F]): Logger[F]         =
     ctx.logger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
