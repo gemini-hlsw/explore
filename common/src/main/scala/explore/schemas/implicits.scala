@@ -9,8 +9,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.optics.syntax.lens._
 
 import lucuma.schemas.ObservationDB.Types.MagnitudeCreateInput
-import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCMagnitudeInput }
-import explore.schemas.ITC.Types.{ WavelengthModelInput => ITCWavelengthInput }
 
 import java.math.MathContext
 
@@ -41,12 +39,18 @@ object implicits {
 
 object itcschema {
   object implicits {
+
+    import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCMagnitudeInput }
+
     type InstrumentModes = ITC.Types.InstrumentModes
-    type GmosNITCInput   = ITC.Types.GmosNITCInput
+    val InstrumentModes = ITC.Types.InstrumentModes
+    type GmosNITCInput = ITC.Types.GmosNITCInput
     val GmosNITCInput = ITC.Types.GmosNITCInput
-    type ITCWavelengthInput   = ITC.Types.WavelengthModelInput
+    type ITCWavelengthInput = ITC.Types.WavelengthModelInput
+    val ITCWavelengthInput = ITC.Types.WavelengthModelInput
     type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
-    type ItcError             = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
+    val ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
+    type ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
     val ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
     type ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
     val ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
@@ -72,7 +76,7 @@ object itcschema {
 
     implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
       def toGmosNITCInput: Input[GmosNITCInput] =
-        new GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
+        GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
     }
   }
 }

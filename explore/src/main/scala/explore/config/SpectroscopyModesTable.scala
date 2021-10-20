@@ -51,7 +51,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
-import lucuma.core.math.Angle
 import explore.model.ConstraintSet
 import explore.model.AirMassRange
 import lucuma.core.model.Magnitude
@@ -60,6 +59,7 @@ import scala.concurrent.duration._
 import clue.data.Input
 import monocle.Focus
 import cats.Parallel
+import react.semanticui.modules.popup.Popup
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -243,19 +243,31 @@ object SpectroscopyModesTable {
         .setMaxWidth(150),
       column(TimeColumnId, itc.forRow(cw, sn, _))
         .setCell { c =>
-          println(s"varue ${c.value}")
-          c.value match {
-            case Left(_)                       => "M/V"
-            case Right(ItcResult.Result(t, c)) =>
-              println("AHA")
-              s"$c/$t"
-            case Right(ItcResult.Pending)      => s"Pending"
-            case Right(_)                      => s"N/A"
+          val content: TagMod = c.value match {
+            case Left(nel)                        =>
+              if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
+                Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+              else {
+                val content = nel.collect {
+                  case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
+                  case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
+                  case ItcQueryProblems.GenericError(e)      => e
+                }
+                Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+              }
+            case Right(ItcResult.Result(t, c))    =>
+              val secs = t.toMillis / 1000.0 * c
+              f"$secs%.0f s"
+            case Right(ItcResult.Pending)         =>
+              Icons.Spinner.spin(true)
+            case Right(ItcResult.SourceTooBright) =>
+              Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
           }
+          <.div(ExploreStyles.ITCCell, content)
         }
-        .setWidth(66)
-        .setMinWidth(66)
-        .setMaxWidth(66)
+        .setWidth(80)
+        .setMinWidth(80)
+        .setMaxWidth(80)
         .setSortType(DefaultSortTypes.number),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
@@ -342,25 +354,28 @@ object SpectroscopyModesTable {
     modes
       .map(_.instrument)
       .collect { case m: GmosNorthSpectroscopyRow =>
-        new InstrumentModes(m.toGmosNITCInput)
+        InstrumentModes(m.toGmosNITCInput)
+      }
+      .filterNot { case m =>
+        itcResults.value.cache.contains((wavelength, signalToNoise, m))
       }
       // ITC supports sending many modes at once, but sending them one by one
       // maximizes cache hits
-      .parTraverse_(m =>
+      .parTraverse_ { m =>
         SpectroscopyITCQuery
           .query(
-            new ITCSpectroscopyInput(
+            ITCSpectroscopyInput(
               wavelength.toITCInput,
               signalToNoise,
-              SpatialProfile.GaussianSource(Angle.fromDoubleArcseconds(10)),
+              SpatialProfile.PointSource,
               SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
-              Magnitude(MagnitudeValue(6), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
+              Magnitude(MagnitudeValue(20), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
               BigDecimal(0.1),
               ConstraintSet(
-                ImageQuality.PointEight,
+                ImageQuality.PointSix,
                 CloudExtinction.PointFive,
                 SkyBackground.Dark,
-                WaterVapor.Dry,
+                WaterVapor.Median,
                 AirMassRange(
                   AirMassRange.DefaultMin,
                   AirMassRange.DefaultMax
@@ -371,7 +386,7 @@ object SpectroscopyModesTable {
           )
           .flatMap { x =>
             val update = x.spectroscopy.flatMap(_.results).map { r =>
-              val im = new InstrumentModes(
+              val im = InstrumentModes(
                 GmosNITCInput(r.mode.params.disperser,
                               r.mode.params.fpu,
                               r.mode.params.filter.orIgnore
@@ -387,7 +402,7 @@ object SpectroscopyModesTable {
               .modState(ItcResultsCache.cache.modify(_ ++ update))
               .to[F]
           }
-      )
+      }
       .runAsyncAndForgetCB
 
   val component =
@@ -458,12 +473,24 @@ object SpectroscopyModesTable {
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
-          val s = visibleRange.value.map(_.startIndex).foldMap(_.toInt)
-          val e = visibleRange.value.map(_.endIndex).foldMap(_.toInt)
+          def visibleRows(visibleRange: ListRange) = {
+            val s = visibleRange.startIndex.toInt
+            val e = visibleRange.endIndex.toInt
 
-          val visibleRows =
             (for { i <- s to e } yield Either.catchNonFatal(tableInstance.rows(i).original))
               .collect { case Right(m) => m }
+          }
+
+          def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+            visibleRange: ListRange
+          ) =
+            (props.spectroscopyRequirements.wavelength,
+             props.spectroscopyRequirements.signalToNoise
+            )
+              .mapN((w, sn) =>
+                queryItc[F](w, sn, visibleRows(visibleRange).toList, itcResults.withEffect)
+              )
+              .getOrEmpty
 
           def scrollButton(
             content:        VdomNode,
@@ -489,54 +516,48 @@ object SpectroscopyModesTable {
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
-              <.label(s"${rows.length} matching configurations",
-                      HelpIcon("configuration/table.md")
-              ),
-              AppCtx.using { implicit ctx =>
-                Button(onClick =
-                  (props.spectroscopyRequirements.wavelength,
-                   props.spectroscopyRequirements.signalToNoise
-                  )
-                    .mapN((w, sn) => queryItc(w, sn, visibleRows.toList, itcResults.withEffect))
-                    .getOrEmpty
-                )("Query ITC")
-              }
+              <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
             ),
             <.div(
               ExploreStyles.ModesTable,
-              ModesTable
-                .Component(
-                  table = Table(celled = true,
-                                selectable = true,
-                                striped = true,
-                                compact = TableCompact.Very
-                  )(),
-                  header = true,
-                  headerCell = (c: ModesTableDef.ColumnType) =>
-                    TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
-                      ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
-                      ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
-                    ),
-                  row = (rowData: Row[SpectroscopyModeRow]) =>
-                    TableRow(
-                      disabled = !enabledRow(rowData.original),
-                      clazz = ExploreStyles.ModeSelected.when_(
-                        selectedIndex.value.exists(_ === rowData.index.toInt)
-                      )
-                    )(
-                      ^.onClick --> (
-                        props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
-                          selectedIndex.setState(rowData.index.toInt.some)
+              AppCtx.using { implicit ctx =>
+                ModesTable
+                  .Component(
+                    table = Table(celled = true,
+                                  selectable = true,
+                                  striped = true,
+                                  compact = TableCompact.Very
+                    )(),
+                    header = true,
+                    headerCell = (c: ModesTableDef.ColumnType) =>
+                      TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
+                        ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
+                        ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
                       ),
-                      props2Attrs(rowData.getRowProps())
-                    )
-                )(
-                  tableInstance,
-                  initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
-                  rangeChanged = ((range: ListRange) => visibleRange.setState(range.some)).some,
-                  atTopChange = ((value: Boolean) => atTop.setState(value)).some
-                )
-                .withRef(virtuosoRef),
+                    row = (rowData: Row[SpectroscopyModeRow]) =>
+                      TableRow(
+                        disabled = !enabledRow(rowData.original),
+                        clazz = ExploreStyles.ModeSelected.when_(
+                          selectedIndex.value.exists(_ === rowData.index.toInt)
+                        )
+                      )(
+                        ^.onClick --> (
+                          props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
+                            selectedIndex.setState(rowData.index.toInt.some)
+                        ),
+                        props2Attrs(rowData.getRowProps())
+                      )
+                  )(
+                    tableInstance,
+                    initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
+                    rangeChanged = (
+                      (range: ListRange) =>
+                        visibleRange.setState(range.some) *> updateITCOnScroll(range)
+                    ).some,
+                    atTopChange = ((value: Boolean) => atTop.setState(value)).some
+                  )
+                  .withRef(virtuosoRef)
+              },
               scrollButton(
                 Icons.ChevronDoubleUp,
                 ExploreStyles.SelectedUp,
