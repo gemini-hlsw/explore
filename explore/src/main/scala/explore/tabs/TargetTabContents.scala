@@ -35,7 +35,7 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:           Option[User.Id],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   listUndoStacks:   View[UndoStacks[IO, TargetListGroupList]],
   // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
   // searching:         View[Set[Target.Id]],
@@ -89,7 +89,7 @@ object TargetTabContents {
       <.div(ExploreStyles.TreeBody)(
         TargetListGroupObsList(
           objectsWithObs,
-          props.focused,
+          props.focusedObs,
           state.zoom(selectedLens),
           props.expandedIds,
           // props.searching,

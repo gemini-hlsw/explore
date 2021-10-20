@@ -66,16 +66,15 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[TargetIdSet]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsTabContents](ObsTabContents.component) {
-  def selectedPanel: SelectedPanel[Observation.Id] = focused.get
-    .collect { case Focused.FocusedObs(id) => id }
-    .fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
+  def selectedPanel: SelectedPanel[Observation.Id] =
+    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(fo => SelectedPanel.editor(fo.obsId))
 }
 
 object ObsTabTiles {
@@ -313,7 +312,7 @@ object ObsTabContents {
         <.div(ExploreStyles.TreeBody)(
           ObsList(
             observations,
-            props.focused,
+            props.focusedObs,
             props.undoStacks.zoom(ModelUndoStacks.forObsList)
           )
         )
@@ -335,7 +334,7 @@ object ObsTabContents {
           size = Mini,
           compact = true,
           clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-          onClickE = linkOverride[ButtonProps](props.focused.set(none))
+          onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
         )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
       )
 

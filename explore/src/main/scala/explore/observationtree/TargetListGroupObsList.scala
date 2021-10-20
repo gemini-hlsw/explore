@@ -16,8 +16,7 @@ import explore.common.TargetListGroupQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.Focused
-import explore.model.Focused._
+import explore.model.FocusedObs
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.TargetEnv
@@ -45,7 +44,7 @@ import scala.collection.immutable.SortedSet
 
 final case class TargetListGroupObsList(
   targetListsWithObs: View[TargetListGroupWithObs],
-  focused:            View[Option[Focused]],
+  focusedObs:         View[Option[FocusedObs]],
   selected:           View[SelectedPanel[TargetEnvIdSet]],
   expandedIds:        View[SortedSet[TargetEnvIdSet]],
   undoStacks:         View[UndoStacks[IO, TargetListGroupList]]
@@ -120,7 +119,7 @@ object TargetListGroupObsList {
       val targetListGroups = props.targetListsWithObs.get.targetListGroups.map(_._2)
 
       // if a single observation is selected
-      val singleObsSelected = props.focused.get.collect { case FocusedObs(_) => true }.nonEmpty
+      val singleObsSelected = props.focusedObs.get.nonEmpty
 
       val state   = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
@@ -142,11 +141,6 @@ object TargetListGroupObsList {
         )
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
-
-      def unfocusIfObs(of: Option[Focused]) = of match {
-        case Some(FocusedObs(_)) => none
-        case _                   => of
-      }
 
       def renderGroup(targetListGroup: TargetEnv): VdomNode = {
         val obsIds        = targetListGroup.obsIds
@@ -199,7 +193,7 @@ object TargetListGroupObsList {
                   .orEmpty
               )(^.cursor.pointer,
                 ^.onClick --> {
-                  props.focused.mod(unfocusIfObs) >>
+                  props.focusedObs.set(none) >>
                     props.selected.set(SelectedPanel.editor(targetEnvIds))
                 }
               )(
@@ -263,7 +257,7 @@ object TargetListGroupObsList {
       val targetEnvIdMap     = targetListGroups.values.map(tlg => (tlg.targetEnvIds, tlg)).toMap
 
       // Unfocus if focused element is not there
-      val unfocus = $.props.focused.mod(_.flatMap {
+      val unfocus = $.props.focusedObs.mod(_.flatMap {
         case FocusedObs(obsId) if !observations.contains(obsId) => none
         case other                                              => other.some
       })
@@ -271,11 +265,11 @@ object TargetListGroupObsList {
       val setAndGetSelected: SyncIO[Option[TargetEnv]] = selected.get match {
         case Uninitialized =>
           val infoFromFocused: Option[(TargetEnvironment.Id, TargetEnv)] =
-            $.props.focused.get.collect { case FocusedObs(obsId) =>
-              (observations.get(obsId).map(_.targetEnvId),
-               targetListGroups.find(_._1.contains(obsId)).map(_._2)
+            $.props.focusedObs.get.flatMap(fo =>
+              (observations.get(fo.obsId).map(_.targetEnvId),
+               targetListGroups.find(_._1.contains(fo.obsId)).map(_._2)
               ).tupled
-            }.flatten
+            )
 
           selected
             .set(infoFromFocused.fold(SelectedPanel.tree[TargetEnvIdSet]) { case (id, _) =>

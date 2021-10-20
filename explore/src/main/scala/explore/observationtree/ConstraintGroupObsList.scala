@@ -17,8 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintGroup
-import explore.model.Focused
-import explore.model.Focused._
+import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
@@ -44,7 +43,7 @@ import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
-  focused:            View[Option[Focused]],
+  focusedObs:         View[Option[FocusedObs]],
   selected:           View[SelectedPanel[ObsIdSet]],
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
@@ -113,7 +112,7 @@ object ConstraintGroupObsList {
       val constraintGroups = props.constraintsWithObs.get.constraintGroups.map(_._2)
 
       // if a single observation is selected
-      val singleObsSelected = props.focused.get.collect { case FocusedObs(_) => true }.nonEmpty
+      val singleObsSelected = props.focusedObs.get.nonEmpty
 
       val state   = ViewF.fromStateSyncIO($)
       val undoCtx = UndoContext(
@@ -135,11 +134,6 @@ object ConstraintGroupObsList {
         )
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
-
-      def unfocusIfObs(of: Option[Focused]) = of match {
-        case Some(FocusedObs(_)) => none
-        case _                   => of
-      }
 
       def renderGroup(constraintGroup: ConstraintGroup): VdomNode = {
         val obsIds        = constraintGroup.obsIds
@@ -187,7 +181,7 @@ object ConstraintGroupObsList {
                 .orEmpty
             )(^.cursor.pointer,
               ^.onClick --> {
-                props.focused.mod(unfocusIfObs) >>
+                props.focusedObs.set(none) >>
                   props.selected.set(SelectedPanel.editor(constraintGroup.obsIds))
               }
             )(
@@ -247,7 +241,7 @@ object ConstraintGroupObsList {
       val selected           = $.props.selected
 
       // Unfocus if focused element is not there
-      val unfocus = $.props.focused.mod(_.flatMap {
+      val unfocus = $.props.focusedObs.mod(_.flatMap {
         case FocusedObs(obsId) if !observations.contains(obsId) => none
         case other                                              => other.some
       })
@@ -255,9 +249,9 @@ object ConstraintGroupObsList {
       val setAndGetSelected = selected.get match {
         case Uninitialized =>
           val infoFromFocused: Option[(Observation.Id, ConstraintGroup)] =
-            $.props.focused.get.collect { case FocusedObs(obsId) =>
-              constraintGroups.find(_._1.contains(obsId)).map { case (_, cg) => (obsId, cg) }
-            }.flatten
+            $.props.focusedObs.get.flatMap(fo =>
+              constraintGroups.find(_._1.contains(fo.obsId)).map { case (_, cg) => (fo.obsId, cg) }
+            )
 
           selected
             .set(

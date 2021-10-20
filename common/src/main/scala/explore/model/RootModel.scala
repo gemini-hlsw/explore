@@ -23,7 +23,7 @@ import scala.collection.immutable.HashSet
 case class RootModel(
   vault:                          Option[UserVault],
   tabs:                           EnumZipper[AppTab],
-  focused:                        Option[Focused] = none,
+  focused:                        Option[FocusedObs] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[TargetIdSet] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,

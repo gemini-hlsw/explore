@@ -7,8 +7,7 @@ import cats.syntax.all._
 import crystal.react.implicits._
 import explore._
 import explore.components.ui.ExploreStyles
-import explore.model.Focused
-import explore.model.Focused._
+import explore.model.FocusedObs
 import explore.model.ObsSummary
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
@@ -18,7 +17,7 @@ import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
-  def focused: View[Option[Focused]]
+  def focusedObs: View[Option[FocusedObs]]
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -28,7 +27,7 @@ trait ViewCommon {
     ObsBadge(
       obs,
       selected =
-        forceHighlight || (highlightSelected && focused.get.exists(_ === FocusedObs(obs.id)))
+        forceHighlight || (highlightSelected && focusedObs.get.exists(_ === FocusedObs(obs.id)))
     )
 
   def renderObsBadgeItem(
@@ -48,7 +47,7 @@ trait ViewCommon {
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactEvent =>
-            e.stopPropagationCB >> focused.set(FocusedObs(obs.id).some) >> onSelect(obs.id)
+            e.stopPropagationCB >> focusedObs.set(FocusedObs(obs.id).some) >> onSelect(obs.id)
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>

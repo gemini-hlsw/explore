@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.Focused.FocusedObs
+import explore.model.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens
@@ -14,24 +14,22 @@ object RootModelRouting {
   protected def getPage(model: RootModel): Page =
     getPage(model.tabs.focus, model.focused)
 
-  def getPage(tab: AppTab, focused: Option[Focused]): Page =
+  def getPage(tab: AppTab, focusedObs: Option[FocusedObs]): Page =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        focused
-          .collect { case FocusedObs(obsId) => ObsPage(obsId) }
+        focusedObs
+          .map(fo => ObsPage(fo.obsId))
           .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
-        focused
-          .collect { case FocusedObs(obsId) =>
-            TargetsObsPage(obsId)
-          }
+        focusedObs
+          .map(fo => TargetsObsPage(fo.obsId))
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
-        focused
-          .collect { case FocusedObs(obsId) => ConstraintsObsPage(obsId) }
+        focusedObs
+          .map(fo => ConstraintsObsPage(fo.obsId))
           .getOrElse(ConstraintsBasePage)
     }
 

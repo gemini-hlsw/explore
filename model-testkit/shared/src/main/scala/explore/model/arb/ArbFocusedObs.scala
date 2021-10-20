@@ -3,26 +3,20 @@
 
 package explore.model.arb
 
-import explore.model.Focused
-import explore.model.Focused.FocusedObs
+import explore.model.FocusedObs
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
-import org.scalacheck.Gen
 import lucuma.core.model.Observation
 import lucuma.core.util.arb.ArbGid._
 
-trait ArbFocused {
-  implicit val focusedArb: Arbitrary[Focused] = Arbitrary(focusedObsGen)
-
-  val focusedObsGen: Gen[Focused.FocusedObs] =
+trait ArbFocusedObs {
+  implicit val focusedObsGen: Arbitrary[FocusedObs] = Arbitrary {
     arbitrary[Observation.Id].map(FocusedObs.apply)
+  }
 
-  implicit val focusedObsCogen: Cogen[Focused.FocusedObs] =
+  implicit val focusedObsCogen: Cogen[FocusedObs] =
     Cogen[Observation.Id].contramap(_.obsId)
-
-  implicit val focusedCogen: Cogen[Focused] =
-    Cogen[FocusedObs].contramap { case a: Focused.FocusedObs => a }
 }
 
-object ArbFocused extends ArbFocused
+object ArbFocusedObs extends ArbFocusedObs

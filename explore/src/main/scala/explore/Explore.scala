@@ -18,7 +18,7 @@ import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
-import explore.model.Focused
+import explore.model.FocusedObs
 import explore.model.RootModel
 import explore.model.RootModelRouting
 import explore.model.UserVault
@@ -145,11 +145,11 @@ object ExploreMain extends IOApp.Simple {
             router(routingView(view))
           )
 
-        def pageUrl(tab: AppTab, focused: Option[Focused]): String =
-          routerCtl.urlFor(RootModelRouting.getPage(tab, focused)).value
+        def pageUrl(tab: AppTab, focusedObs: Option[FocusedObs]): String =
+          routerCtl.urlFor(RootModelRouting.getPage(tab, focusedObs)).value
 
-        def setPage(tab: AppTab, focused: Option[Focused]) =
-          routerCtl.set(RootModelRouting.getPage(tab, focused))
+        def setPage(tab: AppTab, focusedObs: Option[FocusedObs]) =
+          routerCtl.set(RootModelRouting.getPage(tab, focusedObs))
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)
