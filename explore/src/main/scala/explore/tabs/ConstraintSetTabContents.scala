@@ -47,7 +47,7 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
@@ -104,7 +104,7 @@ object ConstraintSetTabContents {
     def treeInner(constraintWithObs: View[ConstraintSummaryWithObervations]) =
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(constraintWithObs,
-                               props.focused,
+                               props.focusedObs,
                                state.zoom(selectedLens),
                                props.expandedIds,
                                props.listUndoStacks
@@ -125,9 +125,9 @@ object ConstraintSetTabContents {
 
       // If we're editing at the group level (even a group of 1) and it no longer exists
       // (probably due to a merger), just go to the summary.
-      val updateSelection = props.focused.get match {
-        case Some(Focused.FocusedObs(_)) => SyncIO.unit
-        case _                           =>
+      val updateSelection = props.focusedObs.get match {
+        case Some(_) => SyncIO.unit
+        case None    =>
           groupList
             .get(editedObsIds)
             .fold(state.zoom(selectedLens).set(SelectedPanel.summary))(_ => SyncIO.unit)
@@ -179,7 +179,7 @@ object ConstraintSetTabContents {
               props.hiddenColumns,
               props.summarySorting,
               state.zoom(TwoPanelState.selected),
-              props.focused,
+              props.focusedObs,
               props.expandedIds,
               renderInTitle
             )
@@ -237,9 +237,9 @@ object ConstraintSetTabContents {
         val csUndo: View[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-        val title = props.focused.get match {
-          case Some(Focused.FocusedObs(id)) => s"Observation $id"
-          case _                            =>
+        val title = props.focusedObs.get match {
+          case Some(FocusedObs(id)) => s"Observation $id"
+          case None                 =>
             val titleSfx = if (idsToEdit.size == 1) "" else "s"
             s"Editing Constraints for ${idsToEdit.size} Observation$titleSfx"
         }

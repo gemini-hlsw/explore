@@ -33,7 +33,7 @@ object reusability {
   implicit val userVaultReuse: Reusability[UserVault]                                          = Reusability.derive
   implicit val targetViewExpandedIdsReuse: Reusability[ExpandedIds]                            = Reusability.derive
   implicit val rootModelReuse: Reusability[RootModel]                                          = Reusability.derive
-  implicit val focusedReuse: Reusability[Focused]                                              = Reusability.derive
+  implicit val focusedObsReuse: Reusability[FocusedObs]                                        = Reusability.derive
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]           =
     Reusability.by(_.toList)
   implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                                    = Reusability.derive

@@ -11,7 +11,7 @@ import clue.data.syntax._
 import explore.common.ObsQueriesGQL._
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.Focused
+import explore.model.FocusedObs
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.optics.GetAdjust
 import explore.undo.Action
@@ -62,8 +62,8 @@ object ObsListActions {
         .void
   )
 
-  def obsExistence[F[_]: Async](obsId: Observation.Id, focused: View[Option[Focused]])(implicit
-    c:                                 TransactionalClient[F, ObservationDB]
+  def obsExistence[F[_]: Async](obsId: Observation.Id, focusedObs: View[Option[FocusedObs]])(
+    implicit c:                        TransactionalClient[F, ObservationDB]
   ) =
     Action[F](
       access = obsListMod.withKey(obsId)
@@ -75,14 +75,14 @@ object ObsListActions {
           ProgramCreateObservation
             .execute[F](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
             .void >>
-            focused.set(Focused.FocusedObs(obs.id).some).to[F]
+            focusedObs.set(FocusedObs(obs.id).some).to[F]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
           ProgramDeleteObservation.execute[F](obsId).void
         } { case (obs, _) =>
           ProgramUndeleteObservation.execute[F](obs.id).void >>
-            focused.set(Focused.FocusedObs(obs.id).some).to[F]
+            focusedObs.set(FocusedObs(obs.id).some).to[F]
         }
     )
 }

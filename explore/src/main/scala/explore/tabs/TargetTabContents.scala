@@ -21,7 +21,6 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import org.scalajs.dom.window
@@ -36,7 +35,7 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:           Option[User.Id],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   listUndoStacks:   View[UndoStacks[IO, TargetListGroupList]],
   // targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, TargetResult]]],
   // searching:         View[Set[Target.Id]],
@@ -44,13 +43,7 @@ final case class TargetTabContents(
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[TargetTabContents](TargetTabContents.component) {
-  def selectedPanel: SelectedPanel[Target.Id] = focused.get
-    .collect { case Focused.FocusedTarget(id) =>
-      id
-    }
-    .fold(SelectedPanel.tree[Target.Id])(SelectedPanel.editor)
-}
+    extends ReactProps[TargetTabContents](TargetTabContents.component)
 
 object TargetTabContents {
   type Props = TargetTabContents
@@ -96,7 +89,7 @@ object TargetTabContents {
       <.div(ExploreStyles.TreeBody)(
         TargetListGroupObsList(
           objectsWithObs,
-          props.focused,
+          props.focusedObs,
           state.zoom(selectedLens),
           props.expandedIds,
           // props.searching,

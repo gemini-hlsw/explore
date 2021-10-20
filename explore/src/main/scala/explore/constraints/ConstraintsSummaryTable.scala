@@ -16,8 +16,7 @@ import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
-import explore.model.Focused
-import explore.model.Focused._
+import explore.model.FocusedObs
 import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
@@ -47,7 +46,7 @@ final case class ConstraintsSummaryTable(
   hiddenColumns:  View[Set[String]],
   summarySorting: View[List[(String, Boolean)]],
   selectedPanel:  View[SelectedPanel[ObsIdSet]],
-  focused:        View[Option[Focused]],
+  focusedObs:     View[Option[FocusedObs]],
   expandedIds:    View[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
@@ -165,7 +164,7 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.focused.set(FocusedObs(obsId).some)
+                        (props.focusedObs.set(FocusedObs(obsId).some)
                           >> props.expandedIds.mod(_ + cell.value)
                           >> props.selectedPanel.set(SelectedPanel.editor(NonEmptySet.one(obsId))))
                       ),

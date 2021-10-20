@@ -98,8 +98,8 @@ case class AppContext[F[_]](
   staticData:     StaticData,
   actions:        Actions[F],
   sso:            SSOClient[F],
-  pageUrl:        (AppTab, Option[Focused]) => String,
-  setPage:        (AppTab, Option[Focused]) => Callback,
+  pageUrl:        (AppTab, Option[FocusedObs]) => String,
+  setPage:        (AppTab, Option[FocusedObs]) => Callback,
   environment:    ExecutionEnvironment,
   fromSyncIO:     SyncIO ~> F
 )(implicit
@@ -138,8 +138,8 @@ object AppContext {
   def from[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[Focused]) => String,
-    setPage:              (AppTab, Option[Focused]) => Callback,
+    pageUrl:              (AppTab, Option[FocusedObs]) => String,
+    setPage:              (AppTab, Option[FocusedObs]) => Callback,
     fromSyncIO:           SyncIO ~> F
   ): F[AppContext[F]] =
     for {
