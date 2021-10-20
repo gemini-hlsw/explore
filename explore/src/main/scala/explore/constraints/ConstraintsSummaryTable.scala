@@ -156,7 +156,7 @@ object ConstraintsSummaryTable {
               case AirMassRange(_, _)     => HourAngleRange.MinHour - 1
               case HourAngleRange(_, max) => max.value
             }),
-          column("count", _.obsIds.size)
+          column("count", _.obsIds.length)
             .setSortType(DefaultSortTypes.number),
           column("observations", ConstraintGroup.obsIds.get)
             .setCell(cell =>
