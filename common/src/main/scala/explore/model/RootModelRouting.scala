@@ -12,7 +12,7 @@ import monocle.Lens
 object RootModelRouting {
 
   protected def getPage(model: RootModel): Page =
-    getPage(model.tabs.focus, model.focused)
+    getPage(model.tabs.focus, model.focusedObs)
 
   def getPage(tab: AppTab, focusedObs: Option[FocusedObs]): Page =
     tab match {
@@ -38,21 +38,21 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage               => setTab(AppTab.Proposal) >>> RootModel.focused.replace(none)
+      case ProposalPage               => setTab(AppTab.Proposal) >>> RootModel.focusedObs.replace(none)
       case ObservationsBasePage       =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(none)
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(none)
       case ObsPage(obsId)             =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
       case ObsAdvancedConfPage(obsId) =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
       case TargetsBasePage            =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(none)
+        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(none)
       case TargetsObsPage(obsId)      =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
+        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
       case ConstraintsBasePage        =>
         setTab(AppTab.Constraints)
       case ConstraintsObsPage(obsId)  =>
-        setTab(AppTab.Constraints) >>> RootModel.focused.replace(FocusedObs(obsId).some)
+        setTab(AppTab.Constraints) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
       case ConfigurationsPage         =>
         setTab(AppTab.Configurations)
       case HomePage                   =>

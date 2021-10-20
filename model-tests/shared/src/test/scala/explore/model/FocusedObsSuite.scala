@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.Focused
+import explore.model.FocusedObs
 import explore.model.arb.all._
 import munit.DisciplineSuite
 
-class FocusedSuite extends DisciplineSuite {
-  checkAll("Eq[Focused]", EqTests[Focused].eqv)
+class FocusedObsSuite extends DisciplineSuite {
+  checkAll("Eq[FocusedObs]", EqTests[FocusedObs].eqv)
 }

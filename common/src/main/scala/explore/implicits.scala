@@ -128,7 +128,7 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
   // Model implicits
   implicit class RootModelOps(val rootModel: RootModel) extends AnyVal {
     def url[F[_]](implicit ctx: AppContext[F]): String =
-      ctx.pageUrl(rootModel.tabs.focus, rootModel.focused)
+      ctx.pageUrl(rootModel.tabs.focus, rootModel.focusedObs)
   }
 
   // React implicits

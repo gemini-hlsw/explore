@@ -23,7 +23,7 @@ import scala.collection.immutable.HashSet
 case class RootModel(
   vault:                          Option[UserVault],
   tabs:                           EnumZipper[AppTab],
-  focused:                        Option[FocusedObs] = none,
+  focusedObs:                     Option[FocusedObs] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[TargetIdSet] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
@@ -39,7 +39,7 @@ case class RootModel(
 
 object RootModel {
   val vault                          = Focus[RootModel](_.vault)
-  val focused                        = Focus[RootModel](_.focused)
+  val focusedObs                     = Focus[RootModel](_.focusedObs)
   val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
   val tabs                           = Focus[RootModel](_.tabs)
   val searchingTarget                = Focus[RootModel](_.searchingTarget)
@@ -67,7 +67,7 @@ object RootModel {
     Eq.by(m =>
       (m.vault,
        m.tabs,
-       m.focused,
+       m.focusedObs,
        m.expandedIds,
        m.searchingTarget,
        m.userSelectionMessage,
