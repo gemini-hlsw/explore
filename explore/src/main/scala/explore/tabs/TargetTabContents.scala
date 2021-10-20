@@ -21,7 +21,6 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import org.scalajs.dom.window
@@ -44,13 +43,7 @@ final case class TargetTabContents(
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[TargetTabContents](TargetTabContents.component) {
-  def selectedPanel: SelectedPanel[Target.Id] = focused.get
-    .collect { case Focused.FocusedTarget(id) =>
-      id
-    }
-    .fold(SelectedPanel.tree[Target.Id])(SelectedPanel.editor)
-}
+    extends ReactProps[TargetTabContents](TargetTabContents.component)
 
 object TargetTabContents {
   type Props = TargetTabContents

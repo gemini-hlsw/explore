@@ -17,7 +17,6 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
 
@@ -104,11 +103,8 @@ object Routing {
             obsTab
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
-          | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
-            targetTab
-          )
           | dynamicRouteCT(
-            ("/target/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
+            ("/targets/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
           ) ~> renderP(
             targetTab
           )
@@ -147,7 +143,6 @@ object Routing {
             ObservationsBasePage,
             ObsPage(randomId(Observation.Id.fromLong)),
             TargetsBasePage,
-            TargetPage(randomId(Target.Id.fromLong)),
             TargetsObsPage(randomId(Observation.Id.fromLong)),
             ConfigurationsPage,
             ConstraintsBasePage

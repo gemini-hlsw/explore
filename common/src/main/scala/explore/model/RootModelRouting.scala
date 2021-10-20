@@ -5,7 +5,6 @@ package explore.model
 
 import cats.syntax.all._
 import explore.model.Focused.FocusedObs
-import explore.model.Focused.FocusedTarget
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens
@@ -25,9 +24,8 @@ object RootModelRouting {
           .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
         focused
-          .collect {
-            case FocusedObs(obsId)       => TargetsObsPage(obsId)
-            case FocusedTarget(targetId) => TargetPage(targetId)
+          .collect { case FocusedObs(obsId) =>
+            TargetsObsPage(obsId)
           }
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
@@ -51,8 +49,6 @@ object RootModelRouting {
         setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case TargetsBasePage            =>
         setTab(AppTab.Targets) >>> RootModel.focused.replace(none)
-      case TargetPage(targetId)       =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedTarget(targetId).some)
       case TargetsObsPage(obsId)      =>
         setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
       case ConstraintsBasePage        =>
