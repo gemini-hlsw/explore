@@ -48,13 +48,15 @@ trait ITC {
         ("blackBody", Json.obj(("temperature", Json.fromBigDecimal(a.temperature.value.value))))
       )
     }
-  implicit val plEncoder: Encoder[model.SpectralDistribution.PowerLaw]  =
+
+  implicit val plEncoder: Encoder[model.SpectralDistribution.PowerLaw] =
     new Encoder[model.SpectralDistribution.PowerLaw] {
       final def apply(a: model.SpectralDistribution.PowerLaw): Json = Json.obj(
         ("powerLaw", Json.obj(("index", Json.fromBigDecimal(a.index))))
       )
     }
-  implicit val lEncoder: Encoder[model.SpectralDistribution.Library]    =
+
+  implicit val lEncoder: Encoder[model.SpectralDistribution.Library] =
     new Encoder[model.SpectralDistribution.Library] {
       final def apply(a: model.SpectralDistribution.Library): Json =
         a.librarySpectrum match {

@@ -10,7 +10,6 @@ import explore.schemas.ITC
 
 object ITCQueriesGQL {
 
-  val cleanupRegex = "(\\s{2,})".r
   @GraphQL
   trait SpectroscopyITCQuery extends GraphQLOperation[ITC] {
     val document =

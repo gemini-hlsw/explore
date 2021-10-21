@@ -74,7 +74,7 @@ object ExploreMain extends IOApp.Simple {
   def runIOApp(): Unit = main(Array.empty)
 
   override final def run: IO[Unit] = {
-    // japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     def initialModel(vault: Option[UserVault]) = RootModel(
       vault = vault,

@@ -26,7 +26,6 @@ object implicits {
                            m.error.map(_.toRational.toBigDecimal(MathContext.UNLIMITED)).orIgnore,
                            m.system.assign
       )
-
   }
 
   implicit def widthUpsertInput(w: WidthUpsertInput): ExploreResizableWidthInsertInput =
@@ -65,7 +64,6 @@ object itcschema {
     }
 
     implicit class MagnitudeOps(val m: Magnitude) extends AnyVal {
-
       def toITCInput: ITCMagnitudeInput =
         ITCMagnitudeInput(m.band,
                           m.value.toDoubleValue,
