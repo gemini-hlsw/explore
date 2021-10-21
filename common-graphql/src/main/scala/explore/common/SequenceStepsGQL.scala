@@ -15,8 +15,8 @@ import lucuma.core.model.Step
 import lucuma.schemas.ObservationDB
 
 import java.time
-// gql: import explore.model.decoders._
 // gql: import io.circe.refined._
+// gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
 object SequenceStepsGQL {

@@ -107,7 +107,6 @@ lazy val common = project
       LucumaSSO.value ++
         LucumaBC.value ++
         LucumaCatalog.value ++
-        LucumaSchemas.value ++
         ReactGridLayout.value ++
         ReactClipboard.value ++
         ReactCommon.value ++
@@ -148,14 +147,14 @@ lazy val explore: Project = project
     Test / test := {},
     libraryDependencies ++=
       GeminiLocales.value ++
-        ReactDatepicker.value ++
         ReactAladin.value ++
         ReactAtlasKitTree.value ++
         ReactCommon.value ++
+        ReactDatepicker.value ++
         ReactGridLayout.value ++
         ReactHighcharts.value ++
-        ReactResizable.value ++
-        ReactHotkeys.value
+        ReactHotkeys.value ++
+        ReactResizable.value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
@@ -170,24 +169,25 @@ lazy val commonSettings = lucumaGlobalSettings ++ Seq(
 
 lazy val commonLibSettings = Seq(
   libraryDependencies ++=
-    LucumaCore.value ++
-      Cats.value ++
-      Mouse.value ++
+    Cats.value ++
       CatsEffect.value ++
       CatsRetry.value ++
-      Monocle.value ++
       Circe.value ++
-      Crystal.value ++
-      Http4sCore.value ++
       Clue.value ++
-      PPrint.value ++
+      Crystal.value ++
       FS2Data.value ++
+      Http4sCore.value ++
+      LucumaCore.value ++
+      LucumaSchemas.value ++
+      Monocle.value ++
+      Mouse.value ++
+      PPrint.value ++
       In(Test)(
         MUnit.value ++
-          MUnitCatsEffect.value ++
           Discipline.value ++
-          MonocleLaw.value ++
-          LucumaCoreTestKit.value
+          MUnitCatsEffect.value ++
+          LucumaCoreTestKit.value ++
+          MonocleLaw.value
       ),
   testFrameworks += new TestFramework("munit.Framework")
 )
@@ -208,12 +208,12 @@ lazy val commonJVMSettings = Seq(
 
 lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(
   libraryDependencies ++=
-    ScalaJSReact.value ++
-      ReactSemanticUI.value ++
-      ClueScalaJS.value ++
+    ClueScalaJS.value ++
       Http4sDom.value ++
-      LucumaUI.value ++
       Log4Cats.value ++
+      LucumaUI.value ++
+      ReactSemanticUI.value ++
+      ScalaJSReact.value ++
       In(Test)(
         ScalaJSReactTest.value
       ),

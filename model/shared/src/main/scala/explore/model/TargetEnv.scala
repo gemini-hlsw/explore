@@ -6,12 +6,12 @@ package explore.model
 import cats.Eq
 import cats.data.NonEmptySet
 import cats.syntax.all._
-import explore.model.decoders._
 import io.circe.Decoder
 import io.circe.Decoder._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
+import lucuma.schemas.decoders._
 import monocle.Focus
 import monocle.Lens
 
