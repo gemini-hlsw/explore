@@ -13,7 +13,7 @@ import scala.collection.immutable.SortedSet
 case class ExpandedIds(
   targetIds:           SortedSet[Target.Id] = SortedSet.empty,
   constraintSetObsIds: SortedSet[ObsIdSet] = SortedSet.empty,
-  targetListObsIds:    SortedSet[TargetEnvIdSet] = SortedSet.empty
+  targetListObsIds:    SortedSet[TargetEnvIdObsIdSet] = SortedSet.empty
 )
 
 object ExpandedIds {

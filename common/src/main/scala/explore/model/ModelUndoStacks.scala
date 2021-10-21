@@ -18,7 +18,6 @@ import monocle.Focus
 case class ModelUndoStacks[F[_]](
   forObsList:         UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forTargetListList:  UndoStacks[F, TargetListGroupList] = UndoStacks.empty[F, TargetListGroupList],
-  // forTargetList:        UndoStacks[F, PointingsWithObs] = UndoStacks.empty[F, PointingsWithObs],
   forSiderealTarget:  Map[TargetIdSet, UndoStacks[F, SiderealTarget]] =
     Map.empty[TargetIdSet, UndoStacks[F, SiderealTarget]],
   forConstraintList:  UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],

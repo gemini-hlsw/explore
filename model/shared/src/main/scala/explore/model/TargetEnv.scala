@@ -38,7 +38,7 @@ case class TargetEnv(
     else
       this.copy(id = NonEmptySet.fromSetUnsafe(id - oldId))
 
-  def asObsKeyValue: (SortedSet[Observation.Id], TargetEnv) = (this.obsIds, this)
+  def asObsKeyValue: (TargetEnvIdObsIdSet, TargetEnv) = (this.id, this)
 
 }
 

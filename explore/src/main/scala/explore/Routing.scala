@@ -44,8 +44,8 @@ object Routing {
           model.zoom(RootModel.userId).get,
           model.zoom(RootModel.focusedObs),
           model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetListList),
-          // model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTarget),
-          // model.zoom(RootModel.searchingTarget),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
+          model.zoom(RootModel.searchingTarget),
           model.zoom(RootModel.expandedIds.andThen(ExpandedIds.targetListObsIds)),
           model.zoom(RootModel.targetSummaryHiddenColumns),
           size

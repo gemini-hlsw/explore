@@ -20,7 +20,8 @@ import explore.model.FocusedObs
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.TargetEnv
-import explore.model.TargetEnvIdSet
+import explore.model.TargetEnvIdObsId
+import explore.model.TargetEnvIdObsIdSet
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
@@ -45,12 +46,15 @@ import scala.collection.immutable.SortedSet
 final case class TargetListGroupObsList(
   targetListsWithObs: View[TargetListGroupWithObs],
   focusedObs:         View[Option[FocusedObs]],
-  selected:           View[SelectedPanel[TargetEnvIdSet]],
-  expandedIds:        View[SortedSet[TargetEnvIdSet]],
+  selected:           View[SelectedPanel[TargetEnvIdObsIdSet]],
+  expandedIds:        View[SortedSet[TargetEnvIdObsIdSet]],
   undoStacks:         View[UndoStacks[IO, TargetListGroupList]]
 )(implicit val ctx:   AppContextIO)
     extends ReactProps[TargetListGroupObsList](TargetListGroupObsList.component)
-    with ViewCommon
+    with ViewCommon {
+  lazy val envIdToObsMap: Map[TargetEnvironment.Id, Observation.Id] =
+    targetListsWithObs.get.observations.map { case (id, obsSumm) => (obsSumm.targetEnvId, id) }
+}
 
 object TargetListGroupObsList {
   type Props = TargetListGroupObsList
@@ -65,22 +69,23 @@ object TargetListGroupObsList {
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
   class Backend($ : BackendScope[Props, State]) {
-    def targetEnvIdsToString(obsIds: TargetEnvIdSet): String =
-      obsIds.toSortedSet.mkString(",")
+    def targetEnvIdObsIdToString(ids: TargetEnvIdObsIdSet): String =
+      ids.toSortedSet.map(_._1).mkString(",") // just keep the target ids to make parsing easier
 
-    def targetEnvIdsStringToIds(
-      targetEnvIdsString: String
-    ): Option[TargetEnvIdSet] =
-      targetEnvIdsString
+    def targetEnvIdObsIdStringToIds(
+      targetEnvObsIdsString: String,
+      obsMap:                Map[TargetEnvironment.Id, Observation.Id]
+    ): Option[TargetEnvIdObsIdSet] =
+      targetEnvObsIdsString
         .split(",")
         .toList
-        .map(TargetEnvironment.Id.parse(_))
-        .sequence
+        .traverse(TargetEnvironment.Id.parse(_))
+        .map(_.map(teId => (teId, obsMap.get(teId))))
         .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)))
 
     def toggleExpanded(
-      targetEnvIds: TargetEnvIdSet,
-      expandedIds:  View[SortedSet[TargetEnvIdSet]]
+      targetEnvIds: TargetEnvIdObsIdSet,
+      expandedIds:  View[SortedSet[TargetEnvIdObsIdSet]]
     ): SyncIO[Unit] =
       expandedIds.mod { expanded =>
         expanded.exists(_ === targetEnvIds).fold(expanded - targetEnvIds, expanded + targetEnvIds)
@@ -88,21 +93,21 @@ object TargetListGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoCtx[TargetListGroupList],
-      expandedIds: View[SortedSet[TargetEnvIdSet]],
-      selected:    View[SelectedPanel[TargetEnvIdSet]]
+      expandedIds: View[SortedSet[TargetEnvIdObsIdSet]],
+      selected:    View[SelectedPanel[TargetEnvIdObsIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
       $.propsIn[SyncIO].flatMap { props =>
         val oData = for {
           destination <- result.destination.toOption
-          destIds     <- targetEnvIdsStringToIds(destination.droppableId)
+          destIds     <- targetEnvIdObsIdStringToIds(destination.droppableId, props.envIdToObsMap)
           obsId       <- Observation.Id.parse(result.draggableId)
           targetEnvId <- props.targetListsWithObs.get.observations.get(obsId).map(_.targetEnvId)
-          if !destIds.contains(targetEnvId)
+          if !destIds.contains((targetEnvId, obsId.some))
           destTlg     <-
             props.targetListsWithObs.get.targetListGroups.values
-              .find(_.targetEnvIds === destIds)
+              .find(_.id === destIds)
         } yield (destTlg, obsId, targetEnvId)
 
         oData.fold(SyncIO.unit) { case (destTlg, obsId, targetEnvId) =>
@@ -143,21 +148,22 @@ object TargetListGroupObsList {
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
 
       def renderGroup(targetListGroup: TargetEnv): VdomNode = {
-        val obsIds        = targetListGroup.obsIds
-        val targetEnvIds  = targetListGroup.targetEnvIds
-        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
+        val obsIds          = targetListGroup.obsIds
+        val targetEnvObsIds = targetListGroup.id
+        val cgObs           = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
-        val groupSelected = props.selected.get.optValue.exists(_.intersect(targetEnvIds).nonEmpty)
+        val groupSelected   =
+          props.selected.get.optValue.exists(_.intersect(targetEnvObsIds).nonEmpty)
 
         val icon: FontAwesomeIcon = props.expandedIds.get
-          .exists(_ === targetEnvIds)
+          .exists(_ === targetEnvObsIds)
           .fold(Icons.ChevronDown, Icons.ChevronRight)
           .addModifiers(
             Seq(
               ^.cursor.pointer,
               ^.onClick ==> { e: ReactEvent =>
                 e.stopPropagationCB >>
-                  toggleExpanded(targetEnvIds, props.expandedIds).toCB
+                  toggleExpanded(targetEnvObsIds, props.expandedIds).toCB
                     .asEventDefault(e)
                     .void
               }
@@ -165,14 +171,14 @@ object TargetListGroupObsList {
           )
           .fixedWidth()
 
-        Droppable(targetEnvIdsToString(targetEnvIds), renderClone = renderClone) {
+        Droppable(targetEnvIdObsIdToString(targetEnvObsIds), renderClone = renderClone) {
           case (provided, snapshot) =>
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
               <.span(ExploreStyles.ObsGroupTitleWithWrap)(
                 targetListGroup.name
               ),
-              Icons.Thumbtack.when(obsIds.size < targetEnvIds.size),
+              Icons.Thumbtack.when(obsIds.size < targetEnvObsIds.size),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )
 
@@ -194,11 +200,11 @@ object TargetListGroupObsList {
               )(^.cursor.pointer,
                 ^.onClick --> {
                   props.focusedObs.set(none) >>
-                    props.selected.set(SelectedPanel.editor(targetEnvIds))
+                    props.selected.set(SelectedPanel.editor(targetEnvObsIds))
                 }
               )(
                 csHeader,
-                TagMod.when(props.expandedIds.get.contains(targetEnvIds))(
+                TagMod.when(props.expandedIds.get.contains(targetEnvObsIds))(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                     props.renderObsBadgeItem(
                       selectable = true,
@@ -207,7 +213,7 @@ object TargetListGroupObsList {
                       linkToObsTab = false,
                       onSelect = _ =>
                         props.selected.set(
-                          SelectedPanel.editor(NonEmptySet.one(obs.targetEnvId))
+                          SelectedPanel.editor(NonEmptySet.one((obs.targetEnvId, obs.id.some)))
                         )
                     )(obs, idx)
                   }
@@ -254,7 +260,7 @@ object TargetListGroupObsList {
       val observations       = targetListsWithObs.observations
       val expandedIds        = $.props.expandedIds
       val selected           = $.props.selected
-      val targetEnvIdMap     = targetListGroups.values.map(tlg => (tlg.targetEnvIds, tlg)).toMap
+      val targetEnvObsIdMap  = targetListGroups.values.map(tlg => (tlg.id, tlg)).toMap
 
       // Unfocus if focused element is not there
       val unfocus = $.props.focusedObs.mod(_.flatMap {
@@ -264,28 +270,28 @@ object TargetListGroupObsList {
 
       val setAndGetSelected: SyncIO[Option[TargetEnv]] = selected.get match {
         case Uninitialized =>
-          val infoFromFocused: Option[(TargetEnvironment.Id, TargetEnv)] =
+          val infoFromFocused: Option[(TargetEnvIdObsId, TargetEnv)] =
             $.props.focusedObs.get.flatMap(fo =>
-              (observations.get(fo.obsId).map(_.targetEnvId),
-               targetListGroups.find(_._1.contains(fo.obsId)).map(_._2)
+              (observations.get(fo.obsId).map(summ => (summ.targetEnvId, summ.id.some)),
+               targetListGroups.find(_._1.exists(_._2 === fo.obsId.some)).map(_._2)
               ).tupled
             )
 
           selected
-            .set(infoFromFocused.fold(SelectedPanel.tree[TargetEnvIdSet]) { case (id, _) =>
+            .set(infoFromFocused.fold(SelectedPanel.tree[TargetEnvIdObsIdSet]) { case (id, _) =>
               SelectedPanel.editor(NonEmptySet.one(id))
             })
             .as(infoFromFocused.map(_._2))
         case Editor(ids)   =>
-          SyncIO.delay(targetEnvIdMap.find(_._1.intersect(ids).nonEmpty).map(_._2))
+          SyncIO.delay(targetEnvObsIdMap.find(_._1.intersect(ids).nonEmpty).map(_._2))
         case _             => SyncIO.delay(none)
       }
 
       def expandSelected(tlgOpt: Option[TargetEnv]) =
-        tlgOpt.map(tlg => expandedIds.mod(_ + tlg.targetEnvIds)).orEmpty
+        tlgOpt.map(tlg => expandedIds.mod(_ + tlg.id)).orEmpty
 
       def cleanupExpandedIds =
-        expandedIds.mod(_.filter(targetEnvIdMap.contains))
+        expandedIds.mod(_.filter(targetEnvObsIdMap.contains))
 
       for {
         _      <- unfocus
