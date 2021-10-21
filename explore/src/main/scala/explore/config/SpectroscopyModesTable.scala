@@ -85,7 +85,8 @@ object ItcResult {
 }
 
 final case class ItcResultsCache(
-  cache: Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
+  cache:       Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]],
+  updateCount: Int = Int.MinValue
 ) {
   import ItcResultsCache._
 
@@ -123,6 +124,8 @@ object ItcResultsCache {
 
   val cache = Focus[ItcResultsCache](_.cache)
 
+  val updateCount = Focus[ItcResultsCache](_.updateCount)
+
 }
 
 object SpectroscopyModesTable {
@@ -137,7 +140,7 @@ object SpectroscopyModesTable {
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
   implicit val itcReuse: Reusability[ItcResultsCache] =
-    Reusability.byRef
+    Reusability.by(_.updateCount)
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
@@ -399,11 +402,33 @@ object SpectroscopyModesTable {
               (wavelength, signalToNoise, im) -> m
             }
             itcResults
-              .modState(ItcResultsCache.cache.modify(_ ++ update))
+              .modState(
+                ItcResultsCache.updateCount.modify(_ + 1) >>> ItcResultsCache.cache
+                  .modify(_ ++ update)
+              )
               .to[F]
           }
       }
       .runAsyncAndForgetCB
+
+  def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+    val s = visibleRange.startIndex.toInt
+    val e = visibleRange.endIndex.toInt
+
+    (for { i <- s to e } yield rows.lift(i))
+      .collect { case Some(m) => m }
+  }
+
+  def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+    wavelength:    Option[Wavelength],
+    signalToNoise: Option[PosBigDecimal],
+    visibleRange:  ListRange,
+    rows:          List[SpectroscopyModeRow],
+    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
+  ) =
+    (wavelength, signalToNoise)
+      .mapN((w, sn) => queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults))
+      .getOrEmpty
 
   val component =
     ScalaFnComponent
@@ -456,6 +481,14 @@ object SpectroscopyModesTable {
       .useMemo(())(_ => ModesTable.createRef)
       // visibleRange
       .useState(none[ListRange])
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
+        (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.signalToNoise)
+      )((_, rows, itcResults, _, _, _, _, range) => { case (wv, sn) =>
+        // selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
+        // range.value.map(r => updateITCOnScroll[SyncIO](wv, sn, r, rows, itcResults.withEffect))
+        // queryItc(wv, sn, range)
+        Callback.log(range.value, wv, sn)
+      })
       // atTop
       .useState(false)
       .render {
@@ -472,25 +505,6 @@ object SpectroscopyModesTable {
         ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
-
-          def visibleRows(visibleRange: ListRange) = {
-            val s = visibleRange.startIndex.toInt
-            val e = visibleRange.endIndex.toInt
-
-            (for { i <- s to e } yield Either.catchNonFatal(tableInstance.rows(i).original))
-              .collect { case Right(m) => m }
-          }
-
-          def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
-            visibleRange: ListRange
-          ) =
-            (props.spectroscopyRequirements.wavelength,
-             props.spectroscopyRequirements.signalToNoise
-            )
-              .mapN((w, sn) =>
-                queryItc[F](w, sn, visibleRows(visibleRange).toList, itcResults.withEffect)
-              )
-              .getOrEmpty
 
           def scrollButton(
             content:        VdomNode,
@@ -552,7 +566,13 @@ object SpectroscopyModesTable {
                     initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
                     rangeChanged = (
                       (range: ListRange) =>
-                        visibleRange.setState(range.some) *> updateITCOnScroll(range)
+                        visibleRange.setState(range.some) *>
+                          updateITCOnScroll(props.spectroscopyRequirements.wavelength,
+                                            props.spectroscopyRequirements.signalToNoise,
+                                            range,
+                                            rows,
+                                            itcResults.withEffect
+                          )
                     ).some,
                     atTopChange = ((value: Boolean) => atTop.setState(value)).some
                   )
