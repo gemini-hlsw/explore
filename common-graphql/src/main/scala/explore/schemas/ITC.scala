@@ -4,6 +4,7 @@
 package explore.schemas
 
 import clue.annotation.GraphQLSchema
+import eu.timepit.refined.types.numeric
 import explore.model.AirMassRange
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
@@ -17,11 +18,11 @@ import lucuma.core.model
 
 @GraphQLSchema
 trait ITC {
-  implicit val piEncoder: Encoder[eu.timepit.refined.types.numeric.PosInt] =
-    Encoder.encodeInt.contramap[eu.timepit.refined.types.numeric.PosInt](_.value)
+  implicit val piEncoder: Encoder[numeric.PosInt] =
+    Encoder.encodeInt.contramap[numeric.PosInt](_.value)
 
-  implicit val pdEncoder: Encoder[eu.timepit.refined.types.numeric.PosBigDecimal] =
-    Encoder.encodeBigDecimal.contramap[eu.timepit.refined.types.numeric.PosBigDecimal](_.value)
+  implicit val pdEncoder: Encoder[numeric.PosBigDecimal] =
+    Encoder.encodeBigDecimal.contramap[numeric.PosBigDecimal](_.value)
 
   implicit val spEncoder: Encoder[model.SpatialProfile] = new Encoder[model.SpatialProfile] {
     final def apply(a: model.SpatialProfile): Json = Json.obj(
@@ -99,8 +100,8 @@ trait ITC {
     // Time
     type Instant       = java.time.Instant
     // Refined
-    type PosInt        = eu.timepit.refined.types.numeric.PosInt
-    type PosBigDecimal = eu.timepit.refined.types.numeric.PosBigDecimal
+    type PosInt        = numeric.PosInt
+    type PosBigDecimal = numeric.PosBigDecimal
   }
 
   object Enums {

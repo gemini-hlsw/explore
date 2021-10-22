@@ -54,7 +54,9 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
     ).sequence.void
 }
 object Clients {
-  def build[F[_]: Async: AjaxJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def build[
+    F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Dispatcher: Logger
+  ](
     odbURI:               Uri,
     prefsURI:             Uri,
     itcURI:               Uri,

@@ -16,7 +16,6 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.AppCtx
 import explore.Icons
 import explore.View
 import explore.common.ObsQueries._
@@ -349,9 +348,13 @@ object SpectroscopyModesTable extends ItcColumn {
       // visibleRange
       .useState(none[ListRange])
       // Recalculate ITC values if the wv or sn change
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
-        (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.signalToNoise)
-      )((props, rows, itcResults, _, _, _, _, range) => { case (wv, sn) =>
+      .useEffectWithDepsBy((props, rows, _, _, _, _, _, range) =>
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.signalToNoise,
+         rows,
+         range
+        )
+      )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
         implicit val ctx = props.ctx
         range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).getOrEmpty
       })
@@ -361,7 +364,7 @@ object SpectroscopyModesTable extends ItcColumn {
         (
           props,
           rows,
-          itcResults,
+          _,
           _,
           selectedIndex,
           tableInstance,
@@ -400,50 +403,41 @@ object SpectroscopyModesTable extends ItcColumn {
             ),
             <.div(
               ExploreStyles.ModesTable,
-              AppCtx.using { implicit ctx =>
-                ModesTable
-                  .Component(
-                    table = Table(celled = true,
-                                  selectable = true,
-                                  striped = true,
-                                  compact = TableCompact.Very
-                    )(),
-                    header = true,
-                    headerCell = (c: ModesTableDef.ColumnType) =>
-                      TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
-                        ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
-                        ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
-                      ),
-                    row = (rowData: Row[SpectroscopyModeRow]) =>
-                      TableRow(
-                        disabled = !enabledRow(rowData.original),
-                        clazz = ExploreStyles.ModeSelected.when_(
-                          selectedIndex.value.exists(_ === rowData.index.toInt)
-                        )
-                      )(
-                        ^.onClick --> (
-                          props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
-                            selectedIndex.setState(rowData.index.toInt.some)
-                        ),
-                        props2Attrs(rowData.getRowProps())
+              ModesTable
+                .Component(
+                  table = Table(celled = true,
+                                selectable = true,
+                                striped = true,
+                                compact = TableCompact.Very
+                  )(),
+                  header = true,
+                  headerCell = (c: ModesTableDef.ColumnType) =>
+                    TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
+                      ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
+                      ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
+                    ),
+                  row = (rowData: Row[SpectroscopyModeRow]) =>
+                    TableRow(
+                      disabled = !enabledRow(rowData.original),
+                      clazz = ExploreStyles.ModeSelected.when_(
+                        selectedIndex.value.exists(_ === rowData.index.toInt)
                       )
-                  )(
-                    tableInstance,
-                    initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
-                    rangeChanged = (
-                      (range: ListRange) =>
-                        visibleRange.setState(range.some) *>
-                          updateITCOnScroll(props.spectroscopyRequirements.wavelength,
-                                            props.spectroscopyRequirements.signalToNoise,
-                                            range,
-                                            rows,
-                                            itcResults.withEffect
-                          )
-                    ).some,
-                    atTopChange = ((value: Boolean) => atTop.setState(value)).some
-                  )
-                  .withRef(virtuosoRef)
-              },
+                    )(
+                      ^.onClick --> (
+                        props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
+                          selectedIndex.setState(rowData.index.toInt.some)
+                      ),
+                      props2Attrs(rowData.getRowProps())
+                    )
+                )(
+                  tableInstance,
+                  initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
+                  rangeChanged = (
+                    (range: ListRange) => visibleRange.setState(range.some)
+                  ).some,
+                  atTopChange = ((value: Boolean) => atTop.setState(value)).some
+                )
+                .withRef(virtuosoRef),
               scrollButton(
                 Icons.ChevronDoubleUp,
                 ExploreStyles.SelectedUp,
