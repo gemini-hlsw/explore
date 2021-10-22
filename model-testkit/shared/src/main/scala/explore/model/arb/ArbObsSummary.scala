@@ -9,6 +9,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
 import explore.model.ConstraintsSummary
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.core.model.TargetEnvironment
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.enum.ObsStatus
@@ -32,7 +33,15 @@ trait ArbObsSummary {
       activeStatus <- arbitrary[ObsActiveStatus]
       duration     <- arbitrary[Duration]
       targetEnvId  <- arbitrary[TargetEnvironment.Id]
-    } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration, targetEnvId)
+      targets      <- arbitrary[Set[Target.Id]]
+    } yield ObsSummaryWithConstraints(id,
+                                      constraints,
+                                      status,
+                                      activeStatus,
+                                      duration,
+                                      targetEnvId,
+                                      targets
+    )
   }
 
   implicit val arbObsSummaryWithTargetsAndConstraints =

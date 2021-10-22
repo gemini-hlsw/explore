@@ -14,7 +14,8 @@ import explore.implicits._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
 import explore.model.TargetEnv
-import explore.model.TargetEnvIdSet
+import explore.model.TargetEnvIdObsId
+import explore.model.TargetEnvIdObsIdSet
 import explore.model.TargetIdSet
 import explore.model.implicits._
 import explore.undo._
@@ -28,23 +29,23 @@ import scala.collection.immutable.TreeSeqMap
 
 object TargetListGroupObsListActions {
   private def getter(
-    targetEnvId: TargetEnvironment.Id
+    targetEnvObsId: TargetEnvIdObsId
   ): TargetListGroupList => Option[TreeSeqMap[TargetIdSet, Target]] =
-    _.values.find(_.targetEnvIds.contains(targetEnvId)).map(_.scienceTargets)
+    _.values.find(_.id.contains(targetEnvObsId)).map(_.scienceTargets)
 
-  private def setter(obsId: Observation.Id, targetEnvId: TargetEnvironment.Id)(
-    otl:                    Option[TreeSeqMap[TargetIdSet, Target]]
+  private def setter(targetEnvObsId: TargetEnvIdObsId)(
+    otl:                             Option[TreeSeqMap[TargetIdSet, Target]]
   ): TargetListGroupList => TargetListGroupList = tlgl => {
     val targetListGroups = tlgl.values
 
     val updatedTlgl =
-      targetListGroups.find(_.targetEnvIds.contains(targetEnvId)).fold(tlgl) { oldTlg =>
-        val newList = tlgl - oldTlg.obsIds
+      targetListGroups.find(_.id.contains(targetEnvObsId)).fold(tlgl) { oldTlg =>
+        val newList = tlgl - oldTlg.id
         // Even if there are not observation ids left, it may still be an "unmoored" target list.
         // We'll determine that by seeing if there is more than one target environment id, although
         // this may be out of date while awaiting for a server round trip.
         if (oldTlg.targetEnvIds.length > 1)
-          newList + oldTlg.removeId((targetEnvId, obsId.some)).asObsKeyValue
+          newList + oldTlg.removeId(targetEnvObsId).asObsKeyValue
         else newList
       }
 
@@ -52,60 +53,63 @@ object TargetListGroupObsListActions {
       targetListGroups
         .find(_.scienceTargets === tl)
         .fold(
-          updatedTlgl + TargetEnv(NonEmptySet.one((targetEnvId, obsId.some)), tl).asObsKeyValue
+          updatedTlgl + TargetEnv(NonEmptySet.one(targetEnvObsId), tl).asObsKeyValue
         ) { newTlg =>
-          updatedTlgl - newTlg.obsIds + newTlg.addId((targetEnvId, obsId.some)).asObsKeyValue
+          updatedTlgl - newTlg.id + newTlg.addId(targetEnvObsId).asObsKeyValue
         }
     }
   }
 
   private def updateExpandedIds(
-    targetEnvId: TargetEnvironment.Id,
-    optDestIds:  Option[TargetEnvIdSet]
+    targetEnvObsId: TargetEnvIdObsId,
+    optDestIds:     Option[TargetEnvIdObsIdSet]
   )(
-    eids:        SortedSet[TargetEnvIdSet]
+    eids:           SortedSet[TargetEnvIdObsIdSet]
   ) = {
-    val setOfOne = NonEmptySet.one(targetEnvId)
+    val setOfOne: TargetEnvIdObsIdSet = NonEmptySet.one(targetEnvObsId)
 
     optDestIds.fold(
       eids.map(ids =>
-        if (ids =!= setOfOne) NonEmptySet.fromSetUnsafe(ids - targetEnvId)
+        if (ids =!= setOfOne) NonEmptySet.fromSetUnsafe(ids -- setOfOne)
         else ids
       ) + setOfOne
     ) { destIds =>
       eids.flatMap(ids =>
         if (ids === destIds || ids === setOfOne) none
-        else NonEmptySet.fromSetUnsafe(ids - targetEnvId).some
-      ) + destIds.add(targetEnvId)
+        else NonEmptySet.fromSetUnsafe(ids - targetEnvObsId).some
+      ) + destIds.add(targetEnvObsId)
     }
   }
 
   private def updateSelected(
-    targetEnvId: TargetEnvironment.Id,
-    optDestIds:  Option[TargetEnvIdSet]
+    targetEnvObsId: TargetEnvIdObsId,
+    optDestIds:     Option[TargetEnvIdObsIdSet]
   )(
-    selected:    SelectedPanel[TargetEnvIdSet]
+    selected:       SelectedPanel[TargetEnvIdObsIdSet]
   ) =
     selected match {
       // If in edit mode, always edit the destination.
-      case Editor(_) => Editor(optDestIds.fold(NonEmptySet.one(targetEnvId))(_.add(targetEnvId)))
+      case Editor(_) =>
+        Editor(optDestIds.fold(NonEmptySet.one(targetEnvObsId))(_.add(targetEnvObsId)))
       case _         => selected
     }
 
   def obsTargetListGroup[F[_]](
     obsId:          Observation.Id,
     targetEnvId:    TargetEnvironment.Id,
-    expandedIds:    View[SortedSet[TargetEnvIdSet]],
-    selected:       View[SelectedPanel[TargetEnvIdSet]]
-  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
-    Action[F](getter = getter(targetEnvId), setter = setter(obsId, targetEnvId))(
+    expandedIds:    View[SortedSet[TargetEnvIdObsIdSet]],
+    selected:       View[SelectedPanel[TargetEnvIdObsIdSet]]
+  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) = {
+    val targetEnvObsId: TargetEnvIdObsId = (targetEnvId, obsId.some)
+    Action[F](getter = getter(targetEnvObsId), setter = setter(targetEnvObsId))(
       onSet = (tlgl, otl) =>
         otl.fold(async.unit) { tl =>
           // destination ids may not be found when undoing
-          val optDestIds = tlgl.values.find(_.scienceTargets === tl).map(_.targetEnvIds)
+          val optDestIds = tlgl.values.find(_.scienceTargets === tl).map(_.id)
           TargetListGroupQueries.replaceObservationScienceTargetList[F](obsId, tl.values.toList) >>
-            expandedIds.mod(updateExpandedIds(targetEnvId, optDestIds) _).to[F] >>
-            selected.mod(updateSelected(targetEnvId, optDestIds) _).to[F]
+            expandedIds.mod(updateExpandedIds(targetEnvObsId, optDestIds) _).to[F] >>
+            selected.mod(updateSelected(targetEnvObsId, optDestIds) _).to[F]
         }
     )
+  }
 }

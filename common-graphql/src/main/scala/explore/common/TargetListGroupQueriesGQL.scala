@@ -87,6 +87,9 @@ object TargetListGroupQueriesGQL {
             }
             targets {
               id
+              scienceTargets {
+                id
+              }
             }
           }
         }

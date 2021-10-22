@@ -15,6 +15,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
 import explore.model.TargetEnv
+import explore.model.TargetEnvIdObsIdSet
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -28,7 +29,6 @@ import monocle.Focus
 import monocle.Getter
 
 import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
 
 import TargetListGroupQueriesGQL._
 
@@ -36,12 +36,13 @@ object TargetListGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the TargetListGroupObsList. If we change to sort by name or something
   // else, we can remove this.
-  implicit val orderSortedSet: Order[SortedSet[Observation.Id]] = Order.by(_.toList)
+  implicit val orderSortedSet: Order[TargetEnvIdObsIdSet] =
+    Order.by(_.toList.map(t => (t._2, t._1)))
 
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
 
-  type TargetListGroupList = SortedMap[SortedSet[Observation.Id], TargetEnv]
+  type TargetListGroupList = SortedMap[TargetEnvIdObsIdSet, TargetEnv]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
   case class TargetListGroupWithObs(
@@ -63,13 +64,14 @@ object TargetListGroupQueries {
                               obsR.status,
                               obsR.activeStatus,
                               obsR.plannedTime.execution,
-                              obsR.targets.id
+                              obsR.targets.id,
+                              obsR.targets.scienceTargets.map(_.id).toSet
     )
 
   private val queryToTargetListGroupWithObsGetter
     : Getter[TargetListGroupObsQuery.Data, TargetListGroupWithObs] = data =>
     TargetListGroupWithObs(
-      data.scienceTargetListGroup.toSortedMap(_.obsIds),
+      data.scienceTargetListGroup.toSortedMap(_.id),
       data.observations.nodes.map(obsResultToSummary).toSortedMap(ObsSummaryWithConstraints.id.get)
     )
 
