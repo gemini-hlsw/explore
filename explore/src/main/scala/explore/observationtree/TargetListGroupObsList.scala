@@ -70,7 +70,7 @@ object TargetListGroupObsList {
 
   class Backend($ : BackendScope[Props, State]) {
     def targetEnvIdObsIdToString(ids: TargetEnvIdObsIdSet): String =
-      ids.toSortedSet.map(_._1).mkString(",") // just keep the target ids to make parsing easier
+      ids.toSortedSet.map(_._1).mkString(",") // just keep the target env ids to make parsing easier
 
     def targetEnvIdObsIdStringToIds(
       targetEnvObsIdsString: String,

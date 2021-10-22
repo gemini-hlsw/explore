@@ -58,7 +58,7 @@ case class ObsSummaryWithConstraints(
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration,
   targetEnvId:               TargetEnvironment.Id,
-  targetIds:                 Set[Target.Id]
+  scienceTargetIds:          Set[Target.Id]
 ) extends ObsSummary
     with ObsWithConstraints
 
@@ -68,7 +68,7 @@ object ObsSummaryWithConstraints {
 
   implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
     Eq.by(o =>
-      (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.targetEnvId, o.targetIds)
+      (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.targetEnvId, o.scienceTargetIds)
     )
 }
 

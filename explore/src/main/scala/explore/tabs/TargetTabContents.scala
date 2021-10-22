@@ -180,16 +180,21 @@ object TargetTabContents {
       )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft)
     )
 
+    /**
+     * Effectively creates a subset of the original TargetEnv, where the TargetEnv.id contains only
+     * ids in envObsIds, and the keys for the TargetEnv.scienceTargets map contain only the keys
+     * specified in targetIds. This subset can then be passed to the TargetEnvEditor.
+     */
     def filterInIds(
       envObsIds: TargetEnvIdObsIdSet,
       targetIds: Set[Target.Id],
-      targetEnv: TargetEnv
+      original:  TargetEnv
     ): Option[TargetEnv] = {
       val filteredIds: Option[TargetEnvIdObsIdSet] =
-        NonEmptySet.fromSet(targetEnv.id.filter(envObsIds.contains))
+        NonEmptySet.fromSet(original.id.filter(envObsIds.contains))
 
       val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
-        targetEnv.scienceTargets.toList
+        original.scienceTargets.toList
           .traverse { case (ids, target) =>
             NonEmptySet
               .fromSet(ids.filter(targetIds.contains))
@@ -199,6 +204,13 @@ object TargetTabContents {
       (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
     }
 
+    /**
+     * Creates a subset of the original TargetEnv where the TargetEnv.id has had all of the ids in
+     * toFilterOut.id removed, and the TargetEnv.scienceTarget keys have had any keys in
+     * toFilter.scienceTargets removed. This is used to create a new TargetEnv when a subset of the
+     * original has been edited, necessitating a split. NOTE: toFilterOut should be a subset of
+     * original with identical targets.
+     */
     def filterOutIds(original: TargetEnv, toFilterOut: TargetEnv): Option[TargetEnv] = {
       val filteredIds: Option[TargetEnvIdObsIdSet]                 =
         NonEmptySet.fromSet(original.id -- toFilterOut.id)
@@ -213,6 +225,13 @@ object TargetTabContents {
       (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
     }
 
+    /**
+     * Given 2 TargetEnvs, this creates a new one where TargetEnv.id is a union of the env1.id and
+     * env2.id. Each of the keys for the targets in TargetEnv.scienceTargets will be the union of
+     * the keys in the respective targets in env1 and env2. This is used to merge 2 TargetEnvs in
+     * the instance where editing a TargetEnv makes it equal to an existing TargetEnv, making a
+     * merger necessary, NOTE: The target lists of env1 and env2 are assumed to be equal.
+     */
     def mergeTargetEnvs(env1: TargetEnv, env2: TargetEnv): TargetEnv = {
       val mergedTargets: TreeSeqMap[TargetIdSet, Target] =
         TreeSeqMap.from(
@@ -222,17 +241,33 @@ object TargetTabContents {
       TargetEnv(env1.id ++ env2.id, mergedTargets)
     }
 
+    /**
+     * Compare the targets in the scienceTargets of 2 TargetEnvs to see if they are all equal. This
+     * is used to determine if a merger is necessary after an edit.
+     */
     def compareTargets(env1: TargetEnv, env2: TargetEnv): Boolean =
       env1.scienceTargets.size === env2.scienceTargets.size &&
         (env1.scienceTargets.toList, env2.scienceTargets.toList)
           .parMapN { case (t1, t2) => t1._2 === t2._2 }
           .forall(identity)
 
+    /**
+     * Render the summary table.
+     */
     def renderSummary: VdomNode =
       Tile("targetListSummary", "Target List Summary", backButton.some)(
         ((_: Tile.RenderInTitle) => <.div("Summary will go here")).reuseAlways
       )
 
+    /**
+     * Render the target env editor for a TargetEnv.
+     *
+     * @param idsToEdit
+     *   The TargetEnvIdObsIds to include in the edit. This needs to be a subset of the ids in
+     *   targetListGroup
+     * @param targetListGroup
+     *   The TargetEnv that is the basis for editing. All or part of it may be included in the edit.
+     */
     def renderEditor(idsToEdit: TargetEnvIdObsIdSet, targetListGroup: TargetEnv): VdomNode = {
       val focusedObs   = props.focusedObs.get
       val groupEnvIds  = targetListGroup.id
@@ -245,7 +280,8 @@ object TargetTabContents {
 
       val optFilteredEnv: Option[TargetEnv] = if (idsToEdit =!= groupEnvIds) {
         val targetIdsToEdit = observations.mapFilter { obsSumm =>
-          if (idsToEdit.contains((obsSumm.targetEnvId, obsSumm.id.some))) obsSumm.targetIds.some
+          if (idsToEdit.contains((obsSumm.targetEnvId, obsSumm.id.some)))
+            obsSumm.scienceTargetIds.some
           else none
         }.combineAll
         filterInIds(idsToEdit, targetIdsToEdit, targetListGroup)
