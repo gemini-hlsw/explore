@@ -8,6 +8,7 @@ import cats.effect._
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
+import clue.js.AjaxJSBackend
 import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
@@ -31,7 +32,8 @@ import scala.concurrent.duration._
 
 case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   odb:           WebSocketClient[F, ObservationDB],
-  preferencesDB: WebSocketClient[F, UserPreferencesDB]
+  preferencesDB: WebSocketClient[F, UserPreferencesDB],
+  itc:           TransactionalClient[F, ITC]
 ) {
   lazy val PreferencesDBConnectionStatus: StreamRenderer.Component[PersistentClientStatus] =
     StreamRenderer.build(preferencesDB.statusStream)
@@ -52,9 +54,10 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
     ).sequence.void
 }
 object Clients {
-  def build[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
+    itcURI:               Uri,
     reconnectionStrategy: WebSocketReconnectionStrategy
   ): F[Clients[F]] =
     for {
@@ -62,7 +65,9 @@ object Clients {
         ApolloWebSocketClient.of[F, ObservationDB](odbURI, "ODB", reconnectionStrategy)
       prefsClient <-
         ApolloWebSocketClient.of[F, UserPreferencesDB](prefsURI, "PREFS", reconnectionStrategy)
-    } yield Clients(odbClient, prefsClient)
+      itcClient   <-
+        TransactionalClient.of[F, ITC](itcURI, "ITC")
+    } yield Clients(odbClient, prefsClient, itcClient)
 }
 
 case class StaticData protected (spectroscopyMatrix: SpectroscopyModesMatrix)
@@ -105,7 +110,8 @@ case class AppContext[F[_]](
 )(implicit
   val F:          Applicative[F],
   val dispatcher: Dispatcher[F],
-  val logger:     Logger[F]
+  val logger:     Logger[F],
+  val P:          Parallel[F]
 ) {
   val syncLogger: Logger[SyncIO] = {
     def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))
@@ -135,7 +141,7 @@ case class AppContext[F[_]](
 }
 
 object AppContext {
-  def from[F[_]: Async: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def from[F[_]: Async: AjaxJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Focused]) => String,
@@ -143,7 +149,9 @@ object AppContext {
     fromSyncIO:           SyncIO ~> F
   ): F[AppContext[F]] =
     for {
-      clients    <- Clients.build[F](config.odbURI, config.preferencesDBURI, reconnectionStrategy)
+      clients    <-
+        Clients
+          .build[F](config.odbURI, config.preferencesDBURI, config.itcURI, reconnectionStrategy)
       staticData <- StaticData.build[F](uri"/instrument_spectroscopy_matrix.csv")
       version     = utils.version(config.environment)
       actions     = Actions[F]()

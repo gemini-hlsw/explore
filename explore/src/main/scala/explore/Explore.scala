@@ -10,6 +10,8 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import cats.~>
 import clue.WebSocketReconnectionStrategy
+import clue.js.AjaxJSBackend
+import clue.js.AjaxMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.implicits._
@@ -127,6 +129,7 @@ object ExploreMain extends IOApp.Simple {
     Dispatcher[IO].allocated
       .map(_._1)
       .flatMap { implicit dispatcher =>
+        implicit val ajaxBackend: AjaxJSBackend[IO]              = AjaxJSBackend[IO](AjaxMethod.GET)
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 

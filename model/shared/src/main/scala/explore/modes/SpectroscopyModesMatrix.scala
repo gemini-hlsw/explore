@@ -32,6 +32,9 @@ sealed trait InstrumentRow {
   type Disperser
   val disperser: Disperser
 
+  type FPU
+  val fpu: FPU
+
   type Filter
   val filter: Filter
 
@@ -40,19 +43,23 @@ sealed trait InstrumentRow {
 
 final case class GmosNorthSpectroscopyRow(
   disperser: GmosNorthDisperser,
+  fpu:       GmosNorthFpu,
   filter:    Option[GmosNorthFilter]
 ) extends InstrumentRow {
   type Disperser = GmosNorthDisperser
   type Filter    = Option[GmosNorthFilter]
+  type FPU       = GmosNorthFpu
   val instrument = Instrument.GmosNorth
 }
 
 final case class GmosSouthSpectroscopyRow(
   disperser: GmosSouthDisperser,
+  fpu:       GmosSouthFpu,
   filter:    Option[GmosSouthFilter]
 ) extends InstrumentRow {
   type Disperser = GmosSouthDisperser
   type Filter    = Option[GmosSouthFilter]
+  type FPU       = GmosSouthFpu
   val instrument = Instrument.GmosSouth
 }
 
@@ -60,6 +67,8 @@ final case class Flamingos2SpectroscopyRow(disperser: F2Disperser, filter: F2Fil
     extends InstrumentRow {
   type Disperser = F2Disperser
   type Filter    = F2Filter
+  type FPU       = Unit
+  val fpu        = ()
   val instrument = Instrument.Flamingos2
 }
 
@@ -67,6 +76,8 @@ final case class GpiSpectroscopyRow(disperser: GpiDisperser, filter: GpiFilter)
     extends InstrumentRow {
   type Disperser = GpiDisperser
   type Filter    = GpiFilter
+  type FPU       = Unit
+  val fpu        = ()
   val instrument = Instrument.Gpi
 }
 
@@ -74,6 +85,8 @@ final case class GnirsSpectroscopyRow(disperser: GnirsDisperser, filter: GnirsFi
     extends InstrumentRow {
   type Disperser = GnirsDisperser
   type Filter    = GnirsFilter
+  type FPU       = Unit
+  val fpu        = ()
   val instrument = Instrument.Gnirs
 }
 
@@ -82,6 +95,8 @@ final case class GenericSpectroscopyRow(i: Instrument, disperser: String, filter
     extends InstrumentRow {
   type Disperser = String
   type Filter    = NonEmptyString
+  type FPU       = Unit
+  val fpu        = ()
   val instrument = i
 }
 
@@ -103,6 +118,9 @@ object InstrumentRow {
   def decodeGmosSouthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosSouthFilter]] =
     decodeOptionalEnum[GmosSouthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
+  def decodeGmosSouthFPU(fpu: NonEmptyString): Either[DecoderError, GmosSouthFpu] =
+    decodeEnum[GmosSouthFpu, String](fpu.value, (i, f) => i === f.shortName)
+
   def decodeGmosSouthDisperser(disperser: String): Either[DecoderError, GmosSouthDisperser] =
     decodeEnum[GmosSouthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
 
@@ -111,6 +129,9 @@ object InstrumentRow {
 
   def decodeGmosNorthDisperser(disperser: String): Either[DecoderError, GmosNorthDisperser] =
     decodeEnum[GmosNorthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
+
+  def decodeGmosNorthFPU(fpu: NonEmptyString): Either[DecoderError, GmosNorthFpu] =
+    decodeEnum[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
 
   def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
     decodeEnum[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
@@ -133,15 +154,22 @@ object InstrumentRow {
   def decode(
     instrument0: Instrument,
     disperser0:  String,
-    filter0:     NonEmptyString
+    filter0:     NonEmptyString,
+    fpu0:        NonEmptyString
   ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
       case Instrument.GmosNorth  =>
-        (decodeGmosNorthDisperser(disperser0), decodeGmosNorthFilter(filter0)).mapN(
+        (decodeGmosNorthDisperser(disperser0),
+         decodeGmosNorthFPU(fpu0),
+         decodeGmosNorthFilter(filter0)
+        ).mapN(
           GmosNorthSpectroscopyRow.apply
         )
       case Instrument.GmosSouth  =>
-        (decodeGmosSouthDisperser(disperser0), decodeGmosSouthFilter(filter0)).mapN(
+        (decodeGmosSouthDisperser(disperser0),
+         decodeGmosSouthFPU(fpu0),
+         decodeGmosSouthFilter(filter0)
+        ).mapN(
           GmosSouthSpectroscopyRow.apply
         )
       case Instrument.Flamingos2 =>
@@ -296,7 +324,8 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       for {
         di  <- row.as[String]("disperser")
         fi  <- row.as[NonEmptyString]("filter")
-        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi))
+        fu  <- row.as[NonEmptyString]("fpu")
+        i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
         s   <- row.as[NonEmptyString]("Config")
         fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
         c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")

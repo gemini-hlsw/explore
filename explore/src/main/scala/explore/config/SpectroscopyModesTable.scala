@@ -3,18 +3,27 @@
 
 package explore.config
 
+import cats.Parallel
+import cats.data._
+import cats.effect.Sync
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
+import clue.TransactionalClient
 import coulomb.Quantity
 import coulomb.refined._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
-import explore._
+import explore.Icons
+import explore.View
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.modes._
+import explore.schemas.ITC
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FocalPlane
@@ -27,6 +36,7 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
+import react.semanticui.modules.popup.Popup
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
@@ -42,9 +52,10 @@ final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   matrix:                   SpectroscopyModesMatrix,
   spectroscopyRequirements: SpectroscopyRequirementsData
-) extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+)(implicit val ctx:         AppContextIO)
+    extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
-object SpectroscopyModesTable {
+object SpectroscopyModesTable extends ItcColumn {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
@@ -54,6 +65,9 @@ object SpectroscopyModesTable {
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
+
+  implicit val itcReuse: Reusability[ItcResultsCache] =
+    Reusability.by(_.updateCount)
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
 
@@ -145,13 +159,46 @@ object SpectroscopyModesTable {
     case FocalPlane.IFU          => "IFU"
   }
 
-  def columns(cw: Option[Wavelength], fpu: Option[FocalPlane]) =
+  def columns(
+    cw:  Option[Wavelength],
+    fpu: Option[FocalPlane],
+    sn:  Option[PosBigDecimal],
+    itc: ItcResultsCache
+  ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
         .setCell(c => formatInstrument(c.value))
         .setWidth(120)
         .setMinWidth(50)
         .setMaxWidth(150),
+      column(TimeColumnId, itc.forRow(cw, sn, _))
+        .setCell { c =>
+          val content: TagMod = c.value match {
+            case Left(nel)                        =>
+              if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
+                Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+              else {
+                val content = nel.collect {
+                  case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
+                  case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
+                  case ItcQueryProblems.GenericError(e)      => e
+                }
+                Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+              }
+            case Right(ItcResult.Result(t, c))    =>
+              val secs = t.toMillis / 1000.0 * c
+              f"$secs%.0f s"
+            case Right(ItcResult.Pending)         =>
+              Icons.Spinner.spin(true)
+            case Right(ItcResult.SourceTooBright) =>
+              Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
+          }
+          <.div(ExploreStyles.ITCCell, content)
+        }
+        .setWidth(80)
+        .setMinWidth(80)
+        .setMaxWidth(80)
+        .setSortType(DefaultSortTypes.number),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
         .setWidth(96)
@@ -196,21 +243,15 @@ object SpectroscopyModesTable {
         .setWidth(66)
         .setMinWidth(66)
         .setMaxWidth(66)
-        .setSortType(DefaultSortTypes.number),
-      column(TimeColumnId, _ => "N/A")
-        .setCell(_ => "N/A")
-        .setWidth(66)
-        .setMinWidth(66)
-        .setMaxWidth(66)
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
     row.instrument match {
-      case GmosNorthSpectroscopyRow(disperser, filter)
+      case GmosNorthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
         ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
-      case GmosSouthSpectroscopyRow(disperser, filter)
+      case GmosSouthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
         ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
       case _ => none
@@ -234,6 +275,27 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
+  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+    val s = visibleRange.startIndex.toInt
+    val e = visibleRange.endIndex.toInt
+
+    (for { i <- s to e } yield rows.lift(i))
+      .collect { case Some(m) => m }
+  }
+
+  protected def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+    wavelength:    Option[Wavelength],
+    signalToNoise: Option[PosBigDecimal],
+    visibleRange:  ListRange,
+    rows:          List[SpectroscopyModeRow],
+    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
+  ) =
+    (wavelength, signalToNoise)
+      .mapN((w, sn) =>
+        queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForgetCB
+      )
+      .getOrEmpty
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -255,32 +317,61 @@ object SpectroscopyModesTable {
           (enabled ++ disabled)
         }
       )
+      // itc results cache
+      .useState(
+        ItcResultsCache(Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]])
+      )
       // cols
-      .useMemoBy((props, _) => // Memo Cols
-        (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.focalPlane)
-      )((_, _) => { case (wavelength, focalPlane) =>
-        columns(wavelength, focalPlane)
+      .useMemoBy { (props, _, itc) => // Memo Cols
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.focalPlane,
+         props.spectroscopyRequirements.signalToNoise,
+         itc.value
+        )
+      }((_, _, _) => { case (wavelength, focalPlane, sn, itc) =>
+        columns(wavelength, focalPlane, sn, itc)
       })
       // selectedIndex
-      .useStateBy((props, rows, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
+      .useStateBy((props, rows, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _) =>
         (props.scienceConfiguration, props.spectroscopyRequirements)
-      )((_, rows, _, selectedIndex) => { case (scienceConfiguration, _) =>
+      )((_, rows, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
       })
       // tableInstance
-      .useTableBy((_, rows, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // If useRef can be used here, I'm not figuring out how to do that.
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
       // visibleRange
       .useState(none[ListRange])
+      // Recalculate ITC values if the wv or sn change or if the range or rows get modified
+      .useEffectWithDepsBy((props, rows, _, _, _, _, _, range) =>
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.signalToNoise,
+         rows,
+         range
+        )
+      )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
+        implicit val ctx = props.ctx
+        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).getOrEmpty
+      })
       // atTop
       .useState(false)
-      .renderWithReuse {
-        (props, rows, _, selectedIndex, tableInstance, virtuosoRef, visibleRange, atTop) =>
+      .render {
+        (
+          props,
+          rows,
+          _,
+          _,
+          selectedIndex,
+          tableInstance,
+          virtuosoRef,
+          visibleRange,
+          atTop
+        ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
@@ -341,7 +432,9 @@ object SpectroscopyModesTable {
                 )(
                   tableInstance,
                   initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
-                  rangeChanged = ((range: ListRange) => visibleRange.setState(range.some)).some,
+                  rangeChanged = (
+                    (range: ListRange) => visibleRange.setState(range.some)
+                  ).some,
                   atTopChange = ((value: Boolean) => atTop.setState(value)).some
                 )
                 .withRef(virtuosoRef),

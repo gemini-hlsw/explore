@@ -1,0 +1,906 @@
+##############
+# From common schema
+##############
+
+# Instrument
+enum InstrumentType {
+  # InstrumentType AcqCam
+  ACQ_CAM
+
+  # InstrumentType Bhros
+  BHROS
+
+  # InstrumentType Flamingos2
+  FLAMINGOS2
+
+  # InstrumentType Ghost
+  GHOST
+
+  # InstrumentType GmosNorth
+  GMOS_NORTH
+
+  # InstrumentType GmosSouth
+  GMOS_SOUTH
+
+  # InstrumentType Gnirs
+  GNIRS
+
+  # InstrumentType Gpi
+  GPI
+
+  # InstrumentType Gsaoi
+  GSAOI
+
+  # InstrumentType Michelle
+  MICHELLE
+
+  # InstrumentType Nici
+  NICI
+
+  # InstrumentType Nifs
+  NIFS
+
+  # InstrumentType Niri
+  NIRI
+
+  # InstrumentType Phoenix
+  PHOENIX
+
+  # InstrumentType Trecs
+  TRECS
+
+  # InstrumentType Visitor
+  VISITOR
+
+  # InstrumentType Scorpio
+  SCORPIO
+
+  # InstrumentType Alopeke
+  ALOPEKE
+
+  # InstrumentType Zorro
+  ZORRO
+}
+
+# Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
+type Duration {
+  # Duration in µs
+  microseconds: Long!
+
+  # Duration in ms
+  milliseconds: BigDecimal!
+
+  # Duration in seconds
+  seconds: BigDecimal!
+
+  # Duration in minutes
+  minutes: BigDecimal!
+
+  # Duration in hours
+  hours: BigDecimal!
+}
+
+# Magnitude band
+enum MagnitudeBand {
+  # MagnitudeBand SloanU
+  SLOAN_U
+
+  # MagnitudeBand SloanG
+  SLOAN_G
+
+  # MagnitudeBand SloanR
+  SLOAN_R
+
+  # MagnitudeBand SloanI
+  SLOAN_I
+
+  # MagnitudeBand SloanZ
+  SLOAN_Z
+
+  # MagnitudeBand U
+  U
+
+  # MagnitudeBand B
+  B
+
+  # MagnitudeBand V
+  V
+
+  # MagnitudeBand Uc
+  UC
+
+  # MagnitudeBand R
+  R
+
+  # MagnitudeBand I
+  I
+
+  # MagnitudeBand Y
+  Y
+
+  # MagnitudeBand J
+  J
+
+  # MagnitudeBand H
+  H
+
+  # MagnitudeBand K
+  K
+
+  # MagnitudeBand L
+  L
+
+  # MagnitudeBand M
+  M
+
+  # MagnitudeBand N
+  N
+
+  # MagnitudeBand Q
+  Q
+
+  # MagnitudeBand Ap
+  AP
+}
+
+# Magnitude creation parameters
+input MagnitudeCreateInput {
+  band: MagnitudeBand!
+  value: BigDecimal!
+  error: BigDecimal
+  system: MagnitudeSystem = VEGA
+}
+
+# Magnitude system
+enum MagnitudeSystem {
+  # MagnitudeSystem Vega
+  VEGA
+
+  # MagnitudeSystem AB
+  AB
+
+  # MagnitudeSystem Jy
+  JY
+
+  # MagnitudeSystem Watts
+  WATTS
+
+  # MagnitudeSystem ErgsWavelength
+  ERGS_WAVELENGTH
+
+  # MagnitudeSystem ErgsFrequency
+  ERGS_FREQUENCY
+}
+
+type Wavelength {
+  # Wavelength in pm
+  picometers: Int!
+
+  # Wavelength in Å
+  angstroms: BigDecimal!
+
+  # Wavelength in nm
+  nanometers: BigDecimal!
+
+  # Wavelength in µm
+  micrometers: BigDecimal!
+}
+
+# Decimal value in Wavelength
+input WavelengthDecimalInput {
+  # decimal value in associated units
+  value: BigDecimal!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Integral value in Wavelength
+input WavelengthLongInput {
+  # integral value in associated units
+  value: Long!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Wavelength, choose one of the available units
+input WavelengthModelInput {
+  picometers: Long
+  angstroms: BigDecimal
+  nanometers: BigDecimal
+  micrometers: BigDecimal
+  fromLong: WavelengthLongInput
+  fromDecimal: WavelengthDecimalInput
+}
+
+# Wavelength units
+enum WavelengthUnits {
+  # WavelengthUnits Picometers
+  PICOMETERS
+
+  # WavelengthUnits Angstroms
+  ANGSTROMS
+
+  # WavelengthUnits Nanometers
+  NANOMETERS
+
+  # WavelengthUnits Micrometers
+  MICROMETERS
+}
+
+# GMOS North Disperser
+enum GmosNorthDisperser {
+  # GmosNorthDisperser B1200_G5301
+  B1200_G5301
+
+  # GmosNorthDisperser R831_G5302
+  R831_G5302
+
+  # GmosNorthDisperser B600_G5303
+  B600_G5303
+
+  # GmosNorthDisperser B600_G5307
+  B600_G5307
+
+  # GmosNorthDisperser R600_G5304
+  R600_G5304
+
+  # GmosNorthDisperser B480_G5309
+  B480_G5309
+
+  # GmosNorthDisperser R400_G5305
+  R400_G5305
+
+  # GmosNorthDisperser R150_G5306
+  R150_G5306
+
+  # GmosNorthDisperser R150_G5308
+  R150_G5308
+}
+# GMOS North FPU
+enum GmosNorthFpu {
+  # GmosNorthFpu Ns0
+  NS0
+
+  # GmosNorthFpu Ns1
+  NS1
+
+  # GmosNorthFpu Ns2
+  NS2
+
+  # GmosNorthFpu Ns3
+  NS3
+
+  # GmosNorthFpu Ns4
+  NS4
+
+  # GmosNorthFpu Ns5
+  NS5
+
+  # GmosNorthFpu LongSlit_0_25
+  LONG_SLIT_0_25
+
+  # GmosNorthFpu LongSlit_0_50
+  LONG_SLIT_0_50
+
+  # GmosNorthFpu LongSlit_0_75
+  LONG_SLIT_0_75
+
+  # GmosNorthFpu LongSlit_1_00
+  LONG_SLIT_1_00
+
+  # GmosNorthFpu LongSlit_1_50
+  LONG_SLIT_1_50
+
+  # GmosNorthFpu LongSlit_2_00
+  LONG_SLIT_2_00
+
+  # GmosNorthFpu LongSlit_5_00
+  LONG_SLIT_5_00
+
+  # GmosNorthFpu Ifu2Slits
+  IFU2_SLITS
+
+  # GmosNorthFpu IfuBlue
+  IFU_BLUE
+
+  # GmosNorthFpu IfuRed
+  IFU_RED
+}
+
+# GMOS North builtin-in FPU
+type GmosNorthBuiltinFpu {
+  # GMOS North builtin-fpu
+  builtin: GmosNorthFpu!
+}
+
+# GMOS Custom Mask
+type GmosCustomMask {
+  # Custom Mask Filename
+  filename: String!
+
+  # Custom Slit Width
+  slitWidth: GmosCustomSlitWidth!
+}
+
+# GMOS Custom Slit Width
+enum GmosCustomSlitWidth {
+  # GmosCustomSlitWidth CustomWidth_0_25
+  CUSTOM_WIDTH_0_25
+
+  # GmosCustomSlitWidth CustomWidth_0_50
+  CUSTOM_WIDTH_0_50
+
+  # GmosCustomSlitWidth CustomWidth_0_75
+  CUSTOM_WIDTH_0_75
+
+  # GmosCustomSlitWidth CustomWidth_1_00
+  CUSTOM_WIDTH_1_00
+
+  # GmosCustomSlitWidth CustomWidth_1_50
+  CUSTOM_WIDTH_1_50
+
+  # GmosCustomSlitWidth CustomWidth_2_00
+  CUSTOM_WIDTH_2_00
+
+  # GmosCustomSlitWidth CustomWidth_5_00
+  CUSTOM_WIDTH_5_00
+}
+
+# Either custom mask or builtin-FPU
+union GmosNorthFpuUnion = GmosCustomMask | GmosNorthBuiltinFpu
+
+# GMOS North Filter
+enum GmosNorthFilter {
+  # GmosNorthFilter GPrime
+  G_PRIME
+
+  # GmosNorthFilter RPrime
+  R_PRIME
+
+  # GmosNorthFilter IPrime
+  I_PRIME
+
+  # GmosNorthFilter ZPrime
+  Z_PRIME
+
+  # GmosNorthFilter Z
+  Z
+
+  # GmosNorthFilter Y
+  Y
+
+  # GmosNorthFilter GG455
+  GG455
+
+  # GmosNorthFilter OG515
+  OG515
+
+  # GmosNorthFilter RG610
+  RG610
+
+  # GmosNorthFilter CaT
+  CA_T
+
+  # GmosNorthFilter Ha
+  HA
+
+  # GmosNorthFilter HaC
+  HA_C
+
+  # GmosNorthFilter DS920
+  DS920
+
+  # GmosNorthFilter SII
+  SII
+
+  # GmosNorthFilter OIII
+  OIII
+
+  # GmosNorthFilter OIIIC
+  OIIIC
+
+  # GmosNorthFilter HeII
+  HE_II
+
+  # GmosNorthFilter HeIIC
+  HE_IIC
+
+  # GmosNorthFilter HartmannA_RPrime
+  HARTMANN_A_R_PRIME
+
+  # GmosNorthFilter HartmannB_RPrime
+  HARTMANN_B_R_PRIME
+
+  # GmosNorthFilter GPrime_GG455
+  G_PRIME_GG455
+
+  # GmosNorthFilter GPrime_OG515
+  G_PRIME_OG515
+
+  # GmosNorthFilter RPrime_RG610
+  R_PRIME_RG610
+
+  # GmosNorthFilter IPrime_CaT
+  I_PRIME_CA_T
+
+  # GmosNorthFilter ZPrime_CaT
+  Z_PRIME_CA_T
+
+  # GmosNorthFilter UPrime
+  U_PRIME
+}
+
+type ConstraintSet {
+  # Image quality
+  imageQuality: ImageQuality!
+
+  # Cloud extinction
+  cloudExtinction: CloudExtinction!
+
+  # Sky background
+  skyBackground: SkyBackground!
+
+  # Water vapor
+  waterVapor: WaterVapor!
+
+  # Either airmass range or elevation range
+  # elevationRange: ElevationRange!
+
+  # Airmass range if elevation range is an Airmass range
+  # airmassRange: AirMassRange
+
+  # Hour angle range if elevation range is an Hour angle range
+  # hourAngleRange: HourAngleRange
+}
+
+# Image quality
+enum ImageQuality {
+  # ImageQuality PointOne
+  POINT_ONE
+
+  # ImageQuality PointTwo
+  POINT_TWO
+
+  # ImageQuality PointThree
+  POINT_THREE
+
+  # ImageQuality PointFour
+  POINT_FOUR
+
+  # ImageQuality PointSix
+  POINT_SIX
+
+  # ImageQuality PointEight
+  POINT_EIGHT
+
+  # ImageQuality OnePointZero
+  ONE_POINT_ZERO
+
+  # ImageQuality OnePointFive
+  ONE_POINT_FIVE
+
+  # ImageQuality TwoPointZero
+  TWO_POINT_ZERO
+}
+
+# Cloud extinction
+enum CloudExtinction {
+  # CloudExtinction PointOne
+  POINT_ONE
+
+  # CloudExtinction PointThree
+  POINT_THREE
+
+  # CloudExtinction PointFive
+  POINT_FIVE
+
+  # CloudExtinction OnePointZero
+  ONE_POINT_ZERO
+
+  # CloudExtinction OnePointFive
+  ONE_POINT_FIVE
+
+  # CloudExtinction TwoPointZero
+  TWO_POINT_ZERO
+
+  # CloudExtinction ThreePointZero
+  THREE_POINT_ZERO
+}
+
+enum SkyBackground {
+  # SkyBackground Darkest
+  DARKEST
+
+  # SkyBackground Dark
+  DARK
+
+  # SkyBackground Gray
+  GRAY
+
+  # SkyBackground Bright
+  BRIGHT
+}
+
+# Water vapor
+enum WaterVapor {
+  # WaterVapor VeryDry
+  VERY_DRY
+
+  # WaterVapor Dry
+  DRY
+
+  # WaterVapor Median
+  MEDIAN
+
+  # WaterVapor Wet
+  WET
+}
+
+###########
+# Based on lucuma-odb schema
+##########,
+# Airmass range creation parameters
+input AirmassRangeInput {
+  min: BigDecimal!
+  max: BigDecimal!
+}
+
+# Hour Angle creation parameters
+input HourAngleRangeInput {
+  minHours: BigDecimal!
+  maxHours: BigDecimal!
+}
+
+# Elevation range creation parameters
+input ElevationRangeInput {
+  airmassRange: AirmassRangeInput
+  hourAngleRange: HourAngleRangeInput
+}
+
+# Constraint set creation parameters
+input ConstraintsSetInput {
+  imageQuality: ImageQuality!
+  cloudExtinction: CloudExtinction!
+  skyBackground: SkyBackground!
+  waterVapor: WaterVapor!
+  elevationRange: ElevationRangeInput!
+}
+
+##############
+# ITC schema
+##############
+
+# Gaussian source angle in appropriate units
+input GaussianSourceAngleInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
+}
+
+# ITC error result
+type ItcError implements ItcResult {
+  # Message
+  msg: String!
+
+  # Result type
+  resultType: String!
+}
+
+# Possible itc result
+interface ItcResult {
+  # Result type
+  resultType: String!
+}
+
+type ItcSuccess implements ItcResult {
+  # Exposure time duration
+  exposureTime: Duration!
+
+  # Exposures
+  exposures: Int!
+
+  # Signal/Noise ratio
+  signalToNoise: PosBigDecimal!
+
+  # Result type
+  resultType: String!
+}
+
+type ObservingModeSpectroscopy {
+  # Wavelength in appropriate units
+  wavelength: Wavelength!
+
+  # Resolution
+  resolution: BigDecimal!
+
+  # params
+  params: InstrumentITCParams!
+
+  # instrument
+  instrument: InstrumentType
+}
+
+# An `Int` in the range from 1 to `Int.MaxValue`
+scalar PosInt
+
+# A `BigDecimal` above 0
+scalar PosBigDecimal
+
+type Query {
+  basiccase(
+    # Configuration alternatives search parameters.
+    input: QueryConfigurationAlternativeSearchInput!
+  ): SpectroscopyResult!
+
+  spectroscopy(
+    # Query multiple modes in spectroscopy mode
+    input: SpectroscopyModeInput!
+  ): [SpectroscopyResult!]!
+}
+
+type GmosSITCParams {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  fpu: GmosNorthFpu
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+input GmosSITCInput {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  fpu: GmosNorthFpu!
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+type GmosNITCParams {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  customMask: GmosCustomMask
+
+  fpu: GmosNorthFpu!
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+input GmosNITCInput {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  fpu: GmosNorthFpu!
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+union InstrumentITCParams = GmosNITCParams | GmosSITCParams
+
+# Parent of instrument modes
+input InstrumentModes {
+  # params
+  gmosN: GmosNITCInput
+}
+
+# Configuration alternatives query
+input SpectroscopyModeInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosBigDecimal!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput!
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpectralDistributionInput!
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeCreateInput!
+
+  # Target redshift.
+  redshift: BigDecimal!
+
+  # Conditions
+  constraints: ConstraintsSetInput!
+
+  # Instrument modes
+  modes: [InstrumentModes]!
+}
+
+# Configuration alternatives query
+input QueryConfigurationAlternativeSearchInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput!
+
+  # Minimum desired simultaneous wavelength coverage.
+  simultaneousCoverage: WavelengthModelInput!
+
+  # Minimum desired resolution.
+  resolution: PosInt!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosBigDecimal!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput!
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpectralDistributionInput!
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeCreateInput!
+
+  # Target redshift.
+  redshift: BigDecimal!
+}
+
+type Result {
+  # Spectroscopy mode
+  mode: ObservingModeSpectroscopy!
+
+  # ITC results
+  itc: ItcResult!
+}
+
+# Spatial profile PointSource/UniformSource/GaussianSource
+input SpatialProfileModelInput {
+  # Spatial profile type: Point/Uniform/Gaussian
+  sourceType: SpatialProfileType!
+
+  # Full width half maximum (including seeing) in suitable units. Required for the Gaussian spatial profile, ignored otherwise.
+  fwhm: GaussianSourceAngleInput
+}
+
+# Spatial profile type: Point/Uniform/Gaussian
+enum SpatialProfileType {
+  # SpatialProfileType PointSource
+  POINT_SOURCE
+
+  # SpatialProfileType UniformSource
+  UNIFORM_SOURCE
+
+  # SpatialProfileType GaussianSource
+  GAUSSIAN_SOURCE
+}
+
+# A black body with a temperature in Kelvin.
+input BlackBody {
+  temperature: BigDecimal
+}
+
+# Defined by power law function.
+input PowerLaw {
+  index: BigDecimal
+}
+
+# Library defined Stellar spectrum
+enum StellarLibrarySpectrum {
+  O5V
+  O8III
+  B0V
+  B5_7V
+  B5III
+  B5I
+  A0V
+  A0III
+  A0I
+  A5V
+  A5III
+  F0V
+  F0III
+  F0I
+  F5V
+  F5V_W
+  F6V_R
+  F5III
+  F5I
+  G0V
+  G0V_W
+  G0V_R
+  G0III
+  G0I
+  G2V
+  G5V
+  G5V_W
+  G5V_R
+  G5III
+  G5III_W
+  G5III_R
+  G5I
+  K0V
+  K0V_R
+  K0III
+  K0III_W
+  K0III_R
+  K0_1II
+  K4V
+  K4III
+  K4III_W
+  K4III_R
+  K4I
+  M0V
+  M0III
+  M3V
+  M3III
+  M6V
+  M6III
+  M9III
+}
+
+# Library defined Non Stellar spectrum
+enum NonStellarLibrarySpectrum {
+  ELLIPTICAL_GALAXY
+  SPIRAL_GALAXY
+  QS0
+  QS02
+  ORION_NEBULA
+  PLANETARY_NEBULA
+  PLANETARY_NEBULA2
+  PLANETARY_NEBULA3
+  STARBURST_GALAXY
+  PMS_STAR
+  GALACTIC_CENTER
+  AFGL_230
+  AFGL_3068
+  ALPHA_BOO
+  ALPHA_CAR
+  BETA_AND
+  BETA_GRU
+  GAMMA_CAS
+  GAMMA_DRA
+  L1511_IRS
+  NGC1068
+  NGC2023
+  NGC2440
+  O_CET
+  ORION_BAR
+  RSCL
+  TXPSC
+  WR104
+  WR34
+  MARS
+  JUPITER
+  SATURN
+  URANUS
+  NEPTUNE
+}
+
+# Spectral distribution variant
+input SpectralDistributionInput {
+  # SpectralDistribution BlackBody
+  blackBody: BlackBody
+
+  # SpectralDistribution PowerLaw
+  powerLaw: PowerLaw
+
+  # SpectralDistribution Stellar
+  stellar: StellarLibrarySpectrum
+
+  # SpectralDistribution NonStellar
+  nonStellar: NonStellarLibrarySpectrum
+}
+
+type SpectroscopyResult {
+  # Search results
+  results: [Result!]!
+}
+
+# The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
+scalar BigDecimal
+
+# The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1.
+scalar Long
