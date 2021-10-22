@@ -3,27 +3,28 @@
 
 package explore.config
 
+import cats.Parallel
 import cats.data._
-import cats.syntax.all._
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
+import cats.syntax.all._
+import clue.TransactionalClient
 import coulomb.Quantity
 import coulomb.refined._
-import clue.TransactionalClient
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.Icons
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
+import explore.Icons
 import explore.View
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.schemas.ITC
 import explore.implicits._
 import explore.modes._
+import explore.schemas.ITC
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FocalPlane
@@ -36,6 +37,7 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
+import react.semanticui.modules.popup.Popup
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
@@ -46,8 +48,6 @@ import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
-import cats.Parallel
-import react.semanticui.modules.popup.Popup
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -276,7 +276,7 @@ object SpectroscopyModesTable extends ItcColumn {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
-  def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
     val s = visibleRange.startIndex.toInt
     val e = visibleRange.endIndex.toInt
 
@@ -284,7 +284,7 @@ object SpectroscopyModesTable extends ItcColumn {
       .collect { case Some(m) => m }
   }
 
-  def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+  protected def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
     wavelength:    Option[Wavelength],
     signalToNoise: Option[PosBigDecimal],
     visibleRange:  ListRange,
@@ -292,7 +292,9 @@ object SpectroscopyModesTable extends ItcColumn {
     itcResults:    hooks.Hooks.UseState[ItcResultsCache]
   ) =
     (wavelength, signalToNoise)
-      .mapN((w, sn) => queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults))
+      .mapN((w, sn) =>
+        queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForgetCB
+      )
       .getOrEmpty
 
   val component =
@@ -346,14 +348,12 @@ object SpectroscopyModesTable extends ItcColumn {
       .useMemo(())(_ => ModesTable.createRef)
       // visibleRange
       .useState(none[ListRange])
+      // Recalculate ITC values if the wv or sn change
       .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
         (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.signalToNoise)
       )((props, rows, itcResults, _, _, _, _, range) => { case (wv, sn) =>
         implicit val ctx = props.ctx
-        // selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
         range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).getOrEmpty
-      // queryItc(wv, sn, range)
-      // Callback.log(range.value, wv, sn)
       })
       // atTop
       .useState(false)

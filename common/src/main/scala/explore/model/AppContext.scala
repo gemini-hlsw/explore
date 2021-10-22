@@ -8,6 +8,7 @@ import cats.effect._
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
+import clue.js.AjaxJSBackend
 import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
@@ -28,7 +29,6 @@ import org.typelevel.log4cats.Logger
 import retry._
 
 import scala.concurrent.duration._
-import clue.js.AjaxJSBackend
 
 case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
   odb:           WebSocketClient[F, ObservationDB],

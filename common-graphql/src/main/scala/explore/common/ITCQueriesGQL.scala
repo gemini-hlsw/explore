@@ -36,7 +36,6 @@ object ITCQueriesGQL {
               }
               ... on ItcError {
                 msg
-                resultType
               }
             }
           }

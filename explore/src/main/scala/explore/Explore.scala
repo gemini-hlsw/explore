@@ -10,6 +10,8 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import cats.~>
 import clue.WebSocketReconnectionStrategy
+import clue.js.AjaxJSBackend
+import clue.js.AjaxMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.implicits._
@@ -48,8 +50,6 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
-import clue.js.AjaxJSBackend
-import clue.js.AjaxMethod
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {

@@ -3,19 +3,18 @@
 
 package explore.schemas
 
+import clue.data.Input
 import clue.data.syntax._
-import lucuma.core.model.Magnitude
+import explore.common.ITCQueriesGQL
+import explore.modes.GmosNorthSpectroscopyRow
 import lucuma.core.math.Wavelength
+import lucuma.core.model.Magnitude
 import lucuma.core.optics.syntax.lens._
-
 import lucuma.schemas.ObservationDB.Types.MagnitudeCreateInput
 
 import java.math.MathContext
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
-import explore.modes.GmosNorthSpectroscopyRow
-import clue.data.Input
-import explore.common.ITCQueriesGQL
 
 object implicits {
 

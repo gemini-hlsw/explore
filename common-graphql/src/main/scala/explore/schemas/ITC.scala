@@ -3,16 +3,16 @@
 
 package explore.schemas
 
-import lucuma.core.enum
-import lucuma.core.model
 import clue.annotation.GraphQLSchema
+import explore.model.AirMassRange
+import explore.model.ElevationRange
+import explore.model.HourAngleRange
 import io.circe.Encoder
 import io.circe.Json
-import io.circe.syntax._
 import io.circe.generic.semiauto._
-import explore.model.ElevationRange
-import explore.model.AirMassRange
-import explore.model.HourAngleRange
+import io.circe.syntax._
+import lucuma.core.enum
+import lucuma.core.model
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema

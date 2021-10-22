@@ -3,7 +3,6 @@ const { visualizer } = require('rollup-plugin-visualizer')
 const path = require("path")
 const fs = require("fs")
 const ViteFonts = require("vite-plugin-fonts")
-import mkcert from'vite-plugin-mkcert'
 
 const fontImport = ViteFonts.Plugin({
   google: {
@@ -105,8 +104,8 @@ module.exports = ({ command, mode }) => {
               _path.includes("/classes") ||
               _path.endsWith(".tmp");
             return sjsIgnored;
-          },
-        ]
+          }
+        ],
       },
       proxy: {
         "conf.json": {
@@ -132,6 +131,6 @@ module.exports = ({ command, mode }) => {
       },
       outDir: path.resolve(__dirname, "heroku/static"),
     },
-    plugins: [reactRefresh(), fontImport, mkcert()],
+    plugins: [reactRefresh(), fontImport],
   };
 };
