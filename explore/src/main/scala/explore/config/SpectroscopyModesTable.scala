@@ -347,7 +347,7 @@ object SpectroscopyModesTable extends ItcColumn {
       .useMemo(())(_ => ModesTable.createRef)
       // visibleRange
       .useState(none[ListRange])
-      // Recalculate ITC values if the wv or sn change
+      // Recalculate ITC values if the wv or sn change or if the range or rows get modified
       .useEffectWithDepsBy((props, rows, _, _, _, _, _, range) =>
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
