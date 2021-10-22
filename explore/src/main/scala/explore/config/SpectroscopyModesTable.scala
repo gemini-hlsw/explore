@@ -53,7 +53,8 @@ final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   matrix:                   SpectroscopyModesMatrix,
   spectroscopyRequirements: SpectroscopyRequirementsData
-) extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
+)(implicit val ctx:         AppContextIO)
+    extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
 object SpectroscopyModesTable extends ItcColumn {
   type Props = SpectroscopyModesTable
@@ -347,11 +348,12 @@ object SpectroscopyModesTable extends ItcColumn {
       .useState(none[ListRange])
       .useEffectWithDepsBy((props, _, _, _, _, _, _, _) =>
         (props.spectroscopyRequirements.wavelength, props.spectroscopyRequirements.signalToNoise)
-      )((_, rows, itcResults, _, _, _, _, range) => { case (wv, sn) =>
+      )((props, rows, itcResults, _, _, _, _, range) => { case (wv, sn) =>
+        implicit val ctx = props.ctx
         // selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
-        // range.value.map(r => updateITCOnScroll[SyncIO](wv, sn, r, rows, itcResults.withEffect))
-        // queryItc(wv, sn, range)
-        Callback.log(range.value, wv, sn)
+        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).getOrEmpty
+      // queryItc(wv, sn, range)
+      // Callback.log(range.value, wv, sn)
       })
       // atTop
       .useState(false)
