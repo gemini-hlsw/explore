@@ -43,9 +43,7 @@ import react.semanticui.sizes._
 import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
 import reactST.reactTable._
-import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.IdType
-import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 
 import scala.collection.immutable.TreeSeqMap
@@ -64,9 +62,7 @@ final case class TargetTable(
 object TargetTable {
   type Props = TargetTable
 
-  protected val TargetTable = TableDef[SiderealTargetWithId].withSort
-
-  import TargetTable.syntax._
+  protected val TargetTable = TableDef[SiderealTargetWithId].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 
@@ -202,7 +198,7 @@ object TargetTable {
           { (hiddenColumns: Set[String], options: TargetTable.OptionsType) =>
             options
               .setAutoResetSortBy(false)
-              .setInitialStateFull(
+              .setInitialState(
                 TargetTable
                   .State()
                   .setHiddenColumns(
@@ -259,7 +255,7 @@ object TargetTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            row = (rowData: Row[SiderealTargetWithId]) =>
+            row = (rowData: TargetTable.RowType) =>
               TableRow(
                 clazz = ExploreStyles.TableRowSelected.when_(
                   props.selectedTarget.get.exists(_ === TargetWithId.id.get(rowData.original))
@@ -270,7 +266,7 @@ object TargetTable {
                   .toCB,
                 props2Attrs(rowData.getRowProps())
               ),
-            cell = (cell: Cell[_, _]) =>
+            cell = (cell: TargetTable.CellType[_]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                 ^.whiteSpace.nowrap
               )
