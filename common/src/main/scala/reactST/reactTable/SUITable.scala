@@ -12,15 +12,14 @@ import japgolly.scalajs.react.vdom.html_<^._
 import react.semanticui.AsC
 import react.semanticui.collections.table._
 import reactST.reactTable._
-import reactST.reactTable.syntax._
+import reactST.reactTable.facade.cell.Cell
+import reactST.reactTable.facade.column.Column
+import reactST.reactTable.facade.row.Row
+import reactST.reactTable.facade.tableInstance.TableInstance
 import reactST.reactTable.util
 
 import scalajs.js
 import scalajs.js.|
-import reactST.reactTable.facade.tableInstance.TableInstance
-import reactST.reactTable.facade.column.Column
-import reactST.reactTable.facade.row.Row
-import reactST.reactTable.facade.cell.Cell
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {

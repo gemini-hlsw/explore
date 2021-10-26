@@ -13,13 +13,12 @@ import react.common.style.Css
 import react.semanticui.collections.table._
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
-import reactST.reactTable.syntax._
+import reactST.reactTable.facade.tableInstance.TableInstance
 
 import scalajs.js
 import scalajs.js.|
 import scalajs.js.JSConverters._
 import definitions._
-import reactST.reactTable.facade.tableInstance.TableInstance
 
 class SUITableVirtuoso[D, Plugins](
   tableDef:     TableDef[D, Plugins, Layout.NonTable] // tableDef is just used to infer types.

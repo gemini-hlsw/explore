@@ -3,8 +3,8 @@
 
 package explore.observationtree
 
-import cats.effect.Async
 import cats.data.NonEmptySet
+import cats.effect.Async
 import cats.implicits._
 import clue.TransactionalClient
 import explore.common.ConstraintGroupQueries._
