@@ -28,7 +28,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -44,7 +43,6 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
-import scala.collection.immutable.TreeSeqMap
 import scala.concurrent.duration._
 
 final case class TargetTabContents(
@@ -181,77 +179,6 @@ object TargetTabContents {
     )
 
     /**
-     * Effectively creates a subset of the original TargetEnv, where the TargetEnv.id contains only
-     * ids in envObsIds, and the keys for the TargetEnv.scienceTargets map contain only the keys
-     * specified in targetIds. This subset can then be passed to the TargetEnvEditor.
-     */
-    def filterInIds(
-      envObsIds: TargetEnvIdObsIdSet,
-      targetIds: Set[Target.Id],
-      original:  TargetEnv
-    ): Option[TargetEnv] = {
-      val filteredIds: Option[TargetEnvIdObsIdSet] =
-        NonEmptySet.fromSet(original.id.filter(envObsIds.contains))
-
-      val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
-        original.scienceTargets.toList
-          .traverse { case (ids, target) =>
-            NonEmptySet
-              .fromSet(ids.filter(targetIds.contains))
-              .map((_, target))
-          }
-          .map(TreeSeqMap.from)
-      (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
-    }
-
-    /**
-     * Creates a subset of the original TargetEnv where the TargetEnv.id has had all of the ids in
-     * toFilterOut.id removed, and the TargetEnv.scienceTarget keys have had any keys in
-     * toFilter.scienceTargets removed. This is used to create a new TargetEnv when a subset of the
-     * original has been edited, necessitating a split. NOTE: toFilterOut should be a subset of
-     * original with identical targets.
-     */
-    def filterOutIds(original: TargetEnv, toFilterOut: TargetEnv): Option[TargetEnv] = {
-      val filteredIds: Option[TargetEnvIdObsIdSet]                 =
-        NonEmptySet.fromSet(original.id -- toFilterOut.id)
-      // TODO: Validate the scienceTarget collections have the same targets?
-      val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
-        (original.scienceTargets.toList, toFilterOut.scienceTargets.toList)
-          .parMapN { case ((allIds, target), (outIds, _)) =>
-            NonEmptySet.fromSet(allIds -- outIds).map((_, target))
-          }
-          .sequence
-          .map(TreeSeqMap.from)
-      (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
-    }
-
-    /**
-     * Given 2 TargetEnvs, this creates a new one where TargetEnv.id is a union of the env1.id and
-     * env2.id. Each of the keys for the targets in TargetEnv.scienceTargets will be the union of
-     * the keys in the respective targets in env1 and env2. This is used to merge 2 TargetEnvs in
-     * the instance where editing a TargetEnv makes it equal to an existing TargetEnv, making a
-     * merger necessary, NOTE: The target lists of env1 and env2 are assumed to be equal.
-     */
-    def mergeTargetEnvs(env1: TargetEnv, env2: TargetEnv): TargetEnv = {
-      val mergedTargets: TreeSeqMap[TargetIdSet, Target] =
-        TreeSeqMap.from(
-          (env1.scienceTargets.toList, env2.scienceTargets.toList)
-            .parMapN { case ((ids1, target), (ids2, _)) => (ids1 ++ ids2, target) }
-        )
-      TargetEnv(env1.id ++ env2.id, mergedTargets)
-    }
-
-    /**
-     * Compare the targets in the scienceTargets of 2 TargetEnvs to see if they are all equal. This
-     * is used to determine if a merger is necessary after an edit.
-     */
-    def compareTargets(env1: TargetEnv, env2: TargetEnv): Boolean =
-      env1.scienceTargets.size === env2.scienceTargets.size &&
-        (env1.scienceTargets.toList, env2.scienceTargets.toList)
-          .parMapN { case (t1, t2) => t1._2 === t2._2 }
-          .forall(identity)
-
-    /**
      * Render the summary table.
      */
     def renderSummary: VdomNode =
@@ -269,22 +196,17 @@ object TargetTabContents {
      *   The TargetEnv that is the basis for editing. All or part of it may be included in the edit.
      */
     def renderEditor(idsToEdit: TargetEnvIdObsIdSet, targetListGroup: TargetEnv): VdomNode = {
-      val focusedObs   = props.focusedObs.get
-      val groupEnvIds  = targetListGroup.id
-      val observations = targetListGroupWithObs.get.observations
+      val focusedObs  = props.focusedObs.get
+      val groupEnvIds = targetListGroup.id
 
       val tlgView =
         targetListGroupWithObs
           .withOnMod(onModTargetsWithObs(groupEnvIds, idsToEdit))
-          .zoom(TargetListGroupWithObs.targetListGroups) // will need withOnMod
+          .zoom(TargetListGroupWithObs.targetListGroups)
 
       val optFilteredEnv: Option[TargetEnv] = if (idsToEdit =!= groupEnvIds) {
-        val targetIdsToEdit = observations.mapFilter { obsSumm =>
-          if (idsToEdit.contains((obsSumm.targetEnvId, obsSumm.id.some)))
-            obsSumm.scienceTargetIds.some
-          else none
-        }.combineAll
-        filterInIds(idsToEdit, targetIdsToEdit, targetListGroup)
+        val targetIdsToEdit = targetListGroupWithObs.get.targetIdsFor(idsToEdit)
+        targetListGroup.filterInIds(idsToEdit, targetIdsToEdit)
       } else targetListGroup.some
 
       optFilteredEnv.fold(renderSummary) { filteredEnv =>
@@ -300,15 +222,15 @@ object TargetTabContents {
                 tlgl.updated(groupEnvIds, moddedEnv) // else just update the current
               else {
                 val temp = tlgl - groupEnvIds + moddedEnv.asObsKeyValue
-                filterOutIds(targetListGroup, filteredEnv).fold(temp)(env =>
-                  temp + env.asObsKeyValue
-                )
+                targetListGroup
+                  .filterOutIds(filteredEnv.id, filteredEnv.targetIds)
+                  .fold(temp)(env => temp + env.asObsKeyValue)
               }
 
-            // see if the edit caused a merger
-            val mergeWithTlg = tlgl.find(tlg => compareTargets(tlg._2, moddedEnv))
+            // see if the edit caused a merger - note that we are checking the original list for the duplicate
+            val mergeWithTlg = tlgl.find(_._2.compareScienceTargets(moddedEnv))
             mergeWithTlg.fold(splitList) { tlg =>
-              splitList - tlg._1 - idsToEdit + mergeTargetEnvs(tlg._2, moddedEnv).asObsKeyValue
+              splitList - tlg._1 - idsToEdit + tlg._2.merge(moddedEnv).asObsKeyValue
             }
           }
 

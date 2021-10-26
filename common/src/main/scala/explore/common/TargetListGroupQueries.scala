@@ -22,6 +22,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.TargetEnvironment
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
@@ -48,7 +49,20 @@ object TargetListGroupQueries {
   case class TargetListGroupWithObs(
     targetListGroups: TargetListGroupList,
     observations:     ObsList
-  )
+  ) {
+    // TODO: When the API supports getting all target environments for a program,
+    // include a Map[TargetEnvironment.Id, NonEmptySet[Target.Id]] in the case class.
+    // then use that map to find the target ids. Until then, this will not work
+    // for unmoored targets when the whole group is not selected.
+    def targetIdsFor(targetEnvObsIds: TargetEnvIdObsIdSet): Set[Target.Id] =
+      targetListGroups
+        .get(targetEnvObsIds)
+        .fold(observations.mapFilter { obsSumm =>
+          if (targetEnvObsIds.contains((obsSumm.targetEnvId, obsSumm.id.some)))
+            obsSumm.scienceTargetIds.some
+          else none
+        }.combineAll)(_.targetIds)
+  }
 
   object TargetListGroupWithObs {
     val targetListGroups = Focus[TargetListGroupWithObs](_.targetListGroups)
@@ -91,12 +105,12 @@ object TargetListGroupQueries {
       }
     )
 
-  def replaceObservationScienceTargetList[F[_]: Async](
-    obsId:      Observation.Id,
-    targets:    List[Target]
-  )(implicit c: TransactionalClient[F, ObservationDB]) = {
+  def replaceScienceTargetList[F[_]: Async](
+    targetEnvIds: List[TargetEnvironment.Id],
+    targets:      List[Target]
+  )(implicit c:   TransactionalClient[F, ObservationDB]) = {
     val input = BulkReplaceTargetListInput(
-      select = SelectTargetEnvironmentInput(observations = List(obsId).assign),
+      select = SelectTargetEnvironmentInput(targetEnvironments = targetEnvIds.assign),
       replace = targets.map(_.toCreateInput)
     )
     ReplaceScienceTargetListMutation.execute[F](input).void
