@@ -31,11 +31,9 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
-import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.SortingRule
-import reactST.reactTable.mod.TableState
 
 import scala.collection.immutable.SortedSet
 
@@ -54,9 +52,7 @@ final case class ConstraintsSummaryTable(
 object ConstraintsSummaryTable {
   type Props = ConstraintsSummaryTable
 
-  protected val ConstraintsTable = TableDef[ConstraintGroup].withSort
-
-  import ConstraintsTable.syntax._
+  protected val ConstraintsTable = TableDef[ConstraintGroup].withSortBy
 
   protected val ConstraintsTableComponent = new SUITable(ConstraintsTable)
 
@@ -82,13 +78,11 @@ object ConstraintsSummaryTable {
 
   private def toSortingRules(tuples: List[(String, Boolean)]) = tuples.map { case (id, b) =>
     SortingRule[ConstraintGroup](id).setDesc(b)
-  }.toJSArray
+  }
 
-  private def fromTableState(state: TableState[ConstraintGroup]): List[(String, Boolean)] = state
-    .asInstanceOf[ConstraintsTable.StateType]
-    .sortBy
-    .toList
-    .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
+  private def fromTableState(state: ConstraintsTable.TableStateType): List[(String, Boolean)] =
+    state.sortBy.toList
+      .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
 
   val component =
     ScalaFnComponent
@@ -185,13 +179,13 @@ object ConstraintsSummaryTable {
           { (hiddenColumns: Set[String], options: ConstraintsTable.OptionsType) =>
             options
               .setAutoResetSortBy(false)
-              .setInitialStateFull(
+              .setInitialState(
                 ConstraintsTable
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList.map(col => col: IdType[ConstraintGroup]).toJSArray
                   )
-                  .setSortBy(toSortingRules(props.summarySorting.get))
+                  .setSortBy(toSortingRules(props.summarySorting.get): _*)
               )
           }.reuseCurrying(props.hiddenColumns.get)
         )
@@ -244,7 +238,7 @@ object ConstraintsSummaryTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            cell = (cell: Cell[ConstraintGroup, _]) =>
+            cell = (cell: ConstraintsTable.CellType[_]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                 ^.whiteSpace.nowrap
               )

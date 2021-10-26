@@ -31,7 +31,6 @@ import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
-import reactST.reactTable.mod.Row
 import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
@@ -55,9 +54,7 @@ object SpectroscopyModesTable {
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
 
-  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
-
-  import ModesTableDef.syntax._
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
   val decFormat = new DecimalFormat("0.###")
 
@@ -325,7 +322,7 @@ object SpectroscopyModesTable {
                       ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
                       ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
                     ),
-                  row = (rowData: Row[SpectroscopyModeRow]) =>
+                  row = (rowData: ModesTableDef.RowType) =>
                     TableRow(
                       disabled = !enabledRow(rowData.original),
                       clazz = ExploreStyles.TableRowSelected.when_(

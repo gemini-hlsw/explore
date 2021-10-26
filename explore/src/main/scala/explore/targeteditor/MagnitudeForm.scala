@@ -63,9 +63,7 @@ object MagnitudeForm {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  private val MagTable = TableDef[View[Magnitude]].withSort
-
-  import MagTable.syntax._
+  private val MagTable = TableDef[View[Magnitude]].withSortBy
 
   private val MagTableComponent = new SUITable(MagTable)
 
@@ -77,7 +75,7 @@ object MagnitudeForm {
     Icons.Trash
   )
 
-  private val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
+  private val tableState = MagTable.State().setSortBy(SortingRule("band"))
 
   val component =
     ScalaFnComponent
@@ -151,7 +149,7 @@ object MagnitudeForm {
                  rows,
                  ((_: MagTable.OptionsType)
                    .setRowIdFn(_.get.band.tag)
-                   .setInitialStateFull(tableState))
+                   .setInitialState(tableState))
                    .reuseAlways
         )
       )

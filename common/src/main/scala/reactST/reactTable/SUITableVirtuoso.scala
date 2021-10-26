@@ -13,54 +13,35 @@ import react.common.style.Css
 import react.semanticui.collections.table._
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
-import reactST.reactTable._
-import reactST.reactTable.mod.{ ^ => _, _ }
-import reactST.reactTable.syntax._
-
-import scala.annotation.unused
+import reactST.reactTable.facade.tableInstance.TableInstance
 
 import scalajs.js
 import scalajs.js.|
 import scalajs.js.JSConverters._
 import definitions._
 
-class SUITableVirtuoso[
-  D,
-  TableOptsD <: UseTableOptions[D],
-  TableInstanceD <: TableInstance[D],
-  ColumnOptsD <: ColumnOptions[D],
-  ColumnInstanceD <: ColumnObject[D],
-  State <: TableState[D]
-]( // tableDef is used to infer types.
-  @unused tableDef: TableDef[
-    D,
-    TableOptsD,
-    TableInstanceD,
-    ColumnOptsD,
-    ColumnInstanceD,
-    State,
-    Layout.NonTable
-  ]
+class SUITableVirtuoso[D, Plugins](
+  tableDef:     TableDef[D, Plugins, Layout.NonTable] // tableDef is just used to infer types.
 )(implicit
-  sortElements:     SortElements[ColumnInstanceD]
+  sortElements: SortElements[D, Plugins]
 ) {
   // I expect this to be inferred in Scala 3
   type RefType =
     facade.React.Component[GroupedVirtuoso.GroupedVirtuosoProps, Null] with VirtuosoComponent
 
   case class Component(
-    table:              TableTemplate[D, TableInstanceD] = Table(): TableTemplate[D, TableInstanceD],
+    table:              TableTemplate[D, Plugins] = Table(): TableTemplate[D, Plugins],
     header:             Boolean | TableHeader = false,
     headerRow:          TableRow = TableRow(),
-    headerCell:         HeaderCell[D, ColumnInstanceD] = TableHeaderCell(): HeaderCell[D, ColumnInstanceD],
+    headerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins],
     body:               TableBody = TableBody()(^.height := "100%"),
-    row:                RowTemplate[D] = TableRow(): RowTemplate[D],
-    cell:               BodyCell[D] = TableCell(): BodyCell[D],
+    row:                RowTemplate[D, Plugins] = TableRow(): RowTemplate[D, Plugins],
+    cell:               BodyCell[D, Plugins] = TableCell(): BodyCell[D, Plugins],
     footer:             Boolean | TableFooter | VdomNode = false,
     footerRow:          TableRow = TableRow(),
-    footerCell:         HeaderCell[D, ColumnInstanceD] = TableHeaderCell(): HeaderCell[D, ColumnInstanceD]
+    footerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins]
   )(
-    val instance:       TableInstanceD,
+    val instance:       TableInstance[D, Plugins],
     val initialIndex:   Option[Int] = None,
     val rangeChanged:   Option[ListRange => Callback] = None,
     val atTopChange:    Option[Boolean => Callback] = None,
@@ -76,7 +57,7 @@ class SUITableVirtuoso[
       def addClass(className: js.UndefOr[String], clazz: js.UndefOr[Css], newClass: Css): Css =
         className.map(Css.apply).orElse(clazz).fold(newClass)(_ |+| newClass)
 
-      val tableRender: TableRender[D, TableInstanceD] = (props.table: Any) match {
+      val tableRender: TableRender[D, Plugins] = (props.table: Any) match {
         case table: Table =>
           tableInstance =>
             table.copy(as = <.div,
@@ -84,7 +65,7 @@ class SUITableVirtuoso[
             )(tableInstance.getTableProps())
         case fn           =>
           tableInstance =>
-            val table = fn.asInstanceOf[TableRender[D, TableInstanceD]](tableInstance)
+            val table = fn.asInstanceOf[TableRender[D, Plugins]](tableInstance)
             table.copy(as = <.div,
                        clazz = addClass(table.className, table.clazz, ExploreStyles.Table)
             )
@@ -108,7 +89,7 @@ class SUITableVirtuoso[
         clazz = addClass(props.headerRow.className, props.headerRow.clazz, ExploreStyles.TR)
       )
 
-      val headerCellRender: HeaderCellRender[D, ColumnInstanceD] =
+      val headerCellRender: HeaderCellRender[D, Plugins] =
         (props.headerCell: Any) match {
           case headerCell: TableHeaderCell =>
             _ =>
@@ -119,7 +100,7 @@ class SUITableVirtuoso[
           case fn                          =>
             colInstance =>
               val headerCell =
-                fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
+                fn.asInstanceOf[HeaderCellRender[D, Plugins]](colInstance)
               headerCell.copy(
                 as = <.div,
                 clazz = addClass(headerCell.className, headerCell.clazz, ExploreStyles.TH)
@@ -132,7 +113,7 @@ class SUITableVirtuoso[
           case 1 => ExploreStyles.OddRow
         })
 
-      val rowRender: RowRender[D] = (props.row: Any) match {
+      val rowRender: RowRender[D, Plugins] = (props.row: Any) match {
         case row: TableRow =>
           rowData =>
             row.copy(as = <.div,
@@ -141,14 +122,14 @@ class SUITableVirtuoso[
             )(rowData.getRowProps())
         case fn            =>
           rowData =>
-            val row = fn.asInstanceOf[RowRender[D]](rowData)
+            val row = fn.asInstanceOf[RowRender[D, Plugins]](rowData)
             row.copy(as = <.div,
                      cellAs = <.div,
                      clazz = addClass(row.className, row.clazz, rowIndexCss(rowData.index.toInt))
             )
       }
 
-      val bodyCellRender: BodyCellRender[D] = (props.cell: Any) match {
+      val bodyCellRender: BodyCellRender[D, Plugins] = (props.cell: Any) match {
         case bodyCell: TableCell =>
           _ =>
             bodyCell.copy(as = <.div,
@@ -156,13 +137,13 @@ class SUITableVirtuoso[
             )
         case fn                  =>
           cell =>
-            val bodyCell = fn.asInstanceOf[BodyCellRender[D]](cell)
+            val bodyCell = fn.asInstanceOf[BodyCellRender[D, Plugins]](cell)
             bodyCell.copy(as = <.div,
                           clazz = addClass(bodyCell.className, bodyCell.clazz, ExploreStyles.TD)
             )
       }
 
-      val footerCellRender: HeaderCellRender[D, ColumnInstanceD] =
+      val footerCellRender: HeaderCellRender[D, Plugins] =
         (props.footerCell: Any) match {
           case footerCell: TableHeaderCell =>
             _ =>
@@ -173,7 +154,7 @@ class SUITableVirtuoso[
           case fn                          =>
             colInstance =>
               val footerCell =
-                fn.asInstanceOf[HeaderCellRender[D, ColumnInstanceD]](colInstance)
+                fn.asInstanceOf[HeaderCellRender[D, Plugins]](colInstance)
               footerCell.copy(
                 as = <.div,
                 clazz = addClass(footerCell.className, footerCell.clazz, ExploreStyles.TH)
@@ -183,14 +164,12 @@ class SUITableVirtuoso[
       val headerElement: Option[TableHeader] =
         headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
           headerRowTag(headerRowData.getHeaderGroupProps())(
-            TableDef
-              .headersFromGroup(headerRowData)
-              .toTagMod((col: ColumnInstanceD) =>
-                headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
-                  col.renderHeader,
-                  sortElements.indicator(col)
-                )
+            headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
+              headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
+                col.renderHeader,
+                sortElements.indicator(col)
               )
+            )
           )
         }))
 
@@ -227,11 +206,9 @@ class SUITableVirtuoso[
         )
       tableInstance.footerGroups.toTagMod { footerRowData =>
         props.footerRow.copy(as = <.div, cellAs = <.div)(footerRowData.getFooterGroupProps())(
-          TableDef
-            .headersFromGroup(footerRowData)
-            .toTagMod((col: ColumnInstanceD) =>
-              footerCellRender(col)(col.getFooterProps())(col.renderFooter)
-            )
+          footerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
+            footerCellRender(col)(col.getFooterProps())(col.renderFooter)
+          )
         )
       }
 

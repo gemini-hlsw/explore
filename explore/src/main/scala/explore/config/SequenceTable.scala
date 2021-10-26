@@ -85,7 +85,6 @@ object SequenceTable {
   private val offsetFormat = new DecimalFormat("#.0")
 
   private val StepTable = TableDef[StepLine[_]]
-  import StepTable.syntax._
 
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width   := "1px", ^.height := "15px", ^.overflow.visible)(
