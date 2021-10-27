@@ -42,11 +42,8 @@ case class TargetEnv(
 
   def asObsKeyValue: (TargetEnvIdObsIdSet, TargetEnv) = (this.id, this)
 
-  def compareScienceTargets(other: TargetEnv): Boolean =
-    TargetEnv.compareScienceTargets(this, other)
-
-  def compareTargetLists(otherTargets: TreeSeqMap[TargetIdSet, Target]): Boolean =
-    TargetEnv.compareTargetLists(this.scienceTargets, otherTargets)
+  def areScienceTargetsEqual(other: TargetEnv): Boolean =
+    TargetEnv.areScienceTargetsEqual(this, other)
 
   /**
    * Effectively creates a subset of the original TargetEnv, where the TargetEnv.id contains only
@@ -84,16 +81,11 @@ case class TargetEnv(
   ): Option[TargetEnv] = {
     val filteredIds: Option[TargetEnvIdObsIdSet]                 =
       NonEmptySet.fromSet(this.id -- envObsIdsToExclude)
-    // TODO: Validate the scienceTarget collections have the same targets?
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
         .map { case (ids, target) =>
           NonEmptySet.fromSet(ids.toSortedSet -- targetIdsToExclude).map((_, target))
         }
-        // (this.scienceTargets.toList, toFilterOut.scienceTargets.toList)
-        //   .parMapN { case ((allIds, target), (outIds, _)) =>
-        //     NonEmptySet.fromSet(allIds -- outIds).map((_, target))
-        // }
         .sequence
         .map(TreeSeqMap.from)
     (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
@@ -122,10 +114,10 @@ object TargetEnv {
    * Compare the targets in the scienceTargets of 2 TargetEnvs to see if they are all equal. This is
    * used to determine if a merger is necessary after an edit.
    */
-  def compareScienceTargets(env1: TargetEnv, env2: TargetEnv): Boolean =
-    compareTargetLists(env1.scienceTargets, env2.scienceTargets)
+  def areScienceTargetsEqual(env1: TargetEnv, env2: TargetEnv): Boolean =
+    areTargetListsEqual(env1.scienceTargets, env2.scienceTargets)
 
-  def compareTargetLists(
+  def areTargetListsEqual(
     tl1: TreeSeqMap[TargetIdSet, Target],
     tl2: TreeSeqMap[TargetIdSet, Target]
   ): Boolean =

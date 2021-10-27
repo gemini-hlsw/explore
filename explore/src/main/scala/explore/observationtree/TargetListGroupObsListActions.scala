@@ -42,7 +42,7 @@ object TargetListGroupObsListActions {
         }
 
         originalEnvList
-          .find(_.compareScienceTargets(destEnv))
+          .find(_.areScienceTargetsEqual(destEnv))
           .fold(updatedList + destEnv.asObsKeyValue) { newEnv =>
             // I can only add the TargetEnvIdObsIds from src to dest since I won't know what the new
             // target ids will be. Will need a server trip to be fully updated unless there are no targets.
@@ -90,7 +90,7 @@ object TargetListGroupObsListActions {
       onSet = (tlgl, oTargetEnv) =>
         oTargetEnv.fold(async.unit) { tenv =>
           // destination ids may not be found when undoing
-          val optDestIds = tlgl.values.find(_.compareScienceTargets(tenv)).map(_.id)
+          val optDestIds = tlgl.values.find(_.areScienceTargetsEqual(tenv)).map(_.id)
           TargetListGroupQueries.replaceScienceTargetList[F](draggedIds.toList.map(_._1),
                                                              tenv.scienceTargets.values.toList
           ) >>

@@ -228,7 +228,7 @@ object TargetTabContents {
               }
 
             // see if the edit caused a merger - note that we are checking the original list for the duplicate
-            val mergeWithTlg = tlgl.find(_._2.compareScienceTargets(moddedEnv))
+            val mergeWithTlg = tlgl.find(_._2.areScienceTargetsEqual(moddedEnv))
             mergeWithTlg.fold(splitList) { tlg =>
               splitList - tlg._1 - idsToEdit + tlg._2.merge(moddedEnv).asObsKeyValue
             }
