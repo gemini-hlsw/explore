@@ -24,25 +24,106 @@ case class TargetEnv(
 ) {
   lazy val targetEnvIds: TargetEnvIdSet      = id.map(_._1)
   lazy val obsIds: SortedSet[Observation.Id] = id.collect { case (_, Some(obsId)) => obsId }
+  lazy val targetIds: Set[Target.Id]         = this.scienceTargets.keys.toList.map(_.toSortedSet).combineAll
 
   lazy val name: String =
     if (scienceTargets.isEmpty) "<No Targets>"
     else scienceTargets.map(TargetWithId.name.get).mkString(";")
 
-  def addId(newId: TargetEnvIdObsId): TargetEnv =
-    this.copy(id = id.add(newId))
+  def addIds(newIds: TargetEnvIdObsIdSet): TargetEnv =
+    TargetEnv.id.modify(_ ++ newIds)(this)
 
-  def removeId(oldId: TargetEnvIdObsId): TargetEnv =
+  def removeIds(oldIds: TargetEnvIdObsIdSet): TargetEnv =
     // TODO Deal with this better. Maybe return an Option[TargetEnv] ?
-    if (id.length === 1) this
-    else
-      this.copy(id = NonEmptySet.fromSetUnsafe(id - oldId))
+    NonEmptySet
+      .fromSet(id -- oldIds)
+      .map(newIds => TargetEnv.id.replace(newIds)(this))
+      .getOrElse(this)
 
   def asObsKeyValue: (TargetEnvIdObsIdSet, TargetEnv) = (this.id, this)
 
+  def areScienceTargetsEqual(other: TargetEnv): Boolean =
+    TargetEnv.areScienceTargetsEqual(this, other)
+
+  /**
+   * Effectively creates a subset of the original TargetEnv, where the TargetEnv.id contains only
+   * ids in envObsIdsToInclude, and the keys for the TargetEnv.scienceTargets map contain only the
+   * keys specified in targetIdsToInclude. This subset can then be passed to the TargetEnvEditor.
+   */
+  def filterInIds(
+    envObsIdsToInclude: TargetEnvIdObsIdSet,
+    targetIdsToInclude: Set[Target.Id]
+  ): Option[TargetEnv] = {
+    val filteredIds: Option[TargetEnvIdObsIdSet] =
+      NonEmptySet.fromSet(this.id.filter(envObsIdsToInclude.contains))
+
+    val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
+      this.scienceTargets.toList
+        .traverse { case (ids, target) =>
+          NonEmptySet
+            .fromSet(ids.filter(targetIdsToInclude.contains))
+            .map((_, target))
+        }
+        .map(TreeSeqMap.from)
+    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
+  }
+
+  /**
+   * Creates a subset of the original TargetEnv where the TargetEnv.id has had all of the ids in
+   * envObsIdsToExclude removed, and the TargetEnv.scienceTarget keys have had any ids in
+   * targetIdsToExclude removed. This is used to create a new TargetEnv when a subset of the
+   * original has been edited, necessitating a split. NOTE: toFilterOut should be a subset of the
+   * original with identical targets.
+   */
+  def filterOutIds(
+    envObsIdsToExclude: TargetEnvIdObsIdSet,
+    targetIdsToExclude: Set[Target.Id]
+  ): Option[TargetEnv] = {
+    val filteredIds: Option[TargetEnvIdObsIdSet]                 =
+      NonEmptySet.fromSet(this.id -- envObsIdsToExclude)
+    val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
+      this.scienceTargets.toList
+        .map { case (ids, target) =>
+          NonEmptySet.fromSet(ids.toSortedSet -- targetIdsToExclude).map((_, target))
+        }
+        .sequence
+        .map(TreeSeqMap.from)
+    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
+  }
+
+  /**
+   * Given another TargetEnv, this creates a new one where TargetEnv.id is a union of the this.id
+   * and other.id. Each of the keys for the targets in TargetEnv.scienceTargets will be the union of
+   * the keys in the respective targets in this and other. This is used to merge 2 TargetEnvs in the
+   * instance where editing a TargetEnv makes it equal to an existing TargetEnv, making a merger
+   * necessary, NOTE: The target lists of this and other are assumed to be equal.
+   */
+  def merge(other: TargetEnv): TargetEnv = {
+    val mergedTargets: TreeSeqMap[TargetIdSet, Target] =
+      TreeSeqMap.from(
+        (this.scienceTargets.toList, other.scienceTargets.toList)
+          .parMapN { case ((ids1, target), (ids2, _)) => (ids1 ++ ids2, target) }
+      )
+    TargetEnv(this.id ++ other.id, mergedTargets)
+  }
 }
 
 object TargetEnv {
+
+  /**
+   * Compare the targets in the scienceTargets of 2 TargetEnvs to see if they are all equal. This is
+   * used to determine if a merger is necessary after an edit.
+   */
+  def areScienceTargetsEqual(env1: TargetEnv, env2: TargetEnv): Boolean =
+    areTargetListsEqual(env1.scienceTargets, env2.scienceTargets)
+
+  def areTargetListsEqual(
+    tl1: TreeSeqMap[TargetIdSet, Target],
+    tl2: TreeSeqMap[TargetIdSet, Target]
+  ): Boolean =
+    tl1.size === tl2.size &&
+      (tl1.toList, tl2.toList).parMapN { case ((_, t1), (_, t2)) => t1 === t2 }.forall(identity)
+
   implicit val eqTargetEnv: Eq[TargetEnv] = Eq.by(x => (x.id, x.scienceTargets.toMap))
 
   private val singleTargetIdDecoder: Decoder[TargetIdSet]       =
