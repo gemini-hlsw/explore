@@ -6,6 +6,7 @@ package explore.model
 import cats.Eq
 import cats.data.NonEmptySet
 import cats.syntax.all._
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.Decoder._
 import lucuma.core.model.Observation
@@ -26,9 +27,9 @@ case class TargetEnv(
   lazy val obsIds: SortedSet[Observation.Id] = id.collect { case (_, Some(obsId)) => obsId }
   lazy val targetIds: Set[Target.Id]         = this.scienceTargets.keys.toList.map(_.toSortedSet).combineAll
 
-  lazy val name: String =
-    if (scienceTargets.isEmpty) "<No Targets>"
-    else scienceTargets.map(TargetWithId.name.get).mkString(";")
+  lazy val name: NonEmptyString =
+    if (scienceTargets.isEmpty) NonEmptyString("<No Targets>")
+    else NonEmptyString.unsafeFrom(scienceTargets.map(TargetWithId.name.get).mkString(";"))
 
   def addIds(newIds: TargetEnvIdObsIdSet): TargetEnv =
     TargetEnv.id.modify(_ ++ newIds)(this)

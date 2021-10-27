@@ -212,7 +212,8 @@ object ConstraintGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick = props.selected.set(SelectedPanel.summary),
+            Button(onClick =
+                     props.focusedObs.set(none) >> props.selected.set(SelectedPanel.summary),
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),

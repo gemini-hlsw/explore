@@ -128,7 +128,7 @@ object MagnitudeForm {
                 )
               ),
             MagTable
-              .Column[Unit]("delete")
+              .Column("delete")
               .setCell(
                 ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                    onClick = deleteFn,

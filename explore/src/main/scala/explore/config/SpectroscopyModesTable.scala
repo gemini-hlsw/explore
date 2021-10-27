@@ -31,7 +31,6 @@ import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
-import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
 
