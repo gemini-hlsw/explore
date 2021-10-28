@@ -104,7 +104,7 @@ module.exports = ({ command, mode }) => {
               _path.includes("/classes") ||
               _path.endsWith(".tmp");
             return sjsIgnored;
-          },
+          }
         ],
       },
       proxy: {

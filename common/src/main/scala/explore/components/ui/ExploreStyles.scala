@@ -242,11 +242,13 @@ object ExploreStyles {
   val StepTableHeader: Css = Css("step-table-header")
   val StepGuided: Css      = Css("step-guided")
 
-  val ExploreForm: Css               = Css("explore-form")
+  val ExploreForm: Css = Css("explore-form")
+  val SkipToNext: Css  = Css("explore-skip-to-next")
+
+  // Configuration tile
   val ConfigurationForm: Css         = Css("explore-configuration-form")
   val ConfigurationGrid: Css         = Css("explore-configuration-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
-  val SkipToNext: Css                = Css("explore-skip-to-next")
   val SignalToNoiseAt: Css           = Css("explore-configuration-signal-to-noise-at")
   val ConfigurationFilter: Css       = Css("explore-configuration-filter")
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
@@ -257,6 +259,7 @@ object ExploreStyles {
   val ScrollButton: Css              = Css("scroll-button")
   val SelectedUp: Css                = Css("selected-up")
   val SelectedDown: Css              = Css("selected-down")
+  val ITCCell: Css                   = Css("explore-modes-table-itc-cell")
 
   val ButtonCopy: Css         = Css("explore-button-copy")
   val ButtonsUndo: Css        = Css("explore-buttons-undo")

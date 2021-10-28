@@ -39,6 +39,7 @@ case class AppConfig(
   environment:      ExecutionEnvironment,
   preferencesDBURI: Uri,
   odbURI:           Uri,
+  itcURI:           Uri,
   sso:              SSOConfig
 )
 

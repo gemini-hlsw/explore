@@ -79,6 +79,8 @@ trait ListImplicits {
 trait ContextImplicits {
   implicit def appContext2Dispatcher[F[_]](implicit ctx: AppContext[F]): Dispatcher[F] =
     ctx.dispatcher
+  implicit def appContext2Parallel[F[_]](implicit ctx: AppContext[F]): Parallel[F]     =
+    ctx.P
   implicit def appContext2Logger[F[_]](implicit ctx: AppContext[F]): Logger[F]         =
     ctx.logger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
@@ -89,6 +91,10 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): WebSocketClient[F, ObservationDB] =
     ctx.clients.odb
+  implicit def appContext2ITC[F[_]](implicit
+    ctx: AppContext[F]
+  ): TransactionalClient[F, ITC] =
+    ctx.clients.itc
   implicit def appContext2fromSync[F[_]](implicit
     ctx: AppContext[F]
   ): SyncIO ~> F = ctx.fromSyncIO

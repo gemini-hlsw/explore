@@ -2,6 +2,7 @@
   "environment": "DEVELOPMENT",
   "odbURI": "wss://lucuma-odb-development.herokuapp.com/ws",
   "preferencesDBURI": "wss://userprefs-hasura-staging.herokuapp.com/v1/graphql",
+  "itcURI": "https://itc-staging.lucuma.xyz/itc",
   "sso": {
     "uri": "https://sso.gpp.lucuma.xyz",
     "readTimeoutSeconds": 10,
