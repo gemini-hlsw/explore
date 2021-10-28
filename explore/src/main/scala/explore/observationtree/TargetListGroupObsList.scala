@@ -257,7 +257,7 @@ object TargetListGroupObsList {
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
               <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                targetListGroup.name
+                targetListGroup.name.value
               ),
               Icons.Thumbtack.when(obsIds.size < targetEnvObsIds.size),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
@@ -318,7 +318,8 @@ object TargetListGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick = props.selected.set(SelectedPanel.summary),
+            Button(onClick =
+                     props.focusedObs.set(none) >> props.selected.set(SelectedPanel.summary),
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),

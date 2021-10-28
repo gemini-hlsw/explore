@@ -23,6 +23,7 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetListGroupObsList
 import explore.targeteditor.TargetEnvEditor
+import explore.targeteditor.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
@@ -183,7 +184,17 @@ object TargetTabContents {
      */
     def renderSummary: VdomNode =
       Tile("targetListSummary", "Target List Summary", backButton.some)(
-        ((_: Tile.RenderInTitle) => <.div("Summary will go here")).reuseAlways
+        Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
+          (targetListGroupWithObs.get, props.hiddenColumns, props.focusedObs, props.expandedIds)
+        )((renderInTitle: Tile.RenderInTitle) =>
+          TargetSummaryTable(targetListGroupWithObs.get,
+                             props.hiddenColumns,
+                             state.zoom(State.panelsSelected),
+                             props.focusedObs,
+                             props.expandedIds,
+                             renderInTitle
+          ): VdomNode
+        )
       )
 
     /**

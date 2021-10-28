@@ -44,7 +44,6 @@ import reactST.reactTable.SUITable
 import reactST.reactTable.TableDef
 import reactST.reactTable._
 import reactST.reactTable.mod.IdType
-import reactST.reactTable.util._
 
 import scala.collection.immutable.TreeSeqMap
 

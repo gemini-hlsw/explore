@@ -16,7 +16,6 @@ import reactST.reactTable.facade.cell.Cell
 import reactST.reactTable.facade.column.Column
 import reactST.reactTable.facade.row.Row
 import reactST.reactTable.facade.tableInstance.TableInstance
-import reactST.reactTable.util
 
 import scalajs.js
 import scalajs.js.|
@@ -34,8 +33,6 @@ object definitions {
 
   type BodyCellRender[D, Plugins] = Cell[D, _, Plugins] => TableCell
   type BodyCell[D, Plugins]       = TableCell | BodyCellRender[D, Plugins]
-
-  implicit def props2Attrs(obj: js.Object): TagMod = util.props2Attrs(obj)
 }
 import definitions._
 
