@@ -184,7 +184,8 @@ object TargetSummaryTable {
                 // The next line is temporary. We're just compensanting for the fact that column
                 // widths are being completely ignored for some reason we don't quite comprehend yet.
                 (^.paddingRight := "15px").when(cell.row.depth == 0),
-                Icons.Star
+                if (cell.row.subRows.isEmpty) Icons.Star
+                else Icons.Stars
               )
             )
             .setWidth(50),

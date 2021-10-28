@@ -155,6 +155,10 @@ object Icons {
   val faStar: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faStars")
+  val faStars: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faSpinner")
   val faSpinner: FAIcon = js.native
 
@@ -199,6 +203,7 @@ object Icons {
     faCompress,
     faExpand,
     faStar,
+    faStars,
     faSpinner,
     faThumbtack
   )
@@ -238,6 +243,7 @@ object Icons {
   val Checkmark           = FontAwesomeIcon(faCheck)
   val ListIcon            = FontAwesomeIcon(faListAlt)
   val Star                = FontAwesomeIcon(faStar)
+  val Stars               = FontAwesomeIcon(faStars)
   val Spinner             = FontAwesomeIcon(faSpinner)
   val Thumbtack           = FontAwesomeIcon(faThumbtack)
 }
