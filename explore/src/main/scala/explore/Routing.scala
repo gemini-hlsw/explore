@@ -16,12 +16,11 @@ import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Asterism
 import lucuma.core.model.Observation
-import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
 
+import scala.annotation.unused
 import scala.scalajs.LinkingInfo
 import scala.util.Random
 
@@ -38,16 +37,16 @@ object Routing {
       )
     }
 
-  private def targetTab(model: View[RootModel]): VdomElement =
+  private def targetTab(@unused model: View[RootModel]): VdomElement =
     withSize { size =>
       AppCtx.using(implicit ctx =>
         TargetTabContents(
           model.zoom(RootModel.userId).get,
-          model.zoom(RootModel.focused),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTarget),
+          model.zoom(RootModel.focusedObs),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forTargetListList),
+          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
           model.zoom(RootModel.searchingTarget),
-          model.zoom(RootModel.expandedIds),
+          model.zoom(RootModel.expandedIds.andThen(ExpandedIds.targetListObsIds)),
           model.zoom(RootModel.targetSummaryHiddenColumns),
           size
         )
@@ -57,11 +56,13 @@ object Routing {
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
-        ObsTabContents(model.zoom(RootModel.userId),
-                       model.zoom(RootModel.focused),
-                       model.zoom(RootModel.undoStacks),
-                       model.zoom(RootModel.searchingTarget),
-                       size
+        ObsTabContents(
+          model.zoom(RootModel.userId),
+          model.zoom(RootModel.focusedObs),
+          model.zoom(RootModel.undoStacks),
+          model.zoom(RootModel.searchingTarget),
+          model.zoom(RootModel.targetSummaryHiddenColumns),
+          size
         )
       )
     )
@@ -71,7 +72,7 @@ object Routing {
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
-          model.zoom(RootModel.focused),
+          model.zoom(RootModel.focusedObs),
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
@@ -102,16 +103,8 @@ object Routing {
             obsTab
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
-          | dynamicRouteCT(("/target" / id[Target.Id]).xmapL(TargetPage.targetId)) ~> renderP(
-            targetTab
-          )
           | dynamicRouteCT(
-            ("/asterism" / id[Asterism.Id]).xmapL(TargetsAsterismPage.asterismId)
-          ) ~> renderP(
-            targetTab
-          )
-          | dynamicRouteCT(
-            ("/target/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
+            ("/targets/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
           ) ~> renderP(
             targetTab
           )
@@ -150,7 +143,6 @@ object Routing {
             ObservationsBasePage,
             ObsPage(randomId(Observation.Id.fromLong)),
             TargetsBasePage,
-            TargetPage(randomId(Target.Id.fromLong)),
             TargetsObsPage(randomId(Observation.Id.fromLong)),
             ConfigurationsPage,
             ConstraintsBasePage

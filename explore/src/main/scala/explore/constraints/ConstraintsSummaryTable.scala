@@ -4,6 +4,7 @@
 package explore.constraints
 
 import cats.Order._
+import cats.data.NonEmptySet
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -15,14 +16,13 @@ import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
-import explore.model.Focused
-import explore.model.Focused._
+import explore.model.FocusedObs
 import explore.model.HourAngleRange
+import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -31,11 +31,9 @@ import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown._
 import reactST.reactTable._
-import reactST.reactTable.mod.Cell
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.SortingRule
-import reactST.reactTable.mod.TableState
 
 import scala.collection.immutable.SortedSet
 
@@ -45,18 +43,16 @@ final case class ConstraintsSummaryTable(
   constraintList: ConstraintGroupList,
   hiddenColumns:  View[Set[String]],
   summarySorting: View[List[(String, Boolean)]],
-  selectedPanel:  View[SelectedPanel[SortedSet[Observation.Id]]],
-  focused:        View[Option[Focused]],
-  expandedIds:    View[SortedSet[SortedSet[Observation.Id]]],
+  selectedPanel:  View[SelectedPanel[ObsIdSet]],
+  focusedObs:     View[Option[FocusedObs]],
+  expandedIds:    View[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
 
 object ConstraintsSummaryTable {
   type Props = ConstraintsSummaryTable
 
-  protected val ConstraintsTable = TableDef[ConstraintGroup].withSort
-
-  import ConstraintsTable.syntax._
+  protected val ConstraintsTable = TableDef[ConstraintGroup].withSortBy
 
   protected val ConstraintsTableComponent = new SUITable(ConstraintsTable)
 
@@ -82,13 +78,11 @@ object ConstraintsSummaryTable {
 
   private def toSortingRules(tuples: List[(String, Boolean)]) = tuples.map { case (id, b) =>
     SortingRule[ConstraintGroup](id).setDesc(b)
-  }.toJSArray
+  }
 
-  private def fromTableState(state: TableState[ConstraintGroup]): List[(String, Boolean)] = state
-    .asInstanceOf[ConstraintsTable.StateType]
-    .sortBy
-    .toList
-    .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
+  private def fromTableState(state: ConstraintsTable.TableStateType): List[(String, Boolean)] =
+    state.sortBy.toList
+      .map(sr => (sr.id.toString, sr.desc.toOption.getOrElse(false)))
 
   val component =
     ScalaFnComponent
@@ -155,18 +149,18 @@ object ConstraintsSummaryTable {
               case AirMassRange(_, _)     => HourAngleRange.MinHour - 1
               case HourAngleRange(_, max) => max.value
             }),
-          column("count", _.obsIds.size)
+          column("count", _.obsIds.length)
             .setSortType(DefaultSortTypes.number),
           column("observations", ConstraintGroup.obsIds.get)
             .setCell(cell =>
               <.span(
-                cell.value.toList
+                cell.value.toSortedSet.toList
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.focused.set(FocusedObs(obsId).some)
+                        (props.focusedObs.set(FocusedObs(obsId).some)
                           >> props.expandedIds.mod(_ + cell.value)
-                          >> props.selectedPanel.set(SelectedPanel.editor(SortedSet(obsId))))
+                          >> props.selectedPanel.set(SelectedPanel.editor(NonEmptySet.one(obsId))))
                       ),
                       obsId.toString
                     )
@@ -185,13 +179,13 @@ object ConstraintsSummaryTable {
           { (hiddenColumns: Set[String], options: ConstraintsTable.OptionsType) =>
             options
               .setAutoResetSortBy(false)
-              .setInitialStateFull(
+              .setInitialState(
                 ConstraintsTable
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList.map(col => col: IdType[ConstraintGroup]).toJSArray
                   )
-                  .setSortBy(toSortingRules(props.summarySorting.get))
+                  .setSortBy(toSortingRules(props.summarySorting.get): _*)
               )
           }.reuseCurrying(props.hiddenColumns.get)
         )
@@ -202,7 +196,7 @@ object ConstraintsSummaryTable {
       .render((props, _, _, tableInstance) =>
         <.div(
           props.renderInTitle(
-            <.span(ExploreStyles.TitleStrip)(
+            <.span(ExploreStyles.TitleSelectColumns)(
               Dropdown(item = true,
                        simple = true,
                        pointing = Pointing.TopRight,
@@ -244,7 +238,7 @@ object ConstraintsSummaryTable {
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
-            cell = (cell: Cell[ConstraintGroup, _]) =>
+            cell = (cell: ConstraintsTable.CellType[_]) =>
               TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
                 ^.whiteSpace.nowrap
               )

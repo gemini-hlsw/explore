@@ -17,9 +17,8 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintsSummary
-import explore.model.Focused
-import explore.model.Focused.FocusedObs
-import explore.model.ObsSummaryWithPointingAndConstraints
+import explore.model.FocusedObs
+import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.ObsBadge
@@ -46,7 +45,7 @@ import ObsQueries._
 
 final case class ObsList(
   observations:     View[ObservationList],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   undoStacks:       View[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsList](ObsList.component)
@@ -57,23 +56,23 @@ object ObsList {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
-    KIListMod[ObsSummaryWithPointingAndConstraints, Observation.Id](
-      ObsSummaryWithPointingAndConstraints.id
+    KIListMod[ObsSummaryWithTargetsAndConstraints, Observation.Id](
+      ObsSummaryWithTargetsAndConstraints.id
     )
 
   protected class Backend {
     protected def insertObs(
-      pos:     Int,
-      focused: View[Option[Focused]],
-      undoCtx: UndoCtx[ObservationList]
+      pos:        Int,
+      focusedObs: View[Option[FocusedObs]],
+      undoCtx:    UndoCtx[ObservationList]
     )(implicit
-      c:       TransactionalClient[IO, ObservationDB]
+      c:          TransactionalClient[IO, ObservationDB]
     ): SyncIO[Unit] = {
       // Temporary measure until we have id pools.
       val newObs = SyncIO(Random.nextInt(0xfff)).map(int =>
-        ObsSummaryWithPointingAndConstraints(
+        ObsSummaryWithTargetsAndConstraints(
           Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
-          pointing = none,
+          targets = List.empty,
           constraints = ConstraintsSummary.default,
           ObsStatus.New,
           ObsActiveStatus.Active,
@@ -83,7 +82,7 @@ object ObsList {
 
       newObs.flatMap { obs =>
         ObsListActions
-          .obsExistence[IO](obs.id, focused)
+          .obsExistence[IO](obs.id, focusedObs)
           .mod(undoCtx)(obsListMod.upsert(obs, pos))
       }
     }
@@ -99,26 +98,26 @@ object ObsList {
                    compact = true,
                    icon = Icons.New,
                    content = "Obs",
-                   onClick = insertObs(observations.length, props.focused, undoCtx)
+                   onClick = insertObs(observations.length, props.focusedObs, undoCtx)
             ),
             UndoButtons(undoCtx, size = Mini)
           ),
           <.div(ExploreStyles.ObsTree)(
             <.div(ExploreStyles.ObsScrollTree)(
               <.div(
-                Button(onClick = props.focused.set(none), clazz = ExploreStyles.ButtonSummary)(
+                Button(onClick = props.focusedObs.set(none), clazz = ExploreStyles.ButtonSummary)(
                   Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
                   "Observations Summary"
                 )
               ),
               observations.toTagMod { obs =>
                 val focusedObs = FocusedObs(obs.id)
-                val selected   = props.focused.get.exists(_ === focusedObs)
+                val selected   = props.focusedObs.get.exists(_ === focusedObs)
                 <.a(
                   ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                   ^.onClick ==> linkOverride(
-                    props.focused.set(focusedObs.some)
+                    props.focusedObs.set(focusedObs.some)
                   )
                 )(
                   ObsBadge(
@@ -131,7 +130,7 @@ object ObsList {
                       .obsActiveStatus[IO](obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
                     deleteCB = ObsListActions
-                      .obsExistence[IO](obs.id, props.focused)
+                      .obsExistence[IO](obs.id, props.focusedObs)
                       .mod(undoCtx)(obsListMod.delete)
                       .reuseAlways
                       .some
@@ -152,7 +151,7 @@ object ObsList {
         val observations = $.props.observations.get
 
         // If focused observation does not exist anymore, then unfocus.
-        $.props.focused.mod(_.flatMap {
+        $.props.focusedObs.mod(_.flatMap {
           case FocusedObs(oid) if !observations.contains(oid) => none
           case other                                          => other.some
         })
@@ -162,7 +161,7 @@ object ObsList {
         val observations     = $.currentProps.observations.get
 
         // If focused observation does not exist anymore, then focus on closest one.
-        $.currentProps.focused.mod(_.flatMap {
+        $.currentProps.focusedObs.mod(_.flatMap {
           case FocusedObs(oid) if !observations.contains(oid) =>
             prevObservations
               .getIndex(oid)

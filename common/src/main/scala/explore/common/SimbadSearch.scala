@@ -10,7 +10,7 @@ import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
-import lucuma.core.model.Target
+import lucuma.core.model.SiderealTarget
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 object SimbadSearch {
   import RetryHelpers._
 
-  def search[F[_]: Async: Logger](term: NonEmptyString): F[Option[Target]] =
+  def search[F[_]: Async: Logger](term: NonEmptyString): F[Option[SiderealTarget]] =
     retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
       FetchClientBuilder[F]
         .withRequestTimeout(5.seconds)

@@ -3,7 +3,7 @@
 
 package explore.model.arb
 
-import explore.model.Focused
+import explore.model.FocusedObs
 import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.arb.all._
@@ -17,19 +17,19 @@ import org.scalacheck.Cogen._
 import org.scalacheck.Gen
 
 trait ArbRootModel {
-  import explore.model.arb.ArbFocused._
+  import explore.model.arb.ArbFocusedObs._
 
   implicit val rootModelArb = Arbitrary[RootModel] {
     for {
-      vault   <- Gen.option(arbitrary[UserVault])
-      tabs    <- arbitrary[EnumZipper[AppTab]]
-      focused <- arbitrary[Option[Focused]]
-    } yield RootModel(vault, tabs, focused)
+      vault      <- Gen.option(arbitrary[UserVault])
+      tabs       <- arbitrary[EnumZipper[AppTab]]
+      focusedObs <- arbitrary[Option[FocusedObs]]
+    } yield RootModel(vault, tabs, focusedObs)
   }
 
   implicit def rootModelCogen: Cogen[RootModel] =
-    Cogen[(Option[UserVault], EnumZipper[AppTab], Option[Focused])].contramap(m =>
-      (m.vault, m.tabs, m.focused)
+    Cogen[(Option[UserVault], EnumZipper[AppTab], Option[FocusedObs])].contramap(m =>
+      (m.vault, m.tabs, m.focusedObs)
     )
 }
 

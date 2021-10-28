@@ -22,6 +22,9 @@ trait utils {
   ): Option[ProperMotion] =
     attemptCombine(ra, dec)
       .map((ProperMotion.apply _).tupled)
+
+  def unsafeOptionFnUnlift[A](fn: Option[A] => Option[A]): A => A =
+    a => fn(a.some).get
 }
 
 object utils extends utils

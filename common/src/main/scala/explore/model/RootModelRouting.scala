@@ -4,9 +4,7 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.Focused.FocusedAsterism
-import explore.model.Focused.FocusedObs
-import explore.model.Focused.FocusedTarget
+import explore.model.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
 import monocle.Lens
@@ -14,28 +12,24 @@ import monocle.Lens
 object RootModelRouting {
 
   protected def getPage(model: RootModel): Page =
-    getPage(model.tabs.focus, model.focused)
+    getPage(model.tabs.focus, model.focusedObs)
 
-  def getPage(tab: AppTab, focused: Option[Focused]): Page =
+  def getPage(tab: AppTab, focusedObs: Option[FocusedObs]): Page =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        focused
-          .collect { case FocusedObs(obsId) => ObsPage(obsId) }
+        focusedObs
+          .map(fo => ObsPage(fo.obsId))
           .getOrElse(ObservationsBasePage)
       case AppTab.Targets        =>
-        focused
-          .collect {
-            case FocusedObs(obsId)           => TargetsObsPage(obsId)
-            case FocusedAsterism(asterismId) => TargetsAsterismPage(asterismId)
-            case FocusedTarget(targetId)     => TargetPage(targetId)
-          }
+        focusedObs
+          .map(fo => TargetsObsPage(fo.obsId))
           .getOrElse(TargetsBasePage)
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
-        focused
-          .collect { case FocusedObs(obsId) => ConstraintsObsPage(obsId) }
+        focusedObs
+          .map(fo => ConstraintsObsPage(fo.obsId))
           .getOrElse(ConstraintsBasePage)
     }
 
@@ -44,28 +38,24 @@ object RootModelRouting {
 
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage                    => setTab(AppTab.Proposal) >>> RootModel.focused.replace(none)
-      case ObservationsBasePage            =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(none)
-      case ObsPage(obsId)                  =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case ObsAdvancedConfPage(obsId)      =>
-        setTab(AppTab.Observations) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case TargetsBasePage                 =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(none)
-      case TargetPage(targetId)            =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedTarget(targetId).some)
-      case TargetsAsterismPage(asterismId) =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedAsterism(asterismId).some)
-      case TargetsObsPage(obsId)           =>
-        setTab(AppTab.Targets) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case ConstraintsBasePage             =>
+      case ProposalPage               => setTab(AppTab.Proposal) >>> RootModel.focusedObs.replace(none)
+      case ObservationsBasePage       =>
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(none)
+      case ObsPage(obsId)             =>
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
+      case ObsAdvancedConfPage(obsId) =>
+        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
+      case TargetsBasePage            =>
+        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(none)
+      case TargetsObsPage(obsId)      =>
+        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
+      case ConstraintsBasePage        =>
         setTab(AppTab.Constraints)
-      case ConstraintsObsPage(obsId)       =>
-        setTab(AppTab.Constraints) >>> RootModel.focused.replace(FocusedObs(obsId).some)
-      case ConfigurationsPage              =>
+      case ConstraintsObsPage(obsId)  =>
+        setTab(AppTab.Constraints) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
+      case ConfigurationsPage         =>
         setTab(AppTab.Configurations)
-      case HomePage                        =>
+      case HomePage                   =>
         setTab(AppTab.Overview)
     }
 

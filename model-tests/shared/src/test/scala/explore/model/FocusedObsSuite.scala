@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
+import explore.model.FocusedObs
 import explore.model.arb.all._
-import io.circe.testing.ArbitraryInstances
 import munit.DisciplineSuite
 
-class PointingIdSuite extends DisciplineSuite with ArbitraryInstances {
-  checkAll("Eq[PointingId]", EqTests[PointingId].eqv)
+class FocusedObsSuite extends DisciplineSuite {
+  checkAll("Eq[FocusedObs]", EqTests[FocusedObs].eqv)
 }

@@ -13,14 +13,15 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.TargetIdSet
 import explore.model.display._
+import explore.model.reusability._
 import explore.utils.ReactTableHelpers
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.model.Magnitude
-import lucuma.core.model.Target
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
@@ -36,11 +37,11 @@ import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
-import scala.collection.immutable.HashSet
+import scala.collection.immutable.SortedMap
 
 final case class MagnitudeForm(
-  targetId:   Target.Id,
-  magnitudes: View[List[Magnitude]],
+  targetId:   TargetIdSet,
+  magnitudes: View[SortedMap[MagnitudeBand, Magnitude]],
   disabled:   Boolean
 ) extends ReactFnProps[MagnitudeForm](MagnitudeForm.component)
 
@@ -53,8 +54,8 @@ object MagnitudeForm {
     val usedBands = Focus[State](_.usedBands)
     val newBand   = Focus[State](_.newBand)
 
-    def fromUsedMagnitudes(magnitudes: List[Magnitude]): State = {
-      val usedBands = HashSet.from(magnitudes.map(_.band))
+    def fromUsedMagnitudes(magnitudes: SortedMap[MagnitudeBand, Magnitude]): State = {
+      val usedBands = magnitudes.keySet
       State(usedBands, MagnitudeBand.all.diff(usedBands.toList).headOption)
     }
   }
@@ -62,9 +63,7 @@ object MagnitudeForm {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  private val MagTable = TableDef[View[Magnitude]].withSort
-
-  import MagTable.syntax._
+  private val MagTable = TableDef[View[Magnitude]].withSortBy
 
   private val MagTableComponent = new SUITable(MagTable)
 
@@ -76,7 +75,7 @@ object MagnitudeForm {
     Icons.Trash
   )
 
-  private val tableState = MagTable.State().setSortByVarargs(SortingRule("band"))
+  private val tableState = MagTable.State().setSortBy(SortingRule("band"))
 
   val component =
     ScalaFnComponent
@@ -88,10 +87,10 @@ object MagnitudeForm {
       .useMemoBy((props, _) => (props.magnitudes, props.disabled)) { (_, _) => // Memo cols
         { case (magnitudes, disabled) =>
           val deleteFn: View[Magnitude] => Callback =
-            mag => magnitudes.mod(_.filterNot(_.band === mag.get.band))
+            mag => magnitudes.mod(_.filterNot(_._1 === mag.get.band))
 
           val excludeFn: View[Magnitude] => Set[MagnitudeBand] =
-            mag => HashSet.from(magnitudes.get.map(_.band)) - mag.get.band
+            mag => magnitudes.get.keySet - mag.get.band
 
           List(
             MagTable
@@ -129,7 +128,7 @@ object MagnitudeForm {
                 )
               ),
             MagTable
-              .Column[Unit]("delete")
+              .Column("delete")
               .setCell(
                 ReactTableHelpers.buttonViewColumn(button = deleteButton,
                                                    onClick = deleteFn,
@@ -141,13 +140,16 @@ object MagnitudeForm {
           )
         }
       }
-      .useMemoBy((props, _, _) => props.magnitudes)((_, _, _) => _.toListOfViews(_.band)) // Rows
+      // rows
+      .useMemoBy((props, _, _) => props.magnitudes)((_, _, _) =>
+        _.widen[Map[MagnitudeBand, Magnitude]].toListOfViews
+      )
       .useTableBy((_, _, cols, rows) =>
         MagTable(cols,
                  rows,
                  ((_: MagTable.OptionsType)
                    .setRowIdFn(_.get.band.tag)
-                   .setInitialStateFull(tableState))
+                   .setInitialState(tableState))
                    .reuseAlways
         )
       )
@@ -170,9 +172,11 @@ object MagnitudeForm {
                 ExploreStyles.MagnitudesTableFooter,
                 newBandView.whenDefined { view =>
                   val addMagnitude =
-                    props.magnitudes.mod(list =>
-                      (list :+ Magnitude(MagnitudeValue(0), view.get, view.get.magnitudeSystem))
-                        .sortBy(_.band)
+                    props.magnitudes.mod(mags =>
+                      (mags + (view.get -> Magnitude(MagnitudeValue(0),
+                                                     view.get,
+                                                     view.get.magnitudeSystem
+                      )))
                     )
 
                   React.Fragment(

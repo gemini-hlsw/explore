@@ -12,9 +12,9 @@ import lucuma.core.math.Angle
 import lucuma.schemas.ObservationDB
 
 import java.time
-// gql: import explore.model.decoders._
 // gql: import explore.model.reusability._
 // gql: import io.circe.refined._
+// gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
 object ObsQueriesGQL {
@@ -29,14 +29,10 @@ object ObsQueriesGQL {
         observations(programId: "p-2") {
           nodes {
             id
-            observationTarget {
-              ... on Target {
-                targetId: id
-                targetName: name
-              }
-              ... on Asterism {
-                asterismId: id
-                asterismName: name
+            targets {
+              scienceTargets {
+                id
+                name
               }
             }
             constraintSet {
@@ -95,9 +91,7 @@ object ObsQueriesGQL {
       }
 
       object ConstraintSetGroup {
-        object Nodes {
-          type ConstraintSet = model.ConstraintSet
-        }
+        type Nodes = model.ConstraintGroup
       }
     }
 
@@ -153,6 +147,52 @@ object ObsQueriesGQL {
       query($obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
+          targets {
+            id
+            observation {
+              id
+            }
+            scienceTargets {
+              id
+              name
+              tracking {
+                ... on Sidereal {
+                  catalogId {
+                    name
+                    id
+                  }
+                  coordinates {
+                    ra {
+                      microarcseconds
+                    }
+                    dec {
+                      microarcseconds
+                    }
+                  }
+                  epoch
+                  properMotion {
+                    ra {
+                      microarcsecondsPerYear
+                    }
+                    dec {
+                      microarcsecondsPerYear
+                    }
+                  }
+                  radialVelocity {
+                    centimetersPerSecond
+                  }
+                  parallax {
+                    microarcseconds
+                  }
+                }
+              }
+              magnitudes {
+                value
+                band
+                system
+              }                
+            }
+          }
           constraintSet {
             cloudExtinction
             imageQuality
@@ -181,7 +221,7 @@ object ObsQueriesGQL {
               signalToNoiseAt {
                 picometers
               }
-              wavelengthRange {
+              wavelengthCoverage {
                 picometers
               }
               focalPlane
@@ -213,14 +253,16 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
+        type Targets = model.TargetEnv
+
         type ConstraintSet = model.ConstraintSet
 
         object ScienceRequirements {
           object SpectroscopyRequirements {
-            type Wavelength      = lucuma.core.math.Wavelength
-            type SignalToNoiseAt = lucuma.core.math.Wavelength
-            type WavelengthRange = lucuma.core.math.Wavelength
-            type FocalPlaneAngle = lucuma.core.math.Angle
+            type Wavelength         = lucuma.core.math.Wavelength
+            type SignalToNoiseAt    = lucuma.core.math.Wavelength
+            type WavelengthCoverage = lucuma.core.math.Wavelength
+            type FocalPlaneAngle    = lucuma.core.math.Angle
           }
         }
 
@@ -262,7 +304,7 @@ object ObsQueriesGQL {
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($obsIds: [ObservationId!]!, $input: EditConstraintSetInput!){
-        updateConstraintSet(input: {observationIds: $obsIds, constraintSet: $input}) {
+        updateConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
           id
         }
       }
@@ -272,8 +314,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: EditScienceRequirementsInput!){
-        updateScienceRequirements(input: {observationIds: [$obsId], scienceRequirements: $input}) {
+      mutation ($obsIds: ObservationId!, $input: EditScienceRequirementsInput!){
+        updateScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
           id
         }        
       }

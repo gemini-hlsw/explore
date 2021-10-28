@@ -165,9 +165,7 @@ object ConstraintsPanel {
 
       <.div(
         props.renderInTitle(
-          <.span(ExploreStyles.TitleStrip)(
-            UndoButtons(undoCtx)
-          )
+          <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))
         ),
         Form(clazz = ExploreStyles.ConstraintsGrid)(
           selectEnum("Image Quality",

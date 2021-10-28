@@ -13,7 +13,6 @@ import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.math.arb.ArbRightAscension
 import lucuma.core.model.arb.ArbSiderealTracking
 import monocle.law.discipline.IsoTests
-import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary._
 
@@ -27,8 +26,8 @@ class ModelOpticsSuite
     with ArbSiderealTracking {
   import coulomb.scalacheck.ArbQuantity._ // This import has to be last.
 
-  checkAll("properMotionRA", LensTests(ModelOptics.properMotionRA))
-  checkAll("properMotionDec", LensTests(ModelOptics.properMotionDec))
+  // checkAll("properMotionRA", LensTests(ModelOptics.properMotionRA))
+  // checkAll("properMotionDec", LensTests(ModelOptics.properMotionDec))
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalISO))
 
   checkAll("coulombIso", IsoTests(coulombIso[Int, Percent]))

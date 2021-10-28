@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.Order._
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -26,6 +27,7 @@ import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.TargetIdSet
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
@@ -64,15 +66,15 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
-  focused:          View[Option[Focused]],
+  focusedObs:       View[Option[FocusedObs]],
   undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
+  searching:        View[Set[TargetIdSet]],
+  hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsTabContents](ObsTabContents.component) {
-  def selectedPanel: SelectedPanel[Observation.Id] = focused.get
-    .collect { case Focused.FocusedObs(id) => id }
-    .fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
+  def selectedPanel: SelectedPanel[Observation.Id] =
+    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(fo => SelectedPanel.editor(fo.obsId))
 }
 
 object ObsTabTiles {
@@ -226,10 +228,15 @@ object ObsTabContents {
           case Left(_)       => Callback.empty
         }
 
-    def obsIdsToString(obsIds: SortedSet[Observation.Id]): String = obsIds.mkString(",")
+    def obsIdsToString(obsIds: ObsIdSet): String = obsIds.toSortedSet.mkString(",")
 
-    def obsIdStringToIds(obsIdStr: String): Option[SortedSet[Observation.Id]] =
-      obsIdStr.split(",").toList.map(Observation.Id.parse(_)).sequence.map(SortedSet.from(_))
+    def obsIdStringToIds(obsIdStr: String): Option[ObsIdSet] =
+      obsIdStr
+        .split(",")
+        .toList
+        .map(Observation.Id.parse(_))
+        .sequence
+        .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)))
 
     def makeConstraintsSelector(
       constraintGroups: View[ConstraintsList],
@@ -305,24 +312,18 @@ object ObsTabContents {
         <.div(ExploreStyles.TreeBody)(
           ObsList(
             observations,
-            props.focused,
+            props.focusedObs,
             props.undoStacks.zoom(ModelUndoStacks.forObsList)
           )
         )
 
       val obsIdOpt: Option[Observation.Id] = state.get.panels.selected.optValue
 
-      val obsSummaryOpt: Option[ObsSummaryWithPointingAndConstraints] =
+      val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
         obsIdOpt.flatMap(observations.get.getElement)
 
       val targetId = obsSummaryOpt.collect {
-        case ObsSummaryWithPointingAndConstraints(_,
-                                                  Some(Pointing.PointingTarget(tid, _)),
-                                                  _,
-                                                  _,
-                                                  _,
-                                                  _
-            ) =>
+        case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
           tid
       }
 
@@ -333,7 +334,7 @@ object ObsTabContents {
           size = Mini,
           compact = true,
           clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-          onClickE = linkOverride[ButtonProps](props.focused.set(none))
+          onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
         )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
       )
 
@@ -408,10 +409,11 @@ object ObsTabContents {
                 notesTile,
                 TargetTile.targetTile(
                   props.userId.get,
-                  targetId,
-                  props.undoStacks.zoom(ModelUndoStacks.forTarget),
+                  obsView.map(_.zoom(ObservationData.targets)),
+                  props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
                   props.searching,
-                  state.zoom(State.options)
+                  state.zoom(State.options),
+                  props.hiddenColumns
                 ),
                 // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
                 // so that the constraints selector dropdown always appears in front of any other tiles. If more
@@ -423,7 +425,7 @@ object ObsTabContents {
                     obsView.map(_.zoom(ObservationData.constraintSet)),
                     props.undoStacks
                       .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                      .zoom(atMapWithDefault(SortedSet(obsId), UndoStacks.empty)),
+                      .zoom(atMapWithDefault(NonEmptySet.one(obsId), UndoStacks.empty)),
                     control = constraintsSelector.some,
                     clazz = ExploreStyles.ConstraintsTile.some
                   ),

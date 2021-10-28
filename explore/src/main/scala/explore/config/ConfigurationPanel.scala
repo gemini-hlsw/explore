@@ -69,7 +69,7 @@ object ConfigurationPanel {
         _ <- SpectroscopyConfigurationOptions.signalToNoiseAtQ    := s.signalToNoiseAt.map(
                wavelengthToMicro
              )
-        _ <- SpectroscopyConfigurationOptions.wavelengthCoverageQ := s.wavelengthRange.map(
+        _ <- SpectroscopyConfigurationOptions.wavelengthCoverageQ := s.wavelengthCoverage.map(
                wavelengthToMicro
              )
         _ <- SpectroscopyConfigurationOptions.focalPlane          := s.focalPlane
@@ -82,18 +82,18 @@ object ConfigurationPanel {
         Wavelength.decimalMicrometers.getOption(m.value)
 
       val op = for {
-        _ <- SpectroscopyRequirementsData.wavelength      := s.wavelengthQ.flatMap(microToWavelength)
-        _ <- SpectroscopyRequirementsData.resolution      := s.resolution
-        _ <- SpectroscopyRequirementsData.signalToNoise   := s.signalToNoise
-        _ <- SpectroscopyRequirementsData.signalToNoiseAt := s.signalToNoiseAtQ.flatMap(
+        _ <- SpectroscopyRequirementsData.wavelength         := s.wavelengthQ.flatMap(microToWavelength)
+        _ <- SpectroscopyRequirementsData.resolution         := s.resolution
+        _ <- SpectroscopyRequirementsData.signalToNoise      := s.signalToNoise
+        _ <- SpectroscopyRequirementsData.signalToNoiseAt    := s.signalToNoiseAtQ.flatMap(
                microToWavelength
              )
-        _ <- SpectroscopyRequirementsData.wavelengthRange := s.wavelengthCoverageQ.flatMap(
+        _ <- SpectroscopyRequirementsData.wavelengthCoverage := s.wavelengthCoverageQ.flatMap(
                microToWavelength
              )
-        _ <- SpectroscopyRequirementsData.focalPlane      := s.focalPlane
-        _ <- SpectroscopyRequirementsData.focalPlaneAngle := s.focalPlaneAngle
-        _ <- SpectroscopyRequirementsData.capabilities    := s.capabilities
+        _ <- SpectroscopyRequirementsData.focalPlane         := s.focalPlane
+        _ <- SpectroscopyRequirementsData.focalPlaneAngle    := s.focalPlaneAngle
+        _ <- SpectroscopyRequirementsData.capabilities       := s.capabilities
       } yield ()
       op.runS(SpectroscopyRequirementsData()).value
     }
@@ -123,7 +123,7 @@ object ConfigurationPanel {
 
       <.div(
         ExploreStyles.ConfigurationGrid,
-        props.renderInTitle(<.span(ExploreStyles.TitleStrip)(UndoButtons(scienceDataUndo))),
+        props.renderInTitle(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(scienceDataUndo))),
         Form(size = Small)(
           ExploreStyles.Grid,
           ExploreStyles.Compact,

@@ -14,7 +14,6 @@ import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import monocle.Focus
 import monocle.Lens
@@ -24,9 +23,9 @@ import scala.collection.immutable.HashSet
 case class RootModel(
   vault:                          Option[UserVault],
   tabs:                           EnumZipper[AppTab],
-  focused:                        Option[Focused] = none,
+  focusedObs:                     Option[FocusedObs] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
-  searchingTarget:                Set[Target.Id] = HashSet.empty,
+  searchingTarget:                Set[TargetIdSet] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
   targetSummaryHiddenColumns:     Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
@@ -40,7 +39,7 @@ case class RootModel(
 
 object RootModel {
   val vault                          = Focus[RootModel](_.vault)
-  val focused                        = Focus[RootModel](_.focused)
+  val focusedObs                     = Focus[RootModel](_.focusedObs)
   val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
   val tabs                           = Focus[RootModel](_.tabs)
   val searchingTarget                = Focus[RootModel](_.searchingTarget)
@@ -68,7 +67,7 @@ object RootModel {
     Eq.by(m =>
       (m.vault,
        m.tabs,
-       m.focused,
+       m.focusedObs,
        m.expandedIds,
        m.searchingTarget,
        m.userSelectionMessage,

@@ -5,15 +5,18 @@ package explore
 
 import cats.syntax.all._
 import coulomb._
-import explore.model.utils._
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
-import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 import lucuma.core.math.units._
 import monocle._
+import monocle.function.At
 import monocle.function.At.atMap
+import monocle.function.Index
+import monocle.function.Index.fromAt
+
+import scala.collection.immutable.TreeSeqMap
 
 package object optics {
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
@@ -135,16 +138,6 @@ package object optics {
       (s: S) => l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s)))
     )
 
-  val unsafePMDecLensO: Lens[Option[ProperMotion], Option[ProperMotion.Dec]] =
-    Lens[Option[ProperMotion], Option[ProperMotion.Dec]](_.map(ProperMotion.dec.get))(s =>
-      a => buildProperMotion(a.map(_.ra), s)
-    )
-
-  val unsafePMRALensO: Lens[Option[ProperMotion], Option[ProperMotion.RA]] =
-    Lens[Option[ProperMotion], Option[ProperMotion.RA]](_.map(ProperMotion.ra.get))(s =>
-      a => buildProperMotion(s, a.map(_.dec))
-    )
-
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
     Iso[BigDecimal, ApparentRadialVelocity](b =>
       ApparentRadialVelocity(b.withUnit[KilometersPerSecond])
@@ -171,4 +164,13 @@ package object optics {
   // This should be safe to use with Maps that have .withDefault(...)
   def atMapWithDefault[K, V](k: K, default: => V): Lens[Map[K, V], V] =
     atMap.at(k).andThen(getWithDefault(default))
+
+  implicit def atTreeSeqMap[K, V]: At[TreeSeqMap[K, V], K, Option[V]] =
+    At(i =>
+      Lens((_: TreeSeqMap[K, V]).get(i))(optV => map => optV.fold(map - i)(v => map + (i -> v)))
+    )
+
+  implicit def indexTreeSeqMap[K, V]: Index[TreeSeqMap[K, V], K, V] =
+    fromAt(atTreeSeqMap)
+
 }

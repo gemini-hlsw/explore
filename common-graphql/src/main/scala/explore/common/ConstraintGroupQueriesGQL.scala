@@ -10,9 +10,9 @@ import lucuma.schemas.ObservationDB
 
 import java.time
 
-// gql: import explore.model.decoders._
 // gql: import explore.model.reusability._
 // gql: import io.circe.refined._
+// gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
 object ConstraintGroupQueriesGQL {
@@ -51,14 +51,10 @@ object ConstraintGroupQueriesGQL {
         observations(programId: "p-2") {
           nodes {
             id
-            observationTarget {
-              ... on Target {
-                targetId: id
-                targetName: name
-              }
-              ... on Asterism {
-                asterismId: id
-                asterismName: name
+            targets {
+              scienceTargets {
+                id
+                name
               }
             }
           	status
@@ -75,9 +71,7 @@ object ConstraintGroupQueriesGQL {
 
     object Data {
       object ConstraintSetGroup {
-        object Nodes {
-          type ConstraintSet = model.ConstraintSet
-        }
+        type Nodes = model.ConstraintGroup
       }
       object Observations       {
         object Nodes {

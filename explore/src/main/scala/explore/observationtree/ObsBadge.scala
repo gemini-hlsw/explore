@@ -13,7 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
-import explore.model.ObsWithPointing
+import explore.model.ObsWithTargets
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -32,6 +32,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.modules.popup.Popup
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
@@ -76,13 +77,11 @@ object ObsBadge {
             size = Small,
             compact = true,
             clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-            icon = true,
+            icon = Icons.Trash,
             onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
               e.preventDefaultCB *>
                 e.stopPropagationCB *>
                 props.deleteCB.map(_.value: Callback).getOrEmpty
-          )(
-            Icons.Trash
           )
 
         def nameAndId(name: String) =
@@ -99,10 +98,10 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObsBadgeHeader,
                   obs match {
-                    case withPointing: ObsWithPointing =>
-                      nameAndId(withPointing.pointingName.toString)
-                    case withConf: ObsWithConf         => withConf.conf
-                    case _                             => nameAndId("")
+                    case withTargets: ObsWithTargets =>
+                      nameAndId(withTargets.targetNames.toString)
+                    case withConf: ObsWithConf       => withConf.conf
+                    case _                           => nameAndId("")
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
@@ -112,7 +111,7 @@ object ObsBadge {
               ),
               CardDescription()(ExploreStyles.ObsBadgeDescription)(
                 obs match {
-                  case _: ObsWithPointing                  =>
+                  case _: ObsWithTargets                   =>
                     ReactFragment(List(conf, constraints).flatten: _*)
                   case withConstraints: ObsWithConstraints =>
                     ReactFragment(withConstraints.constraintsSummary)

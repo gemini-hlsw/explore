@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.Endo
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
@@ -16,10 +17,10 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
@@ -29,8 +30,7 @@ import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SiderealTracking
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types._
@@ -41,8 +41,10 @@ import lucuma.ui.optics.TruncatedDec
 import lucuma.ui.optics.TruncatedRA
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
+import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.divider._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
 
@@ -54,22 +56,21 @@ final case class SearchCallback(
   def run: Callback = Callback.empty
 }
 
-final case class TargetBody(
-  uid:           User.Id,
-  id:            Target.Id,
-  target:        View[TargetResult],
-  undoStacks:    View[UndoStacks[IO, TargetResult]],
-  searching:     View[Set[Target.Id]],
-  options:       View[TargetVisualOptions],
-  renderInTitle: Tile.RenderInTitle
-) extends ReactProps[TargetBody](TargetBody.component) {
+final case class SiderealTargetEditor(
+  uid:        User.Id,
+  id:         TargetIdSet,
+  target:     View[SiderealTarget],
+  undoStacks: View[UndoStacks[IO, SiderealTarget]],
+  searching:  View[Set[TargetIdSet]],
+  options:    View[TargetVisualOptions]
+) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
-    target.zoom(TargetQueries.baseCoordinates).get
+    target.zoom(SiderealTarget.baseCoordinates).get
 }
 
-object TargetBody {
+object SiderealTargetEditor {
 
-  type Props = TargetBody
+  type Props = SiderealTargetEditor
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -83,86 +84,89 @@ object TargetBody {
         val undoViewSet = UndoView(props.id, undoCtx)
 
         val allView = undoViewSet(
-          targetPropsL,
-          { args: (NonEmptyString, SiderealTracking, List[Magnitude]) =>
-            EditSiderealInput.name.replace(args._1.value.assign) >>>
-              TargetQueries.UpdateSiderealTracking(args._2) >>>
-              TargetQueries.replaceMagnitudes(args._3)
+          Iso.id.asLens,
+          { t: SiderealTarget =>
+            EditSiderealInput.name.replace(t.name.assign) >>>
+              TargetQueries.UpdateSiderealTracking(t.tracking) >>>
+              TargetQueries.replaceMagnitudes(t.magnitudes)
           }
         )
 
         val coordsRAView = undoViewSet(
-          TargetQueries.baseCoordinatesRa,
+          SiderealTarget.baseRA,
           (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
         )
 
         val coordsDecView = undoViewSet(
-          TargetQueries.baseCoordinatesDec,
+          SiderealTarget.baseDec,
           (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
         )
 
         val epochView =
           undoViewSet(
-            TargetQueries.epoch,
+            SiderealTarget.epoch,
             (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
           )
 
         val magnitudesView =
-          undoViewSet(TargetResult.magnitudes, TargetQueries.replaceMagnitudes)
+          undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
 
         val nameView = undoViewSet(
-          TargetResult.name,
-          (EditSiderealInput.name.replace _).compose((_: NonEmptyString).value.assign)
+          SiderealTarget.name,
+          (EditSiderealInput.name.replace _).compose((_: NonEmptyString).assign)
         )
 
         val properMotionRAView = undoViewSet(
-          TargetQueries.pmRALens,
+          SiderealTarget.properMotionRA.getOption,
+          (f: Endo[Option[ProperMotion.RA]]) =>
+            SiderealTarget.properMotionRA.modify(unsafeOptionFnUnlift(f)),
           (pmRA: Option[ProperMotion.RA]) =>
             TargetQueries.UpdateSiderealTracking.properMotion(
-              buildProperMotion(pmRA, TargetQueries.pmDecLens.get(target))
+              buildProperMotion(pmRA, SiderealTarget.properMotionDec.getOption(target))
             )
         )
 
         val properMotionDecView = undoViewSet(
-          TargetQueries.pmDecLens,
+          SiderealTarget.properMotionDec.getOption,
+          (f: Endo[Option[ProperMotion.Dec]]) =>
+            SiderealTarget.properMotionDec.modify(unsafeOptionFnUnlift(f)),
           (pmDec: Option[ProperMotion.Dec]) =>
             TargetQueries.UpdateSiderealTracking.properMotion(
-              buildProperMotion(TargetQueries.pmRALens.get(target), pmDec)
+              buildProperMotion(SiderealTarget.properMotionRA.getOption(target), pmDec)
             )
         )
 
         val parallaxView = undoViewSet(
-          TargetQueries.pxLens,
+          SiderealTarget.parallax,
           TargetQueries.UpdateSiderealTracking.parallax
         )
 
         val radialVelocityView = undoViewSet(
-          TargetQueries.rvLens,
+          SiderealTarget.radialVelocity,
           TargetQueries.UpdateSiderealTracking.radialVelocity
         )
 
         def searchAndSet(
-          allView:  View[(NonEmptyString, SiderealTracking, List[Magnitude])],
+          allView:  View[SiderealTarget],
           nameView: View[NonEmptyString],
           s:        SearchCallback
         ): Callback =
           SimbadSearch
             .search[IO](s.searchTerm)
             .runAsyncAndThenCB {
-              case Right(r @ Some(Target(n, Right(st), m))) =>
-                allView.set((n, st, m.values.toList)).toCB >> s.onComplete(r)
-              case Right(Some(r))                           =>
-                Callback.log(s"Unknown target type $r") >>
-                  nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-              case Right(None)                              =>
+              case Right(r @ Some(t)) =>
+                allView.set(t).toCB >> s.onComplete(r)
+              case Right(None)        =>
                 nameView.set(s.searchTerm).toCB >> s.onComplete(none)
-              case Left(t)                                  =>
+              case Left(t)            =>
                 nameView.set(s.searchTerm).toCB >> s.onError(t)
             }
 
         val disabled = props.searching.get.exists(_ === props.id)
 
         React.Fragment(
+          Divider(hidden = true, fitted = true),
+          <.span(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
           <.div(ExploreStyles.TargetGrid)(
             <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
@@ -171,7 +175,7 @@ object TargetBody {
                 // SearchForm doesn't edit the name directly. It will set it atomically, together
                 // with coords & magnitudes from the catalog search, so that all 3 fields are
                 // a single undo/redo operation.
-                props.target.zoom(TargetResult.name).get,
+                props.target.zoom(SiderealTarget.name).get,
                 props.searching,
                 Reuse.currying(allView, nameView).in(searchAndSet _)
               ),
@@ -200,8 +204,8 @@ object TargetBody {
             ),
             AladinCell(
               props.uid,
-              props.target.get.id,
-              props.target.zoom(TargetQueries.baseCoordinates),
+              props.id,
+              props.target.zoom(SiderealTarget.baseCoordinates),
               props.options
             ),
             CataloguesForm(props.options).when(false),
@@ -247,12 +251,9 @@ object TargetBody {
               ),
               RVInput(radialVelocityView, disabled)
             ),
-            MagnitudeForm(target.id, magnitudesView, disabled = disabled),
+            MagnitudeForm(props.id, magnitudesView, disabled = disabled),
             <.div(ExploreStyles.TargetSkyplotCell)(
               SkyPlotSection(props.baseCoordinates)
-            ),
-            props.renderInTitle(
-              <.span(ExploreStyles.TitleStrip, UndoButtons(undoCtx, disabled = disabled))
             )
           )
         )

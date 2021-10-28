@@ -3,11 +3,11 @@
 
 package explore.model
 
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
-import lucuma.core.model.SiderealTracking
-import monocle.Lens
+// import lucuma.core.math.Coordinates
+// import lucuma.core.math.Declination
+// import lucuma.core.math.RightAscension
+// import lucuma.core.model.SiderealTracking
+// import monocle.Lens
 
 /**
  * Contains a set of useful optics to explore the model
@@ -17,14 +17,14 @@ trait ModelOptics {
   /**
    * Lens for right ascension of a SiderealTracking
    */
-  val properMotionRA: Lens[SiderealTracking, RightAscension] =
-    SiderealTracking.baseCoordinates.andThen(Coordinates.rightAscension)
+  // val properMotionRA: Lens[SiderealTracking, RightAscension] =
+  //   SiderealTracking.baseCoordinates.andThen(Coordinates.rightAscension)
 
   /**
    * Lens for declination of a SiderealTracking
    */
-  val properMotionDec: Lens[SiderealTracking, Declination] =
-    SiderealTracking.baseCoordinates.andThen(Coordinates.declination)
+  // val properMotionDec: Lens[SiderealTracking, Declination] =
+  //   SiderealTracking.baseCoordinates.andThen(Coordinates.declination)
 }
 
 object ModelOptics extends ModelOptics

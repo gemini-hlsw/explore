@@ -41,8 +41,6 @@ import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
-import reactST.reactTable.mod.Row
-import reactST.reactTable.util._
 import spire.math.Bounded
 import spire.math.Interval
 
@@ -69,9 +67,7 @@ object SpectroscopyModesTable extends ItcColumn {
   implicit val itcReuse: Reusability[ItcResultsCache] =
     Reusability.by(_.updateCount)
 
-  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSort.withBlockLayout
-
-  import ModesTableDef.syntax._
+  protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
   val decFormat = new DecimalFormat("0.###")
 
@@ -310,7 +306,7 @@ object SpectroscopyModesTable extends ItcColumn {
                 wavelength = s.wavelength,
                 slitWidth = s.focalPlaneAngle,
                 resolution = s.resolution,
-                coverage = s.wavelengthRange
+                coverage = s.wavelengthCoverage
                   .map(_.micrometer.toValue[BigDecimal].toRefined[Positive])
               )
           val (enabled, disabled) = rows.partition(enabledRow)
@@ -402,7 +398,7 @@ object SpectroscopyModesTable extends ItcColumn {
               <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
             ),
             <.div(
-              ExploreStyles.ModesTable,
+              ExploreStyles.ExploreTable,
               ModesTable
                 .Component(
                   table = Table(celled = true,
@@ -416,10 +412,10 @@ object SpectroscopyModesTable extends ItcColumn {
                       ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
                       ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
                     ),
-                  row = (rowData: Row[SpectroscopyModeRow]) =>
+                  row = (rowData: ModesTableDef.RowType) =>
                     TableRow(
                       disabled = !enabledRow(rowData.original),
-                      clazz = ExploreStyles.ModeSelected.when_(
+                      clazz = ExploreStyles.TableRowSelected.when_(
                         selectedIndex.value.exists(_ === rowData.index.toInt)
                       )
                     )(

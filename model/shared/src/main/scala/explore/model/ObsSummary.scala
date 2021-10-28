@@ -6,11 +6,12 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import io.chrisdavenport.cats.time._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
+import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 
 import java.time.Duration
@@ -24,11 +25,11 @@ trait ObsSummary {
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
-    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                       =>
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                     =>
       a === b
-    case (a: ObsSummaryWithPointingAndConstraints, b: ObsSummaryWithPointingAndConstraints) =>
+    case (a: ObsSummaryWithTargetsAndConstraints, b: ObsSummaryWithTargetsAndConstraints) =>
       a === b
-    case _                                                                                  =>
+    case _                                                                                =>
       false
   })
 }
@@ -43,19 +44,11 @@ trait ObsWithConf extends ObsSummary {
   val conf: String = "GMOS-N R831 1x300"
 }
 
-trait ObsWithPointing extends ObsSummary {
-  val pointing: Option[Pointing]
+trait ObsWithTargets extends ObsSummary {
+  val targets: List[TargetSummary]
 
-  lazy val pointingName: NonEmptyString =
-    pointing match {
-      case None                                              => "<No Target>"
-      case Some(Pointing.PointingTarget(_, name))            => name
-      case Some(Pointing.PointingAsterism(_, name, targets)) =>
-        name match {
-          case Some(aname) => aname
-          case None        => NonEmptyString.unsafeFrom(targets.map(_.name).mkString("-"))
-        }
-    }
+  lazy val targetNames: String =
+    targets.map(_.name).mkString(";")
 }
 
 case class ObsSummaryWithConstraints(
@@ -63,48 +56,55 @@ case class ObsSummaryWithConstraints(
   override val constraints:  ConstraintsSummary,
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration
+  override val duration:     Duration,
+  targetEnvId:               TargetEnvironment.Id,
+  scienceTargetIds:          Set[Target.Id]
 ) extends ObsSummary
     with ObsWithConstraints
 
 object ObsSummaryWithConstraints {
+  val id          = Focus[ObsSummaryWithConstraints](_.id)
+  val targetEnvId = Focus[ObsSummaryWithConstraints](_.targetEnvId)
+
   implicit val eqObsSummaryWithConstraints: Eq[ObsSummaryWithConstraints] =
-    Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration))
+    Eq.by(o =>
+      (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.targetEnvId, o.scienceTargetIds)
+    )
 }
 
-case class ObsSummaryWithPointingAndConstraints(
+case class ObsSummaryWithTargetsAndConstraints(
   override val id:           Observation.Id,
-  override val pointing:     Option[Pointing],
+  override val targets:      List[TargetSummary],
   override val constraints:  ConstraintsSummary,
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithPointing
+    with ObsWithTargets
     with ObsWithConstraints
 
-object ObsSummaryWithPointingAndConstraints {
-  val id           = Focus[ObsSummaryWithPointingAndConstraints](_.id)
-  val status       = Focus[ObsSummaryWithPointingAndConstraints](_.status)
-  val activeStatus = Focus[ObsSummaryWithPointingAndConstraints](_.activeStatus)
+object ObsSummaryWithTargetsAndConstraints {
+  val id           = Focus[ObsSummaryWithTargetsAndConstraints](_.id)
+  val status       = Focus[ObsSummaryWithTargetsAndConstraints](_.status)
+  val activeStatus = Focus[ObsSummaryWithTargetsAndConstraints](_.activeStatus)
 
-  implicit val eqObsSummaryWithPointingAndConstraints: Eq[ObsSummaryWithPointingAndConstraints] =
-    Eq.by(o => (o.id, o.pointing, o.constraints, o.status, o.activeStatus, o.duration))
+  implicit val eqObsSummaryWithTargetsAndConstraints: Eq[ObsSummaryWithTargetsAndConstraints] =
+    Eq.by(o => (o.id, o.targets, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
-case class ObsSummaryWithPointingAndConf(
+case class ObsSummaryWithTargetsAndConf(
   override val id:           Observation.Id,
-  override val pointing:     Option[Pointing],
+  override val targets:      List[TargetSummary],
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithPointing
+    with ObsWithTargets
     with ObsWithConf
 
-object ObsSummaryWithPointingAndConf {
-  val id = Focus[ObsSummaryWithPointingAndConf](_.id)
+object ObsSummaryWithTargetsAndConf {
+  val id = Focus[ObsSummaryWithTargetsAndConf](_.id)
 
-  implicit val eqObsSummaryWithPointingAndConf: Eq[ObsSummaryWithPointingAndConf] =
-    Eq.by(o => (o.id, o.pointing, o.status, o.activeStatus, o.duration, o.conf))
+  implicit val eqObsSummaryWithTargetsAndConf: Eq[ObsSummaryWithTargetsAndConf] =
+    Eq.by(o => (o.id, o.targets, o.status, o.activeStatus, o.duration, o.conf))
 }

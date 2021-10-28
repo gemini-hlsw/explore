@@ -17,8 +17,9 @@ import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
 import explore.model.HourAngleRange
-import explore.model.ObsSummaryWithPointingAndConstraints
-import explore.model.Pointing
+import explore.model.ObsIdSet
+import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
 import explore.utils._
@@ -34,14 +35,13 @@ import monocle.Lens
 import monocle.macros.GenIso
 
 import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
 
 import ObsQueriesGQL._
 
 object ObsQueries {
 
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithPointingAndConstraints]
-  type ConstraintsList = SortedMap[SortedSet[Observation.Id], ConstraintGroup]
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints]
+  type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   type WavelengthInput = ObservationDB.Types.WavelengthModelInput
   val WavelengthInput = ObservationDB.Types.WavelengthModelInput
@@ -83,49 +83,33 @@ object ObsQueries {
       Reusability.derive
   }
 
-  private def convertPointing(
-    pointing: ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget
-  ): Pointing =
-    pointing match {
-      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Target(id, name)   =>
-        Pointing.PointingTarget(id, name)
-      case ProgramObservationsQuery.Data.Observations.Nodes.ObservationTarget.Asterism(id, name) =>
-        Pointing.PointingAsterism(id, name, Nil)
-    }
-
-  private def toSortedMap[K: Ordering, A](list: List[A], getKey: A => K) =
-    SortedMap.from(list.map(a => (getKey(a), a)))
+  private def convertTarget(
+    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.ScienceTargets
+  ): TargetSummary =
+    TargetSummary(target.id, target.name)
 
   private val queryToObsSummariesWithConstraintsGetter
     : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
     ObsSummariesWithConstraints(
       KeyedIndexedList.fromList(
         data.observations.nodes.map(node =>
-          ObsSummaryWithPointingAndConstraints(node.id,
-                                               node.observationTarget.map(convertPointing),
-                                               node.constraintSet,
-                                               node.status,
-                                               node.activeStatus,
-                                               node.plannedTime.execution
+          ObsSummaryWithTargetsAndConstraints(
+            node.id,
+            node.targets.scienceTargets.map(convertTarget),
+            node.constraintSet,
+            node.status,
+            node.activeStatus,
+            node.plannedTime.execution
           )
         ),
-        ObsSummaryWithPointingAndConstraints.id.get
+        ObsSummaryWithTargetsAndConstraints.id.get
       ),
-      toSortedMap(data.constraintSetGroup.nodes.map(_.asConstraintGroup),
-                  ConstraintGroup.obsIds.get
-      )
+      data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get)
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
-  }
-
-  implicit class ConstraintGroupResultOps(
-    val self: ProgramObservationsQuery.Data.ConstraintSetGroup.Nodes
-  ) extends AnyVal {
-    def asConstraintGroup =
-      ConstraintGroup(self.constraintSet, SortedSet.from(self.observations.nodes.map(_.id)))
   }
 
   val ObsLiveQuery =
@@ -161,7 +145,6 @@ object ObsQueries {
         )
     }
     val editInput                           = EditConstraintSetInput(
-      name = clue.data.Ignore,
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,
       skyBackground = constraints.skyBackground.assign,

@@ -23,10 +23,10 @@ object Settings {
     val log4Cats          = "2.1.1"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaBC          = "0.3.0"
-    val lucumaCore        = "0.13.3"
-    val lucumaCatalog     = "0.5.1"
+    val lucumaCore        = "0.14.0"
+    val lucumaCatalog     = "0.6.0"
     val lucumaUI          = "0.17.1"
-    val lucumaSchemas     = "0.0.2"
+    val lucumaSchemas     = "0.1.6"
     val lucumaSSO         = "0.0.10"
     val monocle           = "3.1.0"
     val mouse             = "1.0.7"
@@ -42,7 +42,7 @@ object Settings {
     val reactHotkeys      = "0.3.2"
     val reactResizable    = "0.6.0"
     val reactSemanticUI   = "0.12.0"
-    val reactTable        = "0.5.1"
+    val reactTable        = "0.7.0"
     val reactVirtuoso     = "0.2.0"
     val scalaJsReact      = "2.0.0-RC3"
     val pprint            = "0.6.6"
@@ -313,7 +313,8 @@ object Settings {
         "com.github.japgolly.scalajs-react" %%% "extra",
         "com.github.japgolly.scalajs-react" %%% "extra-ext-monocle3",
         "com.github.japgolly.scalajs-react" %%% "core-ext-cats",
-        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect"
+        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect",
+        "com.github.japgolly.scalajs-react" %%% "callback-ext-cats"
       )(scalaJsReact)
     )
 

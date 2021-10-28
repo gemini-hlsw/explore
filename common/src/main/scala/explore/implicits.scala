@@ -18,13 +18,15 @@ import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
-import lucuma.ui.utils._
+import monocle.function.At.at
+import monocle.function.Index.index
 import org.http4s.Uri
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import shapeless._
 
 import scala.annotation.unused
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration
 
 trait ListImplicits {
@@ -52,15 +54,25 @@ trait ListImplicits {
   }
 
   implicit class ViewListOps[F[_], A](val viewList: ViewF[F, List[A]]) {
-    def toListOfViews[B](eqBy: A => B)(implicit eq: Eq[B]): List[ViewF[F, A]] =
-      viewList.get.map { a =>
-        // We're already focused on "this" element
-        val getA: List[A] => A                    = _ => a
-        def modA(mod: A => A): List[A] => List[A] =
-          list => list.modFirstWhere(thisA => eqBy(thisA) === eqBy(a), mod)
-
-        viewList.zoom[A](getA)(modA)
+    def toListOfViews: List[ViewF[F, A]] =
+      // It's safe to "get" since we are only invoking for existing indices.
+      viewList.get.indices.toList.map { i =>
+        val atIndex = index[List[A], Int, A](i)
+        viewList
+          .zoom((atIndex.getOption _).andThen(_.get))(atIndex.modify)
       }
+  }
+
+  implicit class ViewMapOps[F[_], K, V](val viewMap: ViewF[F, Map[K, V]]) {
+    def toListOfViews: List[ViewF[F, V]] =
+      // It's safe to "get" since we are only invoking for existing keys.
+      viewMap.get.keys.toList.map(k =>
+        viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
+      )
+  }
+
+  implicit class ListOps[A](val list: List[A]) {
+    def toSortedMap[K: Ordering](getKey: A => K) = SortedMap.from(list.map(a => (getKey(a), a)))
   }
 }
 
@@ -122,7 +134,7 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
   // Model implicits
   implicit class RootModelOps(val rootModel: RootModel) extends AnyVal {
     def url[F[_]](implicit ctx: AppContext[F]): String =
-      ctx.pageUrl(rootModel.tabs.focus, rootModel.focused)
+      ctx.pageUrl(rootModel.tabs.focus, rootModel.focusedObs)
   }
 
   // React implicits
