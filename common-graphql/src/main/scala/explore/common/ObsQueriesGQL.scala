@@ -314,8 +314,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: EditScienceRequirementsInput!){
-        updateScienceRequirements(input: {observationIds: [$obsId], scienceRequirements: $input}) {
+      mutation ($obsIds: ObservationId!, $input: EditScienceRequirementsInput!){
+        updateScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
           id
         }        
       }
