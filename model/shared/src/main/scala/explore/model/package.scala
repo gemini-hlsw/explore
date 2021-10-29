@@ -40,14 +40,9 @@ package object model {
 
   type TargetEnvIdSet = NonEmptySet[TargetEnvironment.Id]
 
-  type TargetEnvIdObsId    = (TargetEnvironment.Id, Option[Observation.Id])
-  type TargetEnvIdObsIdSet = NonEmptySet[TargetEnvIdObsId]
-
   type ObsIdSet = NonEmptySet[Observation.Id]
 
   object implicits   {
-    implicit val orderTargetnEnvId: Order[TargetEnvIdObsId] = Order.by(_._1)
-
     implicit val orderNESTargetEnvId: Order[TargetEnvIdSet] =
       Order.by(_.toSortedSet)
 

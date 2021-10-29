@@ -15,6 +15,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
 import explore.model.TargetEnv
+import explore.model.TargetEnvIdObsId
 import explore.model.TargetEnvIdObsIdSet
 import explore.schemas.implicits._
 import explore.utils._
@@ -38,7 +39,7 @@ object TargetListGroupQueries {
   // This is used for sorting the TargetListGroupObsList. If we change to sort by name or something
   // else, we can remove this.
   implicit val orderSortedSet: Order[TargetEnvIdObsIdSet] =
-    Order.by(_.toList.map(t => (t._2, t._1)))
+    TargetEnvIdObsIdSet.orderByObsThenTargetEnv
 
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
@@ -58,7 +59,7 @@ object TargetListGroupQueries {
       targetListGroups
         .get(targetEnvObsIds)
         .fold(observations.mapFilter { obsSumm =>
-          if (targetEnvObsIds.contains((obsSumm.targetEnvId, obsSumm.id.some)))
+          if (targetEnvObsIds.contains(TargetEnvIdObsId((obsSumm.targetEnvId, obsSumm.id.some))))
             obsSumm.scienceTargetIds.some
           else none
         }.combineAll)(_.targetIds)

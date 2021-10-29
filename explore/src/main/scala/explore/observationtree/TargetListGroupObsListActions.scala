@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.Order._
-import cats.data.NonEmptySet
 import cats.effect.Async
 import cats.syntax.all._
 import clue.TransactionalClient
@@ -59,11 +58,11 @@ object TargetListGroupObsListActions {
     eids:       SortedSet[TargetEnvIdObsIdSet]
   ) =
     optDestIds.fold(
-      eids.flatMap(ids => NonEmptySet.fromSet(ids -- draggedIds)) + draggedIds
+      eids.flatMap(ids => ids.remove(draggedIds)) + draggedIds
     ) { destIds =>
       eids.flatMap(ids =>
         if (ids === destIds) none
-        else NonEmptySet.fromSet(ids -- draggedIds)
+        else ids.remove(draggedIds)
       ) + (destIds ++ draggedIds)
     }
 
@@ -91,7 +90,7 @@ object TargetListGroupObsListActions {
         oTargetEnv.fold(async.unit) { tenv =>
           // destination ids may not be found when undoing
           val optDestIds = tlgl.values.find(_.areScienceTargetsEqual(tenv)).map(_.id)
-          TargetListGroupQueries.replaceScienceTargetList[F](draggedIds.toList.map(_._1),
+          TargetListGroupQueries.replaceScienceTargetList[F](draggedIds.toList.map(_.targetEnvId),
                                                              tenv.scienceTargets.values.toList
           ) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[F] >>

@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
@@ -155,7 +154,7 @@ object TargetTabContents {
           .mod { eids =>
             val withOld       =
               if (groupIds === editedIds) eids
-              else eids + NonEmptySet.fromSetUnsafe(groupIds -- editedIds)
+              else eids + groupIds.removeUnsafe(editedIds)
             val withOldAndNew =
               if (editedIds === tlg.id && editedIds === groupIds) withOld
               else withOld + tlg.id
