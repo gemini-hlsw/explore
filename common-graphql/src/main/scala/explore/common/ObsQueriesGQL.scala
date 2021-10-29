@@ -253,7 +253,7 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
-        type Targets = model.TargetEnv
+        type Targets = model.TargetEnvGroup
 
         type ConstraintSet = model.ConstraintSet
 

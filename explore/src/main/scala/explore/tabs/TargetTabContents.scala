@@ -51,7 +51,7 @@ final case class TargetTabContents(
   listUndoStacks:    View[UndoStacks[IO, TargetListGroupList]],
   targetsUndoStacks: View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
   searching:         View[Set[TargetIdSet]],
-  expandedIds:       View[SortedSet[TargetEnvIdObsIdSet]],
+  expandedIds:       View[SortedSet[TargetEnvGroupIdSet]],
   hiddenColumns:     View[Set[String]],
   size:              ResizeDetector.Dimensions
 )(implicit val ctx:  AppContextIO)
@@ -61,22 +61,22 @@ object TargetTabContents {
   type Props = TargetTabContents
 
   final case class State(
-    panels:  TwoPanelState[TargetEnvIdObsIdSet],
+    panels:  TwoPanelState[TargetEnvGroupIdSet],
     options: TargetVisualOptions // TODO: not setting fov from user preferences, yet
   )
 
   object State {
     val panels         = Focus[State](_.panels)
     val options        = Focus[State](_.options)
-    val panelsWidth    = State.panels.andThen(TwoPanelState.treeWidth[TargetEnvIdObsIdSet])
-    val panelsSelected = State.panels.andThen(TwoPanelState.selected[TargetEnvIdObsIdSet])
+    val panelsWidth    = State.panels.andThen(TwoPanelState.treeWidth[TargetEnvGroupIdSet])
+    val panelsSelected = State.panels.andThen(TwoPanelState.selected[TargetEnvGroupIdSet])
   }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[TargetEnvIdObsIdSet]
-  val selectedLens  = TwoPanelState.selected[TargetEnvIdObsIdSet]
+  val treeWidthLens = TwoPanelState.treeWidth[TargetEnvGroupIdSet]
+  val selectedLens  = TwoPanelState.selected[TargetEnvGroupIdSet]
 
   def readWidthPreference($ : ComponentDidMount[Props, State, _]): Callback = {
     implicit val ctx = $.props.ctx
@@ -126,13 +126,13 @@ object TargetTabContents {
       )
 
     def findTargetListGroup(
-      targetEnvIds: TargetEnvIdObsIdSet,
-      tlgl:         TargetListGroupList
-    ): Option[TargetEnv] = tlgl.values.find(_.id.intersect(targetEnvIds).nonEmpty)
+      targetEnvGroupIds: TargetEnvGroupIdSet,
+      tlgl:              TargetListGroupList
+    ): Option[TargetEnvGroup] = tlgl.values.find(_.id.intersect(targetEnvGroupIds).nonEmpty)
 
     def onModTargetsWithObs(
-      groupIds:  TargetEnvIdObsIdSet,
-      editedIds: TargetEnvIdObsIdSet
+      groupIds:  TargetEnvGroupIdSet,
+      editedIds: TargetEnvGroupIdSet
     )(tlgwo:     TargetListGroupWithObs): SyncIO[Unit] = {
       val groupList = tlgwo.targetListGroups
 
@@ -200,38 +200,40 @@ object TargetTabContents {
      * Render the target env editor for a TargetEnv.
      *
      * @param idsToEdit
-     *   The TargetEnvIdObsIds to include in the edit. This needs to be a subset of the ids in
+     *   The TargetEnvGroupIds to include in the edit. This needs to be a subset of the ids in
      *   targetListGroup
      * @param targetListGroup
      *   The TargetEnv that is the basis for editing. All or part of it may be included in the edit.
      */
-    def renderEditor(idsToEdit: TargetEnvIdObsIdSet, targetListGroup: TargetEnv): VdomNode = {
-      val focusedObs  = props.focusedObs.get
-      val groupEnvIds = targetListGroup.id
+    def renderEditor(idsToEdit: TargetEnvGroupIdSet, targetListGroup: TargetEnvGroup): VdomNode = {
+      val focusedObs        = props.focusedObs.get
+      val targetEnvGroupIds = targetListGroup.id
 
       val tlgView =
         targetListGroupWithObs
-          .withOnMod(onModTargetsWithObs(groupEnvIds, idsToEdit))
+          .withOnMod(onModTargetsWithObs(targetEnvGroupIds, idsToEdit))
           .zoom(TargetListGroupWithObs.targetListGroups)
 
-      val optFilteredEnv: Option[TargetEnv] = if (idsToEdit =!= groupEnvIds) {
+      val optFilteredEnv: Option[TargetEnvGroup] = if (idsToEdit =!= targetEnvGroupIds) {
         val targetIdsToEdit = targetListGroupWithObs.get.targetIdsFor(idsToEdit)
         targetListGroup.filterInIds(idsToEdit, targetIdsToEdit)
       } else targetListGroup.some
 
       optFilteredEnv.fold(renderSummary) { filteredEnv =>
-        val getEnv: TargetListGroupList => TargetEnv = _ => filteredEnv
+        val getEnv: TargetListGroupList => TargetEnvGroup = _ => filteredEnv
 
-        def modEnv(mod: TargetEnv => TargetEnv): TargetListGroupList => TargetListGroupList =
+        def modEnv(
+          mod: TargetEnvGroup => TargetEnvGroup
+        ): TargetListGroupList => TargetListGroupList =
           tlgl => {
             val moddedEnv = mod(filteredEnv)
 
             // if we're editing a subset of the group, we need to split the group up
             val splitList =
-              if (idsToEdit === groupEnvIds)
-                tlgl.updated(groupEnvIds, moddedEnv) // else just update the current
+              if (idsToEdit === targetEnvGroupIds)
+                tlgl.updated(targetEnvGroupIds, moddedEnv) // else just update the current
               else {
-                val temp = tlgl - groupEnvIds + moddedEnv.asObsKeyValue
+                val temp = tlgl - targetEnvGroupIds + moddedEnv.asObsKeyValue
                 targetListGroup
                   .filterOutIds(filteredEnv.id, filteredEnv.targetIds)
                   .fold(temp)(env => temp + env.asObsKeyValue)
@@ -244,7 +246,7 @@ object TargetTabContents {
             }
           }
 
-        val envView: View[TargetEnv] = tlgView.zoom(getEnv)(modEnv)
+        val envView: View[TargetEnvGroup] = tlgView.zoom(getEnv)(modEnv)
 
         val title = focusedObs match {
           case Some(FocusedObs(id)) => s"Observation $id"
@@ -343,7 +345,7 @@ object TargetTabContents {
     ScalaComponent
       .builder[Props]
       .initialState(
-        State(TwoPanelState.initial[TargetEnvIdObsIdSet](SelectedPanel.Uninitialized),
+        State(TwoPanelState.initial[TargetEnvGroupIdSet](SelectedPanel.Uninitialized),
               TargetVisualOptions.Default
         )
       )

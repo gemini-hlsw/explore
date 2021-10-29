@@ -12,8 +12,8 @@ import explore.common.TargetListGroupQueries._
 import explore.implicits._
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
-import explore.model.TargetEnv
-import explore.model.TargetEnvIdObsIdSet
+import explore.model.TargetEnvGroup
+import explore.model.TargetEnvGroupIdSet
 import explore.undo._
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -22,13 +22,13 @@ import scala.collection.immutable.SortedSet
 
 object TargetListGroupObsListActions {
   private def getter(
-    draggedIds: TargetEnvIdObsIdSet
-  ): TargetListGroupList => Option[TargetEnv] =
+    draggedIds: TargetEnvGroupIdSet
+  ): TargetListGroupList => Option[TargetEnvGroup] =
     _.values
       .find(_.id.intersect(draggedIds).nonEmpty)
 
-  private def setter(draggedIds: TargetEnvIdObsIdSet, targetIds: Set[Target.Id])(
-    oTargetEnv:                  Option[TargetEnv]
+  private def setter(draggedIds: TargetEnvGroupIdSet, targetIds: Set[Target.Id])(
+    oTargetEnv:                  Option[TargetEnvGroup]
   ): TargetListGroupList => TargetListGroupList = originalGroupList => {
     val originalEnvList = originalGroupList.values
 
@@ -43,7 +43,7 @@ object TargetListGroupObsListActions {
         originalEnvList
           .find(_.areScienceTargetsEqual(destEnv))
           .fold(updatedList + destEnv.asObsKeyValue) { newEnv =>
-            // I can only add the TargetEnvIdObsIds from src to dest since I won't know what the new
+            // I can only add the TargetEnvGroupIds from src to dest since I won't know what the new
             // target ids will be. Will need a server trip to be fully updated unless there are no targets.
             updatedList - newEnv.id + newEnv.addIds(draggedIds).asObsKeyValue
           }
@@ -52,10 +52,10 @@ object TargetListGroupObsListActions {
   }
 
   private def updateExpandedIds(
-    draggedIds: TargetEnvIdObsIdSet,
-    optDestIds: Option[TargetEnvIdObsIdSet]
+    draggedIds: TargetEnvGroupIdSet,
+    optDestIds: Option[TargetEnvGroupIdSet]
   )(
-    eids:       SortedSet[TargetEnvIdObsIdSet]
+    eids:       SortedSet[TargetEnvGroupIdSet]
   ) =
     optDestIds.fold(
       eids.flatMap(ids => ids.remove(draggedIds)) + draggedIds
@@ -67,10 +67,10 @@ object TargetListGroupObsListActions {
     }
 
   private def updateSelected(
-    draggedIds: TargetEnvIdObsIdSet,
-    optDestIds: Option[TargetEnvIdObsIdSet]
+    draggedIds: TargetEnvGroupIdSet,
+    optDestIds: Option[TargetEnvGroupIdSet]
   )(
-    selected:   SelectedPanel[TargetEnvIdObsIdSet]
+    selected:   SelectedPanel[TargetEnvGroupIdSet]
   ) =
     selected match {
       // If in edit mode, always edit the destination.
@@ -80,10 +80,10 @@ object TargetListGroupObsListActions {
     }
 
   def obsTargetListGroup[F[_]](
-    draggedIds:     TargetEnvIdObsIdSet,
+    draggedIds:     TargetEnvGroupIdSet,
     targetIds:      Set[Target.Id], // target ids for the dragged ids.
-    expandedIds:    View[SortedSet[TargetEnvIdObsIdSet]],
-    selected:       View[SelectedPanel[TargetEnvIdObsIdSet]]
+    expandedIds:    View[SortedSet[TargetEnvGroupIdSet]],
+    selected:       View[SelectedPanel[TargetEnvGroupIdSet]]
   )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
     Action[F](getter = getter(draggedIds), setter = setter(draggedIds, targetIds))(
       onSet = (tlgl, oTargetEnv) =>

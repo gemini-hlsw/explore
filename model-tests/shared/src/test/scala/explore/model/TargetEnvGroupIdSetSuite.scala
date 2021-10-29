@@ -3,13 +3,13 @@
 
 package explore.model
 
-import explore.model.TargetEnvIdObsId
-import explore.model.arb.ArbTargetEnvIdObsId._
+import explore.model.TargetEnvGroupIdSet
+import explore.model.arb.ArbTargetEnvGroupIdSet._
 import lucuma.core.optics.laws.discipline.FormatTests
 import munit.DisciplineSuite
 
-class TargetEnvIdObsIdSuite extends DisciplineSuite {
-  checkAll("TargetEnvIdObsId.format",
-           FormatTests(TargetEnvIdObsId.format).formatWith(stringsOftenParsable)
+class TargetEnvGroupIdSetSuite extends DisciplineSuite {
+  checkAll("TargetEnvGroupIdSet.format",
+           FormatTests(TargetEnvGroupIdSet.format).formatWith(stringsOftenParsable)
   )
 }

@@ -97,7 +97,7 @@ object TargetListGroupQueriesGQL {
     """
 
     object Data {
-      type ScienceTargetListGroup = model.TargetEnv
+      type ScienceTargetListGroup = model.TargetEnvGroup
       object Observations {
         object Nodes {
           trait ConstraintSet extends model.ConstraintsSummary

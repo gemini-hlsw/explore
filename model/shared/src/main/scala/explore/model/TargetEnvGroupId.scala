@@ -9,7 +9,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.TargetEnvironment
 import lucuma.core.optics.Format
 
-case class TargetEnvIdObsId(id: (TargetEnvironment.Id, Option[Observation.Id])) extends AnyVal {
+case class TargetEnvGroupId(id: (TargetEnvironment.Id, Option[Observation.Id])) extends AnyVal {
   def targetEnvId: TargetEnvironment.Id = id._1
   def optObsId: Option[Observation.Id]  = id._2
 
@@ -20,17 +20,17 @@ case class TargetEnvIdObsId(id: (TargetEnvironment.Id, Option[Observation.Id])) 
   }
 }
 
-object TargetEnvIdObsId {
-  implicit val orderTargetEnvIdObsId: Order[TargetEnvIdObsId] = Order.by(_.id._1)
+object TargetEnvGroupId {
+  implicit val orderTargetEnvGroupId: Order[TargetEnvGroupId] = Order.by(_.id._1)
 
-  val format: Format[String, TargetEnvIdObsId] = Format(parse, _.toString)
+  val format: Format[String, TargetEnvGroupId] = Format(parse, _.toString)
 
-  def parse(idStr: String): Option[TargetEnvIdObsId] =
+  def parse(idStr: String): Option[TargetEnvGroupId] =
     idStr.split(":").toList match {
       case tidStr :: oidStr :: Nil =>
         TargetEnvironment.Id
           .parse(tidStr)
-          .map(tid => TargetEnvIdObsId((tid, Observation.Id.parse(oidStr))))
+          .map(tid => TargetEnvGroupId((tid, Observation.Id.parse(oidStr))))
       case _                       => none
     }
 

@@ -19,8 +19,8 @@ import monocle.Lens
 import scala.collection.immutable.SortedSet
 import scala.collection.immutable.TreeSeqMap
 
-case class TargetEnv(
-  id:             TargetEnvIdObsIdSet,
+case class TargetEnvGroup(
+  id:             TargetEnvGroupIdSet,
   scienceTargets: TreeSeqMap[TargetIdSet, Target]
 ) {
   lazy val targetEnvIds: TargetEnvIdSet      = id.targetEnvIds
@@ -34,13 +34,13 @@ case class TargetEnv(
   // Note: This should only be used while waiting for the server roundtrip
   // since it does not include the target ids. If we start generating
   // target ids on the ui-side, this should go away.
-  def addIds(newIds: TargetEnvIdObsIdSet): TargetEnv =
-    TargetEnv.id.modify(_ ++ newIds)(this)
+  def addIds(newIds: TargetEnvGroupIdSet): TargetEnvGroup =
+    TargetEnvGroup.id.modify(_ ++ newIds)(this)
 
-  def asObsKeyValue: (TargetEnvIdObsIdSet, TargetEnv) = (this.id, this)
+  def asObsKeyValue: (TargetEnvGroupIdSet, TargetEnvGroup) = (this.id, this)
 
-  def areScienceTargetsEqual(other: TargetEnv): Boolean =
-    TargetEnv.areScienceTargetsEqual(this, other)
+  def areScienceTargetsEqual(other: TargetEnvGroup): Boolean =
+    TargetEnvGroup.areScienceTargetsEqual(this, other)
 
   /**
    * Effectively creates a subset of the original TargetEnv, where the TargetEnv.id contains only
@@ -48,10 +48,10 @@ case class TargetEnv(
    * keys specified in targetIdsToInclude. This subset can then be passed to the TargetEnvEditor.
    */
   def filterInIds(
-    envObsIdsToInclude: TargetEnvIdObsIdSet,
+    envObsIdsToInclude: TargetEnvGroupIdSet,
     targetIdsToInclude: Set[Target.Id]
-  ): Option[TargetEnv] = {
-    val filteredIds: Option[TargetEnvIdObsIdSet] =
+  ): Option[TargetEnvGroup] = {
+    val filteredIds: Option[TargetEnvGroupIdSet] =
       this.id.filterOpt(envObsIdsToInclude.contains)
 
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
@@ -62,7 +62,7 @@ case class TargetEnv(
             .map((_, target))
         }
         .map(TreeSeqMap.from)
-    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
+    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnvGroup(id, targets) }
   }
 
   /**
@@ -73,10 +73,10 @@ case class TargetEnv(
    * original with identical targets.
    */
   def filterOutIds(
-    envObsIdsToExclude: TargetEnvIdObsIdSet,
+    envObsIdsToExclude: TargetEnvGroupIdSet,
     targetIdsToExclude: Set[Target.Id]
-  ): Option[TargetEnv] = {
-    val filteredIds: Option[TargetEnvIdObsIdSet]                 =
+  ): Option[TargetEnvGroup] = {
+    val filteredIds: Option[TargetEnvGroupIdSet]                 =
       this.id.remove(envObsIdsToExclude)
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
@@ -85,7 +85,7 @@ case class TargetEnv(
         }
         .sequence
         .map(TreeSeqMap.from)
-    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnv(id, targets) }
+    (filteredIds, filteredTargets).mapN { case (id, targets) => TargetEnvGroup(id, targets) }
   }
 
   /**
@@ -95,23 +95,23 @@ case class TargetEnv(
    * instance where editing a TargetEnv makes it equal to an existing TargetEnv, making a merger
    * necessary, NOTE: The target lists of this and other are assumed to be equal.
    */
-  def merge(other: TargetEnv): TargetEnv = {
+  def merge(other: TargetEnvGroup): TargetEnvGroup = {
     val mergedTargets: TreeSeqMap[TargetIdSet, Target] =
       TreeSeqMap.from(
         (this.scienceTargets.toList, other.scienceTargets.toList)
           .parMapN { case ((ids1, target), (ids2, _)) => (ids1 ++ ids2, target) }
       )
-    TargetEnv(this.id ++ other.id, mergedTargets)
+    TargetEnvGroup(this.id ++ other.id, mergedTargets)
   }
 }
 
-object TargetEnv {
+object TargetEnvGroup {
 
   /**
    * Compare the targets in the scienceTargets of 2 TargetEnvs to see if they are all equal. This is
    * used to determine if a merger is necessary after an edit.
    */
-  def areScienceTargetsEqual(env1: TargetEnv, env2: TargetEnv): Boolean =
+  def areScienceTargetsEqual(env1: TargetEnvGroup, env2: TargetEnvGroup): Boolean =
     areTargetListsEqual(env1.scienceTargets, env2.scienceTargets)
 
   def areTargetListsEqual(
@@ -121,7 +121,7 @@ object TargetEnv {
     tl1.size === tl2.size &&
       (tl1.toList, tl2.toList).parMapN { case ((_, t1), (_, t2)) => t1 === t2 }.forall(identity)
 
-  implicit val eqTargetEnv: Eq[TargetEnv] = Eq.by(x => (x.id, x.scienceTargets.toMap))
+  implicit val eqTargetEnv: Eq[TargetEnvGroup] = Eq.by(x => (x.id, x.scienceTargets.toMap))
 
   private val singleTargetIdDecoder: Decoder[TargetIdSet]       =
     Decoder.instance(_.get[Target.Id]("id").map(id => NonEmptySet.one(id)))
@@ -141,32 +141,32 @@ object TargetEnv {
 
   private val obsIdDecoder: Decoder[Observation.Id] = Decoder.instance(_.get[Observation.Id]("id"))
 
-  private implicit val targetEnvIdDecoder: Decoder[TargetEnvIdObsId] = Decoder.instance(c =>
+  private implicit val targetEnvIdDecoder: Decoder[TargetEnvGroupId] = Decoder.instance(c =>
     for {
       targetEnvId <- c.get[TargetEnvironment.Id]("id")
       obsId       <- c.get[Option[Observation.Id]]("observation")(decodeOption(obsIdDecoder))
-    } yield TargetEnvIdObsId((targetEnvId, obsId))
+    } yield TargetEnvGroupId((targetEnvId, obsId))
   )
 
-  private val singleTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
+  private val singleTargetEnvDecoder: Decoder[TargetEnvGroup] = Decoder.instance(c =>
     for {
-      id             <- c.as[TargetEnvIdObsId].map(id => NonEmptySet.one(id))
+      id             <- c.as[TargetEnvGroupId].map(id => NonEmptySet.one(id))
       scienceTargets <- c.get[List[TargetWithId]]("scienceTargets").map(TreeSeqMap.from)
-    } yield TargetEnv(TargetEnvIdObsIdSet(id), scienceTargets)
+    } yield TargetEnvGroup(TargetEnvGroupIdSet(id), scienceTargets)
   )
 
-  private val groupTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
+  private val groupTargetEnvDecoder: Decoder[TargetEnvGroup] = Decoder.instance(c =>
     for {
-      id             <- c.get[List[TargetEnvIdObsId]]("targetEnvironments")
+      id             <- c.get[List[TargetEnvGroupId]]("targetEnvironments")
                           .map(list => NonEmptySet.of(list.head, list.tail: _*))
       scienceTargets <- c.get[List[TargetWithId]]("commonTargetList").map(TreeSeqMap.from)
-    } yield TargetEnv(TargetEnvIdObsIdSet(id), scienceTargets)
+    } yield TargetEnvGroup(TargetEnvGroupIdSet(id), scienceTargets)
   )
 
-  implicit val decoderTargetEnv: Decoder[TargetEnv] =
+  implicit val decoderTargetEnv: Decoder[TargetEnvGroup] =
     singleTargetEnvDecoder.or(groupTargetEnvDecoder)
 
-  val id: Lens[TargetEnv, TargetEnvIdObsIdSet]                         = Focus[TargetEnv](_.id)
-  val scienceTargets: Lens[TargetEnv, TreeSeqMap[TargetIdSet, Target]] =
-    Focus[TargetEnv](_.scienceTargets)
+  val id: Lens[TargetEnvGroup, TargetEnvGroupIdSet]                         = Focus[TargetEnvGroup](_.id)
+  val scienceTargets: Lens[TargetEnvGroup, TreeSeqMap[TargetIdSet, Target]] =
+    Focus[TargetEnvGroup](_.scienceTargets)
 }

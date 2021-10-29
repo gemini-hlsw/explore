@@ -5,23 +5,23 @@ package explore.model.arb
 
 import cats.data.NonEmptySet
 import cats.laws.discipline.arbitrary._
-import explore.model.TargetEnvIdObsId
-import explore.model.TargetEnvIdObsIdSet
+import explore.model.TargetEnvGroupId
+import explore.model.TargetEnvGroupIdSet
 import lucuma.core.arb._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 
-trait ArbTargetEnvIdObsIdSet {
-  import ArbTargetEnvIdObsId._
+trait ArbTargetEnvGroupIdSet {
+  import ArbTargetEnvGroupId._
 
-  implicit val arbTargetEnvIdObsIdSet: Arbitrary[TargetEnvIdObsIdSet] = Arbitrary {
-    arbitrary[NonEmptySet[TargetEnvIdObsId]].map(TargetEnvIdObsIdSet.apply)
+  implicit val arbTargetEnvGroupIdSet: Arbitrary[TargetEnvGroupIdSet] = Arbitrary {
+    arbitrary[NonEmptySet[TargetEnvGroupId]].map(TargetEnvGroupIdSet.apply)
   }
 
-  implicit val cogenTargetEnvIdObsIdSet: Cogen[TargetEnvIdObsIdSet] =
-    Cogen[NonEmptySet[TargetEnvIdObsId]].contramap(_.idSet)
+  implicit val cogenTargetEnvGroupIdSet: Cogen[TargetEnvGroupIdSet] =
+    Cogen[NonEmptySet[TargetEnvGroupId]].contramap(_.idSet)
 
   private val perturbations: List[String => Gen[String]] =
     List(
@@ -32,9 +32,9 @@ trait ArbTargetEnvIdObsIdSet {
       s => Gen.const(s.replace(",", ""))             // change separator
     )
 
-  val stringsOftenParsable: Gen[String] = arbitrary[TargetEnvIdObsIdSet]
-    .map(TargetEnvIdObsIdSet.format.reverseGet)
+  val stringsOftenParsable: Gen[String] = arbitrary[TargetEnvGroupIdSet]
+    .map(TargetEnvGroupIdSet.format.reverseGet)
     .flatMapOneOf(Gen.const, perturbations: _*)
 }
 
-object ArbTargetEnvIdObsIdSet extends ArbTargetEnvIdObsIdSet
+object ArbTargetEnvGroupIdSet extends ArbTargetEnvGroupIdSet
