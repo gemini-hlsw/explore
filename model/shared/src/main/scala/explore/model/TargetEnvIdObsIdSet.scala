@@ -7,6 +7,7 @@ import cats.Order
 import cats.Order._
 import cats.data.NonEmptySet
 import cats.syntax.all._
+import explore.model.util.NonEmptySetWrapper
 import lucuma.core.model.Observation
 import lucuma.core.model.TargetEnvironment
 import lucuma.core.optics.Format

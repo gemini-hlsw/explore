@@ -7,7 +7,7 @@ import cats.Monoid
 import cats.syntax.all._
 import lucuma.core.math.ProperMotion
 
-trait utils {
+package object util {
   def attemptCombine[A: Monoid, B: Monoid](a: Option[A], b: Option[B]): Option[(A, B)] =
     (a, b) match {
       case (None, None)               => none
@@ -26,5 +26,3 @@ trait utils {
   def unsafeOptionFnUnlift[A](fn: Option[A] => Option[A]): A => A =
     a => fn(a.some).get
 }
-
-object utils extends utils

@@ -205,7 +205,7 @@ object TargetListGroupObsList {
         val cgObs           = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
         val groupSelected   =
-          props.selected.get.optValue.exists(_.hasIntersect(targetEnvObsIds))
+          props.selected.get.optValue.exists(_.intersects(targetEnvObsIds))
 
         val unmooredTargetEnvIds =
           targetListGroup.id.unmooredTargetEnvIds.toList.sorted

@@ -24,7 +24,7 @@ import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
-import explore.model.utils._
+import explore.model.util._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
