@@ -3,7 +3,7 @@
 
 package explore.model.arb
 
-import explore.model.TargetEnvIdObsId
+import explore.model.TargetEnvGroupId
 import lucuma.core.arb._
 import lucuma.core.model.Observation
 import lucuma.core.model.TargetEnvironment
@@ -13,15 +13,15 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 
-trait ArbTargetEnvIdObsId {
-  implicit val arbTargetEnvIdObsId = Arbitrary[TargetEnvIdObsId] {
+trait ArbTargetEnvGroupId {
+  implicit val arbTargetEnvGroupId = Arbitrary[TargetEnvGroupId] {
     for {
       tenvId   <- arbitrary[TargetEnvironment.Id]
       optObsId <- arbitrary[Option[Observation.Id]]
-    } yield TargetEnvIdObsId((tenvId, optObsId))
+    } yield TargetEnvGroupId((tenvId, optObsId))
   }
 
-  implicit val cogenTargetEnvIdObsId: Cogen[TargetEnvIdObsId] =
+  implicit val cogenTargetEnvGroupId: Cogen[TargetEnvGroupId] =
     Cogen[(TargetEnvironment.Id, Option[Observation.Id])].contramap(t =>
       (t.targetEnvId, t.optObsId)
     )
@@ -35,9 +35,9 @@ trait ArbTargetEnvIdObsId {
       s => Gen.const(s.replace(":", " "))       // change separator
     )
 
-  val stringsOftenParsable: Gen[String] = arbitrary[TargetEnvIdObsId]
-    .map(TargetEnvIdObsId.format.reverseGet)
+  val stringsOftenParsable: Gen[String] = arbitrary[TargetEnvGroupId]
+    .map(TargetEnvGroupId.format.reverseGet)
     .flatMapOneOf(Gen.const, perturbations: _*)
 }
 
-object ArbTargetEnvIdObsId extends ArbTargetEnvIdObsId
+object ArbTargetEnvGroupId extends ArbTargetEnvGroupId

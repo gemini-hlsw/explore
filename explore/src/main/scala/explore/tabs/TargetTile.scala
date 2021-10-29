@@ -9,7 +9,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
 import explore.implicits._
-import explore.model.TargetEnv
+import explore.model.TargetEnvGroup
 import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
@@ -26,7 +26,7 @@ object TargetTile {
 
   def targetTile(
     userId:        Option[User.Id],
-    targetEnvPot:  Pot[View[TargetEnv]],
+    targetEnvPot:  Pot[View[TargetEnvGroup]],
     undoStacks:    View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
     searching:     View[Set[TargetIdSet]],
     options:       View[TargetVisualOptions],
@@ -35,9 +35,9 @@ object TargetTile {
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
       Reuse.by((userId, targetEnvPot, undoStacks, searching, options))(
         (renderInTitle: Tile.RenderInTitle) =>
-          potRender[View[TargetEnv]](
+          potRender[View[TargetEnvGroup]](
             (
-              (targetEnv: View[TargetEnv]) =>
+              (targetEnv: View[TargetEnvGroup]) =>
                 userId.map(uid =>
                   <.div(
                     TargetEnvEditor(uid,

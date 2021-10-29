@@ -14,9 +14,9 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ObsSummaryWithConstraints
-import explore.model.TargetEnv
-import explore.model.TargetEnvIdObsId
-import explore.model.TargetEnvIdObsIdSet
+import explore.model.TargetEnvGroup
+import explore.model.TargetEnvGroupId
+import explore.model.TargetEnvGroupIdSet
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -38,13 +38,13 @@ object TargetListGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the TargetListGroupObsList. If we change to sort by name or something
   // else, we can remove this.
-  implicit val orderSortedSet: Order[TargetEnvIdObsIdSet] =
-    TargetEnvIdObsIdSet.orderByObsThenTargetEnv
+  implicit val orderSortedSet: Order[TargetEnvGroupIdSet] =
+    TargetEnvGroupIdSet.orderByObsThenTargetEnv
 
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
 
-  type TargetListGroupList = SortedMap[TargetEnvIdObsIdSet, TargetEnv]
+  type TargetListGroupList = SortedMap[TargetEnvGroupIdSet, TargetEnvGroup]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
   case class TargetListGroupWithObs(
@@ -55,11 +55,11 @@ object TargetListGroupQueries {
     // include a Map[TargetEnvironment.Id, NonEmptySet[Target.Id]] in the case class.
     // then use that map to find the target ids. Until then, this will not work
     // for unmoored targets when the whole group is not selected.
-    def targetIdsFor(targetEnvObsIds: TargetEnvIdObsIdSet): Set[Target.Id] =
+    def targetIdsFor(targetEnvGroupIds: TargetEnvGroupIdSet): Set[Target.Id] =
       targetListGroups
-        .get(targetEnvObsIds)
+        .get(targetEnvGroupIds)
         .fold(observations.mapFilter { obsSumm =>
-          if (targetEnvObsIds.contains(TargetEnvIdObsId((obsSumm.targetEnvId, obsSumm.id.some))))
+          if (targetEnvGroupIds.contains(TargetEnvGroupId((obsSumm.targetEnvId, obsSumm.id.some))))
             obsSumm.scienceTargetIds.some
           else none
         }.combineAll)(_.targetIds)

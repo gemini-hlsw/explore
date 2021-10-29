@@ -23,7 +23,7 @@ import explore.components.InputModal
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.TargetEnv
+import explore.model.TargetEnvGroup
 import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
@@ -49,7 +49,7 @@ import scala.collection.immutable.SortedMap
 
 final case class TargetEnvEditor(
   userId:           User.Id,
-  targetEnv:        View[TargetEnv],
+  targetEnv:        View[TargetEnvGroup],
   undoStacks:       View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
   searching:        View[Set[TargetIdSet]],
   options:          View[TargetVisualOptions],
@@ -84,7 +84,7 @@ object TargetEnvEditor {
     SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
 
   private def insertSiderealTarget(
-    targetEnv:      View[TargetEnv],
+    targetEnv:      View[TargetEnvGroup],
     name:           NonEmptyString,
     searching:      View[Set[TargetIdSet]],
     selectedTarget: View[Option[TargetIdSet]]
@@ -110,7 +110,7 @@ object TargetEnvEditor {
                 case Some(SiderealTarget(_, st, m)) =>
                   // Set locally
                   targetEnv
-                    .zoom(TargetEnv.scienceTargets)
+                    .zoom(TargetEnvGroup.scienceTargets)
                     .zoom(index(id)(indexTreeSeqMap[TargetIdSet, Target]))
                     .zoom(Target.sidereal)
                     .zoom(
@@ -185,7 +185,7 @@ object TargetEnvEditor {
             )
           ),
           TargetTable(
-            props.targetEnv.zoom(TargetEnv.scienceTargets),
+            props.targetEnv.zoom(TargetEnvGroup.scienceTargets),
             props.hiddenColumns,
             selectedTargetId,
             props.renderInTitle
@@ -194,7 +194,7 @@ object TargetEnvEditor {
             .flatMap[VdomElement] { targetId =>
               val selectedTargetView =
                 props.targetEnv
-                  .zoom(TargetEnv.scienceTargets)
+                  .zoom(TargetEnvGroup.scienceTargets)
                   .zoom(index(targetId)(indexTreeSeqMap[TargetIdSet, Target]))
 
               selectedTargetView.mapValue(targetView =>

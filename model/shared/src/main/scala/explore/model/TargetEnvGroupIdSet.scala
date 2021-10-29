@@ -15,7 +15,7 @@ import monocle.Iso
 
 import scala.collection.immutable.SortedSet
 
-case class TargetEnvIdObsIdSet(idSet: NonEmptySet[TargetEnvIdObsId]) {
+case class TargetEnvGroupIdSet(idSet: NonEmptySet[TargetEnvGroupId]) {
   lazy val targetEnvIds: TargetEnvIdSet      = idSet.map(_.targetEnvId)
   lazy val obsIds: SortedSet[Observation.Id] = SortedSet.from(idSet.toList.mapFilter(_.optObsId))
   lazy val obsIdList: List[Observation.Id]   = obsIds.toList
@@ -31,27 +31,27 @@ case class TargetEnvIdObsIdSet(idSet: NonEmptySet[TargetEnvIdObsId]) {
     if (idSet.length === 1) idSet.head.optObsId else none
 }
 
-object TargetEnvIdObsIdSet {
-  implicit val orderTargetEnvIdObsIdSet: Order[TargetEnvIdObsIdSet] = Order.by(_.idSet)
+object TargetEnvGroupIdSet {
+  implicit val orderTargetEnvGroupIdSet: Order[TargetEnvGroupIdSet] = Order.by(_.idSet)
 
-  val iso: Iso[TargetEnvIdObsIdSet, NonEmptySet[TargetEnvIdObsId]] =
-    Iso[TargetEnvIdObsIdSet, NonEmptySet[TargetEnvIdObsId]](_.idSet)(TargetEnvIdObsIdSet.apply)
+  val iso: Iso[TargetEnvGroupIdSet, NonEmptySet[TargetEnvGroupId]] =
+    Iso[TargetEnvGroupIdSet, NonEmptySet[TargetEnvGroupId]](_.idSet)(TargetEnvGroupIdSet.apply)
 
-  implicit def nonEmptySetWrapper(ids: TargetEnvIdObsIdSet) =
-    NonEmptySetWrapper(ids, TargetEnvIdObsIdSet.iso)
+  implicit def nonEmptySetWrapper(ids: TargetEnvGroupIdSet) =
+    NonEmptySetWrapper(ids, TargetEnvGroupIdSet.iso)
 
   // alternate ordering for display
-  val orderByObsThenTargetEnv: Order[TargetEnvIdObsIdSet] =
+  val orderByObsThenTargetEnv: Order[TargetEnvGroupIdSet] =
     Order.by(_.idSet.toList.map(t => (t.optObsId, t.targetEnvId)))
 
-  val format: Format[String, TargetEnvIdObsIdSet] = Format(parse, _.toString)
+  val format: Format[String, TargetEnvGroupIdSet] = Format(parse, _.toString)
 
-  private def parse(idSetStr: String): Option[TargetEnvIdObsIdSet] =
+  private def parse(idSetStr: String): Option[TargetEnvGroupIdSet] =
     idSetStr
       .split(",")
       .toList
-      .traverse(TargetEnvIdObsId.format.getOption)
-      .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)).map(TargetEnvIdObsIdSet.apply))
+      .traverse(TargetEnvGroupId.format.getOption)
+      .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)).map(TargetEnvGroupIdSet.apply))
 
-  def one(id: TargetEnvIdObsId): TargetEnvIdObsIdSet = TargetEnvIdObsIdSet(NonEmptySet.one(id))
+  def one(id: TargetEnvGroupId): TargetEnvGroupIdSet = TargetEnvGroupIdSet(NonEmptySet.one(id))
 }

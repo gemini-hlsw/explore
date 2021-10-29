@@ -15,8 +15,8 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.FocusedObs
 import explore.model.SelectedPanel
-import explore.model.TargetEnv
-import explore.model.TargetEnvIdObsIdSet
+import explore.model.TargetEnvGroup
+import explore.model.TargetEnvGroupIdSet
 import explore.model.TargetIdSet
 import explore.model.conversions._
 import explore.model.formats._
@@ -56,37 +56,37 @@ import scalajs.js.JSConverters._
 final case class TargetSummaryTable(
   targetListGroupWithObs: TargetListGroupWithObs,
   hiddenColumns:          View[Set[String]],
-  selectedPanel:          View[SelectedPanel[TargetEnvIdObsIdSet]],
+  selectedPanel:          View[SelectedPanel[TargetEnvGroupIdSet]],
   focusedObs:             View[Option[FocusedObs]],
-  expandedIds:            View[SortedSet[TargetEnvIdObsIdSet]],
+  expandedIds:            View[SortedSet[TargetEnvGroupIdSet]],
   renderInTitle:          Tile.RenderInTitle
 ) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
 
 final case class TargetRow(
-  id:             String,
-  name:           NonEmptyString,
-  tracking:       Option[SiderealTracking],
-  magnitudes:     SortedMap[MagnitudeBand, Magnitude],
-  optTargetEnvId: Option[TargetEnvIdObsIdSet]
+  id:                  String,
+  name:                NonEmptyString,
+  tracking:            Option[SiderealTracking],
+  magnitudes:          SortedMap[MagnitudeBand, Magnitude],
+  optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
 )
 
 object TargetRow {
   def expandableFromTarget(
-    id:             TargetIdSet,
-    target:         Target,
-    optTargetEnvId: Option[TargetEnvIdObsIdSet]
+    id:                  TargetIdSet,
+    target:              Target,
+    optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
   ): Expandable[TargetRow] =
     Expandable(
       // TODO Better toString for TargetIdSet
       target match {
         case SiderealTarget(name, tracking, magnitudes) =>
-          TargetRow(id.toString, name, tracking.some, magnitudes, optTargetEnvId)
+          TargetRow(id.toString, name, tracking.some, magnitudes, optTargetEnvGroupId)
         case NonsiderealTarget(name, _, magnitudes)     =>
-          TargetRow(id.toString, name, none, magnitudes, optTargetEnvId)
+          TargetRow(id.toString, name, none, magnitudes, optTargetEnvGroupId)
       }
     )
 
-  def expandableFromTargetEnv(targetEnv: TargetEnv): Option[Expandable[TargetRow]] =
+  def expandableFromTargetEnv(targetEnv: TargetEnvGroup): Option[Expandable[TargetRow]] =
     targetEnv.scienceTargets.toList match {
       case Nil                              => none
       case (targetIds, singleTarget) :: Nil =>
@@ -181,10 +181,10 @@ object TargetSummaryTable {
               <.a(
                 ExploreStyles.TargetSummarySubRowCell.when_(cell.row.depth > 0),
                 ^.onClick ==> (_ =>
-                  cell.row.original.value.optTargetEnvId
-                    .map(targetEnvId => // TODO Allow jumping to a specific target?
-                      props.expandedIds.mod(_ + targetEnvId) >>
-                        props.selectedPanel.set(SelectedPanel.editor(targetEnvId))
+                  cell.row.original.value.optTargetEnvGroupId
+                    .map(targetEnvGroupId => // TODO Allow jumping to a specific target?
+                      props.expandedIds.mod(_ + targetEnvGroupId) >>
+                        props.selectedPanel.set(SelectedPanel.editor(targetEnvGroupId))
                     )
                     .orEmpty
                 ),
@@ -268,22 +268,22 @@ object TargetSummaryTable {
               .setSortByAuto,
             column("morphology", _ => ""),
             column("sed", _ => ""),
-            column("count", _.optTargetEnvId.map(_.obsIdList.length)) // TODO Right align
+            column("count", _.optTargetEnvGroupId.map(_.obsIdList.length)) // TODO Right align
               .setCell(_.value.map(_.toString).orEmpty)
               .setSortType(DefaultSortTypes.number),
-            column("observations", _.optTargetEnvId)
+            column("observations", _.optTargetEnvGroupId)
               .setCell(cell =>
                 cell.value
-                  .map(targetEnvId =>
+                  .map(targetEnvGroupId =>
                     <.span(
-                      targetEnvId.obsIdList
+                      targetEnvGroupId.obsIdList
                         .map(obsId =>
                           <.a(
                             ^.onClick ==> (_ =>
                               props.focusedObs.set(FocusedObs(obsId).some) >>
-                                props.expandedIds.mod(_ + targetEnvId) >>
+                                props.expandedIds.mod(_ + targetEnvGroupId) >>
                                 props.selectedPanel
-                                  .set(SelectedPanel.editor(targetEnvId))
+                                  .set(SelectedPanel.editor(targetEnvGroupId))
                             ),
                             obsId.toString
                           )
@@ -312,7 +312,7 @@ object TargetSummaryTable {
                   .State()
                   .setHiddenColumns(
                     hiddenColumns.toList
-                      .map(col => col: IdType[TargetEnvIdObsIdSet])
+                      .map(col => col: IdType[TargetEnvGroupIdSet])
                       .toJSArray
                   )
               )
