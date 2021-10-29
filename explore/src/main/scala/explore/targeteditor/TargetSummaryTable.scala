@@ -31,7 +31,6 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
-import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
@@ -63,53 +62,41 @@ final case class TargetSummaryTable(
   renderInTitle:          Tile.RenderInTitle
 ) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
 
-final case class TargetEnvInfo(targetEnvId: TargetEnvIdObsIdSet) {
-  lazy val observationIds: List[Observation.Id] = targetEnvId.value.toList.flatMap(_._2)
-}
-
 final case class TargetRow(
-  id:            String,
-  name:          NonEmptyString,
-  tracking:      Option[SiderealTracking],
-  magnitudes:    SortedMap[MagnitudeBand, Magnitude],
-  targetEnvInfo: Option[TargetEnvInfo]
+  id:             String,
+  name:           NonEmptyString,
+  tracking:       Option[SiderealTracking],
+  magnitudes:     SortedMap[MagnitudeBand, Magnitude],
+  optTargetEnvId: Option[TargetEnvIdObsIdSet]
 )
 
 object TargetRow {
   def expandableFromTarget(
-    id:            TargetIdSet,
-    target:        Target,
-    targetEnvInfo: Option[TargetEnvInfo]
+    id:             TargetIdSet,
+    target:         Target,
+    optTargetEnvId: Option[TargetEnvIdObsIdSet]
   ): Expandable[TargetRow] =
     Expandable(
       // TODO Better toString for TargetIdSet
       target match {
         case SiderealTarget(name, tracking, magnitudes) =>
-          TargetRow(id.toString, name, tracking.some, magnitudes, targetEnvInfo)
+          TargetRow(id.toString, name, tracking.some, magnitudes, optTargetEnvId)
         case NonsiderealTarget(name, _, magnitudes)     =>
-          TargetRow(id.toString, name, none, magnitudes, targetEnvInfo)
+          TargetRow(id.toString, name, none, magnitudes, optTargetEnvId)
       }
     )
 
-  def expandableFromTargetEnv(targetEnv: TargetEnv): Option[Expandable[TargetRow]] = {
-    val targetEnvInfo = TargetEnvInfo(targetEnv.id)
+  def expandableFromTargetEnv(targetEnv: TargetEnv): Option[Expandable[TargetRow]] =
     targetEnv.scienceTargets.toList match {
       case Nil                              => none
       case (targetIds, singleTarget) :: Nil =>
-        expandableFromTarget(targetIds, singleTarget, targetEnvInfo.some).some
+        expandableFromTarget(targetIds, singleTarget, targetEnv.id.some).some
       case targets                          =>
-        // TODO Better toString for TargetEnvIdObsIdSet
         Expandable(
-          TargetRow(targetEnv.id.toString,
-                    targetEnv.name,
-                    none,
-                    SortedMap.empty,
-                    targetEnvInfo.some
-          )
+          TargetRow(targetEnv.id.toString, targetEnv.name, none, SortedMap.empty, targetEnv.id.some)
         ).withSubRows(targets.map { case (id, target) => expandableFromTarget(id, target, none) })
           .some
     }
-  }
 }
 
 object TargetSummaryTable {
@@ -194,10 +181,10 @@ object TargetSummaryTable {
               <.a(
                 ExploreStyles.TargetSummarySubRowCell.when_(cell.row.depth > 0),
                 ^.onClick ==> (_ =>
-                  cell.row.original.value.targetEnvInfo
-                    .map(targetEnvInfo => // TODO Allow jumping to a specific target?
-                      props.expandedIds.mod(_ + targetEnvInfo.targetEnvId) >>
-                        props.selectedPanel.set(SelectedPanel.editor(targetEnvInfo.targetEnvId))
+                  cell.row.original.value.optTargetEnvId
+                    .map(targetEnvId => // TODO Allow jumping to a specific target?
+                      props.expandedIds.mod(_ + targetEnvId) >>
+                        props.selectedPanel.set(SelectedPanel.editor(targetEnvId))
                     )
                     .orEmpty
                 ),
@@ -281,22 +268,22 @@ object TargetSummaryTable {
               .setSortByAuto,
             column("morphology", _ => ""),
             column("sed", _ => ""),
-            column("count", _.targetEnvInfo.map(_.observationIds.length)) // TODO Right align
+            column("count", _.optTargetEnvId.map(_.obsIdList.length)) // TODO Right align
               .setCell(_.value.map(_.toString).orEmpty)
               .setSortType(DefaultSortTypes.number),
-            column("observations", _.targetEnvInfo)
+            column("observations", _.optTargetEnvId)
               .setCell(cell =>
                 cell.value
-                  .map(targetEnvInfo =>
+                  .map(targetEnvId =>
                     <.span(
-                      targetEnvInfo.observationIds
+                      targetEnvId.obsIdList
                         .map(obsId =>
                           <.a(
                             ^.onClick ==> (_ =>
                               props.focusedObs.set(FocusedObs(obsId).some) >>
-                                props.expandedIds.mod(_ + targetEnvInfo.targetEnvId) >>
+                                props.expandedIds.mod(_ + targetEnvId) >>
                                 props.selectedPanel
-                                  .set(SelectedPanel.editor(targetEnvInfo.targetEnvId))
+                                  .set(SelectedPanel.editor(targetEnvId))
                             ),
                             obsId.toString
                           )

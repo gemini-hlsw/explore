@@ -23,23 +23,19 @@ case class TargetEnv(
   id:             TargetEnvIdObsIdSet,
   scienceTargets: TreeSeqMap[TargetIdSet, Target]
 ) {
-  lazy val targetEnvIds: TargetEnvIdSet      = id.map(_._1)
-  lazy val obsIds: SortedSet[Observation.Id] = id.collect { case (_, Some(obsId)) => obsId }
+  lazy val targetEnvIds: TargetEnvIdSet      = id.targetEnvIds
+  lazy val obsIds: SortedSet[Observation.Id] = id.obsIds
   lazy val targetIds: Set[Target.Id]         = this.scienceTargets.keys.toList.map(_.toSortedSet).combineAll
 
   lazy val name: NonEmptyString =
     if (scienceTargets.isEmpty) NonEmptyString("<No Targets>")
     else NonEmptyString.unsafeFrom(scienceTargets.map(TargetWithId.name.get).mkString(";"))
 
+  // Note: This should only be used while waiting for the server roundtrip
+  // since it does not include the target ids. If we start generating
+  // target ids on the ui-side, this should go away.
   def addIds(newIds: TargetEnvIdObsIdSet): TargetEnv =
     TargetEnv.id.modify(_ ++ newIds)(this)
-
-  def removeIds(oldIds: TargetEnvIdObsIdSet): TargetEnv =
-    // TODO Deal with this better. Maybe return an Option[TargetEnv] ?
-    NonEmptySet
-      .fromSet(id -- oldIds)
-      .map(newIds => TargetEnv.id.replace(newIds)(this))
-      .getOrElse(this)
 
   def asObsKeyValue: (TargetEnvIdObsIdSet, TargetEnv) = (this.id, this)
 
@@ -56,7 +52,7 @@ case class TargetEnv(
     targetIdsToInclude: Set[Target.Id]
   ): Option[TargetEnv] = {
     val filteredIds: Option[TargetEnvIdObsIdSet] =
-      NonEmptySet.fromSet(this.id.filter(envObsIdsToInclude.contains))
+      this.id.filterOpt(envObsIdsToInclude.contains)
 
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
@@ -81,7 +77,7 @@ case class TargetEnv(
     targetIdsToExclude: Set[Target.Id]
   ): Option[TargetEnv] = {
     val filteredIds: Option[TargetEnvIdObsIdSet]                 =
-      NonEmptySet.fromSet(this.id -- envObsIdsToExclude)
+      this.id.remove(envObsIdsToExclude)
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
         .map { case (ids, target) =>
@@ -149,14 +145,14 @@ object TargetEnv {
     for {
       targetEnvId <- c.get[TargetEnvironment.Id]("id")
       obsId       <- c.get[Option[Observation.Id]]("observation")(decodeOption(obsIdDecoder))
-    } yield (targetEnvId, obsId)
+    } yield TargetEnvIdObsId((targetEnvId, obsId))
   )
 
   private val singleTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
     for {
       id             <- c.as[TargetEnvIdObsId].map(id => NonEmptySet.one(id))
       scienceTargets <- c.get[List[TargetWithId]]("scienceTargets").map(TreeSeqMap.from)
-    } yield TargetEnv(id, scienceTargets)
+    } yield TargetEnv(TargetEnvIdObsIdSet(id), scienceTargets)
   )
 
   private val groupTargetEnvDecoder: Decoder[TargetEnv] = Decoder.instance(c =>
@@ -164,7 +160,7 @@ object TargetEnv {
       id             <- c.get[List[TargetEnvIdObsId]]("targetEnvironments")
                           .map(list => NonEmptySet.of(list.head, list.tail: _*))
       scienceTargets <- c.get[List[TargetWithId]]("commonTargetList").map(TreeSeqMap.from)
-    } yield TargetEnv(id, scienceTargets)
+    } yield TargetEnv(TargetEnvIdObsIdSet(id), scienceTargets)
   )
 
   implicit val decoderTargetEnv: Decoder[TargetEnv] =
