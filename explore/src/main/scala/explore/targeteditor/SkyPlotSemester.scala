@@ -154,8 +154,8 @@ object SkyPlotSemester {
 
       val tickFormatter: AxisLabelsFormatterCallbackFunction =
         (
-          labelValue: AxisLabelsFormatterContextObject, //[Double],
-          _:          AxisLabelsFormatterContextObject  //[String]
+          labelValue: AxisLabelsFormatterContextObject, // [Double],
+          _:          AxisLabelsFormatterContextObject  // [String]
         ) =>
           (labelValue.value: Any) match {
             case ms: Double => timeFormat(ms)
