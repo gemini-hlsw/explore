@@ -36,7 +36,9 @@ inThisBuild(
     scalacOptions += "-Ymacro-annotations",
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value,
-    scalafixScalaBinaryVersion    := "2.13"
+    scalafixScalaBinaryVersion    := "2.13",
+    // TODO Remove this once http4s-core and fs2-data release with fs2 3.2.0+.
+    evictionErrorLevel            := Level.Warn
   ) ++ lucumaPublishSettings
 )
 

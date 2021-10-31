@@ -18,7 +18,7 @@ import lucuma.core.model.User
 import lucuma.sso.client.codec.user._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
-import org.scalajs.dom.experimental.RequestCredentials
+import org.scalajs.dom.RequestCredentials
 import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import retry._

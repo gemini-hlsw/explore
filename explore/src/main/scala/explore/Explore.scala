@@ -10,8 +10,8 @@ import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import cats.~>
 import clue.WebSocketReconnectionStrategy
-import clue.js.AjaxJSBackend
-import clue.js.AjaxMethod
+import clue.js.FetchJSBackend
+import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.implicits._
@@ -39,8 +39,8 @@ import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
 import org.scalajs.dom
-import org.scalajs.dom.experimental.RequestCache
-import org.scalajs.dom.raw.Element
+import org.scalajs.dom.RequestCache
+import org.scalajs.dom.Element
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
 
@@ -129,7 +129,7 @@ object ExploreMain extends IOApp.Simple {
     Dispatcher[IO].allocated
       .map(_._1)
       .flatMap { implicit dispatcher =>
-        implicit val ajaxBackend: AjaxJSBackend[IO]              = AjaxJSBackend[IO](AjaxMethod.GET)
+        implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
 

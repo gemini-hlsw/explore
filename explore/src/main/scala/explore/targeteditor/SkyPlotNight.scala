@@ -371,7 +371,7 @@ object SkyPlotNight {
         .setSeries(
           Enumerated[ElevationSeries].all
             .map(series =>
-              SeriesLineOptions(line)
+              SeriesLineOptions((), (), line)
                 .setName(series.name)
                 .setYAxis(series.yAxis)
                 .setData(series.data(seriesData).toJSArray)

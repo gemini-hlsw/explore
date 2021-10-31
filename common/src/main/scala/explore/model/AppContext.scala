@@ -8,7 +8,7 @@ import cats.effect._
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
-import clue.js.AjaxJSBackend
+import clue.js.FetchJSBackend
 import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
@@ -141,7 +141,7 @@ case class AppContext[F[_]](
 }
 
 object AppContext {
-  def from[F[_]: Async: AjaxJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[FocusedObs]) => String,

@@ -219,7 +219,7 @@ object SkyPlotSemester {
         )
         .setSeries(
           List(
-            SeriesLineOptions(line)
+            SeriesLineOptions((), (), line)
               .setName("Visibility")
               .setYAxis(0)
             // .setData(series.toJSArray)
