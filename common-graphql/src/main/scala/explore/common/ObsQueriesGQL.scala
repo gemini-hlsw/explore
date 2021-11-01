@@ -190,7 +190,8 @@ object ObsQueriesGQL {
                 value
                 band
                 system
-              }                
+                error
+              }
             }
           }
           constraintSet {

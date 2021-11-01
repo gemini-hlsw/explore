@@ -65,6 +65,7 @@ object TargetListGroupQueriesGQL {
               value
               band
               system
+              error
             }
           }
         }
