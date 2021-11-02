@@ -3,8 +3,6 @@
 
 package explore.tabs
 
-import cats.Order._
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -61,7 +59,6 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
-import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
@@ -228,16 +225,6 @@ object ObsTabContents {
           case Left(_)       => Callback.empty
         }
 
-    def obsIdsToString(obsIds: ObsIdSet): String = obsIds.toSortedSet.mkString(",")
-
-    def obsIdStringToIds(obsIdStr: String): Option[ObsIdSet] =
-      obsIdStr
-        .split(",")
-        .toList
-        .map(Observation.Id.parse(_))
-        .sequence
-        .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)))
-
     def makeConstraintsSelector(
       constraintGroups: View[ConstraintsList],
       obsView:          Pot[View[ObservationData]]
@@ -248,10 +235,12 @@ object ObsTabContents {
             constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
           Select(
-            value = cgOpt.map(cg => obsIdsToString(cg.obsIds)).orEmpty,
+            value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
             onChange = (p: Dropdown.DropdownProps) => {
               val newCgOpt =
-                obsIdStringToIds(p.value.toString).flatMap(ids => constraintGroups.get.get(ids))
+                ObsIdSet.fromString
+                  .getOption(p.value.toString)
+                  .flatMap(ids => constraintGroups.get.get(ids))
               newCgOpt.map { cg =>
                 vod.zoom(ObservationData.constraintSet).set(cg.constraintSet).toCB >>
                   ObsQueries
@@ -261,7 +250,7 @@ object ObsTabContents {
             },
             options = constraintGroups.get
               .map(kv =>
-                new SelectItem(value = obsIdsToString(kv._1),
+                new SelectItem(value = ObsIdSet.fromString.reverseGet(kv._1),
                                text = kv._2.constraintSet.displayName
                 )
               )
@@ -425,7 +414,7 @@ object ObsTabContents {
                     obsView.map(_.zoom(ObservationData.constraintSet)),
                     props.undoStacks
                       .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                      .zoom(atMapWithDefault(NonEmptySet.one(obsId), UndoStacks.empty)),
+                      .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
                     control = constraintsSelector.some,
                     clazz = ExploreStyles.ConstraintsTile.some
                   ),

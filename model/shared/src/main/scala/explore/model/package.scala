@@ -3,10 +3,6 @@
 
 package explore
 
-import cats.Eq
-import cats.Order
-import cats.data.NonEmptySet
-import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
@@ -18,44 +14,21 @@ import lucuma.core.math.RightAscension
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
-import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.core.model.TargetEnvironment
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
 import monocle.Prism
 
 import scala.collection.immutable.SortedMap
-import scala.collection.immutable.TreeSeqMap
 
 package object model {
   // It'd be nice to make these opaque
-  type TargetIdSet             = NonEmptySet[Target.Id]
   type TargetWithId            = (TargetIdSet, Target)
   type SiderealTargetWithId    = (TargetIdSet, SiderealTarget)
   type NonsiderealTargetWithId = (TargetIdSet, NonsiderealTarget)
-
-  type TargetEnvIdSet = NonEmptySet[TargetEnvironment.Id]
-
-  type ObsIdSet = NonEmptySet[Observation.Id]
-
-  object implicits   {
-    implicit val orderNESTargetEnvId: Order[TargetEnvIdSet] =
-      Order.by(_.toSortedSet)
-
-    implicit val eqScienceTargets: Eq[TreeSeqMap[TargetIdSet, Target]] =
-      Eq.by(_.toMap)
-  }
-  object TargetIdSet {
-    def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =
-      targetIds match {
-        case Nil          => none
-        case head :: tail => NonEmptySet.of(head, tail: _*).some
-      }
-  }
 
   object SiderealTargetWithId {
     val id: Lens[SiderealTargetWithId, TargetIdSet]                                 = Focus[SiderealTargetWithId](_._1)
