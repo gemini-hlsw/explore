@@ -23,8 +23,7 @@ import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import monocle.Focus
 import org.scalajs.dom.document
-import org.scalajs.dom.ext._
-import org.scalajs.dom.raw.Element
+import org.scalajs.dom.Element
 import react.aladin._
 import react.common._
 
