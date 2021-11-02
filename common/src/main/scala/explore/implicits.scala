@@ -4,7 +4,6 @@
 package explore
 
 import cats._
-import cats.effect.SyncIO
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
@@ -16,6 +15,7 @@ import explore.model.RootModel
 import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
 import monocle.function.At.at
@@ -95,12 +95,19 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): TransactionalClient[F, ITC] =
     ctx.clients.itc
-  implicit def appContext2fromSync[F[_]](implicit
+  implicit def appContext2fromDefaultS[F[_]](implicit
     ctx: AppContext[F]
-  ): SyncIO ~> F = ctx.fromSyncIO
+  ): DefaultS ~> F = ctx.fromDefaultS
 }
 
 object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {
+  // TODO Remove this when it's included in scalajs-react
+  // https://github.com/japgolly/scalajs-react/pull/1004
+  implicit object CallbackMonoid extends Monoid[Callback] {
+    val empty: Callback                             = Callback.empty
+    def combine(x: Callback, y: Callback): Callback = x >> y
+  }
+
   // View Optics implicits
   implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
     def zoomGetAdjust[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =

@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.Order._
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
@@ -24,6 +23,7 @@ import explore.model.TargetEnvGroupIdSet
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.TargetEnvironment
@@ -70,7 +70,7 @@ object TargetListGroupObsList {
     def toggleExpanded(
       targetEnvGroupIds: TargetEnvGroupIdSet,
       expandedIds:       View[SortedSet[TargetEnvGroupIdSet]]
-    ): SyncIO[Unit] =
+    ): Callback =
       expandedIds.mod { expanded =>
         expanded
           .exists(_ === targetEnvGroupIds)
@@ -111,8 +111,8 @@ object TargetListGroupObsList {
       selected:    View[SelectedPanel[TargetEnvGroupIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
-    ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
-      $.propsIn[SyncIO].flatMap { props =>
+    ): (DropResult, ResponderProvided) => Callback = (result, _) =>
+      $.props.flatMap { props =>
         val oData = for {
           destination <- result.destination.toOption
           destIds     <- TargetEnvGroupIdSet.format.getOption(destination.droppableId)
@@ -123,7 +123,7 @@ object TargetListGroupObsList {
               .find(_.id === destIds)
         } yield (destTlg, draggedIds)
 
-        oData.fold(SyncIO.unit) { case (destTlg, draggedIds) =>
+        oData.foldMap { case (destTlg, draggedIds) =>
           val targetIds = props.targetListsWithObs.get.targetIdsFor(draggedIds)
           TargetListGroupObsListActions
             .obsTargetListGroup[IO](draggedIds, targetIds, expandedIds, selected)
@@ -137,7 +137,7 @@ object TargetListGroupObsList {
       val observations     = props.targetListsWithObs.get.observations
       val targetListGroups = props.targetListsWithObs.get.targetListGroups.map(_._2)
 
-      val state   = ViewF.fromStateSyncIO($)
+      val state   = ViewF.fromState($)
       val undoCtx = UndoContext(
         props.undoStacks,
         props.targetListsWithObs.zoom(TargetListGroupWithObs.targetListGroups)
@@ -171,22 +171,22 @@ object TargetListGroupObsList {
       def isTargetEnvSelected(targetEnvId: TargetEnvironment.Id): Boolean =
         props.selected.get.optValue.exists(_.exists(_.targetEnvId === targetEnvId))
 
-      def setSelectedPanelToSet(targetEnvGroupIdSet: TargetEnvGroupIdSet): SyncIO[Unit] =
+      def setSelectedPanelToSet(targetEnvGroupIdSet: TargetEnvGroupIdSet): Callback =
         props.selected.set(SelectedPanel.editor(targetEnvGroupIdSet))
 
-      def setSelectedPanelToSingle(targetEnvGroupId: TargetEnvGroupId): SyncIO[Unit] =
+      def setSelectedPanelToSingle(targetEnvGroupId: TargetEnvGroupId): Callback =
         setSelectedPanelToSet(TargetEnvGroupIdSet.one(targetEnvGroupId))
 
-      def setSelectedPanelAndObs(targetEnvGroupId: TargetEnvGroupId): SyncIO[Unit] =
+      def setSelectedPanelAndObs(targetEnvGroupId: TargetEnvGroupId): Callback =
         props.focusedObs.set(targetEnvGroupId.optObsId.map(FocusedObs(_))) >>
           setSelectedPanelToSingle(targetEnvGroupId)
 
-      def setSelectedPanelAndObsToSet(targetEnvGroupIdSet: TargetEnvGroupIdSet): SyncIO[Unit] = {
+      def setSelectedPanelAndObsToSet(targetEnvGroupIdSet: TargetEnvGroupIdSet): Callback = {
         val focused = targetEnvGroupIdSet.firstAndOnlyObsId.map(FocusedObs(_))
         props.focusedObs.set(focused) >> setSelectedPanelToSet(targetEnvGroupIdSet)
       }
 
-      def clearSelectedPanelAndObs: SyncIO[Unit] =
+      def clearSelectedPanelAndObs: Callback =
         props.focusedObs.set(None) >> props.selected.set(SelectedPanel.tree)
 
       def handleCtrlClick(targetEnvGroupId: TargetEnvGroupId, groupIds: TargetEnvGroupIdSet) =
@@ -198,7 +198,7 @@ object TargetListGroupObsList {
               }
             } else
               setSelectedPanelAndObsToSet(selectedIds.add(targetEnvGroupId))
-          } else SyncIO.unit // Not in the same group
+          } else Callback.empty // Not in the same group
         }
 
       def renderGroup(targetListGroup: TargetEnvGroup): VdomNode = {
@@ -220,7 +220,7 @@ object TargetListGroupObsList {
               ^.cursor.pointer,
               ^.onClick ==> { e: ReactEvent =>
                 e.stopPropagationCB >>
-                  toggleExpanded(targetEnvGroupIds, props.expandedIds).toCB
+                  toggleExpanded(targetEnvGroupIds, props.expandedIds)
                     .asEventDefault(e)
                     .void
               }
@@ -292,8 +292,7 @@ object TargetListGroupObsList {
       }
 
       DragDropContext(
-        onDragStart =
-          (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).toCB,
+        onDragStart = (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true),
         onDragEnd = (result, provided) =>
           state.zoom(State.dragging).set(false) >> handleDragEnd(result, provided)
       )(
@@ -336,7 +335,7 @@ object TargetListGroupObsList {
         case other                                              => other.some
       })
 
-      val setAndGetSelected: SyncIO[Option[TargetEnvGroup]] = selected.get match {
+      val setAndGetSelected: CallbackTo[Option[TargetEnvGroup]] = selected.get match {
         case Uninitialized =>
           val infoFromFocused: Option[(TargetEnvGroupId, TargetEnvGroup)] =
             $.props.focusedObs.get.flatMap(fo =>
@@ -353,8 +352,8 @@ object TargetListGroupObsList {
             })
             .as(infoFromFocused.map(_._2))
         case Editor(ids)   =>
-          SyncIO.delay(targetEnvGroupIdMap.find(_._1.intersect(ids).nonEmpty).map(_._2))
-        case _             => SyncIO.delay(none)
+          CallbackTo(targetEnvGroupIdMap.find(_._1.intersect(ids).nonEmpty).map(_._2))
+        case _             => CallbackTo(none)
       }
 
       def expandSelected(tlgOpt: Option[TargetEnvGroup]) =

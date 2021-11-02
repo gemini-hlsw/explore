@@ -233,7 +233,7 @@ object SkyPlotSemester {
               chart =>
                 (renderPoints(chart) >>= (cancelToken =>
                   $.setStateIn[IO](State(cancelToken.some))
-                )).runAsyncCB
+                )).runAsync
         )
           .withKey(props.toString)
       )

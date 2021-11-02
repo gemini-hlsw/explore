@@ -37,6 +37,7 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -219,7 +220,7 @@ object ObsTabContents {
                               ResizableSection.ObservationsTree,
                               (Constants.InitialTreeWidth.toInt, defaultLayout)
         )
-        .runAsyncAndThenCB {
+        .runAsyncAndThen {
           case Right((w, l)) =>
             $.modState((s: State) => State.panelsWidth.replace(w)(s.updateLayouts(l)))
           case Left(_)       => Callback.empty
@@ -242,10 +243,10 @@ object ObsTabContents {
                   .getOption(p.value.toString)
                   .flatMap(ids => constraintGroups.get.get(ids))
               newCgOpt.map { cg =>
-                vod.zoom(ObservationData.constraintSet).set(cg.constraintSet).toCB >>
+                vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
                   ObsQueries
                     .updateObservationConstraintSet[IO](vod.get.id, cg.constraintSet)
-                    .runAsyncAndForgetCB
+                    .runAsyncAndForget
               }.getOrEmpty
             },
             options = constraintGroups.get
@@ -266,7 +267,7 @@ object ObsTabContents {
           UserTargetPreferencesQuery
             .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
             .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
-            .runAsyncAndForgetCB
+            .runAsyncAndForget
         }.getOrEmpty
       }
 
@@ -286,7 +287,7 @@ object ObsTabContents {
                                         ResizableSection.ObservationsTree,
                                         d.size.width
               )
-              .runAsyncAndForgetCB
+              .runAsyncAndForget
               .debounce(1.second)
 
       val treeWidth = state.get.panels.treeWidth.toInt
@@ -334,7 +335,7 @@ object ObsTabContents {
           props.size.width.getOrElse(0) - treeWidth
         }
 
-      val layouts = ViewF.fromStateSyncIO($).zoom(State.layouts)
+      val layouts = ViewF.fromState($).zoom(State.layouts)
 
       val notesTile =
         Tile(
@@ -473,7 +474,7 @@ object ObsTabContents {
 
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromStateSyncIO($)))
+      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState($)))
     }
   }
 

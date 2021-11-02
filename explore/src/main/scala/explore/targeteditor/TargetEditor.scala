@@ -61,7 +61,7 @@
 //       )(
 //         potRender(
 //           Reuse
-//             .currying(props, ViewF.fromStateSyncIO($))
+//             .currying(props, ViewF.fromState($))
 //             .in(
 //               (
 //                 props,

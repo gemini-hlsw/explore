@@ -15,6 +15,7 @@ import crystal.react._
 import crystal.react.reuse._
 import explore._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._

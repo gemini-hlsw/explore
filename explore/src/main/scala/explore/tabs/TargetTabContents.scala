@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -25,6 +24,7 @@ import explore.targeteditor.TargetEnvEditor
 import explore.targeteditor.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
@@ -85,7 +85,7 @@ object TargetTabContents {
                             ResizableSection.TargetsTree,
                             Constants.InitialTreeWidth.toInt
       )
-      .runAsyncAndThenCB {
+      .runAsyncAndThen {
         case Right(w) => $.modState(State.panelsWidth.replace(w))
         case Left(_)  => Callback.empty
       }
@@ -103,7 +103,7 @@ object TargetTabContents {
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.TargetsTree,
                                       d.size.width
-            )).runAsyncCB
+            )).runAsync
           .debounce(1.second)
 
     val treeWidth = state.get.panels.treeWidth.toInt
@@ -133,20 +133,20 @@ object TargetTabContents {
     def onModTargetsWithObs(
       groupIds:  TargetEnvGroupIdSet,
       editedIds: TargetEnvGroupIdSet
-    )(tlgwo:     TargetListGroupWithObs): SyncIO[Unit] = {
+    )(tlgwo:     TargetListGroupWithObs): Callback = {
       val groupList = tlgwo.targetListGroups
 
       // If we're editing at the group level (even a group of 1) and it no longer exists
       // (probably due to a merger), just go to the summary.
       val updateSelection = props.focusedObs.get match {
-        case Some(_) => SyncIO.unit
+        case Some(_) => Callback.empty
         case _       =>
           groupList
             .get(editedIds)
-            .fold(state.zoom(State.panelsSelected).set(SelectedPanel.summary))(_ => SyncIO.unit)
+            .fold(state.zoom(State.panelsSelected).set(SelectedPanel.summary))(_ => Callback.empty)
       }
 
-      val updateExpanded = findTargetListGroup(editedIds, groupList).fold(SyncIO.unit) { tlg =>
+      val updateExpanded = findTargetListGroup(editedIds, groupList).fold(Callback.empty) { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
         // otherwise expand all affected groups.
@@ -336,7 +336,7 @@ object TargetTabContents {
     def render(props: Props) = {
       implicit val ctx = props.ctx
       TargetListGroupLiveQuery(
-        Reuse(renderFn _)(props, ViewF.fromStateSyncIO($))
+        Reuse(renderFn _)(props, ViewF.fromState($))
       )
     }
   }

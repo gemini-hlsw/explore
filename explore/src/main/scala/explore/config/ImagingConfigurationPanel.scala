@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.effect.SyncIO
 import cats.implicits._
 import coulomb.Quantity
 import crystal.react.implicits._
@@ -126,10 +125,9 @@ object ImagingConfigurationPanel {
                   ((r: Any) match {
                     case v: js.Array[_] =>
                       filters.set(valuesToFilters(v.collect { case s: String => s }))
-                    case _              => SyncIO.unit
+                    case _              => Callback.empty
                   })
                 )
-                .map(_.toCB)
                 .getOrEmpty
           ),
           <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),

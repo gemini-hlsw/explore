@@ -77,7 +77,7 @@ object Render {
         implicit val dispatcher = $.props.dispatcher
         implicit val logger     = $.props.logger
 
-        $.state.map(_.subscription.stop().runAsyncCB).getOrEmpty
+        $.state.map(_.subscription.stop().runAsync).getOrEmpty
       }
     }
 
@@ -167,7 +167,7 @@ object Render {
 
         init
           .handleErrorWith(t => logger.error(t)(s"Error initializing $componentName"))
-          .runAsyncCB
+          .runAsync
       }
     }
 
@@ -185,7 +185,7 @@ object Render {
         $.state
           .map(state =>
             (state.cancelConnectionTracker >>
-              state.subscriptions.map(_.stop().handleError(_ => ())).sequence.void).runAsyncCB
+              state.subscriptions.map(_.stop().handleError(_ => ())).sequence.void).runAsync
           )
           .getOrEmpty
       }

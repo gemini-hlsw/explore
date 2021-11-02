@@ -12,7 +12,7 @@ object Settings {
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
     val clue              = "0.19.1"
-    val crystal           = "0.16.2"
+    val crystal           = "0.17.0"
     val discipline        = "1.3.0"
     val disciplineMUnit   = "1.0.9"
     val fs2               = "3.2.2"
@@ -25,14 +25,14 @@ object Settings {
     val lucumaBC          = "0.3.2"
     val lucumaCore        = "0.14.3"
     val lucumaCatalog     = "0.6.0"
-    val lucumaUI          = "0.17.2"
+    val lucumaUI          = "0.18.0"
     val lucumaSchemas     = "0.1.7"
     val lucumaSSO         = "0.0.10"
     val monocle           = "3.1.0"
     val mouse             = "1.0.7"
     val mUnit             = "0.7.29"
     val mUnitCatsEffect   = "1.0.6"
-    val reactAladin       = "0.7.0"
+    val reactAladin       = "0.8.0"
     val reactAtlasKitTree = "0.4.1"
     val reactClipboard    = "1.5.0"
     val reactCommon       = "0.14.6"
@@ -44,7 +44,7 @@ object Settings {
     val reactSemanticUI   = "0.13.0"
     val reactTable        = "0.7.1"
     val reactVirtuoso     = "0.2.1"
-    val scalaJsReact      = "2.0.0-RC5"
+    val scalaJsReact      = "2.0.0-RC6"
     val pprint            = "0.6.6"
   }
 
@@ -309,12 +309,10 @@ object Settings {
 
     val ScalaJSReact = Def.setting(
       deps(
-        "com.github.japgolly.scalajs-react" %%% "core",
+        "com.github.japgolly.scalajs-react" %%% "core-bundle-cb_io",
         "com.github.japgolly.scalajs-react" %%% "extra",
         "com.github.japgolly.scalajs-react" %%% "extra-ext-monocle3",
-        "com.github.japgolly.scalajs-react" %%% "core-ext-cats",
-        "com.github.japgolly.scalajs-react" %%% "core-ext-cats_effect",
-        "com.github.japgolly.scalajs-react" %%% "callback-ext-cats"
+        "com.github.japgolly.scalajs-react" %%% "callback-ext-cats_effect"
       )(scalaJsReact)
     )
 

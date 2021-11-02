@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.Async
 import cats.implicits._
 import clue.TransactionalClient
+import crystal.react.implicits._
 import explore.common.ConstraintGroupQueries._
 import explore.common.ObsQueries
 import explore.implicits._

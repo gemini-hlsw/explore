@@ -472,7 +472,7 @@
 //     def render(props: Props) = {
 //       implicit val ctx = props.ctx
 
-//       val state   = ViewF.fromStateSyncIO($)
+//       val state   = ViewF.fromState($)
 //       val undoCtx = UndoContext(props.undoStacks, props.pointingsWithObs)
 
 //       val observations  = props.pointingsWithObs.get.observations
@@ -514,7 +514,7 @@
 
 //       DragDropContext(
 //         onDragStart =
-//           (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).toCB,
+//           (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true),
 //         onDragEnd = (result, provided) =>
 //           (state.zoom(State.dragging).set(false) >> handleDragEnd(result, provided))
 //       )(
@@ -581,7 +581,7 @@
 //                                 Seq(^.cursor.pointer,
 //                                     ^.onClick ==> { e: ReactEvent =>
 //                                       e.stopPropagationCB >>
-//                                         toggleExpanded(targetId, expandedTargetIds).toCB
+//                                         toggleExpanded(targetId, expandedTargetIds)
 //                                           .asEventDefault(e)
 //                                           .void
 //                                     }
@@ -710,7 +710,7 @@
 //                                 Seq(^.cursor.pointer,
 //                                     ^.onClick ==> { e: ReactEvent =>
 //                                       e.stopPropagationCB >>
-//                                         toggleExpanded(asterismId, expandedAsterismIds).toCB
+//                                         toggleExpanded(asterismId, expandedAsterismIds)
 //                                           .asEventDefault(e)
 //                                           .void
 //                                     }

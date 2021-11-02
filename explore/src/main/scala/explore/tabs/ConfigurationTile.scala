@@ -15,6 +15,7 @@ import explore.implicits._
 import explore.model.reusability._
 import explore.undo._
 import explore.utils.potRender
+import japgolly.scalajs.react.callback.CallbackCats._
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._

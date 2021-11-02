@@ -5,20 +5,29 @@ import cats.effect.IO
 import crystal.ViewF
 import crystal.ViewOptF
 import explore.model.AppContext
+import explore.undo.UndoContext
+import explore.undo.UndoSetter
+import japgolly.scalajs.react.callback.Callback
+import japgolly.scalajs.react.callback.CallbackCats._
+import japgolly.scalajs.react.callback.CallbackTo
 
 package explore {
 
-  import cats.effect.SyncIO
-  import explore.undo.UndoContext
-  import explore.undo.UndoSetter
   trait ShorthandTypes {
     type AppContextIO = AppContext[IO]
-    type View[A]      = ViewF[SyncIO, A]
-    type ViewOpt[A]   = ViewOptF[SyncIO, A]
-    type UndoCtx[A]   = UndoContext[SyncIO, IO, A]
-    type UndoSet[A]   = UndoSetter[SyncIO, IO, A]
-  }
+    type View[A]      = ViewF[CallbackTo, A]
+    type ViewOpt[A]   = ViewOptF[CallbackTo, A]
+    type UndoCtx[A]   = UndoContext[CallbackTo, IO, A]
+    type UndoSet[A]   = UndoSetter[CallbackTo, IO, A]
 
+    object View {
+      @inline
+      def apply[A](
+        value: A,
+        modCB: ((A => A), A => Callback) => Callback
+      ): ViewF[CallbackTo, A] = ViewF[CallbackTo, A](value, modCB)
+    }
+  }
 }
 
 package object explore extends explore.ShorthandTypes

@@ -51,7 +51,7 @@ object TileController {
   ): Callback =
     UserGridLayoutUpsert
       .storeLayoutsPreference[IO](userId, GridLayoutSection.ObservationsLayout, layouts)
-      .runAsyncAndForgetCB
+      .runAsyncAndForget
       .debounce(1.second)
 
   val itemHeght = layoutItems.andThen(layoutItemHeight)

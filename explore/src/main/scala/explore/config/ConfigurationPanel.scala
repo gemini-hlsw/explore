@@ -21,6 +21,7 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Wavelength
@@ -115,7 +116,7 @@ object ConfigurationPanel {
         UpdateScienceRequirements.spectroscopyRequirements
       )
 
-      val imaging = ViewF.fromStateSyncIO($).zoom(State.imagingOptions)
+      val imaging = ViewF.fromState($).zoom(State.imagingOptions)
 
       val configurationView = scienceDataUndo
         .undoableView(ScienceData.configuration)

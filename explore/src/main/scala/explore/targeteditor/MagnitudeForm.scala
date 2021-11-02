@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.Order._
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -18,6 +17,7 @@ import explore.model.display._
 import explore.model.reusability._
 import explore.utils.ReactTableHelpers
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.MagnitudeValue
@@ -161,7 +161,7 @@ object MagnitudeForm {
               (mod, _) =>
                 // This View will ignore Callbacks. This is OK as long as noone calls its .withOnMod.
                 // .withOnMod will likely become deprecated in the transition to hooks.
-                SyncIO(state.modState(State.newBand.some.modify(mod)).runNow())
+                state.modState(State.newBand.some.modify(mod))
             )
           )
 

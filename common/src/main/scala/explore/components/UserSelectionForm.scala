@@ -33,9 +33,9 @@ final case class UserSelectionForm(
   message: View[Option[NonEmptyString]]
 ) extends ReactProps[UserSelectionForm](UserSelectionForm.component) {
   def guest(implicit ctx: AppContextIO): Callback =
-    ctx.sso.guest.flatMap(v => vault.set(v.some).to[IO]).runAsyncCB
+    ctx.sso.guest.flatMap(v => vault.set(v.some).to[IO]).runAsync
   def login(implicit ctx: AppContextIO): Callback =
-    ctx.sso.redirectToLogin.runAsyncCB
+    ctx.sso.redirectToLogin.runAsync
 
   def supportedOrcidBrowser: CallbackTo[(Boolean, Boolean)] = CallbackTo[(Boolean, Boolean)] {
     val browser  = UAParser(dom.window.navigator.userAgent).getBrowser()

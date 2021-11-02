@@ -28,6 +28,7 @@ import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
 import lucuma.core.util.Enumerated
@@ -260,13 +261,12 @@ object ProposalDetailsEditor {
             details
               .zoom(ProposalDetails.abstrakt)
               .set(tap.value.asInstanceOf[String])
-              .toCB
         ).addModifiers(Seq(^.id := "abstract"))
       )
     }
 
     def render(props: Props, state: State) = {
-      val splitsZoom = ViewF.fromStateSyncIO($).zoom(State.splits)
+      val splitsZoom = ViewF.fromState($).zoom(State.splits)
 
       val details = props.proposalDetails
 
@@ -276,8 +276,7 @@ object ProposalDetailsEditor {
       def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
         details
           .zoom(ProposalDetails.partnerSplits)
-          .set(splits.filter(_.percent.value.value > 0))
-          .toCB *>
+          .set(splits.filter(_.percent.value.value > 0)) >>
           closePartnerSplitsEditor
 
       <.div(

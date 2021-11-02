@@ -12,6 +12,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
@@ -49,7 +50,7 @@ object InputModal {
 
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val valueView = ViewF.fromStateSyncIO($).zoom(State.inputValue)
+      val valueView = ViewF.fromState($).zoom(State.inputValue)
 
       val cleanInput = $.setStateL(State.inputValue)("")
 

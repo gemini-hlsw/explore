@@ -5,7 +5,6 @@ package explore
 
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.effect.SyncIO
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import cats.~>
@@ -30,6 +29,8 @@ import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
 import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.callback.CallbackCats._
+import japgolly.scalajs.react.callback.CallbackTo
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -39,8 +40,8 @@ import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
 import org.scalajs.dom
-import org.scalajs.dom.RequestCache
 import org.scalajs.dom.Element
+import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
 
@@ -60,8 +61,8 @@ object ExploreMain extends IOApp.Simple {
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
-  val syncIOtoIO: SyncIO ~> IO = new ~>[SyncIO, IO] {
-    def apply[A](fa: SyncIO[A]): IO[A] = fa.to[IO]
+  val callbackToIO: CallbackTo ~> IO = new ~>[CallbackTo, IO] {
+    def apply[A](fa: CallbackTo[A]): IO[A] = fa.to[IO]
   }
 
   @JSExport
@@ -140,7 +141,7 @@ object ExploreMain extends IOApp.Simple {
           view.withOnMod { model =>
             routerCtl
               .set(RootModelRouting.lens.get(model))
-              .to[SyncIO]
+          // .to[SyncIO]
           }
 
         def rootComponent(view: View[RootModel]): VdomElement =
@@ -159,15 +160,16 @@ object ExploreMain extends IOApp.Simple {
           appConfig            <- fetchConfig
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
-          ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, syncIOtoIO)
+          ctx                  <-
+            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, callbackToIO)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {
           val RootComponent =
-            ContextProviderSyncIO(AppCtx, ctx)
+            ContextProvider(AppCtx, ctx)
 
           val HelpContextComponent =
-            ContextProviderSyncIO(
+            ContextProvider(
               HelpCtx,
               HelpContext(
                 rawUrl = uri"https://raw.githubusercontent.com",
@@ -179,7 +181,7 @@ object ExploreMain extends IOApp.Simple {
             )
 
           val StateProviderComponent =
-            StateProviderSyncIO(initialModel(vault))
+            StateProvider(initialModel(vault))
 
           RootComponent(
             (HelpContextComponent(
