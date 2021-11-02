@@ -3,7 +3,6 @@
 
 package explore.tabs
 
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.syntax.all._
@@ -141,7 +140,7 @@ object ConstraintSetTabContents {
           .mod { eids =>
             val withOld       =
               if (groupObsIds === editedObsIds) eids
-              else eids + (NonEmptySet.fromSetUnsafe(groupObsIds -- editedObsIds))
+              else eids + groupObsIds.removeUnsafe(editedObsIds)
             val withOldAndNew =
               if (editedObsIds === cg.obsIds && editedObsIds === groupObsIds) withOld
               else withOld + cg.obsIds
@@ -213,7 +212,7 @@ object ConstraintSetTabContents {
                   if (idsToEdit === groupObsIds)
                     cgl.updated(groupObsIds, newCg) // otherwise, just update current group
                   else {
-                    val diffIds = NonEmptySet.fromSetUnsafe(groupObsIds -- idsToEdit)
+                    val diffIds = groupObsIds.removeUnsafe(idsToEdit)
                     cgl
                       .removed(groupObsIds)
                       .updated(idsToEdit, ConstraintGroup(newCg.constraintSet, idsToEdit))

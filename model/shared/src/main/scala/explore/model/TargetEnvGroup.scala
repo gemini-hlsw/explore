@@ -57,8 +57,8 @@ case class TargetEnvGroup(
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
         .traverse { case (ids, target) =>
-          NonEmptySet
-            .fromSet(ids.filter(targetIdsToInclude.contains))
+          ids
+            .filterOpt(targetIdsToInclude.contains)
             .map((_, target))
         }
         .map(TreeSeqMap.from)
@@ -81,7 +81,7 @@ case class TargetEnvGroup(
     val filteredTargets: Option[TreeSeqMap[TargetIdSet, Target]] =
       this.scienceTargets.toList
         .map { case (ids, target) =>
-          NonEmptySet.fromSet(ids.toSortedSet -- targetIdsToExclude).map((_, target))
+          ids.removeSet(targetIdsToExclude).map((_, target))
         }
         .sequence
         .map(TreeSeqMap.from)
@@ -124,10 +124,10 @@ object TargetEnvGroup {
   implicit val eqTargetEnv: Eq[TargetEnvGroup] = Eq.by(x => (x.id, x.scienceTargets.toMap))
 
   private val singleTargetIdDecoder: Decoder[TargetIdSet]       =
-    Decoder.instance(_.get[Target.Id]("id").map(id => NonEmptySet.one(id)))
+    Decoder.instance(_.get[Target.Id]("id").map(id => TargetIdSet.one(id)))
   private val multipleTargetIdDecoder: Decoder[TargetIdSet]     =
     Decoder.instance(
-      _.get[List[Target.Id]]("ids").map(list => NonEmptySet.of(list.head, list.tail: _*))
+      _.get[List[Target.Id]]("ids").map(list => TargetIdSet.of(list.head, list.tail: _*))
     )
   private implicit val targetIdSetDecoder: Decoder[TargetIdSet] =
     singleTargetIdDecoder.or(multipleTargetIdDecoder)

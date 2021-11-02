@@ -4,7 +4,6 @@
 package explore.constraints
 
 import cats.Order._
-import cats.data.NonEmptySet
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -160,7 +159,7 @@ object ConstraintsSummaryTable {
                       ^.onClick ==> (_ =>
                         (props.focusedObs.set(FocusedObs(obsId).some)
                           >> props.expandedIds.mod(_ + cell.value)
-                          >> props.selectedPanel.set(SelectedPanel.editor(NonEmptySet.one(obsId))))
+                          >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
                       ),
                       obsId.toString
                     )

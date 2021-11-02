@@ -16,7 +16,7 @@ import monocle.Iso
 import scala.collection.immutable.SortedSet
 
 case class TargetEnvGroupIdSet(idSet: NonEmptySet[TargetEnvGroupId]) {
-  lazy val targetEnvIds: TargetEnvIdSet      = idSet.map(_.targetEnvId)
+  lazy val targetEnvIds: TargetEnvIdSet      = TargetEnvIdSet(idSet.map(_.targetEnvId))
   lazy val obsIds: SortedSet[Observation.Id] = SortedSet.from(idSet.toList.mapFilter(_.optObsId))
   lazy val obsIdList: List[Observation.Id]   = obsIds.toList
 

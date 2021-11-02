@@ -4,8 +4,6 @@
 package explore.model
 
 import cats.Eq
-import cats.data.NonEmptySet
-import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import lucuma.core.model.Observation
@@ -17,9 +15,9 @@ final case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet)
   def addObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_.add(obsId))(this)
 
-  def removeObsId(obsId: Observation.Id): ConstraintGroup =
-    if (obsIds.length === 1) this
-    else ConstraintGroup.obsIds.modify(ids => NonEmptySet.fromSetUnsafe(ids - obsId))(this)
+  // TODO: We may be able to get rid of this once constraint groups allow multi-select
+  def removeObsId(obsId: Observation.Id): Option[ConstraintGroup] =
+    obsIds.removeOne(obsId).map(ids => ConstraintGroup.obsIds.replace(ids)(this))
 
   def asKeyValue: (ObsIdSet, ConstraintGroup) = (this.obsIds, this)
 }
@@ -41,7 +39,7 @@ object ConstraintGroup {
         cs     <- c.downField("constraintSet").as[ConstraintSet]
         obsIds <- c.downField("observations").as[ObsIdNodes].map { o =>
                     val ids = o.nodes.map(_.id)
-                    NonEmptySet.of(ids.head, ids.tail: _*)
+                    ObsIdSet.of(ids.head, ids.tail: _*)
                   }
       } yield ConstraintGroup(cs, obsIds)
     )

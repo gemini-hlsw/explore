@@ -3,7 +3,6 @@
 
 package explore.observationtree
 
-import cats.data.NonEmptySet
 import cats.effect.Async
 import cats.implicits._
 import clue.TransactionalClient
@@ -31,15 +30,14 @@ object ConstraintGroupObsListActions {
     val constraintGroups = cgl.values
 
     val updatedCgl = constraintGroups.find(_.obsIds.contains(obsId)).fold(cgl) { oldCg =>
-      val updatedOldCg = oldCg.removeObsId(obsId)
-      val newList      = cgl - oldCg.obsIds
-      if (updatedOldCg.obsIds.isEmpty) newList else newList + updatedOldCg.asKeyValue
+      val newList = cgl - oldCg.obsIds
+      oldCg.removeObsId(obsId).fold(newList)(updatedCg => newList + updatedCg.asKeyValue)
     }
 
     ocs.fold(updatedCgl) { cs =>
       constraintGroups
         .find(_.constraintSet === cs)
-        .fold(updatedCgl + ConstraintGroup(cs, NonEmptySet.one(obsId)).asKeyValue) { newCg =>
+        .fold(updatedCgl + ConstraintGroup(cs, ObsIdSet.one(obsId)).asKeyValue) { newCg =>
           val updatedNewCg = newCg.addObsId(obsId)
           updatedCgl - newCg.obsIds + updatedNewCg.asKeyValue
         }
@@ -52,17 +50,17 @@ object ConstraintGroupObsListActions {
   )(
     eids:       SortedSet[ObsIdSet]
   ) = {
-    val setOfOne = NonEmptySet.one(obsId)
+    val setOfOne = ObsIdSet.one(obsId)
 
     optDestIds.fold(
       eids.map(ids =>
-        if (ids =!= setOfOne) NonEmptySet.fromSetUnsafe(ids - obsId)
+        if (ids =!= setOfOne) ids.removeOne(obsId).get
         else ids
       ) + setOfOne
     ) { destIds =>
       eids.flatMap(ids =>
         if (ids === destIds || ids === setOfOne) none
-        else NonEmptySet.fromSetUnsafe(ids - obsId).some
+        else ids.removeOne(obsId)
       ) + destIds.add(obsId)
     }
   }
@@ -72,7 +70,7 @@ object ConstraintGroupObsListActions {
   ) =
     selected match {
       // If in edit mode, always edit the destination.
-      case Editor(_) => Editor(optDestIds.fold(NonEmptySet.one(obsId))(_.add(obsId)))
+      case Editor(_) => Editor(optDestIds.fold(ObsIdSet.one(obsId))(_.add(obsId)))
       case _         => selected
     }
 

@@ -28,7 +28,7 @@ trait ArbTargetEnvGroupIdSet {
       _ => arbitrary[String],                        // swap for a random string
       s => Gen.const(s.replaceFirst("t", "x")),      // make a target env id invalid
       s => Gen.const(s.replaceFirst("o", "x")),      // make an obs id invalid
-      s => Gen.const(s.replaceFirst("none", "fun")), // change a None indicator
+      s => Gen.const(s.replaceFirst("none", "fun")), // change a None indicator - OK
       s => Gen.const(s.replace(",", ""))             // change separator
     )
 

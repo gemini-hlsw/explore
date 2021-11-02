@@ -41,12 +41,22 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
   @inline
   def size: Long = selfSet.size
 
+  // Note: length is an Int, while size is a Long. Important in some places in the UI
+  @inline
+  def length: Int = selfSet.length
+
   @inline
   def toList: List[Id] = selfSet.toList
+
+  @inline
+  def toSortedSet: SortedSet[Id] = selfSet.toSortedSet
 
   // some helper methods
   @inline
   def remove(other: IdSet): Option[IdSet] = fromSet(this -- other)
+
+  @inline
+  def removeSet(other: Set[Id]): Option[IdSet] = fromSet(selfSet.toSortedSet -- other)
 
   @inline
   def removeUnsafe(other: IdSet): IdSet =
