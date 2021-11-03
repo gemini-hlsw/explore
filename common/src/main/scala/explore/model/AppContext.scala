@@ -113,33 +113,7 @@ case class AppContext[F[_]](
   val dispatcher: Dispatcher[F],
   val logger:     Logger[F],
   val P:          Parallel[F]
-) {
-  // val syncLogger: Logger[DefaultS] = {
-  //   def f(x: F[Unit]): DefaultS[Unit] = DefaultS(dispatcher.unsafeRunAndForget(x))
-  //   new Logger[DefaultS] {
-  //     def error(t: Throwable)(message: => String): DefaultS[Unit] =
-  //       f(logger.error(t)(message))
-  //     def warn(t: Throwable)(message: => String): DefaultS[Unit]  =
-  //       f(logger.warn(t)(message))
-  //     def info(t: Throwable)(message: => String): DefaultS[Unit]  =
-  //       f(logger.info(t)(message))
-  //     def debug(t: Throwable)(message: => String): DefaultS[Unit] =
-  //       f(logger.debug(t)(message))
-  //     def trace(t: Throwable)(message: => String): DefaultS[Unit] =
-  //       f(logger.trace(t)(message))
-  //     def error(message: => String): DefaultS[Unit]               =
-  //       f(logger.error(message))
-  //     def warn(message: => String): DefaultS[Unit]                =
-  //       f(logger.warn(message))
-  //     def info(message: => String): DefaultS[Unit]                =
-  //       f(logger.info(message))
-  //     def debug(message: => String): DefaultS[Unit]               =
-  //       f(logger.debug(message))
-  //     def trace(message: => String): DefaultS[Unit]               =
-  //       f(logger.trace(message))
-  //   }
-  // }
-}
+)
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](

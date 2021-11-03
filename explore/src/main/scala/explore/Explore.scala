@@ -141,7 +141,6 @@ object ExploreMain extends IOApp.Simple {
           view.withOnMod { model =>
             routerCtl
               .set(RootModelRouting.lens.get(model))
-          // .to[SyncIO]
           }
 
         def rootComponent(view: View[RootModel]): VdomElement =
