@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -22,8 +21,8 @@ import lucuma.core.math.RightAscension
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import monocle.Focus
-import org.scalajs.dom.document
 import org.scalajs.dom.Element
+import org.scalajs.dom.document
 import react.aladin._
 import react.common._
 
@@ -64,10 +63,10 @@ object AladinContainer {
     private val aladinRef = Ref.toScalaComponent(AladinComp)
 
     def setRa(ra: RightAscension): Callback =
-      $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.rightAscension).set(ra))
+      $.props.flatMap(_.target.zoom(Coordinates.rightAscension).set(ra))
 
     def setDec(dec: Declination): Callback =
-      $.propsIn[SyncIO].flatMap(_.target.zoom(Coordinates.declination).set(dec))
+      $.props.flatMap(_.target.zoom(Coordinates.declination).set(dec))
 
     val gotoRaDec = (coords: Coordinates) =>
       aladinRef.get.asCBO

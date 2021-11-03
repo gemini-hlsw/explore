@@ -4,7 +4,6 @@
 package explore.components
 
 import cats.syntax.all._
-import crystal.react.implicits._
 import eu.timepit.refined.types.string._
 import explore.HelpContext
 import explore.HelpCtx

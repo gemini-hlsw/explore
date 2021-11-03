@@ -261,8 +261,7 @@ object TargetTable {
                 )
               )(
                 ^.onClick --> props.selectedTarget
-                  .set(TargetWithId.id.get(rowData.original).some)
-                  .toCB,
+                  .set(TargetWithId.id.get(rowData.original).some),
                 props2Attrs(rowData.getRowProps())
               ),
             cell = (cell: TargetTable.CellType[_]) =>

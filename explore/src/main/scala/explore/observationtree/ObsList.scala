@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.implicits._
@@ -26,6 +25,7 @@ import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
@@ -67,9 +67,9 @@ object ObsList {
       undoCtx:    UndoCtx[ObservationList]
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]
-    ): SyncIO[Unit] = {
+    ): Callback = {
       // Temporary measure until we have id pools.
-      val newObs = SyncIO(Random.nextInt(0xfff)).map(int =>
+      val newObs = CallbackTo(Random.nextInt(0xfff)).map(int =>
         ObsSummaryWithTargetsAndConstraints(
           Observation.Id(PosLong.unsafeFrom(int.abs.toLong + 1)),
           targets = List.empty,

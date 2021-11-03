@@ -4,7 +4,6 @@
 package explore.components.state
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -23,8 +22,8 @@ import java.time.Instant
 
 final case class SSOManager(
   expiration:       Instant,
-  setVault:         Option[UserVault] ==> SyncIO[Unit],
-  setMessage:       NonEmptyString ==> SyncIO[Unit]
+  setVault:         Option[UserVault] ==> Callback,
+  setMessage:       NonEmptyString ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactProps[SSOManager](SSOManager.component)
 
@@ -44,8 +43,8 @@ object SSOManager {
 
     def tokenRefresher(
       expiration:   Instant,
-      setVault:     Option[UserVault] => SyncIO[Unit],
-      setMessage:   NonEmptyString => SyncIO[Unit]
+      setVault:     Option[UserVault] => Callback,
+      setMessage:   NonEmptyString => Callback
     )(implicit ctx: AppContextIO): IO[Unit] =
       for {
         vaultOpt <- ctx.sso.refreshToken(expiration)
@@ -75,7 +74,7 @@ object SSOManager {
         )
         .start
         .flatMap(ct => $.modStateIn[IO](State.cancelToken.replace(ct.cancel.some)))
-        .runAsyncCB
+        .runAsync
     }
     .componentWillUnmount { $ =>
       implicit val ctx = $.props.ctx
@@ -83,7 +82,7 @@ object SSOManager {
       $.state.cancelToken
         .map(cancel => (cancel >> $.props.setVault(none).to[IO]))
         .orEmpty
-        .runAsyncCB
+        .runAsync
     }
     .configure(Reusability.shouldComponentUpdate)
     .build

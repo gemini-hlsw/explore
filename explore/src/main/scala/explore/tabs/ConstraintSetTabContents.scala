@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.implicits._
@@ -26,6 +25,7 @@ import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
@@ -74,7 +74,7 @@ object ConstraintSetTabContents {
     (UserAreaWidths.queryWithDefault[IO]($.props.userId,
                                          ResizableSection.ConstraintSetsTree,
                                          Constants.InitialTreeWidth.toInt
-    ) >>= $.setStateLIn[IO](treeWidthLens)).runAsyncCB
+    ) >>= $.setStateLIn[IO](treeWidthLens)).runAsync
   }
 
   protected def renderFn(
@@ -90,7 +90,7 @@ object ConstraintSetTabContents {
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
                                       d.size.width
-            )).runAsyncCB
+            )).runAsync
           .debounce(1.second)
 
     val treeWidth = state.get.treeWidth.toInt
@@ -119,20 +119,20 @@ object ConstraintSetTabContents {
     def onModSummaryWithObs(
       groupObsIds:  ObsIdSet,
       editedObsIds: ObsIdSet
-    )(cswo:         ConstraintSummaryWithObervations): SyncIO[Unit] = {
+    )(cswo:         ConstraintSummaryWithObervations): Callback = {
       val groupList = cswo.constraintGroups
 
       // If we're editing at the group level (even a group of 1) and it no longer exists
       // (probably due to a merger), just go to the summary.
       val updateSelection = props.focusedObs.get match {
-        case Some(_) => SyncIO.unit
+        case Some(_) => Callback.empty
         case None    =>
           groupList
             .get(editedObsIds)
-            .fold(state.zoom(selectedLens).set(SelectedPanel.summary))(_ => SyncIO.unit)
+            .fold(state.zoom(selectedLens).set(SelectedPanel.summary))(_ => Callback.empty)
       }
 
-      val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(SyncIO.unit) { cg =>
+      val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>
         // We should always find the constraint group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
         // otherwise expand all affected groups.
@@ -290,7 +290,7 @@ object ConstraintSetTabContents {
     def render(props: Props) = {
       implicit val ctx = props.ctx
       ConstraintGroupLiveQuery(
-        Reuse(renderFn _)(props, ViewF.fromStateSyncIO($), window.innerWidth)
+        Reuse(renderFn _)(props, ViewF.fromState($), window.innerWidth)
       )
     }
   }

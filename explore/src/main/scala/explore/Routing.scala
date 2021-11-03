@@ -3,7 +3,6 @@
 
 package explore
 
-import cats.effect.SyncIO
 import cats.syntax.all._
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
@@ -13,6 +12,7 @@ import explore.model._
 import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
+import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -126,7 +126,7 @@ object Routing {
             case (None, next, view) =>
               // Set the model if none was previously set
               view.zoom(RootModelRouting.lens).set(next)
-            case _                  => SyncIO.unit
+            case _                  => Callback.empty
           }
           .renderWithP(layout)
       // .logToConsole

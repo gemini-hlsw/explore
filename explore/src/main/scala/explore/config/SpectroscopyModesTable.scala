@@ -288,7 +288,7 @@ object SpectroscopyModesTable extends ItcColumn {
   ) =
     (wavelength, signalToNoise)
       .mapN((w, sn) =>
-        queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForgetCB
+        queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForget
       )
       .getOrEmpty
 
@@ -420,7 +420,7 @@ object SpectroscopyModesTable extends ItcColumn {
                       )
                     )(
                       ^.onClick --> (
-                        props.scienceConfiguration.set(toggleRow(rowData.original)).toCB >>
+                        props.scienceConfiguration.set(toggleRow(rowData.original)) >>
                           selectedIndex.setState(rowData.index.toInt.some)
                       ),
                       props2Attrs(rowData.getRowProps())

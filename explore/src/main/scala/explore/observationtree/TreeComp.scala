@@ -142,16 +142,16 @@
 //                   onDragEnd(state.tree,
 //                             ($.modStateIn[IO] _).compose(State.tree.modify),
 //                             undoCtx.setter
-//                   )(source, destination).runAsyncCB,
+//                   )(source, destination).runAsync,
 //                 isDragEnabled = true
 //                 // isNestingEnabled = true // Work this into facade. Seems to trigger onDragEnd with defined dest but with undefined index.
 //               )
 //             ),
 //             <.div(
-//               Button(onClick = undoCtx.undo(state.tree).runAsyncCB, disabled = undoCtx.undoEmpty)(
+//               Button(onClick = undoCtx.undo(state.tree).runAsync, disabled = undoCtx.undoEmpty)(
 //                 "Undo"
 //               ),
-//               Button(onClick = undoCtx.redo(state.tree).runAsyncCB, disabled = undoCtx.redoEmpty)(
+//               Button(onClick = undoCtx.redo(state.tree).runAsync, disabled = undoCtx.redoEmpty)(
 //                 "Redo"
 //               )
 //             )

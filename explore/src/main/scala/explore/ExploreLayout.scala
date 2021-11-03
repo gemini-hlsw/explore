@@ -55,7 +55,7 @@ object ExploreLayout {
                     val helpView = helpCtx.zoom(HelpContext.displayedHelp)
                     GlobalHotKeys(
                       keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none).toCB)
+                      handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
                     )(
                       SidebarPushable(
                         Sidebar(

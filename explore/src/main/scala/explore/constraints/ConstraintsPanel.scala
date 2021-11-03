@@ -4,9 +4,7 @@
 package explore.constraints
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -26,6 +24,7 @@ import explore.model.HourAngleRange
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -129,7 +128,7 @@ object ConstraintsPanel {
       }
 
       val erTypeView: View[ElevationRangeType] =
-        ViewF[SyncIO, ElevationRangeType](
+        View[ElevationRangeType](
           state.rangeType,
           (mod, cb) =>
             erView
@@ -146,7 +145,7 @@ object ConstraintsPanel {
         )
 
       val airMassView: View[AirMassRange] =
-        ViewF[SyncIO, AirMassRange](
+        View[AirMassRange](
           state.airMass,
           (mod, cb) =>
             erView
@@ -155,7 +154,7 @@ object ConstraintsPanel {
         )
 
       val hourAngleView: View[HourAngleRange] =
-        ViewF[SyncIO, HourAngleRange](
+        View[HourAngleRange](
           state.hourAngle,
           (mod, cb) =>
             erView

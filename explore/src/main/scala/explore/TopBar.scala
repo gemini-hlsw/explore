@@ -4,7 +4,6 @@
 package explore
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse.Reuse
@@ -18,6 +17,7 @@ import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
@@ -129,7 +129,7 @@ object TopBar {
                       ),
                       DropdownDivider(),
                       DropdownItem(
-                        onClick = appCtx.sso.switchToORCID.runAsyncCB
+                        onClick = appCtx.sso.switchToORCID.runAsync
                       )(
                         <.div(ExploreStyles.OrcidMenu)(
                           Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
@@ -138,13 +138,13 @@ object TopBar {
                       ).when(role === GuestRole),
                       DropdownItem(text = "Logout",
                                    icon = Icons.Logout.fixedWidth(),
-                                   onClick = logout.runAsyncCB
+                                   onClick = logout.runAsync
                       ),
                       DropdownItem(onClick =
                         utils
-                          .setupScheme[SyncIO](
+                          .setupScheme[CallbackTo](
                             if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
-                          ) *> $.modStateIn[SyncIO](_.flip)
+                          ) *> $.modState(_.flip)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )

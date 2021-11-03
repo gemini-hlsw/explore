@@ -14,6 +14,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.View
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
@@ -76,7 +77,7 @@ object SubscriptionRenderMod {
             )
           }
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRenderMod"))
-          .runAsyncCB
+          .runAsync
       }
       .componentWillUnmount(Render.Subscription.willUnmountFn[F, View, D, A](_))
       .configure(Reusability.shouldComponentUpdate)

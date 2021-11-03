@@ -5,12 +5,12 @@ package explore.schemas
 
 import clue.data.Input
 import clue.data.syntax._
-import lucuma.core.math._
-import lucuma.core.model._
-import lucuma.schemas.ObservationDB.Types._
 import explore.common.ITCQueriesGQL
 import explore.modes.GmosNorthSpectroscopyRow
+import lucuma.core.math._
+import lucuma.core.model._
 import lucuma.core.optics.syntax.lens._
+import lucuma.schemas.ObservationDB.Types._
 
 import java.math.MathContext
 

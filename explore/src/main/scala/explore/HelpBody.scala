@@ -89,7 +89,7 @@ object HelpBody {
           <.div(
             ExploreStyles.HelpSidebar,
             GlobalHotKeys(keyMap = KeyMap("CLOSE_HELP" -> "ESC"),
-                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none).toCB)
+                          handlers = Handlers("CLOSE_HELP" -> helpView.set(none))
             ),
             <.div(
               ExploreStyles.HelpTitle,
@@ -136,12 +136,8 @@ object HelpBody {
         }
       }
       .componentDidMount { $ =>
-        implicit val ctx = $.props.ctx
-
         load($.props.url)
           .flatMap(v => $.modStateIn[IO](State.content.replace(Pot.fromTry(v))))
-          .runAsync
       }
       .build
-
 }

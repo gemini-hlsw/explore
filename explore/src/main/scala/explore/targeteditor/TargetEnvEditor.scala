@@ -6,7 +6,6 @@ package explore.targeteditor
 import cats.Monad
 import cats.Monoid
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.data.syntax._
 import crystal.ViewF
@@ -31,6 +30,7 @@ import explore.optics._
 import explore.schemas.implicits._
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
@@ -149,9 +149,9 @@ object TargetEnvEditor {
 
         // TODO We will add this generic state => view conversion in crystal
         val selectedTargetId =
-          ViewF[SyncIO, Option[TargetIdSet]](
+          View[Option[TargetIdSet]](
             selectedTargetIdState.value,
-            (mod, _) => selectedTargetIdState.modState(mod).to[SyncIO]
+            (mod, _) => selectedTargetIdState.modState(mod)
           )
 
         <.div(

@@ -7,6 +7,7 @@ import cats.Order._
 import cats.effect.Async
 import cats.syntax.all._
 import clue.TransactionalClient
+import crystal.react.implicits._
 import explore.common.TargetListGroupQueries
 import explore.common.TargetListGroupQueries._
 import explore.implicits._
@@ -80,14 +81,14 @@ object TargetListGroupObsListActions {
     }
 
   def obsTargetListGroup[F[_]](
-    draggedIds:     TargetEnvGroupIdSet,
-    targetIds:      Set[Target.Id], // target ids for the dragged ids.
-    expandedIds:    View[SortedSet[TargetEnvGroupIdSet]],
-    selected:       View[SelectedPanel[TargetEnvGroupIdSet]]
-  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
+    draggedIds:  TargetEnvGroupIdSet,
+    targetIds:   Set[Target.Id], // target ids for the dragged ids.
+    expandedIds: View[SortedSet[TargetEnvGroupIdSet]],
+    selected:    View[SelectedPanel[TargetEnvGroupIdSet]]
+  )(implicit F:  Async[F], c: TransactionalClient[F, ObservationDB]) =
     Action[F](getter = getter(draggedIds), setter = setter(draggedIds, targetIds))(
       onSet = (tlgl, oTargetEnv) =>
-        oTargetEnv.fold(async.unit) { tenv =>
+        oTargetEnv.fold(F.unit) { tenv =>
           // destination ids may not be found when undoing
           val optDestIds = tlgl.values.find(_.areScienceTargetsEqual(tenv)).map(_.id)
           TargetListGroupQueries.replaceScienceTargetList[F](draggedIds.toList.map(_.targetEnvId),

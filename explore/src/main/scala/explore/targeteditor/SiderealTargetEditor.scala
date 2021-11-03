@@ -28,6 +28,7 @@ import explore.model.util._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.model.SiderealTarget
@@ -153,13 +154,13 @@ object SiderealTargetEditor {
         ): Callback =
           SimbadSearch
             .search[IO](s.searchTerm)
-            .runAsyncAndThenCB {
+            .runAsyncAndThen {
               case Right(r @ Some(t)) =>
-                allView.set(t).toCB >> s.onComplete(r)
+                allView.set(t) >> s.onComplete(r)
               case Right(None)        =>
-                nameView.set(s.searchTerm).toCB >> s.onComplete(none)
+                nameView.set(s.searchTerm) >> s.onComplete(none)
               case Left(t)            =>
-                nameView.set(s.searchTerm).toCB >> s.onError(t)
+                nameView.set(s.searchTerm) >> s.onError(t)
             }
 
         val disabled = props.searching.get.exists(_ === props.id)

@@ -86,7 +86,7 @@ object AladinCell extends ModelOptics {
           UserTargetPreferencesUpsert
             // TODO Accept multiple Target ids.
             .updateFov[IO](props.uid, props.tid.toList.head, fov.x)
-            .runAsyncAndForgetCB
+            .runAsyncAndForget
             .debounce(1.seconds)
       }
 

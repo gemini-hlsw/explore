@@ -62,20 +62,20 @@ object ConnectionManager {
     .renderBackend[Backend]
     .componentDidMount { $ =>
       implicit val ctx = $.props.ctx
-      $.backend.onMount(ctx.clients).runAsyncCB
+      $.backend.onMount(ctx.clients).runAsync
     }
     .componentDidUpdate { $ =>
       implicit val ctx = $.currentProps.ctx
       (Logger[IO].debug(s"[ConnectionManager] Token changed. Refreshing connections.") >>
         $.backend.refresh(ctx.clients))
         .whenA($.prevProps.ssoToken =!= $.currentProps.ssoToken)
-        .runAsyncCB
+        .runAsync
     }
     .componentWillUnmount { $ =>
       implicit val ctx = $.props.ctx
       if ($.state.initialized)
         (Logger[IO].debug(s"[ConnectionManager] Terminating connections.") >>
-          ctx.clients.close()).runAsyncCB
+          ctx.clients.close()).runAsync
       else Callback.empty
     }
     .configure(Reusability.shouldComponentUpdate)

@@ -18,6 +18,7 @@ import explore.model.TargetIdSet
 import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.forms._
@@ -74,7 +75,7 @@ object SearchForm {
   class Backend($ : BackendScope[Props, State]) {
 
     def render(props: Props, state: State) = {
-      val searchComplete: Callback = props.searching.mod(_ - props.id).toCB
+      val searchComplete: Callback = props.searching.mod(_ - props.id)
 
       val search: Callback =
         props
@@ -121,7 +122,7 @@ object SearchForm {
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
-          value = ViewF.fromStateSyncIO($).zoom(State.searchTerm),
+          value = ViewF.fromState($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           error = state.searchError.orUndefined,
           loading = disabled,

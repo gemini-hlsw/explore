@@ -21,6 +21,7 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
@@ -106,39 +107,13 @@ case class AppContext[F[_]](
   pageUrl:        (AppTab, Option[FocusedObs]) => String,
   setPage:        (AppTab, Option[FocusedObs]) => Callback,
   environment:    ExecutionEnvironment,
-  fromSyncIO:     SyncIO ~> F
+  fromDefaultS:   DefaultS ~> F
 )(implicit
   val F:          Applicative[F],
   val dispatcher: Dispatcher[F],
   val logger:     Logger[F],
   val P:          Parallel[F]
-) {
-  val syncLogger: Logger[SyncIO] = {
-    def f(x: F[Unit]): SyncIO[Unit] = SyncIO(dispatcher.unsafeRunAndForget(x))
-    new Logger[SyncIO] {
-      def error(t: Throwable)(message: => String): SyncIO[Unit] =
-        f(logger.error(t)(message))
-      def warn(t: Throwable)(message: => String): SyncIO[Unit]  =
-        f(logger.warn(t)(message))
-      def info(t: Throwable)(message: => String): SyncIO[Unit]  =
-        f(logger.info(t)(message))
-      def debug(t: Throwable)(message: => String): SyncIO[Unit] =
-        f(logger.debug(t)(message))
-      def trace(t: Throwable)(message: => String): SyncIO[Unit] =
-        f(logger.trace(t)(message))
-      def error(message: => String): SyncIO[Unit]               =
-        f(logger.error(message))
-      def warn(message: => String): SyncIO[Unit]                =
-        f(logger.warn(message))
-      def info(message: => String): SyncIO[Unit]                =
-        f(logger.info(message))
-      def debug(message: => String): SyncIO[Unit]               =
-        f(logger.debug(message))
-      def trace(message: => String): SyncIO[Unit]               =
-        f(logger.trace(message))
-    }
-  }
-}
+)
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
@@ -146,7 +121,7 @@ object AppContext {
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[FocusedObs]) => String,
     setPage:              (AppTab, Option[FocusedObs]) => Callback,
-    fromSyncIO:           SyncIO ~> F
+    fromDefaultS:         DefaultS ~> F
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -163,6 +138,6 @@ object AppContext {
                           pageUrl,
                           setPage,
                           config.environment,
-                          fromSyncIO
+                          fromDefaultS
     )
 }

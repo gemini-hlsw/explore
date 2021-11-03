@@ -13,6 +13,7 @@ import explore.implicits._
 import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
@@ -78,7 +79,7 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val rvView = ViewF.fromStateSyncIO($).zoom(State.rvView)
+      val rvView = ViewF.fromState($).zoom(State.rvView)
       val input  = state.rvView match {
         case RVView.Z  =>
           FormInputEV(

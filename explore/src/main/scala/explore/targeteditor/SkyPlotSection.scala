@@ -10,7 +10,6 @@ import explore._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.targeteditor.SkyPlotNight.TimeDisplay
-import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

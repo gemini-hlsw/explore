@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
@@ -22,6 +21,7 @@ import explore.model.SelectedPanel._
 import explore.model.reusability._
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
@@ -65,7 +65,7 @@ object ConstraintGroupObsList {
     def toggleExpanded(
       obsIds:      ObsIdSet,
       expandedIds: View[SortedSet[ObsIdSet]]
-    ): SyncIO[Unit] =
+    ): Callback =
       expandedIds.mod { expanded =>
         expanded.exists(_ === obsIds).fold(expanded - obsIds, expanded + obsIds)
       }
@@ -76,8 +76,8 @@ object ConstraintGroupObsList {
       selected:    View[SelectedPanel[ObsIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
-    ): (DropResult, ResponderProvided) => SyncIO[Unit] = (result, _) =>
-      $.propsIn[SyncIO].flatMap { props =>
+    ): (DropResult, ResponderProvided) => Callback = (result, _) =>
+      $.props.flatMap { props =>
         val oData = for {
           destination <- result.destination.toOption
           destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
@@ -86,7 +86,7 @@ object ConstraintGroupObsList {
           destCg      <- props.constraintsWithObs.get.constraintGroups.get(destIds)
         } yield (destCg, obsId)
 
-        oData.fold(SyncIO.unit) { case (destCg, obsId) =>
+        oData.foldMap { case (destCg, obsId) =>
           ConstraintGroupObsListActions
             .obsConstraintGroup[IO](obsId, expandedIds, selected)
             .set(undoCtx)(destCg.constraintSet.some)
@@ -103,7 +103,7 @@ object ConstraintGroupObsList {
       // if a single observation is selected
       val singleObsSelected = props.focusedObs.get.nonEmpty
 
-      val state   = ViewF.fromStateSyncIO($)
+      val state   = ViewF.fromState($)
       val undoCtx = UndoContext(
         props.undoStacks,
         props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)
@@ -138,7 +138,7 @@ object ConstraintGroupObsList {
               ^.cursor.pointer,
               ^.onClick ==> { e: ReactEvent =>
                 e.stopPropagationCB >>
-                  toggleExpanded(obsIds, props.expandedIds).toCB.asEventDefault(e).void
+                  toggleExpanded(obsIds, props.expandedIds).asEventDefault(e).void
               }
             )
           )
@@ -194,8 +194,7 @@ object ConstraintGroupObsList {
       }
 
       DragDropContext(
-        onDragStart =
-          (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true).toCB,
+        onDragStart = (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true),
         onDragEnd = (result, provided) =>
           state.zoom(State.dragging).set(false) >> handleDragEnd(result, provided)
       )(
@@ -250,10 +249,10 @@ object ConstraintGroupObsList {
                 SelectedPanel.editor(ObsIdSet.one(id))
               }
             )
-            .as(infoFromFocused.map(_._2))
+            .map(_ => infoFromFocused.map(_._2))
         case Editor(ids)   =>
-          SyncIO.delay(constraintGroups.find(_._1.intersect(ids).nonEmpty).map(_._2))
-        case _             => SyncIO.delay(none)
+          CallbackTo(constraintGroups.find(_._1.intersect(ids).nonEmpty).map(_._2))
+        case _             => CallbackTo(none)
       }
 
       def expandSelected(cgOpt: Option[ConstraintGroup]) =

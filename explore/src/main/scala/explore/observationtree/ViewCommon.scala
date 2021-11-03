@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.syntax.all._
-import crystal.react.implicits._
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.FocusedObs
@@ -52,9 +51,10 @@ trait ViewCommon {
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { e: ReactMouseEvent =>
             e.stopPropagationCB >>
-              (if (e.ctrlKey || e.metaKey) onCtrlClick(obs.id)
+              (if (e.ctrlKey || e.metaKey)
+                 onCtrlClick(obs.id)
                else
-                 (focusedObs.set(FocusedObs(obs.id).some).toCB >> onSelect(obs.id)))
+                 (focusedObs.set(FocusedObs(obs.id).some) >> onSelect(obs.id)))
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
