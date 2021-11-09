@@ -103,7 +103,7 @@ object Tile {
             .when_(p.state === TileSizeState.Normal)
         )(Icons.Minimize)
 
-      <.div(ExploreStyles.Tile, p.key.whenDefined(^.key := _))(
+      <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn, p.key.whenDefined(^.key := _))(
         <.div(
           ExploreStyles.TileTitle,
           p.back.map(b => <.div(ExploreStyles.TileButton, b)),

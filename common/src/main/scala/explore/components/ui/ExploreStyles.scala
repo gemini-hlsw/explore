@@ -10,6 +10,8 @@ import react.common.implicits._
 import react.common.style._
 
 object ExploreStyles {
+  val FadeIn: Css = Css("fade-in")
+
   val Tile: Css               = Css("explore-tile")
   val TileTitle: Css          = Css("explore-tile-title")
   val TileTitleMenu: Css      = Css("explore-tile-title-menu")
