@@ -245,7 +245,7 @@ object ObsTabContents {
               newCgOpt.map { cg =>
                 vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
                   ObsQueries
-                    .updateObservationConstraintSet[IO](vod.get.id, cg.constraintSet)
+                    .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
                     .runAsyncAndForget
               }.getOrEmpty
             },

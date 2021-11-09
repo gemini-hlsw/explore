@@ -129,7 +129,7 @@ object ObsQueries {
     )
 
   def updateObservationConstraintSet[F[_]: Async](
-    obsId:       Observation.Id,
+    obsIds:      List[Observation.Id],
     constraints: ConstraintSet
   )(implicit
     c:           TransactionalClient[F, ObservationDB]
@@ -151,6 +151,6 @@ object ObsQueries {
       waterVapor = constraints.waterVapor.assign,
       elevationRange = createER.assign
     )
-    UpdateConstraintSetMutation.execute[F](List(obsId), editInput).void
+    UpdateConstraintSetMutation.execute[F](obsIds, editInput).void
   }
 }

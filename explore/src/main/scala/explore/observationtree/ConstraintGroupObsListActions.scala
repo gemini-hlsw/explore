@@ -11,85 +11,81 @@ import explore.common.ConstraintGroupQueries._
 import explore.common.ObsQueries
 import explore.implicits._
 import explore.model.ConstraintGroup
-import explore.model.ConstraintSet
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
 import explore.undo._
-import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
 
 import scala.collection.immutable.SortedSet
 
 object ConstraintGroupObsListActions {
-  private def getter(obsId: Observation.Id): ConstraintGroupList => Option[ConstraintSet] =
-    cgl => cgl.values.find(_.obsIds.contains(obsId)).map(_.constraintSet)
+  private def getter(draggedIds: ObsIdSet): ConstraintGroupList => Option[ConstraintGroup] =
+    _.values.find(_.obsIds.intersects(draggedIds))
 
   private def setter(
-    obsId: Observation.Id
-  )(ocs:   Option[ConstraintSet]): ConstraintGroupList => ConstraintGroupList = cgl => {
-    val constraintGroups = cgl.values
+    draggedIds: ObsIdSet
+  )(ocg:        Option[ConstraintGroup]): ConstraintGroupList => ConstraintGroupList = originalGroupList =>
+    {
+      val constraintGroups = originalGroupList.values
 
-    val updatedCgl = constraintGroups.find(_.obsIds.contains(obsId)).fold(cgl) { oldCg =>
-      val newList = cgl - oldCg.obsIds
-      oldCg.removeObsId(obsId).fold(newList)(updatedCg => newList + updatedCg.asKeyValue)
-    }
+      // should always have a constraint group and be able to find the dragged ids in the list
+      (ocg, constraintGroups.find(_.obsIds.intersects(draggedIds)))
+        .mapN { case (destCg, srcCg) =>
+          val tempList    = originalGroupList - srcCg.obsIds
+          val updatedList =
+            srcCg
+              .removeObsIds(draggedIds)
+              .fold(tempList)(updatedCg => tempList + updatedCg.asKeyValue)
 
-    ocs.fold(updatedCgl) { cs =>
-      constraintGroups
-        .find(_.constraintSet === cs)
-        .fold(updatedCgl + ConstraintGroup(cs, ObsIdSet.one(obsId)).asKeyValue) { newCg =>
-          val updatedNewCg = newCg.addObsId(obsId)
-          updatedCgl - newCg.obsIds + updatedNewCg.asKeyValue
+          constraintGroups
+            .find(_.constraintSet == destCg.constraintSet) // see if we're merging
+            .fold(updatedList + destCg.asKeyValue) { newCg =>
+              updatedList - newCg.obsIds + newCg.addObsIds(draggedIds).asKeyValue
+            }
         }
+        .getOrElse(originalGroupList)
     }
-  }
 
   private def updateExpandedIds(
-    obsId:      Observation.Id,
+    draggedIds: ObsIdSet,
     optDestIds: Option[ObsIdSet]
   )(
     eids:       SortedSet[ObsIdSet]
-  ) = {
-    val setOfOne = ObsIdSet.one(obsId)
-
+  ) =
     optDestIds.fold(
-      eids.map(ids =>
-        if (ids =!= setOfOne) ids.removeOne(obsId).get
-        else ids
-      ) + setOfOne
+      eids.flatMap(ids => ids.remove(draggedIds)) + draggedIds
     ) { destIds =>
       eids.flatMap(ids =>
-        if (ids === destIds || ids === setOfOne) none
-        else ids.removeOne(obsId)
-      ) + destIds.add(obsId)
+        if (ids === destIds) none
+        else ids.remove(draggedIds)
+      ) + (destIds ++ draggedIds)
     }
-  }
 
-  private def updateSelected(obsId: Observation.Id, optDestIds: Option[ObsIdSet])(
-    selected:                       SelectedPanel[ObsIdSet]
+  private def updateSelected(draggedIds: ObsIdSet, optDestIds: Option[ObsIdSet])(
+    selected:                            SelectedPanel[ObsIdSet]
   ) =
     selected match {
       // If in edit mode, always edit the destination.
-      case Editor(_) => Editor(optDestIds.fold(ObsIdSet.one(obsId))(_.add(obsId)))
+      case Editor(_) => Editor(optDestIds.fold(draggedIds)(_ ++ draggedIds))
       case _         => selected
     }
 
   def obsConstraintGroup[F[_]](
-    obsId:          Observation.Id,
+    draggedIds:     ObsIdSet,
     expandedIds:    View[SortedSet[ObsIdSet]],
     selected:       View[SelectedPanel[ObsIdSet]]
   )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
-    Action[F](getter = getter(obsId), setter = setter(obsId))(
-      onSet = (cgl, ocs) =>
-        ocs.fold(async.unit) { cs =>
+    Action[F](getter = getter(draggedIds), setter = setter(draggedIds))(
+      onSet = (cgl, ocg) =>
+        ocg.fold(async.unit) { cg =>
           // destination ids may not be found when undoing
           val optDestIds = cgl.values
-            .find(_.constraintSet === cs)
+            .find(_.constraintSet === cg.constraintSet)
             .map(_.obsIds)
-          ObsQueries.updateObservationConstraintSet[F](obsId, cs) >>
-            expandedIds.mod(updateExpandedIds(obsId, optDestIds) _).to[F] >>
-            selected.mod(updateSelected(obsId, optDestIds) _).to[F]
+          ObsQueries.updateObservationConstraintSet[F](draggedIds.toList, cg.constraintSet) >>
+            expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[F] >>
+            selected.mod(updateSelected(draggedIds, optDestIds) _).to[F]
         }
     )
 }

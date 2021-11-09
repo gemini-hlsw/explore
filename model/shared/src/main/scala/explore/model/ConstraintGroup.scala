@@ -15,9 +15,11 @@ final case class ConstraintGroup(constraintSet: ConstraintSet, obsIds: ObsIdSet)
   def addObsId(obsId: Observation.Id): ConstraintGroup =
     ConstraintGroup.obsIds.modify(_.add(obsId))(this)
 
-  // TODO: We may be able to get rid of this once constraint groups allow multi-select
-  def removeObsId(obsId: Observation.Id): Option[ConstraintGroup] =
-    obsIds.removeOne(obsId).map(ids => ConstraintGroup.obsIds.replace(ids)(this))
+  def removeObsIds(toRemove: ObsIdSet): Option[ConstraintGroup] =
+    obsIds.remove(toRemove).map(ids => ConstraintGroup.obsIds.replace(ids)(this))
+
+  def addObsIds(toAdd: ObsIdSet): ConstraintGroup =
+    ConstraintGroup.obsIds.modify(_ ++ toAdd)(this)
 
   def asKeyValue: (ObsIdSet, ConstraintGroup) = (this.obsIds, this)
 }
