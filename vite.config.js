@@ -91,6 +91,8 @@ module.exports = ({ command, mode }) => {
         mode == "production"
           ? {}
           : {
+              key: fs.readFileSync("server.key"),
+              cert: fs.readFileSync("server.cert"),
             },
       watch: {
         usePolling: true,
