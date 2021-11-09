@@ -34,7 +34,7 @@ object Settings {
     val mUnitCatsEffect   = "1.0.6"
     val reactAladin       = "0.8.0"
     val reactAtlasKitTree = "0.4.1"
-    val reactClipboard    = "1.5.0"
+    val reactClipboard    = "1.5.1"
     val reactCommon       = "0.14.6"
     val reactDatepicker   = "0.3.1"
     val reactGridLayout   = "0.14.1"
