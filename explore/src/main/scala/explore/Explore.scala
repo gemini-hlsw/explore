@@ -29,7 +29,6 @@ import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.callback.CallbackTo
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement

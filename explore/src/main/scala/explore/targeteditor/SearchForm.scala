@@ -18,7 +18,6 @@ import explore.model.TargetIdSet
 import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.ui.forms._
