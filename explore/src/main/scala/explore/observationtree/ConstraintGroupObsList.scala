@@ -35,6 +35,7 @@ import react.common.implicits._
 import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
+import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
@@ -70,6 +71,21 @@ object ConstraintGroupObsList {
         expanded.exists(_ === obsIds).fold(expanded - obsIds, expanded + obsIds)
       }
 
+    /**
+     * When we're dragging, we can have an observation id as the draggable id. If we have a
+     * selection, and that id is part of the selection, we drag all the items in the selection.
+     * However, the user may have something selected, but be dragging something that is NOT in the
+     * selection - in which case we just drag the individual item.
+     */
+    def getDraggedIds(dragId: String, selected: SelectedPanel[ObsIdSet]): Option[ObsIdSet] =
+      Observation.Id.parse(dragId).map { dId =>
+        val dIdSet = ObsIdSet.one(dId)
+        selected.optValue.fold(dIdSet) { selectedIds =>
+          if (selectedIds.contains(dId)) selectedIds
+          else dIdSet
+        }
+      }
+
     def onDragEnd(
       undoCtx:     UndoCtx[ConstraintGroupList],
       expandedIds: View[SortedSet[ObsIdSet]],
@@ -81,15 +97,15 @@ object ConstraintGroupObsList {
         val oData = for {
           destination <- result.destination.toOption
           destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
-          obsId       <- Observation.Id.parse(result.draggableId)
-          if !destIds.contains(obsId)
+          draggedIds  <- getDraggedIds(result.draggableId, props.selected.get)
+          if !destIds.intersects(draggedIds)
           destCg      <- props.constraintsWithObs.get.constraintGroups.get(destIds)
-        } yield (destCg, obsId)
+        } yield (destCg, draggedIds)
 
-        oData.foldMap { case (destCg, obsId) =>
+        oData.foldMap { case (destCg, draggedIds) =>
           ConstraintGroupObsListActions
-            .obsConstraintGroup[IO](obsId, expandedIds, selected)
-            .set(undoCtx)(destCg.constraintSet.some)
+            .obsConstraintGroup[IO](draggedIds, expandedIds, selected)
+            .set(undoCtx)(destCg.some)
         }
       }
 
@@ -99,9 +115,6 @@ object ConstraintGroupObsList {
       val observations = props.constraintsWithObs.get.observations
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups.map(_._2)
-
-      // if a single observation is selected
-      val singleObsSelected = props.focusedObs.get.nonEmpty
 
       val state   = ViewF.fromState($)
       val undoCtx = UndoContext(
@@ -115,20 +128,60 @@ object ConstraintGroupObsList {
               provided.dragHandleProps,
               props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
-          Observation.Id
-            .parse(rubric.draggableId)
-            .flatMap(obsId => observations.get(obsId))
-            .map(obs => props.renderObsBadge(obs))
+          getDraggedIds(rubric.draggableId, props.selected.get)
+            .flatMap(obsIds =>
+              if (obsIds.size === 1)
+                observations.get(obsIds.head).map(obs => props.renderObsBadge(obs))
+              else {
+                val div: TagMod = <.div(
+                  SegmentGroup(
+                    obsIds.toList.toTagMod(id => Segment(id.show))
+                  )
+                )
+                div.some
+              }
+            )
             .getOrElse(<.span("ERROR"))
         )
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
 
+      def isObsSelected(obsId: Observation.Id): Boolean =
+        props.selected.get.optValue.exists(_.contains(obsId))
+
+      def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
+        props.selected.set(SelectedPanel.editor(obsIdSet))
+
+      def setSelectedPanelToSingle(obsId: Observation.Id): Callback =
+        setSelectedPanelToSet(ObsIdSet.one(obsId))
+
+      def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
+        props.focusedObs.set(FocusedObs(obsId).some) >> setSelectedPanelToSingle(obsId)
+
+      def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
+        val focused = if (obsIdSet.size === 1) FocusedObs(obsIdSet.head).some else none
+        props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
+      }
+
+      def clearSelectedPanelAndObs: Callback =
+        props.focusedObs.set(none) >> props.selected.set(SelectedPanel.tree)
+
+      def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
+        props.selected.get.optValue.fold(setSelectedPanelAndObs(obsId)) { selectedIds =>
+          if (selectedIds.forall(groupIds.contains)) {
+            if (selectedIds.contains(obsId)) {
+              selectedIds.removeOne(obsId).fold(clearSelectedPanelAndObs) {
+                setSelectedPanelAndObsToSet
+              }
+            } else setSelectedPanelAndObsToSet(selectedIds.add(obsId))
+          } else Callback.empty // Not in the same group
+        }
+
       def renderGroup(constraintGroup: ConstraintGroup): VdomNode = {
         val obsIds        = constraintGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
-        val groupSelected = props.selected.get.optValue.exists(_.intersect(obsIds).nonEmpty)
+        val groupSelected = props.selected.get.optValue.exists(_.intersects(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
           .exists((ids: ObsIdSet) => ids === obsIds)
@@ -181,9 +234,10 @@ object ConstraintGroupObsList {
                     props.renderObsBadgeItem(
                       selectable = true,
                       highlightSelected = true,
-                      forceHighlight = groupSelected && !singleObsSelected,
+                      forceHighlight = isObsSelected(obs.id),
                       linkToObsTab = false,
-                      onSelect = id => props.selected.set(SelectedPanel.editor(ObsIdSet.one(id)))
+                      onSelect = setSelectedPanelToSingle,
+                      onCtrlClick = id => handleCtrlClick(id, obsIds)
                     )(obs, idx)
                   }
                 ),

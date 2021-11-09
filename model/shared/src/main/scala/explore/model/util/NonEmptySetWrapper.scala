@@ -23,6 +23,9 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
   def add(id: Id): IdSet = iso.reverseGet(selfSet.add(id))
 
   @inline
+  def head: Id = selfSet.head
+
+  @inline
   def filter(f: Id => Boolean): SortedSet[Id] = selfSet.filter(f)
 
   @inline

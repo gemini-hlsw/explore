@@ -201,9 +201,7 @@ object ConstraintSetTabContents {
                 // see if the edit caused a merger
                 val mergeWithIds = cgl
                   .find { case (ids, group) =>
-                    ids
-                      .intersect(idsToEdit)
-                      .isEmpty && group.constraintSet === newCg.constraintSet
+                    !ids.intersects(idsToEdit) && group.constraintSet === newCg.constraintSet
                   }
                   .map(_._1)
 

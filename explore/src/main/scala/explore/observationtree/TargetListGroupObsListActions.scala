@@ -26,7 +26,7 @@ object TargetListGroupObsListActions {
     draggedIds: TargetEnvGroupIdSet
   ): TargetListGroupList => Option[TargetEnvGroup] =
     _.values
-      .find(_.id.intersect(draggedIds).nonEmpty)
+      .find(_.id.intersects(draggedIds))
 
   private def setter(draggedIds: TargetEnvGroupIdSet, targetIds: Set[Target.Id])(
     oTargetEnv:                  Option[TargetEnvGroup]
@@ -34,7 +34,7 @@ object TargetListGroupObsListActions {
     val originalEnvList = originalGroupList.values
 
     // should always have a targetEnvironment and be able to find the dragged Ids in the list
-    (oTargetEnv, originalEnvList.find(_.id.intersect(draggedIds).nonEmpty))
+    (oTargetEnv, originalEnvList.find(_.id.intersects(draggedIds)))
       .mapN { case (destEnv, srcEnv) =>
         val tempList    = originalGroupList - srcEnv.id
         val updatedList = srcEnv.filterOutIds(draggedIds, targetIds).fold(tempList) { filteredEnv =>
