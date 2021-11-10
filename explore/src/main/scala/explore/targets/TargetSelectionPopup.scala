@@ -28,10 +28,9 @@ import cats.effect.IO
 import explore.implicits._
 import explore.common.SimbadSearch
 import org.typelevel.log4cats.Logger
-import cats.effect.kernel.Sync
-import cats.effect.kernel.Async
-import react.semanticui.elements.input.IconPosition
-import react.semanticui.elements.icon.Icon
+import cats.effect.Async
+import cats.effect.Sync
+import cats.effect.FiberIO
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[VdomNode],
@@ -63,6 +62,8 @@ object TargetSelectionPopup {
     implicit val enumTargetSource: Enumerated[TargetSource] = Enumerated.of(Program, Simbad)
   }
 
+  implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
+
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
@@ -70,35 +71,37 @@ object TargetSelectionPopup {
     // results
     .useStateWithReuse(SortedMap.empty[TargetSource, NonEmptyList[SiderealTarget]])
     // searching
-    .useStateWithReuse(false)
+    .useState(none[FiberIO[Unit]])
     .renderWithReuse { (props, inputValue, results, searching) =>
       implicit val ctx = props.ctx
 
       val cleanState = inputValue.setState("") >> results.setState(SortedMap.empty)
 
-      def search(name: String): Callback =
-        results.setState(SortedMap.empty) >>
+      def search(name: String): IO[Unit] =
+        searching.value.map(_.cancel).orEmpty >>
+          // TODO setStateIn[F] for hooks in crystal
+          (results.setState(SortedMap.empty): Callback).to[IO] >>
           NonEmptyString
             .from(name)
             .toOption
             .map(nonEmptyName =>
-              (searching.setState(true): Callback).to[IO] >>
-                Enumerated[TargetSource].all
-                  .traverse_(source =>
-                    source.search[IO](nonEmptyName) >>= (list =>
-                      NonEmptyList
-                        .fromList(list)
-                        .map(nel => results.modState(_ + (source -> nel)): Callback)
-                        .orEmpty
-                        .to[IO]
-                    )
+              Enumerated[TargetSource].all
+                .traverse_(source =>
+                  source.search[IO](nonEmptyName) >>= (list =>
+                    NonEmptyList
+                      .fromList(list)
+                      .map(nel => results.modState(_ + (source -> nel)): Callback)
+                      .orEmpty
+                      .to[IO]
                   )
-                  .guarantee(
-                    (searching.setState(false) >> Callback.log("Finished searching")).to[IO]
-                  )
+                )
+                .guarantee(
+                  (searching.setState(none) >> Callback.log("Finished searching")).to[IO]
+                )
+                .start >>= (fiber => (searching.setState(fiber.some): Callback).to[IO])
             )
             .orEmpty
-            .runAsync
+      // .runAsync
 
       Modal(
         as = <.form,      // This lets us sumbit on enter
@@ -121,8 +124,8 @@ object TargetSelectionPopup {
             value = inputValue,
             // icon = Icons.Search,
             // iconPosition = IconPosition.Left,
-            onTextChange = t => inputValue.setState(t) >> search(t),
-            loading = searching.value
+            onTextChange = t => inputValue.setState(t) >> search(t).runAsync,
+            loading = searching.value.nonEmpty
           )
             .withMods(^.placeholder := "Name", ^.autoFocus := true),
           Segment(
