@@ -46,6 +46,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
+import explore.targets.TargetSelectionPopup
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -156,20 +157,7 @@ object TargetEnvEditor {
 
         <.div(
           props.renderInTitle(
-            InputModal(
-              "Create new Target",
-              initialValue = None,
-              label = "Name",
-              placeholder = "Target name",
-              okLabel = "Create",
-              onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
-                adding.setState(true) >>
-                  insertSiderealTarget(props.targetEnv,
-                                       name,
-                                       props.searching,
-                                       selectedTargetId
-                  ).runAsyncAndForget
-              ),
+            TargetSelectionPopup(
               trigger = Reuse.by(adding.value)(
                 Button(
                   size = Tiny,
@@ -181,8 +169,36 @@ object TargetEnvEditor {
                   content = "Add",
                   labelPosition = LabelPosition.Left
                 ): VdomNode
-              )
+              ),
+              onComplete = Reuse.always(t => Callback.log(t))
             )
+            // InputModal(
+            //   "Create new Target",
+            //   initialValue = None,
+            //   label = "Name",
+            //   placeholder = "Target name",
+            //   okLabel = "Create",
+            //   onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
+            //     adding.setState(true) >>
+            //       insertSiderealTarget(props.targetEnv,
+            //                            name,
+            //                            props.searching,
+            //                            selectedTargetId
+            //       ).runAsyncAndForget
+            //   ),
+            //   trigger = Reuse.by(adding.value)(
+            //     Button(
+            //       size = Tiny,
+            //       compact = true,
+            //       clazz = ExploreStyles.VeryCompact,
+            //       disabled = adding.value,
+            //       icon = Icons.New,
+            //       loading = adding.value,
+            //       content = "Add",
+            //       labelPosition = LabelPosition.Left
+            //     ): VdomNode
+            //   )
+            // )
           ),
           TargetTable(
             props.targetEnv.zoom(TargetEnvGroup.scienceTargets),
