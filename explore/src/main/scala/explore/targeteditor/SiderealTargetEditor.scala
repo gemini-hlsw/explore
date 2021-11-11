@@ -28,7 +28,6 @@ import explore.model.util._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.model.SiderealTarget

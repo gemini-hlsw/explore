@@ -19,7 +19,7 @@ import explore.schemas.implicits._
 import lucuma.core.math.Angle
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import react.gridlayout.{ BreakpointName => _, _ }
+import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
 

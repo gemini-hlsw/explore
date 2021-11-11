@@ -1,36 +1,39 @@
 package explore.targets
 
+import cats.Order._
+import cats.data.NonEmptyList
+import cats.effect.Async
+import cats.effect.FiberIO
+import cats.effect.IO
+import cats.effect.Sync
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
+import explore.common.SimbadSearch
+import explore.components.ui.ExploreStyles
+import explore.implicits._
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactFnProps
 import lucuma.core.model.SiderealTarget
-import react.semanticui.modules.modal.Modal
+import lucuma.core.util.Enumerated
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.reusability._
+import org.typelevel.log4cats.Logger
+import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
-import explore.Icons
+import react.semanticui.elements.segment.Segment
+import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
-import explore.components.ui.ExploreStyles
-import lucuma.ui.forms.FormInputEV
-import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.ui.reusability._
-import explore.model.reusability._
-import cats.data.NonEmptyList
-import react.semanticui.elements.segment.Segment
+import react.semanticui.sizes._
+
+import java.util.concurrent.TimeUnit
 import scala.collection.immutable.SortedMap
-import cats.Order._
-import lucuma.core.util.Enumerated
-import cats.effect.IO
-import explore.implicits._
-import explore.common.SimbadSearch
-import org.typelevel.log4cats.Logger
-import cats.effect.Async
-import cats.effect.Sync
-import cats.effect.FiberIO
+import scala.concurrent.duration.Duration
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[VdomNode],
@@ -64,6 +67,24 @@ object TargetSelectionPopup {
 
   implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
+  //  BEGIN HOOK
+  implicit val reuseTimeUnit: Reusability[TimeUnit] = Reusability.byRef
+  implicit val reuseDuration: Reusability[Duration] = Reusability.by(x => (x.length, x.unit))
+
+  // Adapted from https://stackoverflow.com/a/59274757
+  def cleanupTimer(
+    timerRef:        Hooks.UseRefF[CallbackTo, Option[FiberIO[Unit]]]
+  )(implicit logger: Logger[IO]): Callback =
+    timerRef.value.map(_.cancel.runAsync).orEmpty >> timerRef.set(none)
+
+  val useTimeout = CustomHook[(Duration, Reusable[Callback])]
+    .useRef(none[FiberIO[Unit]])
+    .useEffectWithDepsBy((input, _) => input)((_, timer) => { case (duration, cb) =>
+      Callback.empty
+    })
+    .build
+  //  END HOOK
+
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
@@ -79,8 +100,7 @@ object TargetSelectionPopup {
 
       def search(name: String): IO[Unit] =
         searching.value.map(_.cancel).orEmpty >>
-          // TODO setStateIn[F] for hooks in crystal
-          (results.setState(SortedMap.empty): Callback).to[IO] >>
+          results.setStateAsync(SortedMap.empty) >>
           NonEmptyString
             .from(name)
             .toOption
@@ -90,18 +110,16 @@ object TargetSelectionPopup {
                   source.search[IO](nonEmptyName) >>= (list =>
                     NonEmptyList
                       .fromList(list)
-                      .map(nel => results.modState(_ + (source -> nel)): Callback)
+                      .map(nel => results.modStateAsync(_ + (source -> nel)): IO[Unit])
                       .orEmpty
-                      .to[IO]
                   )
                 )
                 .guarantee(
-                  (searching.setState(none) >> Callback.log("Finished searching")).to[IO]
+                  searching.setStateAsync(none) >> IO.println("Finished searching")
                 )
-                .start >>= (fiber => (searching.setState(fiber.some): Callback).to[IO])
+                .start >>= (fiber => searching.setStateAsync(fiber.some))
             )
             .orEmpty
-      // .runAsync
 
       Modal(
         as = <.form,      // This lets us sumbit on enter

@@ -6,7 +6,6 @@ package explore.config
 import cats.Parallel
 import cats.data._
 import cats.effect.Sync
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.TransactionalClient
 import coulomb.Quantity
@@ -25,6 +24,7 @@ import explore.implicits._
 import explore.modes._
 import explore.schemas.ITC
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FocalPlane
 import lucuma.core.enum._
@@ -312,7 +312,9 @@ object SpectroscopyModesTable extends ItcColumn {
     ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
   }
 
-  protected def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
+  protected def updateITCOnScroll[
+    F[_]: Parallel: Effect.Dispatch: Sync: TransactionalClient[*[_], ITC]
+  ](
     wavelength:    Option[Wavelength],
     signalToNoise: Option[PosBigDecimal],
     visibleRange:  ListRange,
@@ -323,7 +325,7 @@ object SpectroscopyModesTable extends ItcColumn {
       .mapN((w, sn) =>
         queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForget
       )
-      .getOrEmpty
+      .orEmpty
 
   val component =
     ScalaFnComponent
@@ -385,7 +387,7 @@ object SpectroscopyModesTable extends ItcColumn {
         )
       )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
         implicit val ctx = props.ctx
-        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).getOrEmpty
+        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).orEmpty
       })
       // atTop
       .useState(false)

@@ -5,7 +5,6 @@ package explore.components.graphql
 
 import cats.effect.Async
 import cats.effect.IO
-import cats.effect.std.Dispatcher
 import cats.effect.std.Queue
 import cats.syntax.all._
 import clue.GraphQLSubscription
@@ -16,6 +15,7 @@ import crystal.react.reuse._
 import explore._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
+import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
@@ -32,7 +32,7 @@ final case class LiveQueryRenderMod[S, D, A](
   val onNewData:       Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:               Async[IO],
-  val dispatcher:      Dispatcher[IO],
+  val dispatcher:      Effect.Dispatch[IO],
   val logger:          Logger[IO],
   val reuse:           Reusability[A],
   val client:          WebSocketClient[IO, S]

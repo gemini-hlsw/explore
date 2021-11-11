@@ -3,8 +3,7 @@
 
 package explore.observationtree
 
-import cats.Applicative
-import cats.effect.Async
+import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
@@ -37,53 +36,53 @@ object ObsListActions {
       .withKey(obsId)
       .composeOptionLens(Focus[(ObsSummaryWithTargetsAndConstraints, Int)](_._1))
 
-  def obsStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
-    c:                                    TransactionalClient[F, ObservationDB]
-  ) = Action[F](
+  def obsStatus(obsId: Observation.Id)(implicit
+    c:                 TransactionalClient[IO, ObservationDB]
+  ) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTargetsAndConstraints.status)
   )(onSet =
     (_, status) =>
       UpdateObservationMutation
-        .execute[F](
+        .execute[IO](
           EditObservationInput(observationId = obsId, status = status.orIgnore)
         )
         .void
   )
 
-  def obsActiveStatus[F[_]: Applicative](obsId: Observation.Id)(implicit
-    c:                                          TransactionalClient[F, ObservationDB]
-  ) = Action[F](
+  def obsActiveStatus(obsId: Observation.Id)(implicit
+    c:                       TransactionalClient[IO, ObservationDB]
+  ) = Action(
     access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTargetsAndConstraints.activeStatus)
   )(onSet =
     (_, activeStatus) =>
       UpdateObservationMutation
-        .execute[F](
+        .execute[IO](
           EditObservationInput(observationId = obsId, activeStatus = activeStatus.orIgnore)
         )
         .void
   )
 
-  def obsExistence[F[_]: Async](obsId: Observation.Id, focusedObs: View[Option[FocusedObs]])(
-    implicit c:                        TransactionalClient[F, ObservationDB]
+  def obsExistence(obsId: Observation.Id, focusedObs: View[Option[FocusedObs]])(implicit
+    c:                    TransactionalClient[IO, ObservationDB]
   ) =
-    Action[F](
+    Action(
       access = obsListMod.withKey(obsId)
     )(
       onSet = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
-          ProgramDeleteObservation.execute[F](obsId).void
+          ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
           ProgramCreateObservation
-            .execute[F](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
+            .execute[IO](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
             .void >>
-            focusedObs.set(FocusedObs(obs.id).some).to[F]
+            focusedObs.set(FocusedObs(obs.id).some).to[IO]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
-          ProgramDeleteObservation.execute[F](obsId).void
+          ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
-          ProgramUndeleteObservation.execute[F](obs.id).void >>
-            focusedObs.set(FocusedObs(obs.id).some).to[F]
+          ProgramUndeleteObservation.execute[IO](obs.id).void >>
+            focusedObs.set(FocusedObs(obs.id).some).to[IO]
         }
     )
 }

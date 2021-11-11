@@ -4,7 +4,7 @@
 package explore.observationtree
 
 import cats.Order._
-import cats.effect.Async
+import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.implicits._
@@ -80,22 +80,22 @@ object TargetListGroupObsListActions {
       case _         => selected
     }
 
-  def obsTargetListGroup[F[_]](
+  def obsTargetListGroup(
     draggedIds:  TargetEnvGroupIdSet,
     targetIds:   Set[Target.Id], // target ids for the dragged ids.
     expandedIds: View[SortedSet[TargetEnvGroupIdSet]],
     selected:    View[SelectedPanel[TargetEnvGroupIdSet]]
-  )(implicit F:  Async[F], c: TransactionalClient[F, ObservationDB]) =
-    Action[F](getter = getter(draggedIds), setter = setter(draggedIds, targetIds))(
+  )(implicit c:  TransactionalClient[IO, ObservationDB]) =
+    Action(getter = getter(draggedIds), setter = setter(draggedIds, targetIds))(
       onSet = (tlgl, oTargetEnv) =>
-        oTargetEnv.fold(F.unit) { tenv =>
+        oTargetEnv.fold(IO.unit) { tenv =>
           // destination ids may not be found when undoing
           val optDestIds = tlgl.values.find(_.areScienceTargetsEqual(tenv)).map(_.id)
-          TargetListGroupQueries.replaceScienceTargetList[F](draggedIds.toList.map(_.targetEnvId),
-                                                             tenv.scienceTargets.values.toList
+          TargetListGroupQueries.replaceScienceTargetList[IO](draggedIds.toList.map(_.targetEnvId),
+                                                              tenv.scienceTargets.values.toList
           ) >>
-            expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[F] >>
-            selected.mod(updateSelected(draggedIds, optDestIds) _).to[F]
+            expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
+            selected.mod(updateSelected(draggedIds, optDestIds) _).to[IO]
         }
     )
 }

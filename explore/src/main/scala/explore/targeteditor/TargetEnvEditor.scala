@@ -18,7 +18,6 @@ import explore.common.SimbadSearch
 import explore.common.TargetEnvQueriesGQL
 import explore.common.TargetQueries
 import explore.common.TargetQueriesGQL
-import explore.components.InputModal
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -28,6 +27,7 @@ import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics._
 import explore.schemas.implicits._
+import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
@@ -46,7 +46,6 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
-import explore.targets.TargetSelectionPopup
 
 final case class TargetEnvEditor(
   userId:           User.Id,

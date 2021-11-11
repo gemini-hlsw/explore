@@ -22,9 +22,9 @@ import explore.model.ElevationRange
 import explore.model.Help
 import explore.model.HourAngleRange
 import explore.model.reusability._
+import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -107,7 +107,7 @@ object ConstraintsPanel {
     private def renderFn(
       props:        Props,
       state:        State,
-      undoCtx:      UndoCtx[ConstraintSet]
+      undoCtx:      UndoContext[ConstraintSet]
     )(implicit ctx: AppContextIO): VdomNode = {
       val undoViewSet = UndoView(props.obsIds, undoCtx)
 

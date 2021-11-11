@@ -64,10 +64,9 @@ object LogoutTracker {
           bc
         }.flatMap(bc => $.modState(State.bc.replace(bc.some)))
       }
-      .componentWillUnmount { $ =>
-        implicit val ctx = $.props.ctx
-        $.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty.runAsyncAndForget
-      }
+      .componentWillUnmount(
+        _.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty
+      )
       .configure(Reusability.shouldComponentUpdate)
       .build
 
