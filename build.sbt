@@ -36,9 +36,7 @@ inThisBuild(
     scalacOptions += "-Ymacro-annotations",
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value,
-    scalafixScalaBinaryVersion    := "2.13",
-    // TODO Remove this once http4s-core and fs2-data release with fs2 3.2.0+.
-    evictionErrorLevel            := Level.Warn
+    scalafixScalaBinaryVersion    := "2.13"
   ) ++ lucumaPublishSettings
 )
 
@@ -66,7 +64,10 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(commonModuleTest: _*)
+  .jsSettings(
+    // TODO We can remove explicit dependency on FS2Node once http4s-core releases with fs2 3.2.0+.
+    ((libraryDependencies ++= FS2Node.value) +: commonModuleTest): _*
+  )
   .jvmSettings(commonJVMSettings)
 
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
@@ -177,6 +178,7 @@ lazy val commonLibSettings = Seq(
       Circe.value ++
       Clue.value ++
       Crystal.value ++
+      FS2.value ++
       FS2Data.value ++
       Http4sCore.value ++
       LucumaCore.value ++

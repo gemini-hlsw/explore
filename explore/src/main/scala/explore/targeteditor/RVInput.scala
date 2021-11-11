@@ -13,7 +13,6 @@ import explore.implicits._
 import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display

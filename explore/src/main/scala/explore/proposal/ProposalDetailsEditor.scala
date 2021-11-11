@@ -28,7 +28,6 @@ import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Partner
 import lucuma.core.util.Enumerated

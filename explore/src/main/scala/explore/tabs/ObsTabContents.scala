@@ -37,7 +37,6 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
