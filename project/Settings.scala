@@ -12,11 +12,11 @@ object Settings {
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
     val clue              = "0.19.1"
-    val crystal           = "0.17.0"
+    val crystal           = "0.18.1"
     val discipline        = "1.3.0"
     val disciplineMUnit   = "1.0.9"
     val fs2               = "3.2.2"
-    val fs2Data           = "1.3.0"
+    val fs2Data           = "1.2.0"
     val geminiLocales     = "0.7.0"
     val http4s            = "0.23.6"
     val http4sDom         = "0.2.0"
@@ -25,7 +25,7 @@ object Settings {
     val lucumaBC          = "0.3.2"
     val lucumaCore        = "0.14.3"
     val lucumaCatalog     = "0.6.0"
-    val lucumaUI          = "0.18.0"
+    val lucumaUI          = "0.18.1"
     val lucumaSchemas     = "0.1.7"
     val lucumaSSO         = "0.0.10"
     val monocle           = "3.1.0"
@@ -33,18 +33,18 @@ object Settings {
     val mUnit             = "0.7.29"
     val mUnitCatsEffect   = "1.0.6"
     val reactAladin       = "0.8.0"
-    val reactAtlasKitTree = "0.4.1"
+    val reactAtlasKitTree = "0.4.2"
     val reactClipboard    = "1.5.1"
-    val reactCommon       = "0.14.6"
-    val reactDatepicker   = "0.3.1"
-    val reactGridLayout   = "0.14.1"
-    val reactHighcharts   = "0.4.2"
-    val reactHotkeys      = "0.3.2"
-    val reactResizable    = "0.7.0"
-    val reactSemanticUI   = "0.13.0"
-    val reactTable        = "0.7.1"
-    val reactVirtuoso     = "0.2.1"
-    val scalaJsReact      = "2.0.0-RC5"
+    val reactCommon       = "0.14.7"
+    val reactDatepicker   = "0.4.1"
+    val reactGridLayout   = "0.14.2"
+    val reactHighcharts   = "0.4.4"
+    val reactHotkeys      = "0.4.0"
+    val reactResizable    = "0.7.1"
+    val reactSemanticUI   = "0.13.1"
+    val reactTable        = "0.7.2"
+    val reactVirtuoso     = "0.2.2"
+    val scalaJsReact      = "2.0.0"
     val pprint            = "0.6.6"
   }
 
@@ -121,6 +121,12 @@ object Settings {
       )
     )
 
+    val FS2 = Def.setting(
+      deps(
+        "co.fs2" %%% "fs2-core"
+      )(fs2)
+    )
+
     val FS2Data = Def.setting(
       deps(
         "org.gnieh" %%% "fs2-data-csv"
@@ -130,6 +136,12 @@ object Settings {
     val FS2IO = Def.setting(
       deps(
         "co.fs2" %%% "fs2-io"
+      )(fs2)
+    )
+
+    val FS2Node = Def.setting(
+      deps(
+        "co.fs2" %%% "fs2-node"
       )(fs2)
     )
 

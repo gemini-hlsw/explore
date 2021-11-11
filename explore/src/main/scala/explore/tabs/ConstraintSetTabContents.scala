@@ -25,7 +25,6 @@ import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User

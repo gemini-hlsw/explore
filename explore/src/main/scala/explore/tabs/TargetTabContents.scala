@@ -24,7 +24,6 @@ import explore.targeteditor.TargetEnvEditor
 import explore.targeteditor.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
