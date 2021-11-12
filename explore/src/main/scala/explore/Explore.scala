@@ -7,13 +7,11 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
-import cats.~>
 import clue.WebSocketReconnectionStrategy
 import clue.js.FetchJSBackend
 import clue.js.FetchMethod
 import clue.js.WebSocketJSBackend
 import crystal.react._
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
@@ -29,7 +27,6 @@ import explore.model.enum.Theme
 import explore.model.reusability._
 import explore.utils
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.callback.CallbackTo
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -59,10 +56,6 @@ object ExploreMain extends IOApp.Simple {
   implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
   implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
-
-  val callbackToIO: CallbackTo ~> IO = new ~>[CallbackTo, IO] {
-    def apply[A](fa: CallbackTo[A]): IO[A] = fa.to[IO]
-  }
 
   @JSExport
   @nowarn
@@ -159,7 +152,7 @@ object ExploreMain extends IOApp.Simple {
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
           ctx                  <-
-            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, callbackToIO)
+            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {

@@ -14,7 +14,6 @@ import explore.model.RootModel
 import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
 import monocle.function.At.at
@@ -94,9 +93,6 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): TransactionalClient[F, ITC] =
     ctx.clients.itc
-  implicit def appContext2fromDefaultS[F[_]](implicit
-    ctx: AppContext[F]
-  ): DefaultS ~> F = ctx.fromDefaultS
 }
 
 object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {

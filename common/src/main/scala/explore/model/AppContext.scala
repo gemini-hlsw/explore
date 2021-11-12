@@ -20,7 +20,6 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.util.Effect
 import lucuma.schemas._
 import org.http4s._
@@ -99,20 +98,19 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  version:      NonEmptyString,
-  clients:      Clients[F],
-  staticData:   StaticData,
-  actions:      Actions[F],
-  sso:          SSOClient[F],
-  pageUrl:      (AppTab, Option[FocusedObs]) => String,
-  setPage:      (AppTab, Option[FocusedObs]) => Callback,
-  environment:  ExecutionEnvironment,
-  fromDefaultS: DefaultS ~> F
+  version:     NonEmptyString,
+  clients:     Clients[F],
+  staticData:  StaticData,
+  actions:     Actions[F],
+  sso:         SSOClient[F],
+  pageUrl:     (AppTab, Option[FocusedObs]) => String,
+  setPage:     (AppTab, Option[FocusedObs]) => Callback,
+  environment: ExecutionEnvironment
 )(implicit
-  val F:        Applicative[F],
+  val F:       Applicative[F],
   // val dispatcher: Effect.Dispatch[F],
-  val logger:   Logger[F],
-  val P:        Parallel[F]
+  val logger:  Logger[F],
+  val P:       Parallel[F]
 )
 
 object AppContext {
@@ -120,8 +118,7 @@ object AppContext {
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[FocusedObs]) => String,
-    setPage:              (AppTab, Option[FocusedObs]) => Callback,
-    fromDefaultS:         DefaultS ~> F
+    setPage:              (AppTab, Option[FocusedObs]) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -137,7 +134,6 @@ object AppContext {
                           SSOClient(config.sso),
                           pageUrl,
                           setPage,
-                          config.environment,
-                          fromDefaultS
+                          config.environment
     )
 }

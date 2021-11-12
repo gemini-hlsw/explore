@@ -33,7 +33,7 @@ import react.semanticui.sizes._
 
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.SortedMap
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[VdomNode],
@@ -68,21 +68,41 @@ object TargetSelectionPopup {
   implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
   //  BEGIN HOOK
-  implicit val reuseTimeUnit: Reusability[TimeUnit] = Reusability.byRef
-  implicit val reuseDuration: Reusability[Duration] = Reusability.by(x => (x.length, x.unit))
+  implicit val reuseTimeUnit: Reusability[TimeUnit]             = Reusability.byRef
+  implicit val reuseFiniteDuration: Reusability[FiniteDuration] =
+    Reusability.by(x => (x.length, x.unit))
 
   // Adapted from https://stackoverflow.com/a/59274757
-  def cleanupTimer(
-    timerRef:        Hooks.UseRefF[CallbackTo, Option[FiberIO[Unit]]]
-  )(implicit logger: Logger[IO]): Callback =
-    timerRef.value.map(_.cancel.runAsync).orEmpty >> timerRef.set(none)
+  class TimeoutHandle(
+    duration: FiniteDuration,
+    timerRef: Hooks.UseRefF[CallbackTo, Option[FiberIO[Unit]]]
+  ) {
+    private val cleanup: IO[Unit] = timerRef.set(none).to[IO]
 
-  val useTimeout = CustomHook[(Duration, Reusable[Callback])]
+    val cancel: IO[Unit] = {
+      val runningFiber = timerRef.value
+      (cleanup >> runningFiber.map(_.cancel).orEmpty).uncancelable
+    }
+
+    def onTimeout(effect: IO[Unit]): IO[Unit] = {
+      val timedEffect =
+        // We cleanup after `effect` completes, so that we can still invoke `cancel` when the effect is running.
+        IO.sleep(duration) >> effect.guarantee(cleanup.uncancelable)
+      cancel >>
+        (timedEffect.start >>=
+          (fiber => timerRef.set(fiber.some).to[IO])).uncancelable
+    }
+  }
+
+  val useResetTimer = CustomHook[FiniteDuration]
     .useRef(none[FiberIO[Unit]])
-    .useEffectWithDepsBy((input, _) => input)((_, timer) => { case (duration, cb) =>
-      Callback.empty
-    })
-    .build
+    .buildReturning((duration, timerRef) =>
+      Reusable
+        .implicitly(duration)
+        .withValue(
+          new TimeoutHandle(duration, timerRef)
+        )
+    )
   //  END HOOK
 
   protected val component = ScalaFnComponent
@@ -93,7 +113,8 @@ object TargetSelectionPopup {
     .useStateWithReuse(SortedMap.empty[TargetSource, NonEmptyList[SiderealTarget]])
     // searching
     .useState(none[FiberIO[Unit]])
-    .renderWithReuse { (props, inputValue, results, searching) =>
+    .custom(useResetTimer(2.seconds))
+    .renderWithReuse { (props, inputValue, results, searching, timer) =>
       implicit val ctx = props.ctx
 
       val cleanState = inputValue.setState("") >> results.setState(SortedMap.empty)
@@ -142,7 +163,7 @@ object TargetSelectionPopup {
             value = inputValue,
             // icon = Icons.Search,
             // iconPosition = IconPosition.Left,
-            onTextChange = t => inputValue.setState(t) >> search(t).runAsync,
+            onTextChange = t => inputValue.setState(t) >> timer.onTimeout(search(t)).runAsync,
             loading = searching.value.nonEmpty
           )
             .withMods(^.placeholder := "Name", ^.autoFocus := true),
