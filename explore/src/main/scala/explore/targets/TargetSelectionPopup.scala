@@ -36,7 +36,7 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
-  trigger:          Reuse[VdomNode],
+  trigger:          Reuse[Button],
   onComplete:       SiderealTarget ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
@@ -56,10 +56,7 @@ object TargetSelectionPopup {
     }
     case object Simbad  extends TargetSource {
       override def search[F[_]: Async: Logger](name: NonEmptyString): F[List[SiderealTarget]] =
-        // IO.println(s"Searching for $name in Simbad") >>
-        SimbadSearch
-          .search[F](name)
-          .map(_.toList)
+        SimbadSearch.search[F](name).map(_.toList)
     }
 
     implicit val enumTargetSource: Enumerated[TargetSource] = Enumerated.of(Program, Simbad)
@@ -72,21 +69,20 @@ object TargetSelectionPopup {
   implicit val reuseFiniteDuration: Reusability[FiniteDuration] =
     Reusability.by(x => (x.length, x.unit))
 
-  // Adapted from https://stackoverflow.com/a/59274757
   class TimeoutHandle(
     duration: FiniteDuration,
     timerRef: Hooks.UseRefF[CallbackTo, Option[FiberIO[Unit]]]
   ) {
     private val cleanup: IO[Unit] = timerRef.set(none).to[IO]
 
-    val cancel: IO[Unit] = {
-      val runningFiber = timerRef.value
-      (cleanup >> runningFiber.map(_.cancel).orEmpty).uncancelable
-    }
+    val cancel: IO[Unit] =
+      IO(timerRef.value) >>= (runningFiber =>
+        (cleanup >> runningFiber.map(_.cancel).orEmpty).uncancelable
+      )
 
     def onTimeout(effect: IO[Unit]): IO[Unit] = {
       val timedEffect =
-        // We cleanup after `effect` completes, so that we can still invoke `cancel` when the effect is running.
+        // We don't cleanup until `effect` completes, so that we can still invoke `cancel` when the effect is running.
         IO.sleep(duration) >> effect.guarantee(cleanup.uncancelable)
       cancel >>
         (timedEffect.start >>=
@@ -94,15 +90,13 @@ object TargetSelectionPopup {
     }
   }
 
-  val useResetTimer = CustomHook[FiniteDuration]
+  // Changing duration while component is mounted is not supported.
+  val useDebouncedTimeout = CustomHook[FiniteDuration]
     .useRef(none[FiberIO[Unit]])
-    .buildReturning((duration, timerRef) =>
-      Reusable
-        .implicitly(duration)
-        .withValue(
-          new TimeoutHandle(duration, timerRef)
-        )
-    )
+    .useMemoBy((_, _) => ())((duration, timerRef) => _ => new TimeoutHandle(duration, timerRef))
+    // Cancel timer when component unmounts
+    .useEffectBy((_, _, timeoutHandle) => Callback(timeoutHandle.cancel))
+    .buildReturning((_, _, timeoutHandle) => timeoutHandle)
   //  END HOOK
 
   protected val component = ScalaFnComponent
@@ -113,8 +107,11 @@ object TargetSelectionPopup {
     .useStateWithReuse(SortedMap.empty[TargetSource, NonEmptyList[SiderealTarget]])
     // searching
     .useState(none[FiberIO[Unit]])
-    .custom(useResetTimer(2.seconds))
-    .renderWithReuse { (props, inputValue, results, searching, timer) =>
+    // timer
+    .custom(useDebouncedTimeout(700.milliseconds))
+    // isOpen
+    .useState(false)
+    .renderWithReuse { (props, inputValue, results, searching, timer, isOpen) =>
       implicit val ctx = props.ctx
 
       val cleanState = inputValue.setState("") >> results.setState(SortedMap.empty)
@@ -142,47 +139,56 @@ object TargetSelectionPopup {
             )
             .orEmpty
 
-      Modal(
-        as = <.form,      // This lets us sumbit on enter
-        actions = List(
-          Button(size = Small, icon = true)(
-            Icons.Close,
-            "Cancel"
-          )(^.key := "input-cancel")
-        ),
-        centered = false, // Works better on iOS
-        trigger = props.trigger.value,
-        closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
-        dimmer = Dimmer.Blurring,
-        size = ModalSize.Small,
-        onClose = cleanState,
-        header = ModalHeader("Search Target"),
-        content = ModalContent(
-          FormInputEV(
-            id = NonEmptyString("name"),
-            value = inputValue,
-            // icon = Icons.Search,
-            // iconPosition = IconPosition.Left,
-            onTextChange = t => inputValue.setState(t) >> timer.onTimeout(search(t)).runAsync,
-            loading = searching.value.nonEmpty
-          )
-            .withMods(^.placeholder := "Name", ^.autoFocus := true),
-          Segment(
-            <.div(
-              results.value.map { case (source, targets) =>
-                Segment(
-                  <.div(
-                    <.p(Enumerated[TargetSource].tag(source)),
-                    targets.toList.map { target =>
-                      target.toString
-                    }.toTagMod
-                  )
-                )
-              }.toTagMod
+      React.Fragment(
+        props.trigger.value(^.onClick --> isOpen.setState(true)),
+        Modal(
+          as = <.form,      // This lets us sumbit on enter
+          actions = List(
+            Button(size = Small, icon = true)(
+              Icons.Close,
+              "Cancel"
+            )(^.tpe := "button", ^.key := "input-cancel")
+          ),
+          centered = false, // Works better on iOS
+          open = isOpen.value,
+          closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
+          dimmer = Dimmer.Blurring,
+          size = ModalSize.Small,
+          onClose = isOpen.setState(false) >> cleanState,
+          header = ModalHeader("Search Target"),
+          content = ModalContent(
+            FormInputEV(
+              id = NonEmptyString("name"),
+              value = inputValue,
+              // icon = Icons.Search,
+              // iconPosition = IconPosition.Left,
+              onTextChange = t => inputValue.setState(t) >> timer.onTimeout(search(t)).runAsync,
+              loading = searching.value.nonEmpty
             )
-          ).when(results.value.nonEmpty)
+              .withMods(^.placeholder := "Name", ^.autoFocus := true),
+            Segment(
+              <.div(
+                results.value.map { case (source, targets) =>
+                  Segment(
+                    <.div(
+                      <.p(Enumerated[TargetSource].tag(source)),
+                      targets.toList.map { target =>
+                        <.span(
+                          target.toString,
+                          Button(onClick = isOpen.setState(false) >> props.onComplete(target))(
+                            ^.tpe := "button"
+                          )("Select")
+                        )
+                      }.toTagMod
+                    )
+                  )
+                }.toTagMod
+              )
+            ).when(results.value.nonEmpty)
+          )
+        )(
+          ^.onSubmit ==> (e => e.preventDefaultCB >> search(inputValue.value).runAsync)
         )
       )
-
     }
 }

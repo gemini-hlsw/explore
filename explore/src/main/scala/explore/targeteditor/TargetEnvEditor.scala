@@ -80,56 +80,24 @@ object TargetEnvEditor {
       view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
   }
 
-  private def newTarget(name: NonEmptyString): SiderealTarget =
-    SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
+  // private def newTarget(name: NonEmptyString): SiderealTarget =
+  //   SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
 
   private def insertSiderealTarget(
     targetEnv:      View[TargetEnvGroup],
-    name:           NonEmptyString,
-    searching:      View[Set[TargetIdSet]],
+    target:         SiderealTarget,
     selectedTarget: View[Option[TargetIdSet]]
   )(implicit ctx:   AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
         targetEnv.get.id.targetEnvIds.toList,
-        newTarget(name).toCreateInput
+        target.toCreateInput
       ) >>= { response =>
       val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
 
       TargetIdSet
         .fromTargetIdList(targetIds)
-        .map(id =>
-          selectedTarget.set(id.some).to[IO] >>
-            searching.mod(_ + id).to[IO] >>
-            SimbadSearch
-              .search[IO](name)
-              .attempt
-              .map(_.toOption.flatten)
-              .guarantee(searching.mod(_ - id).to[IO])
-              .flatMap {
-                case Some(SiderealTarget(_, st, m)) =>
-                  // Set locally
-                  targetEnv
-                    .zoom(TargetEnvGroup.scienceTargets)
-                    .zoom(index(id)(indexTreeSeqMap[TargetIdSet, Target]))
-                    .zoom(Target.sidereal)
-                    .zoom(
-                      disjointZip(SiderealTarget.tracking, SiderealTarget.magnitudes)
-                    )
-                    .set((st, m))
-                    .to[IO] >> // Set remotely
-                    TargetQueriesGQL.SiderealTargetMutation
-                      .execute(
-                        (TargetQueries.UpdateSiderealTracking(st) >>>
-                          TargetQueries.replaceMagnitudes(m))(
-                          EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign))
-                        )
-                      )
-                      .void
-                case _                              =>
-                  IO.unit
-              }
-        )
+        .map(id => selectedTarget.set(id.some).to[IO])
         .orEmpty
     }
 
@@ -167,9 +135,10 @@ object TargetEnvEditor {
                   loading = adding.value,
                   content = "Add",
                   labelPosition = LabelPosition.Left
-                ): VdomNode
+                )
               ),
-              onComplete = Reuse.always(t => Callback.log(t))
+              onComplete = Reuse
+                .always(t => insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync)
             )
             // InputModal(
             //   "Create new Target",
