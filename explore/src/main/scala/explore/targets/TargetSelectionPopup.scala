@@ -94,8 +94,6 @@ object TargetSelectionPopup {
   val useDebouncedTimeout = CustomHook[FiniteDuration]
     .useRef(none[FiberIO[Unit]])
     .useMemoBy((_, _) => ())((duration, timerRef) => _ => new TimeoutHandle(duration, timerRef))
-    // Cancel timer when component unmounts
-    .useEffectBy((_, _, timeoutHandle) => Callback(timeoutHandle.cancel))
     .buildReturning((_, _, timeoutHandle) => timeoutHandle)
   //  END HOOK
 
@@ -154,7 +152,8 @@ object TargetSelectionPopup {
           closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
           dimmer = Dimmer.Blurring,
           size = ModalSize.Small,
-          onClose = isOpen.setState(false) >> cleanState,
+          onOpen = cleanState,
+          onClose = timer.cancel.runAsync >> isOpen.setState(false) >> cleanState,
           header = ModalHeader("Search Target"),
           content = ModalContent(
             FormInputEV(
