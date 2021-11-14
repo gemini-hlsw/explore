@@ -6,7 +6,6 @@ import lucuma.core.model.SiderealTarget
 import japgolly.scalajs.react.vdom.html_<^._
 import cats.Order._
 import reactST.reactTable.Plugin
-import lucuma.core.math.Declination
 import lucuma.ui.optics._
 import lucuma.core.model.Target
 import lucuma.core.math.MagnitudeValue
@@ -15,6 +14,7 @@ import lucuma.core.math.Epoch
 import explore.model.formats._
 import explore.model.conversions._
 import lucuma.core.math.Parallax
+import explore.Icons
 
 object TargetColumns {
 
@@ -42,77 +42,109 @@ object TargetColumns {
 
   val allColNames: Map[String, String] = baseColNames ++ siderealColNames
 
-  class SiderealColBuilder[D, Plugins, Layout](
-    tableDef:          TableDef[D, Plugins, Layout],
-    getSiderealTarget: D => Option[SiderealTarget]
-  )(implicit ev:       Plugins <:< Plugin.SortBy.Tag) {
+  // TODO In Scala 3, we should use trait parameters.
 
-    def column[V](id: String, accessor: SiderealTarget => V) =
+  trait BaseColBuilder[D, Plugins, Layout] {
+    val tableDef: TableDef[D, Plugins, Layout]
+    val getTarget: D => Target
+    implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
+
+    def baseColumn[V](id: String, accessor: Target => V) =
       tableDef
-        .Column(id, getSiderealTarget.andThen(_.map(accessor)))
+        .Column(id, getTarget.andThen(accessor))
+        .setHeader(baseColNames(id))
+
+    val baseColumns =
+      List(
+        baseColumn("type", _ => ())
+          .setCell(_ => Icons.Star)
+          .setWidth(30),
+        baseColumn("name", Target.name.get)
+          .setCell(cell => cell.value.toString)
+          .setSortByFn(_.toString)
+      )
+  }
+
+  trait SiderealColBuilder[D, Plugins, Layout] {
+    val tableDef: TableDef[D, Plugins, Layout]
+    val getSiderealTarget: D => Option[SiderealTarget]
+    implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
+
+    def siderealColumnOpt[V](id: String, accessor: SiderealTarget => Option[V]) =
+      tableDef
+        .Column(id, getSiderealTarget.andThen(_.flatMap(accessor)))
         .setHeader(siderealColNames(id))
 
-    val columns =
+    def siderealColumn[V](id: String, accessor: SiderealTarget => V) =
+      siderealColumnOpt(id, accessor.andThen(_.some))
+
+    val siderealColumns =
       List(
-        //
-        // TODO Move to a new BaseColBuilder class
-        //
-        // column("type", _ => ())
-        //   .setCell(_ => Icons.Star)
-        //   .setWidth(30),
-        // column("name", TargetWithId.name.get)
-        //   .setCell(cell => cell.value.toString)
-        //   .setSortByFn(_.toString),
-        column(
-          "ra",
-          SiderealTarget.baseRA.get
-        ).setCell(cell =>
-          TruncatedRA.rightAscension.get
-            .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
-        ).setSortByAuto,
-        column[Declination](
-          "dec",
-          SiderealTarget.baseDec.get
-        ).setCell(cell =>
-          TruncatedDec.declination.get
-            .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
-        ).setSortByAuto,
-        column("priority", _ => "")
+        siderealColumn("ra", SiderealTarget.baseRA.get)
+          .setCell(
+            _.value
+              .map(TruncatedRA.rightAscension.get.andThen(ValidFormatInput.truncatedRA.reverseGet))
+              .orEmpty
+          )
+          .setSortByAuto,
+        siderealColumn("dec", SiderealTarget.baseDec.get)
+          .setCell(
+            _.value
+              .map(TruncatedDec.declination.get.andThen(ValidFormatInput.truncatedDec.reverseGet))
+              .orEmpty
+          )
+          .setSortByAuto,
+        siderealColumn("priority", _ => "").setCell(_ => "")
       ) ++
         MagnitudeBand.all.map(band =>
-          column(
-            band.shortName + "mag",
-            t => Target.magnitudes.get(t).get(band).map(_.value)
-          ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
+          siderealColumnOpt(band.shortName + "mag",
+                            t => Target.magnitudes.get(t).get(band).map(_.value)
+          )
+            .setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty)
+            .setSortByAuto
         ) ++
         List(
-          column("epoch", SiderealTarget.epoch.get)
-            .setCell(cell =>
-              s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
+          siderealColumn("epoch", SiderealTarget.epoch.get)
+            .setCell(
+              _.value
+                .map(value =>
+                  s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
+                )
+                .orEmpty
             )
             .setSortByAuto,
-          column("pmra", SiderealTarget.properMotionRA.getOption)
+          siderealColumnOpt("pmra", SiderealTarget.properMotionRA.getOption)
             .setCell(
               _.value.map(pmRAFormat.reverseGet).orEmpty
             )
             .setSortByAuto,
-          column("pmdec", SiderealTarget.properMotionDec.getOption)
+          siderealColumnOpt("pmdec", SiderealTarget.properMotionDec.getOption)
             .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
             .setSortByAuto,
-          column("rv", SiderealTarget.radialVelocity.get)
+          siderealColumnOpt("rv", SiderealTarget.radialVelocity.get)
             .setCell(_.value.map(formatRV.reverseGet).orEmpty)
             .setSortByAuto,
-          column("z", (SiderealTarget.radialVelocity.get _).andThen(rvToRedshiftGet))
+          siderealColumnOpt("z", (SiderealTarget.radialVelocity.get _).andThen(rvToRedshiftGet))
             .setCell(_.value.map(formatZ.reverseGet).orEmpty)
             .setSortByAuto,
-          column("cz", (SiderealTarget.radialVelocity.get _).andThen(rvToARVGet))
+          siderealColumnOpt("cz", (SiderealTarget.radialVelocity.get _).andThen(rvToARVGet))
             .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
             .setSortByAuto,
-          column("parallax", SiderealTarget.parallax.get)
+          siderealColumnOpt("parallax", SiderealTarget.parallax.get)
             .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
             .setSortByAuto,
-          column("morphology", _ => ""),
-          column("sed", _ => "")
+          siderealColumn("morphology", _ => ""),
+          siderealColumn("sed", _ => "")
         )
+  }
+
+  case class TargetColumnBuilder[D, Plugins, Layout](
+    tableDef:              TableDef[D, Plugins, Layout],
+    getTarget:             D => Target,
+    getSiderealTarget:     D => Option[SiderealTarget]
+  )(implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag)
+      extends BaseColBuilder[D, Plugins, Layout]
+      with SiderealColBuilder[D, Plugins, Layout] {
+    lazy val allColumns = baseColumns ++ siderealColumns
   }
 }
