@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
@@ -16,21 +15,12 @@ import explore.implicits._
 import explore.model.SiderealTargetWithId
 import explore.model.TargetIdSet
 import explore.model.TargetWithId
-import explore.model.conversions._
-import explore.model.formats._
 import explore.model.reusability._
+import explore.targets.TargetColumns
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.MagnitudeBand
-import lucuma.core.math.Declination
-import lucuma.core.math.Epoch
-import lucuma.core.math.MagnitudeValue
-import lucuma.core.math.Parallax
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
-import lucuma.ui.optics.TruncatedDec
-import lucuma.ui.optics.TruncatedRA
-import lucuma.ui.optics.ValidFormatInput
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -48,7 +38,6 @@ import reactST.reactTable.mod.IdType
 import scala.collection.immutable.TreeSeqMap
 
 import scalajs.js.JSConverters._
-import explore.targets.TargetColumns
 
 final case class TargetTable(
   targets:          View[TreeSeqMap[TargetIdSet, Target]],
@@ -115,91 +104,8 @@ object TargetTable {
             .setDisableSortBy(true)
         ) ++
           TargetColumns
-            .TargetColumnBuilder(TargetTable,
-                                 SiderealTargetWithId.target.get,
-                                 SiderealTargetWithId.target.getOption
-            )
+            .BaseColumnBuilder(TargetTable)((TargetWithId.target.get _).andThen(_.some))
             .allColumns
-
-      // def column[V](id: String, accessor: SiderealTargetWithId => V) =
-      //   TargetTable
-      //     .Column(id, accessor)
-      //     .setHeader(columnNames(id))
-
-      // List(
-      //   column("delete", TargetWithId.id.get)
-      //     .setCell(cell =>
-      //       Button(
-      //         size = Tiny,
-      //         compact = true,
-      //         clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-      //         icon = Icons.Trash,
-      //         onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-      //           e.preventDefaultCB >>
-      //             e.stopPropagationCB >>
-      //             props.targets.mod(_ - cell.value) >>
-      //             deleteSiderealTarget(cell.value).runAsyncAndForget
-      //       )
-      //     )
-      //     .setWidth(30)
-      //     .setDisableSortBy(true),
-      //   column("type", _ => ())
-      //     .setCell(_ => Icons.Star)
-      //     .setWidth(30),
-      //   column("name", TargetWithId.name.get)
-      //     .setCell(cell => cell.value.toString)
-      //     .setSortByFn(_.toString),
-      //   column(
-      //     "ra",
-      //     SiderealTargetWithId.baseRA.get
-      //   ).setCell(cell =>
-      //     TruncatedRA.rightAscension.get
-      //       .andThen(ValidFormatInput.truncatedRA.reverseGet)(cell.value)
-      //   ).setSortByAuto,
-      //   column[Declination](
-      //     "dec",
-      //     SiderealTargetWithId.baseDec.get
-      //   ).setCell(cell =>
-      //     TruncatedDec.declination.get
-      //       .andThen(ValidFormatInput.truncatedDec.reverseGet)(cell.value)
-      //   ).setSortByAuto,
-      //   column("priority", _ => "")
-      // ) ++
-      //   MagnitudeBand.all.map(band =>
-      //     column(
-      //       band.shortName + "mag",
-      //       t => TargetWithId.magnitudes.get(t).get(band).map(_.value)
-      //     ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
-      //   ) ++
-      //   List(
-      //     column("epoch", SiderealTargetWithId.epoch.get)
-      //       .setCell(cell =>
-      //         s"${cell.value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(cell.value)}"
-      //       )
-      //       .setSortByAuto,
-      //     column("pmra", SiderealTargetWithId.properMotionRA.getOption)
-      //       .setCell(
-      //         _.value.map(pmRAFormat.reverseGet).orEmpty
-      //       )
-      //       .setSortByAuto,
-      //     column("pmdec", SiderealTargetWithId.properMotionDec.getOption)
-      //       .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
-      //       .setSortByAuto,
-      //     column("rv", SiderealTargetWithId.radialVelocity.get)
-      //       .setCell(_.value.map(formatRV.reverseGet).orEmpty)
-      //       .setSortByAuto,
-      //     column("z", (SiderealTargetWithId.radialVelocity.get _).andThen(rvToRedshiftGet))
-      //       .setCell(_.value.map(formatZ.reverseGet).orEmpty)
-      //       .setSortByAuto,
-      //     column("cz", (SiderealTargetWithId.radialVelocity.get _).andThen(rvToARVGet))
-      //       .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
-      //       .setSortByAuto,
-      //     column("parallax", SiderealTargetWithId.parallax.get)
-      //       .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
-      //       .setSortByAuto,
-      //     column("morphology", _ => ""),
-      //     column("sed", _ => "")
-      //   )
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>

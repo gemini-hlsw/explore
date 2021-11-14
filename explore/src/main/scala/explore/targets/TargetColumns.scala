@@ -1,20 +1,23 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targets
 
-import lucuma.core.enum.MagnitudeBand
-import reactST.reactTable.TableDef
-import lucuma.core.model.SiderealTarget
-import japgolly.scalajs.react.vdom.html_<^._
 import cats.Order._
-import reactST.reactTable.Plugin
-import lucuma.ui.optics._
-import lucuma.core.model.Target
-import lucuma.core.math.MagnitudeValue
 import cats.syntax.all._
-import lucuma.core.math.Epoch
-import explore.model.formats._
-import explore.model.conversions._
-import lucuma.core.math.Parallax
 import explore.Icons
+import explore.model.conversions._
+import explore.model.formats._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.math.Epoch
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Parallax
+import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
+import lucuma.ui.optics._
+import reactST.reactTable.Plugin
+import reactST.reactTable.TableDef
 
 object TargetColumns {
 
@@ -46,12 +49,12 @@ object TargetColumns {
 
   trait BaseColBuilder[D, Plugins, Layout] {
     val tableDef: TableDef[D, Plugins, Layout]
-    val getTarget: D => Target
+    val getTarget: D => Option[Target]
     implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
 
     def baseColumn[V](id: String, accessor: Target => V) =
       tableDef
-        .Column(id, getTarget.andThen(accessor))
+        .Column(id, getTarget.andThen(_.map(accessor)))
         .setHeader(baseColNames(id))
 
     val baseColumns =
@@ -138,13 +141,34 @@ object TargetColumns {
         )
   }
 
-  case class TargetColumnBuilder[D, Plugins, Layout](
-    tableDef:              TableDef[D, Plugins, Layout],
-    getTarget:             D => Target,
-    getSiderealTarget:     D => Option[SiderealTarget]
-  )(implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag)
-      extends BaseColBuilder[D, Plugins, Layout]
+  trait TargetColumnBuilder[D] {
+    val getTarget: D => Option[Target]
+
+    val getSiderealTarget: D => Option[SiderealTarget] =
+      getTarget.andThen(_.flatMap(_ match {
+        case s @ SiderealTarget(_, _, _) => Some(s)
+        case _                           => None
+      }))
+  }
+
+  case class BaseColumnBuilder[D, Plugins, Layout](tableDef: TableDef[D, Plugins, Layout])(
+    val getTarget:                                           D => Option[Target]
+  )(implicit val sortByEv:                                   Plugins <:< Plugin.SortBy.Tag)
+      extends TargetColumnBuilder[D]
+      with BaseColBuilder[D, Plugins, Layout]
       with SiderealColBuilder[D, Plugins, Layout] {
+    // with NonsiderealColBuilder[D, Plugins, Layout] {
     lazy val allColumns = baseColumns ++ siderealColumns
+  }
+
+  case class NonBaseSiderealColumnBuilder[D, Plugins, Layout](
+    tableDef:              TableDef[D, Plugins, Layout]
+  )(
+    val getTarget:         D => Option[Target]
+  )(implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag)
+      extends TargetColumnBuilder[D]
+      with SiderealColBuilder[D, Plugins, Layout] {
+    // with NonsiderealColBuilder[D, Plugins, Layout] {
+    lazy val allColumns = siderealColumns
   }
 }
