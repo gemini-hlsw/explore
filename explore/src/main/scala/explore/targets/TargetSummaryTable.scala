@@ -108,25 +108,6 @@ object TargetSummaryTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  private val columnNames: Map[String, String] = Map(
-    "type"         -> " ",
-    "name"         -> "Name",
-    "ra"           -> "RA",
-    "dec"          -> "Dec",
-    "priority"     -> "Priority",
-    "count"        -> "Count",
-    "observations" -> "Observations",
-    "epoch"        -> "Epoch",
-    "pmra"         -> "µ RA",
-    "pmdec"        -> "µ Dec",
-    "rv"           -> "RV",
-    "z"            -> "z",
-    "cz"           -> "cz",
-    "parallax"     -> "Parallax",
-    "morphology"   -> "Morphology",
-    "sed"          -> "SED"
-  ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
-
   private val columnClasses: Map[String, Css] = Map(
     "expander" -> ExploreStyles.Sticky,
     "type"     -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
@@ -141,7 +122,7 @@ object TargetSummaryTable {
         def column[V](id: String, accessor: TargetRow => V) =
           TargetTable
             .Column(id, row => accessor(row.value))
-            .setHeader(columnNames(id))
+            .setHeader(TargetColumns.allColNames(id))
 
         List(
           TargetTable
@@ -338,7 +319,7 @@ object TargetSummaryTable {
                       DropdownItem()(^.key := colId)(
                         <.div(
                           Checkbox(
-                            label = columnNames(colId),
+                            label = TargetColumns.allColNames(colId),
                             checked = column.isVisible,
                             onChange = (value: Boolean) =>
                               Callback(column.toggleHidden()) >>

@@ -48,6 +48,7 @@ import reactST.reactTable.mod.IdType
 import scala.collection.immutable.TreeSeqMap
 
 import scalajs.js.JSConverters._
+import explore.targets.TargetColumns
 
 final case class TargetTable(
   targets:          View[TreeSeqMap[TargetIdSet, Target]],
@@ -68,24 +69,8 @@ object TargetTable {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private val columnNames: Map[String, String] = Map(
-    "delete"       -> " ",
-    "type"         -> " ",
-    "name"         -> "Name",
-    "ra"           -> "RA",
-    "dec"          -> "Dec",
-    "priority"     -> "Priority",
-    "count"        -> "Count",
-    "observations" -> "Observations",
-    "epoch"        -> "Epoch",
-    "pmra"         -> "µ RA",
-    "pmdec"        -> "µ Dec",
-    "rv"           -> "RV",
-    "z"            -> "z",
-    "cz"           -> "cz",
-    "parallax"     -> "Parallax",
-    "morphology"   -> "Morphology",
-    "sed"          -> "SED"
-  ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
+    "delete" -> " "
+  ) ++ TargetColumns.allColNames
 
   private val columnClasses: Map[String, Css] = Map(
     "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
