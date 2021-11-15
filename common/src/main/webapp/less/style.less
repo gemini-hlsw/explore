@@ -1123,7 +1123,7 @@ tfoot {
   @proposal-details-grid-items: 7;
 
   each(range(1, @proposal-details-grid-items), {
-    @num-in-first-col: ceil(@proposal-details-grid-items / 2);
+    @num-in-first-col: ceil((@proposal-details-grid-items / 2));
     @second-col: boolean(@value > @num-in-first-col);
     @col-start: if(@second-col, 2, 1);
     @row-start: if(@second-col, @value - @num-in-first-col, @value);
