@@ -51,11 +51,11 @@ final case class TargetTable(
 object TargetTable {
   type Props = TargetTable
 
+  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
+
   protected val TargetTable = TableDef[SiderealTargetWithId].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private val columnNames: Map[String, String] = Map(
     "delete" -> " "

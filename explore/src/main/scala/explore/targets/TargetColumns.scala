@@ -136,8 +136,8 @@ object TargetColumns {
           siderealColumnOpt("parallax", SiderealTarget.parallax.get)
             .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
             .setSortByAuto,
-          siderealColumn("morphology", _ => ""),
-          siderealColumn("sed", _ => "")
+          siderealColumn("morphology", _ => "").setCell(_ => ""),
+          siderealColumn("sed", _ => "").setCell(_ => "")
         )
   }
 

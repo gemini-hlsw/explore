@@ -293,4 +293,7 @@ object ExploreStyles {
   val TD: Css      = Css("td")
   val EvenRow: Css = Css("even-row")
   val OddRow: Css  = Css("odd-row")
+
+  // Target Search Popup
+  val SearchResults = Css("search-results")
 }

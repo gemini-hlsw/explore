@@ -80,11 +80,11 @@ object TargetRow {
 object TargetSummaryTable {
   type Props = TargetSummaryTable
 
+  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
+
   protected val TargetTable = TableDef[Expandable[TargetRow]].withExpanded.withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
-
-  implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   private val columnClasses: Map[String, Css] = Map(
     "expander" -> ExploreStyles.Sticky,

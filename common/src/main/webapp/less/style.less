@@ -342,8 +342,7 @@ tfoot {
 
   --column-wide-span: 3;
 
-  grid-template-columns:
-    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
       20ch,
       3fr
     );
@@ -507,8 +506,7 @@ tfoot {
   border-bottom-right-radius: unset;
   background-color: var(--under-tab-background-color);
   font-weight: 300;
-  transition:
-    opacity @defaultDuration @defaultEasing,
+  transition: opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
 }
@@ -1431,8 +1429,7 @@ i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
   outline: none;
   opacity: 1;
-  box-shadow:
-    0 0 0 0.1rem var(--focus-inner-color),
+  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
     0 0 0 0.2rem var(--focus-outer-color);
 }
 
@@ -1458,7 +1455,9 @@ html {
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-magnitudes-container .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width
+  .explore-magnitudes-container
+  .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
@@ -1907,9 +1906,14 @@ svg[focusable="false"]:focus {
 }
 
 .ui.selectable.table > tbody > tr:hover,
-.ui.selectable.table .tbody .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
+.ui.selectable.table
+  .tbody
+  .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
 .ui.table tbody tr td.selectable:hover,
-.ui.table .tbody .tr:not(.disabled) .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
+.ui.table
+  .tbody
+  .tr:not(.disabled)
+  .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
   box-shadow: inset 0 0 0 1px var(--explore-accent-color);
 }
 
@@ -1920,4 +1924,8 @@ svg[focusable="false"]:focus {
 .explore-modes-table-itc-cell {
   display: flex;
   justify-content: center;
+}
+
+.search-results {
+  overflow-x: auto;
 }

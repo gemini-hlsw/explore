@@ -33,10 +33,12 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import react.semanticui.elements.segment.SegmentGroup
+import react.semanticui.elements.header.Header
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
-  onComplete:       Target ==> Callback
+  onSelected:       Target ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
 
@@ -60,13 +62,11 @@ object TargetSelectionPopup {
     // isOpen
     .useState(false)
     // targetSources
-    .useMemoBy((props, _, _, _, _, _) => props.ctx)((_, _, _, _, _, _) =>
-      (propsCtx: AppContextIO) => {
-        implicit val ctx = propsCtx
-        Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
-          TargetSource.forAllCatalogs[IO]
-      }
-    )
+    .useMemoBy((props, _, _, _, _, _) => props.ctx) { (_, _, _, _, _, _) => propsCtx =>
+      implicit val ctx = propsCtx
+      Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
+        TargetSource.forAllCatalogs[IO]
+    }
     .renderWithReuse { (props, inputValue, results, searching, timer, isOpen, targetSources) =>
       implicit val ctx = props.ctx
 
@@ -121,28 +121,29 @@ object TargetSelectionPopup {
               // so that they work with fontawesome.
               // icon = Icons.Search,
               // iconPosition = IconPosition.Left,
-              onTextChange = t => inputValue.setState(t) >> timer.onTimeout(search(t)).runAsync,
+              onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
               loading = searching.value.nonEmpty
             )
               .withMods(^.placeholder := "Name", ^.autoFocus := true),
-            Segment(
-              <.div(
-                results.value.map { case (source, targets) =>
-                  Segment(
-                    <.div(
-                      <.p(source.name),
-                      targets.toList.map { target =>
-                        <.span(
-                          target.toString,
-                          Button(onClick = isOpen.setState(false) >> props.onComplete(target))(
-                            ^.tpe := "button"
-                          )("Select")
-                        )
-                      }.toTagMod
+            SegmentGroup(raised = true)(
+              results.value.map { case (source, targets) =>
+                Segment(
+                  <.div(
+                    Header(size = Small)(source.name),
+                    <.div(ExploreStyles.SearchResults)(
+                      TargetSelectionTable(targets.toList, onSelected = props.onSelected)
                     )
+                    // targets.toList.map { target =>
+                    //   <.span(
+                    //     target.toString,
+                    //     Button(onClick = isOpen.setState(false) >> props.onSelected(target))(
+                    //       ^.tpe := "button"
+                    //     )("Select")
+                    //   )
+                    // }.toTagMod
                   )
-                }.toTagMod
-              )
+                )
+              }.toTagMod
             ).when(results.value.nonEmpty)
           )
         )(

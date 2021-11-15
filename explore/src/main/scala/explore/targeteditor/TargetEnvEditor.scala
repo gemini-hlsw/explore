@@ -127,7 +127,7 @@ object TargetEnvEditor {
                   labelPosition = LabelPosition.Left
                 )
               ),
-              onComplete = Reuse
+              onSelected = Reuse
                 .always(_ match {
                   case t @ SiderealTarget(_, _, _) =>
                     insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync
