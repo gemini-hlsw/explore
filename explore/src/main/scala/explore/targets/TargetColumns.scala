@@ -96,10 +96,10 @@ object TargetColumns {
               .map(TruncatedDec.declination.get.andThen(ValidFormatInput.truncatedDec.reverseGet))
               .orEmpty
           )
-          .setSortByAuto,
-        siderealColumn("priority", _ => "").setCell(_ =>
-          ""
-        ) // TODO IS this really a target property????
+          .setSortByAuto
+        // siderealColumn("priority", _ => "").setCell(_ =>
+        //   ""
+        // ) // TODO IS this a property of the target, or a property of the target in the observation???
       ) ++
         MagnitudeBand.all.map(band =>
           siderealColumnOpt(band.shortName + "mag",

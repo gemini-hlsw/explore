@@ -132,7 +132,7 @@ object TargetSelectionPopup {
                       TargetSelectionTable(
                         targets.toList,
                         onSelected = props.onSelected.map(onSelected =>
-                          t => isOpen.setState(false) >> onSelected(t)
+                          t => onSelected(t) >> isOpen.setState(false) >> cleanState
                         )
                       )
                     )
