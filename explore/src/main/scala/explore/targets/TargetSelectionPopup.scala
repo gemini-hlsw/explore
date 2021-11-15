@@ -10,6 +10,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
+import crystal.react.hooks._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -30,7 +31,6 @@ import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
-import java.util.concurrent.TimeUnit
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
@@ -47,43 +47,6 @@ object TargetSelectionPopup {
 
   implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
-  //  BEGIN HOOK
-  implicit val reuseTimeUnit: Reusability[TimeUnit]             = Reusability.byRef
-  implicit val reuseFiniteDuration: Reusability[FiniteDuration] =
-    Reusability.by(x => (x.length, x.unit))
-
-  class TimeoutHandle(
-    duration: FiniteDuration,
-    timerRef: Hooks.UseRefF[CallbackTo, Option[FiberIO[Unit]]]
-  ) {
-    private val cleanup: IO[Unit] = timerRef.set(none).to[IO]
-
-    val cancel: IO[Unit] =
-      IO(timerRef.value) >>= (runningFiber =>
-        (cleanup >> runningFiber.map(_.cancel).orEmpty).uncancelable
-      )
-
-    def onTimeout(effect: IO[Unit]): IO[Unit] = {
-      val timedEffect =
-        // We don't cleanup until `effect` completes, so that we can still invoke `cancel` when the effect is running.
-        IO.sleep(duration) >> effect.guarantee(cleanup.uncancelable)
-      cancel >>
-        (timedEffect.start >>=
-          (fiber => timerRef.set(fiber.some).to[IO])).uncancelable
-    }
-  }
-
-  // Changing duration while component is mounted is not supported.
-  val useDebouncedTimeout = CustomHook[FiniteDuration]
-    .useRef(none[FiberIO[Unit]])
-    .useMemoBy((_, _) => ())((duration, timerRef) => _ => new TimeoutHandle(duration, timerRef))
-    .buildReturning((_, _, timeoutHandle) => timeoutHandle)
-  //  END HOOK
-
-  // protected val targetSources: List[TargetSource[IO]] =
-  //   Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
-  //     TargetSource.forAllCatalogs[IO]
-
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
@@ -93,7 +56,7 @@ object TargetSelectionPopup {
     // searching
     .useState(none[FiberIO[Unit]])
     // timer
-    .custom(useDebouncedTimeout(700.milliseconds))
+    .useDebouncedTimeout(700.milliseconds)
     // isOpen
     .useState(false)
     // targetSources
@@ -154,6 +117,8 @@ object TargetSelectionPopup {
             FormInputEV(
               id = NonEmptyString("name"),
               value = inputValue,
+              // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
+              // so that they work with fontawesome.
               // icon = Icons.Search,
               // iconPosition = IconPosition.Left,
               onTextChange = t => inputValue.setState(t) >> timer.onTimeout(search(t)).runAsync,
@@ -181,6 +146,7 @@ object TargetSelectionPopup {
             ).when(results.value.nonEmpty)
           )
         )(
+          ^.autoComplete.off,
           ^.onSubmit ==> (e => e.preventDefaultCB >> search(inputValue.value).runAsync)
         )
       )

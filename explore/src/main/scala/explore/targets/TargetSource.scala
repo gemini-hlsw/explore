@@ -38,6 +38,7 @@ protected object TargetSource {
             .map(_.commonTarget)
             // TODO Remove the filter when the API has a name pattern query
             .filter(_.name.value.toLowerCase.startsWith(name.value.toLowerCase))
+            .distinct
         )
   }
 
