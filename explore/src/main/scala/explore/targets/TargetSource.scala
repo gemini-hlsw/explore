@@ -33,13 +33,15 @@ protected object TargetSource {
     override def search(name: NonEmptyString): F[List[Target]] =
       TargetQueriesGQL.TargetNameQuery
         .query()
-        .map(
-          _.scienceTargetGroup
+        .map { data =>
+          println(s"FILTERING TO NAME [$name]")
+
+          data.scienceTargetGroup
             .map(_.commonTarget)
             // TODO Remove the filter when the API has a name pattern query
             .filter(_.name.value.toLowerCase.startsWith(name.value.toLowerCase))
             .distinct
-        )
+        }
   }
 
   case class Catalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {

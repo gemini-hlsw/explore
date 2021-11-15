@@ -19,6 +19,8 @@ import react.semanticui.collections.table.TableCompact
 import react.semanticui.collections.table.TableCell
 import react.common.style.Css
 import react.common.implicits._
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes
 
 final case class TargetSelectionTable(
   targets:    List[Target],
@@ -50,32 +52,36 @@ object TargetSelectionTable {
     .useMemoBy(_ => ()) { props => _ =>
       // implicit val ctx = props.ctx
 
-      def column[V](id: String, accessor: Target => V) =
-        TargetTable
-          .Column(id, accessor)
-          .setHeader(columnNames(id))
+      // def column[V](id: String, accessor: Target => V) =
+      //   TargetTable
+      //     .Column(id, accessor)
+      //     .setHeader(columnNames(id))
 
-      // List(
-      //   column("delete", TargetWithId.id.get)
-      //     .setCell(cell =>
-      //       Button(
-      //         size = Tiny,
-      //         compact = true,
-      //         clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-      //         icon = Icons.Trash,
-      //         onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
-      //           e.preventDefaultCB >>
-      //             e.stopPropagationCB >>
-      //             props.targets.mod(_ - cell.value) >>
-      //             deleteSiderealTarget(cell.value).runAsyncAndForget
-      //       )
-      //     )
-      //     .setWidth(30)
-      //     .setDisableSortBy(true)
-      // ) ++
-      TargetColumns
-        .BaseColumnBuilder(TargetTable)(_.some)
-        .allColumns
+      List(
+        TargetTable
+          .Column("select", target => target)
+          .setCell(cell =>
+            Button(size = sizes.Tiny, compact = true, onClick = props.onSelected(cell.value))(
+              ^.tpe := "button"
+            )("Select")
+          // Button(
+          //   size = Tiny,
+          //   compact = true,
+          //   clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+          //   icon = Icons.Trash,
+          //   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+          //     e.preventDefaultCB >>
+          //       e.stopPropagationCB >>
+          //       props.targets.mod(_ - cell.value) >>
+          //       deleteSiderealTarget(cell.value).runAsyncAndForget
+          // )
+          )
+          .setWidth(30)
+          .setDisableSortBy(true)
+      ) ++
+        TargetColumns
+          .BaseColumnBuilder(TargetTable)(_.some)
+          .allColumns
     }
     // rows
     .useMemoBy((props, _) => props.targets)((_, _) => identity)

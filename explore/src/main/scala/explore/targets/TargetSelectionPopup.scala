@@ -131,16 +131,13 @@ object TargetSelectionPopup {
                   <.div(
                     Header(size = Small)(source.name),
                     <.div(ExploreStyles.SearchResults)(
-                      TargetSelectionTable(targets.toList, onSelected = props.onSelected)
+                      TargetSelectionTable(
+                        targets.toList,
+                        onSelected = props.onSelected.map(onSelected =>
+                          t => isOpen.setState(false) >> onSelected(t)
+                        )
+                      )
                     )
-                    // targets.toList.map { target =>
-                    //   <.span(
-                    //     target.toString,
-                    //     Button(onClick = isOpen.setState(false) >> props.onSelected(target))(
-                    //       ^.tpe := "button"
-                    //     )("Select")
-                    //   )
-                    // }.toTagMod
                   )
                 )
               }.toTagMod
