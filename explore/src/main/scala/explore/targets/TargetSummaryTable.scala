@@ -21,10 +21,6 @@ import explore.model.TargetIdSet
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.MagnitudeBand
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SiderealTarget
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import react.common._
@@ -37,7 +33,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters._
@@ -56,12 +51,7 @@ final case class TargetRow(
   name:                NonEmptyString,
   target:              Option[Target],
   optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
-) {
-  lazy val tracking: Option[SiderealTracking]              =
-    target.collect { case SiderealTarget(_, tracking, _) => tracking }
-  lazy val magnitudes: SortedMap[MagnitudeBand, Magnitude] =
-    target.map(_.magnitudes).getOrElse(SortedMap.empty)
-}
+)
 
 object TargetRow {
   def expandableFromTarget(
