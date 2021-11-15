@@ -88,9 +88,7 @@ object TargetSelectionPopup {
                       .orEmpty
                   )
                 )
-                .guarantee(
-                  searching.setStateAsync(none) >> IO.println("Finished searching")
-                )
+                .guarantee(searching.setStateAsync(none))
                 .start >>= (fiber => searching.setStateAsync(fiber.some))
             )
             .orEmpty

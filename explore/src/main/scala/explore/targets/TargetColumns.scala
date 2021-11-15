@@ -97,7 +97,9 @@ object TargetColumns {
               .orEmpty
           )
           .setSortByAuto,
-        siderealColumn("priority", _ => "").setCell(_ => "")
+        siderealColumn("priority", _ => "").setCell(_ =>
+          ""
+        ) // TODO IS this really a target property????
       ) ++
         MagnitudeBand.all.map(band =>
           siderealColumnOpt(band.shortName + "mag",

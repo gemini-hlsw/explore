@@ -34,8 +34,6 @@ protected object TargetSource {
       TargetQueriesGQL.TargetNameQuery
         .query()
         .map { data =>
-          println(s"FILTERING TO NAME [$name]")
-
           data.scienceTargetGroup
             .map(_.commonTarget)
             // TODO Remove the filter when the API has a name pattern query
