@@ -25,7 +25,7 @@ protected[reflex] trait HandleProps extends js.Object {
 sealed trait Orientation extends Product with Serializable
 
 object Orientation {
-  implicit val enum: EnumValue[Orientation] = EnumValue.toLowerCaseString
+  implicit val enumValue: EnumValue[Orientation] = EnumValue.toLowerCaseString
 
   case object Horizontal extends Orientation
   case object Vertical   extends Orientation

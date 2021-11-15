@@ -78,7 +78,7 @@ object ReactTableHelpers {
     disabled:                            Boolean = false,
     excludeFn:                           Option[View[A] => Set[B]] = None,
     modifiers:                           Seq[TagMod] = Seq.empty
-  )(implicit enum:                       Enumerated[B], display: Display[B]) =
+  )(implicit enumerated:                 Enumerated[B], display: Display[B]) =
     ScalaComponent
       .builder[View[A]]
       .render_P { va =>
