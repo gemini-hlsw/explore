@@ -124,6 +124,7 @@ object TargetSelectionPopup {
             )
               .withMods(^.placeholder := "Name", ^.autoFocus := true),
             SegmentGroup(raised = true)(
+              // TODO: Visualizer (onClick)
               results.value.map { case (source, targets) =>
                 Segment(
                   <.div(
