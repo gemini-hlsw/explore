@@ -5,27 +5,23 @@ package explore.targets
 
 import cats.Order._
 import cats.data.NonEmptyList
-import cats.effect.Async
 import cats.effect.FiberIO
 import cats.effect.IO
-import cats.effect.Sync
 import cats.syntax.all._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.SimbadSearch
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.SiderealTarget
-import lucuma.core.util.Enumerated
+import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
-import org.typelevel.log4cats.Logger
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.segment.Segment
@@ -40,7 +36,7 @@ import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
-  onComplete:       SiderealTarget ==> Callback
+  onComplete:       Target ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
 
@@ -48,22 +44,6 @@ object TargetSelectionPopup {
   type Props = TargetSelectionPopup
 
   implicit val reuseProps: Reusability[Props] = Reusability.derive[Props]
-
-  protected sealed trait TargetSource extends Product with Serializable {
-    def search[F[_]: Async: Logger](name: NonEmptyString): F[List[SiderealTarget]]
-  }
-  protected object TargetSource {
-    case object Program extends TargetSource {
-      override def search[F[_]: Async: Logger](name: NonEmptyString): F[List[SiderealTarget]] =
-        Sync[F].delay(List.empty)
-    }
-    case object Simbad  extends TargetSource {
-      override def search[F[_]: Async: Logger](name: NonEmptyString): F[List[SiderealTarget]] =
-        SimbadSearch.search[F](name).map(_.toList)
-    }
-
-    implicit val enumTargetSource: Enumerated[TargetSource] = Enumerated.of(Program, Simbad)
-  }
 
   implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
@@ -100,19 +80,31 @@ object TargetSelectionPopup {
     .buildReturning((_, _, timeoutHandle) => timeoutHandle)
   //  END HOOK
 
+  // protected val targetSources: List[TargetSource[IO]] =
+  //   Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
+  //     TargetSource.forAllCatalogs[IO]
+
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
     .useStateSnapshotWithReuse("")
     // results
-    .useStateWithReuse(SortedMap.empty[TargetSource, NonEmptyList[SiderealTarget]])
+    .useStateWithReuse(SortedMap.empty[TargetSource[IO], NonEmptyList[Target]])
     // searching
     .useState(none[FiberIO[Unit]])
     // timer
     .custom(useDebouncedTimeout(700.milliseconds))
     // isOpen
     .useState(false)
-    .renderWithReuse { (props, inputValue, results, searching, timer, isOpen) =>
+    // targetSources
+    .useMemoBy((props, _, _, _, _, _) => props.ctx)((_, _, _, _, _, _) =>
+      (propsCtx: AppContextIO) => {
+        implicit val ctx = propsCtx
+        Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
+          TargetSource.forAllCatalogs[IO]
+      }
+    )
+    .renderWithReuse { (props, inputValue, results, searching, timer, isOpen, targetSources) =>
       implicit val ctx = props.ctx
 
       val cleanState = inputValue.setState("") >> results.setState(SortedMap.empty)
@@ -124,9 +116,9 @@ object TargetSelectionPopup {
             .from(name)
             .toOption
             .map(nonEmptyName =>
-              Enumerated[TargetSource].all
+              targetSources.value
                 .traverse_(source =>
-                  source.search[IO](nonEmptyName) >>= (list =>
+                  source.search(nonEmptyName) >>= (list =>
                     NonEmptyList
                       .fromList(list)
                       .map(nel => results.modStateAsync(_ + (source -> nel)): IO[Unit])
@@ -173,7 +165,7 @@ object TargetSelectionPopup {
                 results.value.map { case (source, targets) =>
                   Segment(
                     <.div(
-                      <.p(Enumerated[TargetSource].tag(source)),
+                      <.p(source.name),
                       targets.toList.map { target =>
                         <.span(
                           target.toString,

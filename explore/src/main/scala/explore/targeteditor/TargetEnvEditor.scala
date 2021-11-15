@@ -128,7 +128,11 @@ object TargetEnvEditor {
                 )
               ),
               onComplete = Reuse
-                .always(t => insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync)
+                .always(_ match {
+                  case t @ SiderealTarget(_, _, _) =>
+                    insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync
+                  case _                           => Callback.empty
+                })
             )
             // InputModal(
             //   "Create new Target",

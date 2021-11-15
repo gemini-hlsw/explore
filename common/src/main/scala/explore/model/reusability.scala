@@ -26,7 +26,15 @@ import scala.collection.immutable.TreeSeqMap
  * Reusability instances for model classes
  */
 object reusability {
+  // Move these to lucuma-ui
+  implicit val targetReuse: Reusability[Target]                 = Reusability.derive
+  implicit val semesterReuse: Reusability[Semester]             = Reusability.derive
+  implicit val cssReuse: Reusability[Css]                       = Reusability.by(_.htmlClass)
+  implicit def nonEmptySetReuse[A]: Reusability[NonEmptySet[A]] =
+    Reusability.by(_.toSortedSet.unsorted)
+
   // Model
+  implicit def appContextReuse[F[_]]: Reusability[AppContext[F]]                      = Reusability.always
   implicit val targetSummaryReuse: Reusability[TargetSummary]                         = Reusability.derive
   implicit val statusReuse: Reusability[PersistentClientStatus]                       = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                   = Reusability.derive
@@ -39,7 +47,6 @@ object reusability {
   implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                           = Reusability.derive
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                       = Reusability.derive
   implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                 = Reusability.derive
-  implicit val targetReuse: Reusability[Target]                                       = Reusability.derive
   implicit val scienceTargetsReuse: Reusability[TreeSeqMap[TargetIdSet, Target]]      =
     Reusability.by((_: TreeSeqMap[TargetIdSet, Target]).toMap)(Reusability.map)
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.derive
@@ -78,9 +85,4 @@ object reusability {
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.derive
   implicit val filterReuse: Reusability[AvailableFilter]                             = Reusability.byEq
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions]                = Reusability.derive
-  // Move to lucuma-ui
-  implicit val semesterReuse: Reusability[Semester]                                  = Reusability.derive
-  implicit val cssReuse: Reusability[Css]                                            = Reusability.by(_.htmlClass)
-  implicit def nonEmptySetReuse[A]: Reusability[NonEmptySet[A]]                      =
-    Reusability.by(_.toSortedSet.unsorted)
 }

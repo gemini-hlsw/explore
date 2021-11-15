@@ -38,8 +38,6 @@ class TestUndoable[M](
   private def varRefView[A](ref: VarRef[DefaultS, A]): DefaultS[View[A]] =
     ref.get.map(a => View(a, varRefModCB(ref)))
 
-  // implicit private val syncToAsync: F ~> F = FunctDefaultAnK.id[F]
-
   val context: DefaultS[UndoContext[M]] =
     for {
       valueView  <- varRefView(valueRef)
@@ -61,8 +59,4 @@ object TestUndoable {
                        VarRef[DefaultS].of(UndoStacks.empty[DefaultA, M])
       )
     )
-  // for {
-  //   valueRef  <- Ref[DefaultS].of(initValue)
-  //   stacksRef <- Ref[DefaultS].of(UndoStacks.empty[DefaultA, M])
-  // } yield new TestUndoable(valueRef, stacksRef)
 }

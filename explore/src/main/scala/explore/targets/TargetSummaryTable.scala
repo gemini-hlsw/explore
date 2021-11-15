@@ -60,7 +60,7 @@ object TargetRow {
     optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
   ): Expandable[TargetRow] =
     Expandable(
-      // TODO Better toString for TargetIdSet
+      // TODO Implement a more expressive toString in TargetIdSet
       TargetRow(id.toString, target.name, target.some, optTargetEnvGroupId)
     )
 
