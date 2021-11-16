@@ -153,6 +153,7 @@ object SiderealTargetEditor {
         ): Callback =
           SimbadSearch
             .search[IO](s.searchTerm)
+            .map(_.headOption)
             .runAsyncAndThen {
               case Right(r @ Some(t)) =>
                 allView.set(t) >> s.onComplete(r)

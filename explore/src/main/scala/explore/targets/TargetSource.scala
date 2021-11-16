@@ -17,6 +17,7 @@ import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
+import cats.Parallel
 
 protected sealed trait TargetSource[F[_]] {
   val name: String
@@ -42,17 +43,37 @@ protected object TargetSource {
         }
   }
 
-  case class Catalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
+  case class Catalog[F[_]: Async: Parallel: Logger](catalogName: CatalogName)
+      extends TargetSource[F] {
     val name: String                                           =
       Enumerated[CatalogName].tag(catalogName)
     override def search(name: NonEmptyString): F[List[Target]] =
       catalogName match {
-        case CatalogName.Simbad => SimbadSearch.search[F](name).map(_.toList)
-        case _                  => Sync[F].delay(List.empty)
+        case CatalogName.Simbad =>
+          // This a heuristic based on observed Simbad behavior.
+          val terms = List(
+            NonEmptyString.unsafeFrom(s"$name*"),
+            NonEmptyString.unsafeFrom(s"NAME $name*"),
+            NonEmptyString.unsafeFrom(
+              s"${name.value.replaceFirst("([A-Za-z-\\.]+)(\\S.*)", "$1 $2")}*"
+            )
+          ).distinct
+          terms
+            .parTraverse(term =>
+              Logger[F].debug(s"Searching Simbad: [$term]") >>
+                SimbadSearch.search[F](term, wildcard = true)
+            )
+            .map(
+              _.flatten
+                .distinctBy(t => t.tracking.catalogId.map(_.id).getOrElse(t.name))
+                .sortBy(_.name.value)
+            )
+
+        case _ => Sync[F].delay(List.empty)
       }
   }
 
-  def forAllCatalogs[F[_]: Async: Logger]: List[TargetSource[F]] =
+  def forAllCatalogs[F[_]: Async: Parallel: Logger]: List[TargetSource[F]] =
     Enumerated[CatalogName].all.map(source => TargetSource.Catalog(source))
 
   // TODO Test

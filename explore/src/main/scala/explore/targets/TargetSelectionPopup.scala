@@ -80,7 +80,7 @@ object TargetSelectionPopup {
             .toOption
             .map(nonEmptyName =>
               targetSources.value
-                .traverse_(source =>
+                .parTraverse_(source =>
                   source.search(nonEmptyName) >>= (list =>
                     NonEmptyList
                       .fromList(list)
