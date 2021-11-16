@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.Eq
 import cats.Parallel
 import cats.data._
 import cats.effect.Sync
@@ -37,6 +38,14 @@ object ItcQueryProblems {
   case object MissingWavelength        extends ItcQueryProblems
   case object MissingSignalToNoise     extends ItcQueryProblems
   case class GenericError(msg: String) extends ItcQueryProblems
+
+  implicit val eq: Eq[ItcQueryProblems] = Eq.instance {
+    case (UnsupportedMode, UnsupportedMode)           => true
+    case (MissingWavelength, MissingWavelength)       => true
+    case (MissingSignalToNoise, MissingSignalToNoise) => true
+    case (GenericError(a), GenericError(b))           => a === b
+    case _                                            => false
+  }
 }
 
 sealed trait ItcResult extends Product with Serializable
@@ -45,6 +54,13 @@ object ItcResult {
   case object SourceTooBright                                     extends ItcResult
   case object Pending                                             extends ItcResult
   case class Result(exposureTime: FiniteDuration, exposures: Int) extends ItcResult
+
+  implicit val eq: Eq[ItcResult] = Eq.instance {
+    case (SourceTooBright, SourceTooBright) => true
+    case (Pending, Pending)                 => true
+    case (Result(t1, e1), Result(t2, e2))   => t1 === t2 && e1 === e2
+    case _                                  => false
+  }
 }
 
 // Simple cache of the remotely calculated values
@@ -61,7 +77,9 @@ final case class ItcResultsCache(
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
 
   def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentModes] =
-    Either.fromOption(r.toMode, NonEmptyChain.of(ItcQueryProblems.UnsupportedMode))
+    Either.fromOption(r.toMode.filter(_ => ItcResultsCache.enabledRow(r)),
+                      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
+    )
 
   // Read the cache value or a default
   def forRow(
@@ -76,6 +94,11 @@ final case class ItcResultsCache(
 
 object ItcResultsCache {
   type CacheKey = (Wavelength, PosBigDecimal, InstrumentModes)
+
+  def enabledRow(row: SpectroscopyModeRow): Boolean =
+    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(
+      row.instrument.instrument
+    ) && row.focalPlane === FocalPlane.SingleSlit
 
   implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
     def toMode: Option[InstrumentModes] = r.instrument match {

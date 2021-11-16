@@ -21,7 +21,7 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
       .flatMap(l => Stream(l.toList: _*))
       .zipWithIndex
       .map { case (r, i) =>
-        r.copy(id = i)
+        r.copy(id = i.toInt)
       }
       .compile
       .toList

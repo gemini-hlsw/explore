@@ -41,10 +41,14 @@ import react.virtuoso._
 import react.virtuoso.raw.ListRange
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
+import reactST.reactTable.mod.SortByFn
+import reactST.reactTable.mod.UseTableRowProps
 import spire.math.Bounded
 import spire.math.Interval
 
 import java.text.DecimalFormat
+
+import scalajs.js.|
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
@@ -155,6 +159,57 @@ object SpectroscopyModesTable extends ItcColumn {
     case FocalPlane.IFU          => "IFU"
   }
 
+  private def itcCell(c: EitherNec[ItcQueryProblems, ItcResult]): VdomElement = {
+    val content: TagMod = c match {
+      case Left(nel)                        =>
+        if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
+          Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
+        else {
+          val content = nel.collect {
+            case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
+            case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
+            case ItcQueryProblems.GenericError(e)      => e
+          }
+          Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
+        }
+      case Right(ItcResult.Result(t, c))    =>
+        val secs = t.toMillis / 1000.0 * c
+        f"$secs%.0f s"
+      case Right(ItcResult.Pending)         =>
+        Icons.Spinner.spin(true)
+      case Right(ItcResult.SourceTooBright) =>
+        Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
+    }
+    <.div(ExploreStyles.ITCCell, content)
+  }
+
+  implicit val reuseQueryResponse: Reusability[EitherNec[ItcQueryProblems, ItcResult]] =
+    Reusability.byEq
+
+  def sortItcFun(
+    itc: ItcResultsCache,
+    cw:  Option[Wavelength],
+    sn:  Option[PosBigDecimal]
+  ): SortByFn[SpectroscopyModeRow] =
+    (
+      rowA: UseTableRowProps[SpectroscopyModeRow],
+      rowB: UseTableRowProps[SpectroscopyModeRow],
+      _:    String | String,
+      desc: Boolean | Unit
+    ) =>
+      (itc.forRow(cw, sn, rowA.original), itc.forRow(cw, sn, rowB.original)) match {
+        case (Right(ItcResult.Result(e1, t1)), Right(ItcResult.Result(e2, t2))) =>
+          (e1.toMillis * t1 - e2.toMillis * t2).toDouble
+        case (Left(_), Right(ItcResult.Result(e1, t1)))                         => e1.toMillis * t1.toDouble
+        case (Right(ItcResult.Result(e1, t1)), Left(_))                         => -e1.toMillis * t1.toDouble
+        case _                                                                  =>
+          (desc: Any) match {
+            case true  => -Double.MaxValue
+            case false => Double.MaxValue
+            case _     => 0
+          }
+      }
+
   def columns(
     cw:  Option[Wavelength],
     fpu: Option[FocalPlane],
@@ -168,33 +223,11 @@ object SpectroscopyModesTable extends ItcColumn {
         .setMinWidth(50)
         .setMaxWidth(150),
       column(TimeColumnId, itc.forRow(cw, sn, _))
-        .setCell { c =>
-          val content: TagMod = c.value match {
-            case Left(nel)                        =>
-              if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-                Popup(content = "Mode not supported", trigger = Icons.Ban.color("red"))
-              else {
-                val content = nel.collect {
-                  case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
-                  case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
-                  case ItcQueryProblems.GenericError(e)      => e
-                }
-                Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
-              }
-            case Right(ItcResult.Result(t, c))    =>
-              val secs = t.toMillis / 1000.0 * c
-              f"$secs%.0f s"
-            case Right(ItcResult.Pending)         =>
-              Icons.Spinner.spin(true)
-            case Right(ItcResult.SourceTooBright) =>
-              Popup(content = "Source too bright", trigger = Icons.SunBright.color("yellow"))
-          }
-          <.div(ExploreStyles.ITCCell, content)
-        }
+        .setCell(c => Reusable.implicitly(c.value).map(p => itcCell(p)))
         .setWidth(80)
         .setMinWidth(80)
         .setMaxWidth(80)
-        .setSortType(DefaultSortTypes.number),
+        .setSortType(sortItcFun(itc, cw, sn)),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
         .setWidth(96)
@@ -275,8 +308,9 @@ object SpectroscopyModesTable extends ItcColumn {
     val s = visibleRange.startIndex.toInt
     val e = visibleRange.endIndex.toInt
 
-    (for { i <- s to e } yield rows.lift(i))
-      .collect { case Some(m) => m }
+    // Put the visible rows first
+    ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
+      .distinctBy(_.id)
   }
 
   protected def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
