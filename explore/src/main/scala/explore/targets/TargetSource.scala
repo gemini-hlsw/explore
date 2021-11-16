@@ -3,6 +3,7 @@
 
 package explore.targets
 
+import cats.Parallel
 import cats.effect.Async
 import cats.effect.Sync
 import cats.kernel.Order
@@ -17,7 +18,6 @@ import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
-import cats.Parallel
 
 protected sealed trait TargetSource[F[_]] {
   val name: String

@@ -37,7 +37,7 @@ object SimbadSearch {
 
     retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
       FetchClientBuilder[F]
-        .withRequestTimeout(5.seconds)
+        .withRequestTimeout(20.seconds)
         .resource
         .flatMap(_.run(Request[F](Method.POST, url)))
         .use {

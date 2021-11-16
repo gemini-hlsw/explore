@@ -295,5 +295,6 @@ object ExploreStyles {
   val OddRow: Css  = Css("odd-row")
 
   // Target Search Popup
-  val SearchResults = Css("search-results")
+  val SearchResults       = Css("search-results")
+  val SearchResultsSource = Css("search-results-source")
 }

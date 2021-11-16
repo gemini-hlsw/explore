@@ -1,23 +1,27 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targets
 
 import cats.syntax.all._
 import crystal.react.reuse._
-import lucuma.core.model.Target
+import explore.components.ui.ExploreStyles
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Target
 import react.common.ReactFnProps
-import explore.model.reusability._
-import reactST.reactTable._
-import scalajs.js.JSConverters._
-import react.semanticui.collections.table.Table
-import react.semanticui.collections.table.TableHeaderCell
-import explore.components.ui.ExploreStyles
-import react.semanticui.collections.table.TableCompact
-import react.semanticui.collections.table.TableCell
-import react.common.style.Css
 import react.common.implicits._
+import react.common.style.Css
+import react.semanticui.collections.table.Table
+import react.semanticui.collections.table.TableCell
+import react.semanticui.collections.table.TableCompact
+import react.semanticui.collections.table.TableHeaderCell
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes
+import reactST.reactTable._
+
+import scalajs.js.JSConverters._
 
 final case class TargetSelectionTable(
   targets:    List[Target],

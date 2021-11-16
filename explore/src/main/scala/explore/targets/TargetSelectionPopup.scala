@@ -8,14 +8,15 @@ import cats.data.NonEmptyList
 import cats.effect.FiberIO
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import crystal.react.hooks._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.reusability._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,7 +26,9 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
+import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
@@ -33,8 +36,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.elements.header.Header
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
@@ -123,13 +124,15 @@ object TargetSelectionPopup {
               loading = searching.value.nonEmpty
             )
               .withMods(^.placeholder := "Name", ^.autoFocus := true),
-            SegmentGroup(raised = true)(
+            SegmentGroup(raised = true, clazz = ExploreStyles.SearchResults)(
               // TODO: Visualizer (onClick)
               results.value.map { case (source, targets) =>
                 Segment(
                   <.div(
-                    Header(size = Small)(source.name),
-                    <.div(ExploreStyles.SearchResults)(
+                    Header(size = Small)(
+                      s"${source.name} (${showCount(targets.length, "result")})"
+                    ),
+                    <.div(ExploreStyles.SearchResultsSource)(
                       TargetSelectionTable(
                         targets.toList,
                         onSelected = props.onSelected.map(onSelected =>
