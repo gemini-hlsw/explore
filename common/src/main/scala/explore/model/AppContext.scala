@@ -108,7 +108,6 @@ case class AppContext[F[_]](
   environment: ExecutionEnvironment
 )(implicit
   val F:       Applicative[F],
-  // val dispatcher: Effect.Dispatch[F],
   val logger:  Logger[F],
   val P:       Parallel[F]
 )

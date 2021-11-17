@@ -70,9 +70,6 @@ object TargetEnvEditor {
       view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
   }
 
-  // private def newTarget(name: NonEmptyString): SiderealTarget =
-  //   SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
-
   private def insertSiderealTarget(
     targetEnv:      View[TargetEnvGroup],
     target:         SiderealTarget,
@@ -134,33 +131,6 @@ object TargetEnvEditor {
                   case _                           => Callback.empty
                 })
             )
-            // InputModal(
-            //   "Create new Target",
-            //   initialValue = None,
-            //   label = "Name",
-            //   placeholder = "Target name",
-            //   okLabel = "Create",
-            //   onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
-            //     adding.setState(true) >>
-            //       insertSiderealTarget(props.targetEnv,
-            //                            name,
-            //                            props.searching,
-            //                            selectedTargetId
-            //       ).runAsyncAndForget
-            //   ),
-            //   trigger = Reuse.by(adding.value)(
-            //     Button(
-            //       size = Tiny,
-            //       compact = true,
-            //       clazz = ExploreStyles.VeryCompact,
-            //       disabled = adding.value,
-            //       icon = Icons.New,
-            //       loading = adding.value,
-            //       content = "Add",
-            //       labelPosition = LabelPosition.Left
-            //     ): VdomNode
-            //   )
-            // )
           ),
           TargetTable(
             props.targetEnv.zoom(TargetEnvGroup.scienceTargets),

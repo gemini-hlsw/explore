@@ -11,7 +11,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
-import explore.model.reusability._
 import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.JsUtil

@@ -18,7 +18,6 @@ import lucuma.core.model.Semester
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
-import react.common.style.Css
 
 import scala.collection.immutable.TreeSeqMap
 
@@ -29,7 +28,7 @@ object reusability {
   // Move these to lucuma-ui
   implicit val targetReuse: Reusability[Target]                 = Reusability.derive
   implicit val semesterReuse: Reusability[Semester]             = Reusability.derive
-  implicit val cssReuse: Reusability[Css]                       = Reusability.by(_.htmlClass)
+  // implicit val cssReuse: Reusability[Css]                       = Reusability.by(_.htmlClass)
   implicit def nonEmptySetReuse[A]: Reusability[NonEmptySet[A]] =
     Reusability.by(_.toSortedSet.unsorted)
 
