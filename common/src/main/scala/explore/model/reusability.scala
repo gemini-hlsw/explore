@@ -76,6 +76,8 @@ object reusability {
         }
     )
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.derive
+  implicit val filterReuse: Reusability[AvailableFilter]                             = Reusability.byEq
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]                = Reusability.derive
   // Move to lucuma-ui
   implicit val semesterReuse: Reusability[Semester]                                  = Reusability.derive
   implicit val cssReuse: Reusability[Css]                                            = Reusability.by(_.htmlClass)

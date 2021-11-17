@@ -13,6 +13,7 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
   def loadMatrix[F[_]: Concurrent](s: Stream[F, String]): F[List[SpectroscopyModeRow]] =
     s
       .through(decodeUsingHeaders[NonEmptyList[SpectroscopyModeRow]]())
+      .map(_.zipWithIndex.map { case (row, i) => row.copy(id = i) })
       .flatMap(l => Stream(l.toList: _*))
       .compile
       .toList

@@ -47,12 +47,13 @@ object ConfigurationPanel {
   type Props = ConfigurationPanel
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.never
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   final case class State(
     mode:           ScienceMode,
     imagingOptions: ImagingConfigurationOptions
   )
+
   object State {
     val mode: Lens[State, ScienceMode]                           = Focus[State](_.mode)
     val imagingOptions: Lens[State, ImagingConfigurationOptions] = Focus[State](_.imagingOptions)

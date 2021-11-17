@@ -197,7 +197,7 @@ object InstrumentRow {
 }
 
 case class SpectroscopyModeRow(
-  id:                 Long, // Give them a local id to simplify reusability
+  id:                 Int, // Give them a local id to simplify reusability
   instrument:         InstrumentRow,
   config:             NonEmptyString,
   focalPlane:         FocalPlane,
@@ -338,7 +338,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
         sl  <- row.as[ModeSlitSize]("slit length")
         sw  <- row.as[ModeSlitSize]("slit width")
       } yield fs.map(f =>
-        SpectroscopyModeRow(row.line.orEmpty, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+        SpectroscopyModeRow(row.line.foldMap(_.toInt), i, s, f, c, a, min, max, wo, wr, r, sl, sw)
       )
   }
 }

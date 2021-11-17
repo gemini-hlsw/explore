@@ -32,7 +32,7 @@ import react.semanticui.collections.menu.MenuHeader
 import react.semanticui.modules.dropdown._
 import spire.math.Rational
 
-import scala.collection.SortedSet
+import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
