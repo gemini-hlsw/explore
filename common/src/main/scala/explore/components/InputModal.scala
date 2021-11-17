@@ -73,7 +73,7 @@ object InputModal {
             "Cancel"
           )(^.key := "input-cancel")
         ),
-        centered = false, // Works betten on iOS
+        centered = false, // Works better on iOS
         trigger = props.trigger.value,
         closeIcon = Icons.Close.clazz(ExploreStyles.ModalCloseButton),
         dimmer = Dimmer.Blurring,

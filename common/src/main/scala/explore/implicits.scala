@@ -4,7 +4,6 @@
 package explore
 
 import cats._
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
@@ -15,7 +14,6 @@ import explore.model.RootModel
 import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
 import monocle.function.At.at
@@ -77,11 +75,9 @@ trait ListImplicits {
 }
 
 trait ContextImplicits {
-  implicit def appContext2Dispatcher[F[_]](implicit ctx: AppContext[F]): Dispatcher[F] =
-    ctx.dispatcher
-  implicit def appContext2Parallel[F[_]](implicit ctx: AppContext[F]): Parallel[F]     =
+  implicit def appContext2Parallel[F[_]](implicit ctx: AppContext[F]): Parallel[F] =
     ctx.P
-  implicit def appContext2Logger[F[_]](implicit ctx: AppContext[F]): Logger[F]         =
+  implicit def appContext2Logger[F[_]](implicit ctx: AppContext[F]): Logger[F]     =
     ctx.logger
   implicit def appContext2UserPreferencesDBClient[F[_]](implicit
     ctx: AppContext[F]
@@ -95,9 +91,6 @@ trait ContextImplicits {
     ctx: AppContext[F]
   ): TransactionalClient[F, ITC] =
     ctx.clients.itc
-  implicit def appContext2fromDefaultS[F[_]](implicit
-    ctx: AppContext[F]
-  ): DefaultS ~> F = ctx.fromDefaultS
 }
 
 object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {

@@ -5,7 +5,6 @@ package explore.model
 
 import cats._
 import cats.effect._
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue._
 import clue.js.FetchJSBackend
@@ -21,7 +20,7 @@ import explore.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
+import japgolly.scalajs.react.util.Effect
 import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
@@ -31,7 +30,7 @@ import retry._
 
 import scala.concurrent.duration._
 
-case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
+case class Clients[F[_]: Async: Parallel: Effect.Dispatch: Logger] protected (
   odb:           WebSocketClient[F, ObservationDB],
   preferencesDB: WebSocketClient[F, UserPreferencesDB],
   itc:           TransactionalClient[F, ITC]
@@ -55,7 +54,7 @@ case class Clients[F[_]: Async: Parallel: Dispatcher: Logger] protected (
     ).sequence.void
 }
 object Clients {
-  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def build[F[_]: Async: TransactionalBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     itcURI:               Uri,
@@ -99,29 +98,26 @@ case class Actions[F[_]](
 )
 
 case class AppContext[F[_]](
-  version:        NonEmptyString,
-  clients:        Clients[F],
-  staticData:     StaticData,
-  actions:        Actions[F],
-  sso:            SSOClient[F],
-  pageUrl:        (AppTab, Option[FocusedObs]) => String,
-  setPage:        (AppTab, Option[FocusedObs]) => Callback,
-  environment:    ExecutionEnvironment,
-  fromDefaultS:   DefaultS ~> F
+  version:     NonEmptyString,
+  clients:     Clients[F],
+  staticData:  StaticData,
+  actions:     Actions[F],
+  sso:         SSOClient[F],
+  pageUrl:     (AppTab, Option[FocusedObs]) => String,
+  setPage:     (AppTab, Option[FocusedObs]) => Callback,
+  environment: ExecutionEnvironment
 )(implicit
-  val F:          Applicative[F],
-  val dispatcher: Dispatcher[F],
-  val logger:     Logger[F],
-  val P:          Parallel[F]
+  val F:       Applicative[F],
+  val logger:  Logger[F],
+  val P:       Parallel[F]
 )
 
 object AppContext {
-  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Dispatcher: Logger](
+  def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[FocusedObs]) => String,
-    setPage:              (AppTab, Option[FocusedObs]) => Callback,
-    fromDefaultS:         DefaultS ~> F
+    setPage:              (AppTab, Option[FocusedObs]) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -137,7 +133,6 @@ object AppContext {
                           SSOClient(config.sso),
                           pageUrl,
                           setPage,
-                          config.environment,
-                          fromDefaultS
+                          config.environment
     )
 }

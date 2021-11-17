@@ -6,71 +6,67 @@ package explore.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+// gql: import explore.model.reusability._
+// gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
 object TargetQueriesGQL {
 
-  // @GraphQL
-  // trait TargetEditQuery extends GraphQLOperation[ObservationDB] {
-  //   val document = """
-  //     query($id: TargetId!) {
-  //       target(targetId: $id) {
-  //         id
-  //         name
-  //         tracking {
-  //           ... on Sidereal {
-  //             coordinates {
-  //               ra {
-  //                 microarcseconds
-  //               }
-  //               dec {
-  //                 microarcseconds
-  //               }
-  //             }
-  //             epoch
-  //             properMotion {
-  //               ra {
-  //                 microarcsecondsPerYear
-  //               }
-  //             	dec {
-  //                 microarcsecondsPerYear
-  //               }
-  // 						}
-  //             radialVelocity {
-  //               centimetersPerSecond
-  //             }
-  //             parallax {
-  //               microarcseconds
-  //             }
-  //           }
-  //         }
-  //         magnitudes {
-  //           value
-  //           band
-  //           system
-  //         }
-  //       }
-  //     }
-  //     """
+  @GraphQL
+  trait TargetNameQuery extends GraphQLOperation[ObservationDB] {
+    // FIXME Change this to an actual name patter query when it's available in the API
+    val document = """
+      query {
+        scienceTargetGroup(programId: "p-2") {
+          commonTarget {
+            name
+            tracking {
+              ... on Sidereal {
+                catalogId {
+                  name
+                  id
+                }
+                coordinates {
+                  ra {
+                    microarcseconds
+                  }
+                  dec {
+                    microarcseconds
+                  }
+                }
+                epoch
+                properMotion {
+                  ra {
+                    microarcsecondsPerYear
+                  }
+                  dec {
+                    microarcsecondsPerYear
+                  }
+                }
+                radialVelocity {
+                  centimetersPerSecond
+                }
+                parallax {
+                  microarcseconds
+                }
+              }
+            }
+            magnitudes {
+              value
+              band
+              system
+            }
+          }
+        }
+      }
+    """
 
-  //   object Data {
-  //     object Target {
-  //       type Tracking   = lucuma.core.model.SiderealTracking
-  //       type Magnitudes = lucuma.core.model.Magnitude
-  //     }
-  //   }
-  // }
-
-  // @GraphQL
-  // trait TargetEditSubscription extends GraphQLOperation[ObservationDB] {
-  //   val document = """
-  //     subscription($id: TargetId!) {
-  //       targetEdit(targetId: $id) {
-  //         id
-  //       }
-  //     }
-  //     """
-  // }
+    object Data {
+      object ScienceTargetGroup {
+        type CommonTarget = lucuma.core.model.Target
+      }
+    }
+  }
 
   @GraphQL
   trait SiderealTargetMutation extends GraphQLOperation[ObservationDB] {

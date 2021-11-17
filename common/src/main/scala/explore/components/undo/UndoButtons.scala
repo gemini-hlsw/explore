@@ -3,10 +3,9 @@
 
 package explore.components.undo
 
-// import crystal.react.implicits._
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
+import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common.ReactProps
@@ -15,7 +14,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 final case class UndoButtons[A](
-  undoCtx:  UndoCtx[A],
+  undoCtx:  UndoContext[A],
   size:     SemanticSize = Tiny,
   disabled: Boolean = false
 ) extends ReactProps[UndoButtons[Any]](UndoButtons.component)

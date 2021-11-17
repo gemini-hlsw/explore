@@ -25,7 +25,6 @@ import explore.undo.KIListMod
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
@@ -64,7 +63,7 @@ object ObsList {
     protected def insertObs(
       pos:        Int,
       focusedObs: View[Option[FocusedObs]],
-      undoCtx:    UndoCtx[ObservationList]
+      undoCtx:    UndoContext[ObservationList]
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]
     ): Callback = {
@@ -82,7 +81,7 @@ object ObsList {
 
       newObs.flatMap { obs =>
         ObsListActions
-          .obsExistence[IO](obs.id, focusedObs)
+          .obsExistence(obs.id, focusedObs)
           .mod(undoCtx)(obsListMod.upsert(obs, pos))
       }
     }
@@ -124,13 +123,13 @@ object ObsList {
                     obs,
                     selected = selected,
                     setStatusCB = (ObsListActions
-                      .obsStatus[IO](obs.id)
+                      .obsStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
                     setActiveStatusCB = (ObsListActions
-                      .obsActiveStatus[IO](obs.id)
+                      .obsActiveStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
                     deleteCB = ObsListActions
-                      .obsExistence[IO](obs.id, props.focusedObs)
+                      .obsExistence(obs.id, props.focusedObs)
                       .mod(undoCtx)(obsListMod.delete)
                       .reuseAlways
                       .some

@@ -3,90 +3,87 @@
 
 package explore.undo
 
-import cats.Monad
-import cats.~>
-import crystal.ViewF
+import crystal.react.implicits._
+import explore.View
+import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
+import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import monocle.Lens
 
 /*
  * Allows modifying values in an undo context, but doesn't give access to undo and redo operations.
  */
-trait UndoSetter[F[_], G[_], M] { self =>
-  def model: ViewF[F, M]
-  val syncToAsync: F ~> G
-  implicit val F: Monad[F]
+trait UndoSetter[M] { self =>
+  def model: View[M]
 
   def set[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     (M, A) => G[Unit],
-    onRestore: (M, A) => G[Unit]
-  )(v:         A): F[Unit]
+    onSet:     (M, A) => DefaultA[Unit],
+    onRestore: (M, A) => DefaultA[Unit]
+  )(v:         A): DefaultS[Unit]
 
   def set[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     A => G[Unit],
-    onRestore: A => G[Unit]
-  )(v:         A): F[Unit] =
+    onSet:     A => DefaultA[Unit],
+    onRestore: A => DefaultA[Unit]
+  )(v:         A): DefaultS[Unit] =
     set(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(v)
 
   def set[A](
     getter: M => A,
     setter: A => M => M,
-    onSet:  (M, A) => G[Unit]
-  )(v:      A): F[Unit] =
+    onSet:  (M, A) => DefaultA[Unit]
+  )(v:      A): DefaultS[Unit] =
     set(getter, setter, onSet, onSet)(v)
 
   def set[A](
     getter: M => A,
     setter: A => M => M,
-    onSet:  A => G[Unit]
-  )(v:      A): F[Unit] =
+    onSet:  A => DefaultA[Unit]
+  )(v:      A): DefaultS[Unit] =
     set(getter, setter, (_: M, a: A) => onSet(a))(v)
 
   def mod[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     (M, A) => G[Unit],
-    onRestore: (M, A) => G[Unit]
-  )(f:         A => A): F[Unit]
+    onSet:     (M, A) => DefaultA[Unit],
+    onRestore: (M, A) => DefaultA[Unit]
+  )(f:         A => A): DefaultS[Unit]
 
   def mod[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     A => G[Unit],
-    onRestore: A => G[Unit]
-  )(f:         A => A): F[Unit] =
+    onSet:     A => DefaultA[Unit],
+    onRestore: A => DefaultA[Unit]
+  )(f:         A => A): DefaultS[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a), (_: M, a: A) => onRestore(a))(f)
 
   def mod[A](
     getter: M => A,
     setter: A => M => M,
-    onSet:  (M, A) => G[Unit]
-  )(f:      A => A): F[Unit] =
+    onSet:  (M, A) => DefaultA[Unit]
+  )(f:      A => A): DefaultS[Unit] =
     mod(getter, setter, onSet, onSet)(f)
 
   def mod[A](
     getter: M => A,
     setter: A => M => M,
-    onSet:  A => G[Unit]
-  )(f:      A => A): F[Unit] =
+    onSet:  A => DefaultA[Unit]
+  )(f:      A => A): DefaultS[Unit] =
     mod(getter, setter, (_: M, a: A) => onSet(a))(f)
 
-  def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[F, G, N] =
-    new UndoSetter[F, G, N] {
+  def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[N] =
+    new UndoSetter[N] {
 
-      override def model: ViewF[F, N]   = self.model.zoom(getN)(modN)
-      override val syncToAsync: F ~> G  = self.syncToAsync
-      override implicit val F: Monad[F] = self.F
+      override def model: View[N] = self.model.zoom(getN)(modN)
 
       override def set[A](
         getter:    N => A,
         setter:    A => (N => N),
-        onSet:     (N, A) => G[Unit],
-        onRestore: (N, A) => G[Unit]
-      )(v:         A): F[Unit] =
+        onSet:     (N, A) => DefaultA[Unit],
+        onRestore: (N, A) => DefaultA[Unit]
+      )(v:         A): DefaultS[Unit] =
         self.set(getter.compose(getN),
                  modN.compose(setter),
                  (m, a) => onSet(getN(m), a),
@@ -96,9 +93,9 @@ trait UndoSetter[F[_], G[_], M] { self =>
       override def mod[A](
         getter:    N => A,
         setter:    A => (N => N),
-        onSet:     (N, A) => G[Unit],
-        onRestore: (N, A) => G[Unit]
-      )(f:         A => A): F[Unit] =
+        onSet:     (N, A) => DefaultA[Unit],
+        onRestore: (N, A) => DefaultA[Unit]
+      )(f:         A => A): DefaultS[Unit] =
         self.mod(getter.compose(getN),
                  modN.compose(setter),
                  (m, a) => onSet(getN(m), a),
@@ -106,24 +103,24 @@ trait UndoSetter[F[_], G[_], M] { self =>
         )(f)
     }
 
-  def zoom[N](lens: Lens[M, N]): UndoSetter[F, G, N] = zoom(lens.get, lens.modify)
+  def zoom[N](lens: Lens[M, N]): UndoSetter[N] = zoom(lens.get, lens.modify)
 
   /**
-   * Allows accessing the `UndoSetter` as a `ViewF`.
+   * Allows accessing the `UndoSetter` as a `View`.
    *
-   * When the `ViewF`'s set/mod is invoked, it will be done through the `UndoSetter`, such that the
+   * When the `View`'s set/mod is invoked, it will be done through the `UndoSetter`, such that the
    * change is pushed into the undo stack.
    *
-   * Using `zoom` into `N` the resulting `ViewF` will still save the whole of `M` in the undo stack.
+   * Using `zoom` into `N` the resulting `View` will still save the whole of `M` in the undo stack.
    * To apply a `zoom` while preserving undo granularity you should `zoom` directly on the
    * `UndoSetter` and create the `undoableView` at the last possible moment.
    */
-  def undoableView[N](getN: M => N, modN: (N => N) => M => M): ViewF[F, N] =
-    ViewF[F, N](
+  def undoableView[N](getN: M => N, modN: (N => N) => M => M): View[N] =
+    View[N](
       model.zoom(getN)(modN).get,
-      (f, cb) => mod(getN, (n: N) => modN(_ => n), (n: N) => syncToAsync(cb(n)))(f)
+      (f, cb) => mod(getN, (n: N) => modN(_ => n), (n: N) => cb(n).to[DefaultA])(f)
     )
 
-  def undoableView[N](lens: Lens[M, N]): ViewF[F, N] =
+  def undoableView[N](lens: Lens[M, N]): View[N] =
     undoableView(lens.get, lens.modify)
 }

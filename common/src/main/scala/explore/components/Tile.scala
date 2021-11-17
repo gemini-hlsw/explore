@@ -11,7 +11,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
-import explore.model.reusability._
 import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.JsUtil
@@ -103,7 +102,7 @@ object Tile {
             .when_(p.state === TileSizeState.Normal)
         )(Icons.Minimize)
 
-      <.div(ExploreStyles.Tile, p.key.whenDefined(^.key := _))(
+      <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn, p.key.whenDefined(^.key := _))(
         <.div(
           ExploreStyles.TileTitle,
           p.back.map(b => <.div(ExploreStyles.TileButton, b)),

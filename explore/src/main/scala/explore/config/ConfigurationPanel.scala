@@ -20,6 +20,7 @@ import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
+import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
@@ -38,7 +39,7 @@ import react.semanticui.sizes._
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
-  scienceDataUndo:  UndoCtx[ScienceData],
+  scienceDataUndo:  UndoContext[ScienceData],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -102,7 +103,7 @@ object ConfigurationPanel {
   class Backend($ : BackendScope[Props, State]) {
     private def renderFn(
       props:           Props,
-      scienceDataUndo: UndoCtx[ScienceData]
+      scienceDataUndo: UndoContext[ScienceData]
     )(implicit ctx:    AppContextIO): VdomNode = {
       val requirementsCtx = scienceDataUndo.zoom(ScienceData.requirements)
 

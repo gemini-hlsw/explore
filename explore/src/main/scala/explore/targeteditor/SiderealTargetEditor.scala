@@ -28,7 +28,6 @@ import explore.model.util._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.model.SiderealTarget
@@ -154,6 +153,7 @@ object SiderealTargetEditor {
         ): Callback =
           SimbadSearch
             .search[IO](s.searchTerm)
+            .map(_.headOption)
             .runAsyncAndThen {
               case Right(r @ Some(t)) =>
                 allView.set(t) >> s.onComplete(r)

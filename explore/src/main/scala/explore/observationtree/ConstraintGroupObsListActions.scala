@@ -3,7 +3,7 @@
 
 package explore.observationtree
 
-import cats.effect.Async
+import cats.effect.IO
 import cats.implicits._
 import clue.TransactionalClient
 import crystal.react.implicits._
@@ -71,21 +71,21 @@ object ConstraintGroupObsListActions {
       case _         => selected
     }
 
-  def obsConstraintGroup[F[_]](
-    draggedIds:     ObsIdSet,
-    expandedIds:    View[SortedSet[ObsIdSet]],
-    selected:       View[SelectedPanel[ObsIdSet]]
-  )(implicit async: Async[F], c: TransactionalClient[F, ObservationDB]) =
-    Action[F](getter = getter(draggedIds), setter = setter(draggedIds))(
+  def obsConstraintGroup(
+    draggedIds:  ObsIdSet,
+    expandedIds: View[SortedSet[ObsIdSet]],
+    selected:    View[SelectedPanel[ObsIdSet]]
+  )(implicit c:  TransactionalClient[IO, ObservationDB]) =
+    Action(getter = getter(draggedIds), setter = setter(draggedIds))(
       onSet = (cgl, ocg) =>
-        ocg.fold(async.unit) { cg =>
+        ocg.fold(IO.unit) { cg =>
           // destination ids may not be found when undoing
           val optDestIds = cgl.values
             .find(_.constraintSet === cg.constraintSet)
             .map(_.obsIds)
-          ObsQueries.updateObservationConstraintSet[F](draggedIds.toList, cg.constraintSet) >>
-            expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[F] >>
-            selected.mod(updateSelected(draggedIds, optDestIds) _).to[F]
+          ObsQueries.updateObservationConstraintSet[IO](draggedIds.toList, cg.constraintSet) >>
+            expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
+            selected.mod(updateSelected(draggedIds, optDestIds) _).to[IO]
         }
     )
 }

@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targets
 
 import cats.Order._
 import cats.syntax.all._
@@ -18,25 +18,10 @@ import explore.model.SelectedPanel
 import explore.model.TargetEnvGroup
 import explore.model.TargetEnvGroupIdSet
 import explore.model.TargetIdSet
-import explore.model.conversions._
-import explore.model.formats._
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.MagnitudeBand
-import lucuma.core.math.Coordinates
-import lucuma.core.math.Epoch
-import lucuma.core.math.MagnitudeValue
-import lucuma.core.math.Parallax
-import lucuma.core.math.ProperMotion
-import lucuma.core.model.Magnitude
-import lucuma.core.model.NonsiderealTarget
-import lucuma.core.model.SiderealTarget
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.ui.optics.TruncatedDec
-import lucuma.ui.optics.TruncatedRA
-import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -48,7 +33,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 import scalajs.js.JSConverters._
@@ -65,8 +49,7 @@ final case class TargetSummaryTable(
 final case class TargetRow(
   id:                  String,
   name:                NonEmptyString,
-  tracking:            Option[SiderealTracking],
-  magnitudes:          SortedMap[MagnitudeBand, Magnitude],
+  target:              Option[Target],
   optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
 )
 
@@ -77,13 +60,8 @@ object TargetRow {
     optTargetEnvGroupId: Option[TargetEnvGroupIdSet]
   ): Expandable[TargetRow] =
     Expandable(
-      // TODO Better toString for TargetIdSet
-      target match {
-        case SiderealTarget(name, tracking, magnitudes) =>
-          TargetRow(id.toString, name, tracking.some, magnitudes, optTargetEnvGroupId)
-        case NonsiderealTarget(name, _, magnitudes)     =>
-          TargetRow(id.toString, name, none, magnitudes, optTargetEnvGroupId)
-      }
+      // TODO Implement a more expressive toString in TargetIdSet
+      TargetRow(id.toString, target.name, target.some, optTargetEnvGroupId)
     )
 
   def expandableFromTargetEnv(targetEnv: TargetEnvGroup): Option[Expandable[TargetRow]] =
@@ -93,7 +71,7 @@ object TargetRow {
         expandableFromTarget(targetIds, singleTarget, targetEnv.id.some).some
       case targets                          =>
         Expandable(
-          TargetRow(targetEnv.id.toString, targetEnv.name, none, SortedMap.empty, targetEnv.id.some)
+          TargetRow(targetEnv.id.toString, targetEnv.name, none, targetEnv.id.some)
         ).withSubRows(targets.map { case (id, target) => expandableFromTarget(id, target, none) })
           .some
     }
@@ -102,30 +80,12 @@ object TargetRow {
 object TargetSummaryTable {
   type Props = TargetSummaryTable
 
-  protected val TargetTable = TableDef[Expandable[TargetRow]].withExpanded.withSortBy
-
-  protected val TargetTableComponent = new SUITable(TargetTable)
-
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  private val columnNames: Map[String, String] = Map(
-    "type"         -> " ",
-    "name"         -> "Name",
-    "ra"           -> "RA",
-    "dec"          -> "Dec",
-    "priority"     -> "Priority",
-    "count"        -> "Count",
-    "observations" -> "Observations",
-    "epoch"        -> "Epoch",
-    "pmra"         -> "µ RA",
-    "pmdec"        -> "µ Dec",
-    "rv"           -> "RV",
-    "z"            -> "z",
-    "cz"           -> "cz",
-    "parallax"     -> "Parallax",
-    "morphology"   -> "Morphology",
-    "sed"          -> "SED"
-  ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
+  protected val TargetTable =
+    TableDef[Expandable[TargetRow]].withExpanded.withSortBy
+
+  protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
     "expander" -> ExploreStyles.Sticky,
@@ -141,7 +101,7 @@ object TargetSummaryTable {
         def column[V](id: String, accessor: TargetRow => V) =
           TargetTable
             .Column(id, row => accessor(row.value))
-            .setHeader(columnNames(id))
+            .setHeader(TargetColumns.allColNames(id))
 
         List(
           TargetTable
@@ -191,83 +151,12 @@ object TargetSummaryTable {
                 cell.value.toString
               )
             )
-            .setSortByFn(_.toString),
-          column(
-            "ra",
-            _.tracking.map(SiderealTracking.baseCoordinates.andThen(Coordinates.rightAscension).get)
-          ).setCell(
-            _.value
-              .map(
-                TruncatedRA.rightAscension.get
-                  .andThen(ValidFormatInput.truncatedRA.reverseGet)
-              )
-              .orEmpty
-          ).setSortByAuto,
-          column(
-            "dec",
-            _.tracking.map(SiderealTracking.baseCoordinates.andThen(Coordinates.declination).get)
-          ).setCell(
-            _.value
-              .map(
-                TruncatedDec.declination.get
-                  .andThen(ValidFormatInput.truncatedDec.reverseGet)
-              )
-              .orEmpty
-          ).setSortByAuto,
-          column("priority", _ => "")
+            .setSortByFn(_.toString)
         ) ++
-          MagnitudeBand.all.map(band =>
-            column(
-              band.shortName + "mag",
-              _.magnitudes.get(band).map(_.value)
-            ).setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty).setSortByAuto
-          ) ++
+          TargetColumns
+            .NonBaseSiderealColumnBuilder(TargetTable)(_.value.target)
+            .allColumns ++
           List(
-            column("epoch", _.tracking.map(SiderealTracking.epoch.get))
-              .setCell(
-                _.value
-                  .map(epoch =>
-                    s"${epoch.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(epoch)}"
-                  )
-                  .orEmpty
-              )
-              .setSortByAuto,
-            column(
-              "pmra",
-              _.tracking.flatMap(SiderealTracking.properMotion.get).map(ProperMotion.ra.get)
-            )
-              .setCell(
-                _.value.map(pmRAFormat.reverseGet).orEmpty
-              )
-              .setSortByAuto,
-            column(
-              "pmdec",
-              _.tracking.flatMap(SiderealTracking.properMotion.get).map(ProperMotion.dec.get)
-            )
-              .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
-              .setSortByAuto,
-            column("rv", _.tracking.flatMap(SiderealTracking.radialVelocity.get))
-              .setCell(_.value.map(formatRV.reverseGet).orEmpty)
-              .setSortByAuto,
-            column("z",
-                   _.tracking.flatMap(
-                     (SiderealTracking.radialVelocity.get _).andThen(rvToRedshiftGet)
-                   )
-            )
-              .setCell(_.value.map(formatZ.reverseGet).orEmpty)
-              .setSortByAuto,
-            column("cz",
-                   _.tracking.flatMap(
-                     (SiderealTracking.radialVelocity.get _).andThen(rvToARVGet)
-                   )
-            )
-              .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
-              .setSortByAuto,
-            column("parallax", _.tracking.flatMap(SiderealTracking.parallax.get))
-              .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
-              .setSortByAuto,
-            column("morphology", _ => ""),
-            column("sed", _ => ""),
             column("count", _.optTargetEnvGroupId.map(_.obsIdList.length)) // TODO Right align
               .setCell(_.value.map(_.toString).orEmpty)
               .setSortType(DefaultSortTypes.number),
@@ -338,7 +227,7 @@ object TargetSummaryTable {
                       DropdownItem()(^.key := colId)(
                         <.div(
                           Checkbox(
-                            label = columnNames(colId),
+                            label = TargetColumns.allColNames(colId),
                             checked = column.isVisible,
                             onChange = (value: Boolean) =>
                               Callback(column.toggleHidden()) >>
@@ -356,7 +245,8 @@ object TargetSummaryTable {
             table = Table(celled = true,
                           selectable = true,
                           striped = true,
-                          compact = TableCompact.Very
+                          compact = TableCompact.Very,
+                          clazz = ExploreStyles.ExploreTable
             )(),
             header = true,
             headerCell = (col: TargetTable.ColumnType) =>

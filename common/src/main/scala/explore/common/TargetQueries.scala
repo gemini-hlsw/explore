@@ -10,6 +10,7 @@ import crystal.react.implicits._
 import explore.implicits._
 import explore.model.TargetIdSet
 import explore.schemas.implicits._
+import explore.undo.UndoContext
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
@@ -32,7 +33,7 @@ object TargetQueries {
 
   case class UndoView(
     id:           TargetIdSet,
-    undoCtx:      UndoCtx[SiderealTarget]
+    undoCtx:      UndoContext[SiderealTarget]
   )(implicit ctx: AppContextIO) {
     def apply[A](
       modelGet:  SiderealTarget => A,

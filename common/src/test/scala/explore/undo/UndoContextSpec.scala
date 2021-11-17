@@ -13,13 +13,16 @@ import explore.data.tree._
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import explore.undo._
+import log4cats.loglevel.LogLevelLogger
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 import monocle.function.all._
 import monocle.macros.GenLens
+import org.typelevel.log4cats.Logger
 
 class UndoContextSpec extends munit.CatsEffectSuite {
+  implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
   def idLens[A] = Iso.id[A]
 
@@ -39,7 +42,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("UndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, Int](0)
+      undoable <- TestUndoable[Int](0)
       _        <- undoable.set(id[Int], 1)
       _        <- undoable.set(id[Int], 2)
       _        <- undoable.set(id[Int], 3)
@@ -57,7 +60,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("ListModPosUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
+      undoable <- TestUndoable[KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.pos.withKey(3), listIntMod.pos.set(8))
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5, 3)))
       _        <- undoable.undo
@@ -69,7 +72,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("ListDeleteUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
+      undoable <- TestUndoable[KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.withKey(3), listIntMod.delete)
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 4, 5)))
       _        <- undoable.undo
@@ -81,7 +84,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("ListInsertUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
+      undoable <- TestUndoable[KeyedIndexedList[Int, Int]](kiIntList(1, 2, 3, 4, 5))
       _        <- undoable.mod(listIntMod.withKey(8), listIntMod.upsert(8, 3))
       _        <- undoable.get.map(v => assertEquals(v, kiIntList(1, 2, 3, 8, 4, 5)))
       _        <- undoable.undo
@@ -112,7 +115,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("ListObjModPosUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedList[Int, V]](kiVList(V(1), V(2), V(3), V(4), V(5)))
+      undoable <- TestUndoable[KeyedIndexedList[Int, V]](kiVList(V(1), V(2), V(3), V(4), V(5)))
       _        <- undoable.mod(vListMod.pos.withKey(3), vListMod.pos.set(8))
       _        <- undoable.get.map(v =>
                     assertEquals(v, kiVList(V(1, "1"), V(2, "2"), V(4, "4"), V(5, "5"), V(3, "3")))
@@ -157,7 +160,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("TreeModPosUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
+      undoable <- TestUndoable[KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -205,7 +208,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("TreeDeleteUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
+      undoable <- TestUndoable[KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -251,7 +254,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("TreeInsertUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, Int]](
+      undoable <- TestUndoable[KeyedIndexedTree[Int, Int]](
                     kiIntTree(
                       Tree(
                         Node(1, Node(2), Node(3)),
@@ -310,7 +313,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   dispatcher.test("TreeObjModPosUndoRedo") { implicit dispatcher =>
     for {
-      undoable <- TestUndoable[IO, KeyedIndexedTree[Int, V]](
+      undoable <- TestUndoable[KeyedIndexedTree[Int, V]](
                     kiVTree(
                       Tree(
                         Node(V(1), Node(V(2)), Node(V(3))),

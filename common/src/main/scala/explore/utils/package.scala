@@ -60,6 +60,13 @@ package object utils {
       (pendingRender, errorRender, valueRender, pot: Pot[A]) =>
         pot.fold(pendingRender, errorRender, valueRender)
     )
+
+  def showCount(count: Int, unit: String, plural: String): String =
+    if (count == 1) s"$count $unit"
+    else s"$count $plural"
+
+  @inline def showCount(count: Int, unit: String): String =
+    showCount(count, unit, unit + "s")
 }
 
 package utils {

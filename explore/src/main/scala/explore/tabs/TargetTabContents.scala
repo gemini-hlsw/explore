@@ -21,7 +21,7 @@ import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.TargetListGroupObsList
 import explore.targeteditor.TargetEnvEditor
-import explore.targeteditor.TargetSummaryTable
+import explore.targets.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount

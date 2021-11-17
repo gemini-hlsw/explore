@@ -10,6 +10,8 @@ import react.common.implicits._
 import react.common.style._
 
 object ExploreStyles {
+  val FadeIn: Css = Css("fade-in")
+
   val Tile: Css               = Css("explore-tile")
   val TileTitle: Css          = Css("explore-tile-title")
   val TileTitleMenu: Css      = Css("explore-tile-title-menu")
@@ -182,6 +184,7 @@ object ExploreStyles {
   // The Target tab contents
   val TargetGrid: Css          = Css("target-grid")
   val TargetAladinCell: Css    = Css("target-aladin-cell")
+  val TargetAladin: Css        = Css("aladin-target")
   val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
   val TargetForm: Css          = Css("target-form")
@@ -291,4 +294,12 @@ object ExploreStyles {
   val TD: Css      = Css("td")
   val EvenRow: Css = Css("even-row")
   val OddRow: Css  = Css("odd-row")
+
+  // Target Search Popup
+  val TargetSearchTop: Css           = Css("explore-target-search-top")
+  val TargetSearchInput: Css         = Css("explore-target-search-input")
+  val TargetSearchPreview: Css       = Css("explore-target-search-preview")
+  val TargetSearchAladin: Css        = Css("aladin-search-target")
+  val TargetSearchResults: Css       = Css("explore-target-search-results")
+  val TargetSearchResultsSource: Css = Css("explore-target-search-results-source")
 }

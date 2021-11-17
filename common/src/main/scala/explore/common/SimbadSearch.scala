@@ -3,7 +3,6 @@
 
 package explore.common
 
-import cats.Applicative
 import cats.data.Validated
 import cats.effect._
 import cats.syntax.all._
@@ -22,21 +21,25 @@ import scala.concurrent.duration._
 object SimbadSearch {
   import RetryHelpers._
 
-  def search[F[_]: Async: Logger](term: NonEmptyString): F[Option[SiderealTarget]] =
+  def search[F[_]: Async: Logger](
+    term:     NonEmptyString,
+    wildcard: Boolean = false
+  ): F[List[SiderealTarget]] = {
+    val baseURL =
+      uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+        .withQueryParam("Ident", term.value)
+        .withQueryParam("output.format", "VOTable")
+    val url     =
+      if (wildcard)
+        baseURL.withQueryParam("NbIdent", "wild")
+      else
+        baseURL
+
     retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
       FetchClientBuilder[F]
-        .withRequestTimeout(5.seconds)
+        .withRequestTimeout(20.seconds)
         .resource
-        .flatMap(
-          _.run(
-            Request[F](
-              Method.POST,
-              uri"https://simbad.u-strasbg.fr/simbad/sim-id"
-                .withQueryParam("Ident", term.value)
-                .withQueryParam("output.format", "VOTable")
-            )
-          )
-        )
+        .flatMap(_.run(Request[F](Method.POST, url)))
         .use {
           case Status.Successful(r) =>
             r.bodyText
@@ -44,10 +47,11 @@ object SimbadSearch {
               .compile
               .toList
               .map {
-                _.collect { case Validated.Valid(t) => t }.headOption
+                _.collect { case Validated.Valid(t) => t }
               }
-          case _                    => Applicative[F].pure(none)
+          case _                    =>
+            Logger[F].error(s"Simbad search failed for term [$term]").as(List.empty)
         }
     }
-
+  }
 }

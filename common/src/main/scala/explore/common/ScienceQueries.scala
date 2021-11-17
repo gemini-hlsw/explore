@@ -11,6 +11,7 @@ import crystal.react.implicits._
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
+import explore.undo.UndoSetter
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -23,7 +24,7 @@ import monocle.Lens
 object ScienceQueries {
   case class UndoView(
     obsId:                   Observation.Id,
-    scienceRequirementsUndo: UndoSet[ScienceRequirementsData]
+    scienceRequirementsUndo: UndoSetter[ScienceRequirementsData]
   )(implicit ctx:            AppContextIO) {
     def apply[A](
       modelGet:  ScienceRequirementsData => A,

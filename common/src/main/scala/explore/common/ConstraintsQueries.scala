@@ -12,6 +12,7 @@ import explore.model.AirMassRange
 import explore.model.ConstraintSet
 import explore.model.ElevationRange
 import explore.model.HourAngleRange
+import explore.undo.UndoContext
 import lucuma.core.enum._
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
@@ -20,7 +21,7 @@ import monocle.Lens
 object ConstraintsQueries {
   case class UndoView(
     obsIds:       List[Observation.Id],
-    undoCtx:      UndoCtx[ConstraintSet]
+    undoCtx:      UndoContext[ConstraintSet]
   )(implicit ctx: AppContextIO) {
     def apply[A](
       modelGet:  ConstraintSet => A,

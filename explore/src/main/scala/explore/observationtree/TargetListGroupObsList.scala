@@ -21,6 +21,7 @@ import explore.model.TargetEnvGroup
 import explore.model.TargetEnvGroupId
 import explore.model.TargetEnvGroupIdSet
 import explore.model.reusability._
+import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
@@ -106,7 +107,7 @@ object TargetListGroupObsList {
       }
 
     def onDragEnd(
-      undoCtx:     UndoCtx[TargetListGroupList],
+      undoCtx:     UndoContext[TargetListGroupList],
       expandedIds: View[SortedSet[TargetEnvGroupIdSet]],
       selected:    View[SelectedPanel[TargetEnvGroupIdSet]]
     )(implicit
@@ -126,7 +127,7 @@ object TargetListGroupObsList {
         oData.foldMap { case (destTlg, draggedIds) =>
           val targetIds = props.targetListsWithObs.get.targetIdsFor(draggedIds)
           TargetListGroupObsListActions
-            .obsTargetListGroup[IO](draggedIds, targetIds, expandedIds, selected)
+            .obsTargetListGroup(draggedIds, targetIds, expandedIds, selected)
             .set(undoCtx)(destTlg.some)
         }
       }

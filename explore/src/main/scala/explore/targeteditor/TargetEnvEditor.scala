@@ -7,18 +7,12 @@ import cats.Monad
 import cats.Monoid
 import cats.effect.IO
 import cats.syntax.all._
-import clue.data.syntax._
 import crystal.ViewF
 import crystal.ViewOptF
 import crystal.react.implicits._
 import crystal.react.reuse._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.SimbadSearch
 import explore.common.TargetEnvQueriesGQL
-import explore.common.TargetQueries
-import explore.common.TargetQueriesGQL
-import explore.components.InputModal
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -28,24 +22,20 @@ import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics._
 import explore.schemas.implicits._
+import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.SiderealTarget
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import monocle.function.Index._
 import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-
-import scala.collection.immutable.SortedMap
 
 final case class TargetEnvEditor(
   userId:           User.Id,
@@ -80,56 +70,21 @@ object TargetEnvEditor {
       view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
   }
 
-  private def newTarget(name: NonEmptyString): SiderealTarget =
-    SiderealTarget(name, SiderealTracking.const(Coordinates.Zero), SortedMap.empty)
-
   private def insertSiderealTarget(
     targetEnv:      View[TargetEnvGroup],
-    name:           NonEmptyString,
-    searching:      View[Set[TargetIdSet]],
+    target:         SiderealTarget,
     selectedTarget: View[Option[TargetIdSet]]
   )(implicit ctx:   AppContextIO): IO[Unit] =
     TargetEnvQueriesGQL.AddSiderealTarget
       .execute(
         targetEnv.get.id.targetEnvIds.toList,
-        newTarget(name).toCreateInput
+        target.toCreateInput
       ) >>= { response =>
       val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
 
       TargetIdSet
         .fromTargetIdList(targetIds)
-        .map(id =>
-          selectedTarget.set(id.some).to[IO] >>
-            searching.mod(_ + id).to[IO] >>
-            SimbadSearch
-              .search[IO](name)
-              .attempt
-              .map(_.toOption.flatten)
-              .guarantee(searching.mod(_ - id).to[IO])
-              .flatMap {
-                case Some(SiderealTarget(_, st, m)) =>
-                  // Set locally
-                  targetEnv
-                    .zoom(TargetEnvGroup.scienceTargets)
-                    .zoom(index(id)(indexTreeSeqMap[TargetIdSet, Target]))
-                    .zoom(Target.sidereal)
-                    .zoom(
-                      disjointZip(SiderealTarget.tracking, SiderealTarget.magnitudes)
-                    )
-                    .set((st, m))
-                    .to[IO] >> // Set remotely
-                    TargetQueriesGQL.SiderealTargetMutation
-                      .execute(
-                        (TargetQueries.UpdateSiderealTracking(st) >>>
-                          TargetQueries.replaceMagnitudes(m))(
-                          EditSiderealInput(SelectTargetInput(targetIds = id.toList.assign))
-                        )
-                      )
-                      .void
-                case _                              =>
-                  IO.unit
-              }
-        )
+        .map(id => selectedTarget.set(id.some).to[IO])
         .orEmpty
     }
 
@@ -156,20 +111,7 @@ object TargetEnvEditor {
 
         <.div(
           props.renderInTitle(
-            InputModal(
-              "Create new Target",
-              initialValue = None,
-              label = "Name",
-              placeholder = "Target name",
-              okLabel = "Create",
-              onComplete = Reuse.by(props.targetEnv.get.id)((name: NonEmptyString) =>
-                adding.setState(true) >>
-                  insertSiderealTarget(props.targetEnv,
-                                       name,
-                                       props.searching,
-                                       selectedTargetId
-                  ).runAsyncAndForget
-              ),
+            TargetSelectionPopup(
               trigger = Reuse.by(adding.value)(
                 Button(
                   size = Tiny,
@@ -180,8 +122,14 @@ object TargetEnvEditor {
                   loading = adding.value,
                   content = "Add",
                   labelPosition = LabelPosition.Left
-                ): VdomNode
-              )
+                )
+              ),
+              onSelected = Reuse
+                .always(_ match {
+                  case t @ SiderealTarget(_, _, _) =>
+                    insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync
+                  case _                           => Callback.empty
+                })
             )
           ),
           TargetTable(

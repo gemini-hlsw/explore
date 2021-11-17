@@ -19,9 +19,9 @@ import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.reusability._
+import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
@@ -87,7 +87,7 @@ object ConstraintGroupObsList {
       }
 
     def onDragEnd(
-      undoCtx:     UndoCtx[ConstraintGroupList],
+      undoCtx:     UndoContext[ConstraintGroupList],
       expandedIds: View[SortedSet[ObsIdSet]],
       selected:    View[SelectedPanel[ObsIdSet]]
     )(implicit
@@ -104,7 +104,7 @@ object ConstraintGroupObsList {
 
         oData.foldMap { case (destCg, draggedIds) =>
           ConstraintGroupObsListActions
-            .obsConstraintGroup[IO](draggedIds, expandedIds, selected)
+            .obsConstraintGroup(draggedIds, expandedIds, selected)
             .set(undoCtx)(destCg.some)
         }
       }

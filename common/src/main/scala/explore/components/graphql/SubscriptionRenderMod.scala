@@ -5,7 +5,6 @@ package explore.components.graphql
 
 import cats.effect.Async
 import cats.effect.IO
-import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.Pot
@@ -15,6 +14,7 @@ import crystal.react.reuse._
 import explore.View
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
+import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
@@ -31,7 +31,7 @@ final case class SubscriptionRenderMod[D, A](
   val onNewData:  Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:          Async[IO],
-  val dispatcher: Dispatcher[IO],
+  val dispatcher: Effect.Dispatch[IO],
   val logger:     Logger[IO],
   val reuse:      Reusability[A]
 ) extends ReactProps(SubscriptionRenderMod.component)

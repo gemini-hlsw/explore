@@ -4,7 +4,6 @@
 package explore.components.graphql
 
 import cats.effect._
-import cats.effect.std.Dispatcher
 import cats.effect.std.Queue
 import cats.effect.syntax.all._
 import cats.syntax.all._
@@ -19,6 +18,7 @@ import japgolly.scalajs.react.component.Generic.UnmountedWithRoot
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentWillUnmount
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
+import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 
@@ -28,7 +28,7 @@ object Render {
     val onNewData: Reuse[F[Unit]]
 
     implicit val F: Async[F]
-    implicit val dispatcher: Dispatcher[F]
+    implicit val dispatcher: Effect.Dispatch[F]
     implicit val logger: Logger[F]
     implicit val reuse: Reusability[A]
   }
