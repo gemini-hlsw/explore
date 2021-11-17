@@ -22,11 +22,13 @@ import react.semanticui.sizes
 import reactST.reactTable._
 
 import scalajs.js.JSConverters._
+import react.semanticui.collections.table.TableRow
 
 final case class TargetSelectionTable(
-  targets:    List[Target],
-  // hiddenColumns: View[Set[String]],
-  onSelected: Target ==> Callback
+  targets:       List[Target],
+  onSelected:    Target ==> Callback,
+  selectedIndex: Option[Int],
+  onClick:       (Target, Int) ==> Callback
 ) extends ReactFnProps[TargetSelectionTable](TargetSelectionTable.component)
 
 object TargetSelectionTable {
@@ -76,15 +78,28 @@ object TargetSelectionTable {
       )
     )
     // .useMemo
-    .renderWithReuse((_, _, _, tableInstance) =>
+    .renderWithReuse((props, _, _, tableInstance) =>
       TargetTableComponent(
-        table =
-          Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very)(),
+        table = Table(celled = true,
+                      selectable = true,
+                      striped = true,
+                      compact = TableCompact.Very,
+                      clazz = ExploreStyles.ExploreTable
+        )(),
         header = true,
         headerCell = (col: TargetTable.ColumnType) =>
           TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
             ^.textTransform.none,
             ^.whiteSpace.nowrap
+          ),
+        row = (rowData: TargetTable.RowType) =>
+          TableRow(
+            clazz = ExploreStyles.TableRowSelected.when_(
+              props.selectedIndex.contains_(rowData.index.toInt)
+            )
+          )(
+            ^.onClick --> props.onClick((rowData.original, rowData.index.toInt)),
+            props2Attrs(rowData.getRowProps())
           ),
         cell = (cell: TargetTable.CellType[_]) =>
           TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(

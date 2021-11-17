@@ -82,7 +82,8 @@ object TargetSummaryTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected val TargetTable = TableDef[Expandable[TargetRow]].withExpanded.withSortBy
+  protected val TargetTable =
+    TableDef[Expandable[TargetRow]].withExpanded.withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 
@@ -244,7 +245,8 @@ object TargetSummaryTable {
             table = Table(celled = true,
                           selectable = true,
                           striped = true,
-                          compact = TableCompact.Very
+                          compact = TableCompact.Very,
+                          clazz = ExploreStyles.ExploreTable
             )(),
             header = true,
             headerCell = (col: TargetTable.ColumnType) =>

@@ -131,7 +131,7 @@ object TargetTable {
         )
       )
       .render((props, _, _, tableInstance) =>
-        <.div(ExploreStyles.ExploreTable)(
+        React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
               Dropdown(item = true,
@@ -167,7 +167,8 @@ object TargetTable {
             table = Table(celled = true,
                           selectable = true,
                           striped = true,
-                          compact = TableCompact.Very
+                          compact = TableCompact.Very,
+                          clazz = ExploreStyles.ExploreTable
             )(),
             header = true,
             headerCell = (col: TargetTable.ColumnType) =>
