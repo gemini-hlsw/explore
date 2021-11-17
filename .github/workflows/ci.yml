@@ -19,6 +19,5 @@ jobs:
           java-version: adopt@1.11
       - name: Running tests
         run: |
-          rm .npmrc package.json
-          npm install react semantic-ui-react react-dom
+          npm install
           sbt -v -J-Xmx4g compile scalafmtCheckAll headerCheck Test/headerCheck test
