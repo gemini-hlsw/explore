@@ -19,5 +19,8 @@ jobs:
           java-version: adopt@1.11
       - name: Running tests
         run: |
+          rm .npmrc
+          npm config set "@fortawesome:registry" https://npm.fontawesome.com/
+          npm config set "//npm.fontawesome.com/:_authToken" ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           npm install
           sbt -v -J-Xmx4g compile scalafmtCheckAll headerCheck Test/headerCheck test
