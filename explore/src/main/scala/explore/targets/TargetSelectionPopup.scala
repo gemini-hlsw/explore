@@ -28,7 +28,6 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
 import react.aladin._
 import react.common.ReactFnProps
-import react.common.style.Css
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -94,10 +93,9 @@ object TargetSelectionPopup {
       ) =>
         implicit val ctx = props.ctx
 
-        println(selectedTarget.value)
-
-        val cleanState = inputValue.setState("") >> selectedTarget.setState(none) >>
-          results.setState(SortedMap.empty)
+        val cleanState =
+          searching.setState(none) >> inputValue.setState("") >> selectedTarget.setState(none) >>
+            results.setState(SortedMap.empty)
 
         def search(name: String): IO[Unit] =
           searching.value.map(_.cancel).orEmpty >>
@@ -139,19 +137,21 @@ object TargetSelectionPopup {
             onClose = timer.cancel.runAsync >> isOpen.setState(false) >> cleanState,
             header = ModalHeader("Search Target"),
             content = ModalContent(
-              <.span(^.display.flex)(
-                FormInputEV(
-                  id = NonEmptyString("name"),
-                  value = inputValue,
-                  // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
-                  // so that they work with fontawesome.
-                  // icon = Icons.Search,
-                  // iconPosition = IconPosition.Left,
-                  onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
-                  loading = searching.value.nonEmpty
-                )
-                  .withMods(^.placeholder := "Name", ^.autoFocus := true),
-                <.div(^.width := "200px", ^.height := "200px")(
+              <.span(ExploreStyles.TargetSearchTop)(
+                <.span(ExploreStyles.TargetSearchInput)(
+                  FormInputEV(
+                    id = NonEmptyString("name"),
+                    value = inputValue,
+                    // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
+                    // so that they work with fontawesome.
+                    // icon = Icons.Search,
+                    // iconPosition = IconPosition.Left,
+                    onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
+                    loading = searching.value.nonEmpty
+                  )
+                    .withMods(^.placeholder := "Name", ^.autoFocus := true)
+                ),
+                <.div(ExploreStyles.TargetSearchPreview)(
                   selectedTarget.value
                     .map(_.target)
                     .collect { case SiderealTarget(_, tracking, _) =>
@@ -164,7 +164,7 @@ object TargetSelectionPopup {
                           selectedTarget.value.foldMap(t => s"${t.sourceIndex}-${t.resultIndex}")
                         )(
                           Aladin(
-                            Css("aladin-search-target"),
+                            ExploreStyles.TargetSearchAladin,
                             showReticle = false,
                             showLayersControl = false,
                             target = Coordinates.fromHmsDms.reverseGet(coordinates),
@@ -176,14 +176,14 @@ object TargetSelectionPopup {
                     .whenDefined
                 )
               ),
-              SegmentGroup(raised = true, clazz = ExploreStyles.SearchResults)(
+              SegmentGroup(raised = true, clazz = ExploreStyles.TargetSearchResults)(
                 results.value.map { case (source, (sourceIndex, targets)) =>
                   Segment(
                     <.div(
                       Header(size = Small)(
                         s"${source.name} (${showCount(targets.length, "result")})"
                       ),
-                      <.div(ExploreStyles.SearchResultsSource)(
+                      <.div(ExploreStyles.TargetSearchResultsSource)(
                         TargetSelectionTable(
                           targets.toList,
                           onSelected = props.onSelected.map(onSelected =>

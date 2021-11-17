@@ -251,7 +251,7 @@ object AladinContainer {
         ExploreStyles.AladinContainerBody,
         AladinComp.withRef(aladinRef) {
           Aladin(
-            Css("aladin-target"),
+            ExploreStyles.TargetAladin,
             showReticle = false,
             showLayersControl = false,
             target = props.aladinCoordsStr,

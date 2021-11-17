@@ -184,6 +184,7 @@ object ExploreStyles {
   // The Target tab contents
   val TargetGrid: Css          = Css("target-grid")
   val TargetAladinCell: Css    = Css("target-aladin-cell")
+  val TargetAladin: Css        = Css("aladin-target")
   val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
   val TargetForm: Css          = Css("target-form")
@@ -295,6 +296,10 @@ object ExploreStyles {
   val OddRow: Css  = Css("odd-row")
 
   // Target Search Popup
-  val SearchResults       = Css("search-results")
-  val SearchResultsSource = Css("search-results-source")
+  val TargetSearchTop: Css           = Css("explore-target-search-top")
+  val TargetSearchInput: Css         = Css("explore-target-search-input")
+  val TargetSearchPreview: Css       = Css("explore-target-search-preview")
+  val TargetSearchAladin: Css        = Css("aladin-search-target")
+  val TargetSearchResults: Css       = Css("explore-target-search-results")
+  val TargetSearchResultsSource: Css = Css("explore-target-search-results-source")
 }

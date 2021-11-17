@@ -53,7 +53,11 @@ object TargetSelectionTable {
         TargetTable
           .Column("select", target => target)
           .setCell(cell =>
-            Button(size = sizes.Tiny, compact = true, onClick = props.onSelected(cell.value))(
+            Button(size = sizes.Tiny,
+                   compact = true,
+                   onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                     e.stopPropagationCB >> props.onSelected(cell.value)
+            )(
               ^.tpe := "button"
             )("Select")
           )
