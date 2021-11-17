@@ -20,11 +20,15 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
+import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
+import react.aladin._
 import react.common.ReactFnProps
+import react.common.style.Css
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
@@ -74,8 +78,20 @@ object TargetSelectionPopup {
       (Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
         TargetSource.forAllCatalogs[IO]).zipWithIndex
     }
+    // aladinRef
+    .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
     .renderWithReuse {
-      (props, inputValue, results, searching, timer, isOpen, selectedTarget, targetSources) =>
+      (
+        props,
+        inputValue,
+        results,
+        searching,
+        timer,
+        isOpen,
+        selectedTarget,
+        targetSources,
+        aladinRef
+      ) =>
         implicit val ctx = props.ctx
 
         println(selectedTarget.value)
@@ -123,17 +139,43 @@ object TargetSelectionPopup {
             onClose = timer.cancel.runAsync >> isOpen.setState(false) >> cleanState,
             header = ModalHeader("Search Target"),
             content = ModalContent(
-              FormInputEV(
-                id = NonEmptyString("name"),
-                value = inputValue,
-                // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
-                // so that they work with fontawesome.
-                // icon = Icons.Search,
-                // iconPosition = IconPosition.Left,
-                onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
-                loading = searching.value.nonEmpty
-              )
-                .withMods(^.placeholder := "Name", ^.autoFocus := true),
+              <.span(^.display.flex)(
+                FormInputEV(
+                  id = NonEmptyString("name"),
+                  value = inputValue,
+                  // TODO Investigate if we can replicate SUI's "input with icon" styles (which use <i>) but using <svg>,
+                  // so that they work with fontawesome.
+                  // icon = Icons.Search,
+                  // iconPosition = IconPosition.Left,
+                  onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
+                  loading = searching.value.nonEmpty
+                )
+                  .withMods(^.placeholder := "Name", ^.autoFocus := true),
+                <.div(^.width := "200px", ^.height := "200px")(
+                  selectedTarget.value
+                    .map(_.target)
+                    .collect { case SiderealTarget(_, tracking, _) =>
+                      tracking.baseCoordinates
+                    }
+                    .map(coordinates =>
+                      Aladin.component
+                        .withRef(aladinRef)
+                        .withKey(
+                          selectedTarget.value.foldMap(t => s"${t.sourceIndex}-${t.resultIndex}")
+                        )(
+                          Aladin(
+                            Css("aladin-search-target"),
+                            showReticle = false,
+                            showLayersControl = false,
+                            target = Coordinates.fromHmsDms.reverseGet(coordinates),
+                            fov = 0.25,
+                            showGotoControl = false
+                          )
+                        )
+                    )
+                    .whenDefined
+                )
+              ),
               SegmentGroup(raised = true, clazz = ExploreStyles.SearchResults)(
                 results.value.map { case (source, (sourceIndex, targets)) =>
                   Segment(

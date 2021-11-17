@@ -17,12 +17,12 @@ import react.semanticui.collections.table.Table
 import react.semanticui.collections.table.TableCell
 import react.semanticui.collections.table.TableCompact
 import react.semanticui.collections.table.TableHeaderCell
+import react.semanticui.collections.table.TableRow
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes
 import reactST.reactTable._
 
 import scalajs.js.JSConverters._
-import react.semanticui.collections.table.TableRow
 
 final case class TargetSelectionTable(
   targets:       List[Target],
