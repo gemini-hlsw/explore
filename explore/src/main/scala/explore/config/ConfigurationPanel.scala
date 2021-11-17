@@ -16,7 +16,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
@@ -37,8 +36,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
 
-import scala.collection.SortedSet
-
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
   scienceDataUndo:  UndoCtx[ScienceData],
@@ -49,11 +46,8 @@ final case class ConfigurationPanel(
 object ConfigurationPanel {
   type Props = ConfigurationPanel
 
-  implicit val propsReuse: Reusability[Props]                          = Reusability.derive
-  implicit val filterReuse: Reusability[AvailableFilter]               = Reusability.byEq
-  implicit val filterSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toSet)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]  = Reusability.derive
-  implicit val stateReuse: Reusability[State]                          = Reusability.derive
+  implicit val propsReuse: Reusability[Props] = Reusability.derive
+  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   final case class State(
     mode:           ScienceMode,

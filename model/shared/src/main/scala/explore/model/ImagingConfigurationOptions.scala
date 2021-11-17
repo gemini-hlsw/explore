@@ -17,7 +17,7 @@ import lucuma.core.math.units._
 import monocle.Focus
 import spire.math.interval.ValueBound
 
-import scala.collection.SortedSet
+import scala.collection.immutable.SortedSet
 
 sealed abstract class AvailableFilter {
   val tag: String

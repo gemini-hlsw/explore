@@ -223,7 +223,7 @@ object SpectroscopyModesTable extends ItcColumn {
         .setMinWidth(50)
         .setMaxWidth(150),
       column(TimeColumnId, itc.forRow(cw, sn, _))
-        .setCell(c => Reusable.implicitly(c.value).map(p => itcCell(p)))
+        .setCell(c => itcCell(c.value))
         .setWidth(80)
         .setMinWidth(80)
         .setMaxWidth(80)
@@ -310,7 +310,6 @@ object SpectroscopyModesTable extends ItcColumn {
 
     // Put the visible rows first
     ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
-      .distinctBy(_.id)
   }
 
   protected def updateITCOnScroll[F[_]: Parallel: Dispatcher: Sync: TransactionalClient[*[_], ITC]](
