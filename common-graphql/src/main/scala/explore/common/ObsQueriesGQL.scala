@@ -45,7 +45,7 @@ object ObsQueriesGQL {
             }
           }
         }
-      
+
         constraintSetGroup(programId: "p-2") {
             nodes {
               constraintSet {
@@ -68,7 +68,7 @@ object ObsQueriesGQL {
               observations {
                 nodes {
                   id
-                } 
+                }
               }
             }
           }
@@ -242,7 +242,7 @@ object ObsQueriesGQL {
                 microarcseconds
               }
             }
-          }          
+          }
         }
       }
     """
@@ -313,7 +313,7 @@ object ObsQueriesGQL {
       mutation ($obsIds: ObservationId!, $input: EditScienceRequirementsInput!){
         updateScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
           id
-        }        
+        }
       }
     """
   }

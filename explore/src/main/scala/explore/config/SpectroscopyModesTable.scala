@@ -21,6 +21,8 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
+import explore.model.ConstraintSet
+import explore.model.reusability._
 import explore.modes._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -51,7 +53,8 @@ import scalajs.js.|
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
-  matrix:                   SpectroscopyModesMatrix
+  constraints:              ConstraintSet,
+  matrix:                   SpectroscopyModesMatrix,
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -61,7 +64,7 @@ object SpectroscopyModesTable {
   type ColId = NonEmptyString
 
   implicit val reuseProps: Reusability[Props] =
-    Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements))
+    Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements, x.constraints))
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
@@ -182,9 +185,10 @@ object SpectroscopyModesTable {
     Reusability.byEq
 
   def sortItcFun(
-    itc: ItcResultsCache,
-    cw:  Option[Wavelength],
-    sn:  Option[PosBigDecimal]
+    itc:         ItcResultsCache,
+    cw:          Option[Wavelength],
+    sn:          Option[PosBigDecimal],
+    constraints: ConstraintSet
   ): SortByFn[SpectroscopyModeRow] =
     (
       rowA: UseTableRowProps[SpectroscopyModeRow],
@@ -192,7 +196,9 @@ object SpectroscopyModesTable {
       _:    String | String,
       desc: Boolean | Unit
     ) =>
-      (itc.forRow(cw, sn, rowA.original), itc.forRow(cw, sn, rowB.original)) match {
+      (itc.forRow(cw, sn, constraints, rowA.original),
+       itc.forRow(cw, sn, constraints, rowB.original)
+      ) match {
         case (Right(ItcResult.Result(e1, t1)), Right(ItcResult.Result(e2, t2))) =>
           (e1.toMillis * t1 - e2.toMillis * t2).toDouble
         case (Left(_), Right(ItcResult.Result(e1, t1)))                         =>
@@ -208,10 +214,11 @@ object SpectroscopyModesTable {
       }
 
   def columns(
-    cw:  Option[Wavelength],
-    fpu: Option[FocalPlane],
-    sn:  Option[PosBigDecimal],
-    itc: ItcResultsCache
+    cw:          Option[Wavelength],
+    fpu:         Option[FocalPlane],
+    sn:          Option[PosBigDecimal],
+    constraints: ConstraintSet,
+    itc:         ItcResultsCache
   ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
@@ -219,12 +226,12 @@ object SpectroscopyModesTable {
         .setWidth(120)
         .setMinWidth(50)
         .setMaxWidth(150),
-      column(TimeColumnId, itc.forRow(cw, sn, _))
+      column(TimeColumnId, itc.forRow(cw, sn, constraints, _))
         .setCell(c => itcCell(c.value))
         .setWidth(80)
         .setMinWidth(80)
         .setMaxWidth(80)
-        .setSortType(sortItcFun(itc, cw, sn)),
+        .setSortType(sortItcFun(itc, cw, sn, constraints)),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
         .setWidth(96)
@@ -335,8 +342,8 @@ object SpectroscopyModesTable {
          props.spectroscopyRequirements.signalToNoise,
          itc
         )
-      }((_, _, _) => { case (wavelength, focalPlane, sn, itc) =>
-        columns(wavelength, focalPlane, sn, itc.get)
+      }((props, _, _) => { case (wavelength, focalPlane, sn, itc) =>
+        columns(wavelength, focalPlane, sn, props.constraints, itc.get)
       })
       // selectedIndex
       .useStateBy((props, rows, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))

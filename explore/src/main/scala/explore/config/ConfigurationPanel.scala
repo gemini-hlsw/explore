@@ -95,6 +95,7 @@ object ConfigurationPanel {
       .renderWithReuse { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
         val requirementsCtx            = props.scienceDataUndo.zoom(ScienceData.requirements)
+        val constraintsSet             = props.scienceDataUndo.zoom(ScienceData.constraints)
 
         val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
 
@@ -130,6 +131,7 @@ object ConfigurationPanel {
           SpectroscopyModesTable(
             configurationView,
             spectroscopy.get,
+            constraintsSet.model.get,
             ctx.staticData.spectroscopyMatrix
           ).when(isSpectroscopy)
         )

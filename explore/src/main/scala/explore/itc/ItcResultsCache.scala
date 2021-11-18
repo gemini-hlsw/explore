@@ -7,6 +7,7 @@ import cats.data._
 import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import explore.model.ConstraintSet
 import explore.modes._
 import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
@@ -35,16 +36,17 @@ final case class ItcResultsCache(
   def forRow(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
+    c:  ConstraintSet,
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
     (wavelength(w), signalToNoise(sn), mode(r)).parMapN { (w, sn, im) =>
-      cache.get((w, sn, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
+      cache.get((w, sn, c, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 
 }
 
 object ItcResultsCache {
-  type CacheKey = (Wavelength, PosBigDecimal, InstrumentModes)
+  type CacheKey = (Wavelength, PosBigDecimal, ConstraintSet, InstrumentModes)
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(
