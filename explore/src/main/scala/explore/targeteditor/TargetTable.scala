@@ -163,34 +163,36 @@ object TargetTable {
               )
             )
           ),
-          TargetTableComponent(
-            table = Table(celled = true,
-                          selectable = true,
-                          striped = true,
-                          compact = TableCompact.Very,
-                          clazz = ExploreStyles.ExploreTable
-            )(),
-            header = true,
-            headerCell = (col: TargetTable.ColumnType) =>
-              TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
-                ^.textTransform.none,
-                ^.whiteSpace.nowrap
-              ),
-            row = (rowData: TargetTable.RowType) =>
-              TableRow(
-                clazz = ExploreStyles.TableRowSelected.when_(
-                  props.selectedTarget.get.exists(_ === TargetWithId.id.get(rowData.original))
+          <.div(ExploreStyles.ExploreTable)(
+            TargetTableComponent(
+              table = Table(celled = true,
+                            selectable = true,
+                            striped = true,
+                            compact = TableCompact.Very,
+                            unstackable = true
+              )(),
+              header = true,
+              headerCell = (col: TargetTable.ColumnType) =>
+                TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
+                  ^.textTransform.none,
+                  ^.whiteSpace.nowrap
+                ),
+              row = (rowData: TargetTable.RowType) =>
+                TableRow(
+                  clazz = ExploreStyles.TableRowSelected.when_(
+                    props.selectedTarget.get.exists(_ === TargetWithId.id.get(rowData.original))
+                  )
+                )(
+                  ^.onClick --> props.selectedTarget
+                    .set(TargetWithId.id.get(rowData.original).some),
+                  props2Attrs(rowData.getRowProps())
+                ),
+              cell = (cell: TargetTable.CellType[_]) =>
+                TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+                  ^.whiteSpace.nowrap
                 )
-              )(
-                ^.onClick --> props.selectedTarget
-                  .set(TargetWithId.id.get(rowData.original).some),
-                props2Attrs(rowData.getRowProps())
-              ),
-            cell = (cell: TargetTable.CellType[_]) =>
-              TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
-                ^.whiteSpace.nowrap
-              )
-          )(tableInstance)
+            )(tableInstance)
+          )
         )
       )
 }

@@ -16,9 +16,12 @@ import reactST.reactTable.facade.cell.Cell
 import reactST.reactTable.facade.column.Column
 import reactST.reactTable.facade.row.Row
 import reactST.reactTable.facade.tableInstance.TableInstance
+import react.common.implicits._
 
 import scalajs.js
 import scalajs.js.|
+import react.common.style.Css
+import explore.components.ui.ExploreStyles
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {
@@ -99,6 +102,9 @@ class SUITable[D, Plugins, Layout](
   layout:       LayoutDefaultTag[Layout],
   sortElements: SortElements[D, Plugins]
 ) {
+  private def addCss(css: js.UndefOr[Css], added: Css): Css =
+    css.fold(added)(_ |+| added)
+
   val component = ScalaFnComponent[SUITableProps[D, Plugins]] { case props =>
     val tableInstance = props.instance
 
@@ -109,29 +115,38 @@ class SUITable[D, Plugins, Layout](
     }
 
     val rowRender: RowRender[D, Plugins] = (props.row: Any) match {
-      case row: TableRow => rowData => row.copy(as = layout.tag)(rowData.getRowProps())
+      case row: TableRow =>
+        rowData =>
+          row.copy(as = layout.tag, clazz = addCss(row.clazz, ExploreStyles.TR))(
+            rowData.getRowProps()
+          )
       case other         => other.asInstanceOf[RowRender[D, Plugins]]
     }
 
     val headerTag: Option[TableHeader] = (props.header: Any) match {
-      case true  => TableHeader(as = layout.tag).some
+      case true  => TableHeader(as = layout.tag, clazz = ExploreStyles.THead).some
       case false => none
-      case other => other.asInstanceOf[TableHeader].some // Can't wait for Scala 3's union types
+      case other =>
+        val header = other.asInstanceOf[TableHeader]
+        header.some
     }
 
     val headerCellRender: HeaderCellRender[D, Plugins] =
       (props.headerCell: Any) match {
-        case headerCell: TableHeaderCell => _ => headerCell.copy(as = layout.tag)
+        case headerCell: TableHeaderCell =>
+          _ => headerCell.copy(as = layout.tag, clazz = addCss(headerCell.clazz, ExploreStyles.TH))
         case fn                          => fn.asInstanceOf[HeaderCellRender[D, Plugins]]
       }
 
     val bodyCellRender: BodyCellRender[D, Plugins] = (props.cell: Any) match {
-      case cell: TableCell => _ => cell.copy(as = layout.tag)
+      case cell: TableCell =>
+        _ => cell.copy(as = layout.tag, clazz = addCss(cell.clazz, ExploreStyles.TD))
       case fn              => fn.asInstanceOf[BodyCellRender[D, Plugins]]
     }
 
     val footerCellRender: HeaderCellRender[D, Plugins] = (props.footerCell: Any) match {
-      case footerCell: TableHeaderCell => _ => footerCell.copy(as = layout.tag)
+      case footerCell: TableHeaderCell =>
+        _ => footerCell.copy(as = layout.tag, clazz = addCss(footerCell.clazz, ExploreStyles.TH))
       case fn                          => fn.asInstanceOf[HeaderCellRender[D, Plugins]]
     }
 
@@ -145,7 +160,7 @@ class SUITable[D, Plugins, Layout](
             )
           )
         )
-      }))
+      })(^.key := "header"))
 
     val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
       tableInstance.rows.toTagMod { rowData =>
@@ -156,7 +171,7 @@ class SUITable[D, Plugins, Layout](
           )
         )
       }
-    )
+    )(^.key := "body")
 
     def standardFooter(footerTag: TableFooter) =
       footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
@@ -165,7 +180,7 @@ class SUITable[D, Plugins, Layout](
             footerCellRender(col)(col.getFooterProps())(col.renderFooter)
           )
         )
-      })
+      })(^.key := "footer")
 
     val footerElement: Option[VdomNode] = (props.footer: Any) match {
       case true                     => standardFooter(TableFooter()).vdomElement.some
