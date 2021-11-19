@@ -109,7 +109,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.get.collect { case (id, st @ SiderealTarget(_, _, _)) => id -> st }.toList
+        _.get.collect { case (id, st @ SiderealTarget(_, _, _, _)) => id -> st }.toList
       )
       .useTableBy((props, cols, rows) =>
         TargetTable(

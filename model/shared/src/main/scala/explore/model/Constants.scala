@@ -6,11 +6,13 @@ package explore.model
 import lucuma.core.math.Angle
 
 trait Constants {
-  val TwoPanelCutoff    = 576.0
-  val InitialTreeWidth  = 300.0
-  val MinLeftPanelWidth = 270.0
-  val GridRowHeight     = 36
-  val InitialFov: Angle = Angle.fromDoubleDegrees(0.25)
+  val TwoPanelCutoff     = 576.0
+  val InitialTreeWidth   = 300.0
+  val MinLeftPanelWidth  = 270.0
+  val GridRowHeight      = 36
+  val InitialFov: Angle  = Angle.fromDoubleDegrees(0.25)
+  val AngleSizeFovFactor = 1.5
+  val SimbadResultLimit  = 50
 }
 
 object Constants extends Constants

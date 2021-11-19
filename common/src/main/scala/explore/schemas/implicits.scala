@@ -88,9 +88,9 @@ object implicits {
 
   implicit class TargetOps(target: Target) {
     def toCreateInput: CreateTargetInput = target match {
-      case sidereal @ SiderealTarget(_, _, _)       =>
+      case sidereal @ SiderealTarget(_, _, _, _)       =>
         CreateTargetInput(sidereal = sidereal.toCreateInput.assign)
-      case nonsidereal @ NonsiderealTarget(_, _, _) =>
+      case nonsidereal @ NonsiderealTarget(_, _, _, _) =>
         CreateTargetInput(nonsidereal = nonsidereal.toCreateInput.assign)
     }
   }

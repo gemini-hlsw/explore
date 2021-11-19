@@ -51,11 +51,12 @@ protected object TargetSource {
       catalogName match {
         case CatalogName.Simbad =>
           // This a heuristic based on observed Simbad behavior.
-          val terms = List(
-            NonEmptyString.unsafeFrom(s"$name*"),
-            NonEmptyString.unsafeFrom(s"NAME $name*"),
+          val escapedName = name.value.replaceAll("\\*", "\\\\*")
+          val terms       = List(
+            NonEmptyString.unsafeFrom(s"$escapedName*"),
+            NonEmptyString.unsafeFrom(s"NAME $escapedName*"),
             NonEmptyString.unsafeFrom(
-              s"${name.value.replaceFirst("([A-Za-z-\\.]+)(\\S.*)", "$1 $2")}*"
+              s"${escapedName.replaceFirst("([A-Za-z-\\.]+)(\\S.*)", "$1 $2")}*"
             )
           ).distinct
           terms

@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import explore.model.ConstraintsSummary
-import io.circe.Decoder
 import lucuma.core.math.Angle
 import lucuma.schemas.ObservationDB
 
@@ -18,10 +17,6 @@ import java.time
 // gql: import lucuma.ui.reusability._
 
 object ObsQueriesGQL {
-  implicit val posAngleDecoder: Decoder[Angle] = Decoder.instance(
-    _.downField("microarcseconds").as[Long].map(Angle.microarcseconds.reverseGet)
-  )
-
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     val document = """

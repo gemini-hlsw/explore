@@ -12,6 +12,7 @@ import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.core.model.AngularSize
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.Semester
@@ -26,6 +27,7 @@ import scala.collection.immutable.TreeSeqMap
  */
 object reusability {
   // Move these to lucuma-ui
+  implicit val angularSizeReuse: Reusability[AngularSize]       = Reusability.derive
   implicit val targetReuse: Reusability[Target]                 = Reusability.derive
   implicit val semesterReuse: Reusability[Semester]             = Reusability.derive
   // implicit val cssReuse: Reusability[Css]                       = Reusability.by(_.htmlClass)
