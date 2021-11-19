@@ -39,6 +39,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import explore.model.Constants
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
@@ -93,13 +94,14 @@ object TargetSelectionPopup {
       ) =>
         implicit val ctx = props.ctx
 
+        val cleanResults = selectedTarget.setState(none) >> results.setState(SortedMap.empty)
+
         val cleanState =
-          searching.setState(none) >> inputValue.setState("") >> selectedTarget.setState(none) >>
-            results.setState(SortedMap.empty)
+          inputValue.setState("") >> searching.setState(none) >> cleanResults
 
         def search(name: String): IO[Unit] =
           searching.value.map(_.cancel).orEmpty >>
-            results.setStateAsync(SortedMap.empty) >>
+            cleanResults.to[IO] >>
             NonEmptyString
               .from(name)
               .toOption
@@ -154,10 +156,10 @@ object TargetSelectionPopup {
                 <.div(ExploreStyles.TargetSearchPreview)(
                   selectedTarget.value
                     .map(_.target)
-                    .collect { case SiderealTarget(_, tracking, _) =>
-                      tracking.baseCoordinates
+                    .collect { case SiderealTarget(_, tracking, _, angSize) =>
+                      (tracking.baseCoordinates, angSize)
                     }
-                    .map(coordinates =>
+                    .map { case (coordinates, angSize) =>
                       Aladin.component
                         .withRef(aladinRef)
                         .withKey(
@@ -168,11 +170,13 @@ object TargetSelectionPopup {
                             showReticle = false,
                             showLayersControl = false,
                             target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                            fov = 0.25,
+                            fov = angSize
+                              .map(_.majorAxis.toDoubleDegrees * Constants.AngleSizeFovFactor)
+                              .getOrElse(Constants.InitialFov.toDoubleDegrees): Double,
                             showGotoControl = false
                           )
                         )
-                    )
+                    }
                     .whenDefined
                 )
               ),

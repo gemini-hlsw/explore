@@ -387,7 +387,7 @@ object SpectroscopyModesTable extends ItcColumn {
         )
       )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
         implicit val ctx = props.ctx
-        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.withEffect)).orEmpty
+        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults)).orEmpty
       })
       // atTop
       .useState(false)

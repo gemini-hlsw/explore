@@ -29,7 +29,7 @@ import react.common._
 import scala.annotation.nowarn
 import scala.concurrent.duration._
 
-final case class AladinContainer(
+final case class AladinContainer( // TODO Use target's FOV if not set in user prefs.
   target:                 View[Coordinates],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,

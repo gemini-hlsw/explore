@@ -126,9 +126,9 @@ object TargetEnvEditor {
               ),
               onSelected = Reuse
                 .always(_ match {
-                  case t @ SiderealTarget(_, _, _) =>
+                  case t @ SiderealTarget(_, _, _, _) =>
                     insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync
-                  case _                           => Callback.empty
+                  case _                              => Callback.empty
                 })
             )
           ),
@@ -147,7 +147,7 @@ object TargetEnvEditor {
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case SiderealTarget(_, _, _) =>
+                  case SiderealTarget(_, _, _, _) =>
                     SiderealTargetEditor(
                       props.userId,
                       targetId,
@@ -157,7 +157,7 @@ object TargetEnvEditor {
                       props.searching,
                       props.options
                     )
-                  case _                       =>
+                  case _                          =>
                     <.div("Non-sidereal targets not supported")
                 }
               )

@@ -23,13 +23,14 @@ package object model {
 
   object TargetWithId {
     val sidereal: Prism[TargetWithId, SiderealTargetWithId] =
-      Prism.partial[TargetWithId, SiderealTargetWithId] { case (id, t @ SiderealTarget(_, _, _)) =>
-        id -> t
+      Prism.partial[TargetWithId, SiderealTargetWithId] {
+        case (id, t @ SiderealTarget(_, _, _, _)) =>
+          id -> t
       }(identity)
 
     val nonsidereal: Prism[TargetWithId, NonsiderealTargetWithId] =
       Prism.partial[TargetWithId, NonsiderealTargetWithId] {
-        case (id, t @ NonsiderealTarget(_, _, _)) =>
+        case (id, t @ NonsiderealTarget(_, _, _, _)) =>
           id -> t
       }(identity)
 

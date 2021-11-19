@@ -17,6 +17,7 @@ import org.typelevel.log4cats.Logger
 import retry._
 
 import scala.concurrent.duration._
+import explore.model.Constants
 
 object SimbadSearch {
   import RetryHelpers._
@@ -29,9 +30,11 @@ object SimbadSearch {
       uri"https://simbad.u-strasbg.fr/simbad/sim-id"
         .withQueryParam("Ident", term.value)
         .withQueryParam("output.format", "VOTable")
+        .withQueryParam("output.max", Constants.SimbadResultLimit)
     val url     =
       if (wildcard)
-        baseURL.withQueryParam("NbIdent", "wild")
+        baseURL
+          .withQueryParam("NbIdent", "wild")
       else
         baseURL
 
