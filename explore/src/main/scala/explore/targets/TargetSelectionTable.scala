@@ -41,8 +41,9 @@ object TargetSelectionTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
-    "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
-    "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
+    "select" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummarySelect),
+    "type"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
+    "name"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
   )
 
   protected val component = ScalaFnComponent
@@ -61,7 +62,6 @@ object TargetSelectionTable {
               ^.tpe := "button"
             )("Select")
           )
-          .setWidth(30)
           .setDisableSortBy(true)
       ) ++
         TargetColumns
