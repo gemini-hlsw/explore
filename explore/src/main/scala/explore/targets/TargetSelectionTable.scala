@@ -88,6 +88,7 @@ object TargetSelectionTable {
                       selectable = true,
                       striped = true,
                       compact = TableCompact.Very,
+                      unstackable = true,
                       clazz = ExploreStyles.ExploreTable
         )(),
         header = true,
