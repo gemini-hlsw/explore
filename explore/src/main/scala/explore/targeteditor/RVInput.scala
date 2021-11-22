@@ -126,7 +126,7 @@ object RVInput {
         <.label(label, ExploreStyles.SkipToNext),
         <.div(
           ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls,
-          EnumViewSelect[RVView](id = "view", value = rvView, disabled = props.disabled),
+          EnumViewSelect(id = "view", value = rvView, disabled = props.disabled),
           input
         ),
         state.units

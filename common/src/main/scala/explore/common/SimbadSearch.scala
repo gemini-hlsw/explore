@@ -7,6 +7,7 @@ import cats.data.Validated
 import cats.effect._
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.Constants
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.SiderealTarget
@@ -17,7 +18,6 @@ import org.typelevel.log4cats.Logger
 import retry._
 
 import scala.concurrent.duration._
-import explore.model.Constants
 
 object SimbadSearch {
   import RetryHelpers._
