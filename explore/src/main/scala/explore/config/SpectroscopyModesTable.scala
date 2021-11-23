@@ -27,6 +27,7 @@ import explore.schemas.ITC
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.extra._
 import lucuma.core.enum.FocalPlane
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
@@ -322,7 +323,7 @@ object SpectroscopyModesTable {
     signalToNoise: Option[PosBigDecimal],
     visibleRange:  ListRange,
     rows:          List[SpectroscopyModeRow],
-    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
+    itcResults:    StateSnapshot[ItcResultsCache]
   ) =
     (wavelength, signalToNoise)
       .mapN((w, sn) =>
@@ -354,9 +355,9 @@ object SpectroscopyModesTable {
         }
       )
       // itc results cache
-      .useState(
+      .useStateSnapshot {
         ItcResultsCache(Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]])
-      )
+      }
       // cols
       .useMemoBy { (props, _, itc) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,

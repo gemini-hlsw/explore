@@ -20,6 +20,7 @@ import explore.modes._
 import explore.schemas.ITC
 import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra._
 import lucuma.core.enum._
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Wavelength
@@ -86,7 +87,7 @@ object ItcResultsCache {
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     modes:         List[SpectroscopyModeRow],
-    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
+    itcResults:    StateSnapshot[ItcResultsCache]
   ): F[Unit] =
     modes
       .map(_.instrument)
