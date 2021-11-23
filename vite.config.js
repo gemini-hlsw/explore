@@ -95,7 +95,6 @@ module.exports = ({ command, mode }) => {
               cert: fs.readFileSync("server.cert"),
             },
       watch: {
-        usePolling: true,
         ignored: [
           function ignoreThisPath(_path) {
             const sjsIgnored =
