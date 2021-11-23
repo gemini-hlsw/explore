@@ -86,63 +86,55 @@ object ConfigurationPanel {
       op.runS(SpectroscopyRequirementsData()).value
     }
 
-  private def renderFn(
-    props:           Props,
-    scienceDataUndo: UndoContext[ScienceData],
-    mode:            StateSnapshot[ScienceMode],
-    imaging:         StateSnapshot[ImagingConfigurationOptions]
-  )(implicit ctx:    AppContextIO): VdomNode = {
-    val requirementsCtx = scienceDataUndo.zoom(ScienceData.requirements)
-
-    val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
-
-    val isSpectroscopy = mode.value === ScienceMode.Spectroscopy
-
-    val spectroscopy = requirementsViewSet(
-      ScienceRequirementsData.spectroscopyRequirements,
-      UpdateScienceRequirements.spectroscopyRequirements
-    )
-
-    // val imaging = state.zoomStateL(State.imagingOptions)
-    //
-    val configurationView = scienceDataUndo
-      .undoableView(ScienceData.configuration)
-      .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
-
-    <.div(
-      ExploreStyles.ConfigurationGrid,
-      props.renderInTitle(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(scienceDataUndo))),
-      Form(size = Small)(
-        ExploreStyles.Grid,
-        ExploreStyles.Compact,
-        ExploreStyles.ExploreForm,
-        ExploreStyles.ConfigurationForm
-      )(
-        <.label("Mode", HelpIcon("configuration/mode.md")),
-        EnumViewSelect(id = "configuration-mode", value = mode),
-        SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
-          .when(isSpectroscopy),
-        ImagingConfigurationPanel(imaging)
-          .unless(isSpectroscopy)
-      ),
-      SpectroscopyModesTable
-        .component(
-          SpectroscopyModesTable(
-            configurationView,
-            props.ctx.staticData.spectroscopyMatrix,
-            spectroscopy.get
-          )
-        )
-        .when(isSpectroscopy)
-    )
-  }
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateSnapshotWithReuse[ScienceMode](ScienceMode.Spectroscopy)
       .useStateSnapshotWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, options) =>
-        renderFn(props, props.scienceDataUndo, mode, options)(props.ctx)
+      .renderWithReuse { (props, mode, imaging) =>
+        implicit val ctx    = props.ctx
+        val requirementsCtx = props.scienceDataUndo.zoom(ScienceData.requirements)
+
+        val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
+
+        val isSpectroscopy = mode.value === ScienceMode.Spectroscopy
+
+        val spectroscopy = requirementsViewSet(
+          ScienceRequirementsData.spectroscopyRequirements,
+          UpdateScienceRequirements.spectroscopyRequirements
+        )
+
+        val configurationView = props.scienceDataUndo
+          .undoableView(ScienceData.configuration)
+          .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+
+        <.div(
+          ExploreStyles.ConfigurationGrid,
+          props.renderInTitle(
+            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceDataUndo))
+          ),
+          Form(size = Small)(
+            ExploreStyles.Grid,
+            ExploreStyles.Compact,
+            ExploreStyles.ExploreForm,
+            ExploreStyles.ConfigurationForm
+          )(
+            <.label("Mode", HelpIcon("configuration/mode.md")),
+            EnumViewSelect(id = "configuration-mode", value = mode),
+            SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
+              .when(isSpectroscopy),
+            ImagingConfigurationPanel(imaging)
+              .unless(isSpectroscopy)
+          ),
+          SpectroscopyModesTable
+            .component(
+              SpectroscopyModesTable(
+                configurationView,
+                ctx.staticData.spectroscopyMatrix,
+                spectroscopy.get
+              )
+            )
+            .when(isSpectroscopy)
+        )
       }
 }
