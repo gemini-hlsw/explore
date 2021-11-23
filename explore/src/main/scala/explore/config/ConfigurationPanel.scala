@@ -7,7 +7,6 @@ import cats.syntax.all._
 import coulomb.Quantity
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
-import explore.AppCtx
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
 import explore.components.HelpIcon
@@ -20,7 +19,6 @@ import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import explore.undo.UndoContext
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -31,9 +29,7 @@ import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.reusability._
-import monocle.Focus
 import monocle.Iso
-import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
@@ -49,17 +45,6 @@ object ConfigurationPanel {
   type Props = ConfigurationPanel
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
-
-  final case class State(
-    mode:           ScienceMode,
-    imagingOptions: ImagingConfigurationOptions
-  )
-
-  object State {
-    val mode: Lens[State, ScienceMode]                           = Focus[State](_.mode)
-    val imagingOptions: Lens[State, ImagingConfigurationOptions] = Focus[State](_.imagingOptions)
-  }
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
@@ -104,22 +89,22 @@ object ConfigurationPanel {
   private def renderFn(
     props:           Props,
     scienceDataUndo: UndoContext[ScienceData],
-    state:           StateSnapshot[State]
+    mode:            StateSnapshot[ScienceMode],
+    imaging:         StateSnapshot[ImagingConfigurationOptions]
   )(implicit ctx:    AppContextIO): VdomNode = {
     val requirementsCtx = scienceDataUndo.zoom(ScienceData.requirements)
 
     val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
 
-    def mode           = requirementsViewSet(ScienceRequirementsData.mode, UpdateScienceRequirements.mode)
-    val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
+    val isSpectroscopy = mode.value === ScienceMode.Spectroscopy
 
     val spectroscopy = requirementsViewSet(
       ScienceRequirementsData.spectroscopyRequirements,
       UpdateScienceRequirements.spectroscopyRequirements
     )
 
-    val imaging = state.zoomStateL(State.imagingOptions)
-
+    // val imaging = state.zoomStateL(State.imagingOptions)
+    //
     val configurationView = scienceDataUndo
       .undoableView(ScienceData.configuration)
       .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
@@ -155,16 +140,9 @@ object ConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateSnapshotWithReuse(
-        State(ScienceMode.Spectroscopy, ImagingConfigurationOptions.Default)
-      )
-      .render { (props, state) =>
-        AppCtx.using { implicit appCtx =>
-          renderFn(
-            props,
-            props.scienceDataUndo,
-            state
-          )
-        }
+      .useStateSnapshotWithReuse[ScienceMode](ScienceMode.Spectroscopy)
+      .useStateSnapshotWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+      .renderWithReuse { (props, mode, options) =>
+        renderFn(props, props.scienceDataUndo, mode, options)(props.ctx)
       }
 }
