@@ -4,18 +4,18 @@
 package explore.config
 
 import cats.data._
-import cats.effect.IO
-import cats.effect.Sync
+import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.refined._
+import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.View
 import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -23,7 +23,6 @@ import explore.implicits._
 import explore.itc._
 import explore.modes._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FocalPlane
 import lucuma.core.enum._
@@ -52,8 +51,7 @@ import scalajs.js.|
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
-  matrix:                   SpectroscopyModesMatrix,
-  queue:                    ITCRequestsQueue[IO]
+  matrix:                   SpectroscopyModesMatrix
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -67,9 +65,6 @@ object SpectroscopyModesTable {
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
-
-  implicit val itcReuse: Reusability[ItcResultsCache] =
-    Reusability.by(_.updateCount)
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
@@ -306,29 +301,6 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
-  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
-    val s = visibleRange.startIndex.toInt
-    val e = visibleRange.endIndex.toInt
-
-    // Put the visible rows first
-    ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
-  }
-
-  protected def updateITCOnScroll[F[_]: Effect.Dispatch: Sync](
-    wavelength:    Option[Wavelength],
-    signalToNoise: Option[PosBigDecimal],
-    visibleRange:  ListRange,
-    rows:          List[SpectroscopyModeRow],
-    cache:         ItcResultsCache,
-    cacheUpdate:   (ItcResultsCache => ItcResultsCache) => F[Unit],
-    queue:         ITCRequestsQueue[F]
-  ) =
-    (wavelength, signalToNoise).mapN { (w, sn) =>
-      ITCRequestsQueue
-        .queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, cache, cacheUpdate, queue)
-        .runAsyncAndForget
-    }.orEmpty
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -351,18 +323,20 @@ object SpectroscopyModesTable {
         }
       )
       // itc results cache
-      .useState(
-        ItcResultsCache(Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]])
+      .useSerialStateView(
+        ItcResultsCache(
+          Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
+        )
       )
       // cols
       .useMemoBy { (props, _, itc) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
-         itc.value
+         itc
         )
       }((_, _, _) => { case (wavelength, focalPlane, sn, itc) =>
-        columns(wavelength, focalPlane, sn, itc)
+        columns(wavelength, focalPlane, sn, itc.get)
       })
       // selectedIndex
       .useStateBy((props, rows, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
@@ -375,32 +349,30 @@ object SpectroscopyModesTable {
       // tableInstance
       .useTableBy((_, rows, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
-      // If useRef can be used here, I'm not figuring out how to do that.
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
       // visibleRange
       .useState(none[ListRange])
-      // Recalculate ITC values if the wv or sn change or if the range or rows get modified
-      .useEffectWithDepsBy((props, rows, _, _, _, _, _, range) =>
-        (props.spectroscopyRequirements.wavelength,
-         props.spectroscopyRequirements.signalToNoise,
-         rows,
-         range
-        )
-      )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
-        val modState: (ItcResultsCache => ItcResultsCache) => Callback =
-          itcResults.modState(_)
-
-        val cacheUpdate = modState.andThen(_.to[IO])
-        range.value
-          .map(r =>
-            updateITCOnScroll[IO](wv, sn, r, rows, itcResults.value, cacheUpdate, props.queue)
-          )
-          .orEmpty
-      })
       // atTop
       .useState(false)
-      .render {
+
+      // singleEffect
+      .useSingleEffect
+      // Recalculate ITC values if the wv or sn change or if the rows get modified
+      .useEffectWithDepsBy((props, rows, _, _, _, _, _, _, _, _) =>
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.signalToNoise,
+         rows
+        )
+      )((props, _, itcResults, _, _, _, _, _, _, singleEffect) => {
+        case (wavelength, signalToNoise, rows) =>
+          implicit val ctx = props.ctx
+
+          singleEffect.submit((wavelength, signalToNoise).mapN { (w, sn) =>
+            ITCRequests.queryItc[IO](w, sn, rows, itcResults.async)
+          }.orEmpty)
+      })
+      .renderWithReuse {
         (
           props,
           rows,
@@ -410,7 +382,8 @@ object SpectroscopyModesTable {
           tableInstance,
           virtuosoRef,
           visibleRange,
-          atTop
+          atTop,
+          _
         ) =>
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))

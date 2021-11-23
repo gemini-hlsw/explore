@@ -3,10 +3,10 @@
 
 package explore.config
 
-import cats.effect.IO
 import cats.syntax.all._
 import coulomb.Quantity
 import crystal.react.implicits._
+import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
@@ -15,14 +15,12 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.itc._
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.reusability._
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.util.syntax._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
@@ -92,60 +90,49 @@ object ConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateSnapshotWithReuse(none[ITCRequestsQueue[IO]])
-      .useEffectOnMountBy { (props, st) =>
-        // Create the requests queue and put it on the state
+      .useStateView[ScienceMode](ScienceMode.Spectroscopy)
+      .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+      .renderWithReuse { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
-        // TODO proper cleanup
-        ITCRequestsQueue
-          .build[IO]
-          .flatMap(r => st.setState(r.some).to[IO])
-      }
-      .useStateSnapshotWithReuse[ScienceMode](ScienceMode.Spectroscopy)
-      .useStateSnapshotWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, u, mode, imaging) =>
-        u.value.map { queue =>
-          implicit val ctx: AppContextIO = props.ctx
-          val requirementsCtx            = props.scienceDataUndo.zoom(ScienceData.requirements)
+        val requirementsCtx            = props.scienceDataUndo.zoom(ScienceData.requirements)
 
-          val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
+        val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
 
-          val isSpectroscopy = mode.value === ScienceMode.Spectroscopy
+        val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
-          val spectroscopy = requirementsViewSet(
-            ScienceRequirementsData.spectroscopyRequirements,
-            UpdateScienceRequirements.spectroscopyRequirements
-          )
+        val spectroscopy = requirementsViewSet(
+          ScienceRequirementsData.spectroscopyRequirements,
+          UpdateScienceRequirements.spectroscopyRequirements
+        )
 
-          val configurationView = props.scienceDataUndo
-            .undoableView(ScienceData.configuration)
-            .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+        val configurationView = props.scienceDataUndo
+          .undoableView(ScienceData.configuration)
+          .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
 
-          <.div(
-            ExploreStyles.ConfigurationGrid,
-            props.renderInTitle(
-              <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceDataUndo))
-            ),
-            Form(size = Small)(
-              ExploreStyles.Grid,
-              ExploreStyles.Compact,
-              ExploreStyles.ExploreForm,
-              ExploreStyles.ConfigurationForm
-            )(
-              <.label("Mode", HelpIcon("configuration/mode.md")),
-              EnumViewSelect(id = "configuration-mode", value = mode),
-              SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
-                .when(isSpectroscopy),
-              ImagingConfigurationPanel(imaging)
-                .unless(isSpectroscopy)
-            ),
-            SpectroscopyModesTable(
-              configurationView,
-              spectroscopy.get,
-              ctx.staticData.spectroscopyMatrix,
-              queue
-            ).when(isSpectroscopy)
-          )
-        }
+        <.div(
+          ExploreStyles.ConfigurationGrid,
+          props.renderInTitle(
+            <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceDataUndo))
+          ),
+          Form(size = Small)(
+            ExploreStyles.Grid,
+            ExploreStyles.Compact,
+            ExploreStyles.ExploreForm,
+            ExploreStyles.ConfigurationForm
+          )(
+            <.label("Mode", HelpIcon("configuration/mode.md")),
+            EnumViewSelect(id = "configuration-mode", value = mode),
+            SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
+              .when(isSpectroscopy),
+            ImagingConfigurationPanel(imaging)
+              .unless(isSpectroscopy)
+          ),
+          SpectroscopyModesTable(
+            configurationView,
+            spectroscopy.get,
+            ctx.staticData.spectroscopyMatrix
+          ).when(isSpectroscopy)
+        )
+      // }
       }
 }

@@ -10,6 +10,7 @@ import coulomb._
 import coulomb.accepted._
 import coulomb.refined._
 import crystal.ViewF
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._

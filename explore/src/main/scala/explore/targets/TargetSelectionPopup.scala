@@ -7,6 +7,7 @@ import cats.Order._
 import cats.data.NonEmptyList
 import cats.effect.FiberIO
 import cats.effect.IO
+import cats.effect.kernel.Outcome
 import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -19,7 +20,6 @@ import explore.model.Constants
 import explore.model.reusability._
 import explore.utils._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
@@ -61,13 +61,13 @@ object TargetSelectionPopup {
   protected val component = ScalaFnComponent
     .withHooks[Props]
     // inputValue
-    .useStateSnapshotWithReuse("")
+    .useStateView("")
     // results
     .useStateWithReuse(SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[Target])])
     // searching
-    .useState(none[FiberIO[Unit]])
-    // timer
-    .useDebouncedTimeout(700.milliseconds)
+    .useState(false)
+    // singleEffect
+    .useSingleEffect
     // isOpen
     .useState(false)
     // selectedTarget
@@ -86,7 +86,7 @@ object TargetSelectionPopup {
         inputValue,
         results,
         searching,
-        timer,
+        singleEffect,
         isOpen,
         selectedTarget,
         targetSources,
@@ -97,26 +97,31 @@ object TargetSelectionPopup {
         val cleanResults = selectedTarget.setState(none) >> results.setState(SortedMap.empty)
 
         val cleanState =
-          inputValue.setState("") >> searching.setState(none) >> cleanResults
+          inputValue.set("") >> searching.setState(false) >> cleanResults
 
         def search(name: String): IO[Unit] =
-          searching.value.map(_.cancel).orEmpty >>
-            cleanResults.to[IO] >>
+          cleanResults.to[IO] >>
             NonEmptyString
               .from(name)
               .toOption
               .map(nonEmptyName =>
-                targetSources.value
-                  .parTraverse_ { case (source, index) =>
-                    source.search(nonEmptyName) >>= (list =>
-                      NonEmptyList
-                        .fromList(list)
-                        .map(nel => results.modStateAsync(_ + (source -> ((index, nel)))): IO[Unit])
-                        .orEmpty
-                    )
-                  }
-                  .guarantee(searching.setStateAsync(none))
-                  .start >>= (fiber => searching.setStateAsync(fiber.some))
+                searching.setStateAsync(true) >>
+                  targetSources.value
+                    .parTraverse_ { case (source, index) =>
+                      source.search(nonEmptyName) >>= (list =>
+                        NonEmptyList
+                          .fromList(list)
+                          .map(nel =>
+                            results.modStateAsync(_ + (source -> ((index, nel)))): IO[Unit]
+                          )
+                          .orEmpty
+                      )
+                    }
+                    .guaranteeCase {
+                      // If it gets canceled, it's because another search has started
+                      case Outcome.Canceled() => IO.unit
+                      case _                  => searching.setStateAsync(false)
+                    }
               )
               .orEmpty
 
@@ -136,7 +141,7 @@ object TargetSelectionPopup {
             dimmer = Dimmer.Blurring,
             size = ModalSize.Small,
             onOpen = cleanState,
-            onClose = timer.cancel.runAsync >> isOpen.setState(false) >> cleanState,
+            onClose = singleEffect.cancel.runAsync >> isOpen.setState(false) >> cleanState,
             header = ModalHeader("Search Target"),
             content = ModalContent(
               <.span(ExploreStyles.TargetSearchTop)(
@@ -148,8 +153,10 @@ object TargetSelectionPopup {
                     // so that they work with fontawesome.
                     // icon = Icons.Search,
                     // iconPosition = IconPosition.Left,
-                    onTextChange = t => inputValue.setState(t) >> timer.submit(search(t)).runAsync,
-                    loading = searching.value.nonEmpty
+                    onTextChange = t =>
+                      inputValue.set(t) >>
+                        singleEffect.submit(IO.sleep(700.milliseconds) >> search(t)).runAsync,
+                    loading = searching.value
                   )
                     .withMods(^.placeholder := "Name", ^.autoFocus := true)
                 ),
@@ -217,7 +224,7 @@ object TargetSelectionPopup {
             )
           )(
             ^.autoComplete.off,
-            ^.onSubmit ==> (e => e.preventDefaultCB >> search(inputValue.value).runAsync)
+            ^.onSubmit ==> (e => e.preventDefaultCB >> search(inputValue.get).runAsync)
           )
         )
     }

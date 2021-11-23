@@ -3,12 +3,9 @@
 
 package explore.targeteditor
 
-import cats.Monad
-import cats.Monoid
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.ViewF
-import crystal.ViewOptF
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -25,7 +22,6 @@ import explore.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
@@ -52,23 +48,6 @@ object TargetEnvEditor {
   type Props = TargetEnvEditor
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
-
-  // This can go into crystal.
-  implicit class ViewFOptOps[F[_], A](val view: ViewF[F, Option[A]]) extends AnyVal {
-    def mapValue[B](f: ViewF[F, A] => B): Option[B] =
-      view.get.map(a => f(view.zoom(_ => a)(f => _.map(f))))
-  }
-
-  implicit class ViewOptFOps[F[_], A](val view: ViewOptF[F, A]) extends AnyVal {
-    def mapValue[B](f: ViewF[F, A] => B)(implicit F: Monad[F], ev: Monoid[F[Unit]]): Option[B] =
-      view.get.map(a => f(ViewF[F, A](a, (mod, cb) => view.modCB(mod, _.foldMap(cb)))))
-  }
-
-  // This can go into crystal.
-  implicit class ViewFOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
-    def unsafeNarrow[B <: A]: ViewF[F, B] =
-      view.zoom(_.asInstanceOf[B])(modB => a => modB(a.asInstanceOf[B]))
-  }
 
   private def insertSiderealTarget(
     targetEnv:      View[TargetEnvGroup],

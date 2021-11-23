@@ -5,12 +5,12 @@ package explore.tabs
 
 import cats.effect.IO
 import crystal.Pot
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.constraints.ConstraintsPanel
-import explore.implicits._
 import explore.model.ConstraintSet
 import explore.model.reusability._
 import explore.undo._

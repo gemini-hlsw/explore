@@ -4,9 +4,9 @@
 package explore.targeteditor
 
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
-import explore.View
 import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible

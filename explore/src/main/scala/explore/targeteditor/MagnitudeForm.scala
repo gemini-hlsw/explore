@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import crystal.ViewF
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._

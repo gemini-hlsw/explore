@@ -6,8 +6,8 @@ package explore.undo
 import cats.Applicative
 import cats.syntax.all._
 import crystal.implicits._
+import crystal.react.View
 import crystal.react.implicits._
-import explore.View
 import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
 import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import org.typelevel.log4cats.Logger

@@ -8,6 +8,8 @@ import cats.syntax.all._
 import crystal.Pot
 import crystal.ViewF
 import crystal.implicits._
+import crystal.react.View
+import crystal.react.ViewOpt
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._

@@ -4,6 +4,8 @@
 package explore.proposal
 
 import cats.syntax.all._
+import crystal.react.View
+import crystal.react.ViewOpt
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
