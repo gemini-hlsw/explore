@@ -22,11 +22,15 @@ import scalajs.js
 import scalajs.js.|
 import react.common.style.Css
 import explore.components.ui.ExploreStyles
+import reactST.reactTable.facade.column.HeaderGroup
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {
   type TableRender[D, Plugins]   = TableInstance[D, Plugins] => Table
   type TableTemplate[D, Plugins] = Table | TableRender[D, Plugins]
+
+  type HeaderRowRender[D, Plugins]   = HeaderGroup[D, Plugins] => TableRow
+  type HeaderRowTemplate[D, Plugins] = TableRow | HeaderRowRender[D, Plugins]
 
   type HeaderCellRender[D, Plugins] = Column[D, Plugins] => TableHeaderCell
   type HeaderCell[D, Plugins]       = TableHeaderCell | HeaderCellRender[D, Plugins]
@@ -86,7 +90,7 @@ object SortElements extends LowPrioritySortElements {
 protected case class SUITableProps[D, Plugins](
   table:        TableTemplate[D, Plugins],
   header:       Boolean | TableHeader,
-  headerRow:    TableRow = TableRow(),
+  headerRow:    HeaderRowTemplate[D, Plugins],
   headerCell:   HeaderCell[D, Plugins],
   body:         TableBody,
   row:          RowTemplate[D, Plugins],
@@ -112,6 +116,15 @@ class SUITable[D, Plugins, Layout](
       case table: Table =>
         tableInstance => table.copy(as = layout.tag)(tableInstance.getTableProps())
       case other        => other.asInstanceOf[TableRender[D, Plugins]]
+    }
+
+    val headerRowRender: HeaderRowRender[D, Plugins] = (props.headerRow: Any) match {
+      case headerRow: TableRow =>
+        headerRowData =>
+          headerRow.copy(as = layout.tag, clazz = addCss(headerRow.clazz, ExploreStyles.TR))(
+            headerRowData.getHeaderGroupProps()
+          )
+      case other               => other.asInstanceOf[HeaderRowRender[D, Plugins]]
     }
 
     val rowRender: RowRender[D, Plugins] = (props.row: Any) match {
@@ -152,7 +165,7 @@ class SUITable[D, Plugins, Layout](
 
     val headerElement: Option[TableHeader] =
       headerTag.map(_(tableInstance.headerGroups.toTagMod { headerRowData =>
-        props.headerRow(headerRowData.getHeaderGroupProps())(
+        headerRowRender(headerRowData)(
           headerRowData.headers.toTagMod((col: tableDef.ColumnType) =>
             headerCellRender(col)(col.getHeaderProps(), sortElements.props(col))(
               col.renderHeader,
@@ -204,7 +217,7 @@ class SUITable[D, Plugins, Layout](
   def apply(
     table:      TableTemplate[D, Plugins] = Table(as = layout.tag),
     header:     Boolean | TableHeader = false,
-    headerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    headerRow:  HeaderRowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),
     headerCell: HeaderCell[D, Plugins] = TableHeaderCell(as = layout.tag),
     body:       TableBody = TableBody(as = layout.tag),
     row:        RowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),

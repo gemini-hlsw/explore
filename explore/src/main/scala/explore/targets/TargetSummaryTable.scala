@@ -88,9 +88,9 @@ object TargetSummaryTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
-    "expander" -> ExploreStyles.Sticky,
-    "type"     -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
-    "name"     -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
+    "expander" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryExpander),
+    "type"     -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithExpander),
+    "name"     -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithExpander)
   )
 
   protected val component =
@@ -121,8 +121,7 @@ object TargetSummaryTable {
                 )
               else ""
             )
-            .setDisableSortBy(true)
-            .setWidth(35),
+            .setDisableSortBy(true),
           TargetTable
             .Column("type")
             .setCell(cell =>
@@ -134,8 +133,7 @@ object TargetSummaryTable {
                 if (cell.row.subRows.isEmpty) Icons.Star
                 else Icons.Stars
               )
-            )
-            .setWidth(50),
+            ),
           column("name", _.name)
             .setCell(cell =>
               <.a(
