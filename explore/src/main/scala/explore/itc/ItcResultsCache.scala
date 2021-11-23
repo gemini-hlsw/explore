@@ -1,9 +1,8 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.itc
 
-import cats.Eq
 import cats.Parallel
 import cats.data._
 import cats.effect.Sync
@@ -30,38 +29,6 @@ import lucuma.core.model.SpectralDistribution
 import monocle.Focus
 
 import scala.concurrent.duration._
-
-sealed trait ItcQueryProblems extends Product with Serializable
-
-object ItcQueryProblems {
-  case object UnsupportedMode          extends ItcQueryProblems
-  case object MissingWavelength        extends ItcQueryProblems
-  case object MissingSignalToNoise     extends ItcQueryProblems
-  case class GenericError(msg: String) extends ItcQueryProblems
-
-  implicit val eq: Eq[ItcQueryProblems] = Eq.instance {
-    case (UnsupportedMode, UnsupportedMode)           => true
-    case (MissingWavelength, MissingWavelength)       => true
-    case (MissingSignalToNoise, MissingSignalToNoise) => true
-    case (GenericError(a), GenericError(b))           => a === b
-    case _                                            => false
-  }
-}
-
-sealed trait ItcResult extends Product with Serializable
-
-object ItcResult {
-  case object SourceTooBright                                     extends ItcResult
-  case object Pending                                             extends ItcResult
-  case class Result(exposureTime: FiniteDuration, exposures: Int) extends ItcResult
-
-  implicit val eq: Eq[ItcResult] = Eq.instance {
-    case (SourceTooBright, SourceTooBright) => true
-    case (Pending, Pending)                 => true
-    case (Result(t1, e1), Result(t2, e2))   => t1 === t2 && e1 === e2
-    case _                                  => false
-  }
-}
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
@@ -90,6 +57,7 @@ final case class ItcResultsCache(
     (wavelength(w), signalToNoise(sn), mode(r)).parMapN { (w, sn, im) =>
       cache.get((w, sn, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
+
 }
 
 object ItcResultsCache {
@@ -114,15 +82,12 @@ object ItcResultsCache {
 
   val updateCount = Focus[ItcResultsCache](_.updateCount)
 
-}
-
-trait ItcColumn {
   def queryItc[F[_]: Parallel: Sync: TransactionalClient[*[_], ITC]](
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
     modes:         List[SpectroscopyModeRow],
     itcResults:    hooks.Hooks.UseState[ItcResultsCache]
-  ) =
+  ): F[Unit] =
     modes
       .map(_.instrument)
       // Only handle known modes

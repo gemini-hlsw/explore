@@ -21,6 +21,7 @@ import explore.common.ObsQueries._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.itc._
 import explore.modes._
 import explore.schemas.ITC
 import japgolly.scalajs.react._
@@ -57,7 +58,7 @@ final case class SpectroscopyModesTable(
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
-object SpectroscopyModesTable extends ItcColumn {
+object SpectroscopyModesTable {
   type Props = SpectroscopyModesTable
 
   type ColId = NonEmptyString
@@ -200,8 +201,10 @@ object SpectroscopyModesTable extends ItcColumn {
       (itc.forRow(cw, sn, rowA.original), itc.forRow(cw, sn, rowB.original)) match {
         case (Right(ItcResult.Result(e1, t1)), Right(ItcResult.Result(e2, t2))) =>
           (e1.toMillis * t1 - e2.toMillis * t2).toDouble
-        case (Left(_), Right(ItcResult.Result(e1, t1)))                         => e1.toMillis * t1.toDouble
-        case (Right(ItcResult.Result(e1, t1)), Left(_))                         => -e1.toMillis * t1.toDouble
+        case (Left(_), Right(ItcResult.Result(e1, t1)))                         =>
+          e1.toMillis * t1.toDouble
+        case (Right(ItcResult.Result(e1, t1)), Left(_))                         =>
+          -e1.toMillis * t1.toDouble
         case _                                                                  =>
           (desc: Any) match {
             case true  => -Double.MaxValue
@@ -323,7 +326,9 @@ object SpectroscopyModesTable extends ItcColumn {
   ) =
     (wavelength, signalToNoise)
       .mapN((w, sn) =>
-        queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults).runAsyncAndForget
+        ItcResultsCache
+          .queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults)
+          .runAsyncAndForget
       )
       .orEmpty
 

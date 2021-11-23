@@ -15,6 +15,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Constants
 import explore.model.reusability._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -39,7 +40,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import explore.model.Constants
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
