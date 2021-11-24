@@ -39,7 +39,7 @@ import scala.scalajs.js.JSConverters._
 
 final case class ImagingConfigurationPanel(
   options: StateSnapshot[ImagingConfigurationOptions]
-) extends ReactProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
+) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
@@ -101,10 +101,8 @@ object ImagingConfigurationPanel {
         combination.map(f => f.asRight.some))
 
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_P { p =>
+    ScalaFnComponent
+      .withReuse[Props] { p =>
         val filters       = p.options.zoomStateL(ImagingConfigurationOptions.filters)
         val fov           = p.options.zoomStateL(ImagingConfigurationOptions.fov)
         val signalToNoise = p.options.zoomStateL(ImagingConfigurationOptions.signalToNoise)
@@ -163,6 +161,4 @@ object ImagingConfigurationPanel {
           )
         )
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 }

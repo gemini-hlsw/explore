@@ -26,7 +26,7 @@ import react.common._
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyConfigurationOptions]
-) extends ReactProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
+) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel {
   type Props = SpectroscopyConfigurationPanel
@@ -35,10 +35,8 @@ object SpectroscopyConfigurationPanel {
   implicit val propsReuse: Reusability[Props]                              = Reusability.derive
 
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_P { p =>
+    ScalaFnComponent
+      .withReuse[Props] { p =>
         val wv                       = p.options.zoom(SpectroscopyConfigurationOptions.wavelengthQ)
         val resolution               = p.options.zoom(SpectroscopyConfigurationOptions.resolution)
         val signalToNoise            = p.options.zoom(SpectroscopyConfigurationOptions.signalToNoise)
@@ -145,6 +143,4 @@ object SpectroscopyConfigurationPanel {
           )
         )
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 }
