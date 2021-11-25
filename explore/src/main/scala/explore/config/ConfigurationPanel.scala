@@ -97,7 +97,9 @@ object ConfigurationPanel {
         // Create the requests queue and put it on the state
         implicit val ctx: AppContextIO = props.ctx
         // TODO proper cleanup
-        ITCRequestsQueue.build[IO]((r: Option[ITCRequestsQueue[IO]]) => st.setState(r).to[IO])
+        ITCRequestsQueue
+          .build[IO]
+          .flatMap(r => st.setState(r.some).to[IO])
       }
       .useStateSnapshotWithReuse[ScienceMode](ScienceMode.Spectroscopy)
       .useStateSnapshotWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
