@@ -3,11 +3,10 @@
 
 package explore.config
 
-import cats.Parallel
 import cats.data._
+import cats.effect.IO
 import cats.effect.Sync
 import cats.syntax.all._
-import clue.TransactionalClient
 import coulomb.Quantity
 import coulomb.refined._
 import crystal.react.implicits._
@@ -23,7 +22,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
 import explore.modes._
-import explore.schemas.ITC
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
@@ -53,8 +51,9 @@ import scalajs.js.|
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
+  spectroscopyRequirements: SpectroscopyRequirementsData,
   matrix:                   SpectroscopyModesMatrix,
-  spectroscopyRequirements: SpectroscopyRequirementsData
+  queue:                    ITCRequestsQueue[IO]
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -315,22 +314,20 @@ object SpectroscopyModesTable {
     ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
   }
 
-  protected def updateITCOnScroll[
-    F[_]: Parallel: Effect.Dispatch: Sync: TransactionalClient[*[_], ITC]
-  ](
+  protected def updateITCOnScroll[F[_]: Effect.Dispatch: Sync](
     wavelength:    Option[Wavelength],
     signalToNoise: Option[PosBigDecimal],
     visibleRange:  ListRange,
     rows:          List[SpectroscopyModeRow],
-    itcResults:    hooks.Hooks.UseState[ItcResultsCache]
+    cache:         ItcResultsCache,
+    cacheUpdate:   (ItcResultsCache => ItcResultsCache) => F[Unit],
+    queue:         ITCRequestsQueue[F]
   ) =
-    (wavelength, signalToNoise)
-      .mapN((w, sn) =>
-        ItcResultsCache
-          .queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, itcResults)
-          .runAsyncAndForget
-      )
-      .orEmpty
+    (wavelength, signalToNoise).mapN { (w, sn) =>
+      ITCRequestsQueue
+        .queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, cache, cacheUpdate, queue)
+        .runAsyncAndForget
+    }.orEmpty
 
   val component =
     ScalaFnComponent
@@ -391,8 +388,15 @@ object SpectroscopyModesTable {
          range
         )
       )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
-        implicit val ctx = props.ctx
-        range.value.map(r => updateITCOnScroll(wv, sn, r, rows, itcResults)).orEmpty
+        val modState: (ItcResultsCache => ItcResultsCache) => Callback =
+          itcResults.modState(_)
+
+        val cacheUpdate = modState.andThen(_.to[IO])
+        range.value
+          .map(r =>
+            updateITCOnScroll[IO](wv, sn, r, rows, itcResults.value, cacheUpdate, props.queue)
+          )
+          .orEmpty
       })
       // atTop
       .useState(false)

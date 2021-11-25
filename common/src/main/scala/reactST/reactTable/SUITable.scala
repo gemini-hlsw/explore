@@ -5,24 +5,24 @@ package reactST.reactTable
 
 import cats.syntax.all._
 import explore.Icons
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.JsFn
 import japgolly.scalajs.react.internal.Box
 import japgolly.scalajs.react.vdom.html_<^._
+import react.common.implicits._
+import react.common.style.Css
 import react.semanticui.AsC
 import react.semanticui.collections.table._
 import reactST.reactTable._
 import reactST.reactTable.facade.cell.Cell
 import reactST.reactTable.facade.column.Column
+import reactST.reactTable.facade.column.HeaderGroup
 import reactST.reactTable.facade.row.Row
 import reactST.reactTable.facade.tableInstance.TableInstance
-import react.common.implicits._
 
 import scalajs.js
 import scalajs.js.|
-import react.common.style.Css
-import explore.components.ui.ExploreStyles
-import reactST.reactTable.facade.column.HeaderGroup
 
 // We can't define a package object since it's already defined in the facade.
 object definitions {
