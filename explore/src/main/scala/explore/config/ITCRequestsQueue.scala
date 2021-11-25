@@ -64,15 +64,12 @@ object ITCRequestsQueue {
 
   implicit val itcRequestsQueueReuse: Reusability[ITCRequestsQueue[IO]] = Reusability.always
 
-  def build[F[_]: Async: Logger: TransactionalClient[*[_], ITC]](
-    set: Option[ITCRequestsQueue[F]] => F[Unit]
-  ): F[Unit] =
+  def build[F[_]: Async: Logger: TransactionalClient[*[_], ITC]]: F[ITCRequestsQueue[F]] =
     for {
       queue <- Queue.unbounded[F, Option[ITCRequest[F]]]
       rq     = ITCRequestsQueue(queue)
       _     <- rq.run.start
-      r     <- set(rq.some)
-    } yield r
+    } yield rq
 
   implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
     def toMode: Option[InstrumentModes] = r.instrument match {
