@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.Parallel
 import cats.data._
 import cats.effect.IO
 import cats.effect.Sync
@@ -315,7 +314,7 @@ object SpectroscopyModesTable {
     ((for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList ::: rows)
   }
 
-  protected def updateITCOnScroll[F[_]: Parallel: Effect.Dispatch: Sync](
+  protected def updateITCOnScroll[F[_]: Effect.Dispatch: Sync](
     wavelength:    Option[Wavelength],
     signalToNoise: Option[PosBigDecimal],
     visibleRange:  ListRange,
@@ -325,7 +324,7 @@ object SpectroscopyModesTable {
     queue:         ITCRequestsQueue[F]
   ) =
     (wavelength, signalToNoise).mapN { (w, sn) =>
-      ItcResultsCache
+      ITCRequestsQueue
         .queryItc[F](w, sn, visibleRows(visibleRange, rows).toList, cache, cacheUpdate, queue)
         .runAsyncAndForget
     }.orEmpty
@@ -389,11 +388,14 @@ object SpectroscopyModesTable {
          range
         )
       )((props, _, itcResults, _, _, _, _, _) => { case (wv, sn, rows, range) =>
-        implicit val ctx                                        = props.ctx
-        val u: (ItcResultsCache => ItcResultsCache) => Callback = itcResults.modState(_)
-        val update                                              = u.andThen(_.to[IO])
+        val modState: (ItcResultsCache => ItcResultsCache) => Callback =
+          itcResults.modState(_)
+
+        val cacheUpdate = modState.andThen(_.to[IO])
         range.value
-          .map(r => updateITCOnScroll(wv, sn, r, rows, itcResults.value, update, props.queue))
+          .map(r =>
+            updateITCOnScroll[IO](wv, sn, r, rows, itcResults.value, cacheUpdate, props.queue)
+          )
           .orEmpty
       })
       // atTop

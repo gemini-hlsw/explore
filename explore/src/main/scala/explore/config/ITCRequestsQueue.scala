@@ -6,6 +6,7 @@ import cats.effect.std.Queue
 import cats.effect.syntax.all._
 import cats.syntax.all._
 import clue.TransactionalClient
+import clue.data.Input
 import clue.data.syntax._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection._
@@ -13,6 +14,8 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ITCQueriesGQL._
 import explore.model.AirMassRange
 import explore.model.ConstraintSet
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
 import explore.schemas.itcschema.implicits._
 import fs2.Stream
@@ -67,6 +70,66 @@ object ITCRequestsQueue {
       _     <- rq.run.start
       r     <- set(rq.some)
     } yield r
+
+  implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
+    def toMode: Option[InstrumentModes] = r.instrument match {
+      case GmosNorthSpectroscopyRow(d, f, fi) =>
+        (new InstrumentModes(
+          new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
+        )).some
+      case _                                  => none
+    }
+  }
+
+  def queryItc[F[_]: Applicative](
+    wavelength:    Wavelength,
+    signalToNoise: PosBigDecimal,
+    modes:         List[SpectroscopyModeRow],
+    cache:         ItcResultsCache,
+    cacheUpdate:   (ItcResultsCache => ItcResultsCache) => F[Unit],
+    queue:         ITCRequestsQueue[F]
+  ): F[Unit] =
+    modes
+      .map(_.instrument)
+      // Only handle known modes
+      .collect { case m: GmosNorthSpectroscopyRow =>
+        InstrumentModes(m.toGmosNITCInput)
+      }
+      // Discard values in the cache
+      .filterNot { case m =>
+        cache.cache.contains((wavelength, signalToNoise, m))
+      }
+      // ITC supports sending many modes at once, but sending them one by one
+      // maximizes cache hits
+      .traverse_ { m =>
+        queue.add(
+          ITCRequest[F](
+            m,
+            wavelength,
+            signalToNoise,
+            { x =>
+              // Convert to usable types and update the cache
+              val update = x.spectroscopy.flatMap(_.results).map { r =>
+                val im = InstrumentModes(
+                  GmosNITCInput(r.mode.params.disperser,
+                                r.mode.params.fpu,
+                                r.mode.params.filter.orIgnore
+                  ).assign
+                )
+                val m  = r.itc match {
+                  case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
+                  case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+                }
+                (wavelength, signalToNoise, im) -> m
+              }
+              cacheUpdate(
+                ItcResultsCache.updateCount.modify(_ + 1) >>> ItcResultsCache.cache
+                  .modify(_ ++ update)
+              )
+            }
+          )
+        )
+      }
 
   def doRequest[F[_]: FlatMap: Logger: TransactionalClient[*[_], ITC]](
     request: ITCRequest[F]

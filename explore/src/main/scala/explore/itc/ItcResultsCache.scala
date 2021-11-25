@@ -3,11 +3,8 @@
 
 package explore.itc
 
-import cats.Parallel
 import cats.data._
 import cats.syntax.all._
-import clue.data.Input
-import clue.data.syntax._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.modes._
@@ -17,14 +14,12 @@ import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import monocle.Focus
 
-import scala.concurrent.duration._
-
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
   cache:       Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]],
   updateCount: Int = Int.MinValue // monotonically increased to calculate reusability
 ) {
-  import ItcResultsCache._
+  import ITCRequestsQueue._
 
   def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
@@ -57,67 +52,8 @@ object ItcResultsCache {
       row.instrument.instrument
     ) && row.focalPlane === FocalPlane.SingleSlit
 
-  implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
-    def toMode: Option[InstrumentModes] = r.instrument match {
-      case GmosNorthSpectroscopyRow(d, f, fi) =>
-        (new InstrumentModes(
-          new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
-        )).some
-      case _                                  => none
-    }
-  }
-
   val cache = Focus[ItcResultsCache](_.cache)
 
   val updateCount = Focus[ItcResultsCache](_.updateCount)
 
-  def queryItc[F[_]: Parallel](
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    modes:         List[SpectroscopyModeRow],
-    cache:         ItcResultsCache,
-    cacheUpdate:   (ItcResultsCache => ItcResultsCache) => F[Unit],
-    queue:         ITCRequestsQueue[F]
-  ): F[Unit] =
-    modes
-      .map(_.instrument)
-      // Only handle known modes
-      .collect { case m: GmosNorthSpectroscopyRow =>
-        InstrumentModes(m.toGmosNITCInput)
-      }
-      // Discard values in the cache
-      .filterNot { case m =>
-        cache.cache.contains((wavelength, signalToNoise, m))
-      }
-      // ITC supports sending many modes at once, but sending them one by one
-      // maximizes cache hits
-      .parTraverse_ { m =>
-        queue.add(
-          ITCRequest[F](
-            m,
-            wavelength,
-            signalToNoise,
-            { x =>
-              // Convert to usable types and update the cache
-              val update = x.spectroscopy.flatMap(_.results).map { r =>
-                val im = InstrumentModes(
-                  GmosNITCInput(r.mode.params.disperser,
-                                r.mode.params.fpu,
-                                r.mode.params.filter.orIgnore
-                  ).assign
-                )
-                val m  = r.itc match {
-                  case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
-                  case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
-                }
-                (wavelength, signalToNoise, im) -> m
-              }
-              cacheUpdate(
-                ItcResultsCache.updateCount.modify(_ + 1) >>> ItcResultsCache.cache
-                  .modify(_ ++ update)
-              )
-            }
-          )
-        )
-      }
 }

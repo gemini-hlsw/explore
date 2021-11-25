@@ -94,7 +94,9 @@ object ConfigurationPanel {
       .withHooks[Props]
       .useStateSnapshotWithReuse(none[ITCRequestsQueue[IO]])
       .useEffectOnMountBy { (props, st) =>
+        // Create the requests queue and put it on the state
         implicit val ctx: AppContextIO = props.ctx
+        // TODO proper cleanup
         ITCRequestsQueue.build[IO]((r: Option[ITCRequestsQueue[IO]]) => st.setState(r).to[IO])
       }
       .useStateSnapshotWithReuse[ScienceMode](ScienceMode.Spectroscopy)
