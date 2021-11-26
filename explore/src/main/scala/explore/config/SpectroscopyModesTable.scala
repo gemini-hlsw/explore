@@ -54,7 +54,7 @@ final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
-  matrix:                   SpectroscopyModesMatrix,
+  matrix:                   SpectroscopyModesMatrix
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
 
@@ -369,14 +369,16 @@ object SpectroscopyModesTable {
       .useEffectWithDepsBy((props, rows, _, _, _, _, _, _, _, _) =>
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
+         props.constraints,
          rows
         )
       )((props, _, itcResults, _, _, _, _, _, _, singleEffect) => {
-        case (wavelength, signalToNoise, rows) =>
+        case (wavelength, signalToNoise, constraints, rows) =>
           implicit val ctx = props.ctx
+          println("Recalculate")
 
           singleEffect.submit((wavelength, signalToNoise).mapN { (w, sn) =>
-            ITCRequests.queryItc[IO](w, sn, rows, itcResults.async)
+            ITCRequests.queryItc[IO](w, sn, constraints, rows, itcResults.async)
           }.orEmpty)
       })
       .renderWithReuse {
@@ -392,6 +394,7 @@ object SpectroscopyModesTable {
           atTop,
           _
         ) =>
+          println("Render")
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
