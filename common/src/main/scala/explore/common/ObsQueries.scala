@@ -57,18 +57,24 @@ object ObsQueries {
 
   case class ScienceData(
     requirements:  ScienceRequirementsData,
-    configuration: Option[ScienceConfigurationData]
+    configuration: Option[ScienceConfigurationData],
+    constraints:   ConstraintSet
   )
   object ScienceData {
     val requirements: Lens[ScienceData, ScienceRequirementsData]           =
       Focus[ScienceData](_.requirements)
     val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] =
       Focus[ScienceData](_.configuration)
+    val constraints: Lens[ScienceData, ConstraintSet]                      =
+      Focus[ScienceData](_.constraints)
     implicit val reusabilityScienceData: Reusability[ScienceData]          = Reusability.derive
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
-    disjointZip(ObservationData.scienceRequirements, ObservationData.scienceConfiguration)
+    disjointZip(ObservationData.scienceRequirements,
+                ObservationData.scienceConfiguration,
+                ObservationData.constraintSet
+    )
       .andThen(GenIso.fields[ScienceData].reverse)
 
   case class ObsSummariesWithConstraints(

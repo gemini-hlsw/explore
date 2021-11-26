@@ -13,7 +13,6 @@ import clue.data.syntax._
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ITCQueriesGQL._
-import explore.model.AirMassRange
 import explore.model.Constants
 import explore.model.ConstraintSet
 import explore.modes.GmosNorthSpectroscopyRow
@@ -55,6 +54,7 @@ object ITCRequests {
   def queryItc[F[_]: Concurrent: Parallel: Logger: TransactionalClient[*[_], ITC]](
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
+    constraints:   ConstraintSet,
     modes:         List[SpectroscopyModeRow],
     cache:         ViewF[F, ItcResultsCache]
   ): F[Unit] =
@@ -68,7 +68,7 @@ object ITCRequests {
         }
         // Discard values in the cache
         .filterNot { case m =>
-          cache.get.cache.contains((wavelength, signalToNoise, m))
+          cache.get.cache.contains((wavelength, signalToNoise, constraints, m))
         }
     )(m =>
       // ITC supports sending many modes at once, but sending them one by one
@@ -77,6 +77,7 @@ object ITCRequests {
         m,
         wavelength,
         signalToNoise,
+        constraints,
         { x =>
           // Convert to usable types and update the cache
           val update = x.spectroscopy.flatMap(_.results).map { r =>
@@ -90,7 +91,7 @@ object ITCRequests {
               case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
               case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
             }
-            (wavelength, signalToNoise, im) -> m
+            (wavelength, signalToNoise, constraints, im) -> m
           }
           cache.mod(ItcResultsCache.cache.modify(_ ++ update))
         }
@@ -101,6 +102,7 @@ object ITCRequests {
     mode:          InstrumentModes,
     wavelength:    Wavelength,
     signalToNoise: PosBigDecimal,
+    constraints:   ConstraintSet,
     callback:      SpectroscopyITCQuery.Data => F[Unit]
   ): F[Unit] =
     Logger[F].info(s"ITC request for mode $mode") *>
@@ -114,17 +116,7 @@ object ITCRequests {
             SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
             Magnitude(MagnitudeValue(20), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
             BigDecimal(0.1),
-            // TODO Link constraints info to explore
-            ConstraintSet(
-              ImageQuality.PointSix,
-              CloudExtinction.PointFive,
-              SkyBackground.Dark,
-              WaterVapor.Median,
-              AirMassRange(
-                AirMassRange.DefaultMin,
-                AirMassRange.DefaultMax
-              )
-            ),
+            constraints,
             List(mode.assign)
           ).assign
         )
