@@ -5,6 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import crystal.Pot
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile

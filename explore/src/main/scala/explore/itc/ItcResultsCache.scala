@@ -16,10 +16,9 @@ import monocle.Focus
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
-  cache:       Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]],
-  updateCount: Int = Int.MinValue // monotonically increased to calculate reusability
+  cache: Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
-  import ITCRequestsQueue._
+  import ITCRequests._
 
   def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
@@ -53,7 +52,4 @@ object ItcResultsCache {
     ) && row.focalPlane === FocalPlane.SingleSlit
 
   val cache = Focus[ItcResultsCache](_.cache)
-
-  val updateCount = Focus[ItcResultsCache](_.updateCount)
-
 }

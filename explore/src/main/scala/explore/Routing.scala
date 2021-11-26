@@ -4,6 +4,7 @@
 package explore
 
 import cats.syntax.all._
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
 import explore.model.Page

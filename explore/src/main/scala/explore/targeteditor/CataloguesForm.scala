@@ -5,8 +5,8 @@ package explore.targeteditor
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.implicits._
-import explore.View
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions

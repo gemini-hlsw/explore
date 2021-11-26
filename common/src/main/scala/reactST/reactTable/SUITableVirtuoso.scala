@@ -66,9 +66,8 @@ class SUITableVirtuoso[D, Plugins](
         case fn           =>
           tableInstance =>
             val table = fn.asInstanceOf[TableRender[D, Plugins]](tableInstance)
-            table.copy(as = <.div,
-                       clazz = addClass(table.className, table.clazz, ExploreStyles.Table)
-            )
+            table
+              .copy(as = <.div, clazz = addClass(table.className, table.clazz, ExploreStyles.Table))
       }
 
       val headerTag: Option[TableHeader] = (props.header: Any) match {

@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong

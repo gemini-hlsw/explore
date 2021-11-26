@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.syntax.all._
+import crystal.react.View
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.FocusedObs

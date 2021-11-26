@@ -4,6 +4,7 @@
 package explore.observationtree
 
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.reuse._
 import explore.Icons
 import explore.components.ui.ExploreStyles

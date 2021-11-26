@@ -5,11 +5,11 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
-import explore.View
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles

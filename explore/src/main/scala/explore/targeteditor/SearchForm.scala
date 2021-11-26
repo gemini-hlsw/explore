@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.ViewF
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -13,7 +14,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.TargetIdSet
 import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._

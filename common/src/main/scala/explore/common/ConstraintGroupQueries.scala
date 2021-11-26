@@ -6,6 +6,7 @@ package explore.common
 import cats.Order
 import cats.effect.IO
 import cats.implicits._
+import crystal.react.View
 import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod

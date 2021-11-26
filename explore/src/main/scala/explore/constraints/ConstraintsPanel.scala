@@ -5,6 +5,7 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._

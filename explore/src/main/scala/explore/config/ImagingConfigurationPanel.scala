@@ -15,9 +15,7 @@ import explore.model.ImagingConfigurationOptions
 import explore.model.enum.ImagingCapabilities
 import explore.model.formats._
 import explore.targeteditor.InputWithUnits
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FilterType
@@ -36,9 +34,11 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import crystal.react.View
+import crystal.react.implicits._
 
 final case class ImagingConfigurationPanel(
-  options: StateSnapshot[ImagingConfigurationOptions]
+  options: View[ImagingConfigurationOptions]
 ) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
@@ -103,10 +103,10 @@ object ImagingConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withReuse[Props] { p =>
-        val filters       = p.options.zoomStateL(ImagingConfigurationOptions.filters)
-        val fov           = p.options.zoomStateL(ImagingConfigurationOptions.fov)
-        val signalToNoise = p.options.zoomStateL(ImagingConfigurationOptions.signalToNoise)
-        val capabilities  = p.options.zoomStateL(ImagingConfigurationOptions.capabilities)
+        val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
+        val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
+        val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
+        val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
 
         ReactFragment(
           <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
@@ -116,14 +116,14 @@ object ImagingConfigurationPanel {
             selection = true,
             multiple = true,
             search = true,
-            value = filters.value.toList.map(_.tag).toJSArray,
+            value = filters.get.toList.map(_.tag).toJSArray,
             options = options.collect { case Some(x) => filterItem(x) },
             onChange = (ddp: Dropdown.DropdownProps) =>
               ddp.value.toOption
                 .map(r =>
                   ((r: Any) match {
                     case v: js.Array[_] =>
-                      filters.setState(valuesToFilters(v.collect { case s: String => s }))
+                      filters.set(valuesToFilters(v.collect { case s: String => s }))
                     case _              => Callback.empty
                   })
                 )

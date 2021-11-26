@@ -5,13 +5,13 @@ package explore.constraints
 
 import cats.Order._
 import cats.syntax.all._
+import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet

@@ -7,6 +7,7 @@ import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
+import crystal.react.View
 import crystal.react.implicits._
 import explore.common.TargetListGroupQueries
 import explore.common.TargetListGroupQueries._

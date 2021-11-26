@@ -2,27 +2,12 @@
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
 import cats.effect.IO
-import crystal.ViewF
-import crystal.ViewOptF
 import explore.model.AppContext
-import japgolly.scalajs.react.callback.Callback
-import japgolly.scalajs.react.callback.CallbackCats._
-import japgolly.scalajs.react.callback.CallbackTo
 
 package explore {
 
   trait ShorthandTypes {
     type AppContextIO = AppContext[IO]
-    type View[A]      = ViewF[CallbackTo, A]
-    type ViewOpt[A]   = ViewOptF[CallbackTo, A]
-
-    object View {
-      @inline
-      def apply[A](
-        value: A,
-        modCB: ((A => A), A => Callback) => Callback
-      ): ViewF[CallbackTo, A] = ViewF[CallbackTo, A](value, modCB)
-    }
   }
 }
 

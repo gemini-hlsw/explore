@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.ViewF
+import crystal.react.View
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString

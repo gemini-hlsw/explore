@@ -8,10 +8,10 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.GraphQLSubscription
 import crystal.Pot
+import crystal.react.View
 import crystal.react._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import explore.View
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.util.Effect

@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
+import crystal.react.View
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._

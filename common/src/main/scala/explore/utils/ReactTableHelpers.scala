@@ -4,6 +4,7 @@
 package explore.utils
 
 import cats._
+import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.implicits._
