@@ -80,6 +80,13 @@ module.exports = ({ command, mode }) => {
         },
       ],
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          charset: false
+        }
+      }
+    },
     server: {
       strictPort: true,
       fsServe: {
