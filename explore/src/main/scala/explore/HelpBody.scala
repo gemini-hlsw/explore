@@ -8,13 +8,13 @@ import cats.syntax.all._
 import crystal.Pending
 import crystal.Pot
 import crystal.Ready
+import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import monocle.Focus
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import react.common._
@@ -30,7 +30,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
-    extends ReactProps[HelpBody](HelpBody.component) {
+    extends ReactFnProps[HelpBody](HelpBody.component) {
   private val path        = Uri.Path.unsafeFromString(helpId.value)
   private val rootUrl     = base.rawUrl / base.user.value / base.project.value
   private val baseUrl     =
@@ -57,12 +57,6 @@ class HelpLoader {
 object HelpBody {
   type Props = HelpBody
 
-  final case class State(content: Pot[String])
-
-  object State {
-    val content = Focus[State](_.content)
-  }
-
   def load(uri: Uri): IO[Try[String]] =
     FetchClientBuilder[IO]
       .withRequestTimeout(5.seconds)
@@ -74,17 +68,20 @@ object HelpBody {
       }
 
   private val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(State(Pot.pending))
-      .render_PS { (p, s) =>
-        val imageConv = (s: Uri) => p.baseUrl / s.path
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateView(Pot.pending[String])
+      .useEffectOnMountBy { (props, state) =>
+        load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
+      }
+      .render { (props, state) =>
+        val imageConv = (s: Uri) => props.baseUrl / s.path
 
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)
-          val editUrl  = s.content match {
-            case Ready(_) => p.editPage
-            case _        => p.newPage
+          val editUrl  = state.get match {
+            case Ready(_) => props.editPage
+            case _        => props.newPage
           }
           <.div(
             ExploreStyles.HelpSidebar,
@@ -107,7 +104,7 @@ object HelpBody {
               ExploreStyles.HelpBody,
               <.div(
                 ExploreStyles.HelpBody,
-                s.content match {
+                state.get match {
                   case Ready(a)                                         =>
                     ReactMarkdown(
                       content = a,
@@ -122,7 +119,7 @@ object HelpBody {
                     <.div(
                       ExploreStyles.HelpMarkdownBody,
                       "Not found, maybe you want to create it ",
-                      <.a(^.href := p.newPage.toString(), ^.target := "_blank", Icons.Edit)
+                      <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
                     )
                   case crystal.Error(_)                                 =>
                     <.div(
@@ -135,9 +132,4 @@ object HelpBody {
           )
         }
       }
-      .componentDidMount { $ =>
-        load($.props.url)
-          .flatMap(v => $.modStateIn[IO](State.content.replace(Pot.fromTry(v))))
-      }
-      .build
 }
