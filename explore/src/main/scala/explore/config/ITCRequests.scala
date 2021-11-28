@@ -97,7 +97,7 @@ object ITCRequests {
                 case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
                 case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
               }
-              (wavelength, signalToNoise, im) -> m
+              (wavelength, signalToNoise, constraints, im) -> m
             }
             cache.mod(ItcResultsCache.cache.modify(_ ++ update))
           }
