@@ -394,7 +394,6 @@ object SpectroscopyModesTable {
       ) { (props, _, itcResults, itcProgress, _, _, _, _, _, _, singleEffect) =>
         { case (wavelength, signalToNoise, constraints, rows) =>
           implicit val ctx = props.ctx
-          println("Recalculate")
 
           // Efect is executed multiple rows if IO.unit is not there. It seems to be executed once for each query (probably its modState afterward).
           // This seems to be a bug somewhere. Dosen't seem to be in useSingleEffect, since the behavior is identical without wrapping in singleEffect.submit.
@@ -423,7 +422,6 @@ object SpectroscopyModesTable {
           atTop,
           _
         ) =>
-          println("Render")
           def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
