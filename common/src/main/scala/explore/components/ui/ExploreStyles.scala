@@ -262,6 +262,7 @@ object ExploreStyles {
   val ScrollButton: Css              = Css("scroll-button")
   val SelectedUp: Css                = Css("selected-up")
   val SelectedDown: Css              = Css("selected-down")
+  val ITCHeaderCell: Css             = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                   = Css("explore-modes-table-itc-cell")
 
   val ButtonCopy: Css         = Css("explore-button-copy")

@@ -22,6 +22,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
 import explore.model.ConstraintSet
+import explore.model.Progress
 import explore.model.reusability._
 import explore.modes._
 import japgolly.scalajs.react._
@@ -32,6 +33,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.util.Display
 import lucuma.ui.reusability._
+import react.CircularProgressbar.CircularProgressbar
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -218,7 +220,8 @@ object SpectroscopyModesTable {
     fpu:         Option[FocalPlane],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
-    itc:         ItcResultsCache
+    itc:         ItcResultsCache,
+    progress:    Option[Progress]
   ) =
     List(
       column(InstrumentColumnId, SpectroscopyModeRow.instrumentAndConfig.get)
@@ -231,7 +234,20 @@ object SpectroscopyModesTable {
         .setWidth(80)
         .setMinWidth(80)
         .setMaxWidth(80)
-        .setSortType(sortItcFun(itc, cw, sn, constraints)),
+        .setHeader(_ =>
+          <.div(ExploreStyles.ITCHeaderCell)(
+            "Time",
+            progress
+              .map(p =>
+                CircularProgressbar(p.percentage.value.value,
+                                    strokeWidth = 15,
+                                    className = "explore-modes-table-itc-circular-progressbar"
+                )
+              )
+          )
+        )
+        .setSortType(sortItcFun(itc, cw, sn, constraints))
+        .setDisableSortBy(progress.isDefined),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
         .setWidth(96)
@@ -335,26 +351,29 @@ object SpectroscopyModesTable {
           Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
         )
       )
+      // itcProgress
+      .useStateView(none[Progress])
       // cols
-      .useMemoBy { (props, _, itc) => // Memo Cols
+      .useMemoBy { (props, _, itc, itcProgress) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
-         itc
+         itc,
+         itcProgress
         )
-      }((props, _, _) => { case (wavelength, focalPlane, sn, itc) =>
-        columns(wavelength, focalPlane, sn, props.constraints, itc.get)
+      }((_, _, _, _) => { case (wavelength, focalPlane, sn, itc, itcProgress) =>
+        columns(wavelength, focalPlane, sn, props.constraints, itc.get, itcProgress.get)
       })
       // selectedIndex
-      .useStateBy((props, rows, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
+      .useStateBy((props, rows, _, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) =>
         (props.scienceConfiguration, props.spectroscopyRequirements)
-      )((_, rows, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
+      )((_, rows, _, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
       })
       // tableInstance
-      .useTableBy((_, rows, _, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
@@ -362,29 +381,39 @@ object SpectroscopyModesTable {
       .useState(none[ListRange])
       // atTop
       .useState(false)
-
       // singleEffect
       .useSingleEffect
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, rows, _, _, _, _, _, _, _, _) =>
-        (props.spectroscopyRequirements.wavelength,
-         props.spectroscopyRequirements.signalToNoise,
-         props.constraints,
-         rows
+      .useEffectWithDepsBy((props, rows, _, _, _, _, _, _, _, _, _) =>
+        (
+          props.spectroscopyRequirements.wavelength,
+          props.spectroscopyRequirements.signalToNoise,
+          props.constraints,
+          rows
         )
-      )((props, _, itcResults, _, _, _, _, _, _, singleEffect) => {
-        case (wavelength, signalToNoise, constraints, rows) =>
+      ) { (props, _, itcResults, itcProgress, _, _, _, _, _, _, singleEffect) =>
+        { case (wavelength, signalToNoise, constraints, rows) =>
           implicit val ctx = props.ctx
           println("Recalculate")
 
-          singleEffect.submit((wavelength, signalToNoise).mapN { (w, sn) =>
-            ITCRequests.queryItc[IO](w, sn, constraints, rows, itcResults.async)
-          }.orEmpty)
-      })
+          // Efect is executed multiple rows if IO.unit is not there. It seems to be executed once for each query (probably its modState afterward).
+          // This seems to be a bug somewhere. Dosen't seem to be in useSingleEffect, since the behavior is identical without wrapping in singleEffect.submit.
+          // (both the repeated execution, and avoiding it with the IO.unit).
+          IO.unit >>
+            singleEffect
+              .submit(
+                (wavelength, signalToNoise).mapN { (w, sn) =>
+                  ITCRequests
+                    .queryItc[IO](w, sn, constraints, rows, itcResults.async, itcProgress.async)
+                }.orEmpty
+              )
+        }
+      }
       .renderWithReuse {
         (
           props,
           rows,
+          _,
           _,
           _,
           selectedIndex,

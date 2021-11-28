@@ -11,10 +11,12 @@ import clue.TransactionalClient
 import clue.data.Input
 import clue.data.syntax._
 import crystal.ViewF
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ITCQueriesGQL._
 import explore.model.Constants
 import explore.model.ConstraintSet
+import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
@@ -56,47 +58,52 @@ object ITCRequests {
     signalToNoise: PosBigDecimal,
     constraints:   ConstraintSet,
     modes:         List[SpectroscopyModeRow],
-    cache:         ViewF[F, ItcResultsCache]
-  ): F[Unit] =
-    parTraverseN(
-      Constants.ConcurrentItcRequests.toLong,
-      modes
-        .map(_.instrument)
-        // Only handle known modes
-        .collect { case m: GmosNorthSpectroscopyRow =>
-          InstrumentModes(m.toGmosNITCInput)
-        }
-        // Discard values in the cache
-        .filterNot { case m =>
-          cache.get.cache.contains((wavelength, signalToNoise, constraints, m))
-        }
-    )(m =>
-      // ITC supports sending many modes at once, but sending them one by one
-      // maximizes cache hits
-      doRequest(
-        m,
-        wavelength,
-        signalToNoise,
-        constraints,
-        { x =>
-          // Convert to usable types and update the cache
-          val update = x.spectroscopy.flatMap(_.results).map { r =>
-            val im = InstrumentModes(
-              GmosNITCInput(r.mode.params.disperser,
-                            r.mode.params.fpu,
-                            r.mode.params.filter.orIgnore
-              ).assign
-            )
-            val m  = r.itc match {
-              case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
-              case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+    cache:         ViewF[F, ItcResultsCache],
+    progress:      ViewF[F, Option[Progress]]
+  ): F[Unit] = {
+    val itcRows = modes
+      .map(_.instrument)
+      // Only handle known modes
+      .collect { case m: GmosNorthSpectroscopyRow =>
+        InstrumentModes(m.toGmosNITCInput)
+      }
+      // Discard values in the cache
+      .filterNot { case m =>
+        cache.get.cache.contains((wavelength, signalToNoise, constraints, m))
+      }
+
+    progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRows.length)).some) >>
+      parTraverseN(
+        Constants.MaxConcurrentItcRequests.toLong,
+        itcRows
+      )(m =>
+        // ITC supports sending many modes at once, but sending them one by one
+        // maximizes cache hits
+        doRequest(
+          m,
+          wavelength,
+          signalToNoise,
+          constraints,
+          { x =>
+            // Convert to usable types and update the cache
+            val update = x.spectroscopy.flatMap(_.results).map { r =>
+              val im = InstrumentModes(
+                GmosNITCInput(r.mode.params.disperser,
+                              r.mode.params.fpu,
+                              r.mode.params.filter.orIgnore
+                ).assign
+              )
+              val m  = r.itc match {
+                case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
+                case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
+              }
+              (wavelength, signalToNoise, im) -> m
             }
-            (wavelength, signalToNoise, constraints, im) -> m
+            cache.mod(ItcResultsCache.cache.modify(_ ++ update))
           }
-          cache.mod(ItcResultsCache.cache.modify(_ ++ update))
-        }
-      )
-    ).void
+        ) >> progress.mod(_.map(_.increment()))
+      ) >> progress.set(none)
+  }
 
   private def doRequest[F[_]: FlatMap: Logger: TransactionalClient[*[_], ITC]](
     mode:          InstrumentModes,
@@ -105,7 +112,7 @@ object ITCRequests {
     constraints:   ConstraintSet,
     callback:      SpectroscopyITCQuery.Data => F[Unit]
   ): F[Unit] =
-    Logger[F].info(s"ITC request for mode $mode") *>
+    Logger[F].debug(s"ITC request for mode $mode") *>
       SpectroscopyITCQuery
         .query(
           ITCSpectroscopyInput(
