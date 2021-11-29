@@ -75,6 +75,7 @@
   },
   "browserslist": [
     "supports es6-module",
-    "last 2 versions"
+    "last 2 versions",
+    "Firefox ESR"
   ]
 }
