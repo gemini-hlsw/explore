@@ -5,8 +5,8 @@ package explore.config
 
 import cats.syntax.all._
 import coulomb.Quantity
-import crystal.react.implicits._
 import crystal.react.hooks._
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._

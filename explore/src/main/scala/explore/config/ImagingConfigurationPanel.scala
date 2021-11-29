@@ -5,6 +5,8 @@ package explore.config
 
 import cats.implicits._
 import coulomb.Quantity
+import crystal.react.View
+import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -34,8 +36,6 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import crystal.react.View
-import crystal.react.implicits._
 
 final case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]

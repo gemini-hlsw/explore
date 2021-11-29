@@ -86,4 +86,5 @@ object reusability {
   implicit def modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]]           = Reusability.derive
   implicit val filterReuse: Reusability[AvailableFilter]                             = Reusability.byEq
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions]                = Reusability.derive
+  implicit val percentageReuse: Reusability[Progress]                                = Reusability.derive
 }

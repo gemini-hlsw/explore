@@ -2030,3 +2030,22 @@ td.sticky {
       --table-selected-background
     ) !important; // Important overrides regular row background color.
 }
+
+.explore-modes-table-itc-header-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.explore-modes-table-itc-circular-progressbar {
+  height: 16px;
+  padding-left: 4px;
+
+  .CircularProgressbar-trail {
+    stroke: none !important;
+  }
+
+  .CircularProgressbar-path {
+    stroke: var(--site-text-color) !important;
+  }
+}
