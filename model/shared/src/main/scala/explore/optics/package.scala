@@ -138,6 +138,16 @@ package object optics {
       (s: S) => l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s)))
     )
 
+  def disjointZip[S, A, B, C, D](
+    l1: Lens[S, A],
+    l2: Lens[S, B],
+    l3: Lens[S, C],
+    l4: Lens[S, D]
+  ): Lens[S, (A, B, C, D)] =
+    Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s), l4.get(s)))((abc: (A, B, C, D)) =>
+      (s: S) => l4.replace(abc._4)(l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s))))
+    )
+
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
     Iso[BigDecimal, ApparentRadialVelocity](b =>
       ApparentRadialVelocity(b.withUnit[KilometersPerSecond])

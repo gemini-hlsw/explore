@@ -14,6 +14,7 @@ import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
 import explore.model.reusability._
+import explore.schemas.itcschema.implicits._
 import explore.undo._
 import explore.utils.potRender
 import lucuma.core.model.Observation
@@ -37,6 +38,7 @@ object ConfigurationTile {
             ConfigurationPanel(obsId,
                                UndoContext(undoStacks_, scienceData_),
                                scienceData_.get.constraints,
+                               scienceData_.get.itcTargets,
                                renderInTitle
             )
           )

@@ -15,6 +15,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ConstraintSet
+import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
@@ -34,12 +36,12 @@ import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import explore.model.ConstraintSet
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
   scienceDataUndo:  UndoContext[ScienceData],
   constraints:      ConstraintSet,
+  itcTargets:       List[ITCTarget],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -133,6 +135,7 @@ object ConfigurationPanel {
             configurationView,
             spectroscopy.get,
             props.constraints,
+            if (props.itcTargets.isEmpty) none else props.itcTargets.some,
             ctx.staticData.spectroscopyMatrix
           ).when(isSpectroscopy)
         )
