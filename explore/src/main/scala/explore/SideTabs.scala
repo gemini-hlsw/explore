@@ -24,7 +24,7 @@ import react.semanticui.sizes._
 
 final case class SideTabs(
   tabs: View[EnumZipper[AppTab]]
-) extends ReactProps[SideTabs](SideTabs.component)
+) extends ReactFnProps[SideTabs](SideTabs.component)
 
 object SideTabs {
   type Props = SideTabs
@@ -32,10 +32,8 @@ object SideTabs {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_P { p =>
+    ScalaFnComponent
+      .withReuse[Props] { p =>
         AppCtx.using { implicit ctx =>
           val tabsL = p.tabs.get.toNel
           val focus = p.tabs.get.focus
@@ -93,6 +91,4 @@ object SideTabs {
           )
         }
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 }
