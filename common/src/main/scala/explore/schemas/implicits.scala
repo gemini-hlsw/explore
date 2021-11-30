@@ -107,6 +107,7 @@ object itcschema {
   object implicits {
 
     import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCMagnitudeInput }
+    import explore.schemas.ITC.Types.RadialVelocityInput
 
     type InstrumentModes = ITC.Types.InstrumentModes
     val InstrumentModes = ITC.Types.InstrumentModes
@@ -142,6 +143,11 @@ object itcschema {
     implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
       def toGmosNITCInput: Input[GmosNITCInput] =
         GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
+    }
+
+    implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
+      def toITCInput: RadialVelocityInput =
+        RadialVelocityInput(metersPerSecond = r.rv.value.assign)
     }
   }
 }
