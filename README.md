@@ -54,3 +54,7 @@ npx vite build && npx vite preview
 
 As before you can now see the app locally but in a different port
 http://local.lucuma.xyz:5000/
+
+## Bundle sizes
+
+You can check the evolution of bundle sizes [here](https://app.bundlemon.dev/projects/61a698e5de59ab000954f941/reports?branch=master&resolution=all)

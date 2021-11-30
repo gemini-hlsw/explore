@@ -47,7 +47,8 @@ jobs:
       - name: Run BundleMon
         run: yarn bundlemon
         env:
-          BUNDLEMON_PROJECT_ID: 614a60c0e759f5000834cacc
+          BUNDLEMON_PROJECT_ID: 61a698e5de59ab000954f941
+          BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
 
       - name: Deploy review app to Firebase
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
