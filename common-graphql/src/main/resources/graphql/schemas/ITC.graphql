@@ -172,6 +172,13 @@ enum MagnitudeSystem {
   ERGS_FREQUENCY
 }
 
+# Radial velocity, choose one of the available units
+input RadialVelocityInput {
+  centimetersPerSecond: Long
+  metersPerSecond: BigDecimal
+  kilometersPerSecond: BigDecimal
+}
+
 type Wavelength {
   # Wavelength in pm
   picometers: Int!
@@ -711,8 +718,8 @@ input SpectroscopyModeInput {
   # Target magnitude/system/band.
   magnitude: MagnitudeCreateInput!
 
-  # Target redshift.
-  redshift: BigDecimal!
+  # Target radial velocity
+  radialVelocity: RadialVelocityInput!
 
   # Conditions
   constraints: ConstraintsSetInput!
@@ -744,8 +751,8 @@ input QueryConfigurationAlternativeSearchInput {
   # Target magnitude/system/band.
   magnitude: MagnitudeCreateInput!
 
-  # Target redshift.
-  redshift: BigDecimal!
+  # Target radial velocity
+  radialVelocity: RadialVelocityInput!
 }
 
 type Result {

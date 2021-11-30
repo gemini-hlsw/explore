@@ -25,6 +25,7 @@ import japgolly.scalajs.react._
 import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.enum._
 import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Redshift
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SpatialProfile
@@ -122,7 +123,7 @@ object ITCRequests {
             SpatialProfile.PointSource,
             SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
             Magnitude(MagnitudeValue(20), MagnitudeBand.I, none, MagnitudeSystem.Vega).toITCInput,
-            BigDecimal(0.1),
+            Redshift(0.1).toRadialVelocity.get.toITCInput,
             constraints,
             List(mode.assign)
           ).assign
