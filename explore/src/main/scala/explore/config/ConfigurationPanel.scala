@@ -34,10 +34,12 @@ import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import explore.model.ConstraintSet
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
   scienceDataUndo:  UndoContext[ScienceData],
+  constraints:      ConstraintSet,
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -95,7 +97,6 @@ object ConfigurationPanel {
       .renderWithReuse { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
         val requirementsCtx            = props.scienceDataUndo.zoom(ScienceData.requirements)
-        val constraintsSet             = props.scienceDataUndo.zoom(ScienceData.constraints)
 
         val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
 
@@ -131,7 +132,7 @@ object ConfigurationPanel {
           SpectroscopyModesTable(
             configurationView,
             spectroscopy.get,
-            constraintsSet.model.get,
+            props.constraints,
             ctx.staticData.spectroscopyMatrix
           ).when(isSpectroscopy)
         )
