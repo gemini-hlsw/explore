@@ -72,5 +72,10 @@
     "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/less",
     "build": "node --unhandled-rejections=strict build.js",
     "serve": "vite preview"
-  }
+  },
+  "browserslist": [
+    "supports es6-module",
+    "last 2 versions",
+    "Firefox ESR"
+  ]
 }
