@@ -72,24 +72,23 @@ object ITCRequests {
     cache:         ViewF[F, ItcResultsCache],
     progress:      ViewF[F, Option[Progress]]
   ): F[Unit] = {
-    val itcRows = modes
+    val itcRowsParams = modes
       .map(_.instrument)
       // Only handle known modes
       .collect { case m: GmosNorthSpectroscopyRow =>
-        InstrumentModes(m.toGmosNITCInput)
+        val mode = InstrumentModes(m.toGmosNITCInput)
+        ITCRequestParams(wavelength, signalToNoise, constraints, targets, mode)
       }
       // Discard values in the cache
-      .filterNot { case mode =>
-        val params = ITCRequestParams(wavelength, signalToNoise, constraints, targets, mode)
+      .filterNot { case params =>
         cache.get.cache.contains(params)
       }
 
-    progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRows.length)).some) >>
+    progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
       parTraverseN(
         Constants.MaxConcurrentItcRequests.toLong,
-        itcRows
-      ) { mode =>
-        val params = ITCRequestParams(wavelength, signalToNoise, constraints, targets, mode)
+        itcRowsParams
+      ) { params =>
         // ITC supports sending many modes at once, but sending them one by one
         // maximizes cache hits
         doRequest(

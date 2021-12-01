@@ -157,10 +157,7 @@ object itcschema {
     implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
       // From the list of targets selects the ones relevant for ITC
       def itcTargets: List[ITCTarget] = s.targets.scienceTargets
-        .collect { case (_, s: SiderealTarget) =>
-          s.tracking.radialVelocity
-        }
-        .collect { case Some(rv) =>
+        .collect { case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), _, _)) =>
           // We can only process targets with a radial velocity
           ITCTarget(rv)
         }

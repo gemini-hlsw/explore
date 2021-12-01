@@ -67,10 +67,8 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val reuseProps: Reusability[Props] =
-    Reusability.by(x =>
-      (x.scienceConfiguration, x.spectroscopyRequirements, x.constraints, x.targets)
-    )
+  implicit val matrixProps: Reusability[SpectroscopyModesMatrix] = Reusability.always
+  implicit val reuseProps: Reusability[Props]                    = Reusability.derive
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
