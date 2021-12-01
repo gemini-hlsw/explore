@@ -22,6 +22,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
 import explore.model.ConstraintSet
+import explore.model.ITCTarget
 import explore.model.Progress
 import explore.model.reusability._
 import explore.modes._
@@ -56,6 +57,7 @@ final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
+  targets:                  Option[List[ITCTarget]],
   matrix:                   SpectroscopyModesMatrix
 )(implicit val ctx:         AppContextIO)
     extends ReactFnProps[SpectroscopyModesTable](SpectroscopyModesTable.component)
@@ -65,8 +67,8 @@ object SpectroscopyModesTable {
 
   type ColId = NonEmptyString
 
-  implicit val reuseProps: Reusability[Props] =
-    Reusability.by(x => (x.scienceConfiguration, x.spectroscopyRequirements, x.constraints))
+  implicit val matrixProps: Reusability[SpectroscopyModesMatrix] = Reusability.always
+  implicit val reuseProps: Reusability[Props]                    = Reusability.derive
 
   implicit val listRangeReuse: Reusability[ListRange] =
     Reusability.by(x => (x.startIndex.toInt, x.endIndex.toInt))
@@ -190,7 +192,8 @@ object SpectroscopyModesTable {
     itc:         ItcResultsCache,
     cw:          Option[Wavelength],
     sn:          Option[PosBigDecimal],
-    constraints: ConstraintSet
+    constraints: ConstraintSet,
+    target:      Option[List[ITCTarget]]
   ): SortByFn[SpectroscopyModeRow] =
     (
       rowA: UseTableRowProps[SpectroscopyModeRow],
@@ -198,8 +201,8 @@ object SpectroscopyModesTable {
       _:    String | String,
       desc: Boolean | Unit
     ) =>
-      (itc.forRow(cw, sn, constraints, rowA.original),
-       itc.forRow(cw, sn, constraints, rowB.original)
+      (itc.forRow(cw, sn, constraints, target, rowA.original),
+       itc.forRow(cw, sn, constraints, target, rowB.original)
       ) match {
         case (Right(ItcResult.Result(e1, t1)), Right(ItcResult.Result(e2, t2))) =>
           (e1.toMillis * t1 - e2.toMillis * t2).toDouble
@@ -220,6 +223,7 @@ object SpectroscopyModesTable {
     fpu:         Option[FocalPlane],
     sn:          Option[PosBigDecimal],
     constraints: ConstraintSet,
+    target:      Option[List[ITCTarget]],
     itc:         ItcResultsCache,
     progress:    Option[Progress]
   ) =
@@ -229,7 +233,7 @@ object SpectroscopyModesTable {
         .setWidth(120)
         .setMinWidth(50)
         .setMaxWidth(150),
-      column(TimeColumnId, itc.forRow(cw, sn, constraints, _))
+      column(TimeColumnId, itc.forRow(cw, sn, constraints, target, _))
         .setCell(c => itcCell(c.value))
         .setWidth(80)
         .setMinWidth(80)
@@ -246,7 +250,7 @@ object SpectroscopyModesTable {
               )
           )
         )
-        .setSortType(sortItcFun(itc, cw, sn, constraints))
+        .setSortType(sortItcFun(itc, cw, sn, constraints, target))
         .setDisableSortBy(progress.isDefined),
       column(SlitWidthColumnId, SpectroscopyModeRow.slitWidth.get)
         .setCell(c => formatSlitWidth(c.value))
@@ -348,7 +352,7 @@ object SpectroscopyModesTable {
       // itc results cache
       .useSerialStateView(
         ItcResultsCache(
-          Map.empty[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
+          Map.empty[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
         )
       )
       // itcProgress
@@ -358,11 +362,12 @@ object SpectroscopyModesTable {
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
+         props.targets,
          itc,
          itcProgress
         )
-      }((props, _, _, _) => { case (wavelength, focalPlane, sn, itc, itcProgress) =>
-        columns(wavelength, focalPlane, sn, props.constraints, itc.get, itcProgress.get)
+      }((props, _, _, _) => { case (wavelength, focalPlane, sn, targets, itc, itcProgress) =>
+        columns(wavelength, focalPlane, sn, props.constraints, targets, itc.get, itcProgress.get)
       })
       // selectedIndex
       .useStateBy((props, rows, _, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
@@ -389,10 +394,11 @@ object SpectroscopyModesTable {
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
           props.constraints,
+          props.targets,
           rows
         )
       ) { (props, _, itcResults, itcProgress, _, _, _, _, _, _, singleEffect) =>
-        { case (wavelength, signalToNoise, constraints, rows) =>
+        { case (wavelength, signalToNoise, constraints, targets, rows) =>
           implicit val ctx = props.ctx
 
           // Efect is executed multiple rows if IO.unit is not there. It seems to be executed once for each query (probably its modState afterward).
@@ -401,9 +407,17 @@ object SpectroscopyModesTable {
           IO.unit >>
             singleEffect
               .submit(
-                (wavelength, signalToNoise).mapN { (w, sn) =>
-                  ITCRequests
-                    .queryItc[IO](w, sn, constraints, rows, itcResults.async, itcProgress.async)
+                (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList)).mapN {
+                  (w, sn, t) =>
+                    ITCRequests
+                      .queryItc[IO](w,
+                                    sn,
+                                    constraints,
+                                    t,
+                                    rows,
+                                    itcResults.async,
+                                    itcProgress.async
+                      )
                 }.orEmpty
               )
         }

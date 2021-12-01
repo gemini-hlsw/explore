@@ -35,6 +35,7 @@ object reusability {
     Reusability.by(_.toSortedSet.unsorted)
 
   // Model
+  implicit val itcTargetProps: Reusability[ITCTarget]                                 = Reusability.byEq
   implicit def appContextReuse[F[_]]: Reusability[AppContext[F]]                      = Reusability.always
   implicit val targetSummaryReuse: Reusability[TargetSummary]                         = Reusability.derive
   implicit val statusReuse: Reusability[PersistentClientStatus]                       = Reusability.derive

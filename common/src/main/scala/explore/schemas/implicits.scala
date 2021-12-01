@@ -3,9 +3,12 @@
 
 package explore.schemas
 
+import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
 import explore.common.ITCQueriesGQL
+import explore.common.ObsQueries
+import explore.model.ITCTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import lucuma.core.math._
 import lucuma.core.model._
@@ -117,7 +120,8 @@ object itcschema {
     val ITCWavelengthInput = ITC.Types.WavelengthModelInput
     type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
     val ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
-    type ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
+    type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
+    type ItcError   = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
     val ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
     type ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
     val ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
@@ -148,6 +152,17 @@ object itcschema {
     implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
       def toITCInput: RadialVelocityInput =
         RadialVelocityInput(metersPerSecond = r.rv.value.assign)
+    }
+
+    implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
+      // From the list of targets selects the ones relevant for ITC
+      def itcTargets: List[ITCTarget] = s.targets.scienceTargets
+        .collect { case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), _, _)) =>
+          // We can only process targets with a radial velocity
+          ITCTarget(rv)
+        }
+        .toList
+        .hashDistinct
     }
   }
 }

@@ -8,6 +8,7 @@ import cats.syntax.all._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.ConstraintSet
+import explore.model.ITCTarget
 import explore.modes._
 import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
@@ -17,7 +18,7 @@ import monocle.Focus
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
-  cache: Map[ItcResultsCache.CacheKey, EitherNec[ItcQueryProblems, ItcResult]]
+  cache: Map[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
   import ITCRequests._
 
@@ -32,21 +33,28 @@ final case class ItcResultsCache(
                       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
+  def targets(r: Option[List[ITCTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ITCTarget]] =
+    Either.fromOption(r.flatMap(NonEmptyList.fromList),
+                      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
+    )
+
   // Read the cache value or a default
   def forRow(
     w:  Option[Wavelength],
     sn: Option[PosBigDecimal],
     c:  ConstraintSet,
+    t:  Option[List[ITCTarget]],
     r:  SpectroscopyModeRow
   ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w), signalToNoise(sn), mode(r)).parMapN { (w, sn, im) =>
-      cache.get((w, sn, c, im)).getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
+    (wavelength(w), signalToNoise(sn), mode(r), targets(t)).parMapN { (w, sn, im, t) =>
+      cache
+        .get(ITCRequestParams(w, sn, c, t, im))
+        .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 
 }
 
 object ItcResultsCache {
-  type CacheKey = (Wavelength, PosBigDecimal, ConstraintSet, InstrumentModes)
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
     List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(
