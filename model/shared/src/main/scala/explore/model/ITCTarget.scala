@@ -4,13 +4,19 @@
 package explore.model
 
 import cats.Hash
+import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.RadialVelocity
+import lucuma.core.model.Magnitude
 
-final case class ITCTarget(rv: RadialVelocity)
+import scala.collection.immutable.SortedMap
+
+final case class ITCTarget(rv: RadialVelocity, magnitudes: SortedMap[MagnitudeBand, Magnitude])
 
 object ITCTarget {
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations
   implicit val hashRadialVelocity: Hash[RadialVelocity] = Hash.by(_.rv.value)
-  implicit val hashITCTarget: Hash[ITCTarget]           = Hash.by(x => x.rv)
+  implicit val hashBand: Hash[MagnitudeBand]            = Hash.by(_.tag)
+  implicit val hashMag: Hash[Magnitude]                 = Hash.fromUniversalHashCode
+  implicit val hashITCTarget: Hash[ITCTarget]           = Hash.by(x => (x.rv, x.magnitudes))
 }

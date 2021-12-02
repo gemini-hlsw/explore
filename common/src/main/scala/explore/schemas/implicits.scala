@@ -10,6 +10,7 @@ import explore.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
 import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.InstrumentRow
 import lucuma.core.math._
 import lucuma.core.model._
 import lucuma.core.optics.syntax.lens._
@@ -157,12 +158,23 @@ object itcschema {
     implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
       // From the list of targets selects the ones relevant for ITC
       def itcTargets: List[ITCTarget] = s.targets.scienceTargets
-        .collect { case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), _, _)) =>
-          // We can only process targets with a radial velocity
-          ITCTarget(rv)
+        .collect {
+          case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), brightness, _)) =>
+            // We can only process targets with a radial velocity
+            ITCTarget(rv, brightness)
         }
         .toList
         .hashDistinct
+    }
+
+    implicit class ITCInstrumentModesOps(val m: InstrumentRow) extends AnyVal {
+      def toITCInput: Option[InstrumentModes] = m match {
+        case GmosNorthSpectroscopyRow(d, f, fi) =>
+          (new InstrumentModes(
+            new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
+          )).some
+        case _                                  => none
+      }
     }
   }
 }

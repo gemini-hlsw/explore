@@ -10,26 +10,24 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.ConstraintSet
 import explore.model.ITCTarget
 import explore.modes._
-import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import monocle.Focus
+import mouse.boolean._
 
 // Simple cache of the remotely calculated values
 final case class ItcResultsCache(
   cache: Map[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 ) {
-  import ITCRequests._
-
   def wavelength(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingWavelength))
 
   def signalToNoise(w: Option[PosBigDecimal]): EitherNec[ItcQueryProblems, PosBigDecimal] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
 
-  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentModes] =
-    Either.fromOption(r.toMode.filter(_ => ItcResultsCache.enabledRow(r)),
+  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentRow] =
+    Either.fromOption(ItcResultsCache.enabledRow(r).option(r.instrument),
                       NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
     )
 
@@ -57,7 +55,7 @@ final case class ItcResultsCache(
 object ItcResultsCache {
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
-    List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(
+    List[Instrument](Instrument.GmosNorth).contains_(
       row.instrument.instrument
     ) && row.focalPlane === FocalPlane.SingleSlit
 
