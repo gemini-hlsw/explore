@@ -9,7 +9,6 @@ import cats.effect._
 import cats.effect.std.Semaphore
 import cats.syntax.all._
 import clue.TransactionalClient
-import clue.data.Input
 import clue.data.syntax._
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
@@ -20,19 +19,20 @@ import explore.model.ConstraintSet
 import explore.model.ITCTarget
 import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
 import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
+import lucuma.core.enum.MagnitudeBand
 import lucuma.core.enum.StellarLibrarySpectrum
-import lucuma.core.enum._
-import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SpatialProfile
 import lucuma.core.model.SpectralDistribution
 import org.typelevel.log4cats.Logger
 
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class ITCRequestParams(
@@ -40,7 +40,7 @@ final case class ITCRequestParams(
   signalToNoise: PosBigDecimal,
   constraints:   ConstraintSet,
   target:        NonEmptyList[ITCTarget],
-  mode:          InstrumentModes
+  mode:          InstrumentRow
 )
 
 object ITCRequests {
@@ -52,16 +52,6 @@ object ITCRequests {
     Semaphore[F](n).flatMap { s =>
       ga.parTraverse(a => s.permit.use(_ => f(a)))
     }
-
-  implicit class Row2Modes(val r: SpectroscopyModeRow) extends AnyVal {
-    def toMode: Option[InstrumentModes] = r.instrument match {
-      case GmosNorthSpectroscopyRow(d, f, fi) =>
-        (new InstrumentModes(
-          new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
-        )).some
-      case _                                  => none
-    }
-  }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger: TransactionalClient[*[_], ITC]](
     wavelength:    Wavelength,
@@ -76,8 +66,7 @@ object ITCRequests {
       .map(_.instrument)
       // Only handle known modes
       .collect { case m: GmosNorthSpectroscopyRow =>
-        val mode = InstrumentModes(m.toGmosNITCInput)
-        ITCRequestParams(wavelength, signalToNoise, constraints, targets, mode)
+        ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
       // Discard values in the cache
       .filterNot { case params =>
@@ -115,13 +104,23 @@ object ITCRequests {
       } >> progress.set(none)
   }
 
+  // Find the magnitude closest to the requested wavelength
+  def selectedMagnitude(
+    mags:       SortedMap[MagnitudeBand, Magnitude],
+    wavelength: Wavelength
+  ): Option[Magnitude] =
+    mags.minimumByOption(b =>
+      (b.band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+    )
+
   private def doRequest[F[_]: Monad: Logger: TransactionalClient[*[_], ITC]](
     request:  ITCRequestParams,
-    callback: NonEmptyList[ItcResults] => F[Unit]
+    callback: List[ItcResults] => F[Unit]
   ): F[Unit] =
     Logger[F].debug(s"ITC request for mode ${request.mode}") *>
       request.target
-        .traverse { t =>
+        .fproduct(t => selectedMagnitude(t.magnitudes, request.wavelength))
+        .collect { case (t, Some(m)) =>
           SpectroscopyITCQuery
             .query(
               ITCSpectroscopyInput(
@@ -130,16 +129,13 @@ object ITCRequests {
                 // TODO Link sp and SED info to explore
                 SpatialProfile.PointSource,
                 SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
-                Magnitude(MagnitudeValue(20),
-                          MagnitudeBand.I,
-                          none,
-                          MagnitudeSystem.Vega
-                ).toITCInput,
+                m.toITCInput,
                 t.rv.toITCInput,
                 request.constraints,
-                List(request.mode.assign)
+                request.mode.toITCInput.map(_.assign).toList
               ).assign
             )
         }
+        .sequence
         .flatMap(callback)
 }
