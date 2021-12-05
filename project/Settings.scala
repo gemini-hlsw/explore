@@ -31,7 +31,7 @@ object Settings {
     val monocle           = "3.1.0"
     val mouse             = "1.0.7"
     val mUnit             = "0.7.29"
-    val mUnitCatsEffect   = "1.0.6"
+    val mUnitCatsEffect   = "1.0.7"
     val reactAladin       = "0.9.0"
     val reactAtlasKitTree = "0.4.2"
     val reactClipboard    = "1.5.1"
