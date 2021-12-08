@@ -428,11 +428,8 @@ object SpectroscopyModesTable {
                   .getOrElse(IO.unit)
               )
 
-          val isCacheEmpty = itcResults.value.get.isEmpty
-
-          // Only send the requests if the cache is empty, send the visible rows first
+          // Send the visible rows first
           submitRows(range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows)
-            .whenA(isCacheEmpty)
 
         }
       }
