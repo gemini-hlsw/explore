@@ -50,12 +50,15 @@ final case class ItcResultsCache(
         .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
     }.flatten
 
+  def size: Int = cache.size
+
+  def isEmpty: Boolean = size === 0
 }
 
 object ItcResultsCache {
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
-    List[Instrument](Instrument.GmosNorth).contains_(
+    List[Instrument](Instrument.GmosNorth, Instrument.GmosSouth).contains_(
       row.instrument.instrument
     ) && row.focalPlane === FocalPlane.SingleSlit
 

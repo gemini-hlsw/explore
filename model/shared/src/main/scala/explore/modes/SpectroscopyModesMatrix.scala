@@ -38,7 +38,7 @@ sealed trait InstrumentRow {
   type Filter
   val filter: Filter
 
-  override def toString(): String = s"${instrument.shortName}, $disperser, $filter"
+  override def toString(): String = s"Mode: ${instrument.shortName}, $disperser, $filter, $fpu"
 }
 
 final case class GmosNorthSpectroscopyRow(

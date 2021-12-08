@@ -114,6 +114,9 @@ trait ITC {
     type GmosNorthDisperser         = enum.GmosNorthDisperser
     type GmosNorthFilter            = enum.GmosNorthFilter
     type GmosNorthFpu               = enum.GmosNorthFpu
+    type GmosSouthDisperser         = enum.GmosSouthDisperser
+    type GmosSouthFilter            = enum.GmosSouthFilter
+    type GmosSouthFpu               = enum.GmosSouthFpu
     type GmosCustomSlitWidth        = enum.GmosCustomSlitWidth
     type StellarLibrarySpectrum     = enum.StellarLibrarySpectrum
     type NoneStellarLibrarySpectrum = enum.NonStellarLibrarySpectrum

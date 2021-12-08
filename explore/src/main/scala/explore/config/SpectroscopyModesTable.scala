@@ -328,6 +328,13 @@ object SpectroscopyModesTable {
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
+  protected def visibleRows(visibleRange: ListRange, rows: List[SpectroscopyModeRow]) = {
+    val s = visibleRange.startIndex.toInt
+    val e = visibleRange.endIndex.toInt
+
+    (for { i <- s to e } yield rows.lift(i)).collect { case Some(m) => m }.toList
+  }
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -389,26 +396,25 @@ object SpectroscopyModesTable {
       // singleEffect
       .useSingleEffect
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, rows, _, _, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, range, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
           props.constraints,
           props.targets,
-          rows
+          range
         )
-      ) { (props, _, itcResults, itcProgress, _, _, _, _, _, _, singleEffect) =>
-        { case (wavelength, signalToNoise, constraints, targets, rows) =>
+      ) { (props, _, itcResults, itcProgress, _, _, ti, _, _, _, singleEffect) =>
+        { case (wavelength, signalToNoise, constraints, targets, range) =>
           implicit val ctx = props.ctx
 
-          // Efect is executed multiple rows if IO.unit is not there. It seems to be executed once for each query (probably its modState afterward).
-          // This seems to be a bug somewhere. Dosen't seem to be in useSingleEffect, since the behavior is identical without wrapping in singleEffect.submit.
-          // (both the repeated execution, and avoiding it with the IO.unit).
-          IO.unit >>
+          val sortedRows = ti.value.preSortedRows.map(_.original).toList
+
+          def submitRows(rows: List[SpectroscopyModeRow]): IO[Unit] =
             singleEffect
               .submit(
-                (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList)).mapN {
-                  (w, sn, t) =>
+                (wavelength, signalToNoise, targets.flatMap(NonEmptyList.fromList))
+                  .mapN { (w, sn, t) =>
                     ITCRequests
                       .queryItc[IO](w,
                                     sn,
@@ -418,8 +424,16 @@ object SpectroscopyModesTable {
                                     itcResults.async,
                                     itcProgress.async
                       )
-                }.orEmpty
+                  }
+                  .getOrElse(IO.unit)
               )
+
+          val isCacheEmpty = itcResults.value.get.isEmpty
+
+          // Only send the requests if the cache is empty, send the visible rows first
+          submitRows(range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows)
+            .whenA(isCacheEmpty)
+
         }
       }
       .renderWithReuse {

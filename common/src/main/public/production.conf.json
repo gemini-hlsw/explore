@@ -2,7 +2,7 @@
   "environment": "PRODUCTION",
   "odbURI": "wss://lucuma-odb.herokuapp.com/ws",
   "preferencesDBURI": "wss://userprefs-hasura-staging.herokuapp.com/v1/graphql",
-  "itcURI": "https://itc-staging.lucuma.xyz/itc",
+  "itcURI": "https://itc.gpp.gemini.edu/itc",
   "sso": {
     "uri": "https://sso.gpp.gemini.edu",
     "readTimeoutSeconds": 10,
