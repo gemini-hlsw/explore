@@ -10,6 +10,7 @@ import explore.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
 import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import lucuma.core.math._
 import lucuma.core.model._
@@ -117,6 +118,8 @@ object itcschema {
     val InstrumentModes = ITC.Types.InstrumentModes
     type GmosNITCInput = ITC.Types.GmosNITCInput
     val GmosNITCInput = ITC.Types.GmosNITCInput
+    type GmosSITCInput = ITC.Types.GmosSITCInput
+    val GmosSITCInput = ITC.Types.GmosSITCInput
     type ITCWavelengthInput = ITC.Types.WavelengthModelInput
     val ITCWavelengthInput = ITC.Types.WavelengthModelInput
     type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
@@ -150,6 +153,11 @@ object itcschema {
         GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
     }
 
+    implicit class GmosSouthSpectropyRowOps(val r: GmosSouthSpectroscopyRow) extends AnyVal {
+      def toGmosSITCInput: Input[GmosSITCInput] =
+        GmosSITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
+    }
+
     implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
       def toITCInput: RadialVelocityInput =
         RadialVelocityInput(metersPerSecond = r.rv.value.assign)
@@ -159,8 +167,9 @@ object itcschema {
       // From the list of targets selects the ones relevant for ITC
       def itcTargets: List[ITCTarget] = s.targets.scienceTargets
         .collect {
-          case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), brightness, _)) =>
-            // We can only process targets with a radial velocity
+          case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), brightness, _))
+              if brightness.nonEmpty =>
+            // We can only process targets with a radial velocity and magnitudes
             ITCTarget(rv, brightness)
         }
         .toList
@@ -169,11 +178,11 @@ object itcschema {
 
     implicit class ITCInstrumentModesOps(val m: InstrumentRow) extends AnyVal {
       def toITCInput: Option[InstrumentModes] = m match {
-        case GmosNorthSpectroscopyRow(d, f, fi) =>
-          (new InstrumentModes(
-            new GmosNITCInput(d, f, Input.orIgnore(fi)).assign
-          )).some
-        case _                                  => none
+        case r: GmosNorthSpectroscopyRow =>
+          InstrumentModes(gmosN = r.toGmosNITCInput).some
+        case r: GmosSouthSpectroscopyRow =>
+          InstrumentModes(gmosS = r.toGmosSITCInput).some
+        case _                           => none
       }
     }
   }

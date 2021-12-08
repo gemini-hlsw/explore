@@ -19,6 +19,7 @@ import explore.model.ConstraintSet
 import explore.model.ITCTarget
 import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
@@ -65,8 +66,11 @@ object ITCRequests {
     val itcRowsParams = modes
       .map(_.instrument)
       // Only handle known modes
-      .collect { case m: GmosNorthSpectroscopyRow =>
-        ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
+      .collect {
+        case m: GmosNorthSpectroscopyRow =>
+          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
+        case m: GmosSouthSpectroscopyRow =>
+          ITCRequestParams(wavelength, signalToNoise, constraints, targets, m)
       }
       // Discard values in the cache
       .filterNot { case params =>
@@ -76,7 +80,7 @@ object ITCRequests {
     progress.set(Progress.initial(NonNegInt.unsafeFrom(itcRowsParams.length)).some) >>
       parTraverseN(
         Constants.MaxConcurrentItcRequests.toLong,
-        itcRowsParams
+        itcRowsParams.reverse
       ) { params =>
         // ITC supports sending many modes at once, but sending them one by one
         // maximizes cache hits
@@ -113,11 +117,13 @@ object ITCRequests {
       (b.band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
     )
 
-  private def doRequest[F[_]: Monad: Logger: TransactionalClient[*[_], ITC]](
+  private def doRequest[F[_]: Parallel: Monad: Logger: TransactionalClient[*[_], ITC]](
     request:  ITCRequestParams,
     callback: List[ItcResults] => F[Unit]
   ): F[Unit] =
-    Logger[F].debug(s"ITC request for mode ${request.mode}") *>
+    Logger[F].debug(
+      s"ITC request for mode ${request.mode} and target count: ${request.target.length}"
+    ) *>
       request.target
         .fproduct(t => selectedMagnitude(t.magnitudes, request.wavelength))
         .collect { case (t, Some(m)) =>
@@ -136,6 +142,7 @@ object ITCRequests {
               ).assign
             )
         }
-        .sequence
+        .parSequence
+        .flatTap(_ => Logger[F].debug(s"result for mode ${request.mode}"))
         .flatMap(callback)
 }

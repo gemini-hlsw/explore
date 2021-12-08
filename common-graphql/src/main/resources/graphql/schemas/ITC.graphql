@@ -439,27 +439,175 @@ enum GmosNorthFilter {
   U_PRIME
 }
 
-type ConstraintSet {
-  # Image quality
-  imageQuality: ImageQuality!
+# GMOS South FPU
+enum GmosSouthFpu {
+  # GmosSouthFpu Bhros
+  BHROS
 
-  # Cloud extinction
-  cloudExtinction: CloudExtinction!
+  # GmosSouthFpu Ns1
+  NS1
 
-  # Sky background
-  skyBackground: SkyBackground!
+  # GmosSouthFpu Ns2
+  NS2
 
-  # Water vapor
-  waterVapor: WaterVapor!
+  # GmosSouthFpu Ns3
+  NS3
 
-  # Either airmass range or elevation range
-  # elevationRange: ElevationRange!
+  # GmosSouthFpu Ns4
+  NS4
 
-  # Airmass range if elevation range is an Airmass range
-  # airmassRange: AirMassRange
+  # GmosSouthFpu Ns5
+  NS5
 
-  # Hour angle range if elevation range is an Hour angle range
-  # hourAngleRange: HourAngleRange
+  # GmosSouthFpu LongSlit_0_25
+  LONG_SLIT_0_25
+
+  # GmosSouthFpu LongSlit_0_50
+  LONG_SLIT_0_50
+
+  # GmosSouthFpu LongSlit_0_75
+  LONG_SLIT_0_75
+
+  # GmosSouthFpu LongSlit_1_00
+  LONG_SLIT_1_00
+
+  # GmosSouthFpu LongSlit_1_50
+  LONG_SLIT_1_50
+
+  # GmosSouthFpu LongSlit_2_00
+  LONG_SLIT_2_00
+
+  # GmosSouthFpu LongSlit_5_00
+  LONG_SLIT_5_00
+
+  # GmosSouthFpu Ifu2Slits
+  IFU2_SLITS
+
+  # GmosSouthFpu IfuBlue
+  IFU_BLUE
+
+  # GmosSouthFpu IfuRed
+  IFU_RED
+
+  # GmosSouthFpu IfuNS2Slits
+  IFU_NS2_SLITS
+
+  # GmosSouthFpu IfuNSBlue
+  IFU_NS_BLUE
+
+  # GmosSouthFpu IfuNSRed
+  IFU_NS_RED
+}
+
+# GMOS South Disperser
+enum GmosSouthDisperser {
+  # GmosSouthDisperser B1200_G5321
+  B1200_G5321
+
+  # GmosSouthDisperser R831_G5322
+  R831_G5322
+
+  # GmosSouthDisperser B600_G5323
+  B600_G5323
+
+  # GmosSouthDisperser R600_G5324
+  R600_G5324
+
+  # GmosSouthDisperser B480_G5327
+  B480_G5327
+
+  # GmosSouthDisperser R400_G5325
+  R400_G5325
+
+  # GmosSouthDisperser R150_G5326
+  R150_G5326
+}
+
+# GMOS South Filter
+enum GmosSouthFilter {
+  # GmosSouthFilter UPrime
+  U_PRIME
+
+  # GmosSouthFilter GPrime
+  G_PRIME
+
+  # GmosSouthFilter RPrime
+  R_PRIME
+
+  # GmosSouthFilter IPrime
+  I_PRIME
+
+  # GmosSouthFilter ZPrime
+  Z_PRIME
+
+  # GmosSouthFilter Z
+  Z
+
+  # GmosSouthFilter Y
+  Y
+
+  # GmosSouthFilter GG455
+  GG455
+
+  # GmosSouthFilter OG515
+  OG515
+
+  # GmosSouthFilter RG610
+  RG610
+
+  # GmosSouthFilter RG780
+  RG780
+
+  # GmosSouthFilter CaT
+  CA_T
+
+  # GmosSouthFilter HartmannA_RPrime
+  HARTMANN_A_R_PRIME
+
+  # GmosSouthFilter HartmannB_RPrime
+  HARTMANN_B_R_PRIME
+
+  # GmosSouthFilter GPrime_GG455
+  G_PRIME_GG455
+
+  # GmosSouthFilter GPrime_OG515
+  G_PRIME_OG515
+
+  # GmosSouthFilter RPrime_RG610
+  R_PRIME_RG610
+
+  # GmosSouthFilter IPrime_RG780
+  I_PRIME_RG780
+
+  # GmosSouthFilter IPrime_CaT
+  I_PRIME_CA_T
+
+  # GmosSouthFilter ZPrime_CaT
+  Z_PRIME_CA_T
+
+  # GmosSouthFilter Ha
+  HA
+
+  # GmosSouthFilter SII
+  SII
+
+  # GmosSouthFilter HaC
+  HA_C
+
+  # GmosSouthFilter OIII
+  OIII
+
+  # GmosSouthFilter OIIIC
+  OIIIC
+
+  # GmosSouthFilter HeII
+  HE_II
+
+  # GmosSouthFilter HeIIC
+  HE_IIC
+
+  # GmosSouthFilter Lya395
+  LYA395
 }
 
 # Image quality
@@ -545,9 +693,6 @@ enum WaterVapor {
   WET
 }
 
-###########
-# Based on lucuma-odb schema
-##########,
 # Airmass range creation parameters
 input AirmassRangeInput {
   min: BigDecimal!
@@ -648,25 +793,25 @@ type Query {
 }
 
 type GmosSITCParams {
-  # Gmos North disperser
-  disperser: GmosNorthDisperser!
+  # Gmos South disperser
+  disperser: GmosSouthDisperser!
 
-  # Gmos North Focal plane unit
-  fpu: GmosNorthFpu
+  # Gmos South Focal plane unit
+  fpu: GmosSouthFpu
 
-  # Gmos North filter
-  filter: GmosNorthFilter
+  # Gmos South filter
+  filter: GmosSouthFilter
 }
 
 input GmosSITCInput {
-  # Gmos North disperser
-  disperser: GmosNorthDisperser!
+  # Gmos South disperser
+  disperser: GmosSouthDisperser!
 
-  # Gmos North Focal plane unit
-  fpu: GmosNorthFpu!
+  # Gmos South Focal plane unit
+  fpu: GmosSouthFpu!
 
-  # Gmos North filter
-  filter: GmosNorthFilter
+  # Gmos South filter
+  filter: GmosSouthFilter
 }
 
 type GmosNITCParams {
@@ -695,10 +840,13 @@ input GmosNITCInput {
 
 union InstrumentITCParams = GmosNITCParams | GmosSITCParams
 
-# Parent of instrument modes
+# Params for instrument modes
 input InstrumentModes {
-  # params
+  # Gmos North
   gmosN: GmosNITCInput
+
+  # Gmos South
+  gmosS: GmosSITCInput
 }
 
 # Configuration alternatives query

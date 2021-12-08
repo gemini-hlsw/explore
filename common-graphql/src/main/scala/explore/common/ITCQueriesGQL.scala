@@ -19,13 +19,6 @@ object ITCQueriesGQL {
           results {
             mode {
               instrument
-              params {
-                ... on GmosNITCParams {
-                  disperser
-                  fpu
-                  filter
-                }
-              }
             }
             itc {
               ... on ItcSuccess {
