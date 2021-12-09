@@ -18,7 +18,6 @@ import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
 import monocle.function.At.at
 import monocle.function.Index.index
-import org.http4s.Uri
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import shapeless._
@@ -151,7 +150,4 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
       }
   }
 
-  implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
-    def /(path: Uri.Path): Uri = uri.withPath(uri.path.concat(path))
-  }
 }
