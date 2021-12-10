@@ -7,7 +7,7 @@ object Settings {
 
   object LibraryVersions {
     val cats              = "2.7.0"
-    val catsEffect        = "3.3.0"
+    val catsEffect        = "3.2.9"
     val catsRetry         = "3.1.0"
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
@@ -15,7 +15,7 @@ object Settings {
     val crystal           = "0.20.0"
     val discipline        = "1.4.0"
     val disciplineMUnit   = "1.0.9"
-    val fs2               = "3.2.3"
+    val fs2               = "3.2.2"
     val fs2Data           = "1.3.1"
     val geminiLocales     = "0.7.0"
     val http4s            = "0.23.6"

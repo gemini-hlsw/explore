@@ -40,6 +40,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import lucuma.core.model.NonsiderealTarget
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
@@ -99,6 +100,33 @@ object TargetSelectionPopup {
         val cleanState =
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
+        def addResults(source: TargetSource[IO], index: Int)(targets: List[Target]): IO[Unit] =
+          NonEmptyList
+            .fromList(targets)
+            .map[IO[Unit]](nel =>
+              results.modStateAsync(r =>
+                r.get(source).fold(r + (source -> ((index, nel)))) { case (i, ts) =>
+                  r + (source -> ((i,
+                                   // NonEmptyList doesn't have distinctBy
+                                   NonEmptyList.fromListUnsafe(
+                                     (ts.toList ++ nel.toList)
+                                       .distinctBy(_ match {
+                                         case SiderealTarget(name, tracking, _, _)     =>
+                                           tracking.catalogId
+                                             .map(_.id.value)
+                                             .getOrElse(name.value)
+                                         case NonsiderealTarget(_, ephemerisKey, _, _) =>
+                                           ephemerisKey.toString
+                                       })
+                                       .sortBy(_.name.value)
+                                   )
+                                  )
+                  ))
+                }
+              )
+            )
+            .orEmpty
+
         def search(name: String): IO[Unit] =
           cleanResults.to[IO] >>
             NonEmptyString
@@ -107,16 +135,10 @@ object TargetSelectionPopup {
               .map(nonEmptyName =>
                 searching.setStateAsync(true) >>
                   targetSources.value
-                    .parTraverse_ { case (source, index) =>
-                      source.search(nonEmptyName) >>= (list =>
-                        NonEmptyList
-                          .fromList(list)
-                          .map(nel =>
-                            results.modStateAsync(_ + (source -> ((index, nel)))): IO[Unit]
-                          )
-                          .orEmpty
-                      )
+                    .flatMap { case (source, index) =>
+                      source.searches(nonEmptyName).map(_ >>= addResults(source, index))
                     }
+                    .parSequence_
                     .guaranteeCase {
                       // If it gets canceled, it's because another search has started
                       case Outcome.Canceled() => IO.unit
