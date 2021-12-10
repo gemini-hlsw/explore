@@ -13,17 +13,19 @@ import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ExploreLocalPreferences
+import explore.model.ExploreLocalPreferences._
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
+import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.Focus
 import org.scalajs.dom
+import org.scalajs.dom.window
 import react.clipboard.CopyToClipboard
 import react.common._
 import react.semanticui.collections.menu._
@@ -35,26 +37,18 @@ import react.semanticui.modules.dropdown.DropdownItem
 import react.semanticui.modules.dropdown.DropdownMenu
 import react.semanticui.shorthand._
 import react.semanticui.views.item.Item
+import typings.loglevel.mod.LogLevelDesc
 
 final case class TopBar(
-  user:     User,
-  onLogout: IO[Unit]
-) extends ReactProps[TopBar](TopBar.component)
+  user:        User,
+  preferences: ExploreLocalPreferences,
+  onLogout:    IO[Unit]
+) extends ReactFnProps[TopBar](TopBar.component)
 
 object TopBar {
   type Props = TopBar
 
-  protected case class State(copied: Boolean = false, theme: Theme) {
-    def flip: State =
-      if (theme === Theme.Dark) copy(theme = Theme.Light) else copy(theme = Theme.Dark)
-  }
-
-  object State {
-    val copied = Focus[State](_.copied)
-  }
-
   implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   def currentTheme: Theme =
     if (dom.document.body.classList.contains(Theme.Light.clazz.htmlClass))
@@ -62,19 +56,30 @@ object TopBar {
     else
       Theme.Dark
 
-  private val component =
-    ScalaComponent
-      .builder[TopBar]
-      .initialState(State(false, currentTheme))
-      .render { $ =>
-        val p            = $.props
-        val currentTheme = $.state.theme
+  def flipTheme(theme: Theme): Theme =
+    if (theme === Theme.Dark) Theme.Light else Theme.Dark
 
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      // copied
+      .useState(false)
+      // theme
+      .useState(currentTheme)
+      .renderWithReuse { (props, copied, theme) =>
         AppCtx.using { implicit appCtx =>
-          val role = p.user.role
+          val role = props.user.role
 
           def logout: IO[Unit] =
-            appCtx.sso.logout >> p.onLogout
+            appCtx.sso.logout >> props.onLogout
+
+          val level = props.preferences.level
+
+          def setLogLevel(l: LogLevelDesc): Callback =
+            (ExploreLocalPreferences
+              .storePreferences[IO](
+                props.preferences.copy(level = l)
+              ) *> IO(window.location.reload(false))).runAsync
 
           React.Fragment(
             <.div(
@@ -92,7 +97,7 @@ object TopBar {
                 ),
                 Item(
                   ExploreStyles.MainUserName,
-                  p.user.displayName
+                  props.user.displayName
                 ),
                 ConnectionsStatus(),
                 MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
@@ -108,20 +113,19 @@ object TopBar {
                         Reuse.always(
                           DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
                         ),
-                        Reuse.always(
+                        Reuse.never(
                           <.span(ExploreStyles.Version,
-                                 ExploreStyles.VersionUncopied.when(! $.state.copied)
+                                 ExploreStyles.VersionUncopied.when(!copied.value)
                           )(
                             s"Version: ${appCtx.version}",
                             CopyToClipboard(
                               text = appCtx.version.value,
-                              onCopy = (_, copied) =>
-                                $.setStateL(State.copied)(copied) >>
-                                  $.setStateL(State.copied)(false).delayMs(1500).toCallback
+                              onCopy = (_, copiedCallback) =>
+                                copied.setState(copiedCallback) *>
+                                  copied.setState(false).delayMs(1500).toCallback
                             )(
-                              <.span(
-                                Icons.Clipboard.when(! $.state.copied),
-                                Icons.ClipboardCheck.when($.state.copied)
+                              <.span(Icons.Clipboard.unless(copied.value),
+                                     Icons.ClipboardCheck.when(copied.value)
                               )
                             )
                           )
@@ -140,11 +144,25 @@ object TopBar {
                                    icon = Icons.Logout.fixedWidth(),
                                    onClick = logout.runAsync
                       ),
+                      DropdownItem()(
+                        Icons.BarCodeRead.fixedWidth(),
+                        "Log Level",
+                        DropdownMenu(
+                          DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
+                            Checkbox(label = "Info", checked = level =!= LogLevelDesc.DEBUG)
+                          ),
+                          DropdownItem(onClick = setLogLevel(LogLevelDesc.DEBUG))(
+                            Checkbox(label = "Debug",
+                                     checked = level === LogLevelLogger.Level.DEBUG
+                            )
+                          )
+                        )
+                      ).when(appCtx.environment =!= ExecutionEnvironment.Production),
                       DropdownItem(onClick =
                         utils
                           .setupScheme[CallbackTo](
-                            if (currentTheme === Theme.Dark) Theme.Light else Theme.Dark
-                          ) *> $.modState(_.flip)
+                            if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
+                          ) *> theme.modState(flipTheme)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
@@ -157,7 +175,5 @@ object TopBar {
           )
         }
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 
 }

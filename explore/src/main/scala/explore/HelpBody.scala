@@ -31,19 +31,19 @@ import scala.util.Try
 
 final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[HelpBody](HelpBody.component) {
-  private val path        = Uri.Path.unsafeFromString(helpId.value)
-  private val rootUrl     = base.rawUrl / base.user.value / base.project.value
-  private val baseUrl     =
+  private val path: Uri.Path = Uri.Path.unsafeFromString(helpId.value)
+  private val rootUrl        = base.rawUrl / base.user.value / base.project.value
+  private val baseUrl        =
     path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
       (uri, segment) => uri / segment.encoded
     )
-  private val url         = rootUrl / "main" / path
-  private val rootEditUrl = base.editUrl / base.user.value / base.project.value
-  private val newPage     = (rootEditUrl / "new" / "main")
+  private val url            = rootUrl / "main" / path
+  private val rootEditUrl    = base.editUrl / base.user.value / base.project.value
+  private val newPage        = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
     .withQueryParam("value", s"# Title")
     .withQueryParam("message", s"Create $helpId")
-  private val editPage    = (rootEditUrl / "edit" / "main" / path)
+  private val editPage       = (rootEditUrl / "edit" / "main" / path)
     .withQueryParam("message", s"Update $helpId")
 }
 
