@@ -3,6 +3,7 @@ const { visualizer } = require('rollup-plugin-visualizer')
 const path = require("path")
 const fs = require("fs")
 const ViteFonts = require("vite-plugin-fonts")
+const EnvironmentPlugin = require("vite-plugin-environment").default
 
 const fontImport = ViteFonts.Plugin({
   google: {
@@ -13,6 +14,12 @@ const fontImport = ViteFonts.Plugin({
       },
     ],
   },
+});
+
+// This is not working for the moment. See main.jsx.
+const environmentImport = EnvironmentPlugin({
+  // This results in a build error.
+  // CATS_EFFECT_TRACING_MODE: "none"
 });
 
 // https://vitejs.dev/config/
@@ -45,6 +52,10 @@ module.exports = ({ command, mode }) => {
 
   const publicDir = mode == "production" ? publicDirProd : publicDirDev;
   return {
+    // TODO Remove this if we get EnvironmentPlugin to work.
+    define: {
+      'process.env.CATS_EFFECT_TRACING_MODE': "none"
+    },
     root: "explore/src/main/webapp",
     publicDir: publicDir,
     resolve: {
@@ -137,6 +148,6 @@ module.exports = ({ command, mode }) => {
       },
       outDir: path.resolve(__dirname, "heroku/static"),
     },
-    plugins: [reactRefresh(), fontImport],
+    plugins: [reactRefresh(), fontImport, environmentImport]
   };
 };

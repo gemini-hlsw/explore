@@ -17,15 +17,16 @@ import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import retry._
 
+import java.util.concurrent.TimeoutException
 import scala.concurrent.duration._
 
 object SimbadSearch {
   import RetryHelpers._
 
-  def search[F[_]: Async: Logger](
-    term:     NonEmptyString,
-    wildcard: Boolean = false
-  ): F[List[SiderealTarget]] = {
+  def search[F[_]](
+    term:       NonEmptyString,
+    wildcard:   Boolean = false
+  )(implicit F: Async[F], logger: Logger[F]): F[List[SiderealTarget]] = {
     val baseURL =
       uri"https://simbad.u-strasbg.fr/simbad/sim-id"
         .withQueryParam("Ident", term.value)
@@ -38,20 +39,30 @@ object SimbadSearch {
       else
         baseURL
 
-    retryingOnAllErrors(retryPolicy[F], logError[F]("Simbad")) {
+    def isWorthRetrying(e: Throwable): F[Boolean] = e match {
+      case _: TimeoutException => F.pure(!wildcard)
+      case _                   => F.pure(true)
+    }
+
+    retryingOnSomeErrors(
+      retryPolicy[F],
+      isWorthRetrying,
+      logError[F]("Simbad")
+    ) {
       FetchClientBuilder[F]
-        .withRequestTimeout(20.seconds)
+        .withRequestTimeout(15.seconds)
         .resource
         .flatMap(_.run(Request[F](Method.POST, url)))
         .use {
           case Status.Successful(r) =>
-            r.bodyText
-              .through(VoTableParser.targets(CatalogName.Simbad))
-              .compile
-              .toList
-              .map {
-                _.collect { case Validated.Valid(t) => t }
-              }
+            Logger[F].debug("Simbad search succeeded") >>
+              r.bodyText
+                .through(VoTableParser.targets(CatalogName.Simbad))
+                .compile
+                .toList
+                .map {
+                  _.collect { case Validated.Valid(t) => t }
+                }
           case _                    =>
             Logger[F].error(s"Simbad search failed for term [$term]").as(List.empty)
         }
