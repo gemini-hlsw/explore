@@ -86,27 +86,32 @@ object ITCRequests {
         // maximizes cache hits
         doRequest(
           params,
-          { x =>
+          { r =>
             // Convert to usable types and update the cache
-            val update: EitherNec[ItcQueryProblems, ItcResult] = x.toList
-              .flatMap(x =>
-                x.spectroscopy.flatMap(_.results).map { r =>
-                  val (t, m) = r.itc match {
-                    case ItcError(m)      => (Long.MinValue, ItcQueryProblems.GenericError(m).leftNec)
-                    case ItcSuccess(e, t) =>
-                      (t.microseconds, ItcResult.Result(t.microseconds.microseconds, e).rightNec)
-                  }
-                  (t, m)
-                }
-              )
+            val update: EitherNec[ItcQueryProblems, ItcResult] = itcResults(r)
               // There maybe multiple targets, take the one with the max time
               .maxBy(_._1)
-              ._2
+              ._3
             cache.mod(ItcResultsCache.cache.modify(_ + (params -> update)))
           }
         ) >> progress.mod(_.map(_.increment()))
       } >> progress.set(none)
   }
+
+  private def itcResults(
+    r: List[ItcResults]
+  ): List[(Long, Int, EitherNec[ItcQueryProblems, ItcResult])] =
+    // Convert to usable types and update the cache
+    r.toList
+      .flatMap(x =>
+        x.spectroscopy.flatMap(_.results).map { r =>
+          r.itc match {
+            case ItcError(m)      => (Long.MinValue, 0, ItcQueryProblems.GenericError(m).leftNec)
+            case ItcSuccess(e, t) =>
+              (t.microseconds, e, ItcResult.Result(t.microseconds.microseconds, e).rightNec)
+          }
+        }
+      )
 
   // Find the magnitude closest to the requested wavelength
   def selectedMagnitude(
@@ -143,6 +148,10 @@ object ITCRequests {
             )
         }
         .parSequence
-        .flatTap(_ => Logger[F].debug(s"result for mode ${request.mode}"))
+        .flatTap(r =>
+          Logger[F].debug(
+            s"Result for mode ${request.mode}: ${itcResults(r).map(r => s"${r._2} x ${r._1 / 10e6}s")}"
+          )
+        )
         .flatMap(callback)
 }
