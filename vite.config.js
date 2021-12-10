@@ -18,7 +18,8 @@ const fontImport = ViteFonts.Plugin({
 
 // This is not working for the moment. See main.jsx.
 const environmentImport = EnvironmentPlugin({
-  CATS_EFFECT_TRACING_MODE: "none"
+  // This results in a build error.
+  // CATS_EFFECT_TRACING_MODE: "none"
 });
 
 // https://vitejs.dev/config/
@@ -51,6 +52,7 @@ module.exports = ({ command, mode }) => {
 
   const publicDir = mode == "production" ? publicDirProd : publicDirDev;
   return {
+    // TODO Remove this if we get EnvironmentPlugin to work.
     define: {
       'process.env.CATS_EFFECT_TRACING_MODE': "none"
     },
