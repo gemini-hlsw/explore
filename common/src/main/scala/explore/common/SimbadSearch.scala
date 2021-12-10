@@ -16,8 +16,8 @@ import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import retry._
-import java.util.concurrent.TimeoutException
 
+import java.util.concurrent.TimeoutException
 import scala.concurrent.duration._
 
 object SimbadSearch {

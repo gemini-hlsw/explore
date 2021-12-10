@@ -3,8 +3,8 @@
 
 package explore.targets
 
-import cats.effect.Async
 import cats.Order
+import cats.effect.Async
 import cats.syntax.all._
 import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
@@ -12,8 +12,8 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
 import lucuma.core.enum.CatalogName
 import lucuma.core.model
-import lucuma.core.model.Target
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
