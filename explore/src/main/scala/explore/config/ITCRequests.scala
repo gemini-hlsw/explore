@@ -127,7 +127,7 @@ object ITCRequests {
     callback: List[ItcResults] => F[Unit]
   ): F[Unit] =
     Logger[F].debug(
-      s"ITC request for mode ${request.mode} and target count: ${request.target.length}"
+      s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
     ) *>
       request.target
         .fproduct(t => selectedMagnitude(t.magnitudes, request.wavelength))
@@ -150,7 +150,8 @@ object ITCRequests {
         .parSequence
         .flatTap(r =>
           Logger[F].debug(
-            s"Result for mode ${request.mode}: ${itcResults(r).map(r => s"${r._2} x ${r._1 / 10e6}s")}"
+            s"ITC: Result for mode ${request.mode}: ${itcResults(r)
+              .map(r => s"${r._2} x ${r._1 / 10e6}s")}"
           )
         )
         .flatMap(callback)
