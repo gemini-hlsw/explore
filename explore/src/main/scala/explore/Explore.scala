@@ -17,6 +17,7 @@ import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
+import explore.model.ExploreLocalPreferences
 import explore.model.FocusedObs
 import explore.model.RootModel
 import explore.model.RootModelRouting
@@ -51,11 +52,7 @@ import js.annotation._
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
 
-  LogLevelLogger.setLevel(LogLevelLogger.Level.INFO)
-
   implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
-
-  implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
 
   @JSExport
   @nowarn
@@ -69,13 +66,19 @@ object ExploreMain extends IOApp.Simple {
   override final def run: IO[Unit] = {
     japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
-    def initialModel(vault: Option[UserVault]) = RootModel(
+    def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) = RootModel(
       vault = vault,
-      tabs = EnumZipper.of[AppTab]
+      tabs = EnumZipper.of[AppTab],
+      localPreferences = pref
     )
 
+    def setupLogger(p: ExploreLocalPreferences): IO[Logger[IO]] = IO {
+      LogLevelLogger.setLevel(p.level)
+      LogLevelLogger.createForRoot[IO]
+    }
+
     val fetchConfig: IO[AppConfig] =
-      // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by webpack).
+      // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
       FetchClientBuilder[IO]
         .withRequestTimeout(5.seconds)
         .withCache(RequestCache.`no-store`)
@@ -121,7 +124,15 @@ object ExploreMain extends IOApp.Simple {
 
     Dispatcher[IO].allocated
       .map(_._1)
-      .flatMap { implicit dispatcher =>
+      .flatMap { d =>
+        for {
+          p <- ExploreLocalPreferences.loadPreferences[IO]
+          l <- setupLogger(p)
+        } yield (d, l, p)
+      }
+      .flatMap { param =>
+        implicit val (dispatcher, logger, _)                     = param
+        implicit val localPreferences                            = param._3
         implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
@@ -172,7 +183,7 @@ object ExploreMain extends IOApp.Simple {
             )
 
           val StateProviderComponent =
-            StateProvider(initialModel(vault))
+            StateProvider(initialModel(vault, localPreferences))
 
           RootComponent(
             (HelpContextComponent(
@@ -183,7 +194,7 @@ object ExploreMain extends IOApp.Simple {
       }
       .void
       .handleErrorWith { t =>
-        logger.error(t)("Error initializing") >>
+        IO.println("Error initializing") >>
           crash(s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
   }

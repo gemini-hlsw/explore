@@ -65,6 +65,7 @@ object reusability {
   implicit val proposalDetailsReuse: Reusability[ProposalDetails]                     = Reusability.byEq
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.derive
   implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
+  implicit val localPreferencesReuse: Reusability[ExploreLocalPreferences]            = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
     Reusability.derive
   implicit val obsSummaryWithTargetsAndConstraintsReuse

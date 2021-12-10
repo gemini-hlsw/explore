@@ -79,6 +79,7 @@ object ExploreLayout {
                           <.div(
                             ExploreStyles.MainGrid,
                             TopBar(vault.user,
+                                   props.view.zoom(RootModel.localPreferences).get,
                                    onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
                             ),
                             <.div(

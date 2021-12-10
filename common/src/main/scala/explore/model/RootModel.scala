@@ -23,6 +23,7 @@ import scala.collection.immutable.HashSet
 case class RootModel(
   vault:                          Option[UserVault],
   tabs:                           EnumZipper[AppTab],
+  localPreferences:               ExploreLocalPreferences,
   focusedObs:                     Option[FocusedObs] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[TargetIdSet] = HashSet.empty,
@@ -48,6 +49,7 @@ object RootModel {
   val targetSummaryHiddenColumns     = Focus[RootModel](_.targetSummaryHiddenColumns)
   val constraintSummaryHiddenColumns = Focus[RootModel](_.constraintSummaryHiddenColumns)
   val constraintSummarySorting       = Focus[RootModel](_.constraintSummarySorting)
+  val localPreferences               = Focus[RootModel](_.localPreferences)
 
   val userUserId = Lens[User, User.Id](_.id)(s =>
     a =>
