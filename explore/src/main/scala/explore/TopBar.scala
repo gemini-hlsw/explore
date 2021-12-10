@@ -14,6 +14,7 @@ import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ExploreLocalPreferences
+import explore.model.ExploreLocalPreferences._
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import japgolly.scalajs.react._
@@ -75,11 +76,10 @@ object TopBar {
           val level = props.preferences.level
 
           def setLogLevel(l: LogLevelDesc): Callback =
-            ExploreLocalPreferences
+            (ExploreLocalPreferences
               .storePreferences[IO](
                 props.preferences.copy(level = l)
-              )
-              .runAsync *> Callback(window.location.reload(false))
+              ) *> IO(window.location.reload(false))).runAsync
 
           React.Fragment(
             <.div(
@@ -149,10 +149,12 @@ object TopBar {
                         "Log Level",
                         DropdownMenu(
                           DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
-                            Checkbox(label = "Info", checked = level != LogLevelDesc.DEBUG)
+                            Checkbox(label = "Info", checked = level =!= LogLevelDesc.DEBUG)
                           ),
                           DropdownItem(onClick = setLogLevel(LogLevelDesc.DEBUG))(
-                            Checkbox(label = "Debug", checked = level == LogLevelLogger.Level.DEBUG)
+                            Checkbox(label = "Debug",
+                                     checked = level === LogLevelLogger.Level.DEBUG
+                            )
                           )
                         )
                       ).when(appCtx.environment =!= ExecutionEnvironment.Production),

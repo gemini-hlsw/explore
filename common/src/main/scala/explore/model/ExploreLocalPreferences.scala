@@ -13,6 +13,7 @@ import io.circe.Json
 import io.circe.parser.decode
 import io.circe.syntax._
 import log4cats.loglevel.LogLevelLogger
+import lucuma.core.util.Enumerated
 import monocle.Focus
 import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
@@ -21,6 +22,25 @@ import typings.loglevel.mod.LogLevelDesc
 case class ExploreLocalPreferences(level: LogLevelDesc)
 
 object ExploreLocalPreferences {
+  implicit val levelEnumerated: Enumerated[LogLevelDesc] =
+    new Enumerated[LogLevelDesc] {
+      val all = List(LogLevelDesc.TRACE,
+                     LogLevelDesc.DEBUG,
+                     LogLevelDesc.INFO,
+                     LogLevelDesc.WARN,
+                     LogLevelDesc.ERROR,
+                     LogLevelDesc.SILENT
+      )
+
+      def tag(l: LogLevelDesc): String =
+        if (l == LogLevelDesc.TRACE) "TRACE"
+        else if (l == LogLevelDesc.DEBUG) "DEBUG"
+        else if (l == LogLevelDesc.INFO) "INFO"
+        else if (l == LogLevelDesc.WARN) "WARN"
+        else if (l == LogLevelDesc.ERROR) "ERROR"
+        else "SILENT"
+    }
+
   val Default = ExploreLocalPreferences(LogLevelLogger.Level.INFO)
 
   val StorageKey = "ExplorePreferences"
@@ -28,7 +48,7 @@ object ExploreLocalPreferences {
 
   val level = Focus[ExploreLocalPreferences](_.level)
 
-  implicit val eqExploreLocalpreferences: Eq[ExploreLocalPreferences] = Eq.by(_.level.toString)
+  implicit val eqExploreLocalpreferences: Eq[ExploreLocalPreferences] = Eq.by(_.level)
 
   implicit class LevelOps(val l: LogLevelDesc) extends AnyVal {
     def value: String =
@@ -55,7 +75,7 @@ object ExploreLocalPreferences {
     )
   }
 
-  implicit val decodeFoo: Decoder[ExploreLocalPreferences] = new Decoder[ExploreLocalPreferences] {
+  implicit val decoder: Decoder[ExploreLocalPreferences] = new Decoder[ExploreLocalPreferences] {
     final def apply(c: HCursor): Decoder.Result[ExploreLocalPreferences] =
       for {
         l <- c.downField(LevelKey).as[Option[String]]

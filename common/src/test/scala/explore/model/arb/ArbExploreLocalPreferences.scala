@@ -4,17 +4,19 @@
 package explore.model.arb
 
 import explore.model.ExploreLocalPreferences
+import explore.model.ExploreLocalPreferences._
+import lucuma.core.util.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen._
-import org.scalacheck.Gen
 import typings.loglevel.mod.LogLevelDesc
 
 trait ArbExploreLocalPreferences {
 
   implicit val localPreferencesArb = Arbitrary[ExploreLocalPreferences] {
     for {
-      level <- Gen.const(LogLevelDesc.INFO)
+      level <- arbitrary[LogLevelDesc]
     } yield ExploreLocalPreferences(level)
   }
 

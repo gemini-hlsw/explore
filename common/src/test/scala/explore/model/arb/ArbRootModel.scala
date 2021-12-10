@@ -11,6 +11,7 @@ import explore.model.arb.all._
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
 import lucuma.core.data.arb.ArbEnumZipper._
+import lucuma.core.util.arb.ArbEnumerated._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

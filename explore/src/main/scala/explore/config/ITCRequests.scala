@@ -92,6 +92,7 @@ object ITCRequests {
               // There maybe multiple targets, take the one with the max time
               .maxBy(_._1)
               ._3
+            // Put the results in the cache
             cache.mod(ItcResultsCache.cache.modify(_ + (params -> update)))
           }
         ) >> progress.mod(_.map(_.increment()))
@@ -101,7 +102,7 @@ object ITCRequests {
   private def itcResults(
     r: List[ItcResults]
   ): List[(Long, Int, EitherNec[ItcQueryProblems, ItcResult])] =
-    // Convert to usable types and update the cache
+    // Convert to usable types
     r.toList
       .flatMap(x =>
         x.spectroscopy.flatMap(_.results).map { r =>

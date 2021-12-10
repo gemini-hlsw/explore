@@ -131,8 +131,7 @@ object ExploreMain extends IOApp.Simple {
         } yield (d, l, p)
       }
       .flatMap { param =>
-        implicit val (dispatcher, logger, _)                     = param
-        implicit val localPreferences                            = param._3
+        implicit val (dispatcher, logger, localPreferences)      = param
         implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
         implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
           WebSocketJSBackend[IO](dispatcher)
