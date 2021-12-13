@@ -45,7 +45,7 @@ object Settings {
     val reactTable        = "0.7.4"
     val reactVirtuoso     = "0.2.2"
     val scalaJsReact      = "2.0.0"
-    val pprint            = "0.7.0"
+    val pprint            = "0.7.1"
   }
 
   object Libraries {
