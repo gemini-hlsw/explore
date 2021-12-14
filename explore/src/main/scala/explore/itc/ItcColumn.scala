@@ -31,7 +31,9 @@ sealed trait ItcResult extends Product with Serializable
 object ItcResult {
   case object SourceTooBright                                     extends ItcResult
   case object Pending                                             extends ItcResult
-  case class Result(exposureTime: FiniteDuration, exposures: Int) extends ItcResult
+  case class Result(exposureTime: FiniteDuration, exposures: Int) extends ItcResult {
+    val duration: FiniteDuration = exposureTime * exposures.toLong
+  }
 
   implicit val eq: Eq[ItcResult] = Eq.instance {
     case (SourceTooBright, SourceTooBright) => true
