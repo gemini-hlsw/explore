@@ -174,9 +174,14 @@ object SpectroscopyModesTable {
           }
           Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
         }
-      case Right(ItcResult.Result(t, c))    =>
-        val secs = t.toMillis / 1000.0 * c
-        f"$secs%.0f s"
+      case Right(r: ItcResult.Result)       =>
+        val seconds = r.duration.toSeconds
+        if (seconds < 60)
+          s"$seconds sec"
+        else if (seconds < 3600)
+          f"${seconds / 60.0}%.2f min"
+        else
+          f"${seconds / 3600.0}%.2f hr"
       case Right(ItcResult.Pending)         =>
         Icons.Spinner.spin(true)
       case Right(ItcResult.SourceTooBright) =>
