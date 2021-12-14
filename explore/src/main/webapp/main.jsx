@@ -11,9 +11,11 @@ import "react-circular-progressbar/dist/styles.css";
 import { Explore } from "@sjs/main.js";
 
 // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
-// See vite.config.js. Although configured there, the value is not getting to runtime for some reason.
-// Anyway, for the moment this is not having the desired effect either, and we are downgrading cats-effect.
-// process.env.CATS_EFFECT_TRACING_MODE="none";
+// but for now we can survive setting this only on dev
+if (import.meta.env.DEV && process && process.env) {
+  process.env = {CATS_EFFECT_TRACING_MODE: "none"};
+}
+
 Explore.runIOApp();
 
 if (import.meta.hot) {
