@@ -15,12 +15,14 @@ object ItcQueryProblems {
   case object UnsupportedMode          extends ItcQueryProblems
   case object MissingWavelength        extends ItcQueryProblems
   case object MissingSignalToNoise     extends ItcQueryProblems
+  case object MissingTargetInfo        extends ItcQueryProblems
   case class GenericError(msg: String) extends ItcQueryProblems
 
   implicit val eq: Eq[ItcQueryProblems] = Eq.instance {
     case (UnsupportedMode, UnsupportedMode)           => true
     case (MissingWavelength, MissingWavelength)       => true
     case (MissingSignalToNoise, MissingSignalToNoise) => true
+    case (MissingTargetInfo, MissingTargetInfo)       => true
     case (GenericError(a), GenericError(b))           => a === b
     case _                                            => false
   }
