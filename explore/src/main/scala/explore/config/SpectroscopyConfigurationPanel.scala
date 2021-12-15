@@ -11,6 +11,7 @@ import eu.timepit.refined.cats._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.itc.requiredForITC
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.formats._
@@ -24,9 +25,6 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-import explore.Icons
-import react.fa.IconSize
-import react.semanticui.modules.popup.Popup
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyConfigurationOptions]
@@ -37,15 +35,6 @@ object SpectroscopyConfigurationPanel {
 
   implicit val optionsReuse: Reusability[SpectroscopyConfigurationOptions] = Reusability.derive
   implicit val propsReuse: Reusability[Props]                              = Reusability.derive
-
-  def layered(text: String, icon: TagMod): TagMod =
-    Popup(
-      trigger = <.span(
-        ^.cls := "fa-layers fa-fw",
-        icon,
-        <.span(^.cls := "fa-layers-text fa-inverse", text)
-      )
-    )("Required for ITC")
 
   protected val component =
     ScalaFnComponent
@@ -67,14 +56,7 @@ object SpectroscopyConfigurationPanel {
         val wvUnits =
           <.span(
             "μm ",
-            layered(
-              "ITC",
-              Icons.StarExclamation
-                .clazz(ExploreStyles.WarningIcon)
-                .title("Required for ITC")
-                .size(IconSize.X1)
-            )
-              .unless(wv.get.isDefined)
+            requiredForITC.unless(wv.get.isDefined)
           )
         ReactFragment(
           <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
@@ -108,13 +90,7 @@ object SpectroscopyConfigurationPanel {
           ),
           <.div(
             ExploreStyles.SignalToNoiseAt,
-            layered(
-              "ITC",
-              Icons.StarExclamation
-                .clazz(ExploreStyles.WarningIcon)
-                .size(IconSize.X1)
-            )
-              .unless(signalToNoise.get.isDefined),
+            requiredForITC.unless(signalToNoise.get.isDefined),
             <.label("at"),
             InputWithUnits(
               id = "signal-to-noise-at",

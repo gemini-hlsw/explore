@@ -40,6 +40,7 @@ import react.common.implicits._
 import react.semanticui._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.label.Label
 import react.semanticui.modules.popup.Popup
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
@@ -53,7 +54,6 @@ import spire.math.Interval
 import java.text.DecimalFormat
 
 import scalajs.js.|
-import react.semanticui.elements.label.Label
 
 final case class SpectroscopyModesTable(
   scienceConfiguration:     View[Option[ScienceConfigurationData]],
