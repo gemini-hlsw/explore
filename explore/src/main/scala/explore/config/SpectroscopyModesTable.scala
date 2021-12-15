@@ -385,9 +385,9 @@ object SpectroscopyModesTable {
               .forRow(wavelength, sn, constraints, targets, _)
           )
           .collect { case Left(p) =>
-            p.toList.filterNot {
-              case ItcQueryProblems.UnsupportedMode | ItcQueryProblems.GenericError(_) => true
-              case _                                                                   => false
+            p.toList.filter {
+              case ItcQueryProblems.MissingTargetInfo => true
+              case _                                  => false
             }.distinct
           }
           .flatten
@@ -516,7 +516,7 @@ object SpectroscopyModesTable {
               )
             case ItcQueryProblems.MissingTargetInfo    =>
               Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)(
-                "Set Target "
+                "Missing Target Info"
               )
           }
 
@@ -526,7 +526,6 @@ object SpectroscopyModesTable {
                       HelpIcon("configuration/table.md")
               ),
               <.div(
-                <.label(s"Missing: ").when(errLabel.nonEmpty),
                 errLabel.toTagMod
               )
             ),

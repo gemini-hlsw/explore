@@ -24,6 +24,9 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
+import explore.Icons
+import react.fa.IconSize
+import react.semanticui.modules.popup.Popup
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyConfigurationOptions]
@@ -34,6 +37,15 @@ object SpectroscopyConfigurationPanel {
 
   implicit val optionsReuse: Reusability[SpectroscopyConfigurationOptions] = Reusability.derive
   implicit val propsReuse: Reusability[Props]                              = Reusability.derive
+
+  def layered(text: String, icon: TagMod): TagMod =
+    Popup(
+      trigger = <.span(
+        ^.cls := "fa-layers fa-fw",
+        icon,
+        <.span(^.cls := "fa-layers-text fa-inverse", text)
+      )
+    )("Required for ITC")
 
   protected val component =
     ScalaFnComponent
@@ -52,14 +64,26 @@ object SpectroscopyConfigurationPanel {
         val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatWavelengthMicron)
         val wvChangeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional
 
+        val wvUnits =
+          <.span(
+            "μm ",
+            layered(
+              "ITC",
+              Icons.StarExclamation
+                .clazz(ExploreStyles.WarningIcon)
+                .title("Required for ITC")
+                .size(IconSize.X1)
+            )
+              .unless(wv.get.isDefined)
+          )
         ReactFragment(
           <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
           InputWithUnits(
             id = "configuration-wavelength",
-            clazz = Css.Empty,
+            clazz = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
             inline = true,
             value = wv,
-            units = "μm",
+            units = wvUnits,
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor,
             disabled = false
@@ -78,11 +102,19 @@ object SpectroscopyConfigurationPanel {
           FormInputEV(
             id = "signal-to-noise",
             value = signalToNoise,
+            clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
             changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
           ),
           <.div(
             ExploreStyles.SignalToNoiseAt,
+            layered(
+              "ITC",
+              Icons.StarExclamation
+                .clazz(ExploreStyles.WarningIcon)
+                .size(IconSize.X1)
+            )
+              .unless(signalToNoise.get.isDefined),
             <.label("at"),
             InputWithUnits(
               id = "signal-to-noise-at",

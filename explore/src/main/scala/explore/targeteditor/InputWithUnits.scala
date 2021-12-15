@@ -28,7 +28,7 @@ final case class InputWithUnits[EV[_], A](
   changeAuditor:   ChangeAuditor[A],
   id:              NonEmptyString,
   label:           js.UndefOr[ShorthandS[Label]] = js.undefined,
-  units:           String,
+  units:           TagMod,
   clazz:           Css = ExploreStyles.Grow(1),
   disabled:        Boolean = false,
   columnSpam:      Int Refined Interval.Closed[1, 16] = 2,
