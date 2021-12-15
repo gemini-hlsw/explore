@@ -11,6 +11,7 @@ import eu.timepit.refined.cats._
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.itc.requiredForITC
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._
 import explore.model.formats._
@@ -52,14 +53,19 @@ object SpectroscopyConfigurationPanel {
         val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatWavelengthMicron)
         val wvChangeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional
 
+        val wvUnits =
+          <.span(
+            "μm ",
+            requiredForITC.unless(wv.get.isDefined)
+          )
         ReactFragment(
           <.label("Wavelength", HelpIcon("configuration/wavelength.md"), ExploreStyles.SkipToNext),
           InputWithUnits(
             id = "configuration-wavelength",
-            clazz = Css.Empty,
+            clazz = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
             inline = true,
             value = wv,
-            units = "μm",
+            units = wvUnits,
             validFormat = wvMicroInput,
             changeAuditor = wvChangeAuditor,
             disabled = false
@@ -78,11 +84,13 @@ object SpectroscopyConfigurationPanel {
           FormInputEV(
             id = "signal-to-noise",
             value = signalToNoise,
+            clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
             changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
           ),
           <.div(
             ExploreStyles.SignalToNoiseAt,
+            requiredForITC.unless(signalToNoise.get.isDefined),
             <.label("at"),
             InputWithUnits(
               id = "signal-to-noise-at",

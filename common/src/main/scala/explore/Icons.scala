@@ -35,6 +35,10 @@ object Icons {
   val faBarCodeRead: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faStarExclamation")
+  val faStarExclamation: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashAlt")
   val faTrash: FAIcon = js.native
 
@@ -183,6 +187,7 @@ object Icons {
     faCogs,
     faBars,
     faBarCodeRead,
+    faStarExclamation,
     faUndo,
     faRedo,
     faPlus,
@@ -225,6 +230,7 @@ object Icons {
 
   val Bars                = FontAwesomeIcon(faBars)
   val BarCodeRead         = FontAwesomeIcon(faBarCodeRead)
+  val StarExclamation     = FontAwesomeIcon(faStarExclamation)
   val Cogs                = FontAwesomeIcon(faCogs)
   val Undo                = FontAwesomeIcon(faUndo)
   val Redo                = FontAwesomeIcon(faRedo)

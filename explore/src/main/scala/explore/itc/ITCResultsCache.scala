@@ -33,7 +33,7 @@ final case class ItcResultsCache(
 
   def targets(r: Option[List[ITCTarget]]): EitherNec[ItcQueryProblems, NonEmptyList[ITCTarget]] =
     Either.fromOption(r.flatMap(NonEmptyList.fromList),
-                      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
+                      NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)
     )
 
   // Read the cache value or a default
@@ -53,6 +53,7 @@ final case class ItcResultsCache(
   def size: Int = cache.size
 
   def isEmpty: Boolean = size === 0
+
 }
 
 object ItcResultsCache {

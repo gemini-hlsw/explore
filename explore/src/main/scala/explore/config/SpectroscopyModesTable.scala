@@ -37,8 +37,10 @@ import lucuma.ui.reusability._
 import react.CircularProgressbar.CircularProgressbar
 import react.common._
 import react.common.implicits._
+import react.semanticui._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.label.Label
 import react.semanticui.modules.popup.Popup
 import react.virtuoso._
 import react.virtuoso.raw.ListRange
@@ -170,6 +172,7 @@ object SpectroscopyModesTable {
           val content = nel.collect {
             case ItcQueryProblems.MissingSignalToNoise => "Set S/N"
             case ItcQueryProblems.MissingWavelength    => "Set Wavelength"
+            case ItcQueryProblems.MissingTargetInfo    => "Missing target info"
             case ItcQueryProblems.GenericError(e)      => e
           }
           Popup(content = content.mkString_(", "), trigger = Icons.TriangleSolid)
@@ -367,30 +370,58 @@ object SpectroscopyModesTable {
           Map.empty[ITCRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
         )
       )
+      .useMemoBy { (props, rows, itc) => // Calculate the common errors
+        (props.spectroscopyRequirements.wavelength,
+         props.spectroscopyRequirements.signalToNoise,
+         props.targets,
+         props.constraints,
+         rows,
+         itc
+        )
+      }((_, _, _) => { case (wavelength, sn, targets, constraints, rows, itc) =>
+        rows.value
+          .map(
+            itc.value.get
+              .forRow(wavelength, sn, constraints, targets, _)
+          )
+          .collect { case Left(p) =>
+            p.toList.filter {
+              case ItcQueryProblems.MissingTargetInfo => true
+              case _                                  => false
+            }.distinct
+          }
+          .flatten
+          .toList
+          .distinct
+      })
       // itcProgress
       .useStateView(none[Progress])
       // cols
-      .useMemoBy { (props, _, itc, itcProgress) => // Memo Cols
+      .useMemoBy { (props, _, itc, _, itcProgress) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.focalPlane,
          props.spectroscopyRequirements.signalToNoise,
          props.targets,
+         props.constraints,
          itc,
          itcProgress
         )
-      }((props, _, _, _) => { case (wavelength, focalPlane, sn, targets, itc, itcProgress) =>
-        columns(wavelength, focalPlane, sn, props.constraints, targets, itc.get, itcProgress.get)
+      }((_, _, _, _, _) => {
+        case (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
+          columns(wavelength, focalPlane, sn, constraints, targets, itc.get, itcProgress.get)
       })
       // selectedIndex
-      .useStateBy((props, rows, _, _, _) => selectedRowIndex(props.scienceConfiguration.get, rows))
+      .useStateBy((props, rows, _, _, _, _) =>
+        selectedRowIndex(props.scienceConfiguration.get, rows)
+      )
       // Recompute state if conf or requirements change.
-      .useEffectWithDepsBy((props, _, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
         (props.scienceConfiguration, props.spectroscopyRequirements)
-      )((_, rows, _, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
+      )((_, rows, _, _, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
         selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
       })
       // tableInstance
-      .useTableBy((_, rows, _, _, cols, _) => ModesTableDef(cols, rows))
+      .useTableBy((_, rows, _, _, _, cols, _) => ModesTableDef(cols, rows))
       // virtuosoRef
       // This useMemo may be deceptive: it actually memoizes the ref, which is a wrapper to a mutable value.
       .useMemo(())(_ => ModesTable.createRef)
@@ -401,7 +432,7 @@ object SpectroscopyModesTable {
       // singleEffect
       .useSingleEffect
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, range, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _, range, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -409,11 +440,10 @@ object SpectroscopyModesTable {
           props.targets,
           range
         )
-      ) { (props, _, itcResults, itcProgress, _, _, ti, _, _, _, singleEffect) =>
+      ) { (props, _, itcResults, _, itcProgress, _, _, ti, _, _, _, singleEffect) =>
         { case (wavelength, signalToNoise, constraints, targets, range) =>
           implicit val ctx = props.ctx
-
-          val sortedRows = ti.value.preSortedRows.map(_.original).toList
+          val sortedRows   = ti.value.preSortedRows.map(_.original).toList
 
           def submitRows(rows: List[SpectroscopyModeRow]): IO[Unit] =
             singleEffect
@@ -435,7 +465,6 @@ object SpectroscopyModesTable {
 
           // Send the visible rows first
           submitRows(range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows)
-
         }
       }
       .renderWithReuse {
@@ -443,6 +472,7 @@ object SpectroscopyModesTable {
           props,
           rows,
           _,
+          errs,
           _,
           _,
           selectedIndex,
@@ -477,9 +507,27 @@ object SpectroscopyModesTable {
               )(content).when(indexCondition(idx))
             )
 
+          val errLabel: List[VdomNode] = errs.collect {
+            case ItcQueryProblems.MissingWavelength    =>
+              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)("Set Wav..")
+            case ItcQueryProblems.MissingSignalToNoise =>
+              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)(
+                "Set S/N"
+              )
+            case ItcQueryProblems.MissingTargetInfo    =>
+              Label(clazz = ExploreStyles.WarningLabel, size = sizes.Small)(
+                "Missing Target Info"
+              )
+          }
+
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
-              <.label(s"${rows.length} matching configurations", HelpIcon("configuration/table.md"))
+              <.label(s"${rows.length} matching configurations",
+                      HelpIcon("configuration/table.md")
+              ),
+              <.div(
+                errLabel.toTagMod
+              )
             ),
             <.div(
               ExploreStyles.ExploreTable,

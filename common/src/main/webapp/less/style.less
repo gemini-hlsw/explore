@@ -1372,6 +1372,20 @@ i.icon.user-astronaut::before {
   background-color: var(--warning-background-color);
 }
 
+.explore-warning-icon {
+  color: var(--warning-background-color);
+}
+
+span.fa-layers-text {
+  font-weight: 900;
+  transform: scale(0.6) translate(-1em, -2.4em) rotate(30deg);
+}
+
+div.field.explore-warning-input,
+div.inline.field.explore-warning-input {
+  box-shadow: -0px 0px 2px 1px var(--warning-background-color);
+}
+
 .ui.label.explore-warning-label {
   .warning-label-mixin();
 }
@@ -1831,6 +1845,8 @@ html {
 
 .explore-modes-table-title {
   grid-area: table-header;
+  display: flex;
+  justify-content: space-between;
 }
 
 .explore-configuration-form {

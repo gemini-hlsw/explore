@@ -11,6 +11,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.itc.requiredForITC
 import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
@@ -59,13 +60,14 @@ object RVInput {
   }
 
   final case class State(rvView: RVView) {
-    val units = rvView match {
+    def units(v: Option[RadialVelocity]) = rvView match {
       case RVView.Z              =>
-        <.div()
+        <.div(requiredForITC.unless(v.nonEmpty))
       case RVView.CZ | RVView.RV =>
         <.div(
           ExploreStyles.UnitsLabel,
-          "km/s"
+          "km/s",
+          requiredForITC.unless(v.nonEmpty)
         )
     }
   }
@@ -79,43 +81,47 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val rvView = ViewF.fromState($).zoom(State.rvView)
-      val input  = state.rvView match {
+      val rvView   = ViewF.fromState($).zoom(State.rvView)
+      val errorCss = ExploreStyles.InputErrorTooltip
+      val baseCss  = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(
+        props.value.get.isEmpty
+      )
+      val input    = state.rvView match {
         case RVView.Z  =>
           FormInputEV(
             id = state.rvView.tag,
             value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
-            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
             changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
-            clazz = ExploreStyles.Grow(1),
+            clazz = baseCss,
             disabled = props.disabled
           )
         case RVView.CZ =>
           FormInputEV(
             id = state.rvView.tag,
             value = props.value.zoom(rvToARVGet)(rvToARVMod),
-            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
             changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
-            clazz = ExploreStyles.Grow(1),
+            clazz = baseCss,
             disabled = props.disabled
           )
         case RVView.RV =>
           FormInputEV(
             id = state.rvView.tag,
             value = props.value,
-            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
             changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
-            clazz = ExploreStyles.Grow(1),
+            clazz = baseCss,
             disabled = props.disabled
           )
       }
-      val label  = state.rvView match {
+      val label    = state.rvView match {
         case RVView.Z  =>
           state.rvView.tag.value
         case RVView.CZ =>
@@ -130,7 +136,7 @@ object RVInput {
           EnumViewSelect(id = "view", value = rvView, disabled = props.disabled),
           input
         ),
-        state.units
+        state.units(props.value.get)
       )
     }
   }
