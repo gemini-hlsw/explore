@@ -36,7 +36,8 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
     path.segments.init.foldLeft(base.rawUrl / base.user.value / base.project.value / "main")(
       (uri, segment) => uri / segment.encoded
     )
-  private val url            = (rootUrl / "main").withPath(path)
+  private val mainUrl        = rootUrl / "main"
+  private val url            = (rootUrl / "main").withPath(mainUrl.path.concat(path))
   private val rootEditUrl    = base.editUrl / base.user.value / base.project.value
   private val newPage        = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
@@ -75,7 +76,7 @@ object HelpBody {
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
       .render { (props, state) =>
-        val imageConv = (s: Uri) => props.baseUrl.withPath(s.path)
+        val imageConv = (s: Uri) => props.baseUrl.withPath(props.baseUrl.path.concat(s.path))
 
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)
