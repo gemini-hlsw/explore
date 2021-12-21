@@ -11,6 +11,7 @@ import crystal.Ready
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
+import explore.utils._
 import explore.model.Help
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -37,14 +38,14 @@ final case class HelpBody(base: HelpContext, helpId: Help.Id)(implicit val ctx: 
       (uri, segment) => uri / segment.encoded
     )
   private val mainUrl        = rootUrl / "main"
-  private val url            = (rootUrl / "main").withPath(mainUrl.path.concat(path))
+  private val url            = mainUrl.addPath(path)
   private val rootEditUrl    = base.editUrl / base.user.value / base.project.value
   private val newPage        = (rootEditUrl / "new" / "main")
     .withQueryParam("filename", path.segments.mkString("/"))
     .withQueryParam("value", s"# Title")
     .withQueryParam("message", s"Create $helpId")
   private val editPage       = (rootEditUrl / "edit" / "main")
-    .withPath(path)
+    .addPath(path)
     .withQueryParam("message", s"Update $helpId")
 }
 
@@ -76,7 +77,7 @@ object HelpBody {
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).to[IO])
       }
       .render { (props, state) =>
-        val imageConv = (s: Uri) => props.baseUrl.withPath(props.baseUrl.path.concat(s.path))
+        val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
 
         HelpCtx.usingView { helpCtx =>
           val helpView = helpCtx.zoom(HelpContext.displayedHelp)
@@ -103,32 +104,29 @@ object HelpBody {
             ),
             <.div(
               ExploreStyles.HelpBody,
-              <.div(
-                ExploreStyles.HelpBody,
-                state.get match {
-                  case Ready(a)                                         =>
-                    ReactMarkdown(
-                      content = a,
-                      clazz = ExploreStyles.HelpMarkdownBody,
-                      linkTarget = "_blank",
-                      imageConv,
-                      remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                      rehypePlugins = List(RehypePlugin.RehypeKatex)
-                    ): VdomNode
-                  case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
-                  case crystal.Error(o) if o.getMessage.contains("404") =>
-                    <.div(
-                      ExploreStyles.HelpMarkdownBody,
-                      "Not found, maybe you want to create it ",
-                      <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
-                    )
-                  case crystal.Error(_)                                 =>
-                    <.div(
-                      ExploreStyles.HelpMarkdownBody,
-                      "We encountered an error trying to read the help file"
-                    )
-                }
-              )
+              state.get match {
+                case Ready(a)                                         =>
+                  ReactMarkdown(
+                    content = a,
+                    clazz = ExploreStyles.HelpMarkdownBody,
+                    linkTarget = "_blank",
+                    imageConv,
+                    remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
+                    rehypePlugins = List(RehypePlugin.RehypeKatex)
+                  ): VdomNode
+                case Pending(_)                                       => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
+                case crystal.Error(o) if o.getMessage.contains("404") =>
+                  <.div(
+                    ExploreStyles.HelpMarkdownBody,
+                    "Not found, maybe you want to create it ",
+                    <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
+                  )
+                case crystal.Error(_)                                 =>
+                  <.div(
+                    ExploreStyles.HelpMarkdownBody,
+                    "We encountered an error trying to read the help file"
+                  )
+              }
             )
           )
         }
