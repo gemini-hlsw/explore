@@ -14,6 +14,7 @@ import explore.model.enum.Theme
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
+import org.http4s.Uri
 import org.scalajs.dom
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
@@ -67,6 +68,11 @@ package object utils {
 
   @inline def showCount(count: Int, unit: String): String =
     showCount(count, unit, unit + "s")
+
+  implicit class Http4sUriOps(val uri: Uri) extends AnyVal {
+    def addPath(p: Uri.Path): Uri =
+      uri.withPath(uri.path.concat(p))
+  }
 }
 
 package utils {
