@@ -16,7 +16,7 @@ trait ArbTree {
 
   def genTree[A](implicit arbA: Arbitrary[A]) =
     for {
-      depth <- Gen.choose(0, 6) // Limit max depth because of exponential blow
+      depth    <- Gen.choose(0, 6) // Limit max depth because of exponential blow
       children <- genChildren[A](depth)
     } yield Tree(children)
 
@@ -55,7 +55,7 @@ trait ArbTree {
     Arbitrary[Node[A]] {
       for {
         depth <- Gen.choose(0, 6) // Limit max depth because of exponential blow
-        node <- genIntermediateNode[A](depth)
+        node  <- genIntermediateNode[A](depth)
       } yield node
     }
 
