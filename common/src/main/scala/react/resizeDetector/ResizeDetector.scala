@@ -66,7 +66,7 @@ object ResizeDetector {
 
   sealed trait ObserveBox extends Product with Serializable
 
-  object ObserveBox      {
+  object ObserveBox {
     implicit val enumValue: EnumValue[ObserveBox] = EnumValue.instance(_ match {
       case Content            => "content-box"
       case Border             => "border-box"
@@ -83,7 +83,7 @@ object ResizeDetector {
     var leading: js.UndefOr[Boolean]
     var trailing: js.UndefOr[Boolean]
   }
-  object RefreshOptions  {
+  object RefreshOptions {
     def apply(
       leading:  js.UndefOr[Boolean] = js.undefined,
       trailing: js.UndefOr[Boolean] = js.undefined
