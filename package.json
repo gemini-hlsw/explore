@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "@atlaskit/tree": "8.4.0",
-    "@cquiroz/aladin-lite": "0.5.1",
+    "@cquiroz/aladin-lite": "0.5.3",
     "@fortawesome/fontawesome-pro": "^5.15.4",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/pro-duotone-svg-icons": "^5.15.3",
