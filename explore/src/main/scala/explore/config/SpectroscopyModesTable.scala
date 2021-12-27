@@ -464,7 +464,7 @@ object SpectroscopyModesTable {
               )
 
           // Send the visible rows first
-          submitRows(range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows)
+          submitRows((range.value.foldMap(visibleRows(_, sortedRows)) ++ sortedRows).distinct)
         }
       }
       .renderWithReuse {

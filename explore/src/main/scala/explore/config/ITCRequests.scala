@@ -152,7 +152,7 @@ object ITCRequests {
         .flatTap(r =>
           Logger[F].debug(
             s"ITC: Result for mode ${request.mode}: ${itcResults(r)
-              .map(r => s"${r._2} x ${r._1 / 10e6}s")}"
+              .map(r => s"${r._2} x ${r._1.microseconds.toSeconds} s")}"
           )
         )
         .flatMap(callback)
