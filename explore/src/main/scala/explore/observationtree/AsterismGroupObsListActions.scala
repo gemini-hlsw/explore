@@ -92,7 +92,7 @@ object AsterismGroupObsListActions {
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
     Action(getter = getter(draggedIds), setter = setter(draggedIds))(
       onSet = (agl, oAsterismGroup) =>
-        oAsterismGroup.fold(IO.unit) { asterismGroup =>
+        oAsterismGroup.foldMap { asterismGroup =>
           // destination ids may not be found when undoing
           val optDestIds = agl.values.find(_.targetIds === asterismGroup.targetIds).map(_.obsIds)
           AsterismQueries.replaceAsterism[IO](draggedIds.toList, asterismGroup.targetIds.toList) >>

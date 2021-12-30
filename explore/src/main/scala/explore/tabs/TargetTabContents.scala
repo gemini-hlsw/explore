@@ -131,25 +131,13 @@ object TargetTabContents {
     def findAsterismGroup(
       obsIds: ObsIdSet,
       agl:    AsterismGroupList
-    ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersect(obsIds).nonEmpty)
+    ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
-    )(tlgwo:     AsterismGroupsWithObs): Callback = {
-      val groupList = tlgwo.asterismGroups
-
-      // If we're editing at the group level (even a group of 1) and it no longer exists
-      // (probably due to a merger), just go to the summary.
-      val updateSelection = props.focusedObs.get match {
-        case Some(_) => Callback.empty
-        case _       =>
-          groupList
-            .get(editedIds)
-            .fold(state.zoom(State.panelsSelected).set(SelectedPanel.summary))(_ => Callback.empty)
-      }
-
-      val updateExpanded = findAsterismGroup(editedIds, groupList).fold(Callback.empty) { tlg =>
+    )(agwo:      AsterismGroupsWithObs): Callback =
+      findAsterismGroup(editedIds, agwo.asterismGroups).foldMap { tlg =>
         // We should always find the group.
         // If a group was edited while closed and it didn't create a merger, keep it closed,
         // otherwise expand all affected groups.
@@ -162,12 +150,9 @@ object TargetTabContents {
               if (editedIds === tlg.obsIds && editedIds === groupIds) withOld
               else withOld + tlg.obsIds
 
-            withOldAndNew.filter(ids => groupList.contains(ids)) // clean up
+            withOldAndNew.filter(ids => agwo.asterismGroups.contains(ids)) // clean up
           }
       }
-
-      updateSelection >> updateExpanded
-    }
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -233,12 +218,9 @@ object TargetTabContents {
           if (idsToEdit === groupIds || targetIds === newTargetIds)
             asterismGroups
           else {
-            asterismGroups - groupIds + asterismGroup
-              .removeObsIdsUnsafe(idsToEdit)
-              .asObsKeyValue + AsterismGroup(
-              idsToEdit,
-              newTargetIds
-            ).asObsKeyValue
+            asterismGroups - groupIds +
+              asterismGroup.removeObsIdsUnsafe(idsToEdit).asObsKeyValue +
+              AsterismGroup(idsToEdit, newTargetIds).asObsKeyValue
           }
 
         // see if the edit caused a merger.
@@ -247,9 +229,10 @@ object TargetTabContents {
         }
 
         val updatedAsterismGroups = oMergeWithAg.fold(
-          splitAsterisms.updated(idsToEdit, asterismGroup.copy(targetIds = newTargetIds))
+          splitAsterisms
         ) { mergeWithAg =>
-          asterismGroups - idsToEdit + mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
+          splitAsterisms - idsToEdit - mergeWithAg._1 +
+            mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
         }
 
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
