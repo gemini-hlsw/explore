@@ -78,7 +78,7 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
   def intersects(other: IdSet): Boolean = intersect(other).nonEmpty
 
   @inline
-  def firstAndOnly: Option[Id] = if (selfSet.length === 1) selfSet.head.some else none
+  def single: Option[Id] = if (selfSet.length === 1) selfSet.head.some else none
 
   private def fromSet(set: SortedSet[Id]): Option[IdSet] =
     NonEmptySet.fromSet(set).map(iso.reverseGet)

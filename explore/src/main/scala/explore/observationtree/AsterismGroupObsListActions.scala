@@ -74,7 +74,7 @@ object AsterismGroupObsListActions {
     optDestIds: Option[ObsIdSet]
   ) = {
     val ids     = optDestIds.fold(draggedIds)(_ ++ draggedIds)
-    val focused = ids.firstAndOnly.map(FocusedObs(_))
+    val focused = ids.single.map(FocusedObs(_))
     selected.mod(panel =>
       panel match {
         // If in edit mode, always edit the destination.

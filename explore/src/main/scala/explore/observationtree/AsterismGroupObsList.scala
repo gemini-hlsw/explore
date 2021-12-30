@@ -147,7 +147,7 @@ object AsterismGroupObsList {
         )(
           getDraggedIds(rubric.draggableId, props)
             .flatMap(ids =>
-              ids.firstAndOnly.fold {
+              ids.single.fold {
                 val list        = ids.toList
                 val div: TagMod = <.div(
                   SegmentGroup(
@@ -176,7 +176,7 @@ object AsterismGroupObsList {
           setSelectedPanelToSingle(obsId)
 
       def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
-        val focused = obsIdSet.firstAndOnly.map(FocusedObs(_))
+        val focused = obsIdSet.single.map(FocusedObs(_))
         props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
       }
 
@@ -289,7 +289,7 @@ object AsterismGroupObsList {
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
-              "Target List Summary"
+              "Asterism Summary"
             )
           ),
           <.div(ExploreStyles.ObsTree)(

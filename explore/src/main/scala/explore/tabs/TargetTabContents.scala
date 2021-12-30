@@ -262,8 +262,7 @@ object TargetTabContents {
       val title = focusedObs match {
         case Some(FocusedObs(id)) => s"Observation $id"
         case None                 =>
-          val titleSfx = if (idsToEdit.size === 1) "" else "s"
-          s"Editing ${idsToEdit.size} Target List$titleSfx"
+          s"Editing ${idsToEdit.size} Asterisms"
       }
 
       Tile("targetEditor", title, backButton.some)(
