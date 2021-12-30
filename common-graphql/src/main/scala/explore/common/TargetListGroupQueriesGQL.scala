@@ -11,6 +11,7 @@ import lucuma.schemas.ObservationDB
 import java.time
 
 // gql: import explore.model.reusability._
+// gql: import explore.model.TargetWithId._
 // gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
@@ -20,52 +21,58 @@ object TargetListGroupQueriesGQL {
   trait TargetListGroupObsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
       query {
-        scienceTargetListGroup(programId: "p-2") {
-          targetEnvironments {
-            id
-            observation {
+        asterismGroup(programId: "p-2") {
+          nodes {
+            observationIds
+            asterism {
               id
             }
           }
-          commonTargetList {
-            ids
-            name
-            tracking {
-              ... on Sidereal {
-                catalogId {
-                  name
-                  id
-                }
-                coordinates {
-                  ra {
+        }
+
+        targetGroup(programId: "p-2") {
+          nodes {
+            observationIds
+            target {
+              id
+              name
+              tracking {
+                ... on Sidereal {
+                  catalogId {
+                    name
+                    id
+                  }
+                  coordinates {
+                    ra {
+                      microarcseconds
+                    }
+                    dec {
+                      microarcseconds
+                    }
+                  }
+                  epoch
+                  properMotion {
+                    ra {
+                      microarcsecondsPerYear
+                    }
+                    dec {
+                      microarcsecondsPerYear
+                    }
+                  }
+                  radialVelocity {
+                    centimetersPerSecond
+                  }
+                  parallax {
                     microarcseconds
                   }
-                  dec {
-                    microarcseconds
-                  }
-                }
-                epoch
-                properMotion {
-                  ra {
-                    microarcsecondsPerYear
-                  }
-                  dec {
-                    microarcsecondsPerYear
-                  }
-                }
-                radialVelocity {
-                  centimetersPerSecond
-                }
-                parallax {
-                  microarcseconds
                 }
               }
-            }
-            magnitudes {
-              value
-              band
-              system
-              error
+              magnitudes {
+                value
+                band
+                system
+                error
+              }
             }
           }
         }
@@ -87,8 +94,7 @@ object TargetListGroupQueriesGQL {
               }
             }
             targets {
-              id
-              scienceTargets {
+              asterism {
                 id
               }
             }
@@ -98,7 +104,12 @@ object TargetListGroupQueriesGQL {
     """
 
     object Data {
-      type ScienceTargetListGroup = model.TargetEnvGroup
+      object TargetGroup {
+        object Nodes {
+          type Target = model.TargetWithId
+        }
+      }
+
       object Observations {
         object Nodes {
           trait ConstraintSet extends model.ConstraintsSummary
@@ -113,9 +124,20 @@ object TargetListGroupQueriesGQL {
   @GraphQL
   trait ReplaceScienceTargetListMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: BulkReplaceTargetListInput!) {
-        replaceScienceTargetList(input: $input) {
-          observation { id }
+      mutation($input: BulkEditTargetEnvironmentInput!) {
+        updateTargetEnvironment(input: $input) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UpdateAsterismMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: BulkEditAsterismInput!) {
+        updateAsterism(input: $input) {
+          id
         }
       }
     """

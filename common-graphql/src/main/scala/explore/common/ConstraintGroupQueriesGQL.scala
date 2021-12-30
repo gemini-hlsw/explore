@@ -52,7 +52,7 @@ object ConstraintGroupQueriesGQL {
           nodes {
             id
             targets {
-              scienceTargets {
+              asterism {
                 id
                 name
               }

@@ -20,34 +20,33 @@ import org.typelevel.log4cats.Logger
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
-
-  def searches(name: NonEmptyString): List[F[List[Target]]]
+  def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]]
 }
 
 protected object TargetSource {
   case class Program[F[_]: Async](programId: model.Program.Id)(implicit
     client:                                  TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
-    val name: String                                                   =
+    val name: String                                                                        =
       s"Program $programId"
-    override def searches(name: NonEmptyString): List[F[List[Target]]] =
+    override def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
           .query()
           .map { data =>
-            data.scienceTargetGroup
-              .map(_.commonTarget)
+            data.targetGroup.nodes
+              .map(node => (node.target._1.some, node.target._2))
               // TODO Remove the filter when the API has a name pattern query
-              .filter(_.name.value.toLowerCase.startsWith(name.value.toLowerCase))
+              .filter(_._2.name.value.toLowerCase.startsWith(name.value.toLowerCase))
               .distinct
           }
       )
   }
 
   case class Catalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String                                                   =
+    val name: String                                                                        =
       Enumerated[CatalogName].tag(catalogName)
-    override def searches(name: NonEmptyString): List[F[List[Target]]] =
+    override def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]] =
       catalogName match {
         case CatalogName.Simbad =>
           val escapedName: String                             = name.value.replaceAll("\\*", "\\\\*")
@@ -66,7 +65,7 @@ protected object TargetSource {
           )
 
           (regularSearch +: wildcardSearches).map((search: F[List[SiderealTarget]]) =>
-            search.map((ts: List[SiderealTarget]) => ts: List[Target])
+            search.map(_.map((t: Target) => (none, t)))
           )
         case _                  => List.empty
       }

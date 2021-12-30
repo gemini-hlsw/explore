@@ -14,8 +14,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model.TargetIdSet
-import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -34,9 +32,9 @@ import react.semanticui.shorthand._
 import scalajs.js.JSConverters._
 
 final case class SearchForm(
-  id:          TargetIdSet,
+  id:          Target.Id,
   name:        NonEmptyString,
-  searching:   View[Set[TargetIdSet]],
+  searching:   View[Set[Target.Id]],
   searchAndGo: SearchCallback ==> Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(

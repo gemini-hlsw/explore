@@ -44,7 +44,7 @@ import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
-  onSelected:       Target ==> Callback
+  onSelected:       (Option[Target.Id], Target) ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
 
@@ -64,7 +64,9 @@ object TargetSelectionPopup {
     // inputValue
     .useStateView("")
     // results
-    .useStateWithReuse(SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[Target])])
+    .useStateWithReuse(
+      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[(Option[Target.Id], Target)])]
+    )
     // searching
     .useState(false)
     // singleEffect
@@ -100,7 +102,9 @@ object TargetSelectionPopup {
         val cleanState =
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
-        def addResults(source: TargetSource[IO], index: Int)(targets: List[Target]): IO[Unit] =
+        def addResults(source: TargetSource[IO], index: Int)(
+          targets:             List[(Option[Target.Id], Target)]
+        ): IO[Unit] =
           NonEmptyList
             .fromList(targets)
             .map[IO[Unit]](nel =>
@@ -111,14 +115,14 @@ object TargetSelectionPopup {
                                    NonEmptyList.fromListUnsafe(
                                      (ts.toList ++ nel.toList)
                                        .distinctBy(_ match {
-                                         case SiderealTarget(name, tracking, _, _)     =>
+                                         case (_, SiderealTarget(name, tracking, _, _))     =>
                                            tracking.catalogId
                                              .map(_.id.value)
                                              .getOrElse(name.value)
-                                         case NonsiderealTarget(_, ephemerisKey, _, _) =>
+                                         case (_, NonsiderealTarget(_, ephemerisKey, _, _)) =>
                                            ephemerisKey.toString
                                        })
-                                       .sortBy(_.name.value)
+                                       .sortBy(_._2.name.value)
                                    )
                                   )
                   ))

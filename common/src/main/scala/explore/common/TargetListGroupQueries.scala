@@ -14,17 +14,15 @@ import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
+import explore.model.AsterismGroup
+import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraints
-import explore.model.TargetEnvGroup
-import explore.model.TargetEnvGroupId
-import explore.model.TargetEnvGroupIdSet
-import explore.schemas.implicits._
+import explore.model.TargetWithId
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import lucuma.core.model.TargetEnvironment
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
@@ -32,6 +30,7 @@ import monocle.Focus
 import monocle.Getter
 
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 import TargetListGroupQueriesGQL._
 
@@ -39,39 +38,28 @@ object TargetListGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
   // This is used for sorting the TargetListGroupObsList. If we change to sort by name or something
   // else, we can remove this.
-  implicit val orderSortedSet: Order[TargetEnvGroupIdSet] =
-    TargetEnvGroupIdSet.orderByObsThenTargetEnv
+  implicit val orderSortedSet: Order[ObsIdSet] = ObsIdSet.orderObsIdSet
 
   type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
 
-  type TargetListGroupList = SortedMap[TargetEnvGroupIdSet, TargetEnvGroup]
-  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithConstraints]
+  type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
+  type TargetGroupList   = SortedMap[Target.Id, TargetWithId]
+  type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
-  case class TargetListGroupWithObs(
-    targetListGroups: TargetListGroupList,
-    observations:     ObsList
-  ) {
-    // TODO: When the API supports getting all target environments for a program,
-    // include a Map[TargetEnvironment.Id, NonEmptySet[Target.Id]] in the case class.
-    // then use that map to find the target ids. Until then, this will not work
-    // for unmoored targets when the whole group is not selected.
-    def targetIdsFor(targetEnvGroupIds: TargetEnvGroupIdSet): Set[Target.Id] =
-      targetListGroups
-        .get(targetEnvGroupIds)
-        .fold(observations.mapFilter { obsSumm =>
-          if (targetEnvGroupIds.contains(TargetEnvGroupId((obsSumm.targetEnvId, obsSumm.id.some))))
-            obsSumm.scienceTargetIds.some
-          else none
-        }.combineAll)(_.targetIds)
+  case class AsterismGroupsWithObs(
+    asterismGroups: AsterismGroupList,
+    targetGroups:   TargetGroupList,
+    observations:   ObsList
+  )
+
+  object AsterismGroupsWithObs {
+    val asterismGroups = Focus[AsterismGroupsWithObs](_.asterismGroups)
+    val targetGroups   = Focus[AsterismGroupsWithObs](_.targetGroups)
+    val observations   = Focus[AsterismGroupsWithObs](_.observations)
   }
 
-  object TargetListGroupWithObs {
-    val targetListGroups = Focus[TargetListGroupWithObs](_.targetListGroups)
-    val observations     = Focus[TargetListGroupWithObs](_.observations)
-  }
-
-  implicit val targetListGroupWithObservationsReuse: Reusability[TargetListGroupWithObs] =
+  implicit val targetListGroupWithObservationsReuse: Reusability[AsterismGroupsWithObs] =
     Reusability.derive
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraints =
@@ -80,16 +68,26 @@ object TargetListGroupQueries {
                               obsR.status,
                               obsR.activeStatus,
                               obsR.plannedTime.execution,
-                              obsR.targets.id,
-                              obsR.targets.scienceTargets.map(_.id).toSet
+                              obsR.targets.asterism.map(_.id).toSet
     )
 
   private val queryToTargetListGroupWithObsGetter
-    : Getter[TargetListGroupObsQuery.Data, TargetListGroupWithObs] = data =>
-    TargetListGroupWithObs(
-      data.scienceTargetListGroup.toSortedMap(_.id),
+    : Getter[TargetListGroupObsQuery.Data, AsterismGroupsWithObs] = data => {
+    val asterismGroups = data.asterismGroup.nodes
+      .map { node =>
+        ObsIdSet.fromList(node.observationIds).map { obsIdSet =>
+          AsterismGroup(obsIdSet, SortedSet.from(node.asterism.map(_.id)))
+        }
+      }
+      .flatten
+      .toSortedMap(_.obsIds)
+    val targetGroups   = data.targetGroup.nodes.map(_.target).toSortedMap(_._1)
+    AsterismGroupsWithObs(
+      asterismGroups,
+      targetGroups,
       data.observations.nodes.map(obsResultToSummary).toSortedMap(ObsSummaryWithConstraints.id.get)
     )
+  }
 
   implicit class TargetListGroupObsQueryDataOps(val self: TargetListGroupObsQuery.Data.type)
       extends AnyVal {
@@ -97,24 +95,46 @@ object TargetListGroupQueries {
   }
 
   val TargetListGroupLiveQuery =
-    ScalaFnComponent[View[TargetListGroupWithObs] ==> VdomNode](render =>
+    ScalaFnComponent[View[AsterismGroupsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB, TargetListGroupObsQuery.Data, TargetListGroupWithObs](
+        LiveQueryRenderMod[ObservationDB, TargetListGroupObsQuery.Data, AsterismGroupsWithObs](
           TargetListGroupObsQuery.query().reuseAlways,
           (TargetListGroupObsQuery.Data.asTargetListGroupWithObs.get _).reuseAlways,
-          List(TargetEnvQueriesGQL.ProgramTargetEnvEditSubscription.subscribe[IO]()).reuseAlways
+          List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),
+               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO]()
+          ).reuseAlways
         )(potRender(render))
       }
     )
 
   def replaceScienceTargetList[F[_]: Async](
-    targetEnvIds: List[TargetEnvironment.Id],
-    targets:      List[Target]
-  )(implicit c:   TransactionalClient[F, ObservationDB]) = {
-    val input = BulkReplaceTargetListInput(
-      select = SelectTargetEnvironmentInput(targetEnvironments = targetEnvIds.assign),
-      replace = targets.map(_.toCreateInput)
+    obsIds:     List[Observation.Id],
+    targetIds:  List[Target.Id]
+  )(implicit c: TransactionalClient[F, ObservationDB]) = {
+    val input = BulkEditTargetEnvironmentInput(
+      selectObservations = obsIds.assign,
+      edit = EditTargetEnvironmentInput(asterism = targetIds.assign)
     )
     ReplaceScienceTargetListMutation.execute[F](input).void
+  }
+
+  def addTargetToAsterisms[F[_]: Async](
+    obsIds:     List[Observation.Id],
+    targetId:   Target.Id
+  )(implicit c: TransactionalClient[F, ObservationDB]) = {
+    val input = BulkEditAsterismInput(selectObservations = obsIds.assign,
+                                      edit = List(EditAsterismInput(add = targetId.assign))
+    )
+    UpdateAsterismMutation.execute[F](input).void
+  }
+
+  def removeTargetFromAsterisms[F[_]: Async](
+    obsIds:     List[Observation.Id],
+    targetId:   Target.Id
+  )(implicit c: TransactionalClient[F, ObservationDB]) = {
+    val input = BulkEditAsterismInput(selectObservations = obsIds.assign,
+                                      edit = List(EditAsterismInput(delete = targetId.assign))
+    )
+    UpdateAsterismMutation.execute[F](input).void
   }
 }

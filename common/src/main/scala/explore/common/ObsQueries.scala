@@ -95,7 +95,7 @@ object ObsQueries {
   }
 
   private def convertTarget(
-    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.ScienceTargets
+    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.Asterism
   ): TargetSummary =
     TargetSummary(target.id, target.name)
 
@@ -106,7 +106,7 @@ object ObsQueries {
         data.observations.nodes.map(node =>
           ObsSummaryWithTargetsAndConstraints(
             node.id,
-            node.targets.scienceTargets.map(convertTarget),
+            node.targets.asterism.map(convertTarget),
             node.constraintSet,
             node.status,
             node.activeStatus,

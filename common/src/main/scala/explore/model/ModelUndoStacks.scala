@@ -7,19 +7,19 @@ import cats.Eq
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
-import explore.common.TargetListGroupQueries.TargetListGroupList
+import explore.common.TargetListGroupQueries.AsterismGroupList
 import explore.model.ObsIdSet
-import explore.model.TargetIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
 import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import monocle.Focus
 
 case class ModelUndoStacks[F[_]](
   forObsList:         UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forTargetListList:  UndoStacks[F, TargetListGroupList] = UndoStacks.empty[F, TargetListGroupList],
-  forSiderealTarget:  Map[TargetIdSet, UndoStacks[F, SiderealTarget]] =
-    Map.empty[TargetIdSet, UndoStacks[F, SiderealTarget]],
+  forTargetListList:  UndoStacks[F, AsterismGroupList] = UndoStacks.empty[F, AsterismGroupList],
+  forSiderealTarget:  Map[Target.Id, UndoStacks[F, SiderealTarget]] =
+    Map.empty[Target.Id, UndoStacks[F, SiderealTarget]],
   forConstraintList:  UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup: Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],

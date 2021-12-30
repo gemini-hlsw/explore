@@ -20,7 +20,6 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.formats._
 import explore.model.reusability._
@@ -58,10 +57,10 @@ final case class SearchCallback(
 
 final case class SiderealTargetEditor(
   uid:        User.Id,
-  id:         TargetIdSet,
+  id:         Target.Id,
   target:     View[SiderealTarget],
   undoStacks: View[UndoStacks[IO, SiderealTarget]],
-  searching:  View[Set[TargetIdSet]],
+  searching:  View[Set[Target.Id]],
   options:    View[TargetVisualOptions]
 ) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
@@ -86,7 +85,7 @@ object SiderealTargetEditor {
         val allView = undoViewSet(
           Iso.id.asLens,
           { t: SiderealTarget =>
-            EditSiderealInput.name.replace(t.name.assign) >>>
+            EditTargetInput.name.replace(t.name.assign) >>>
               TargetQueries.UpdateSiderealTracking(t.tracking) >>>
               TargetQueries.replaceMagnitudes(t.magnitudes)
           }
@@ -113,7 +112,7 @@ object SiderealTargetEditor {
 
         val nameView = undoViewSet(
           SiderealTarget.name,
-          (EditSiderealInput.name.replace _).compose((_: NonEmptyString).assign)
+          (EditTargetInput.name.replace _).compose((_: NonEmptyString).assign)
         )
 
         val properMotionRAView = undoViewSet(
@@ -252,7 +251,7 @@ object SiderealTargetEditor {
               ),
               RVInput(radialVelocityView, disabled)
             ),
-            MagnitudeForm(props.id, magnitudesView, disabled = disabled),
+            MagnitudeForm(magnitudesView, disabled = disabled),
             <.div(ExploreStyles.TargetSkyplotCell)(
               SkyPlotSection(props.baseCoordinates)
             )

@@ -24,15 +24,22 @@ object ObsIdSet {
 
   implicit def nonEmptySetWrapper(ids: ObsIdSet) = NonEmptySetWrapper(ids, iso)
 
+  def fromList(obsIds: List[Observation.Id]): Option[ObsIdSet] =
+    NonEmptySet.fromSet(SortedSet.from(obsIds)).map(ObsIdSet.apply)
+
   val fromString: Prism[String, ObsIdSet] =
-    Prism(parse)(_.idSet.toSortedSet.map(_.toString).mkString(","))
+    Prism(parse)(ids =>
+      eu.timepit.refined.types.string.NonEmptyString
+        .unsafeFrom(ids.idSet.toSortedSet.map(_.toString).mkString(","))
+        .value
+    )
 
   private def parse(idSetStr: String): Option[ObsIdSet] =
     idSetStr
       .split(",")
       .toList
       .traverse(Observation.Id.parse)
-      .flatMap(list => NonEmptySet.fromSet(SortedSet.from(list)).map(ObsIdSet.apply))
+      .flatMap(fromList)
 
   def one(id: Observation.Id): ObsIdSet = ObsIdSet(NonEmptySet.one(id))
 

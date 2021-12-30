@@ -15,7 +15,6 @@ import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelOptics
-import explore.model.TargetIdSet
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import japgolly.scalajs.react.ReactMonocle._
@@ -23,6 +22,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Focus
@@ -38,7 +38,7 @@ import scala.concurrent.duration._
 
 final case class AladinCell(
   uid:              User.Id,
-  tid:              TargetIdSet,
+  tid:              Target.Id,
   target:           View[Coordinates],
   options:          View[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
@@ -84,8 +84,7 @@ object AladinCell extends ModelOptics {
         implicit val ctx = props.ctx
         $.setStateL(State.fov)(fov) >>
           UserTargetPreferencesUpsert
-            // TODO Accept multiple Target ids.
-            .updateFov[IO](props.uid, props.tid.toList.head, fov.x)
+            .updateFov[IO](props.uid, props.tid, fov.x)
             .runAsyncAndForget
             .debounce(1.seconds)
       }

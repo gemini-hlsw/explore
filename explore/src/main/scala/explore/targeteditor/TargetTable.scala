@@ -9,12 +9,12 @@ import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
-import explore.common.TargetEnvQueriesGQL
+import explore.common.TargetListGroupQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ObsIdSet
 import explore.model.SiderealTargetWithId
-import explore.model.TargetIdSet
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targets.TargetColumns
@@ -22,6 +22,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
+import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
@@ -36,14 +37,13 @@ import reactST.reactTable.TableDef
 import reactST.reactTable._
 import reactST.reactTable.mod.IdType
 
-import scala.collection.immutable.TreeSeqMap
-
 import scalajs.js.JSConverters._
 
 final case class TargetTable(
-  targets:          View[TreeSeqMap[TargetIdSet, Target]],
+  obsIds:           ObsIdSet,
+  targets:          View[List[TargetWithId]],
   hiddenColumns:    View[Set[String]],
-  selectedTarget:   View[Option[TargetIdSet]],
+  selectedTarget:   View[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
 )(implicit val ctx: AppContextIO)
@@ -69,17 +69,16 @@ object TargetTable {
   )
 
   private def deleteSiderealTarget(
-    targetId:     TargetIdSet
+    obsIds:       ObsIdSet,
+    targetId:     Target.Id
   )(implicit ctx: AppContextIO): IO[Unit] =
-    TargetEnvQueriesGQL.RemoveSiderealTarget
-      .execute(targetId.toList)
-      .void
+    TargetListGroupQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
 
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // cols
-      .useMemoBy(_ => ()) { props => _ =>
+      .useMemoBy(_.obsIds) { props => _ =>
         implicit val ctx = props.ctx
 
         def column[V](id: String, accessor: SiderealTargetWithId => V) =
@@ -98,8 +97,8 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_ - cell.value) >>
-                    deleteSiderealTarget(cell.value).runAsyncAndForget
+                    props.targets.mod(_.filter(_._1 != cell.value)) >>
+                    deleteSiderealTarget(props.obsIds, cell.value).runAsyncAndForget
               )
             )
             .setDisableSortBy(true)

@@ -12,52 +12,51 @@ import crystal.react.implicits._
 import explore.common.TargetListGroupQueries
 import explore.common.TargetListGroupQueries._
 import explore.implicits._
+import explore.model.AsterismGroup
+import explore.model.FocusedObs
+import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
-import explore.model.TargetEnvGroup
-import explore.model.TargetEnvGroupIdSet
 import explore.undo._
-import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 
 import scala.collection.immutable.SortedSet
 
 object TargetListGroupObsListActions {
   private def getter(
-    draggedIds: TargetEnvGroupIdSet
-  ): TargetListGroupList => Option[TargetEnvGroup] =
+    draggedIds: ObsIdSet
+  ): AsterismGroupList => Option[AsterismGroup] =
     _.values
-      .find(_.id.intersects(draggedIds))
+      .find(_.obsIds.intersects(draggedIds))
 
-  private def setter(draggedIds: TargetEnvGroupIdSet, targetIds: Set[Target.Id])(
-    oTargetEnv:                  Option[TargetEnvGroup]
-  ): TargetListGroupList => TargetListGroupList = originalGroupList => {
+  private def setter(draggedIds: ObsIdSet)(
+    oAsterismGroup:              Option[AsterismGroup]
+  ): AsterismGroupList => AsterismGroupList = originalGroupList => {
     val originalEnvList = originalGroupList.values
 
-    // should always have a targetEnvironment and be able to find the dragged Ids in the list
-    (oTargetEnv, originalEnvList.find(_.id.intersects(draggedIds)))
-      .mapN { case (destEnv, srcEnv) =>
-        val tempList    = originalGroupList - srcEnv.id
-        val updatedList = srcEnv.filterOutIds(draggedIds, targetIds).fold(tempList) { filteredEnv =>
-          tempList + filteredEnv.asObsKeyValue
-        }
+    // should always have an asterism group and be able to find the dragged Ids in the list
+    (oAsterismGroup, originalEnvList.find(_.obsIds.intersects(draggedIds)))
+      .mapN { case (destGroup, srcGroup) =>
+        val tempList    = originalGroupList - srcGroup.obsIds
+        val updatedList =
+          srcGroup.removeObsIds(draggedIds).fold(tempList) { filteredGroup =>
+            tempList + filteredGroup.asObsKeyValue
+          }
 
         originalEnvList
-          .find(_.areScienceTargetsEqual(destEnv))
-          .fold(updatedList + destEnv.asObsKeyValue) { newEnv =>
-            // I can only add the TargetEnvGroupIds from src to dest since I won't know what the new
-            // target ids will be. Will need a server trip to be fully updated unless there are no targets.
-            updatedList - newEnv.id + newEnv.addIds(draggedIds).asObsKeyValue
+          .find(_.asterism == destGroup.asterism)
+          .fold(updatedList + destGroup.asObsKeyValue) { newGroup =>
+            updatedList - newGroup.obsIds + newGroup.addObsIds(draggedIds).asObsKeyValue
           }
       }
       .getOrElse(originalGroupList)
   }
 
   private def updateExpandedIds(
-    draggedIds: TargetEnvGroupIdSet,
-    optDestIds: Option[TargetEnvGroupIdSet]
+    draggedIds: ObsIdSet,
+    optDestIds: Option[ObsIdSet]
   )(
-    eids:       SortedSet[TargetEnvGroupIdSet]
+    eids:       SortedSet[ObsIdSet]
   ) =
     optDestIds.fold(
       eids.flatMap(ids => ids.remove(draggedIds)) + draggedIds
@@ -69,34 +68,38 @@ object TargetListGroupObsListActions {
     }
 
   private def updateSelected(
-    draggedIds: TargetEnvGroupIdSet,
-    optDestIds: Option[TargetEnvGroupIdSet]
-  )(
-    selected:   SelectedPanel[TargetEnvGroupIdSet]
-  ) =
-    selected match {
-      // If in edit mode, always edit the destination.
-      case Editor(_) =>
-        Editor(optDestIds.fold(draggedIds)(_ ++ draggedIds))
-      case _         => selected
-    }
+    selected:   View[SelectedPanel[ObsIdSet]],
+    focusedObs: View[Option[FocusedObs]],
+    draggedIds: ObsIdSet,
+    optDestIds: Option[ObsIdSet]
+  ) = {
+    val ids     = optDestIds.fold(draggedIds)(_ ++ draggedIds)
+    val focused = ids.firstAndOnly.map(FocusedObs(_))
+    selected.mod(panel =>
+      panel match {
+        // If in edit mode, always edit the destination.
+        case Editor(_) => Editor(ids)
+        case _         => panel
+      }
+    ) >> focusedObs.set(focused)
+  }
 
   def obsTargetListGroup(
-    draggedIds:  TargetEnvGroupIdSet,
-    targetIds:   Set[Target.Id], // target ids for the dragged ids.
-    expandedIds: View[SortedSet[TargetEnvGroupIdSet]],
-    selected:    View[SelectedPanel[TargetEnvGroupIdSet]]
+    draggedIds:  ObsIdSet,
+    expandedIds: View[SortedSet[ObsIdSet]],
+    selected:    View[SelectedPanel[ObsIdSet]],
+    focusedObs:  View[Option[FocusedObs]]
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
-    Action(getter = getter(draggedIds), setter = setter(draggedIds, targetIds))(
-      onSet = (tlgl, oTargetEnv) =>
-        oTargetEnv.fold(IO.unit) { tenv =>
+    Action(getter = getter(draggedIds), setter = setter(draggedIds))(
+      onSet = (agl, oAsterismGroup) =>
+        oAsterismGroup.fold(IO.unit) { asterismGroup =>
           // destination ids may not be found when undoing
-          val optDestIds = tlgl.values.find(_.areScienceTargetsEqual(tenv)).map(_.id)
-          TargetListGroupQueries.replaceScienceTargetList[IO](draggedIds.toList.map(_.targetEnvId),
-                                                              tenv.scienceTargets.values.toList
+          val optDestIds = agl.values.find(_.asterism === asterismGroup.asterism).map(_.obsIds)
+          TargetListGroupQueries.replaceScienceTargetList[IO](draggedIds.toList,
+                                                              asterismGroup.asterism.toList
           ) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
-            selected.mod(updateSelected(draggedIds, optDestIds) _).to[IO]
+            updateSelected(selected, focusedObs, draggedIds, optDestIds).to[IO]
         }
     )
 }
