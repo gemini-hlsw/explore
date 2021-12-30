@@ -15,10 +15,10 @@ import java.time
 // gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
-object TargetListGroupQueriesGQL {
+object AsterismQueriesGQL {
 
   @GraphQL
-  trait TargetListGroupObsQuery extends GraphQLOperation[ObservationDB] {
+  trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
       query {
         asterismGroup(programId: "p-2") {
@@ -122,7 +122,7 @@ object TargetListGroupQueriesGQL {
   }
 
   @GraphQL
-  trait ReplaceScienceTargetListMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateTargetEnvironmentMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation($input: BulkEditTargetEnvironmentInput!) {
         updateTargetEnvironment(input: $input) {

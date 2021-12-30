@@ -14,7 +14,7 @@ import explore.model.ObsIdSet
 import explore.model.TargetWithId
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
-import explore.targeteditor.TargetEnvEditor
+import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -30,34 +30,34 @@ object TargetTile {
   def targetTile(
     userId:        Option[User.Id],
     obsId:         Observation.Id,
-    targetEnvPot:  Pot[View[List[TargetWithId]]],
+    asterismPot:   Pot[View[List[TargetWithId]]],
     undoStacks:    View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
     searching:     View[Set[Target.Id]],
     options:       View[TargetVisualOptions],
     hiddenColumns: View[Set[String]]
   )(implicit ctx:  AppContextIO) =
     Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
-      Reuse.by((userId, obsId, targetEnvPot, undoStacks, searching, options))(
+      Reuse.by((userId, obsId, asterismPot, undoStacks, searching, options))(
         (renderInTitle: Tile.RenderInTitle) =>
           potRender[View[List[TargetWithId]]](
             (
-              (targetEnv: View[List[TargetWithId]]) =>
+              (asterism: View[List[TargetWithId]]) =>
                 userId.map(uid =>
                   <.div(
-                    TargetEnvEditor(uid,
-                                    ObsIdSet.one(obsId),
-                                    targetEnv,
-                                    undoStacks,
-                                    searching,
-                                    options,
-                                    hiddenColumns,
-                                    renderInTitle
+                    AsterismEditor(uid,
+                                   ObsIdSet.one(obsId),
+                                   asterism,
+                                   undoStacks,
+                                   searching,
+                                   options,
+                                   hiddenColumns,
+                                   renderInTitle
                     )
                   )
                 ): VdomNode
             ).reuseAlways
           )(
-            targetEnvPot
+            asterismPot
           )
       )
     )

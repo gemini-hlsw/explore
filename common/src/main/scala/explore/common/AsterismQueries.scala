@@ -32,16 +32,16 @@ import monocle.Getter
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
-import TargetListGroupQueriesGQL._
+import AsterismQueriesGQL._
 
-object TargetListGroupQueries {
+object AsterismQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.
-  // This is used for sorting the TargetListGroupObsList. If we change to sort by name or something
+  // This is used for sorting the AsterismGroupObsList. If we change to sort by name or something
   // else, we can remove this.
   implicit val orderSortedSet: Order[ObsIdSet] = ObsIdSet.orderObsIdSet
 
-  type ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
-  val ObservationResult = TargetListGroupObsQuery.Data.Observations.Nodes
+  type ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
+  val ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetGroupList   = SortedMap[Target.Id, TargetWithId]
@@ -59,7 +59,7 @@ object TargetListGroupQueries {
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
   }
 
-  implicit val targetListGroupWithObservationsReuse: Reusability[AsterismGroupsWithObs] =
+  implicit val asterismGroupWithObsReuse: Reusability[AsterismGroupsWithObs] =
     Reusability.derive
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraints =
@@ -71,8 +71,8 @@ object TargetListGroupQueries {
                               obsR.targets.asterism.map(_.id).toSet
     )
 
-  private val queryToTargetListGroupWithObsGetter
-    : Getter[TargetListGroupObsQuery.Data, AsterismGroupsWithObs] = data => {
+  private val queryToAsterismGroupWithObsGetter
+    : Getter[AsterismGroupObsQuery.Data, AsterismGroupsWithObs] = data => {
     val asterismGroups = data.asterismGroup.nodes
       .map { node =>
         ObsIdSet.fromList(node.observationIds).map { obsIdSet =>
@@ -89,17 +89,17 @@ object TargetListGroupQueries {
     )
   }
 
-  implicit class TargetListGroupObsQueryDataOps(val self: TargetListGroupObsQuery.Data.type)
+  implicit class AsterismGroupObsQueryDataOps(val self: AsterismGroupObsQuery.Data.type)
       extends AnyVal {
-    def asTargetListGroupWithObs = queryToTargetListGroupWithObsGetter
+    def asAsterismGroupWithObs = queryToAsterismGroupWithObsGetter
   }
 
-  val TargetListGroupLiveQuery =
+  val AsterismGroupLiveQuery =
     ScalaFnComponent[View[AsterismGroupsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB, TargetListGroupObsQuery.Data, AsterismGroupsWithObs](
-          TargetListGroupObsQuery.query().reuseAlways,
-          (TargetListGroupObsQuery.Data.asTargetListGroupWithObs.get _).reuseAlways,
+        LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
+          AsterismGroupObsQuery.query().reuseAlways,
+          (AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get _).reuseAlways,
           List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),
                TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO]()
           ).reuseAlways
@@ -107,7 +107,7 @@ object TargetListGroupQueries {
       }
     )
 
-  def replaceScienceTargetList[F[_]: Async](
+  def replaceAsterism[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetIds:  List[Target.Id]
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
@@ -115,7 +115,7 @@ object TargetListGroupQueries {
       selectObservations = obsIds.assign,
       edit = EditTargetEnvironmentInput(asterism = targetIds.assign)
     )
-    ReplaceScienceTargetListMutation.execute[F](input).void
+    UpdateTargetEnvironmentMutation.execute[F](input).void
   }
 
   def addTargetToAsterisms[F[_]: Async](

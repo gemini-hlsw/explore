@@ -12,7 +12,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
-import explore.common.TargetListGroupQueries._
+import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
@@ -21,8 +21,8 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
-import explore.observationtree.TargetListGroupObsList
-import explore.targeteditor.TargetEnvEditor
+import explore.observationtree.AsterismGroupObsList
+import explore.targeteditor.AsterismEditor
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
@@ -93,10 +93,10 @@ object TargetTabContents {
   }
 
   protected def renderFn(
-    props:                  Props,
-    state:                  View[State],
-    targetListGroupWithObs: View[AsterismGroupsWithObs]
-  )(implicit ctx:           AppContextIO): VdomNode = {
+    props:                Props,
+    state:                View[State],
+    asterismGroupWithObs: View[AsterismGroupsWithObs]
+  )(implicit ctx:         AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         (state.zoom(State.panelsWidth).set(d.size.width).to[IO] *>
@@ -109,7 +109,7 @@ object TargetTabContents {
 
     val treeWidth = state.get.panels.treeWidth.toInt
 
-    val targetMap = targetListGroupWithObs.get.targetGroups
+    val targetMap = asterismGroupWithObs.get.targetGroups
 
     // Tree area
     def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
@@ -119,7 +119,7 @@ object TargetTabContents {
 
     def treeInner(objectsWithObs: View[AsterismGroupsWithObs]) =
       <.div(ExploreStyles.TreeBody)(
-        TargetListGroupObsList(
+        AsterismGroupObsList(
           objectsWithObs,
           props.focusedObs,
           state.zoom(State.panelsSelected),
@@ -185,13 +185,13 @@ object TargetTabContents {
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("targetListSummary", "Target List Summary", backButton.some)(
+      Tile("asterismSummary", "Asterism Summary", backButton.some)(
         Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
-          (targetListGroupWithObs.get, props.hiddenColumns, props.focusedObs, props.expandedIds)
+          (asterismGroupWithObs.get, props.hiddenColumns, props.focusedObs, props.expandedIds)
         )((_: Tile.RenderInTitle) => explore.UnderConstruction())
         // TODO: Fix the summary table and reinstate
         // )((renderInTitle: Tile.RenderInTitle) =>
-        //   TargetSummaryTable(targetListGroupWithObs.get,
+        //   TargetSummaryTable(asterismGroupWithObs.get,
         //                      props.hiddenColumns,
         //                      state.zoom(State.panelsSelected),
         //                      props.focusedObs,
@@ -202,10 +202,10 @@ object TargetTabContents {
       )
 
     /**
-     * Render the target env editor for a TargetEnv.
+     * Render the asterism editor
      *
      * @param idsToEdit
-     *   The TargetEnvGroupIds to include in the edit. This needs to be a subset of the ids in
+     *   The observations to include in the edit. This needs to be a subset of the ids in
      *   asterismGroup
      * @param asterismGroup
      *   The AsterismGroup that is the basis for editing. All or part of it may be included in the
@@ -214,20 +214,19 @@ object TargetTabContents {
     def renderEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
       val focusedObs = props.focusedObs.get
       val groupIds   = asterismGroup.obsIds
-      val asterism   = asterismGroup.asterism
+      val targetIds  = asterismGroup.targetIds
 
-      val targetList = asterism.toList.map(targetMap.get).flatten
-      val targetIds  = SortedSet.from(targetList.map(TargetWithId.id.get))
+      val asterism = targetIds.toList.map(targetMap.get).flatten
 
-      val getTargetList: AsterismGroupsWithObs => List[TargetWithId] = _ => targetList
-      def modTargetList(
+      val getAsterism: AsterismGroupsWithObs => List[TargetWithId] = _ => asterism
+      def modAsterism(
         mod: List[TargetWithId] => List[TargetWithId]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
         val asterismGroups      = agwo.asterismGroups
         val targetGroups        = agwo.targetGroups
-        val moddedTargetList    = mod(targetList)
-        val newTargetIds        = SortedSet.from(moddedTargetList.map(TargetWithId.id.get))
-        val updatedTargetGroups = targetGroups ++ moddedTargetList.map(twi => (twi._1, twi))
+        val moddedAsterism      = mod(asterism)
+        val newTargetIds        = SortedSet.from(moddedAsterism.map(TargetWithId.id.get))
+        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi => (twi._1, twi))
 
         // if we're editing a subgroup, actions such as adding/removing a target would result in a split
         val splitAsterisms =
@@ -244,11 +243,11 @@ object TargetTabContents {
 
         // see if the edit caused a merger.
         val oMergeWithAg = asterismGroups.find { case (obsIds, ag) =>
-          obsIds =!= groupIds && ag.asterism === newTargetIds
+          obsIds =!= groupIds && ag.targetIds === newTargetIds
         }
 
         val updatedAsterismGroups = oMergeWithAg.fold(
-          splitAsterisms.updated(idsToEdit, asterismGroup.copy(asterism = newTargetIds))
+          splitAsterisms.updated(idsToEdit, asterismGroup.copy(targetIds = newTargetIds))
         ) { mergeWithAg =>
           asterismGroups - idsToEdit + mergeWithAg._2.addObsIds(groupIds).asObsKeyValue
         }
@@ -256,9 +255,9 @@ object TargetTabContents {
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
       }
 
-      val targetListView: View[List[TargetWithId]] = targetListGroupWithObs
+      val asterismView: View[List[TargetWithId]] = asterismGroupWithObs
         .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-        .zoom(getTargetList)(modTargetList)
+        .zoom(getAsterism)(modAsterism)
 
       val title = focusedObs match {
         case Some(FocusedObs(id)) => s"Observation $id"
@@ -272,7 +271,7 @@ object TargetTabContents {
           .by(
             (props.userId,
              idsToEdit,
-             targetListView,
+             asterismView,
              props.targetsUndoStacks,
              props.searching,
              state.zoom(State.options),
@@ -281,14 +280,14 @@ object TargetTabContents {
           )((renderInTitle: Tile.RenderInTitle) =>
             props.userId.map(uid =>
               <.div(
-                TargetEnvEditor(uid,
-                                idsToEdit,
-                                targetListView,
-                                props.targetsUndoStacks,
-                                props.searching,
-                                state.zoom(State.options),
-                                props.hiddenColumns,
-                                renderInTitle
+                AsterismEditor(uid,
+                               idsToEdit,
+                               asterismView,
+                               props.targetsUndoStacks,
+                               props.searching,
+                               state.zoom(State.options),
+                               props.hiddenColumns,
+                               renderInTitle
                 )
               )
             ): VdomNode
@@ -302,7 +301,7 @@ object TargetTabContents {
 
     val rightSide = state.get.panels.selected.optValue
       .flatMap(ids =>
-        findAsterismGroup(ids, targetListGroupWithObs.get.asterismGroups).map(ag => (ids, ag))
+        findAsterismGroup(ids, asterismGroupWithObs.get.asterismGroups).map(ag => (ids, ag))
       )
       .fold[VdomNode](renderSummary) { case (idsToEdit, asterismGroup) =>
         renderEditor(idsToEdit, asterismGroup)
@@ -314,7 +313,7 @@ object TargetTabContents {
     if (window.innerWidth <= Constants.TwoPanelCutoff) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(targetListGroupWithObs))
+        <.div(ExploreStyles.Tree, treeInner(asterismGroupWithObs))
           .when(state.get.panels.selected.leftPanelVisible),
         <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
@@ -331,7 +330,7 @@ object TargetTabContents {
           maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
           onResize = treeResize,
           resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(targetListGroupWithObs),
+          content = tree(asterismGroupWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
         <.div(^.key   := "target-right-side",
@@ -348,7 +347,7 @@ object TargetTabContents {
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
-      TargetListGroupLiveQuery(
+      AsterismGroupLiveQuery(
         Reuse(renderFn _)(props, ViewF.fromState($))
       )
     }

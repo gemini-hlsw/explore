@@ -9,7 +9,7 @@ import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
-import explore.common.TargetListGroupQueries
+import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -72,7 +72,7 @@ object TargetTable {
     obsIds:       ObsIdSet,
     targetId:     Target.Id
   )(implicit ctx: AppContextIO): IO[Unit] =
-    TargetListGroupQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
+    AsterismQueries.removeTargetFromAsterisms[IO](obsIds.toList, targetId)
 
   protected val component =
     ScalaFnComponent

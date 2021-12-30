@@ -11,8 +11,8 @@ import monocle.Lens
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroup(
-  obsIds:   ObsIdSet,
-  asterism: SortedSet[Target.Id]
+  obsIds:    ObsIdSet,
+  targetIds: SortedSet[Target.Id]
 ) {
   // Note: This should only be used while waiting for the server roundtrip
   def addObsIds(newIds: ObsIdSet): AsterismGroup =
@@ -28,8 +28,8 @@ case class AsterismGroup(
 }
 
 object AsterismGroup {
-  implicit val eqAsterismGroup: Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.asterism))
+  implicit val eqAsterismGroup: Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.targetIds))
 
-  val obsIds: Lens[AsterismGroup, ObsIdSet]               = Focus[AsterismGroup](_.obsIds)
-  val asterism: Lens[AsterismGroup, SortedSet[Target.Id]] = Focus[AsterismGroup](_.asterism)
+  val obsIds: Lens[AsterismGroup, ObsIdSet]                = Focus[AsterismGroup](_.obsIds)
+  val targetIds: Lens[AsterismGroup, SortedSet[Target.Id]] = Focus[AsterismGroup](_.targetIds)
 }

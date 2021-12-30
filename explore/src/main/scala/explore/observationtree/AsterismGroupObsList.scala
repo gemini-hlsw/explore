@@ -10,7 +10,7 @@ import crystal.ViewF
 import crystal.react.View
 import crystal.react.implicits._
 import explore.Icons
-import explore.common.TargetListGroupQueries._
+import explore.common.AsterismQueries._
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -43,18 +43,18 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 
-final case class TargetListGroupObsList(
+final case class AsterismGroupObsList(
   asterismsWithObs: View[AsterismGroupsWithObs],
   focusedObs:       View[Option[FocusedObs]],
   selected:         View[SelectedPanel[ObsIdSet]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupList]]
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[TargetListGroupObsList](TargetListGroupObsList.component)
+    extends ReactProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon
 
-object TargetListGroupObsList {
-  type Props = TargetListGroupObsList
+object AsterismGroupObsList {
+  type Props = AsterismGroupObsList
 
   case class State(dragging: Boolean = false)
 
@@ -120,8 +120,8 @@ object TargetListGroupObsList {
         } yield (destAg, draggedIds)
 
         oData.foldMap { case (destAg, draggedIds) =>
-          TargetListGroupObsListActions
-            .obsTargetListGroup(draggedIds, expandedIds, selected, focusedObs)
+          AsterismGroupObsListActions
+            .obsAsterismGroup(draggedIds, expandedIds, selected, focusedObs)
             .set(undoCtx)(destAg.some)
         }
       }
@@ -196,7 +196,7 @@ object TargetListGroupObsList {
         }
 
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
-        val targets = asterismGroup.asterism.toList.map(targetMap.get).flatten
+        val targets = asterismGroup.targetIds.toList.map(targetMap.get).flatten
         if (targets.isEmpty) "<No Targets>"
         else targets.map(TargetWithId.name.get).mkString(";")
       }

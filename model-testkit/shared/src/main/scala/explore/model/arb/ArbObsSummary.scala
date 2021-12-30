@@ -32,14 +32,7 @@ trait ArbObsSummary {
       activeStatus <- arbitrary[ObsActiveStatus]
       duration     <- arbitrary[Duration]
       targets      <- arbitrary[Set[Target.Id]]
-    } yield ObsSummaryWithConstraints(id,
-                                      constraints,
-                                      status,
-                                      activeStatus,
-                                      duration,
-                                      // targetEnvId,
-                                      targets
-    )
+    } yield ObsSummaryWithConstraints(id, constraints, status, activeStatus, duration, targets)
   }
 
   implicit val arbObsSummaryWithTargetsAndConstraints =

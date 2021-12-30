@@ -9,8 +9,8 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.View
 import crystal.react.implicits._
-import explore.common.TargetListGroupQueries
-import explore.common.TargetListGroupQueries._
+import explore.common.AsterismQueries
+import explore.common.AsterismQueries._
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.FocusedObs
@@ -22,7 +22,7 @@ import lucuma.schemas.ObservationDB
 
 import scala.collection.immutable.SortedSet
 
-object TargetListGroupObsListActions {
+object AsterismGroupObsListActions {
   private def getter(
     draggedIds: ObsIdSet
   ): AsterismGroupList => Option[AsterismGroup] =
@@ -44,7 +44,7 @@ object TargetListGroupObsListActions {
           }
 
         originalEnvList
-          .find(_.asterism == destGroup.asterism)
+          .find(_.targetIds == destGroup.targetIds)
           .fold(updatedList + destGroup.asObsKeyValue) { newGroup =>
             updatedList - newGroup.obsIds + newGroup.addObsIds(draggedIds).asObsKeyValue
           }
@@ -84,7 +84,7 @@ object TargetListGroupObsListActions {
     ) >> focusedObs.set(focused)
   }
 
-  def obsTargetListGroup(
+  def obsAsterismGroup(
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     selected:    View[SelectedPanel[ObsIdSet]],
@@ -94,10 +94,8 @@ object TargetListGroupObsListActions {
       onSet = (agl, oAsterismGroup) =>
         oAsterismGroup.fold(IO.unit) { asterismGroup =>
           // destination ids may not be found when undoing
-          val optDestIds = agl.values.find(_.asterism === asterismGroup.asterism).map(_.obsIds)
-          TargetListGroupQueries.replaceScienceTargetList[IO](draggedIds.toList,
-                                                              asterismGroup.asterism.toList
-          ) >>
+          val optDestIds = agl.values.find(_.targetIds === asterismGroup.targetIds).map(_.obsIds)
+          AsterismQueries.replaceAsterism[IO](draggedIds.toList, asterismGroup.targetIds.toList) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
             updateSelected(selected, focusedObs, draggedIds, optDestIds).to[IO]
         }
