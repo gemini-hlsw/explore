@@ -15,59 +15,48 @@ import explore.utils.ExploreEvent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
-import monocle.Focus
-import react.common.ReactProps
-// import japgolly.scalajs.react.callback.CallbackCats._
+import react.common.ReactFnProps
 
 final case class LogoutTracker(
   setVault:   Option[UserVault] ==> Callback,
   setMessage: NonEmptyString ==> Callback
 )(val render: IO[Unit] ==> VdomNode)(implicit val ctx: AppContextIO)
-    extends ReactProps[LogoutTracker](LogoutTracker.component)
+    extends ReactFnProps[LogoutTracker](LogoutTracker.component)
 
 object LogoutTracker {
   type Props = LogoutTracker
 
-  case class State(bc: Option[BroadcastChannel[ExploreEvent]])
-
-  object State {
-    val bc = Focus[State](_.bc)
-  }
-
   protected implicit val propsReuse: Reusability[Props] =
     Reusability.derive && Reusability.by(_.render)
-  protected implicit val stateReuse: Reusability[State] = Reusability.never
 
-  private val component =
-    ScalaComponent
-      .builder[LogoutTracker]
-      .initialState(State(none))
-      .render { $ =>
-        React.Fragment(
-          $.state.bc.fold[VdomNode](React.Fragment())(bc =>
-            $.props.render(IO(bc.postMessage(ExploreEvent.Logout)).attempt.void)
-          )
-        )
-      }
-      .componentDidMount { $ =>
-        CallbackTo {
-          val bc = new BroadcastChannel[ExploreEvent]("explore")
-          bc.onmessage = (x: ExploreEvent) =>
-            // This is coming from the js world, we can't match the type
-            (x.event match {
-              case ExploreEvent.Logout.event =>
-                ($.props.setVault(none) >> $.props.setMessage(
-                  "You logged out in another instance"
-                )).to[IO]
-              case _                         => IO.unit
-            })
-          bc
-        }.flatMap(bc => $.modState(State.bc.replace(bc.some)))
-      }
-      .componentWillUnmount(
-        _.state.bc.map(bc => IO(bc.close()).attempt.void).orEmpty
+  protected implicit val stateReuse: Reusability[BroadcastChannel[ExploreEvent]] =
+    Reusability.always
+
+  val component = ScalaFnComponent
+    .withHooks[Props]
+    // Create a nonce
+    .useState(System.currentTimeMillis)
+    .useState(none[BroadcastChannel[ExploreEvent]])
+    .useEffectOnMountBy { (props, nonce, state) =>
+      val bc = new BroadcastChannel[ExploreEvent]("explore")
+      bc.onmessage = (x: ExploreEvent) =>
+        // This is coming from the js world, we can't match the type
+        (x.event match {
+          case ExploreEvent.Logout.event =>
+            (props.setVault(none) >> props.setMessage(
+              "You logged out in another instance"
+            )).to[IO].whenA(x.value =!= nonce.value.toString)
+          case _                         => IO.unit
+        })
+
+      state
+        .setState(bc.some)
+        .flatMap(_ => CallbackTo(Callback(bc.close()).attempt))
+    }
+    .renderWithReuse { (props, nonce, bc) =>
+      bc.value.fold[VdomNode](React.Fragment())(bc =>
+        props.render(IO(bc.postMessage(ExploreEvent.Logout(nonce.value))).attempt.void)
       )
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+    }
 
 }

@@ -81,11 +81,19 @@ package utils {
   // We don't need yet more than just an index to  differentiate
   sealed trait ExploreEvent extends js.Object {
     def event: Int
+    def value: String // encode whatever value as a String. it can be e.g. json
   }
 
   object ExploreEvent {
-    object Logout extends ExploreEvent {
+    class Logout(val nonce: Long) extends ExploreEvent {
       val event = 1
+      val value = nonce.toString
+    }
+
+    object Logout {
+      val event                          = 1
+      def apply(nonce: Long)             = new Logout(nonce)
+      def unapply(l: Logout): Some[Long] = Some(l.nonce)
     }
   }
 

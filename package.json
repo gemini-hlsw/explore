@@ -14,7 +14,7 @@
     "@fortawesome/pro-solid-svg-icons": "^5.15.3",
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@svgdotjs/svg.js": "3.0.16",
-    "broadcast-channel": "4.8.0",
+    "broadcast-channel": "4.9.0",
     "copy-to-clipboard": "3.3.1",
     "fomantic-ui-less": "2.8.8",
     "github-markdown-css": "^5.1.0",
@@ -62,7 +62,7 @@
     "stylelint-config-standard": "^22.0.0",
     "stylelint-value-no-unknown-custom-properties": "^3.0.0",
     "terser": "5.10.0",
-    "vite": "2.7.4",
+    "vite": "2.7.7",
     "vite-plugin-fonts": "^0.2.2"
   },
   "scripts": {
