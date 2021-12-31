@@ -22,6 +22,8 @@ import react.common.implicits._
 import react.common.style._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.Node
 
 import scalajs.js
 
@@ -38,13 +40,14 @@ final case class Tile(
   controllerClass:   Option[Css] = None // applied to wrapping div when in a TileController.
 )(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
-  def showMaximize: Boolean                                                                =
+  def showMaximize: Boolean =
     state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)
-  def showMinimize: Boolean                                                                =
+
+  def showMinimize: Boolean =
     state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
+
   def withState(state: TileSizeState, sizeStateCallback: TileSizeState ==> Callback): Tile =
     copy(state = state, sizeStateCallback = sizeStateCallback)(render)
-  protected val infoRef                                                                    = Ref.toVdom[html.Element]
 }
 
 object Tile {
@@ -55,7 +58,9 @@ object Tile {
 
   implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
-  implicit val rawContainerReuse: Reusability[Raw.ReactDOM.Container] = Reusability.always
+  implicit val rawContainerReuse: Reusability[html.Element]                  = Reusability.always
+  implicit val rawDomContainerReuse: Reusability[Raw.ReactDOM.Container]     = Reusability.always
+  implicit def ref[F[_]]: Reusability[Ref.FullF[F, Node, Node, HTMLElement]] = Reusability.always
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -72,7 +77,7 @@ object Tile {
       .withHooks[Props]
       // info ref
       .useRefToVdom[html.Element]
-      .render { (p, infoRef) =>
+      .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
           Button(
             as = <.a,
