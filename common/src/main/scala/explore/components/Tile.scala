@@ -113,7 +113,7 @@ object Tile {
             ),
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
             <.span(ExploreStyles.TileTitleStrip,
-                   ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize),
+                   ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
             ).withRef(infoRef),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
