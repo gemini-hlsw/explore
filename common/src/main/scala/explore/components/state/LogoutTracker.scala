@@ -35,7 +35,8 @@ object LogoutTracker {
   val component = ScalaFnComponent
     .withHooks[Props]
     // Create a nonce
-    .useState(System.currentTimeMillis)
+    .useMemo(())(_ => System.currentTimeMillis)
+    // Hold the broadcast channel
     .useState(none[BroadcastChannel[ExploreEvent]])
     .useEffectOnMountBy { (props, nonce, state) =>
       val bc = new BroadcastChannel[ExploreEvent]("explore")
@@ -50,8 +51,7 @@ object LogoutTracker {
         })
 
       state
-        .setState(bc.some)
-        .flatMap(_ => CallbackTo(Callback(bc.close()).attempt))
+        .setState(bc.some) *> CallbackTo(Callback(bc.close()).attempt)
     }
     .renderWithReuse { (props, nonce, bc) =>
       bc.value.fold[VdomNode](React.Fragment())(bc =>
