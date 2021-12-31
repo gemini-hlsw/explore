@@ -11,8 +11,8 @@ import crystal.Ready
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
-import explore.utils._
 import explore.model.Help
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.http4s._
