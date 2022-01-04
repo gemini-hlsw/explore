@@ -94,9 +94,9 @@ object implicits {
   implicit class TargetOps(target: Target) {
     def toCreateInput: CreateTargetInput = target match {
       case sidereal @ SiderealTarget(_, _, _, _)       =>
-        CreateTargetInput(sidereal = sidereal.toCreateInput.assign)
+        CreateTargetInput(programId = "p-2", sidereal = sidereal.toCreateInput.assign)
       case nonsidereal @ NonsiderealTarget(_, _, _, _) =>
-        CreateTargetInput(nonsidereal = nonsidereal.toCreateInput.assign)
+        CreateTargetInput(programId = "p-2", nonsidereal = nonsidereal.toCreateInput.assign)
     }
   }
 
@@ -165,7 +165,7 @@ object itcschema {
 
     implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
       // From the list of targets selects the ones relevant for ITC
-      def itcTargets: List[ITCTarget] = s.targets.scienceTargets
+      def itcTargets: List[ITCTarget] = s.targets.asterism
         .collect {
           case (_, SiderealTarget(_, SiderealTracking(_, _, _, _, Some(rv), _), brightness, _))
               if brightness.nonEmpty =>

@@ -13,13 +13,13 @@ import scala.collection.immutable.SortedSet
 case class ExpandedIds(
   targetIds:           SortedSet[Target.Id] = SortedSet.empty,
   constraintSetObsIds: SortedSet[ObsIdSet] = SortedSet.empty,
-  targetListObsIds:    SortedSet[TargetEnvGroupIdSet] = SortedSet.empty
+  asterismObsIds:      SortedSet[ObsIdSet] = SortedSet.empty
 )
 
 object ExpandedIds {
   val targetIds           = Focus[ExpandedIds](_.targetIds)
   val constraintSetObsIds = Focus[ExpandedIds](_.constraintSetObsIds)
-  val targetListObsIds    = Focus[ExpandedIds](_.targetListObsIds)
+  val asterismObsIds      = Focus[ExpandedIds](_.asterismObsIds)
 
   implicit val eqExpandedIds: Eq[ExpandedIds] = Eq.fromUniversalEquals
 }

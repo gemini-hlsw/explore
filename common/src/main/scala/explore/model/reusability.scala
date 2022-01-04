@@ -30,7 +30,6 @@ object reusability {
   implicit val angularSizeReuse: Reusability[AngularSize]       = Reusability.derive
   implicit val targetReuse: Reusability[Target]                 = Reusability.derive
   implicit val semesterReuse: Reusability[Semester]             = Reusability.derive
-  // implicit val cssReuse: Reusability[Css]                       = Reusability.by(_.htmlClass)
   implicit def nonEmptySetReuse[A]: Reusability[NonEmptySet[A]] =
     Reusability.by(_.toSortedSet.unsorted)
 
@@ -49,13 +48,11 @@ object reusability {
   implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                           = Reusability.derive
   implicit val siderealTargetReuse: Reusability[SiderealTarget]                       = Reusability.derive
   implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                 = Reusability.derive
-  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[TargetIdSet, Target]]      =
-    Reusability.by((_: TreeSeqMap[TargetIdSet, Target]).toMap)(Reusability.map)
+  implicit val scienceTargetsReuse: Reusability[TreeSeqMap[Target.Id, Target]]        =
+    Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.derive
-  implicit val taretIdSetReuse: Reusability[TargetIdSet]                              = Reusability.derive
-  implicit val targetEnvGroupIdReuse: Reusability[TargetEnvGroupId]                   = Reusability.derive
-  implicit val targetEnvGroupIdSetReuse: Reusability[TargetEnvGroupIdSet]             = Reusability.derive
-  implicit val targetEnvReuse: Reusability[TargetEnvGroup]                            = Reusability.derive
+  implicit val targetIdSetReuse: Reusability[TargetIdSet]                             = Reusability.derive
+  implicit val targetWithIdReuse: Reusability[TargetWithId]                           = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                           = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                       = Reusability.derive
   implicit val elevationRangeReuse: Reusability[ElevationRange]                       = Reusability.derive

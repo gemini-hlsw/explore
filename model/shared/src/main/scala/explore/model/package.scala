@@ -9,6 +9,9 @@ import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
+import lucuma.schemas.decoders._
+import io.circe.Decoder
+import io.circe.Decoder._
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
@@ -17,9 +20,9 @@ import scala.collection.immutable.SortedMap
 
 package object model {
   // It'd be nice to make these opaque
-  type TargetWithId            = (TargetIdSet, Target)
-  type SiderealTargetWithId    = (TargetIdSet, SiderealTarget)
-  type NonsiderealTargetWithId = (TargetIdSet, NonsiderealTarget)
+  type TargetWithId            = (Target.Id, Target)
+  type SiderealTargetWithId    = (Target.Id, SiderealTarget)
+  type NonsiderealTargetWithId = (Target.Id, NonsiderealTarget)
 
   object TargetWithId {
     val sidereal: Prism[TargetWithId, SiderealTargetWithId] =
@@ -34,10 +37,17 @@ package object model {
           id -> t
       }(identity)
 
-    val id: Lens[TargetWithId, TargetIdSet]                                 = Focus[TargetWithId](_._1)
+    val id: Lens[TargetWithId, Target.Id]                                   = Focus[TargetWithId](_._1)
     val target: Lens[TargetWithId, Target]                                  = Focus[TargetWithId](_._2)
     val name: Lens[TargetWithId, NonEmptyString]                            = target.andThen(Target.name)
     val magnitudes: Lens[TargetWithId, SortedMap[MagnitudeBand, Magnitude]] =
       target.andThen(Target.magnitudes)
+
+    implicit val targetWithIdDecoder: Decoder[TargetWithId] = Decoder.instance(c =>
+      for {
+        id     <- c.get[Target.Id]("id")
+        target <- c.as[Target]
+      } yield (id, target)
+    )
   }
 }

@@ -42,6 +42,9 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
     selfSet.intersect(iso.get(other))
 
   @inline
+  def subsetOf(other: IdSet): Boolean = toSortedSet.subsetOf(iso.get(other).toSortedSet)
+
+  @inline
   def size: Long = selfSet.size
 
   // Note: length is an Int, while size is a Long. Important in some places in the UI
@@ -73,6 +76,9 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
 
   @inline
   def intersects(other: IdSet): Boolean = intersect(other).nonEmpty
+
+  @inline
+  def single: Option[Id] = if (selfSet.length === 1) selfSet.head.some else none
 
   private def fromSet(set: SortedSet[Id]): Option[IdSet] =
     NonEmptySet.fromSet(set).map(iso.reverseGet)

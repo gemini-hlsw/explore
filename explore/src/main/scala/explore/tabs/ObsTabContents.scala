@@ -27,7 +27,6 @@ import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.TargetIdSet
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
@@ -67,7 +66,7 @@ final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
   focusedObs:       View[Option[FocusedObs]],
   undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[TargetIdSet]],
+  searching:        View[Set[Target.Id]],
   hiddenColumns:    View[Set[String]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
@@ -400,7 +399,10 @@ object ObsTabContents {
                 notesTile,
                 TargetTile.targetTile(
                   props.userId.get,
-                  obsView.map(_.zoom(ObservationData.targets)),
+                  obsId,
+                  obsView.map(
+                    _.zoom(ObservationData.targets.andThen(ObservationData.Targets.asterism))
+                  ),
                   props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
                   props.searching,
                   state.zoom(State.options),

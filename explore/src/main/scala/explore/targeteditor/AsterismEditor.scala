@@ -9,16 +9,16 @@ import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
-import explore.common.TargetEnvQueriesGQL
+import explore.common.AsterismQueries
+import explore.common.TargetQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.TargetEnvGroup
-import explore.model.TargetIdSet
+import explore.model.ObsIdSet
+import explore.model.TargetWithId
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics._
-import explore.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
@@ -27,55 +27,57 @@ import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.function.Index._
+import monocle.Optional
 import react.common.ReactFnProps
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
-final case class TargetEnvEditor(
+final case class AsterismEditor(
   userId:           User.Id,
-  targetEnv:        View[TargetEnvGroup],
-  undoStacks:       View[Map[TargetIdSet, UndoStacks[IO, SiderealTarget]]],
-  searching:        View[Set[TargetIdSet]],
+  obsIds:           ObsIdSet,
+  asterism:         View[List[TargetWithId]],
+  undoStacks:       View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+  searching:        View[Set[Target.Id]],
   options:          View[TargetVisualOptions],
   hiddenColumns:    View[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[TargetEnvEditor](TargetEnvEditor.component)
+    extends ReactFnProps[AsterismEditor](AsterismEditor.component)
 
-object TargetEnvEditor {
-  type Props = TargetEnvEditor
+object AsterismEditor {
+  type Props = AsterismEditor
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  // TODO: Create target id locally and don't wait for the mutations.
   private def insertSiderealTarget(
-    targetEnv:      View[TargetEnvGroup],
+    obsIds:         ObsIdSet,
+    asterism:       View[List[TargetWithId]],
+    oTargetId:      Option[Target.Id],
     target:         SiderealTarget,
-    selectedTarget: View[Option[TargetIdSet]]
-  )(implicit ctx:   AppContextIO): IO[Unit] =
-    TargetEnvQueriesGQL.AddSiderealTarget
-      .execute(
-        targetEnv.get.id.targetEnvIds.toList,
-        target.toCreateInput
-      ) >>= { response =>
-      val targetIds = response.updateScienceTargetList.flatMap(_.edits.map(_.target.id))
-
-      TargetIdSet
-        .fromTargetIdList(targetIds)
-        .map(id => selectedTarget.set(id.some).to[IO])
-        .orEmpty
-    }
+    selectedTarget: View[Option[Target.Id]]
+  )(implicit ctx:   AppContextIO): IO[Unit] = {
+    val targetId = oTargetId.fold(TargetQueries.createSiderealTarget[IO](target))(IO.pure)
+    targetId.flatMap(tid =>
+      AsterismQueries.addTargetToAsterisms[IO](
+        obsIds.toList,
+        tid
+      ) >>
+        (asterism.mod(_ :+ (tid, target)) >> selectedTarget.set(tid.some))
+          .to[IO]
+    )
+  }
 
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // selectedTargetIdState
-      .useStateBy(_.targetEnv.get.scienceTargets.headOption.map(_._1))
+      .useStateBy(_.asterism.get.headOption.map(_._1))
       // adding
       .useState(false)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _, _) => props.targetEnv.get.scienceTargets)((_, _, adding) =>
+      .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, _, adding) =>
         _ => adding.setState(false)
       )
       .renderWithReuse { (props, selectedTargetIdState, adding) =>
@@ -83,7 +85,7 @@ object TargetEnvEditor {
 
         // TODO We will add this generic state => view conversion in crystal
         val selectedTargetId =
-          View[Option[TargetIdSet]](
+          View[Option[Target.Id]](
             selectedTargetIdState.value,
             (mod, _) => selectedTargetIdState.modState(mod)
           )
@@ -105,24 +107,32 @@ object TargetEnvEditor {
               ),
               onSelected = Reuse
                 .always(_ match {
-                  case t @ SiderealTarget(_, _, _, _) =>
-                    insertSiderealTarget(props.targetEnv, t, selectedTargetId).runAsync
-                  case _                              => Callback.empty
+                  case (oid, t @ SiderealTarget(_, _, _, _)) =>
+                    insertSiderealTarget(props.obsIds,
+                                         props.asterism,
+                                         oid,
+                                         t,
+                                         selectedTargetId
+                    ).runAsync
+                  case _                                     => Callback.empty
                 })
             )
           ),
           TargetTable(
-            props.targetEnv.zoom(TargetEnvGroup.scienceTargets),
+            props.obsIds,
+            props.asterism,
             props.hiddenColumns,
             selectedTargetId,
             props.renderInTitle
           ),
           selectedTargetId.get
             .flatMap[VdomElement] { targetId =>
-              val selectedTargetView =
-                props.targetEnv
-                  .zoom(TargetEnvGroup.scienceTargets)
-                  .zoom(index(targetId)(indexTreeSeqMap[TargetIdSet, Target]))
+              val optional =
+                Optional[List[TargetWithId], Target](_.find(_._1 === targetId).map(_._2))(target =>
+                  _.map(twid => if (twid._1 === targetId) (targetId, target) else twid)
+                )
+
+              val selectedTargetView = props.asterism.zoom(optional)
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {

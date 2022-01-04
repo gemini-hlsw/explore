@@ -12,6 +12,7 @@ import lucuma.schemas.ObservationDB
 
 import java.time
 // gql: import explore.model.reusability._
+// gql: import explore.model.TargetWithId._
 // gql: import io.circe.refined._
 // gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
@@ -25,7 +26,7 @@ object ObsQueriesGQL {
           nodes {
             id
             targets {
-              scienceTargets {
+              asterism {
                 id
                 name
               }
@@ -143,11 +144,7 @@ object ObsQueriesGQL {
         observation(observationId: $obsId) {
           id
           targets {
-            id
-            observation {
-              id
-            }
-            scienceTargets {
+            asterism {
               id
               name
               tracking {
@@ -249,7 +246,9 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
-        type Targets       = model.TargetEnvGroup
+        object Targets {
+          type Asterism = model.TargetWithId
+        }
         type ConstraintSet = model.ConstraintSet
 
         object ScienceRequirements {

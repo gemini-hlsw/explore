@@ -8,19 +8,31 @@ import clue.annotation.GraphQL
 import explore.model
 import lucuma.schemas.ObservationDB
 
+import java.time
+
 // gql: import explore.model.reusability._
 // gql: import explore.model.TargetWithId._
+// gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
-object TargetQueriesGQL {
+object AsterismQueriesGQL {
 
   @GraphQL
-  trait TargetNameQuery extends GraphQLOperation[ObservationDB] {
-    // FIXME Change this to an actual name pattern query when it's available in the API
-    val document = """
+  trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = """
       query {
+        asterismGroup(programId: "p-2") {
+          nodes {
+            observationIds
+            asterism {
+              id
+            }
+          }
+        }
+
         targetGroup(programId: "p-2") {
           nodes {
+            observationIds
             target {
               id
               name
@@ -59,6 +71,31 @@ object TargetQueriesGQL {
                 value
                 band
                 system
+                error
+              }
+            }
+          }
+        }
+
+        observations(programId: "p-2") {
+          nodes {
+            id
+            constraintSet {
+              imageQuality
+              cloudExtinction
+              skyBackground
+              waterVapor
+            }
+            status
+            activeStatus
+            plannedTime {
+              execution {
+                microseconds
+              }
+            }
+            targets {
+              asterism {
+                id
               }
             }
           }
@@ -72,14 +109,23 @@ object TargetQueriesGQL {
           type Target = model.TargetWithId
         }
       }
+
+      object Observations {
+        object Nodes {
+          trait ConstraintSet extends model.ConstraintsSummary
+          object PlannedTime {
+            type Execution = time.Duration
+          }
+        }
+      }
     }
   }
 
   @GraphQL
-  trait CreateTargetMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateTargetEnvironmentMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: CreateTargetInput!) {
-        createTarget(input: $input) {
+      mutation($input: BulkEditTargetEnvironmentInput!) {
+        updateTargetEnvironment(input: $input) {
           id
         }
       }
@@ -87,43 +133,10 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait DeleteTargetMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateAsterismMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($targetId: TargetId!) {
-        deleteTarget(targetId: $targetId) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UndeleteTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($targetId: TargetId!) {
-        undeleteTarget(targetId: $targetId) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UpdateTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: EditTargetInput!) {
-        updateTarget(input: $input) {
-          id
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait ProgramTargetEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document = """
-      subscription {
-        targetEdit(programId:"p-2") {
+      mutation($input: BulkEditAsterismInput!) {
+        updateAsterism(input: $input) {
           id
         }
       }
