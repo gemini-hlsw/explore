@@ -77,10 +77,10 @@ object SiderealTargetEditor {
     ScalaFnComponent
       .withHooks[Props]
       .renderWithReuse { props =>
-      AppCtx.using { implicit appCtx =>
-        val undoCtx     = UndoContext(props.undoStacks, props.target)
-        val target      = props.target.get
-        val undoViewSet = UndoView(props.id, undoCtx)
+        AppCtx.using { implicit appCtx =>
+          val undoCtx     = UndoContext(props.undoStacks, props.target)
+          val target      = props.target.get
+          val undoViewSet = UndoView(props.id, undoCtx)
 
         val allView = undoViewSet(
           Iso.id.asLens,
@@ -91,78 +91,78 @@ object SiderealTargetEditor {
           }
         )
 
-        val coordsRAView = undoViewSet(
-          SiderealTarget.baseRA,
-          (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
-        )
-
-        val coordsDecView = undoViewSet(
-          SiderealTarget.baseDec,
-          (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
-        )
-
-        val epochView =
-          undoViewSet(
-            SiderealTarget.epoch,
-            (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
+          val coordsRAView = undoViewSet(
+            SiderealTarget.baseRA,
+            (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
           )
 
-        val magnitudesView =
-          undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
+          val coordsDecView = undoViewSet(
+            SiderealTarget.baseDec,
+            (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
+          )
+
+          val epochView =
+            undoViewSet(
+              SiderealTarget.epoch,
+              (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
+            )
+
+          val magnitudesView =
+            undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
 
         val nameView = undoViewSet(
           SiderealTarget.name,
           (EditTargetInput.name.replace _).compose((_: NonEmptyString).assign)
         )
 
-        val properMotionRAView = undoViewSet(
-          SiderealTarget.properMotionRA.getOption,
-          (f: Endo[Option[ProperMotion.RA]]) =>
-            SiderealTarget.properMotionRA.modify(unsafeOptionFnUnlift(f)),
-          (pmRA: Option[ProperMotion.RA]) =>
-            TargetQueries.UpdateSiderealTracking.properMotion(
-              buildProperMotion(pmRA, SiderealTarget.properMotionDec.getOption(target))
-            )
-        )
+          val properMotionRAView = undoViewSet(
+            SiderealTarget.properMotionRA.getOption,
+            (f: Endo[Option[ProperMotion.RA]]) =>
+              SiderealTarget.properMotionRA.modify(unsafeOptionFnUnlift(f)),
+            (pmRA: Option[ProperMotion.RA]) =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(pmRA, SiderealTarget.properMotionDec.getOption(target))
+              )
+          )
 
-        val properMotionDecView = undoViewSet(
-          SiderealTarget.properMotionDec.getOption,
-          (f: Endo[Option[ProperMotion.Dec]]) =>
-            SiderealTarget.properMotionDec.modify(unsafeOptionFnUnlift(f)),
-          (pmDec: Option[ProperMotion.Dec]) =>
-            TargetQueries.UpdateSiderealTracking.properMotion(
-              buildProperMotion(SiderealTarget.properMotionRA.getOption(target), pmDec)
-            )
-        )
+          val properMotionDecView = undoViewSet(
+            SiderealTarget.properMotionDec.getOption,
+            (f: Endo[Option[ProperMotion.Dec]]) =>
+              SiderealTarget.properMotionDec.modify(unsafeOptionFnUnlift(f)),
+            (pmDec: Option[ProperMotion.Dec]) =>
+              TargetQueries.UpdateSiderealTracking.properMotion(
+                buildProperMotion(SiderealTarget.properMotionRA.getOption(target), pmDec)
+              )
+          )
 
-        val parallaxView = undoViewSet(
-          SiderealTarget.parallax,
-          TargetQueries.UpdateSiderealTracking.parallax
-        )
+          val parallaxView = undoViewSet(
+            SiderealTarget.parallax,
+            TargetQueries.UpdateSiderealTracking.parallax
+          )
 
-        val radialVelocityView = undoViewSet(
-          SiderealTarget.radialVelocity,
-          TargetQueries.UpdateSiderealTracking.radialVelocity
-        )
+          val radialVelocityView = undoViewSet(
+            SiderealTarget.radialVelocity,
+            TargetQueries.UpdateSiderealTracking.radialVelocity
+          )
 
-        def searchAndSet(
-          allView:  View[SiderealTarget],
-          nameView: View[NonEmptyString],
-          s:        SearchCallback
-        ): Callback =
-          SimbadSearch
-            .search[IO](s.searchTerm)
-            .map(_.headOption)
-            .runAsyncAndThen {
-              case Right(r @ Some(t)) =>
-                allView.set(t) >> s.onComplete(r)
-              case Right(None)        =>
-                nameView.set(s.searchTerm) >> s.onComplete(none)
-              case Left(t)            =>
-                nameView.set(s.searchTerm) >> s.onError(t)
-            }
+          def searchAndSet(
+            allView:  View[SiderealTarget],
+            nameView: View[NonEmptyString],
+            s:        SearchCallback
+          ): Callback =
+            SimbadSearch
+              .search[IO](s.searchTerm)
+              .map(_.headOption)
+              .runAsyncAndThen {
+                case Right(r @ Some(t)) =>
+                  allView.set(t) >> s.onComplete(r)
+                case Right(None)        =>
+                  nameView.set(s.searchTerm) >> s.onComplete(none)
+                case Left(t)            =>
+                  nameView.set(s.searchTerm) >> s.onError(t)
+              }
 
-        val disabled = props.searching.get.exists(_ === props.id)
+          val disabled = props.searching.get.exists(_ === props.id)
 
         React.Fragment(
           Divider(hidden = true, fitted = true),
