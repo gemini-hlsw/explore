@@ -81,14 +81,14 @@ object SiderealTargetEditor {
           val target      = props.target.get
           val undoViewSet = UndoView(props.id, undoCtx)
 
-        val allView = undoViewSet(
-          Iso.id.asLens,
-          { t: SiderealTarget =>
-            EditTargetInput.name.replace(t.name.assign) >>>
-              TargetQueries.UpdateSiderealTracking(t.tracking) >>>
-              TargetQueries.replaceMagnitudes(t.magnitudes)
-          }
-        )
+          val allView = undoViewSet(
+            Iso.id.asLens,
+            { t: SiderealTarget =>
+              EditTargetInput.name.replace(t.name.assign) >>>
+                TargetQueries.UpdateSiderealTracking(t.tracking) >>>
+                TargetQueries.replaceMagnitudes(t.magnitudes)
+            }
+          )
 
           val coordsRAView = undoViewSet(
             SiderealTarget.baseRA,
@@ -109,10 +109,10 @@ object SiderealTargetEditor {
           val magnitudesView =
             undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
 
-        val nameView = undoViewSet(
-          SiderealTarget.name,
-          (EditTargetInput.name.replace _).compose((_: NonEmptyString).assign)
-        )
+          val nameView = undoViewSet(
+            SiderealTarget.name,
+            (EditTargetInput.name.replace _).compose((_: NonEmptyString).assign)
+          )
 
           val properMotionRAView = undoViewSet(
             SiderealTarget.properMotionRA.getOption,
@@ -163,100 +163,100 @@ object SiderealTargetEditor {
 
           val disabled = props.searching.get.exists(_ === props.id)
 
-        React.Fragment(
-          Divider(hidden = true, fitted = true),
-          <.span(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
-          <.div(ExploreStyles.TargetGrid)(
-            <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
-              // Keep the search field and the coords always together
-              SearchForm(
+          React.Fragment(
+            Divider(hidden = true, fitted = true),
+            <.span(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
+            <.div(ExploreStyles.TargetGrid)(
+              <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
+                // Keep the search field and the coords always together
+                SearchForm(
+                  props.id,
+                  // SearchForm doesn't edit the name directly. It will set it atomically, together
+                  // with coords & magnitudes from the catalog search, so that all 3 fields are
+                  // a single undo/redo operation.
+                  props.target.zoom(SiderealTarget.name).get,
+                  props.searching,
+                  Reuse.currying(allView, nameView).in(searchAndSet _)
+                ),
+                <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+                FormInputEV(
+                  id = "ra",
+                  value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
+                  validFormat = ValidFormatInput.truncatedRA,
+                  changeAuditor = ChangeAuditor.truncatedRA,
+                  clazz = ExploreStyles.TargetRaDecMinWidth,
+                  errorPointing = LabelPointing.Below,
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  disabled = disabled
+                ),
+                <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
+                FormInputEV(
+                  id = "dec",
+                  value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
+                  validFormat = ValidFormatInput.truncatedDec,
+                  changeAuditor = ChangeAuditor.truncatedDec,
+                  clazz = ExploreStyles.TargetRaDecMinWidth,
+                  errorPointing = LabelPointing.Below,
+                  errorClazz = ExploreStyles.InputErrorTooltip,
+                  disabled = disabled
+                )
+              ),
+              AladinCell(
+                props.uid,
                 props.id,
-                // SearchForm doesn't edit the name directly. It will set it atomically, together
-                // with coords & magnitudes from the catalog search, so that all 3 fields are
-                // a single undo/redo operation.
-                props.target.zoom(SiderealTarget.name).get,
-                props.searching,
-                Reuse.currying(allView, nameView).in(searchAndSet _)
+                props.target.zoom(SiderealTarget.baseCoordinates),
+                props.options
               ),
-              <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-              FormInputEV(
-                id = "ra",
-                value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
-                validFormat = ValidFormatInput.truncatedRA,
-                changeAuditor = ChangeAuditor.truncatedRA,
-                clazz = ExploreStyles.TargetRaDecMinWidth,
-                errorPointing = LabelPointing.Below,
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                disabled = disabled
+              CataloguesForm(props.options).when(false),
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                ExploreStyles.ExploreForm,
+                <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
+                InputWithUnits(
+                  epochView,
+                  ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
+                  ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                  id = "epoch",
+                  units = "years",
+                  disabled = disabled
+                ),
+                <.label("µ RA", ExploreStyles.SkipToNext),
+                InputWithUnits(
+                  properMotionRAView,
+                  ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
+                  id = "raPM",
+                  units = "mas/y",
+                  disabled = disabled
+                ),
+                <.label("µ Dec", ExploreStyles.SkipToNext),
+                InputWithUnits(
+                  properMotionDecView,
+                  ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
+                  id = "raDec",
+                  units = "mas/y",
+                  disabled = disabled
+                ),
+                <.label("Parallax", ExploreStyles.SkipToNext),
+                InputWithUnits(
+                  parallaxView,
+                  ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                  ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
+                  id = "parallax",
+                  units = "mas",
+                  disabled = disabled
+                ),
+                RVInput(radialVelocityView, disabled)
               ),
-              <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-              FormInputEV(
-                id = "dec",
-                value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
-                validFormat = ValidFormatInput.truncatedDec,
-                changeAuditor = ChangeAuditor.truncatedDec,
-                clazz = ExploreStyles.TargetRaDecMinWidth,
-                errorPointing = LabelPointing.Below,
-                errorClazz = ExploreStyles.InputErrorTooltip,
-                disabled = disabled
+              MagnitudeForm(magnitudesView, disabled = disabled),
+              <.div(ExploreStyles.TargetSkyplotCell)(
+                SkyPlotSection(props.baseCoordinates)
               )
-            ),
-            AladinCell(
-              props.uid,
-              props.id,
-              props.target.zoom(SiderealTarget.baseCoordinates),
-              props.options
-            ),
-            CataloguesForm(props.options).when(false),
-            Form(as = <.div, size = Small)(
-              ExploreStyles.Grid,
-              ExploreStyles.Compact,
-              ExploreStyles.ExploreForm,
-              <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
-              InputWithUnits(
-                epochView,
-                ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
-                id = "epoch",
-                units = "years",
-                disabled = disabled
-              ),
-              <.label("µ RA", ExploreStyles.SkipToNext),
-              InputWithUnits(
-                properMotionRAView,
-                ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
-                ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
-                id = "raPM",
-                units = "mas/y",
-                disabled = disabled
-              ),
-              <.label("µ Dec", ExploreStyles.SkipToNext),
-              InputWithUnits(
-                properMotionDecView,
-                ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
-                ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
-                id = "raDec",
-                units = "mas/y",
-                disabled = disabled
-              ),
-              <.label("Parallax", ExploreStyles.SkipToNext),
-              InputWithUnits(
-                parallaxView,
-                ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
-                ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
-                id = "parallax",
-                units = "mas",
-                disabled = disabled
-              ),
-              RVInput(radialVelocityView, disabled)
-            ),
-            MagnitudeForm(magnitudesView, disabled = disabled),
-            <.div(ExploreStyles.TargetSkyplotCell)(
-              SkyPlotSection(props.baseCoordinates)
             )
           )
-        )
-      }
+        }
       }
 
 }
