@@ -34,6 +34,7 @@ import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
+import explore.syntax.ui._
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.ReactMonocle._
@@ -329,7 +330,7 @@ object ObsTabContents {
       )
 
       val coreWidth =
-        if (window.innerWidth <= Constants.TwoPanelCutoff) {
+        if (window.canFitTwoPanels) {
           props.size.width.getOrElse(0)
         } else {
           props.size.width.getOrElse(0) - treeWidth
@@ -442,7 +443,7 @@ object ObsTabContents {
           )
         )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
 
-      if (window.innerWidth <= Constants.TwoPanelCutoff) {
+      if (window.canFitTwoPanels) {
         <.div(
           ExploreStyles.TreeRGL,
           <.div(ExploreStyles.Tree, treeInner(observations))

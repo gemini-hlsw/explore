@@ -25,6 +25,7 @@ import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.undo._
+import explore.syntax.ui._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
@@ -80,7 +81,6 @@ object ConstraintSetTabContents {
   protected def renderFn(
     props:              Props,
     state:              View[State],
-    innerWidth:         Double,
     constraintsWithObs: View[ConstraintSummaryWithObervations]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
@@ -248,7 +248,7 @@ object ConstraintSetTabContents {
         )
       }
 
-    if (innerWidth <= Constants.TwoPanelCutoff) {
+    if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, tree(constraintsWithObs))
@@ -288,7 +288,7 @@ object ConstraintSetTabContents {
     def render(props: Props) = {
       implicit val ctx = props.ctx
       ConstraintGroupLiveQuery(
-        Reuse(renderFn _)(props, ViewF.fromState($), window.innerWidth)
+        Reuse(renderFn _)(props, ViewF.fromState($))
       )
     }
   }
