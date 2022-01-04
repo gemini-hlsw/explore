@@ -211,19 +211,22 @@ object TargetTabContents {
         val targetGroups        = agwo.targetGroups
         val moddedAsterism      = mod(asterism)
         val newTargetIds        = SortedSet.from(moddedAsterism.map(TargetWithId.id.get))
+        // make sure any added targets are in the map and update modified ones.
         val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi => (twi._1, twi))
 
-        // if we're editing a subgroup, actions such as adding/removing a target would result in a split
         val splitAsterisms =
-          if (idsToEdit === groupIds || targetIds === newTargetIds)
+          if (targetIds === newTargetIds)
             asterismGroups
-          else {
+          else if (idsToEdit === groupIds) {
+            asterismGroups + asterismGroup.copy(targetIds = newTargetIds).asObsKeyValue
+          } else {
+            // Since we're editing a subgroup, actions such as adding/removing a target will result in a split
             asterismGroups - groupIds +
               asterismGroup.removeObsIdsUnsafe(idsToEdit).asObsKeyValue +
               AsterismGroup(idsToEdit, newTargetIds).asObsKeyValue
           }
 
-        // see if the edit caused a merger.
+        // see if the edit caused a merger - note that we're searching the original lists.
         val oMergeWithAg = asterismGroups.find { case (obsIds, ag) =>
           obsIds =!= groupIds && ag.targetIds === newTargetIds
         }
