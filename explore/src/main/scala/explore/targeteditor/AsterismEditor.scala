@@ -113,7 +113,7 @@ object AsterismEditor {
                 )
               ),
               onSelected = Reuse
-                .by((props.obsIds, props.asterism))(_ match {
+                .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
                   case (oid, t @ SiderealTarget(_, _, _, _)) =>
                     insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
                   case _                                     => Callback.empty
