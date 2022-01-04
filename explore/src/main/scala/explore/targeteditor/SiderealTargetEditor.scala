@@ -62,7 +62,7 @@ final case class SiderealTargetEditor(
   undoStacks: View[UndoStacks[IO, SiderealTarget]],
   searching:  View[Set[Target.Id]],
   options:    View[TargetVisualOptions]
-) extends ReactProps[SiderealTargetEditor](SiderealTargetEditor.component) {
+) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(SiderealTarget.baseCoordinates).get
 }
@@ -73,10 +73,10 @@ object SiderealTargetEditor {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val AladinRef = AladinCell.component
-
-  class Backend() {
-    def render(props: Props) =
+  val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .renderWithReuse { props =>
       AppCtx.using { implicit appCtx =>
         val undoCtx     = UndoContext(props.undoStacks, props.target)
         val target      = props.target.get
@@ -258,13 +258,6 @@ object SiderealTargetEditor {
           )
         )
       }
-  }
-
-  val component =
-    ScalaComponent
-      .builder[Props]
-      .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+      }
 
 }
