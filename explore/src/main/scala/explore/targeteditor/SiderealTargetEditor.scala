@@ -75,8 +75,7 @@ object SiderealTargetEditor {
 
   val component =
     ScalaFnComponent
-      .withHooks[Props]
-      .renderWithReuse { props =>
+      .withReuse[Props] { props =>
         AppCtx.using { implicit appCtx =>
           val undoCtx     = UndoContext(props.undoStacks, props.target)
           val target      = props.target.get
