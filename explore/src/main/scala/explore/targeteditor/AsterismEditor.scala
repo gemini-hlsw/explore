@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
+import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
@@ -33,6 +34,8 @@ import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
+import scala.util.Random
+
 final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
@@ -50,24 +53,28 @@ object AsterismEditor {
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  // TODO: Create target id locally and don't wait for the mutations.
   private def insertSiderealTarget(
     obsIds:         ObsIdSet,
     asterism:       View[List[TargetWithId]],
     oTargetId:      Option[Target.Id],
     target:         SiderealTarget,
     selectedTarget: View[Option[Target.Id]]
-  )(implicit ctx:   AppContextIO): IO[Unit] = {
-    val targetId = oTargetId.fold(TargetQueries.createSiderealTarget[IO](target))(IO.pure)
+  )(implicit ctx:   AppContextIO): Callback = {
+    val (targetId, createTarget) = oTargetId.fold(
+      (newId, ((tid: Target.Id) => TargetQueries.createSiderealTarget[IO](tid, target)))
+    )(tid => (CallbackTo(tid), (_: Target.Id) => IO.unit))
     targetId.flatMap(tid =>
-      AsterismQueries.addTargetToAsterisms[IO](
-        obsIds.toList,
-        tid
-      ) >>
-        (asterism.mod(_ :+ (tid, target)) >> selectedTarget.set(tid.some))
-          .to[IO]
+      asterism.mod(_ :+ (tid, target)) >> selectedTarget.set(tid.some) >>
+        (createTarget(tid) >>
+          AsterismQueries.addTargetToAsterisms[IO](
+            obsIds.toList,
+            tid
+          )).runAsync
     )
   }
+
+  val newId =
+    CallbackTo(Random.nextInt(0xfff)).map(int => Target.Id(PosLong.unsafeFrom(int.abs.toLong + 1)))
 
   protected val component =
     ScalaFnComponent
@@ -106,14 +113,9 @@ object AsterismEditor {
                 )
               ),
               onSelected = Reuse
-                .always(_ match {
+                .by((props.obsIds, props.asterism))(_ match {
                   case (oid, t @ SiderealTarget(_, _, _, _)) =>
-                    insertSiderealTarget(props.obsIds,
-                                         props.asterism,
-                                         oid,
-                                         t,
-                                         selectedTargetId
-                    ).runAsync
+                    insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
                   case _                                     => Callback.empty
                 })
             )

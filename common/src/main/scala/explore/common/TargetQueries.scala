@@ -120,12 +120,14 @@ object TargetQueries {
     )
 
   def createSiderealTarget[F[_]: Async](
+    id:         Target.Id,
     target:     SiderealTarget
-  )(implicit c: TransactionalClient[F, ObservationDB]): F[Target.Id] = {
+  )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] = {
     val input = CreateTargetInput(
       programId = "p-2",
+      targetId = id.assign,
       sidereal = target.toCreateInput.assign
     )
-    CreateTargetMutation.execute[F](input).map(_.createTarget.id)
+    CreateTargetMutation.execute[F](input).void
   }
 }

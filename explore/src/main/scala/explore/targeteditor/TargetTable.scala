@@ -78,7 +78,7 @@ object TargetTable {
     ScalaFnComponent
       .withHooks[Props]
       // cols
-      .useMemoBy(_.obsIds) { props => _ =>
+      .useMemoBy(props => (props.obsIds, props.targets)) { props => _ =>
         implicit val ctx = props.ctx
 
         def column[V](id: String, accessor: SiderealTargetWithId => V) =
@@ -97,8 +97,8 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_.filter(_._1 != cell.value)) >>
-                    deleteSiderealTarget(props.obsIds, cell.value).runAsyncAndForget
+                    props.targets.mod(_.filter(_._1 =!= cell.value.extract)) >>
+                    deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )
             )
             .setDisableSortBy(true)
@@ -130,7 +130,7 @@ object TargetTable {
           }.reuseCurrying(props.hiddenColumns.get)
         )
       )
-      .render((props, _, _, tableInstance) =>
+      .renderWithReuse((props, _, _, tableInstance) =>
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
