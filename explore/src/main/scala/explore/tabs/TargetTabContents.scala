@@ -313,22 +313,21 @@ object TargetTabContents {
       .useStateView(TargetVisualOptions.Default)
       .useEffectOnMountBy { (props, panels, _) =>
         implicit val ctx = props.ctx
-        Callback.log("On mount") *>
-          UserAreaWidths
-            .queryWithDefault[IO](props.userId,
-                                  ResizableSection.TargetsTree,
-                                  Constants.InitialTreeWidth.toInt
-            )
-            .attempt
-            .map {
-              case Right(w) =>
-                Callback.log(s"Set $w") *>
-                  panels
-                    .zoom(TwoPanelState.treeWidth[ObsIdSet])
-                    .set(w)
-              case Left(u)  => Callback.log(u.toString)
-            }
-            .runAsyncAndForget
+        UserAreaWidths
+          .queryWithDefault[IO](props.userId,
+                                ResizableSection.TargetsTree,
+                                Constants.InitialTreeWidth.toInt
+          )
+          .attempt
+          .map {
+            case Right(w) =>
+              Callback.log(s"Set $w") *>
+                panels
+                  .zoom(TwoPanelState.treeWidth[ObsIdSet])
+                  .set(w)
+            case Left(u)  => Callback.log(u.toString)
+          }
+          .runAsyncAndForget
       }
       .renderWithReuse { (props, tps, opts) =>
         implicit val ctx = props.ctx
