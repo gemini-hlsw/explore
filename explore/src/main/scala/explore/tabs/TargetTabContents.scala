@@ -6,8 +6,8 @@ package explore.tabs
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -24,15 +24,14 @@ import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.targeteditor.AsterismEditor
 import explore.undo._
+import explore.syntax.ui._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.Focus
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
@@ -56,50 +55,25 @@ final case class TargetTabContents(
   hiddenColumns:     View[Set[String]],
   size:              ResizeDetector.Dimensions
 )(implicit val ctx:  AppContextIO)
-    extends ReactProps[TargetTabContents](TargetTabContents.component)
+    extends ReactFnProps[TargetTabContents](TargetTabContents.component)
 
 object TargetTabContents {
   type Props = TargetTabContents
 
-  final case class State(
-    panels:  TwoPanelState[ObsIdSet],
-    options: TargetVisualOptions // TODO: not setting fov from user preferences, yet
-  )
-
-  object State {
-    val panels         = Focus[State](_.panels)
-    val options        = Focus[State](_.options)
-    val panelsWidth    = State.panels.andThen(TwoPanelState.treeWidth[ObsIdSet])
-    val panelsSelected = State.panels.andThen(TwoPanelState.selected[ObsIdSet])
-  }
-
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
   val treeWidthLens = TwoPanelState.treeWidth[ObsIdSet]
   val selectedLens  = TwoPanelState.selected[ObsIdSet]
 
-  def readWidthPreference($ : ComponentDidMount[Props, State, _]): Callback = {
-    implicit val ctx = $.props.ctx
-    UserAreaWidths
-      .queryWithDefault[IO]($.props.userId,
-                            ResizableSection.TargetsTree,
-                            Constants.InitialTreeWidth.toInt
-      )
-      .runAsyncAndThen {
-        case Right(w) => $.modState(State.panelsWidth.replace(w))
-        case Left(_)  => Callback.empty
-      }
-  }
-
   protected def renderFn(
     props:                Props,
-    state:                View[State],
+    panelState:           View[TwoPanelState[ObsIdSet]],
+    options:              View[TargetVisualOptions],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(State.panelsWidth).set(d.size.width).to[IO] *>
+        (panelState.zoom(treeWidthLens).set(d.size.width).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.TargetsTree,
@@ -107,7 +81,8 @@ object TargetTabContents {
             )).runAsync
           .debounce(1.second)
 
-    val treeWidth = state.get.panels.treeWidth.toInt
+    val treeWidth    = panelState.get.treeWidth.toInt
+    val selectedView = panelState.zoom(selectedLens)
 
     val targetMap = asterismGroupWithObs.get.targetGroups
 
@@ -122,7 +97,7 @@ object TargetTabContents {
         AsterismGroupObsList(
           objectsWithObs,
           props.focusedObs,
-          state.zoom(State.panelsSelected),
+          selectedView,
           props.expandedIds,
           props.listUndoStacks
         )
@@ -161,8 +136,9 @@ object TargetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE =
-          linkOverride[ButtonProps](state.zoom(State.panelsSelected).set(SelectedPanel.tree))
+        onClickE = linkOverride[ButtonProps](
+          selectedView.set(SelectedPanel.tree)
+        )
       )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft)
     )
 
@@ -178,7 +154,7 @@ object TargetTabContents {
         // )((renderInTitle: Tile.RenderInTitle) =>
         //   TargetSummaryTable(asterismGroupWithObs.get,
         //                      props.hiddenColumns,
-        //                      state.zoom(State.panelsSelected),
+        //                      selectedView,
         //                      props.focusedObs,
         //                      props.expandedIds,
         //                      renderInTitle
@@ -259,7 +235,7 @@ object TargetTabContents {
              asterismView,
              props.targetsUndoStacks,
              props.searching,
-             state.zoom(State.options),
+             options,
              props.hiddenColumns
             )
           )((renderInTitle: Tile.RenderInTitle) =>
@@ -270,7 +246,7 @@ object TargetTabContents {
                                asterismView,
                                props.targetsUndoStacks,
                                props.searching,
-                               state.zoom(State.options),
+                               options,
                                props.hiddenColumns,
                                renderInTitle
                 )
@@ -284,7 +260,8 @@ object TargetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = state.get.panels.selected.optValue
+    val selectedPanel = panelState.get.selected
+    val rightSide     = selectedPanel.optValue
       .flatMap(ids =>
         findAsterismGroup(ids, asterismGroupWithObs.get.asterismGroups).map(ag => (ids, ag))
       )
@@ -295,14 +272,14 @@ object TargetTabContents {
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable
     // or only one panel at a time (Mobile)
-    if (window.innerWidth <= Constants.TwoPanelCutoff) {
+    if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(asterismGroupWithObs))
-          .when(state.get.panels.selected.leftPanelVisible),
+          .when(selectedPanel.leftPanelVisible),
         <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
-        ).when(state.get.panels.selected.rightPanelVisible)
+        ).when(selectedPanel.rightPanelVisible)
       )
     } else {
       <.div(
@@ -312,7 +289,7 @@ object TargetTabContents {
           width = treeWidth,
           height = coreHeight,
           minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-          maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
+          maxConstraints = (coreWidth / 2, 0),
           onResize = treeResize,
           resizeHandles = List(ResizeHandleAxis.East),
           content = tree(asterismGroupWithObs),
@@ -329,26 +306,34 @@ object TargetTabContents {
     }
   }
 
-  protected class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props) = {
-      implicit val ctx = props.ctx
-      AsterismGroupLiveQuery(
-        Reuse(renderFn _)(props, ViewF.fromState($))
-      )
-    }
-  }
-
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(
-        State(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized),
-              TargetVisualOptions.Default
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateView(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
+      .useStateView(TargetVisualOptions.Default)
+      .useEffectOnMountBy { (props, panels, _) =>
+        implicit val ctx = props.ctx
+        UserAreaWidths
+          .queryWithDefault[IO](props.userId,
+                                ResizableSection.TargetsTree,
+                                Constants.InitialTreeWidth.toInt
+          )
+          .attempt
+          .map {
+            case Right(w) =>
+              Callback.log(s"Set $w") *>
+                panels
+                  .zoom(TwoPanelState.treeWidth[ObsIdSet])
+                  .set(w)
+            case Left(u)  => Callback.log(u.toString)
+          }
+          .runAsyncAndForget
+      }
+      .renderWithReuse { (props, tps, opts) =>
+        implicit val ctx = props.ctx
+        AsterismGroupLiveQuery(
+          Reuse(renderFn _)(props, tps, opts)
         )
-      )
-      .renderBackend[Backend]
-      .componentDidMount(readWidthPreference)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+      }
 
 }
