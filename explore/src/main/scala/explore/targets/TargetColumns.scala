@@ -6,15 +6,15 @@ package explore.targets
 import cats.Order._
 import cats.syntax.all._
 import explore.Icons
+import explore.model.ModelOptics._
 import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.Band
 import lucuma.core.math.Epoch
-import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Parallax
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
+import lucuma.core.syntax.display._
 import lucuma.ui.optics._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
@@ -41,7 +41,7 @@ object TargetColumns {
     "parallax"     -> "Parallax",
     "morphology"   -> "Morphology",
     "sed"          -> "SED"
-  ) ++ MagnitudeBand.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
+  ) ++ Band.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
 
   val allColNames: Map[String, String] = baseColNames ++ siderealColNames
 
@@ -70,27 +70,27 @@ object TargetColumns {
 
   trait SiderealColBuilder[D, Plugins, Layout] {
     val tableDef: TableDef[D, Plugins, Layout]
-    val getSiderealTarget: D => Option[SiderealTarget]
+    val getSiderealTarget: D => Option[Target.Sidereal]
     implicit val sortByEv: Plugins <:< Plugin.SortBy.Tag
 
-    def siderealColumnOpt[V](id: String, accessor: SiderealTarget => Option[V]) =
+    def siderealColumnOpt[V](id: String, accessor: Target.Sidereal => Option[V]) =
       tableDef
         .Column(id, getSiderealTarget.andThen(_.flatMap(accessor)))
         .setHeader(siderealColNames(id))
 
-    def siderealColumn[V](id: String, accessor: SiderealTarget => V) =
+    def siderealColumn[V](id: String, accessor: Target.Sidereal => V) =
       siderealColumnOpt(id, accessor.andThen(_.some))
 
     val siderealColumns =
       List(
-        siderealColumn("ra", SiderealTarget.baseRA.get)
+        siderealColumn("ra", Target.Sidereal.baseRA.get)
           .setCell(
             _.value
               .map(TruncatedRA.rightAscension.get.andThen(ValidFormatInput.truncatedRA.reverseGet))
               .orEmpty
           )
           .setSortByAuto,
-        siderealColumn("dec", SiderealTarget.baseDec.get)
+        siderealColumn("dec", Target.Sidereal.baseDec.get)
           .setCell(
             _.value
               .map(TruncatedDec.declination.get.andThen(ValidFormatInput.truncatedDec.reverseGet))
@@ -101,15 +101,14 @@ object TargetColumns {
         //   ""
         // ) // TODO IS this a property of the target, or a property of the target in the observation???
       ) ++
-        MagnitudeBand.all.map(band =>
-          siderealColumnOpt(band.shortName + "mag",
-                            t => Target.magnitudes.get(t).get(band).map(_.value)
-          )
-            .setCell(_.value.map(MagnitudeValue.fromString.reverseGet).orEmpty)
-            .setSortByAuto
+        Band.all.map(band =>
+          siderealColumnOpt(
+            band.shortName + "mag",
+            t => targetBrightnesses.get(t).flatMap(_.get(band))
+          ).setCell(_.value.map(_.shortName).orEmpty)
         ) ++
         List(
-          siderealColumn("epoch", SiderealTarget.epoch.get)
+          siderealColumn("epoch", Target.Sidereal.epoch.get)
             .setCell(
               _.value
                 .map(value =>
@@ -118,24 +117,24 @@ object TargetColumns {
                 .orEmpty
             )
             .setSortByAuto,
-          siderealColumnOpt("pmra", SiderealTarget.properMotionRA.getOption)
+          siderealColumnOpt("pmra", Target.Sidereal.properMotionRA.getOption)
             .setCell(
               _.value.map(pmRAFormat.reverseGet).orEmpty
             )
             .setSortByAuto,
-          siderealColumnOpt("pmdec", SiderealTarget.properMotionDec.getOption)
+          siderealColumnOpt("pmdec", Target.Sidereal.properMotionDec.getOption)
             .setCell(_.value.map(pmDecFormat.reverseGet).orEmpty)
             .setSortByAuto,
-          siderealColumnOpt("rv", SiderealTarget.radialVelocity.get)
+          siderealColumnOpt("rv", Target.Sidereal.radialVelocity.get)
             .setCell(_.value.map(formatRV.reverseGet).orEmpty)
             .setSortByAuto,
-          siderealColumnOpt("z", (SiderealTarget.radialVelocity.get _).andThen(rvToRedshiftGet))
+          siderealColumnOpt("z", (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet))
             .setCell(_.value.map(formatZ.reverseGet).orEmpty)
             .setSortByAuto,
-          siderealColumnOpt("cz", (SiderealTarget.radialVelocity.get _).andThen(rvToARVGet))
+          siderealColumnOpt("cz", (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
             .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
             .setSortByAuto,
-          siderealColumnOpt("parallax", SiderealTarget.parallax.get)
+          siderealColumnOpt("parallax", Target.Sidereal.parallax.get)
             .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
             .setSortByAuto,
           siderealColumn("morphology", _ => "").setCell(_ => ""),
@@ -146,10 +145,10 @@ object TargetColumns {
   trait TargetColumnBuilder[D] {
     val getTarget: D => Option[Target]
 
-    val getSiderealTarget: D => Option[SiderealTarget] =
+    val getSiderealTarget: D => Option[Target.Sidereal] =
       getTarget.andThen(_.flatMap(_ match {
-        case s @ SiderealTarget(_, _, _, _) => Some(s)
-        case _                              => None
+        case s @ Target.Sidereal(_, _, _, _, _) => Some(s)
+        case _                                  => None
       }))
   }
 

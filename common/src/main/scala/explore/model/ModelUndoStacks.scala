@@ -11,15 +11,14 @@ import explore.common.ObsQueries.ScienceData
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import monocle.Focus
 
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
   forAsterismGroupList: UndoStacks[F, AsterismGroupList] = UndoStacks.empty[F, AsterismGroupList],
-  forSiderealTarget:    Map[Target.Id, UndoStacks[F, SiderealTarget]] =
-    Map.empty[Target.Id, UndoStacks[F, SiderealTarget]],
+  forSiderealTarget:    Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
+    Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
   forConstraintGroup:   Map[ObsIdSet, UndoStacks[F, ConstraintSet]] =
     Map.empty[ObsIdSet, UndoStacks[F, ConstraintSet]],

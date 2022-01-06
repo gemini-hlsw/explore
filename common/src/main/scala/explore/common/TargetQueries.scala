@@ -14,35 +14,31 @@ import crystal.react.implicits._
 import explore.implicits._
 import explore.schemas.implicits._
 import explore.undo.UndoContext
-import lucuma.core.enum.MagnitudeBand
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
-import lucuma.core.model.CatalogId
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
-import scala.collection.immutable.SortedMap
-
 import TargetQueriesGQL._
+import lucuma.core.model.SourceProfile
+import scala.annotation.unused
 
 object TargetQueries {
 
   case class UndoView(
     id:           Target.Id,
-    undoCtx:      UndoContext[SiderealTarget]
+    undoCtx:      UndoContext[Target.Sidereal]
   )(implicit ctx: AppContextIO) {
     def apply[A](
-      modelGet:  SiderealTarget => A,
-      modelMod:  (A => A) => SiderealTarget => SiderealTarget,
+      modelGet:  Target.Sidereal => A,
+      modelMod:  (A => A) => Target.Sidereal => Target.Sidereal,
       remoteSet: A => EditTargetInput => EditTargetInput
     ): View[A] =
       undoCtx
@@ -59,7 +55,7 @@ object TargetQueries {
         )
 
     def apply[A](
-      modelLens: Lens[SiderealTarget, A],
+      modelLens: Lens[Target.Sidereal, A],
       remoteSet: A => EditTargetInput => EditTargetInput
     ): View[A] = apply(modelLens.get, modelLens.modify, remoteSet)
   }
@@ -71,9 +67,6 @@ object TargetQueries {
       case _                                                 => eti
     }
   object UpdateSiderealTracking {
-
-    def catalogId(cid: Option[CatalogId]): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.catalogId.replace(cid.map(_.toInput).orUnassign))
 
     def epoch(epoch: Option[Epoch]): Endo[EditTargetInput] =
       toTargetEndo(
@@ -103,8 +96,7 @@ object TargetQueries {
      * Updates all the fields of sideral tracking
      */
     def apply(t: SiderealTracking): Endo[EditTargetInput] =
-      catalogId(t.catalogId) >>>
-        ra(t.baseCoordinates.ra.some) >>>
+      ra(t.baseCoordinates.ra.some) >>>
         dec(t.baseCoordinates.dec.some) >>>
         epoch(t.epoch.some) >>>
         properMotion(t.properMotion) >>>
@@ -112,16 +104,18 @@ object TargetQueries {
         parallax(t.parallax)
   }
 
-  def replaceMagnitudes(mags: SortedMap[MagnitudeBand, Magnitude]): Endo[EditTargetInput] =
-    toTargetEndo(
-      EditSiderealInput.magnitudes.replace(
-        MagnitudeEditList(replaceList = mags.values.toList.map(_.toCreateInput).assign).assign
-      )
-    )
+  def replaceSourceProfile(@unused sourceProfile: SourceProfile): Endo[EditTargetInput] =
+    // API Doesn't have a way to update SourceProfile yet.
+    identity
+  //   toTargetEndo(
+  //     EditSiderealInput.magnitudes.replace(
+  //       MagnitudeEditList(replaceList = mags.values.toList.map(_.toCreateInput).assign).assign
+  //     )
+  // )
 
   def createSiderealTarget[F[_]: Async](
     id:         Target.Id,
-    target:     SiderealTarget
+    target:     Target.Sidereal
   )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] = {
     val input = CreateTargetInput(
       programId = "p-2",

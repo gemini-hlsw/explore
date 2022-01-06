@@ -22,9 +22,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
-import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.Program
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.ui.forms.FormInputEV
 import lucuma.ui.reusability._
@@ -115,11 +113,9 @@ object TargetSelectionPopup {
                                    NonEmptyList.fromListUnsafe(
                                      (ts.toList ++ nel.toList)
                                        .distinctBy(_ match {
-                                         case (_, SiderealTarget(name, tracking, _, _))     =>
-                                           tracking.catalogId
-                                             .map(_.id.value)
-                                             .getOrElse(name.value)
-                                         case (_, NonsiderealTarget(_, ephemerisKey, _, _)) =>
+                                         case (_, Target.Sidereal(name, _, _, catalogInfo, _)) =>
+                                           catalogInfo.map(_.id.value).getOrElse(name.value)
+                                         case (_, Target.Nonsidereal(_, ephemerisKey, _, _))   =>
                                            ephemerisKey.toString
                                        })
                                        .sortBy(_._2.name.value)
@@ -189,7 +185,7 @@ object TargetSelectionPopup {
                 <.div(ExploreStyles.TargetSearchPreview)(
                   selectedTarget.value
                     .map(_.target)
-                    .collect { case SiderealTarget(_, tracking, _, angSize) =>
+                    .collect { case Target.Sidereal(_, tracking, _, _, angSize) =>
                       (tracking.baseCoordinates, angSize)
                     }
                     .map { case (coordinates, angSize) =>

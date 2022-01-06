@@ -29,7 +29,6 @@ import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types._
@@ -58,13 +57,13 @@ final case class SearchCallback(
 final case class SiderealTargetEditor(
   uid:        User.Id,
   id:         Target.Id,
-  target:     View[SiderealTarget],
-  undoStacks: View[UndoStacks[IO, SiderealTarget]],
+  target:     View[Target.Sidereal],
+  undoStacks: View[UndoStacks[IO, Target.Sidereal]],
   searching:  View[Set[Target.Id]],
   options:    View[TargetVisualOptions]
 ) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
-    target.zoom(SiderealTarget.baseCoordinates).get
+    target.zoom(Target.Sidereal.baseCoordinates).get
 }
 
 object SiderealTargetEditor {
@@ -83,69 +82,69 @@ object SiderealTargetEditor {
 
           val allView = undoViewSet(
             Iso.id.asLens,
-            { t: SiderealTarget =>
+            { t: Target.Sidereal =>
               EditTargetInput.name.replace(t.name.assign) >>>
-                TargetQueries.UpdateSiderealTracking(t.tracking) >>>
-                TargetQueries.replaceMagnitudes(t.magnitudes)
+                TargetQueries.UpdateSiderealTracking(t.tracking) // >>>
+            // TargetQueries.replaceMagnitudes(t.magnitudes)
             }
           )
 
           val coordsRAView = undoViewSet(
-            SiderealTarget.baseRA,
+            Target.Sidereal.baseRA,
             (TargetQueries.UpdateSiderealTracking.ra _).compose((_: RightAscension).some)
           )
 
           val coordsDecView = undoViewSet(
-            SiderealTarget.baseDec,
+            Target.Sidereal.baseDec,
             (TargetQueries.UpdateSiderealTracking.dec _).compose((_: Declination).some)
           )
 
           val epochView =
             undoViewSet(
-              SiderealTarget.epoch,
+              Target.Sidereal.epoch,
               (TargetQueries.UpdateSiderealTracking.epoch _).compose((_: Epoch).some)
             )
 
-          val magnitudesView =
-            undoViewSet(SiderealTarget.magnitudes, TargetQueries.replaceMagnitudes)
+          val sourceProfileView =
+            undoViewSet(Target.Sidereal.sourceProfile, TargetQueries.replaceSourceProfile)
 
           val nameView = undoViewSet(
-            SiderealTarget.name,
+            Target.Sidereal.name,
             (EditTargetInput.name.replace _).compose((_: NonEmptyString).assign)
           )
 
           val properMotionRAView = undoViewSet(
-            SiderealTarget.properMotionRA.getOption,
+            Target.Sidereal.properMotionRA.getOption,
             (f: Endo[Option[ProperMotion.RA]]) =>
-              SiderealTarget.properMotionRA.modify(unsafeOptionFnUnlift(f)),
+              Target.Sidereal.properMotionRA.modify(unsafeOptionFnUnlift(f)),
             (pmRA: Option[ProperMotion.RA]) =>
               TargetQueries.UpdateSiderealTracking.properMotion(
-                buildProperMotion(pmRA, SiderealTarget.properMotionDec.getOption(target))
+                buildProperMotion(pmRA, Target.Sidereal.properMotionDec.getOption(target))
               )
           )
 
           val properMotionDecView = undoViewSet(
-            SiderealTarget.properMotionDec.getOption,
+            Target.Sidereal.properMotionDec.getOption,
             (f: Endo[Option[ProperMotion.Dec]]) =>
-              SiderealTarget.properMotionDec.modify(unsafeOptionFnUnlift(f)),
+              Target.Sidereal.properMotionDec.modify(unsafeOptionFnUnlift(f)),
             (pmDec: Option[ProperMotion.Dec]) =>
               TargetQueries.UpdateSiderealTracking.properMotion(
-                buildProperMotion(SiderealTarget.properMotionRA.getOption(target), pmDec)
+                buildProperMotion(Target.Sidereal.properMotionRA.getOption(target), pmDec)
               )
           )
 
           val parallaxView = undoViewSet(
-            SiderealTarget.parallax,
+            Target.Sidereal.parallax,
             TargetQueries.UpdateSiderealTracking.parallax
           )
 
           val radialVelocityView = undoViewSet(
-            SiderealTarget.radialVelocity,
+            Target.Sidereal.radialVelocity,
             TargetQueries.UpdateSiderealTracking.radialVelocity
           )
 
           def searchAndSet(
-            allView:  View[SiderealTarget],
+            allView:  View[Target.Sidereal],
             nameView: View[NonEmptyString],
             s:        SearchCallback
           ): Callback =
@@ -174,7 +173,7 @@ object SiderealTargetEditor {
                   // SearchForm doesn't edit the name directly. It will set it atomically, together
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
-                  props.target.zoom(SiderealTarget.name).get,
+                  props.target.zoom(Target.Sidereal.name).get,
                   props.searching,
                   Reuse.currying(allView, nameView).in(searchAndSet _)
                 ),
@@ -204,7 +203,7 @@ object SiderealTargetEditor {
               AladinCell(
                 props.uid,
                 props.id,
-                props.target.zoom(SiderealTarget.baseCoordinates),
+                props.target.zoom(Target.Sidereal.baseCoordinates),
                 props.options
               ),
               CataloguesForm(props.options).when(false),
@@ -250,7 +249,7 @@ object SiderealTargetEditor {
                 ),
                 RVInput(radialVelocityView, disabled)
               ),
-              MagnitudeForm(magnitudesView, disabled = disabled),
+              SourceProfileEditor(sourceProfileView, disabled = disabled),
               <.div(ExploreStyles.TargetSkyplotCell)(
                 SkyPlotSection(props.baseCoordinates)
               )

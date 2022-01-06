@@ -20,11 +20,8 @@ object display {
   implicit val displayToOActivation: Display[ToOActivation] =
     Display.byShortName(_.label)
 
-  implicit val displayMagnitudeBand: Display[MagnitudeBand] =
+  implicit val displayBand: Display[Band] =
     Display.by(_.shortName, _.longName)
-
-  implicit val displayMagnitudeSystem: Display[MagnitudeSystem] =
-    Display.byShortName(_.tag)
 
   implicit val spectroscopyCapabilitiesDisplay: Display[SpectroscopyCapabilities] =
     Display.byShortName {

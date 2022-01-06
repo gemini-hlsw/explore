@@ -342,8 +342,7 @@ tfoot {
 
   --column-wide-span: 3;
 
-  grid-template-columns:
-    [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
+  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
       20ch,
       3fr
     );
@@ -507,8 +506,7 @@ tfoot {
   border-bottom-right-radius: unset;
   background-color: var(--under-tab-background-color);
   font-weight: 300;
-  transition:
-    opacity @defaultDuration @defaultEasing,
+  transition: opacity @defaultDuration @defaultEasing,
     color @defaultDuration @defaultEasing,
     box-shadow @defaultDuration @defaultEasing;
 }
@@ -1235,7 +1233,7 @@ img.partner-split-flag {
     grid-template-columns: 1fr;
   }
 
-  .explore-magnitudes-container {
+  .explore-brightnesses-container {
     .ui.table,
     thead,
     tbody,
@@ -1383,7 +1381,7 @@ span.fa-layers-text {
 
 div.field.explore-warning-input,
 div.inline.field.explore-warning-input {
-  box-shadow: -0px 0px 2px 1px var(--warning-background-color);
+  box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
 
 .ui.label.explore-warning-label {
@@ -1445,8 +1443,7 @@ i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
   outline: none;
   opacity: 1;
-  box-shadow:
-    0 0 0 0.1rem var(--focus-inner-color),
+  box-shadow: 0 0 0 0.1rem var(--focus-inner-color),
     0 0 0 0.2rem var(--focus-outer-color);
 }
 
@@ -1466,13 +1463,15 @@ html {
   padding: 1em;
 }
 
-.ui.segment.explore-magnitudes-container {
+.ui.segment.explore-brightnesses-container {
   padding: 0;
   display: inline-block;
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-magnitudes-container .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width
+  .explore-brightnesses-container
+  .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
@@ -1523,7 +1522,7 @@ html {
   }
 }
 
-.explore-magnitudes-delete-button-wrapper {
+.explore-brightnesses-delete-button-wrapper {
   display: flex;
   justify-content: center;
 
@@ -1532,7 +1531,7 @@ html {
   }
 }
 
-.explore-magnitudes-footer {
+.explore-brightnesses-footer {
   display: flex;
   justify-content: flex-end;
 }
@@ -1603,7 +1602,6 @@ html {
 .explore-help-body {
   flex: 1 1 auto;
   overflow: auto;
-
   min-height: 0;
   background-color: white;
 }
@@ -1873,8 +1871,7 @@ html {
 
   tr.explore-table-row-selected,
   .tr.explore-table-row-selected {
-    box-shadow:
-      inset 0 1px 0 0 var(--explore-selected-box-color),
+    box-shadow: inset 0 1px 0 0 var(--explore-selected-box-color),
       inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
 
     background: var(--table-selected-background) !important;
@@ -1981,11 +1978,15 @@ svg[focusable="false"]:focus {
 }
 
 .ui.selectable.table > tbody > tr:hover,
-.ui.selectable.table .tbody .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
+.ui.selectable.table
+  .tbody
+  .tr:not(.disabled):not(.thead > .tr):not(.tfoot > .tr):hover,
 .ui.table tbody tr td.selectable:hover,
-.ui.table .tbody .tr:not(.disabled) .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
-  box-shadow:
-    inset 0 1px 0 0 var(--explore-accent-color),
+.ui.table
+  .tbody
+  .tr:not(.disabled)
+  .td.selectable:not(.thead > .tr):not(.tfoot > .tr):hover {
+  box-shadow: inset 0 1px 0 0 var(--explore-accent-color),
     inset 0 -1px 0 0 var(--explore-accent-color);
 }
 
@@ -2046,10 +2047,9 @@ td.sticky {
 }
 
 .ui.table tr.explore-table-row-selected td.sticky {
-  background-color:
-    var(
-      --table-selected-background
-    ) !important; // Important overrides regular row background color.
+  background-color: var(
+    --table-selected-background
+  ) !important; // Important overrides regular row background color.
 }
 
 .explore-modes-table-itc-header-cell {

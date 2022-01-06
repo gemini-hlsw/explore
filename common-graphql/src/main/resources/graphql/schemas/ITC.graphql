@@ -81,71 +81,71 @@ type Duration {
 }
 
 # Magnitude band
-enum MagnitudeBand {
-  # MagnitudeBand SloanU
+enum Band {
+  # Band SloanU
   SLOAN_U
 
-  # MagnitudeBand SloanG
+  # Band SloanG
   SLOAN_G
 
-  # MagnitudeBand SloanR
+  # Band SloanR
   SLOAN_R
 
-  # MagnitudeBand SloanI
+  # Band SloanI
   SLOAN_I
 
-  # MagnitudeBand SloanZ
+  # Band SloanZ
   SLOAN_Z
 
-  # MagnitudeBand U
+  # Band U
   U
 
-  # MagnitudeBand B
+  # Band B
   B
 
-  # MagnitudeBand V
+  # Band V
   V
 
-  # MagnitudeBand Uc
+  # Band Uc
   UC
 
-  # MagnitudeBand R
+  # Band R
   R
 
-  # MagnitudeBand I
+  # Band I
   I
 
-  # MagnitudeBand Y
+  # Band Y
   Y
 
-  # MagnitudeBand J
+  # Band J
   J
 
-  # MagnitudeBand H
+  # Band H
   H
 
-  # MagnitudeBand K
+  # Band K
   K
 
-  # MagnitudeBand L
+  # Band L
   L
 
-  # MagnitudeBand M
+  # Band M
   M
 
-  # MagnitudeBand N
+  # Band N
   N
 
-  # MagnitudeBand Q
+  # Band Q
   Q
 
-  # MagnitudeBand Ap
+  # Band Ap
   AP
 }
 
 # Magnitude creation parameters
 input MagnitudeCreateInput {
-  band: MagnitudeBand!
+  band: Band!
   value: BigDecimal!
   error: BigDecimal
   system: MagnitudeSystem = VEGA

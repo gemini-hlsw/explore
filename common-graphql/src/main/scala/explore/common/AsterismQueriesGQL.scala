@@ -36,12 +36,8 @@ object AsterismQueriesGQL {
             target {
               id
               name
-              tracking {
+              tracking {               
                 ... on Sidereal {
-                  catalogId {
-                    name
-                    id
-                  }
                   coordinates {
                     ra {
                       microarcseconds
@@ -67,11 +63,39 @@ object AsterismQueriesGQL {
                   }
                 }
               }
-              magnitudes {
-                value
-                band
-                system
-                error
+              sourceProfile {
+                point {
+                  bandNormalized {
+                    sed {
+                      stellarLibrary
+                      coolStar
+                      galaxy
+                      planet
+                      quasar
+                      hiiRegion
+                      planetaryNebula
+                      powerLaw
+                      blackBodyTempK
+                      fluxDensities {
+                        wavelength {
+                          picometers
+                        }
+                        density
+                      }
+                    }
+                    brightnesses {
+                      band
+                      value
+                      units
+                      error
+                    }
+                  }
+                }
+              }
+              catalogInfo {
+                name
+                id
+                objectType
               }
             }
           }

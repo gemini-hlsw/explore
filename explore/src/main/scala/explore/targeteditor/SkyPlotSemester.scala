@@ -12,7 +12,6 @@ import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
-import io.chrisdavenport.cats.time._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
@@ -25,6 +24,7 @@ import lucuma.core.model.Semester
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
+import org.typelevel.cats.time._
 import react.common._
 import react.highcharts.Chart
 import spire.math.Bounded

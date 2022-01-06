@@ -10,7 +10,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constants
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
-import lucuma.core.model.SiderealTarget
+import lucuma.core.model.Target
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -26,7 +26,7 @@ object SimbadSearch {
   def search[F[_]](
     term:       NonEmptyString,
     wildcard:   Boolean = false
-  )(implicit F: Async[F], logger: Logger[F]): F[List[SiderealTarget]] = {
+  )(implicit F: Async[F], logger: Logger[F]): F[List[Target.Sidereal]] = {
     val baseURL =
       uri"https://simbad.u-strasbg.fr/simbad/sim-id"
         .withQueryParam("Ident", term.value)

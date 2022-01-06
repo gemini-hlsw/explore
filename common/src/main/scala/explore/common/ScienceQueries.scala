@@ -57,11 +57,11 @@ object ScienceQueries {
         .runS(FocalPlaneAngleInput())
         .value
 
-    def wavelength(w: Wavelength): WavelengthModelInput =
+    def wavelength(w: Wavelength): WavelengthInput =
       (WavelengthInput.micrometers := Wavelength.decimalMicrometers
         .reverseGet(w)
         .assign)
-        .runS(WavelengthModelInput())
+        .runS(WavelengthInput())
         .value
 
     def spectroscopyRequirements(

@@ -10,7 +10,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
-import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.Band
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
@@ -31,8 +31,8 @@ case class RootModel(
   userSelectionMessage:           Option[NonEmptyString] = none,
   targetSummaryHiddenColumns:     Set[String] =
     Set("epoch", "pmra", "pmdec", "z", "cz", "parallax", "morphology", "sed") ++
-      MagnitudeBand.all
-        .filterNot(_ === MagnitudeBand.V)
+      Band.all
+        .filterNot(_ === Band.V)
         .map(b => (b.shortName + "mag")),
   constraintSummaryHiddenColumns: Set[String] = Set("minam", "minha", "maxha"),
   constraintSummarySorting:       List[(String, Boolean)] = List.empty,

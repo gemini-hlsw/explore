@@ -24,7 +24,6 @@ import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -40,7 +39,7 @@ final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
   asterism:         View[List[TargetWithId]],
-  undoStacks:       View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+  undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:        View[Set[Target.Id]],
   options:          View[TargetVisualOptions],
   hiddenColumns:    View[Set[String]],
@@ -57,7 +56,7 @@ object AsterismEditor {
     obsIds:         ObsIdSet,
     asterism:       View[List[TargetWithId]],
     oTargetId:      Option[Target.Id],
-    target:         SiderealTarget,
+    target:         Target.Sidereal,
     selectedTarget: View[Option[Target.Id]]
   )(implicit ctx:   AppContextIO): Callback = {
     val (targetId, createTarget) = oTargetId.fold(
@@ -114,9 +113,9 @@ object AsterismEditor {
               ),
               onSelected = Reuse
                 .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
-                  case (oid, t @ SiderealTarget(_, _, _, _)) =>
+                  case (oid, t @ Target.Sidereal(_, _, _, _, _)) =>
                     insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
-                  case _                                     => Callback.empty
+                  case _                                         => Callback.empty
                 })
             )
           ),
@@ -138,17 +137,17 @@ object AsterismEditor {
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case SiderealTarget(_, _, _, _) =>
+                  case Target.Sidereal(_, _, _, _, _) =>
                     SiderealTargetEditor(
                       props.userId,
                       targetId,
                       targetView
-                        .unsafeNarrow[SiderealTarget],
+                        .unsafeNarrow[Target.Sidereal],
                       props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                       props.searching,
                       props.options
                     )
-                  case _                          =>
+                  case _                              =>
                     <.div("Non-sidereal targets not supported")
                 }
               )
