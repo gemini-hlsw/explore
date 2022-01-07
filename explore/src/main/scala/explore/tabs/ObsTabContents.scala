@@ -6,10 +6,10 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
-import crystal.ViewF
 import crystal.implicits._
 import crystal.react.View
 import crystal.react.ViewOpt
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -37,7 +37,6 @@ import explore.optics._
 import explore.syntax.ui._
 import explore.undo.UndoStacks
 import explore.utils._
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -46,14 +45,14 @@ import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
-import monocle.Focus
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.gridlayout._
 import react.resizable._
-import react.resizeDetector.ResizeDetector
+import react.resizeDetector._
+import react.resizeDetector.hooks._
 import react.semanticui.addons.select.Select
 import react.semanticui.addons.select.Select.SelectItem
 import react.semanticui.elements.button.Button
@@ -68,10 +67,9 @@ final case class ObsTabContents(
   focusedObs:       View[Option[FocusedObs]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
-  hiddenColumns:    View[Set[String]],
-  size:             ResizeDetector.Dimensions
+  hiddenColumns:    View[Set[String]]
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[ObsTabContents](ObsTabContents.component) {
+    extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
   def selectedPanel: SelectedPanel[Observation.Id] =
     focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(fo => SelectedPanel.editor(fo.obsId))
 }
@@ -192,315 +190,293 @@ object ObsTabContents {
       )
     )
 
-  final case class State(
-    panels:  TwoPanelState[Observation.Id],
-    layouts: LayoutsMap,
-    options: TargetVisualOptions
-  ) {
-    def updateLayouts(newLayouts: LayoutsMap): State =
-      copy(layouts = mergeMap(layouts, newLayouts))
-  }
-
-  object State {
-    val panels        = Focus[State](_.panels)
-    val options       = Focus[State](_.options)
-    val layouts       = Focus[State](_.layouts)
-    val panelsWidth   = State.panels.andThen(TwoPanelState.treeWidth[Observation.Id])
-    val panelSelected = State.panels.andThen(TwoPanelState.selected[Observation.Id])
-    val fovAngle      = State.options.andThen(TargetVisualOptions.fovAngle)
-  }
-
   type Props = ObsTabContents
   implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
 
-  protected class Backend($ : BackendScope[Props, State]) {
-    def readTabPreference(userId: Option[User.Id])(implicit ctx: AppContextIO): Callback =
-      ObsTabPreferencesQuery
-        .queryWithDefault[IO](userId,
-                              ResizableSection.ObservationsTree,
-                              (Constants.InitialTreeWidth.toInt, defaultLayout)
-        )
-        .runAsyncAndThen {
-          case Right((w, l)) =>
-            $.modState((s: State) => State.panelsWidth.replace(w)(s.updateLayouts(l)))
-          case Left(_)       => Callback.empty
-        }
+  def makeConstraintsSelector(
+    constraintGroups: View[ConstraintsList],
+    obsView:          Pot[View[ObservationData]]
+  )(implicit ctx:     AppContextIO): VdomNode =
+    potRender[View[ObservationData]] {
+      Reuse.always { vod =>
+        val cgOpt: Option[ConstraintGroup] =
+          constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
 
-    def makeConstraintsSelector(
-      constraintGroups: View[ConstraintsList],
-      obsView:          Pot[View[ObservationData]]
-    )(implicit ctx:     AppContextIO): VdomNode =
-      potRender[View[ObservationData]] {
-        Reuse.always { vod =>
-          val cgOpt: Option[ConstraintGroup] =
-            constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
-
-          Select(
-            value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
-            onChange = (p: Dropdown.DropdownProps) => {
-              val newCgOpt =
-                ObsIdSet.fromString
-                  .getOption(p.value.toString)
-                  .flatMap(ids => constraintGroups.get.get(ids))
-              newCgOpt.map { cg =>
-                vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
-                  ObsQueries
-                    .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
-                    .runAsyncAndForget
-              }.getOrEmpty
-            },
-            options = constraintGroups.get
-              .map(kv =>
-                new SelectItem(value = ObsIdSet.fromString.reverseGet(kv._1),
-                               text = kv._2.constraintSet.displayName
-                )
+        Select(
+          value = cgOpt.map(cg => ObsIdSet.fromString.reverseGet(cg.obsIds)).orEmpty,
+          onChange = (p: Dropdown.DropdownProps) => {
+            val newCgOpt =
+              ObsIdSet.fromString
+                .getOption(p.value.toString)
+                .flatMap(ids => constraintGroups.get.get(ids))
+            newCgOpt.map { cg =>
+              vod.zoom(ObservationData.constraintSet).set(cg.constraintSet) >>
+                ObsQueries
+                  .updateObservationConstraintSet[IO](List(vod.get.id), cg.constraintSet)
+                  .runAsyncAndForget
+            }.getOrEmpty
+          },
+          options = constraintGroups.get
+            .map(kv =>
+              new SelectItem(value = ObsIdSet.fromString.reverseGet(kv._1),
+                             text = kv._2.constraintSet.displayName
               )
-              .toList
-          )
-        }
-      }(obsView)
+            )
+            .toList
+        )
+      }
+    }(obsView)
 
-    // TODO Use this method
-    def readTargetPreferences(targetId: Target.Id)(implicit ctx: AppContextIO): Callback =
-      $.props.flatMap { p =>
-        p.userId.get.map { uid =>
-          UserTargetPreferencesQuery
-            .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
-            .flatMap(v => $.modStateIn[IO](State.fovAngle.replace(v)))
+  // TODO Use this method
+  // def readTargetPreferences(p: Props, targetId: Target.Id, state: View[State])(implicit ctx: AppContextIO): Callback =
+  //   p.userId.get.map { uid =>
+  //     UserTargetPreferencesQuery
+  //       .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
+  //       .flatMap(v => state.modStateIn[IO](State.fovAngle.replace(v)))
+  //       .runAsyncAndForget
+  //   }.getOrEmpty
+
+  protected def renderFn(
+    props:              Props,
+    panels:             View[TwoPanelState[Observation.Id]],
+    options:            View[TargetVisualOptions],
+    layouts:            View[LayoutsMap],
+    resize:             UseResizeDetectorReturn,
+    obsWithConstraints: View[ObsSummariesWithConstraints]
+  )(implicit ctx:       AppContextIO): VdomNode = {
+    val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
+    val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
+
+    val panelsResize =
+      (_: ReactEvent, d: ResizeCallbackData) =>
+        panels.zoom(TwoPanelState.treeWidth[Observation.Id]).set(d.size.width) *>
+          UserWidthsCreation
+            .storeWidthPreference[IO](props.userId.get,
+                                      ResizableSection.ObservationsTree,
+                                      d.size.width
+            )
             .runAsyncAndForget
-        }.getOrEmpty
-      }
+            .debounce(1.second)
 
-    protected def renderFn(
-      props:              Props,
-      state:              View[State],
-      obsWithConstraints: View[ObsSummariesWithConstraints]
-    )(implicit ctx:       AppContextIO): VdomNode = {
-      val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
-      val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
+    val treeWidth =
+      panels.get.treeWidth.toInt
 
-      val treeResize =
-        (_: ReactEvent, d: ResizeCallbackData) =>
-          $.setStateL(State.panelsWidth)(d.size.width) *>
-            UserWidthsCreation
-              .storeWidthPreference[IO](props.userId.get,
-                                        ResizableSection.ObservationsTree,
-                                        d.size.width
-              )
-              .runAsyncAndForget
-              .debounce(1.second)
-
-      val treeWidth = state.get.panels.treeWidth.toInt
-
-      // Tree area
-      def tree(observations: View[ObservationList]) =
-        <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
-          treeInner(observations)
-        )
-
-      def treeInner(observations: View[ObservationList]) =
-        <.div(ExploreStyles.TreeBody)(
-          ObsList(
-            observations,
-            props.focusedObs,
-            props.undoStacks.zoom(ModelUndoStacks.forObsList)
-          )
-        )
-
-      val obsIdOpt: Option[Observation.Id] = state.get.panels.selected.optValue
-
-      val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
-        obsIdOpt.flatMap(observations.get.getElement)
-
-      val targetId = obsSummaryOpt.collect {
-        case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
-          tid
-      }
-
-      val backButton = Reuse.always[VdomNode](
-        Button(
-          as = <.a,
-          basic = true,
-          size = Mini,
-          compact = true,
-          clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-          onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
-        )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
+    // Tree area
+    def tree(observations: View[ObservationList]) =
+      <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
+        treeInner(observations)
       )
 
-      val coreWidth =
-        if (window.canFitTwoPanels) {
-          props.size.width.getOrElse(0)
-        } else {
-          props.size.width.getOrElse(0) - treeWidth
-        }
-
-      val layouts = ViewF.fromState($).zoom(State.layouts)
-
-      val notesTile =
-        Tile(
-          ObsTabTiles.NotesId,
-          s"Note for Observer",
-          backButton.some,
-          canMinimize = true
-        )(
-          Reuse.always(_ =>
-            <.div(
-              ExploreStyles.NotesWrapper,
-              <.div(
-                ExploreStyles.ObserverNotes,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-              )
-            )
-          )
+    def treeInner(observations: View[ObservationList]) =
+      <.div(ExploreStyles.TreeBody)(
+        ObsList(
+          observations,
+          props.focusedObs,
+          props.undoStacks.zoom(ModelUndoStacks.forObsList)
         )
+      )
 
-      def rightSideRGL(obsId: Observation.Id) =
-        LiveQueryRenderMod[ObservationDB, ObsEditQuery.Data, Pot[ObservationData]](
-          ObsEditQuery.query(obsId).reuseAlways,
-          (ObsEditQuery.Data.observation.get _)
-            .andThen(_.toRight(new Exception(s"Observation [$obsId] not found")).toTry.toPot)
-            .reuseAlways,
-          List(ObservationEditSubscription.subscribe[IO](obsId)).reuseAlways
-        )(
-          // TODO Better declare reusability. We might need higher arities than defined now.
-          // Something like this is what we strive for:
-          // (props.userId.get, coreWidth, defaultLayout, layouts, notesTile, targetId, props.searching, state.zoom(State.options), obsPot).curryReusing.in(
-          // (_: Pot[View[Pot[ObservationData]]]).curryReusing.in
-          Reuse.by(
-            (props.userId.get,
-             coreWidth,
-             defaultLayout,
-             layouts,
-             notesTile,
-             targetId,
-             props.undoStacks,
-             props.searching,
-             state.zoom(State.options),
-             constraintGroups
-            )
-          ) { (obsViewPot: Pot[View[Pot[ObservationData]]]) =>
-            val obsView: Pot[View[ObservationData]] =
-              obsViewPot.flatMap(view =>
-                view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod)))
-              )
+    val obsIdOpt: Option[Observation.Id] = panels.get.selected.optValue
 
-            val constraintsSelector =
-              Reuse.by((constraintGroups, obsView.map(_.get.constraintSet)))(
-                makeConstraintsSelector(constraintGroups, obsView)
-              )
+    val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
+      obsIdOpt.flatMap(observations.get.getElement)
 
-            TileController(
-              props.userId.get,
-              coreWidth,
-              defaultLayout,
-              layouts,
-              List(
-                notesTile,
-                TargetTile.targetTile(
-                  props.userId.get,
-                  obsId,
-                  obsView.map(
-                    _.zoom(ObservationData.targets.andThen(ObservationData.Targets.asterism))
-                  ),
-                  props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
-                  props.searching,
-                  state.zoom(State.options),
-                  props.hiddenColumns
-                ),
-                // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
-                // so that the constraints selector dropdown always appears in front of any other tiles. If more
-                // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
-                // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-                ConstraintsTile
-                  .constraintsTile(
-                    obsId,
-                    obsView.map(_.zoom(ObservationData.constraintSet)),
-                    props.undoStacks
-                      .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                      .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
-                    control = constraintsSelector.some,
-                    clazz = ExploreStyles.ConstraintsTile.some
-                  ),
-                ConfigurationTile.configurationTile(
-                  obsId,
-                  obsView.map(_.zoom(scienceDataForObs)),
-                  props.undoStacks
-                    .zoom(ModelUndoStacks.forScienceData[IO])
-                    .zoom(atMapWithDefault(obsId, UndoStacks.empty))
-                )
-              ),
-              clazz = ExploreStyles.ObservationTiles.some
-            ): VdomNode
-          }
-        ).withKey(obsId.toString)
-
-      val rightSide =
-        obsIdOpt.fold(
-          <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-                <.div("Select or add an observation")
-          )
-        )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
-
-      if (window.canFitTwoPanels) {
-        <.div(
-          ExploreStyles.TreeRGL,
-          <.div(ExploreStyles.Tree, treeInner(observations))
-            .when(state.get.panels.selected.leftPanelVisible),
-          <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
-            rightSide
-          ).when(state.get.panels.selected.rightPanelVisible)
-        )
-      } else {
-        <.div(
-          ExploreStyles.TreeRGL,
-          Resizable(
-            axis = Axis.X,
-            width = treeWidth,
-            height = props.size.height.getOrElse[Int](0),
-            minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
-            maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
-            onResize = treeResize,
-            resizeHandles = List(ResizeHandleAxis.East),
-            content = tree(observations)
-          ),
-          <.div(^.key   := "obs-right-side",
-                ^.width := coreWidth.px,
-                ^.left  := treeWidth.px,
-                ExploreStyles.SinglePanelTile
-          )(
-            rightSide
-          )
-        )
-      }
+    val targetId = obsSummaryOpt.collect {
+      case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
+        tid
     }
 
-    def render(props: Props) = {
-      implicit val ctx = props.ctx
-      ObsLiveQuery(Reuse(renderFn _)(props, ViewF.fromState($)))
+    val backButton = Reuse.always[VdomNode](
+      Button(
+        as = <.a,
+        basic = true,
+        size = Mini,
+        compact = true,
+        clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
+        onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
+      )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
+    )
+
+    val coreWidth =
+      if (window.canFitTwoPanels) {
+        resize.width.getOrElse(0)
+      } else {
+        resize.width.getOrElse(0) - treeWidth
+      }
+
+    val notesTile =
+      Tile(
+        ObsTabTiles.NotesId,
+        s"Note for Observer",
+        backButton.some,
+        canMinimize = true
+      )(
+        Reuse.always(_ =>
+          <.div(
+            ExploreStyles.NotesWrapper,
+            <.div(
+              ExploreStyles.ObserverNotes,
+              "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+            )
+          ).reuseAlways
+        )
+      )
+
+    def rightSideRGL(obsId: Observation.Id) =
+      LiveQueryRenderMod[ObservationDB, ObsEditQuery.Data, Pot[ObservationData]](
+        ObsEditQuery.query(obsId).reuseAlways,
+        (ObsEditQuery.Data.observation.get _)
+          .andThen(_.toRight(new Exception(s"Observation [$obsId] not found")).toTry.toPot)
+          .reuseAlways,
+        List(ObservationEditSubscription.subscribe[IO](obsId)).reuseAlways
+      )(
+        // TODO Better declare reusability. We might need higher arities than defined now.
+        // Something like this is what we strive for:
+        // (props.userId.get, coreWidth, defaultLayout, layouts, notesTile, targetId, props.searching, state.zoom(State.options), obsPot).curryReusing.in(
+        // (_: Pot[View[Pot[ObservationData]]]).curryReusing.in
+        Reuse.by(
+          (props.userId.get,
+           coreWidth,
+           defaultLayout,
+           layouts,
+           notesTile,
+           targetId,
+           props.undoStacks,
+           props.searching,
+           options,
+           constraintGroups
+          )
+        ) { (obsViewPot: Pot[View[Pot[ObservationData]]]) =>
+          val obsView: Pot[View[ObservationData]] =
+            obsViewPot.flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
+
+          val constraintsSelector =
+            Reuse.by((constraintGroups, obsView.map(_.get.constraintSet)))(
+              makeConstraintsSelector(constraintGroups, obsView)
+            )
+
+          TileController(
+            props.userId.get,
+            coreWidth,
+            defaultLayout,
+            layouts,
+            List(
+              notesTile,
+              TargetTile.targetTile(
+                props.userId.get,
+                obsId,
+                obsView.map(
+                  _.zoom(ObservationData.targets.andThen(ObservationData.Targets.asterism))
+                ),
+                props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
+                props.searching,
+                options,
+                props.hiddenColumns
+              ),
+              // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+              // so that the constraints selector dropdown always appears in front of any other tiles. If more
+              // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+              // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+              ConstraintsTile
+                .constraintsTile(
+                  obsId,
+                  obsView.map(_.zoom(ObservationData.constraintSet)),
+                  props.undoStacks
+                    .zoom(ModelUndoStacks.forConstraintGroup[IO])
+                    .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
+                  control = constraintsSelector.some,
+                  clazz = ExploreStyles.ConstraintsTile.some
+                ),
+              ConfigurationTile.configurationTile(
+                obsId,
+                obsView.map(_.zoom(scienceDataForObs)),
+                props.undoStacks
+                  .zoom(ModelUndoStacks.forScienceData[IO])
+                  .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+              )
+            ),
+            clazz = ExploreStyles.ObservationTiles.some
+          ): VdomNode
+        }
+      ).withKey(obsId.toString)
+
+    val rightSide =
+      obsIdOpt.fold(
+        <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+              <.div("Select or add an observation")
+        )
+      )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
+
+    if (window.canFitTwoPanels) {
+      <.div(
+        ExploreStyles.TreeRGL,
+        <.div(ExploreStyles.Tree, treeInner(observations))
+          .when(panels.get.selected.leftPanelVisible),
+        <.div(^.key := "obs-right-side", ExploreStyles.SinglePanelTile)(
+          rightSide
+        ).when(panels.get.selected.rightPanelVisible)
+      )
+    } else {
+      <.div(
+        ExploreStyles.TreeRGL,
+        Resizable(
+          axis = Axis.X,
+          width = treeWidth,
+          height = resize.height.getOrElse[Int](0),
+          minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
+          maxConstraints = (resize.width.getOrElse(0) / 2, 0),
+          onResize = panelsResize,
+          resizeHandles = List(ResizeHandleAxis.East),
+          content = tree(observations)
+        ),
+        <.div(^.key   := "obs-right-side",
+              ^.width := coreWidth.px,
+              ^.left  := treeWidth.px,
+              ExploreStyles.SinglePanelTile
+        )(
+          rightSide
+        )
+      )
     }
   }
 
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .getDerivedStateFromPropsAndState((p, s: Option[State]) =>
-        s match {
-          case None    =>
-            State(TwoPanelState.initial(p.selectedPanel),
-                  defaultLayout,
-                  TargetVisualOptions.Default
-            )
-          case Some(s) =>
-            if (s.panels.selected =!= p.selectedPanel)
-              State.panelSelected.replace(p.selectedPanel)(s)
-            else s
-        }
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateViewBy(p => TwoPanelState.initial(p.selectedPanel))
+      .useEffectBy((p, panels) =>
+        if (panels.get.selected =!= p.selectedPanel)
+          panels.mod(TwoPanelState.selected.replace(p.selectedPanel))
+        else Callback(panels.get)
       )
-      .renderBackend[Backend]
-      .componentDidMount($ => $.backend.readTabPreference($.props.userId.get)($.props.ctx))
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+      .useStateView(TargetVisualOptions.Default)
+      .useStateView(defaultLayout)
+      .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
+        implicit val ctx = props.ctx
+        _ =>
+          ObsTabPreferencesQuery
+            .queryWithDefault[IO](props.userId.get,
+                                  ResizableSection.ObservationsTree,
+                                  (Constants.InitialTreeWidth.toInt, defaultLayout)
+            )
+            .attempt
+            .flatMap {
+              case Right((w, l)) =>
+                (panels
+                  .mod(
+                    TwoPanelState.treeWidth[Observation.Id].replace(w)
+                  ) *> layout.set(mergeMap(layout.get, l)))
+                  .to[IO]
+              case Left(_)       => IO.unit
+            }
+            .runAsync
+      }
+      .useResizeDetector()
+      .renderWithReuse { (props, panels, options, layouts, resize) =>
+        implicit val ctx = props.ctx
+        ObsLiveQuery(
+          Reuse(renderFn _)(props, panels, options, layouts, resize)
+        )
+      }
 
 }
