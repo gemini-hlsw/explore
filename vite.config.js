@@ -1,4 +1,4 @@
-const reactRefresh = require('@vitejs/plugin-react-refresh')
+const react = require('@vitejs/plugin-react')
 const { visualizer } = require('rollup-plugin-visualizer')
 const path = require("path")
 const fs = require("fs")
@@ -139,6 +139,6 @@ module.exports = ({ command, mode }) => {
       },
       outDir: path.resolve(__dirname, "heroku/static"),
     },
-    plugins: [reactRefresh(), fontImport]
+    plugins: [react(), fontImport]
   };
 };
