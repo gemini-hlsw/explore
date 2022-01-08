@@ -16,14 +16,14 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{ facade => Raw }
 import lucuma.ui.reusability._
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.Node
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
 import react.common.style._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.Node
 
 import scalajs.js
 

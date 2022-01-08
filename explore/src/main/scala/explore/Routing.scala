@@ -39,20 +39,17 @@ object Routing {
     }
 
   private def targetTab(@unused model: View[RootModel]): VdomElement =
-    withSize { size =>
-      AppCtx.using(implicit ctx =>
-        TargetTabContents(
-          model.zoom(RootModel.userId).get,
-          model.zoom(RootModel.focusedObs),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
-          model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
-          model.zoom(RootModel.searchingTarget),
-          model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
-          model.zoom(RootModel.targetSummaryHiddenColumns),
-          size
-        )
+    AppCtx.using(implicit ctx =>
+      TargetTabContents(
+        model.zoom(RootModel.userId).get,
+        model.zoom(RootModel.focusedObs),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
+        model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
+        model.zoom(RootModel.searchingTarget),
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
+        model.zoom(RootModel.targetSummaryHiddenColumns)
       )
-    }
+    )
 
   private def obsTab(model: View[RootModel]): VdomElement =
     withSize(size =>
