@@ -3,8 +3,8 @@
 
 package explore.syntax
 
-import org.scalajs.dom.Window
 import explore.model.Constants
+import org.scalajs.dom.Window
 
 package object ui {
   implicit class WindowOps(val self: Window) extends AnyVal {

@@ -11,8 +11,8 @@ import crystal.react.reuse._
 import explore.components.Tile
 import explore.implicits._
 import explore.model.ObsIdSet
-import explore.model.TargetWithId
 import explore.model.TargetVisualOptions
+import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks

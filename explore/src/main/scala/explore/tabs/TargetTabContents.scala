@@ -22,9 +22,9 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
+import explore.syntax.ui._
 import explore.targeteditor.AsterismEditor
 import explore.undo._
-import explore.syntax.ui._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SiderealTarget
@@ -37,7 +37,8 @@ import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
-import react.resizeDetector.ResizeDetector
+import react.resizeDetector._
+import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
@@ -52,8 +53,7 @@ final case class TargetTabContents(
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]],
-  hiddenColumns:     View[Set[String]],
-  size:              ResizeDetector.Dimensions
+  hiddenColumns:     View[Set[String]]
 )(implicit val ctx:  AppContextIO)
     extends ReactFnProps[TargetTabContents](TargetTabContents.component)
 
@@ -69,17 +69,16 @@ object TargetTabContents {
     props:                Props,
     panelState:           View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
+    resize:               UseResizeDetectorReturn,
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (panelState.zoom(treeWidthLens).set(d.size.width).to[IO] *>
-          UserWidthsCreation
-            .storeWidthPreference[IO](props.userId,
-                                      ResizableSection.TargetsTree,
-                                      d.size.width
-            )).runAsync
-          .debounce(1.second)
+        panelState.zoom(treeWidthLens).set(d.size.width) *>
+          (UserWidthsCreation
+            .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width))
+            .runAsync
+            .debounce(1.second)
 
     val treeWidth    = panelState.get.treeWidth.toInt
     val selectedView = panelState.zoom(selectedLens)
@@ -257,8 +256,8 @@ object TargetTabContents {
       )
     }
 
-    val coreWidth  = props.size.width.getOrElse(0) - treeWidth
-    val coreHeight = props.size.height.getOrElse(0)
+    val coreWidth  = resize.width.getOrElse(0) - treeWidth
+    val coreHeight = resize.height.getOrElse(0)
 
     val selectedPanel = panelState.get.selected
     val rightSide     = selectedPanel.optValue
@@ -272,7 +271,7 @@ object TargetTabContents {
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable
     // or only one panel at a time (Mobile)
-    if (window.canFitTwoPanels) {
+    val body = if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(asterismGroupWithObs))
@@ -304,6 +303,7 @@ object TargetTabContents {
         )
       )
     }
+    body.withRef(resize.ref)
   }
 
   protected val component =
@@ -319,20 +319,21 @@ object TargetTabContents {
                                 Constants.InitialTreeWidth.toInt
           )
           .attempt
-          .map {
+          .flatMap {
             case Right(w) =>
-              Callback.log(s"Set $w") *>
-                panels
-                  .zoom(TwoPanelState.treeWidth[ObsIdSet])
-                  .set(w)
-            case Left(u)  => Callback.log(u.toString)
+              panels
+                .zoom(TwoPanelState.treeWidth[ObsIdSet])
+                .set(w)
+                .to[IO]
+            case Left(_)  => IO.unit
           }
-          .runAsyncAndForget
+          .runAsync
       }
-      .renderWithReuse { (props, tps, opts) =>
+      .useResizeDetector()
+      .renderWithReuse { (props, tps, opts, resize) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
-          Reuse(renderFn _)(props, tps, opts)
+          Reuse(renderFn _)(props, tps, opts, resize)
         )
       }
 

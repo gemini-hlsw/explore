@@ -4,14 +4,14 @@
 package explore
 
 import eu.timepit.refined.types.string.NonEmptyString
+import io.circe.Decoder
+import io.circe.Decoder._
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.Magnitude
 import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.schemas.decoders._
-import io.circe.Decoder
-import io.circe.Decoder._
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism

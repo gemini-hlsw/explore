@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.Eq
+import explore.common.AsterismQueries.AsterismGroupList
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
-import explore.common.AsterismQueries.AsterismGroupList
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
 import lucuma.core.model.Observation
