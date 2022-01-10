@@ -37,7 +37,6 @@ import react.common._
 import react.common.implicits._
 import react.draggable.Axis
 import react.resizable._
-import react.resizeDetector.UseResizeDetectorProps
 import react.resizeDetector._
 import react.resizeDetector.hooks._
 import react.semanticui.elements.button.Button
@@ -330,7 +329,7 @@ object TargetTabContents {
           }
           .runAsync
       }
-      .useResizeDetector(UseResizeDetectorProps())
+      .useResizeDetector()
       .renderWithReuse { (props, tps, opts, resize) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(

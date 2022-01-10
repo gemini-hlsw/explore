@@ -84,10 +84,10 @@ object UseResizeDetectorProps {
 object HooksApiExt {
 
   object mod {
-    @JSImport("react-resize-detector", JSImport.Namespace)
     @js.native
+    @JSImport("react-resize-detector", JSImport.Namespace)
     @nowarn
-    val base: js.Any = js.native
+    private val base: js.Any = js.native
 
     @scala.inline
     def useResizeDetector(): UseResizeDetectorReturn                              = UseResizeDetectorReturn.fromJS(
@@ -114,15 +114,15 @@ object HooksApiExt {
 
   sealed class Primary[Ctx, Step <: HooksApi.AbstractStep](api: HooksApi.Primary[Ctx, Step]) {
 
-    final def useResizeDetector(pos: UseResizeDetectorProps)(implicit
-      step:                          Step
-    ): step.Next[UseResizeDetectorReturn] =
-      useResizeDetectorBy(_ => pos)
-
-    final def useResizeDetectorBy(pos: Ctx => UseResizeDetectorProps)(implicit
+    final def useResizeDetector(props: UseResizeDetectorProps = UseResizeDetectorProps())(implicit
       step:                            Step
     ): step.Next[UseResizeDetectorReturn] =
-      api.customBy(ctx => hook(pos(ctx)))
+      useResizeDetectorBy(_ => props)
+
+    final def useResizeDetectorBy(props: Ctx => UseResizeDetectorProps)(implicit
+      step:                              Step
+    ): step.Next[UseResizeDetectorReturn] =
+      api.customBy(ctx => hook(props(ctx)))
   }
 
   final class Secondary[Ctx, CtxFn[_], Step <: HooksApi.SubsequentStep[Ctx, CtxFn]](
