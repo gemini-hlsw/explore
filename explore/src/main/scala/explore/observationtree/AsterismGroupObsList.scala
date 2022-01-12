@@ -94,12 +94,17 @@ object AsterismGroupObsList {
      * something that is NOT in the selection - in which case we just drag the individual item.
      */
     def getDraggedIds(dragId: String, props: Props): Option[Either[Target.Id, ObsIdSet]] =
-      parseDragId(dragId).map(_.map { obsId =>
-        props.selected.get.optValue.fold(ObsIdSet.one(obsId)) { selectedIds =>
-          if (selectedIds.contains(obsId)) selectedIds
-          else ObsIdSet.one(obsId)
-        }
-      })
+      // The return type would be better represented as Option[Target.Id | ObsIdSet] in scala 3
+      parseDragId(dragId).map {
+        case Left(targetId) => targetId.asLeft
+        case Right(obsId)   =>
+          props.selected.get.optValue
+            .fold(ObsIdSet.one(obsId)) { selectedIds =>
+              if (selectedIds.contains(obsId)) selectedIds
+              else ObsIdSet.one(obsId)
+            }
+            .asRight
+      }
 
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupList],
@@ -165,8 +170,12 @@ object AsterismGroupObsList {
               props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
           // we don't need to render clones for the targets, the default is what we want.
+          // (We don't include a `renderClone` value in the target `Droppable`.)
           getDraggedIds(rubric.draggableId, props)
-            .flatMap(_.toOption.flatMap(x => renderObsClone(x)))
+            .flatMap {
+              case Left(_)       => none
+              case Right(obsIds) => renderObsClone(obsIds)
+            }
             .getOrElse(<.span("ERROR"))
         )
 
