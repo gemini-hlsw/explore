@@ -3,13 +3,18 @@
 
 package explore.model.util
 
+import cats.Eq
 import cats.data.NonEmptySet
+import cats.instances.all._
 import cats.syntax.all._
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet
 
-final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptySet[Id]]) {
+final class NonEmptySetWrapper[IdSet, Id: Eq](
+  self: IdSet,
+  iso:  Iso[IdSet, NonEmptySet[Id]]
+) {
   private val selfSet = iso.get(self)
 
   // expose the NonEmptySet methods
@@ -43,6 +48,10 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
 
   @inline
   def subsetOf(other: IdSet): Boolean = toSortedSet.subsetOf(iso.get(other).toSortedSet)
+
+  @inline
+  def strictSubsetOf(other: IdSet): Boolean =
+    this.selfSet =!= iso.get(other) && subsetOf(other)
 
   @inline
   def size: Long = selfSet.size
@@ -85,7 +94,7 @@ final class NonEmptySetWrapper[IdSet, Id](self: IdSet, iso: Iso[IdSet, NonEmptyS
 }
 
 object NonEmptySetWrapper {
-  def apply[IdSet, Id](
+  def apply[IdSet, Id: Eq](
     idSet: IdSet,
     iso:   Iso[IdSet, NonEmptySet[Id]]
   ): NonEmptySetWrapper[IdSet, Id] =

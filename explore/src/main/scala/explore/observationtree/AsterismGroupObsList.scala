@@ -27,6 +27,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
@@ -36,10 +37,13 @@ import react.beautifuldnd._
 import react.common._
 import react.common.implicits._
 import react.fa.FontAwesomeIcon
+import react.reflex._
 import react.semanticui.elements.button.Button
+import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
 import react.semanticui.sizes._
+import react.semanticui.views.card._
 
 import scala.collection.immutable.SortedSet
 
@@ -77,27 +81,29 @@ object AsterismGroupObsList {
           .fold(expanded - obsIds, expanded + obsIds)
       }
 
-    // TODO: We will need this when we start being able to drag targets.
-    // def parseDragId(dragId: String): Option[Either[Target.Id, Observation.Id]] =
-    //   Observation.Id
-    //     .parse(dragId)
-    //     .map(_.asRight)
-    //     .orElse(Target.Id.parse(dragId).map(_.asLeft))
-
-    def parseDragId(dragId: String): Option[Observation.Id] = Observation.Id.parse(dragId)
+    def parseDragId(dragId: String): Option[Either[Target.Id, Observation.Id]] =
+      Observation.Id
+        .parse(dragId)
+        .map(_.asRight)
+        .orElse(Target.Id.parse(dragId).map(_.asLeft))
 
     /**
-     * When we're dragging, we can either be dragging a single observation or a group of them. If we
-     * have a selection, and the drag id is part of the selection, we drag all the items in the
-     * selection. However, the user may have something selected, but be dragging something that is
-     * NOT in the selection - in which case we just drag the individual item.
+     * When we're dragging an observation, we can either be dragging a single observation or a group
+     * of them. If we have a selection, and the drag id is part of the selection, we drag all the
+     * items in the selection. However, the user may have something selected, but be dragging
+     * something that is NOT in the selection - in which case we just drag the individual item.
      */
-    def getDraggedIds(dragId: String, props: Props): Option[ObsIdSet] =
-      parseDragId(dragId).map { obsId =>
-        props.selected.get.optValue.fold(ObsIdSet.one(obsId)) { selectedIds =>
-          if (selectedIds.contains(obsId)) selectedIds
-          else ObsIdSet.one(obsId)
-        }
+    def getDraggedIds(dragId: String, props: Props): Option[Either[Target.Id, ObsIdSet]] =
+      // The return type would be better represented as Option[Target.Id | ObsIdSet] in scala 3
+      parseDragId(dragId).map {
+        case Left(targetId) => targetId.asLeft
+        case Right(obsId)   =>
+          props.selected.get.optValue
+            .fold(ObsIdSet.one(obsId)) { selectedIds =>
+              if (selectedIds.contains(obsId)) selectedIds
+              else ObsIdSet.one(obsId)
+            }
+            .asRight
       }
 
     def onDragEnd(
@@ -113,16 +119,23 @@ object AsterismGroupObsList {
           destination <- result.destination.toOption
           destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
           draggedIds  <- getDraggedIds(result.draggableId, props)
-          if destIds.intersect(draggedIds).isEmpty
           destAg      <-
             props.asterismsWithObs.get.asterismGroups.values
               .find(_.obsIds === destIds)
         } yield (destAg, draggedIds)
 
         oData.foldMap { case (destAg, draggedIds) =>
-          AsterismGroupObsListActions
-            .obsAsterismGroup(draggedIds, expandedIds, selected, focusedObs)
-            .set(undoCtx)(destAg.some)
+          draggedIds match {
+            case Left(targetId) if !destAg.targetIds.contains(targetId) =>
+              AsterismGroupObsListActions
+                .dropTarget(destAg.obsIds, targetId, expandedIds)
+                .set(undoCtx)(destAg.some)
+            case Right(obsIds) if !destAg.obsIds.intersects(obsIds)     =>
+              AsterismGroupObsListActions
+                .dropObservations(obsIds, expandedIds, selected, focusedObs)
+                .set(undoCtx)(destAg.some)
+            case _                                                      => Callback.empty
+          }
         }
       }
 
@@ -139,24 +152,30 @@ object AsterismGroupObsList {
         props.asterismsWithObs.zoom(AsterismGroupsWithObs.asterismGroups)
       )
 
+      def renderObsClone(obsIds: ObsIdSet): Option[TagMod] =
+        obsIds.single.fold {
+          val list        = obsIds.toList
+          val div: TagMod = <.div(
+            SegmentGroup(
+              list.toTagMod(id => Segment(id.show))
+            )
+          )
+          div.some
+        }(obsId => observations.get(obsId).map(summ => props.renderObsBadge(summ)))
+
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(provided.innerRef,
               provided.draggableProps,
               provided.dragHandleProps,
               props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
+          // we don't need to render clones for the targets, the default is what we want.
+          // (We don't include a `renderClone` value in the target `Droppable`.)
           getDraggedIds(rubric.draggableId, props)
-            .flatMap(ids =>
-              ids.single.fold {
-                val list        = ids.toList
-                val div: TagMod = <.div(
-                  SegmentGroup(
-                    list.toTagMod(id => Segment(id.show))
-                  )
-                )
-                div.some
-              }(obsId => observations.get(obsId).map(summ => props.renderObsBadge(summ)))
-            )
+            .flatMap {
+              case Left(_)       => none
+              case Right(obsIds) => renderObsClone(obsIds)
+            }
             .getOrElse(<.span("ERROR"))
         )
 
@@ -201,7 +220,7 @@ object AsterismGroupObsList {
         else targets.map(TargetWithId.name.get).mkString(";")
       }
 
-      def renderGroup(asterismGroup: AsterismGroup): VdomNode = {
+      def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {
         val obsIds        = asterismGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
@@ -276,6 +295,31 @@ object AsterismGroupObsList {
         }
       }
 
+      def renderTarget(twid: TargetWithId, index: Int): VdomNode =
+        Draggable(twid._1.toString, index) { case (provided, snapshot, _) =>
+          <.div(
+            provided.innerRef,
+            provided.draggableProps,
+            props.getDraggedStyle(provided.draggableStyle, snapshot)
+          )(
+            <.span(provided.dragHandleProps)(
+              Card()(ExploreStyles.ObsBadge)(
+                CardContent(
+                  CardHeader(
+                    <.div(
+                      ExploreStyles.ObsBadgeHeader,
+                      <.div(ExploreStyles.ObsBadgeTargetAndId,
+                            <.div(twid._2.name.value),
+                            <.div(ExploreStyles.ObsBadgeId, s"[${twid._1.value.value.toHexString}]")
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        }
+
       DragDropContext(
         onDragStart = (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true),
         onDragEnd = (result, provided) =>
@@ -292,10 +336,37 @@ object AsterismGroupObsList {
               "Asterism Summary"
             )
           ),
-          <.div(ExploreStyles.ObsTree)(
-            <.div(ExploreStyles.ObsScrollTree)(
-              asterismGroups.toTagMod(renderGroup)
-            )
+          ReflexContainer()(
+            List[TagMod](
+              ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection)(
+                Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Asterisms"),
+                <.div(ExploreStyles.ObsTree)(
+                  <.div(ExploreStyles.ObsScrollTree)(
+                    asterismGroups.toTagMod(renderAsterismGroup)
+                  )
+                )
+              ),
+              ReflexSplitter(propagate = true),
+              ReflexElement(minSize = 36, clazz = ExploreStyles.ObsTreeSection, withHandle = true)(
+                ReflexWithHandle(reflexProvided =>
+                  Droppable("target-list") { case (provided, _) =>
+                    <.div(provided.innerRef, provided.droppableProps)(
+                      ReflexHandle(provided = reflexProvided)(
+                        Header(block = true, clazz = ExploreStyles.ObsTreeHeader)("Target Library")
+                      ),
+                      <.div(ExploreStyles.ObsTree)(
+                        <.div(ExploreStyles.ObsScrollTree)(
+                          targetMap.toList.map(_._2).zipWithIndex.toTagMod { case (twid, idx) =>
+                            renderTarget(twid, idx)
+                          },
+                          provided.placeholder
+                        )
+                      )
+                    )
+                  }
+                )
+              )
+            ).toTagMod
           )
         )
       )

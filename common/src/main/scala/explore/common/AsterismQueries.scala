@@ -59,6 +59,15 @@ object AsterismQueries {
     val observations   = Focus[AsterismGroupsWithObs](_.observations)
   }
 
+  // Some helper methods on AsterismGroupList
+  implicit class AsterismGroupListOps(val self: AsterismGroupList) extends AnyVal {
+    def findContainingObsIds(obsIds: ObsIdSet): Option[AsterismGroup] =
+      self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(_._2)
+
+    def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
+      self.find { case (_, ag) => ag.targetIds === targetIds }.map(_._2)
+  }
+
   implicit val asterismGroupWithObsReuse: Reusability[AsterismGroupsWithObs] =
     Reusability.derive
 
