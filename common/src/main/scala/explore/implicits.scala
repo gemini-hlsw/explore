@@ -60,7 +60,7 @@ trait ListImplicits {
       }
   }
 
-  implicit class ViewMapOps[F[_]: Monad, K, V](val viewMap: ViewF[F, Map[K, V]]) {
+  implicit class ViewMapOps[F[_], K, V](val viewMap: ViewF[F, Map[K, V]]) {
     def toListOfViews: List[(K, ViewF[F, V])] =
       // It's safe to "get" since we are only invoking for existing keys.
       viewMap.get.keys.toList.map(k =>
