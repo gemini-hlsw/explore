@@ -25,7 +25,6 @@ object SourceProfileEditor {
         .zoom(SourceProfile.integratedBrightnesses)
         .mapValue(integratedBrightnessesView =>
           IntegratedBrightnessEditor(integratedBrightnessesView, props.disabled)
-        // <.div(integratedBrightnessesView.get.toString())
         )
         .whenDefined
     )
