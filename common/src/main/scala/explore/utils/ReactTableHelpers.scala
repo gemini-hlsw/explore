@@ -44,12 +44,13 @@ object ReactTableHelpers {
     ScalaComponent
       .builder[View[A]]
       .render_P { view =>
-        FormInputEV(id = newId,
-                    value = view,
-                    validFormat = validFormat,
-                    changeAuditor = changeAuditor,
-                    disabled = disabled,
-                    modifiers = modifiers
+        FormInputEV(
+          id = newId,
+          value = view,
+          validFormat = validFormat,
+          changeAuditor = changeAuditor,
+          disabled = disabled,
+          modifiers = modifiers
         )
       }
       .build
@@ -81,12 +82,13 @@ object ReactTableHelpers {
       .render_P { view =>
         val excluded = excludeFn.fold(Set.empty[A])(_.apply(view.get))
 
-        EnumViewSelect(id = newId,
-                       value = view,
-                       exclude = excluded,
-                       compact = true,
-                       disabled = disabled,
-                       modifiers = modifiers
+        EnumViewSelect(
+          id = newId,
+          value = view,
+          exclude = excluded,
+          compact = true,
+          disabled = disabled,
+          modifiers = modifiers
         )
       }
       .build

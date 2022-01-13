@@ -227,6 +227,7 @@ object ExploreStyles {
 
   val BrightnessesTableContainer: Css          = Css("explore-brightnesses-container")
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
+  val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
   val BrightnessesTableSection: Css            = Css("explore-brightnesses-section")
 

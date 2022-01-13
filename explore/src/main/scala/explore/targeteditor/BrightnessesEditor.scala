@@ -124,7 +124,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .setHeader("Units")
               .setCell(
                 ReactTableHelpers.editableEnumViewColumn[Units Of Brightness[T]](
-                  disabled = disabled
+                  disabled = disabled,
+                  modifiers = List(ExploreStyles.BrightnessesTableUnitsDropdown)
                 )
               ),
             BrightnessTable
