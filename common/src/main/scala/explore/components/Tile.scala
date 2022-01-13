@@ -77,7 +77,7 @@ object Tile {
       .withHooks[Props]
       // info ref
       .useRefToVdom[html.Element]
-      .renderWithReuse { (p, contentRef) =>
+      .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
           Button(
             as = <.a,
@@ -119,11 +119,11 @@ object Tile {
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
             <.span(ExploreStyles.TileTitleStrip,
                    ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
-            ).withRef(contentRef),
+            ).withRef(infoRef),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
           ),
-          Option(contentRef.raw.current)
+          Option(infoRef.raw.current)
             .map(_.asInstanceOf[Raw.ReactDOM.Container]) // Some uglies
             .whenDefined { node =>
               ResponsiveComponent(widthBreakpoints,
