@@ -12,18 +12,18 @@ import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.core.math.dimensional.Measure
+import lucuma.core.math.dimensional.Units
 import lucuma.core.model.AngularSize
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Semester
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 
-import scala.collection.immutable.TreeSeqMap
-import lucuma.core.model.SourceProfile
-import lucuma.core.math.dimensional.Units
-import lucuma.core.model.SpectralDefinition
-import lucuma.core.math.dimensional.Measure
 import scala.annotation.nowarn
+import scala.collection.immutable.TreeSeqMap
 
 /**
  * Reusability instances for model classes

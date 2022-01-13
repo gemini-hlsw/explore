@@ -1,14 +1,15 @@
+// Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
 package explore.targeteditor
 
+import crystal.react.View
+import crystal.react.implicits._
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-
-import react.common._
-import crystal.react.View
 import lucuma.core.model.SourceProfile
-
-import explore.model.reusability._
-import crystal.react.implicits._
+import react.common._
 
 case class SourceProfileEditor(sourceProfile: View[SourceProfile], disabled: Boolean)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)

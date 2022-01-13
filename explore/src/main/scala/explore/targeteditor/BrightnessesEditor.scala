@@ -19,8 +19,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Band
-import lucuma.core.math.BrightnessValue
 import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.BrightnessValue
+import lucuma.core.math.dimensional._
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
@@ -37,10 +40,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
-import monocle.Lens
-import lucuma.core.math.dimensional._
-import lucuma.core.util.Enumerated
-import lucuma.core.util.Display
 
 sealed trait BrightnessesEditor[T] {
   val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
@@ -69,16 +68,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   implicit protected val displayTaggedUnits: Display[Units Of Brightness[T]] = Display[Units].narrow
 
-  private type RowValue = (Band, BrightnessMeasure[T])
+  private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val BrightnessTable = TableDef[View[RowValue]].withSortBy
-
-  private val bandLens: Lens[RowValue, Band]                              = Focus[RowValue](_._1)
-  private val measureLens: Lens[RowValue, BrightnessMeasure[T]]           = Focus[RowValue](_._2)
-  private val brightnessValueLens: Lens[RowValue, BrightnessValue]        =
-    measureLens.andThen(Measure.valueTagged)
-  private val brightnessUnitsLens: Lens[RowValue, Units Of Brightness[T]] =
-    measureLens.andThen(Measure.unitsTagged)
+  private val BrightnessTable = TableDef[RowValue].withSortBy
 
   private val BrightnessTableComponent = new SUITable(BrightnessTable)
 
@@ -101,22 +93,24 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       )
       .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
         { case (brightnesses, disabled) =>
-          val deleteFn: View[RowValue] => Callback =
-            row => brightnesses.mod(_ - row.zoom(bandLens).get)
-
-          val excludeFn: View[RowValue] => Set[Band] =
-            row => brightnesses.get.keySet - row.zoom(bandLens).get
+          val deleteFn: RowValue => Callback =
+            row => brightnesses.mod(_ - row._1)
 
           List(
             BrightnessTable
-              .Column("value", _.zoom(brightnessValueLens))
+              .Column("band", _._1)
+              .setHeader("Band")
+              .setCell(_.value.shortName)
+              .setSortByAuto,
+            BrightnessTable
+              .Column("value", _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]))
               .setHeader("Value")
               .setCell(
                 ReactTableHelpers
                   .editableViewColumn(
-                    brightnessValueLens,
-                    validFormat = ValidFormatInput.fromFormat(BrightnessValue.fromString,
-                                                              "Invalid brightness value"
+                    validFormat = ValidFormatInput.fromFormat(
+                      BrightnessValue.fromString,
+                      "Invalid brightness value"
                     ),
                     changeAuditor = ChangeAuditor
                       .fromFormat(BrightnessValue.fromString)
@@ -126,20 +120,10 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   )
               ),
             BrightnessTable
-              .Column("band", _.zoom(bandLens))
-              .setHeader("Band")
-              .setCell(
-                ReactTableHelpers.editableEnumViewColumn(bandLens)(
-                  disabled = disabled,
-                  excludeFn = Some(excludeFn)
-                )
-              )
-              .setSortByFn(_.get),
-            BrightnessTable
-              .Column("units", _.zoom(brightnessUnitsLens))
+              .Column("units", _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]))
               .setHeader("Units")
               .setCell(
-                ReactTableHelpers.editableEnumViewColumn(brightnessUnitsLens)(
+                ReactTableHelpers.editableEnumViewColumn[Units Of Brightness[T]](
                   disabled = disabled
                 )
               ),
@@ -164,7 +148,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         BrightnessTable(cols,
                         rows,
                         ((_: BrightnessTable.OptionsType)
-                          .setRowIdFn(_.zoom(bandLens).get.tag)
+                          .setRowIdFn(_._1.tag)
                           .setInitialState(tableState))
                           .reuseAlways
         )

@@ -14,9 +14,9 @@ import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.ModelOptics
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
+import explore.optics.ModelOptics
 import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

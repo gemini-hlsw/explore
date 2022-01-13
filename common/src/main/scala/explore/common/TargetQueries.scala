@@ -21,14 +21,15 @@ import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.RightAscension
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 
-import TargetQueriesGQL._
-import lucuma.core.model.SourceProfile
 import scala.annotation.unused
+
+import TargetQueriesGQL._
 
 object TargetQueries {
 

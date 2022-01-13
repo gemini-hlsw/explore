@@ -9,10 +9,10 @@ import clue.data.syntax._
 import explore.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
-import explore.model.ModelOptics._
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
+import explore.optics.ModelOptics._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
@@ -23,8 +23,6 @@ import lucuma.core.math.units._
 import lucuma.core.model._
 import lucuma.core.optics.syntax.lens._
 import lucuma.schemas.ObservationDB.Types._
-
-import java.math.MathContext
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
@@ -300,8 +298,8 @@ object itcschema {
       def toITCInput: ITCMagnitudeInput =
         ITCMagnitudeInput(
           b._1,
-          b._2.value.toDoubleValue,
-          b._2.error.map(_.toRational.toBigDecimal(MathContext.UNLIMITED)).orIgnore,
+          b._2.value.toDouble,
+          b._2.error.map(_.toBigDecimal).orIgnore,
           b._2.units.toITCInputOpt.orUnassign
         )
     }

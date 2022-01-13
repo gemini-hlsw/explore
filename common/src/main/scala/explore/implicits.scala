@@ -16,6 +16,7 @@ import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.schemas._
+import monocle.function.At.at
 import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
@@ -60,16 +61,11 @@ trait ListImplicits {
   }
 
   implicit class ViewMapOps[F[_]: Monad, K, V](val viewMap: ViewF[F, Map[K, V]]) {
-    def toListOfViews: List[ViewF[F, (K, V)]] =
-      viewMap.get.toList.map { case (k, v) =>
-        ViewF[F, (K, V)](
-          (k, v),
-          { (mod, cb) =>
-            val (newK, newV) = mod((k, v))
-            viewMap.modCB(_ - k + (newK -> newV), newMap => cb((newK, newMap(newK))))
-          }
-        )
-      }
+    def toListOfViews: List[(K, ViewF[F, V])] =
+      // It's safe to "get" since we are only invoking for existing keys.
+      viewMap.get.keys.toList.map(k =>
+        k -> viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
+      )
   }
 
   implicit class ListOps[A](val list: List[A]) {

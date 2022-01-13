@@ -6,9 +6,9 @@ package explore.targets
 import cats.Order._
 import cats.syntax.all._
 import explore.Icons
-import explore.model.ModelOptics._
 import explore.model.conversions._
 import explore.model.formats._
+import explore.optics.ModelOptics._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Band
 import lucuma.core.math.Epoch
