@@ -6,12 +6,12 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.auto._
-import io.chrisdavenport.cats.time._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
+import org.typelevel.cats.time._
 
 import java.time.Duration
 

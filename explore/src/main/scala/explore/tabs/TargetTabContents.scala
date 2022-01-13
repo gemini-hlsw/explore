@@ -27,7 +27,6 @@ import explore.targeteditor.AsterismEditor
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -50,7 +49,7 @@ final case class TargetTabContents(
   userId:            Option[User.Id],
   focusedObs:        View[Option[FocusedObs]],
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupList]],
-  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]],
   hiddenColumns:     View[Set[String]]

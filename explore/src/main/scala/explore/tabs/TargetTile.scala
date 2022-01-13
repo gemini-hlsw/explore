@@ -19,7 +19,6 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -31,7 +30,7 @@ object TargetTile {
     userId:        Option[User.Id],
     obsId:         Observation.Id,
     asterismPot:   Pot[View[List[TargetWithId]]],
-    undoStacks:    View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+    undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:     View[Set[Target.Id]],
     options:       View[TargetVisualOptions],
     hiddenColumns: View[Set[String]]

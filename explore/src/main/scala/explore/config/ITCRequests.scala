@@ -23,13 +23,15 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
+import explore.schemas.ITC.Enums._
+import explore.schemas.ITC.Types._
 import explore.schemas.itcschema.implicits._
 import japgolly.scalajs.react._
-import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.Band
 import lucuma.core.enum.StellarLibrarySpectrum
+import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
-import lucuma.core.model.Magnitude
-import lucuma.core.model.SpatialProfile
+import lucuma.core.math.dimensional.Measure
 import lucuma.core.model.SpectralDistribution
 import org.typelevel.log4cats.Logger
 
@@ -115,13 +117,14 @@ object ITCRequests {
       )
 
   // Find the magnitude closest to the requested wavelength
-  def selectedMagnitude(
-    mags:       SortedMap[MagnitudeBand, Magnitude],
+  def selectedBrightness(
+    mags:       SortedMap[Band, Measure[BrightnessValue]],
     wavelength: Wavelength
-  ): Option[Magnitude] =
-    mags.minimumByOption(b =>
-      (b.band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-    )
+  ): Option[(Band, Measure[BrightnessValue])] =
+    mags
+      .minByOption { case (band, _) =>
+        (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+      }
 
   private def doRequest[F[_]: Parallel: Monad: Logger: TransactionalClient[*[_], ITC]](
     request:  ITCRequestParams,
@@ -131,17 +134,17 @@ object ITCRequests {
       s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
     ) *>
       request.target
-        .fproduct(t => selectedMagnitude(t.magnitudes, request.wavelength))
-        .collect { case (t, Some(m)) =>
+        .fproduct(t => selectedBrightness(t.brightnesses, request.wavelength))
+        .collect { case (t, Some(brightness)) =>
           SpectroscopyITCQuery
             .query(
               ITCSpectroscopyInput(
                 request.wavelength.toITCInput,
                 request.signalToNoise,
                 // TODO Link sp and SED info to explore
-                SpatialProfile.PointSource,
+                SpatialProfileModelInput(SpatialProfileType.PointSource),
                 SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
-                m.toITCInput,
+                brightness.toITCInput,
                 t.rv.toITCInput,
                 request.constraints,
                 request.mode.toITCInput.map(_.assign).toList

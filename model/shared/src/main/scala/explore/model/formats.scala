@@ -83,7 +83,7 @@ trait formats {
     formatBigDecimalRV.andThen(fromKilometersPerSecondRV)
 
   val formatZ: Format[String, Redshift] =
-    formatBigDecimalZ.andThen(redshiftBigDecimalISO)
+    formatBigDecimalZ.andThen(redshiftBigDecimalIso)
 
   val formatCZ: Format[String, ApparentRadialVelocity] =
     formatBigDecimalCZ.andThen(fromKilometersPerSecondCZ)

@@ -61,10 +61,10 @@ trait ListImplicits {
   }
 
   implicit class ViewMapOps[F[_], K, V](val viewMap: ViewF[F, Map[K, V]]) {
-    def toListOfViews: List[ViewF[F, V]] =
+    def toListOfViews: List[(K, ViewF[F, V])] =
       // It's safe to "get" since we are only invoking for existing keys.
       viewMap.get.keys.toList.map(k =>
-        viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
+        k -> viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
       )
   }
 

@@ -26,10 +26,6 @@ object TargetQueriesGQL {
               name
               tracking {
                 ... on Sidereal {
-                  catalogId {
-                    name
-                    id
-                  }
                   coordinates {
                     ra {
                       microarcseconds
@@ -55,10 +51,39 @@ object TargetQueriesGQL {
                   }
                 }
               }
-              magnitudes {
-                value
-                band
-                system
+              sourceProfile {
+                point {
+                  bandNormalized {
+                    sed {
+                      stellarLibrary
+                      coolStar
+                      galaxy
+                      planet
+                      quasar
+                      hiiRegion
+                      planetaryNebula
+                      powerLaw
+                      blackBodyTempK
+                      fluxDensities {
+                        wavelength {
+                          picometers
+                        }
+                        density
+                      }
+                    }
+                    brightnesses {
+                      band
+                      value
+                      units
+                      error
+                    }
+                  }
+                }
+              }
+              catalogInfo {
+                name
+                id
+                objectType
               }
             }
           }

@@ -14,12 +14,9 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms._
 import lucuma.ui.optics._
-import monocle.Lens
 import react.common.style.Css
 import react.semanticui.elements.button.Button
-import reactST.reactTable.mod.{ ^ => _, _ }
-
-import scalajs.js
+import reactST.reactTable.facade.cell._
 
 object ReactTableHelpers {
 
@@ -38,26 +35,26 @@ object ReactTableHelpers {
    * @return
    *   The component.
    */
-  def editableViewColumn[A, B](
-    lens:          Lens[A, B],
-    validFormat:   ValidFormatInput[B],
-    changeAuditor: ChangeAuditor[B] = ChangeAuditor.accept[B],
+  def editableViewColumn[A](
+    validFormat:   ValidFormatInput[A],
+    changeAuditor: ChangeAuditor[A] = ChangeAuditor.accept[A],
     disabled:      Boolean = false,
     modifiers:     Seq[TagMod] = Seq.empty
-  )(implicit eq:   Eq[B]) =
+  )(implicit eq:   Eq[A]) =
     ScalaComponent
       .builder[View[A]]
-      .render_P { va =>
-        FormInputEV(id = newId,
-                    value = va.zoom(lens),
-                    validFormat = validFormat,
-                    changeAuditor = changeAuditor,
-                    disabled = disabled,
-                    modifiers = modifiers
+      .render_P { view =>
+        FormInputEV(
+          id = newId,
+          value = view,
+          validFormat = validFormat,
+          changeAuditor = changeAuditor,
+          disabled = disabled,
+          modifiers = modifiers
         )
       }
       .build
-      .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)
+      .cmapCtorProps[CellProps[_, View[A], _]](_.value)
       .toJsComponent
       .raw
 
@@ -75,26 +72,27 @@ object ReactTableHelpers {
    * @return
    *   The component.
    */
-  def editableEnumViewColumn[A, B](lens: Lens[A, B])(
-    disabled:                            Boolean = false,
-    excludeFn:                           Option[View[A] => Set[B]] = None,
-    modifiers:                           Seq[TagMod] = Seq.empty
-  )(implicit enumerated:                 Enumerated[B], display: Display[B]) =
+  def editableEnumViewColumn[A](
+    disabled:            Boolean = false,
+    excludeFn:           Option[A => Set[A]] = None,
+    modifiers:           Seq[TagMod] = Seq.empty
+  )(implicit enumerated: Enumerated[A], display: Display[A]) =
     ScalaComponent
       .builder[View[A]]
-      .render_P { va =>
-        val excluded = excludeFn.fold(Set.empty[B])(_.apply(va))
+      .render_P { view =>
+        val excluded = excludeFn.fold(Set.empty[A])(_.apply(view.get))
 
-        EnumViewSelect(id = newId,
-                       value = va.zoom(lens),
-                       exclude = excluded,
-                       compact = true,
-                       disabled = disabled,
-                       modifiers = modifiers
+        EnumViewSelect(
+          id = newId,
+          value = view,
+          exclude = excluded,
+          compact = true,
+          disabled = disabled,
+          modifiers = modifiers
         )
       }
       .build
-      .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)
+      .cmapCtorProps[CellProps[_, View[A], _]](_.value)
       .toJsComponent
       .raw
 
@@ -116,12 +114,12 @@ object ReactTableHelpers {
    */
   def buttonViewColumn[A](
     button:       Button,
-    onClick:      View[A] => Callback,
+    onClick:      A => Callback,
     wrapperClass: Css = Css.Empty,
     disabled:     Boolean = false
   ) =
     ScalaComponent
-      .builder[View[A]]
+      .builder[A]
       .render_P { rowData =>
         <.div(
           wrapperClass,
@@ -129,7 +127,7 @@ object ReactTableHelpers {
         )
       }
       .build
-      .cmapCtorProps[(CellProps[View[A], _]) with js.Object](_.cell.row.original)
+      .cmapCtorProps[CellProps[_, A, _]](_.value)
       .toJsComponent
       .raw
 

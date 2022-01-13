@@ -12,14 +12,17 @@ import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
+import lucuma.core.math.dimensional.Measure
+import lucuma.core.math.dimensional.Units
 import lucuma.core.model.AngularSize
 import lucuma.core.model.EphemerisKey
-import lucuma.core.model.NonsiderealTarget
 import lucuma.core.model.Semester
-import lucuma.core.model.SiderealTarget
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 
+import scala.annotation.nowarn
 import scala.collection.immutable.TreeSeqMap
 
 /**
@@ -46,8 +49,8 @@ object reusability {
   implicit def idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]]  =
     Reusability.by(_.toList)
   implicit val ephemerisKeyReuse: Reusability[EphemerisKey]                           = Reusability.derive
-  implicit val siderealTargetReuse: Reusability[SiderealTarget]                       = Reusability.derive
-  implicit val nonsiderealTargetReuse: Reusability[NonsiderealTarget]                 = Reusability.derive
+  implicit val SiderealTargetReuse: Reusability[Target.Sidereal]                      = Reusability.derive
+  implicit val NonsiderealTargetReuse: Reusability[Target.Nonsidereal]                = Reusability.derive
   implicit val scienceTargetsReuse: Reusability[TreeSeqMap[Target.Id, Target]]        =
     Reusability.by((_: TreeSeqMap[Target.Id, Target]).toMap)(Reusability.map)
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.derive
@@ -86,4 +89,11 @@ object reusability {
   implicit val filterReuse: Reusability[AvailableFilter]                             = Reusability.byEq
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions]                = Reusability.derive
   implicit val percentageReuse: Reusability[Progress]                                = Reusability.derive
+
+  // Core model - move to lucuma-ui
+  implicit val unitsReuse: Reusability[Units] = Reusability.byEq
+  @nowarn // Reusability context bound is required but the compiler emits a warning anyway.
+  implicit def measureReuse[N: Reusability]: Reusability[Measure[N]]          = Reusability.derive
+  implicit def spectralDefinitionReuse[T]: Reusability[SpectralDefinition[T]] = Reusability.derive
+  implicit val sourceProfileReuse: Reusability[SourceProfile]                 = Reusability.derive
 }

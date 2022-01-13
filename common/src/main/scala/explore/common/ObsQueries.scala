@@ -44,8 +44,6 @@ object ObsQueries {
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  type WavelengthInput = ObservationDB.Types.WavelengthModelInput
-  val WavelengthInput = ObservationDB.Types.WavelengthModelInput
   type ObservationData = ObsEditQuery.Data.Observation
   val ObservationData = ObsEditQuery.Data.Observation
   type ScienceRequirementsData = ObservationData.ScienceRequirements

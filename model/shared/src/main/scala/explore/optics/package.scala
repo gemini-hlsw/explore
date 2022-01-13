@@ -4,12 +4,6 @@
 package explore
 
 import cats.syntax.all._
-import coulomb._
-import lucuma.core.math.ApparentRadialVelocity
-import lucuma.core.math.Constants._
-import lucuma.core.math.RadialVelocity
-import lucuma.core.math.Redshift
-import lucuma.core.math.units._
 import monocle._
 import monocle.function.At
 import monocle.function.At.atMap
@@ -18,7 +12,7 @@ import monocle.function.Index.fromAt
 
 import scala.collection.immutable.TreeSeqMap
 
-package object optics {
+package object optics extends ModelOptics {
   implicit class IsoOps[From, To](val self: Iso[From, To]) extends AnyVal {
     def andThen[X](other: Adjuster[To, X]): Adjuster[From, X] =
       asAdjuster.andThen(other)
@@ -147,23 +141,6 @@ package object optics {
     Lens((s: S) => (l1.get(s), l2.get(s), l3.get(s), l4.get(s)))((abc: (A, B, C, D)) =>
       (s: S) => l4.replace(abc._4)(l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s))))
     )
-
-  val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
-    Iso[BigDecimal, ApparentRadialVelocity](b =>
-      ApparentRadialVelocity(b.withUnit[KilometersPerSecond])
-    )(cz => cz.cz.toUnit[KilometersPerSecond].value)
-
-  val redshiftBigDecimalISO: Iso[BigDecimal, Redshift] = Iso(Redshift.apply)(_.z)
-
-  val fromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
-    Prism[BigDecimal, RadialVelocity](b =>
-      Some(b)
-        .filter(_.abs <= SpeedOfLight.to[BigDecimal, KilometersPerSecond].value)
-        .flatMap(v => RadialVelocity(v.withUnit[KilometersPerSecond]))
-    )(rv => rv.rv.toUnit[KilometersPerSecond].value)
-
-  // Iso for coulumb quantities
-  def coulombIso[N, U] = Iso[Quantity[N, U], N](_.value)(_.withUnit[U])
 
   def optionIso[A, B](iso: Iso[A, B]): Iso[Option[A], Option[B]] =
     Iso[Option[A], Option[B]](_.map(iso.get))(_.map(iso.reverseGet))

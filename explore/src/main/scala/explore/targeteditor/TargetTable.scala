@@ -20,7 +20,6 @@ import explore.model.reusability._
 import explore.targets.TargetColumns
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import react.common._
@@ -45,7 +44,7 @@ final case class TargetTable(
   hiddenColumns:    View[Set[String]],
   selectedTarget:   View[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
-  // undoStacks: View[Map[Target.Id, UndoStacks[IO, SiderealTarget]]],
+  // undoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetTable](TargetTable.component)
 
@@ -109,7 +108,7 @@ object TargetTable {
       }
       // rows
       .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.get.collect { case (id, st @ SiderealTarget(_, _, _, _)) => id -> st }.toList
+        _.get.collect { case (id, st @ Target.Sidereal(_, _, _, _, _)) => id -> st }.toList
       )
       .useTableBy((props, cols, rows) =>
         TargetTable(

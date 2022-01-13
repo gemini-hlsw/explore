@@ -12,7 +12,7 @@ import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
 import io.circe.syntax._
-import lucuma.core.enum
+import lucuma.core.`enum`
 import lucuma.core.model
 // gql: import lucuma.ui.reusability._
 
@@ -24,20 +24,20 @@ trait ITC {
   implicit val pdEncoder: Encoder[numeric.PosBigDecimal] =
     Encoder.encodeBigDecimal.contramap[numeric.PosBigDecimal](_.value)
 
-  implicit val spEncoder: Encoder[model.SpatialProfile] = new Encoder[model.SpatialProfile] {
-    final def apply(a: model.SpatialProfile): Json = Json.obj(
+  implicit val spEncoder: Encoder[model.SourceProfile] = new Encoder[model.SourceProfile] {
+    final def apply(a: model.SourceProfile): Json = Json.obj(
       ("sourceType",
        Json.fromString(a match {
-         case model.SpatialProfile.PointSource       => "POINT_SOURCE"
-         case model.SpatialProfile.UniformSource     => "UNIFORM_SOURCE"
-         case model.SpatialProfile.GaussianSource(_) => "GAUSSIAN_SOURCE"
+         case model.SourceProfile.Point(_)       => "POINT_SOURCE"
+         case model.SourceProfile.Uniform(_)     => "UNIFORM_SOURCE"
+         case model.SourceProfile.Gaussian(_, _) => "GAUSSIAN_SOURCE"
        })
       ),
       ("fwhm",
        a match {
-         case model.SpatialProfile.GaussianSource(f) =>
+         case model.SourceProfile.Gaussian(f, _) =>
            Json.obj(("microarcseconds", Json.fromString(f.toMicroarcseconds.toString)))
-         case _                                      => Json.Null
+         case _                                  => Json.Null
        }
       )
     )
@@ -105,8 +105,7 @@ trait ITC {
   }
 
   object Enums {
-    type MagnitudeBand              = enum.MagnitudeBand
-    type MagnitudeSystem            = enum.MagnitudeSystem
+    type Band                       = enum.Band
     type ImageQuality               = enum.ImageQuality
     type CloudExtinction            = enum.CloudExtinction
     type WaterVapor                 = enum.WaterVapor
@@ -123,7 +122,6 @@ trait ITC {
   }
 
   object Types {
-    type SpatialProfileModelInput  = model.SpatialProfile
     type SpectralDistributionInput = model.SpectralDistribution
     type ConstraintsSetInput       = explore.model.ConstraintSet
   }

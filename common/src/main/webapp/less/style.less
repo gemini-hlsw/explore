@@ -1235,7 +1235,7 @@ img.partner-split-flag {
     grid-template-columns: 1fr;
   }
 
-  .explore-magnitudes-container {
+  .explore-brightnesses-container {
     .ui.table,
     thead,
     tbody,
@@ -1383,7 +1383,7 @@ span.fa-layers-text {
 
 div.field.explore-warning-input,
 div.inline.field.explore-warning-input {
-  box-shadow: -0px 0px 2px 1px var(--warning-background-color);
+  box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
 
 .ui.label.explore-warning-label {
@@ -1466,13 +1466,17 @@ html {
   padding: 1em;
 }
 
-.ui.segment.explore-magnitudes-container {
+.ui.segment.explore-brightnesses-container {
   padding: 0;
   display: inline-block;
+
+  th {
+    white-space: nowrap;
+  }
 }
 
 // https://css-tricks.com/responsive-data-tables/
-.tile-xs-width .explore-magnitudes-container .ui.ui.ui.ui.table:not(.unstackable) {
+.tile-xs-width .explore-brightnesses-container .ui.ui.ui.ui.table:not(.unstackable) {
   tfoot {
     display: block;
   }
@@ -1523,7 +1527,11 @@ html {
   }
 }
 
-.explore-magnitudes-delete-button-wrapper {
+.explore-brightnesses-units-dropdown .ui.dropdown {
+  white-space: nowrap;
+}
+
+.explore-brightnesses-delete-button-wrapper {
   display: flex;
   justify-content: center;
 
@@ -1532,7 +1540,7 @@ html {
   }
 }
 
-.explore-magnitudes-footer {
+.explore-brightnesses-footer {
   display: flex;
   justify-content: flex-end;
 }
@@ -1603,7 +1611,6 @@ html {
 .explore-help-body {
   flex: 1 1 auto;
   overflow: auto;
-
   min-height: 0;
   background-color: white;
 }

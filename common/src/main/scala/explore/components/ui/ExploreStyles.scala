@@ -225,10 +225,11 @@ object ExploreStyles {
   val Version: Css         = Css("version")
   val VersionUncopied: Css = Css("uncopied")
 
-  val MagnitudesTableContainer: Css          = Css("explore-magnitudes-container")
-  val MagnitudesTableFooter: Css             = Css("explore-magnitudes-footer")
-  val MagnitudesTableDeletButtonWrapper: Css = Css("explore-magnitudes-delete-button-wrapper")
-  val MagnitudesTableSection: Css            = Css("explore-magnitudes-section")
+  val BrightnessesTableContainer: Css          = Css("explore-brightnesses-container")
+  val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
+  val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
+  val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
+  val BrightnessesTableSection: Css            = Css("explore-brightnesses-section")
 
   val EmptyTreeContent: Css = Css("explore-empty-tree-content")
 

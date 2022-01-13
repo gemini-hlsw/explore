@@ -12,7 +12,6 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
 import lucuma.core.enum.CatalogName
 import lucuma.core.model
-import lucuma.core.model.SiderealTarget
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
@@ -49,11 +48,11 @@ protected object TargetSource {
     override def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]] =
       catalogName match {
         case CatalogName.Simbad =>
-          val escapedName: String                             = name.value.replaceAll("\\*", "\\\\*")
-          val regularSearch: F[List[model.SiderealTarget]]    =
+          val escapedName: String                              = name.value.replaceAll("\\*", "\\\\*")
+          val regularSearch: F[List[model.Target.Sidereal]]    =
             SimbadSearch.search[F](name)
           // This a heuristic based on observed Simbad behavior.
-          val wildcardSearches: List[F[List[SiderealTarget]]] = List(
+          val wildcardSearches: List[F[List[Target.Sidereal]]] = List(
             NonEmptyString.unsafeFrom(s"$escapedName*"),
             NonEmptyString.unsafeFrom(s"NAME $escapedName*"),
             NonEmptyString.unsafeFrom(
@@ -64,7 +63,7 @@ protected object TargetSource {
               SimbadSearch.search[F](term, wildcard = true)
           )
 
-          (regularSearch +: wildcardSearches).map((search: F[List[SiderealTarget]]) =>
+          (regularSearch +: wildcardSearches).map((search: F[List[Target.Sidereal]]) =>
             search.map(_.map((t: Target) => (none, t)))
           )
         case _                  => List.empty
