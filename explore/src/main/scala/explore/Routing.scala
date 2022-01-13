@@ -52,16 +52,13 @@ object Routing {
     )
 
   private def obsTab(model: View[RootModel]): VdomElement =
-    withSize(size =>
-      AppCtx.using(implicit ctx =>
-        ObsTabContents(
-          model.zoom(RootModel.userId),
-          model.zoom(RootModel.focusedObs),
-          model.zoom(RootModel.undoStacks),
-          model.zoom(RootModel.searchingTarget),
-          model.zoom(RootModel.targetSummaryHiddenColumns),
-          size
-        )
+    AppCtx.using(implicit ctx =>
+      ObsTabContents(
+        model.zoom(RootModel.userId),
+        model.zoom(RootModel.focusedObs),
+        model.zoom(RootModel.undoStacks),
+        model.zoom(RootModel.searchingTarget),
+        model.zoom(RootModel.targetSummaryHiddenColumns)
       )
     )
 
