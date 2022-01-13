@@ -105,14 +105,8 @@ object TargetQueries {
         parallax(t.parallax)
   }
 
-  def replaceSourceProfile(@unused sourceProfile: SourceProfile): Endo[EditTargetInput] =
-    // API Doesn't have a way to update SourceProfile yet.
+  def updateSourceProfile(@unused sourceProfile: SourceProfile): Endo[EditTargetInput] =
     identity
-  //   toTargetEndo(
-  //     EditSiderealInput.magnitudes.replace(
-  //       MagnitudeEditList(replaceList = mags.values.toList.map(_.toCreateInput).assign).assign
-  //     )
-  // )
 
   def createSiderealTarget[F[_]: Async](
     id:         Target.Id,

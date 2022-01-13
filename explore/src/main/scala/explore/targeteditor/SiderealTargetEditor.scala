@@ -84,8 +84,8 @@ object SiderealTargetEditor {
             Iso.id.asLens,
             { t: Target.Sidereal =>
               EditTargetInput.name.replace(t.name.assign) >>>
-                TargetQueries.UpdateSiderealTracking(t.tracking) // >>>
-            // TargetQueries.replaceMagnitudes(t.magnitudes)
+                TargetQueries.UpdateSiderealTracking(t.tracking) >>>
+                TargetQueries.updateSourceProfile(t.sourceProfile)
             }
           )
 
@@ -106,7 +106,7 @@ object SiderealTargetEditor {
             )
 
           val sourceProfileView =
-            undoViewSet(Target.Sidereal.sourceProfile, TargetQueries.replaceSourceProfile)
+            undoViewSet(Target.Sidereal.sourceProfile, TargetQueries.updateSourceProfile)
 
           val nameView = undoViewSet(
             Target.Sidereal.name,
