@@ -407,7 +407,7 @@ object ObsTabContents {
         )
       )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
 
-    if (window.canFitTwoPanels) {
+    val body = if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(observations))
@@ -438,6 +438,7 @@ object ObsTabContents {
         )
       )
     }
+    body.withRef(resize.ref)
   }
 
   protected val component =
