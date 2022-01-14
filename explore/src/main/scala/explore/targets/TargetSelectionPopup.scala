@@ -17,6 +17,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
+import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -42,7 +43,7 @@ import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
-  onSelected:       (Option[Target.Id], Target) ==> Callback
+  onSelected:       TargetWithOptId ==> Callback
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetSelectionPopup](TargetSelectionPopup.component)
 
@@ -63,7 +64,7 @@ object TargetSelectionPopup {
     .useStateView("")
     // results
     .useStateWithReuse(
-      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[(Option[Target.Id], Target)])]
+      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[TargetWithOptId])]
     )
     // searching
     .useState(false)
@@ -101,7 +102,7 @@ object TargetSelectionPopup {
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
         def addResults(source: TargetSource[IO], index: Int)(
-          targets:             List[(Option[Target.Id], Target)]
+          targets:             List[TargetWithOptId]
         ): IO[Unit] =
           NonEmptyList
             .fromList(targets)
@@ -113,12 +114,18 @@ object TargetSelectionPopup {
                                    NonEmptyList.fromListUnsafe(
                                      (ts.toList ++ nel.toList)
                                        .distinctBy(_ match {
-                                         case (_, Target.Sidereal(name, _, _, catalogInfo, _)) =>
+                                         case TargetWithOptId(
+                                               _,
+                                               Target.Sidereal(name, _, _, catalogInfo, _)
+                                             ) =>
                                            catalogInfo.map(_.id.value).getOrElse(name.value)
-                                         case (_, Target.Nonsidereal(_, ephemerisKey, _, _))   =>
+                                         case TargetWithOptId(
+                                               _,
+                                               Target.Nonsidereal(_, ephemerisKey, _, _)
+                                             ) =>
                                            ephemerisKey.toString
                                        })
-                                       .sortBy(_._2.name.value)
+                                       .sortBy(_.target.name.value)
                                    )
                                   )
                   ))

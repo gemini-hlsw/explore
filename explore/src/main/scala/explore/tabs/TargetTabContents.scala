@@ -184,9 +184,9 @@ object TargetTabContents {
         val asterismGroups      = agwo.asterismGroups
         val targetGroups        = agwo.targetGroups
         val moddedAsterism      = mod(asterism)
-        val newTargetIds        = SortedSet.from(moddedAsterism.map(TargetWithId.id.get))
+        val newTargetIds        = SortedSet.from(moddedAsterism.map(_.id))
         // make sure any added targets are in the map and update modified ones.
-        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi => (twi._1, twi))
+        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi => (twi.id, twi))
 
         val splitAsterisms =
           if (targetIds === newTargetIds)

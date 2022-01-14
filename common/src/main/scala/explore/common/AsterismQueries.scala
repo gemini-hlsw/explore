@@ -90,7 +90,7 @@ object AsterismQueries {
       }
       .flatten
       .toSortedMap(_.obsIds)
-    val targetGroups   = data.targetGroup.nodes.map(_.target).toSortedMap(_._1)
+    val targetGroups   = data.targetGroup.nodes.map(_.target).toSortedMap(_.id)
     AsterismGroupsWithObs(
       asterismGroups,
       targetGroups,

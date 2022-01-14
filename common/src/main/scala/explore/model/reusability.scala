@@ -56,6 +56,7 @@ object reusability {
   implicit val obsIdSetReuse: Reusability[ObsIdSet]                                   = Reusability.derive
   implicit val targetIdSetReuse: Reusability[TargetIdSet]                             = Reusability.derive
   implicit val targetWithIdReuse: Reusability[TargetWithId]                           = Reusability.derive
+  implicit val targetWithOptIdReuse: Reusability[TargetWithOptId]                     = Reusability.derive
   implicit val airMassRangeReuse: Reusability[AirMassRange]                           = Reusability.derive
   implicit val hourAngleRangeReuse: Reusability[HourAngleRange]                       = Reusability.derive
   implicit val elevationRangeReuse: Reusability[ElevationRange]                       = Reusability.derive

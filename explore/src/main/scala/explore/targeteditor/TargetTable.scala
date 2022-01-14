@@ -86,7 +86,7 @@ object TargetTable {
             .setHeader(columnNames(id))
 
         List(
-          column("delete", TargetWithId.id.get)
+          column("delete", _.id)
             .setCell(cell =>
               Button(
                 size = Tiny,
@@ -96,20 +96,18 @@ object TargetTable {
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.preventDefaultCB >>
                     e.stopPropagationCB >>
-                    props.targets.mod(_.filter(_._1 =!= cell.value.extract)) >>
+                    props.targets.mod(_.filter(_.id =!= cell.value.extract)) >>
                     deleteSiderealTarget(props.obsIds, cell.value).runAsync
               )
             )
             .setDisableSortBy(true)
         ) ++
           TargetColumns
-            .BaseColumnBuilder(TargetTable)((TargetWithId.target.get _).andThen(_.some))
+            .BaseColumnBuilder(TargetTable)(_.target.some)
             .allColumns
       }
       // rows
-      .useMemoBy((props, _) => props.targets)((_, _) =>
-        _.get.collect { case (id, st @ Target.Sidereal(_, _, _, _, _)) => id -> st }.toList
-      )
+      .useMemoBy((props, _) => props.targets)((_, _) => _.get.flatMap(_.toSidereal).toList)
       .useTableBy((props, cols, rows) =>
         TargetTable(
           cols,
@@ -181,11 +179,11 @@ object TargetTable {
               row = (rowData: TargetTable.RowType) =>
                 TableRow(
                   clazz = ExploreStyles.TableRowSelected.when_(
-                    props.selectedTarget.get.exists(_ === TargetWithId.id.get(rowData.original))
+                    props.selectedTarget.get.exists(_ === rowData.original.id)
                   )
                 )(
                   ^.onClick --> props.selectedTarget
-                    .set(TargetWithId.id.get(rowData.original).some),
+                    .set(rowData.original.id.some),
                   props2Attrs(rowData.getRowProps())
                 ),
               cell = (cell: TargetTable.CellType[_]) =>

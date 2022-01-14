@@ -10,6 +10,7 @@ import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
+import explore.model.TargetWithOptId
 import lucuma.core.enum.CatalogName
 import lucuma.core.model
 import lucuma.core.model.Target
@@ -19,33 +20,33 @@ import org.typelevel.log4cats.Logger
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
-  def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]]
+  def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]]
 }
 
 protected object TargetSource {
   case class Program[F[_]: Async](programId: model.Program.Id)(implicit
     client:                                  TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
-    val name: String                                                                        =
+    val name: String                                                            =
       s"Program $programId"
-    override def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]] =
+    override def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
           .query()
           .map { data =>
             data.targetGroup.nodes
-              .map(node => (node.target._1.some, node.target._2))
+              .map(node => node.target.toOptId)
               // TODO Remove the filter when the API has a name pattern query
-              .filter(_._2.name.value.toLowerCase.startsWith(name.value.toLowerCase))
+              .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
               .distinct
           }
       )
   }
 
   case class Catalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String                                                                        =
+    val name: String                                                            =
       Enumerated[CatalogName].tag(catalogName)
-    override def searches(name: NonEmptyString): List[F[List[(Option[Target.Id], Target)]]] =
+    override def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]] =
       catalogName match {
         case CatalogName.Simbad =>
           val escapedName: String                              = name.value.replaceAll("\\*", "\\\\*")
@@ -64,7 +65,7 @@ protected object TargetSource {
           )
 
           (regularSearch +: wildcardSearches).map((search: F[List[Target.Sidereal]]) =>
-            search.map(_.map((t: Target) => (none, t)))
+            search.map(_.map((t: Target) => TargetWithOptId(none, t)))
           )
         case _                  => List.empty
       }

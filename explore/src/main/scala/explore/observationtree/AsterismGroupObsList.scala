@@ -217,7 +217,7 @@ object AsterismGroupObsList {
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
         val targets = asterismGroup.targetIds.toList.map(targetMap.get).flatten
         if (targets.isEmpty) "<No Targets>"
-        else targets.map(TargetWithId.name.get).mkString(";")
+        else targets.map(_.target.name).mkString(";")
       }
 
       def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {
@@ -296,7 +296,7 @@ object AsterismGroupObsList {
       }
 
       def renderTarget(twid: TargetWithId, index: Int): VdomNode =
-        Draggable(twid._1.toString, index) { case (provided, snapshot, _) =>
+        Draggable(twid.id.toString, index) { case (provided, snapshot, _) =>
           <.div(
             provided.innerRef,
             provided.draggableProps,
@@ -309,8 +309,8 @@ object AsterismGroupObsList {
                     <.div(
                       ExploreStyles.ObsBadgeHeader,
                       <.div(ExploreStyles.ObsBadgeTargetAndId,
-                            <.div(twid._2.name.value),
-                            <.div(ExploreStyles.ObsBadgeId, s"[${twid._1.value.value.toHexString}]")
+                            <.div(twid.target.name.value),
+                            <.div(ExploreStyles.ObsBadgeId, s"[${twid.id.value.value.toHexString}]")
                       )
                     )
                   )
