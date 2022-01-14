@@ -105,7 +105,9 @@ object TargetColumns {
           siderealColumnOpt(
             band.shortName + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
-          ).setCell(_.value.map(_.shortName).orEmpty)
+          )
+            .setCell(_.value.map(_.displayWithoutError).orEmpty)
+            .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(
           siderealColumn("epoch", Target.Sidereal.epoch.get)

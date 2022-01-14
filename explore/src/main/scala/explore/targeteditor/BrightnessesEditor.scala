@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.Order._
-import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.View
 import crystal.react.implicits._
@@ -22,7 +21,6 @@ import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional._
-import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.optics.ChangeAuditor
@@ -65,8 +63,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   implicit protected def propsReuse: Reusability[Props] // Abstract
   implicit protected val stateReuse: Reusability[State] = Reusability.derive
-
-  implicit protected val displayTaggedUnits: Display[Units Of Brightness[T]] = Display[Units].narrow
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
