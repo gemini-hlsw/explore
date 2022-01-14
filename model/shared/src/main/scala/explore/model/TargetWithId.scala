@@ -25,6 +25,16 @@ case class TargetWithId(id: Target.Id, target: Target) {
   def toNonSidereal: Option[NonsiderealTargetWithId] = TargetWithId.nonsidereal.getOption(this)
 }
 
+case class TargetWithOptId(optId: Option[Target.Id], target: Target)
+
+case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
+  def toTargetWithId = TargetWithId(id, target)
+}
+
+case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {
+  def toTargetWithId = TargetWithId(id, target)
+}
+
 object TargetWithId {
   val id: Lens[TargetWithId, Target.Id]        = Focus[TargetWithId](_.id)
   val target: Lens[TargetWithId, Target]       = Focus[TargetWithId](_.target)
@@ -58,16 +68,6 @@ object TargetWithId {
   implicit val eqTargetWithId: Eq[TargetWithId] = Eq.by(x => (x.id, x.target))
 }
 
-case class TargetWithOptId(optId: Option[Target.Id], target: Target)
-
 object TargetWithOptId {
   implicit val eqTargetWithOptId: Eq[TargetWithOptId] = Eq.by(x => (x.optId, x.target))
-}
-
-case class SiderealTargetWithId(id: Target.Id, target: Target.Sidereal) {
-  def toTargetWithId = TargetWithId(id, target)
-}
-
-case class NonsiderealTargetWithId(id: Target.Id, target: Target.Nonsidereal) {
-  def toTargetWithId = TargetWithId(id, target)
 }
