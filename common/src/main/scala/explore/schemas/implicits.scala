@@ -9,6 +9,7 @@ import clue.data.syntax._
 import explore.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
+import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
@@ -322,7 +323,7 @@ object itcschema {
     implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
       // From the list of targets selects the ones relevant for ITC
       def itcTargets: List[ITCTarget] = s.targets.asterism
-        .map { case (_, target) =>
+        .map { case TargetWithId(_, target) =>
           (targetRV.getOption(target), targetBrightnesses.get(target)).mapN(ITCTarget.apply)
         }
         .flatten

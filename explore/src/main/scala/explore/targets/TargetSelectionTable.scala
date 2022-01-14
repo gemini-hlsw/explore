@@ -6,6 +6,7 @@ package explore.targets
 import cats.syntax.all._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
+import explore.model.TargetWithOptId
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -26,8 +27,8 @@ import reactST.reactTable._
 import scalajs.js.JSConverters._
 
 final case class TargetSelectionTable(
-  targets:       List[(Option[Target.Id], Target)],
-  onSelected:    (Option[Target.Id], Target) ==> Callback,
+  targets:       List[TargetWithOptId],
+  onSelected:    TargetWithOptId ==> Callback,
   selectedIndex: Option[Int],
   onClick:       (Target, Int) ==> Callback
 ) extends ReactFnProps[TargetSelectionTable](TargetSelectionTable.component)
@@ -37,7 +38,7 @@ object TargetSelectionTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected val TargetTable = TableDef[(Option[Target.Id], Target)].withSortBy
+  protected val TargetTable = TableDef[TargetWithOptId].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 
@@ -66,7 +67,7 @@ object TargetSelectionTable {
           .setDisableSortBy(true)
       ) ++
         TargetColumns
-          .BaseColumnBuilder(TargetTable)(_._2.some)
+          .BaseColumnBuilder(TargetTable)(_.target.some)
           .allColumns
     }
     // rows
@@ -104,7 +105,7 @@ object TargetSelectionTable {
               props.selectedIndex.contains_(rowData.index.toInt)
             )
           )(
-            ^.onClick --> props.onClick((rowData.original._2, rowData.index.toInt)),
+            ^.onClick --> props.onClick((rowData.original.target, rowData.index.toInt)),
             props2Attrs(rowData.getRowProps())
           ),
         cell = (cell: TargetTable.CellType[_]) =>

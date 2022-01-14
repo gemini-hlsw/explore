@@ -18,6 +18,7 @@ import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
+import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup
@@ -63,7 +64,7 @@ object AsterismEditor {
       (newId, ((tid: Target.Id) => TargetQueries.createSiderealTarget[IO](tid, target)))
     )(tid => (CallbackTo(tid), (_: Target.Id) => IO.unit))
     targetId.flatMap(tid =>
-      asterism.mod(_ :+ (tid, target)) >> selectedTarget.set(tid.some) >>
+      asterism.mod(_ :+ TargetWithId(tid, target)) >> selectedTarget.set(tid.some) >>
         (createTarget(tid) >>
           AsterismQueries.addTargetToAsterisms[IO](
             obsIds.toList,
@@ -79,7 +80,7 @@ object AsterismEditor {
     ScalaFnComponent
       .withHooks[Props]
       // selectedTargetIdState
-      .useStateBy(_.asterism.get.headOption.map(_._1))
+      .useStateBy(_.asterism.get.headOption.map(_.id))
       // adding
       .useState(false)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
@@ -113,9 +114,9 @@ object AsterismEditor {
               ),
               onSelected = Reuse
                 .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
-                  case (oid, t @ Target.Sidereal(_, _, _, _, _)) =>
+                  case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _, _)) =>
                     insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
-                  case _                                         => Callback.empty
+                  case _                                                        => Callback.empty
                 })
             )
           ),
@@ -129,8 +130,11 @@ object AsterismEditor {
           selectedTargetId.get
             .flatMap[VdomElement] { targetId =>
               val optional =
-                Optional[List[TargetWithId], Target](_.find(_._1 === targetId).map(_._2))(target =>
-                  _.map(twid => if (twid._1 === targetId) (targetId, target) else twid)
+                Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
+                  target =>
+                    _.map(twid =>
+                      if (twid.id === targetId) TargetWithId(targetId, target) else twid
+                    )
                 )
 
               val selectedTargetView = props.asterism.zoom(optional)
