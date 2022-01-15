@@ -114,9 +114,9 @@ object AsterismEditor {
               ),
               onSelected = Reuse
                 .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
-                  case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _, _)) =>
+                  case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
                     insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
-                  case _                                                        => Callback.empty
+                  case _                                                     => Callback.empty
                 })
             )
           ),
@@ -141,7 +141,7 @@ object AsterismEditor {
 
               selectedTargetView.mapValue(targetView =>
                 targetView.get match {
-                  case Target.Sidereal(_, _, _, _, _) =>
+                  case Target.Sidereal(_, _, _, _) =>
                     SiderealTargetEditor(
                       props.userId,
                       targetId,
@@ -151,7 +151,7 @@ object AsterismEditor {
                       props.searching,
                       props.options
                     )
-                  case _                              =>
+                  case _                           =>
                     <.div("Non-sidereal targets not supported")
                 }
               )

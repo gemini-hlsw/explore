@@ -148,8 +148,8 @@ object TargetColumns {
 
     val getSiderealTarget: D => Option[Target.Sidereal] =
       getTarget.andThen(_.flatMap(_ match {
-        case s @ Target.Sidereal(_, _, _, _, _) => Some(s)
-        case _                                  => None
+        case s @ Target.Sidereal(_, _, _, _) => Some(s)
+        case _                               => None
       }))
   }
 

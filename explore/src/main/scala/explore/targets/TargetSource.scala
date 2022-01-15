@@ -10,32 +10,31 @@ import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
-import explore.model.TargetWithOptId
+import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enum.CatalogName
-import lucuma.core.model
-import lucuma.core.model.Target
+import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
-  def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]]
+  def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]]
 }
 
 protected object TargetSource {
-  case class Program[F[_]: Async](programId: model.Program.Id)(implicit
-    client:                                  TransactionalClient[F, ObservationDB]
+  case class FromProgram[F[_]: Async](programId: Program.Id)(implicit
+    client:                                      TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
-    val name: String                                                            =
+    val name: String                                                               =
       s"Program $programId"
-    override def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]] =
+    override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
           .query()
           .map { data =>
             data.targetGroup.nodes
-              .map(node => node.target.toOptId)
+              .map(node => TargetSearchResult(node.target.toOptId, none))
               // TODO Remove the filter when the API has a name pattern query
               .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
               .distinct
@@ -43,17 +42,17 @@ protected object TargetSource {
       )
   }
 
-  case class Catalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String                                                            =
+  case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
+    val name: String                                                               =
       Enumerated[CatalogName].tag(catalogName)
-    override def searches(name: NonEmptyString): List[F[List[TargetWithOptId]]] =
+    override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       catalogName match {
         case CatalogName.Simbad =>
-          val escapedName: String                              = name.value.replaceAll("\\*", "\\\\*")
-          val regularSearch: F[List[model.Target.Sidereal]]    =
+          val escapedName: String                                  = name.value.replaceAll("\\*", "\\\\*")
+          val regularSearch: F[List[CatalogTargetResult]]          =
             SimbadSearch.search[F](name)
           // This a heuristic based on observed Simbad behavior.
-          val wildcardSearches: List[F[List[Target.Sidereal]]] = List(
+          val wildcardSearches: List[F[List[CatalogTargetResult]]] = List(
             NonEmptyString.unsafeFrom(s"$escapedName*"),
             NonEmptyString.unsafeFrom(s"NAME $escapedName*"),
             NonEmptyString.unsafeFrom(
@@ -64,21 +63,23 @@ protected object TargetSource {
               SimbadSearch.search[F](term, wildcard = true)
           )
 
-          (regularSearch +: wildcardSearches).map((search: F[List[Target.Sidereal]]) =>
-            search.map(_.map((t: Target) => TargetWithOptId(none, t)))
+          (regularSearch +: wildcardSearches).map((search: F[List[CatalogTargetResult]]) =>
+            search.map(
+              _.map((r: CatalogTargetResult) => TargetSearchResult.fromCatalogTargetResult(r))
+            )
           )
         case _                  => List.empty
       }
   }
 
   def forAllCatalogs[F[_]: Async: Logger]: List[TargetSource[F]] =
-    Enumerated[CatalogName].all.map(source => TargetSource.Catalog(source))
+    Enumerated[CatalogName].all.map(source => TargetSource.FromCatalog(source))
 
   // TODO Test
   implicit def orderTargetSource[F[_]]: Order[TargetSource[F]] = Order.from {
-    case (TargetSource.Program(pidA), TargetSource.Program(pidB)) => pidA.compare(pidB)
-    case (TargetSource.Program(_), _)                             => -1
-    case (_, TargetSource.Program(_))                             => 1
-    case (TargetSource.Catalog(cnA), TargetSource.Catalog(cnB))   => cnA.compare(cnB)
+    case (TargetSource.FromProgram(pidA), TargetSource.FromProgram(pidB)) => pidA.compare(pidB)
+    case (TargetSource.FromProgram(_), _)                                 => -1
+    case (_, TargetSource.FromProgram(_))                                 => 1
+    case (TargetSource.FromCatalog(cnA), TargetSource.FromCatalog(cnB))   => cnA.compare(cnB)
   }
 }

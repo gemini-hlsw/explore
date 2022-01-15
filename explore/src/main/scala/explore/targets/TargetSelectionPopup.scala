@@ -40,6 +40,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import lucuma.catalog.AngularSize
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
@@ -50,13 +51,18 @@ final case class TargetSelectionPopup(
 object TargetSelectionPopup {
   type Props = TargetSelectionPopup
 
-  protected case class SelectedTarget(target: Target, sourceIndex: Int, resultIndex: Int)
+  protected case class SelectedTarget(
+    target:      Target,
+    sourceIndex: Int,
+    resultIndex: Int,
+    angularSize: Option[AngularSize]
+  )
 
-  implicit val reuseProps: Reusability[Props] = Reusability.derive[Props]
+  implicit protected val reuseProps: Reusability[Props] = Reusability.derive[Props]
 
-  implicit val reuseSelectedTarget: Reusability[SelectedTarget] = Reusability.derive
+  implicit protected val reuseSelectedTarget: Reusability[SelectedTarget] = Reusability.derive
 
-  implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
+  implicit protected val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
   protected val component = ScalaFnComponent
     .withHooks[Props]
@@ -64,7 +70,7 @@ object TargetSelectionPopup {
     .useStateView("")
     // results
     .useStateWithReuse(
-      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[TargetWithOptId])]
+      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[TargetSearchResult])]
     )
     // searching
     .useState(false)
@@ -77,7 +83,7 @@ object TargetSelectionPopup {
     // targetSources
     .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (_, _, _, _, _, _, _) => propsCtx =>
       implicit val ctx = propsCtx
-      (Program.Id.parse("p-2").map(p => TargetSource.Program[IO](p)).toList ++
+      (Program.Id.parse("p-2").map(p => TargetSource.FromProgram[IO](p)).toList ++
         TargetSource.forAllCatalogs[IO]).zipWithIndex
     }
     // aladinRef
@@ -102,7 +108,7 @@ object TargetSelectionPopup {
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
         def addResults(source: TargetSource[IO], index: Int)(
-          targets:             List[TargetWithOptId]
+          targets:             List[TargetSearchResult]
         ): IO[Unit] =
           NonEmptyList
             .fromList(targets)
@@ -114,14 +120,20 @@ object TargetSelectionPopup {
                                    NonEmptyList.fromListUnsafe(
                                      (ts.toList ++ nel.toList)
                                        .distinctBy(_ match {
-                                         case TargetWithOptId(
-                                               _,
-                                               Target.Sidereal(name, _, _, catalogInfo, _)
+                                         case TargetSearchResult(
+                                               TargetWithOptId(
+                                                 _,
+                                                 Target.Sidereal(name, _, _, catalogInfo)
+                                               ),
+                                               _
                                              ) =>
                                            catalogInfo.map(_.id.value).getOrElse(name.value)
-                                         case TargetWithOptId(
-                                               _,
-                                               Target.Nonsidereal(_, ephemerisKey, _, _)
+                                         case TargetSearchResult(
+                                               TargetWithOptId(
+                                                 _,
+                                                 Target.Nonsidereal(_, ephemerisKey, _)
+                                               ),
+                                               _
                                              ) =>
                                            ephemerisKey.toString
                                        })
@@ -191,9 +203,9 @@ object TargetSelectionPopup {
                 ),
                 <.div(ExploreStyles.TargetSearchPreview)(
                   selectedTarget.value
-                    .map(_.target)
-                    .collect { case Target.Sidereal(_, tracking, _, _, angSize) =>
-                      (tracking.baseCoordinates, angSize)
+                    .collect {
+                      case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, angSize) =>
+                        (tracking.baseCoordinates, angSize)
                     }
                     .map { case (coordinates, angSize) =>
                       Aladin.component
@@ -217,22 +229,23 @@ object TargetSelectionPopup {
                 )
               ),
               SegmentGroup(raised = true, clazz = ExploreStyles.TargetSearchResults)(
-                results.value.map { case (source, (sourceIndex, targets)) =>
+                results.value.map { case (source, (sourceIndex, sourceResults)) =>
                   Segment(
                     <.div(
                       Header(size = Small)(
-                        s"${source.name} (${showCount(targets.length, "result")})"
+                        s"${source.name} (${showCount(sourceResults.length, "result")})"
                       ),
                       <.div(ExploreStyles.TargetSearchResultsSource)(
                         TargetSelectionTable(
-                          targets.toList,
+                          sourceResults.toList,
                           onSelected = props.onSelected.map(onSelected =>
-                            t => onSelected(t) >> isOpen.setState(false) >> cleanState
+                            t =>
+                              onSelected(t.targetWithOptId) >> isOpen.setState(false) >> cleanState
                           ),
                           selectedIndex = selectedTarget.value
                             .filter(_.sourceIndex === sourceIndex)
                             .map(_.resultIndex),
-                          onClick = Reuse.always { case (target: Target, index: Int) =>
+                          onClick = Reuse.always { case (result: TargetSearchResult, index: Int) =>
                             selectedTarget.setState(
                               if (
                                 selectedTarget.value.exists(st =>
@@ -241,7 +254,11 @@ object TargetSelectionPopup {
                               )
                                 none
                               else
-                                SelectedTarget(target, sourceIndex, index).some
+                                SelectedTarget(result.target,
+                                               sourceIndex,
+                                               index,
+                                               result.angularSize
+                                ).some
                             )
                           }
                         )
