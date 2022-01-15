@@ -40,9 +40,9 @@ object implicits {
       WavelengthInput(picometers = w.toPicometers.value.value.toLong.assign)
   }
 
-  implicit class CatalogInfoOps(cid: CatalogInfo) {
-    def toInput: CatalogIdInput =
-      CatalogIdInput(cid.catalog, cid.id.value)
+  implicit class CatalogInfoOps(info: CatalogInfo) {
+    def toInput: CatalogInfoInput =
+      CatalogInfoInput(info.catalog.assign, info.id.assign, info.objectType.orIgnore)
   }
 
   implicit class RightAscensionOps(ra: RightAscension) {
@@ -206,37 +206,34 @@ object implicits {
   }
 
   implicit class SiderealTargetOps(sidereal: Target.Sidereal) {
-    def toCreateInput: CreateSiderealInput =
-      CreateSiderealInput(
+    def toCreateInput(id: Option[Target.Id] = none): CreateTargetInput =
+      CreateTargetInput(
+        targetId = id.orIgnore,
         name = sidereal.name,
-        catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore,
-        ra = sidereal.tracking.baseCoordinates.ra.toInput,
-        dec = sidereal.tracking.baseCoordinates.dec.toInput,
-        epoch = Epoch.fromString.reverseGet(sidereal.tracking.epoch).assign,
-        properMotion = sidereal.tracking.properMotion.map(_.toInput).orIgnore,
-        radialVelocity = sidereal.tracking.radialVelocity.map(_.toInput).orIgnore,
-        parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore,
+        sidereal = CreateSiderealInput(
+          catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore,
+          ra = sidereal.tracking.baseCoordinates.ra.toInput,
+          dec = sidereal.tracking.baseCoordinates.dec.toInput,
+          epoch = Epoch.fromString.reverseGet(sidereal.tracking.epoch).assign,
+          properMotion = sidereal.tracking.properMotion.map(_.toInput).orIgnore,
+          radialVelocity = sidereal.tracking.radialVelocity.map(_.toInput).orIgnore,
+          parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore
+        ).assign,
         sourceProfile = sidereal.sourceProfile.toCreateInput
       )
   }
 
   implicit class NonsiderealTargetOps(nonsidereal: Target.Nonsidereal) {
-    def toCreateInput: CreateNonsiderealInput =
-      CreateNonsiderealInput(
+    def toCreateInput(id: Option[Target.Id] = none): CreateTargetInput =
+      CreateTargetInput(
+        targetId = id.orIgnore,
         name = nonsidereal.name,
-        keyType = nonsidereal.ephemerisKey.keyType,
-        des = nonsidereal.ephemerisKey.des,
+        nonsidereal = CreateNonsiderealInput(
+          keyType = nonsidereal.ephemerisKey.keyType,
+          des = nonsidereal.ephemerisKey.des
+        ).assign,
         sourceProfile = nonsidereal.sourceProfile.toCreateInput
       )
-  }
-
-  implicit class TargetOps(target: Target) {
-    def toCreateInput: CreateTargetInput = target match {
-      case sidereal @ Target.Sidereal(_, _, _, _, _)    =>
-        CreateTargetInput(programId = "p-2", sidereal = sidereal.toCreateInput.assign)
-      case nonsidereal @ Target.Nonsidereal(_, _, _, _) =>
-        CreateTargetInput(programId = "p-2", nonsidereal = nonsidereal.toCreateInput.assign)
-    }
   }
 
   implicit def widthUpsertInput(w: WidthUpsertInput): ExploreResizableWidthInsertInput =

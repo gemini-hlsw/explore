@@ -14,7 +14,6 @@ import lucuma.core.enum.Band
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.model.Target
-import lucuma.core.syntax.display._
 import lucuma.ui.optics._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef

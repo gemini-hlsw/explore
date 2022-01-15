@@ -147,32 +147,33 @@ object ObsQueriesGQL {
             asterism {
               id
               name
-              tracking {
-                ... on Sidereal {
-                  coordinates {
-                    ra {
-                      microarcseconds
-                    }
-                    dec {
-                      microarcseconds
-                    }
+              sidereal {
+                ra {
+                  microarcseconds
+                }
+                dec {
+                  microarcseconds
+                }
+                epoch
+                properMotion {
+                  ra {
+                    microarcsecondsPerYear
                   }
-                  epoch
-                  properMotion {
-                    ra {
-                      microarcsecondsPerYear
-                    }
-                    dec {
-                      microarcsecondsPerYear
-                    }
-                  }
-                  radialVelocity {
-                    centimetersPerSecond
-                  }
-                  parallax {
-                    microarcseconds
+                  dec {
+                    microarcsecondsPerYear
                   }
                 }
+                radialVelocity {
+                  centimetersPerSecond
+                }
+                parallax {
+                  microarcseconds
+                }
+                catalogInfo {
+                  name
+                  id
+                  objectType
+                }                
               }
               sourceProfile {
                 point {
@@ -202,12 +203,7 @@ object ObsQueriesGQL {
                     }
                   }
                 }
-              }
-              catalogInfo {
-                name
-                id
-                objectType
-              }              
+              }            
             }
           }
           constraintSet {

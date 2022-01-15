@@ -63,9 +63,9 @@ object TargetQueries {
 
   def toTargetEndo(setSidereal: Endo[EditSiderealInput]): Endo[EditTargetInput] = eti =>
     eti match {
-      case EditTargetInput(_, _, _, Assign(editSidereal), _) =>
+      case EditTargetInput(_, _, _, Assign(editSidereal), _, _) =>
         eti.copy(sidereal = setSidereal(editSidereal).assign)
-      case _                                                 => eti
+      case _                                                    => eti
     }
   object UpdateSiderealTracking {
 
@@ -111,12 +111,6 @@ object TargetQueries {
   def createSiderealTarget[F[_]: Async](
     id:         Target.Id,
     target:     Target.Sidereal
-  )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] = {
-    val input = CreateTargetInput(
-      programId = "p-2",
-      targetId = id.assign,
-      sidereal = target.toCreateInput.assign
-    )
-    CreateTargetMutation.execute[F](input).void
-  }
+  )(implicit c: TransactionalClient[F, ObservationDB]): F[Unit] =
+    CreateTargetMutation.execute[F]("p-2", target.toCreateInput(id.some)).void
 }
