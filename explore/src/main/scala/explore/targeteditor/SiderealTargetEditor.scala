@@ -152,11 +152,11 @@ object SiderealTargetEditor {
               .search[IO](s.searchTerm)
               .map(_.headOption)
               .runAsyncAndThen {
-                case Right(r @ Some(t)) =>
-                  allView.set(t) >> s.onComplete(r)
-                case Right(None)        =>
+                case Right(Some(r)) =>
+                  allView.set(r.target) >> s.onComplete(r.target.some)
+                case Right(None)    =>
                   nameView.set(s.searchTerm) >> s.onComplete(none)
-                case Left(t)            =>
+                case Left(t)        =>
                   nameView.set(s.searchTerm) >> s.onError(t)
               }
 

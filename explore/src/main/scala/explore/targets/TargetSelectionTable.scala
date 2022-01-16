@@ -6,11 +6,8 @@ package explore.targets
 import cats.syntax.all._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
-import explore.model.TargetWithOptId
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.common.implicits._
@@ -27,10 +24,10 @@ import reactST.reactTable._
 import scalajs.js.JSConverters._
 
 final case class TargetSelectionTable(
-  targets:       List[TargetWithOptId],
-  onSelected:    TargetWithOptId ==> Callback,
+  targets:       List[TargetSearchResult],
+  onSelected:    TargetSearchResult ==> Callback,
   selectedIndex: Option[Int],
-  onClick:       (Target, Int) ==> Callback
+  onClick:       (TargetSearchResult, Int) ==> Callback
 ) extends ReactFnProps[TargetSelectionTable](TargetSelectionTable.component)
 
 object TargetSelectionTable {
@@ -38,7 +35,7 @@ object TargetSelectionTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected val TargetTable = TableDef[TargetWithOptId].withSortBy
+  protected val TargetTable = TableDef[TargetSearchResult].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 
@@ -105,7 +102,7 @@ object TargetSelectionTable {
               props.selectedIndex.contains_(rowData.index.toInt)
             )
           )(
-            ^.onClick --> props.onClick((rowData.original.target, rowData.index.toInt)),
+            ^.onClick --> props.onClick((rowData.original, rowData.index.toInt)),
             props2Attrs(rowData.getRowProps())
           ),
         cell = (cell: TargetTable.CellType[_]) =>
