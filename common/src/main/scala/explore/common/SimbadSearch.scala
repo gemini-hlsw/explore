@@ -8,9 +8,9 @@ import cats.effect._
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constants
+import lucuma.catalog.CatalogTargetResult
 import lucuma.catalog.VoTableParser
 import lucuma.core.enum.CatalogName
-import lucuma.core.model.Target
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -26,7 +26,7 @@ object SimbadSearch {
   def search[F[_]](
     term:       NonEmptyString,
     wildcard:   Boolean = false
-  )(implicit F: Async[F], logger: Logger[F]): F[List[Target.Sidereal]] = {
+  )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
       uri"https://simbad.u-strasbg.fr/simbad/sim-id"
         .withQueryParam("Ident", term.value)
@@ -61,7 +61,7 @@ object SimbadSearch {
                 .compile
                 .toList
                 .map {
-                  _.collect { case Validated.Valid(t) => t }
+                  _.collect { case Validated.Valid(r) => r }
                 }
           case _                    =>
             Logger[F].error(s"Simbad search failed for term [$term]").as(List.empty)

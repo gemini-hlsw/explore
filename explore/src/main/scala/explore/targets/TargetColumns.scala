@@ -14,7 +14,6 @@ import lucuma.core.enum.Band
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.model.Target
-import lucuma.core.syntax.display._
 import lucuma.ui.optics._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
@@ -105,7 +104,9 @@ object TargetColumns {
           siderealColumnOpt(
             band.shortName + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
-          ).setCell(_.value.map(_.shortName).orEmpty)
+          )
+            .setCell(_.value.map(_.displayWithoutError).orEmpty)
+            .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(
           siderealColumn("epoch", Target.Sidereal.epoch.get)
@@ -147,8 +148,8 @@ object TargetColumns {
 
     val getSiderealTarget: D => Option[Target.Sidereal] =
       getTarget.andThen(_.flatMap(_ match {
-        case s @ Target.Sidereal(_, _, _, _, _) => Some(s)
-        case _                                  => None
+        case s @ Target.Sidereal(_, _, _, _) => Some(s)
+        case _                               => None
       }))
   }
 

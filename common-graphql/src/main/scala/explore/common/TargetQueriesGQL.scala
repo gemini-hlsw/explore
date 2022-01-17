@@ -24,32 +24,33 @@ object TargetQueriesGQL {
             target {
               id
               name
-              tracking {
-                ... on Sidereal {
-                  coordinates {
-                    ra {
-                      microarcseconds
-                    }
-                    dec {
-                      microarcseconds
-                    }
+              sidereal {
+                ra {
+                  microarcseconds
+                }
+                dec {
+                  microarcseconds
+                }
+                epoch
+                properMotion {
+                  ra {
+                    microarcsecondsPerYear
                   }
-                  epoch
-                  properMotion {
-                    ra {
-                      microarcsecondsPerYear
-                    }
-                    dec {
-                      microarcsecondsPerYear
-                    }
-                  }
-                  radialVelocity {
-                    centimetersPerSecond
-                  }
-                  parallax {
-                    microarcseconds
+                  dec {
+                    microarcsecondsPerYear
                   }
                 }
+                radialVelocity {
+                  centimetersPerSecond
+                }
+                parallax {
+                  microarcseconds
+                }
+                catalogInfo {
+                  name
+                  id
+                  objectType
+                }                
               }
               sourceProfile {
                 point {
@@ -80,11 +81,6 @@ object TargetQueriesGQL {
                   }
                 }
               }
-              catalogInfo {
-                name
-                id
-                objectType
-              }
             }
           }
         }
@@ -103,8 +99,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait CreateTargetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation($input: CreateTargetInput!) {
-        createTarget(input: $input) {
+      mutation($programId: ProgramId! $input: CreateTargetInput!) {
+        createTarget(programId: $programId, input: $input) {
           id
         }
       }

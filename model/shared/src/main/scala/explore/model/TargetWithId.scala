@@ -48,13 +48,13 @@ object TargetWithId {
 
   val sidereal: Prism[TargetWithId, SiderealTargetWithId] =
     Prism.partial[TargetWithId, SiderealTargetWithId] {
-      case TargetWithId(id, t @ Target.Sidereal(_, _, _, _, _)) =>
+      case TargetWithId(id, t @ Target.Sidereal(_, _, _, _)) =>
         SiderealTargetWithId(id, t)
     }(_.toTargetWithId)
 
   val nonsidereal: Prism[TargetWithId, NonsiderealTargetWithId] =
     Prism.partial[TargetWithId, NonsiderealTargetWithId] {
-      case TargetWithId(id, t @ Target.Nonsidereal(_, _, _, _)) =>
+      case TargetWithId(id, t @ Target.Nonsidereal(_, _, _)) =>
         NonsiderealTargetWithId(id, t)
     }(_.toTargetWithId)
 
