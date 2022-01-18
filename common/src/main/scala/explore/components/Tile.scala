@@ -4,6 +4,8 @@
 package explore.components
 
 import cats.syntax.all._
+import crystal.react.hooks._
+import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -11,13 +13,10 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import explore.model.Constants
 import explore.model.enum.TileSizeState
-import japgolly.scalajs.react.Key
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{ facade => Raw }
 import lucuma.ui.reusability._
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.Node
+import org.scalajs.dom
 import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
@@ -26,6 +25,7 @@ import react.semanticui.collections.menu._
 import react.semanticui.elements.button.Button
 
 import scalajs.js
+import scalajs.js.|
 
 final case class Tile(
   id:                Tile.TileId,
@@ -58,9 +58,7 @@ object Tile {
 
   implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
-  implicit val rawContainerReuse: Reusability[html.Element]                  = Reusability.always
-  implicit val rawDomContainerReuse: Reusability[Raw.ReactDOM.Container]     = Reusability.always
-  implicit def ref[F[_]]: Reusability[Ref.FullF[F, Node, Node, HTMLElement]] = Reusability.always
+  implicit val htmlElementReuse: Reusability[html.Element] = Reusability.byRefOr_==
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -75,8 +73,8 @@ object Tile {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // info ref
-      .useRefToVdom[html.Element]
+      // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
+      .useStateView(none[html.Element])
       .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
           Button(
@@ -104,6 +102,9 @@ object Tile {
               .when_(p.state === TileSizeState.Normal)
           )(Icons.Minimize)
 
+        def setInfoRef(node: dom.Node | Null): Unit =
+          infoRef.set(Option(node.asInstanceOf[html.Element])).runNow()
+
         <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn, p.key.whenDefined(^.key := _))(
           <.div(
             ExploreStyles.TileTitle,
@@ -117,18 +118,19 @@ object Tile {
               MenuItem(as = <.a)(p.title)
             ),
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-            <.span(ExploreStyles.TileTitleStrip,
-                   ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
-            ).withRef(infoRef),
+            <.span(^.untypedRef(setInfoRef))(
+              ExploreStyles.TileTitleStrip,
+              ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
+            ),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
           ),
-          Option(infoRef.raw.current)
-            .map(_.asInstanceOf[Raw.ReactDOM.Container]) // Some uglies
-            .whenDefined { node =>
-              ResponsiveComponent(widthBreakpoints,
-                                  heightBreakpoints,
-                                  clazz = ExploreStyles.TileBody
+          infoRef.get
+            .map(node =>
+              ResponsiveComponent(
+                widthBreakpoints,
+                heightBreakpoints,
+                clazz = ExploreStyles.TileBody
               )(
                 p.render(
                   Reuse
@@ -136,8 +138,8 @@ object Tile {
                     .in((mountNode, info: VdomNode) => ReactPortal(info, mountNode))
                 )
               ).when(p.state =!= TileSizeState.Minimized)
-            }
+            )
+            .whenDefined
         )
       }
-
 }
