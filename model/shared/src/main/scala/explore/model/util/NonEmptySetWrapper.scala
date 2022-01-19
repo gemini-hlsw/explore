@@ -5,7 +5,6 @@ package explore.model.util
 
 import cats.Eq
 import cats.data.NonEmptySet
-import cats.instances.all._
 import cats.syntax.all._
 import monocle.Iso
 
