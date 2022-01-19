@@ -6,6 +6,7 @@ package explore.schemas
 import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
@@ -14,6 +15,7 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.ModelOptics._
+import io.circe.syntax._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
@@ -210,14 +212,14 @@ object implicits {
       CreateTargetInput(
         targetId = id.orIgnore,
         name = sidereal.name,
-        sidereal = CreateSiderealInput(
-          catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore,
-          ra = sidereal.tracking.baseCoordinates.ra.toInput,
-          dec = sidereal.tracking.baseCoordinates.dec.toInput,
+        sidereal = SiderealInput(
+          ra = sidereal.tracking.baseCoordinates.ra.toInput.assign,
+          dec = sidereal.tracking.baseCoordinates.dec.toInput.assign,
           epoch = Epoch.fromString.reverseGet(sidereal.tracking.epoch).assign,
           properMotion = sidereal.tracking.properMotion.map(_.toInput).orIgnore,
           radialVelocity = sidereal.tracking.radialVelocity.map(_.toInput).orIgnore,
-          parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore
+          parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore,
+          catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore
         ).assign,
         sourceProfile = sidereal.sourceProfile.toCreateInput
       )
@@ -228,9 +230,8 @@ object implicits {
       CreateTargetInput(
         targetId = id.orIgnore,
         name = nonsidereal.name,
-        nonsidereal = CreateNonsiderealInput(
-          keyType = nonsidereal.ephemerisKey.keyType,
-          des = nonsidereal.ephemerisKey.des
+        nonsidereal = NonsiderealInput(
+          key = NonEmptyString.unsafeFrom(nonsidereal.ephemerisKey.asJson.toString).assign
         ).assign,
         sourceProfile = nonsidereal.sourceProfile.toCreateInput
       )
