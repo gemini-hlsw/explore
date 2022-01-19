@@ -48,7 +48,7 @@ object TargetQueries {
           UpdateTargetMutation
             .execute(
               remoteSet(value)(
-                EditTargetInput(targetId = id, sidereal = EditSiderealInput().assign)
+                EditTargetInput(targetId = id, sidereal = SiderealInput().assign)
               )
             )
             .void
@@ -61,37 +61,37 @@ object TargetQueries {
     ): View[A] = apply(modelLens.get, modelLens.modify, remoteSet)
   }
 
-  def toTargetEndo(setSidereal: Endo[EditSiderealInput]): Endo[EditTargetInput] = eti =>
+  def toTargetEndo(setSidereal: Endo[SiderealInput]): Endo[EditTargetInput] = eti =>
     eti match {
-      case EditTargetInput(_, _, _, Assign(editSidereal), _, _) =>
+      case EditTargetInput(_, _, _, Assign(editSidereal), _) =>
         eti.copy(sidereal = setSidereal(editSidereal).assign)
-      case _                                                    => eti
+      case _                                                 => eti
     }
   object UpdateSiderealTracking {
 
     def epoch(epoch: Option[Epoch]): Endo[EditTargetInput] =
       toTargetEndo(
-        EditSiderealInput.epoch.replace(epoch.map(Epoch.fromString.reverseGet).orUnassign)
+        SiderealInput.epoch.replace(epoch.map(Epoch.fromString.reverseGet).orUnassign)
       )
 
     def ra(ra: Option[RightAscension]): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.ra.replace(ra.map(_.toInput).orUnassign))
+      toTargetEndo(SiderealInput.ra.replace(ra.map(_.toInput).orUnassign))
 
     def dec(dec: Option[Declination]): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.dec.replace(dec.map(_.toInput).orUnassign))
+      toTargetEndo(SiderealInput.dec.replace(dec.map(_.toInput).orUnassign))
 
     def properMotion(
       pm: Option[ProperMotion]
     ): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.properMotion.replace(pm.map(_.toInput).orUnassign))
+      toTargetEndo(SiderealInput.properMotion.replace(pm.map(_.toInput).orUnassign))
 
     def radialVelocity(
       rv: Option[RadialVelocity]
     ): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.radialVelocity.replace(rv.map(_.toInput).orUnassign))
+      toTargetEndo(SiderealInput.radialVelocity.replace(rv.map(_.toInput).orUnassign))
 
     def parallax(p: Option[Parallax]): Endo[EditTargetInput] =
-      toTargetEndo(EditSiderealInput.parallax.replace(p.map(_.toInput).orUnassign))
+      toTargetEndo(SiderealInput.parallax.replace(p.map(_.toInput).orUnassign))
 
     /**
      * Updates all the fields of sideral tracking
