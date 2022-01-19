@@ -12,10 +12,10 @@ import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
-import lucuma.core.math.dimensional.Measure
-import lucuma.core.math.dimensional.Units
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.math.dimensional.Measure
+import lucuma.core.math.dimensional.Units
 import lucuma.core.model.EphemerisKey
 import lucuma.core.model.Semester
 import lucuma.core.model.SourceProfile
