@@ -13,8 +13,11 @@ object GridLayoutSection {
   case object ObservationsLayout extends GridLayoutSection {
     val value = "observations"
   }
+  case object TargetLayout       extends GridLayoutSection {
+    val value = "targets"
+  }
 
   /** @group Typeclass Instances */
   implicit val GridLayoutSectionEnumerated: Enumerated[GridLayoutSection] =
-    Enumerated.of(ObservationsLayout)
+    Enumerated.of(ObservationsLayout, TargetLayout)
 }
