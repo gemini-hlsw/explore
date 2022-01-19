@@ -5,7 +5,7 @@ package lucuma.core.model
 
 import cats.Eq
 import cats.Order
-import cats.implicits._
+import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.cats.implicits._
 import coulomb.si.Kelvin
