@@ -37,7 +37,9 @@ final case class Tile(
   state:             TileSizeState = TileSizeState.Normal,
   sizeStateCallback: TileSizeState ==> Callback = Reuse.always(_ => Callback.empty),
   key:               js.UndefOr[Key] = js.undefined,
-  controllerClass:   Option[Css] = None // applied to wrapping div when in a TileController.
+  controllerClass:   Option[Css] = None, // applied to wrapping div when in a TileController.
+  bodyClass:         Option[Css] = None, // applied to tile body
+  tileClass:         Option[Css] = None  // applied to the tile
 )(val render:        Tile.RenderInTitle ==> VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -105,7 +107,9 @@ object Tile {
         def setInfoRef(node: dom.Node | Null): Unit =
           infoRef.set(Option(node.asInstanceOf[html.Element])).runNow()
 
-        <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn, p.key.whenDefined(^.key := _))(
+        <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
+              p.key.whenDefined(^.key := _)
+        )(
           <.div(
             ExploreStyles.TileTitle,
             p.back.map(b => <.div(ExploreStyles.TileButton, b)),
@@ -130,7 +134,7 @@ object Tile {
               ResponsiveComponent(
                 widthBreakpoints,
                 heightBreakpoints,
-                clazz = ExploreStyles.TileBody
+                clazz = ExploreStyles.TileBody |+| p.bodyClass.orEmpty
               )(
                 p.render(
                   Reuse

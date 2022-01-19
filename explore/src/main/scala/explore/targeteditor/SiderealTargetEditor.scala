@@ -249,10 +249,10 @@ object SiderealTargetEditor {
                 ),
                 RVInput(radialVelocityView, disabled)
               ),
-              SourceProfileEditor(sourceProfileView, disabled = disabled),
-              <.div(ExploreStyles.TargetSkyplotCell)(
-                SkyPlotSection(props.baseCoordinates)
-              )
+              SourceProfileEditor(sourceProfileView, disabled = disabled)
+              // <.div(ExploreStyles.TargetSkyplotCell)(
+              //   SkyPlotSection(props.baseCoordinates)
+              // )
             )
           )
         }

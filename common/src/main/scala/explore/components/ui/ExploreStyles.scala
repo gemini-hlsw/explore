@@ -124,6 +124,8 @@ object ExploreStyles {
 
   val DraggingOver: Css = Css("dragging-over")
 
+  val SkyPlotTile: Css               = Css("sky-plot-tile")
+  val SkyPlotTileBody: Css           = Css("sky-plot-tile-body")
   val SkyPlot: Css                   = Css("sky-plot")
   val SkyPlotSection: Css            = Css("sky-plot-section")
   val SkyPlotControls: Css           = Css("sky-plot-controls")
@@ -185,7 +187,7 @@ object ExploreStyles {
   val TargetGrid: Css          = Css("target-grid")
   val TargetAladinCell: Css    = Css("target-aladin-cell")
   val TargetAladin: Css        = Css("aladin-target")
-  val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
+  // val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
   val TargetForm: Css          = Css("target-form")
   val SearchForm: Css          = Css("target-search-form")

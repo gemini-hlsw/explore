@@ -21,7 +21,6 @@ import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.ButtonGroup
-import react.semanticui.elements.segment.Segment
 
 import java.time.ZonedDateTime
 
@@ -54,16 +53,16 @@ object SkyPlotSection {
       .renderWithReuse { (props, site, date, plotPeriod, timeDisplay) =>
         implicit val ctx = props.ctx
 
-        Segment(ExploreStyles.SkyPlotSection)(
+        <.div(ExploreStyles.SkyPlotSection)(
           HelpIcon("target/main/elevation-plot.md", ExploreStyles.HelpIconFloating),
           <.div(ExploreStyles.SkyPlot) {
             plotPeriod.value match {
               case PlotPeriod.Night    =>
-                SkyPlotNight(site.value, props.coords, date.value, timeDisplay.value, 350)
+                SkyPlotNight(site.value, props.coords, date.value, timeDisplay.value)
               case PlotPeriod.Semester =>
                 val coords   = props.coords
                 val semester = Semester.fromLocalDate(date.value)
-                SkyPlotSemester(site.value, coords, semester, 350).withKey(
+                SkyPlotSemester(site.value, coords, semester).withKey(
                   s"$site-$coords-$semester"
                 )
             }

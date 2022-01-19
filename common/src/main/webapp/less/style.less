@@ -834,8 +834,25 @@ tfoot {
   background-color: var(--explore-group-dragging) !important;
 }
 
+.sky-plot-tile {
+  background-color: var(--plot-background-color);
+}
+
+.sky-plot-tile-body {
+  display: flex;
+  justify-content: stretch;
+  align-content: stretch;
+}
+
+// .target-skyplot-cell {
+//   min-width: 1px; // Needed to help highcharts recompute width on the fly.
+//   display: flex;
+//   justify-content: stretch;
+//   align-content: stretch;
+// }
+//
 .sky-plot {
-  height: 350px;
+  height: 100%;
 
   .highcharts-xaxis .highcharts-axis-title {
     fill: hsl(0, 87%, 66%);
@@ -843,8 +860,13 @@ tfoot {
 }
 
 .sky-plot-section {
-  height: 390px;
-  padding: 0 !important;
+  min-width: 1px; // Needed to help highcharts recompute width on the fly.
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-content: stretch;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 }
@@ -859,6 +881,7 @@ tfoot {
   align-items: baseline;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+  margin-bottom: 0em;
 
   .ui.compact.buttons .button,
   .ui.compact.button {
@@ -1055,12 +1078,6 @@ tfoot {
   padding: 0.5em;
 }
 
-.target-skyplot-cell {
-  margin: 0 1em 1em;
-  position: relative;
-  min-width: 1px; // Needed to help highcharts recompute width on the fly.
-}
-
 .tile-xl-width,
 .tile-lg-width,
 .tile-md-width {
@@ -1079,10 +1096,6 @@ tfoot {
     max-height: 500px;
   }
 
-  .target-skyplot-cell {
-    grid-column-start: 1;
-    grid-column-end: 3;
-  }
 }
 
 .target-rv-controls {

@@ -11,6 +11,8 @@ import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
@@ -20,11 +22,13 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
+import explore.model.layout._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
-import explore.syntax.ui._
 import explore.targeteditor.AsterismEditor
 import explore.undo._
+import explore.syntax.ui._
+import react.gridlayout._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -44,6 +48,9 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import explore.targeteditor.SkyPlotSection
+import monocle.Optional
+import explore.components.TileController
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -58,6 +65,39 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
+  val TargetId: NonEmptyString = "target"
+  val PlotId: NonEmptyString   = "skyPlot"
+
+  val TargetMaxHeight: NonNegInt = 3
+  val TargetMinHeight: NonNegInt = 3
+  val DefaultWidth: NonNegInt    = 12
+
+  val layoutLarge: Layout = Layout(
+    List(
+      LayoutItem(x = 0,
+                 y = 0,
+                 w = DefaultWidth.value,
+                 h = TargetMaxHeight.value,
+                 i = TargetId.value
+      ),
+      LayoutItem(x = 0,
+                 y = TargetMaxHeight.value,
+                 w = DefaultWidth.value,
+                 h = TargetMinHeight.value,
+                 i = PlotId.value
+      )
+    )
+  )
+
+  val defaultLayout: LayoutsMap =
+    defineStdLayouts(
+      Map(
+        (BreakpointName.lg, layoutLarge),
+        (BreakpointName.md, layoutLarge)
+        // (BreakpointName.md, layoutMedium),
+        // (BreakpointName.sm, layoutSmall)
+      )
+    )
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -68,6 +108,7 @@ object TargetTabContents {
     props:                Props,
     panelState:           View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
+    layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
@@ -163,11 +204,14 @@ object TargetTabContents {
         // )
       )
 
+    val coreWidth  = resize.width.getOrElse(0) - treeWidth
+    val coreHeight = resize.height.getOrElse(0)
+
     /**
      * Render the asterism editor
      *
      * @param idsToEdit
-     *   The observations to include in the edit. This needs to be a subset of the ids in
+     *   The observations to include in the edit. This needs to be asubset of the ids in
      *   asterismGroup
      * @param asterismGroup
      *   The AsterismGroup that is the basis for editing. All or part of it may be included in the
@@ -228,7 +272,17 @@ object TargetTabContents {
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      Tile("targetEditor", title, backButton.some)(
+      val selectedTarget =
+        asterismView.get.headOption.map(_.id).map { targetId =>
+          val optional =
+            Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
+              _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
+            )
+
+          asterismView.zoom(optional)
+        }
+
+      val targetEditorTile = Tile(TargetId, title, backButton.some, canMaximize = true)(
         Reuse
           .by(
             (props.userId,
@@ -240,7 +294,7 @@ object TargetTabContents {
              props.hiddenColumns
             )
           )((renderInTitle: Tile.RenderInTitle) =>
-            props.userId.map(uid =>
+            props.userId.map { uid =>
               <.div(
                 AsterismEditor(uid,
                                idsToEdit,
@@ -252,14 +306,53 @@ object TargetTabContents {
                                renderInTitle
                 )
               )
-            ): VdomNode
+            }: VdomNode
           )
           .reuseAlways
       )
-    }
 
-    val coreWidth  = resize.width.getOrElse(0) - treeWidth
-    val coreHeight = resize.height.getOrElse(0)
+      val testTile = Tile(TargetId, s"Test $focusedObs")(
+        Reuse.by(focusedObs)(_ => <.div("ABC").reuseAlways)
+      )
+
+      val skyPlotTile =
+        Tile(PlotId,
+             "Elevation Plot",
+             canMinimize = true,
+             bodyClass = ExploreStyles.SkyPlotTileBody.some,
+             tileClass = ExploreStyles.SkyPlotTile.some
+        )(
+          Reuse
+            .by(
+              (props.userId, coreWidth, coreHeight, selectedTarget)
+            ) { (_: Tile.RenderInTitle) =>
+              selectedTarget
+                .flatMap(
+                  _.mapValue(targetView =>
+                    targetView.get match {
+                      case t @ Target.Sidereal(_, _, _, _) =>
+                        val baseCoordinates =
+                          Target.Sidereal.baseCoordinates.get(t)
+                        SkyPlotSection(baseCoordinates): VdomNode
+                      case _                               => EmptyVdom
+                    }
+                  )
+                )
+                .getOrElse(EmptyVdom)
+            }
+            .reuseAlways
+        )
+
+      TileController(
+        props.userId,
+        coreWidth,
+        defaultLayout,
+        layouts,
+        List(testTile, skyPlotTile),
+        GridLayoutSection.TargetLayout,
+        None
+      )
+    }
 
     val selectedPanel = panelState.get.selected
     val rightSide     = selectedPanel.optValue
@@ -313,7 +406,8 @@ object TargetTabContents {
       .withHooks[Props]
       .useStateView(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
       .useStateView(TargetVisualOptions.Default)
-      .useEffectOnMountBy { (props, panels, _) =>
+      .useStateView(defaultLayout)
+      .useEffectOnMountBy { (props, panels, _, _) =>
         implicit val ctx = props.ctx
         UserAreaWidths
           .queryWithDefault[IO](props.userId,
@@ -333,10 +427,10 @@ object TargetTabContents {
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, resize, debouncer) =>
+      .renderWithReuse { (props, tps, opts, layout, resize, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
-          Reuse(renderFn _)(props, tps, opts, resize, debouncer)
+          Reuse(renderFn _)(props, tps, opts, layout, resize, debouncer)
         )
       }
 
