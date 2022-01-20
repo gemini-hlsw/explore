@@ -16,6 +16,7 @@ import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
+import japgolly.scalajs.react.Reusability
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
@@ -26,8 +27,8 @@ protected object TargetSource {
   case class FromProgram[F[_]: Async](programId: Program.Id)(implicit
     client:                                      TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
-    val name: String                                                               =
-      s"Program $programId"
+    val name: String = s"Program $programId"
+
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
@@ -40,11 +41,13 @@ protected object TargetSource {
               .distinct
           }
       )
+
+    override def toString: String = programId.toString
   }
 
   case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String                                                               =
-      Enumerated[CatalogName].tag(catalogName)
+    val name: String = Enumerated[CatalogName].tag(catalogName)
+
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       catalogName match {
         case CatalogName.Simbad =>
@@ -70,6 +73,8 @@ protected object TargetSource {
           )
         case _                  => List.empty
       }
+
+    override def toString: String = catalogName.toString
   }
 
   def forAllCatalogs[F[_]: Async: Logger]: List[TargetSource[F]] =
@@ -82,4 +87,6 @@ protected object TargetSource {
     case (_, TargetSource.FromProgram(_))                                 => 1
     case (TargetSource.FromCatalog(cnA), TargetSource.FromCatalog(cnB))   => cnA.compare(cnB)
   }
+
+  implicit def reuseTargetSource[F[_]]: Reusability[TargetSource[F]] = Reusability.byEq
 }

@@ -53,7 +53,7 @@ object TargetSelectionPopup {
 
   protected case class SelectedTarget(
     target:      Target,
-    sourceIndex: Int,
+    source:      TargetSource[IO],
     resultIndex: Int,
     angularSize: Option[AngularSize]
   )
@@ -70,7 +70,7 @@ object TargetSelectionPopup {
     .useStateView("")
     // results
     .useStateWithReuse(
-      SortedMap.empty[TargetSource[IO], (Int, NonEmptyList[TargetSearchResult])]
+      SortedMap.empty[TargetSource[IO], NonEmptyList[TargetSearchResult]]
     )
     // searching
     .useState(false)
@@ -83,8 +83,8 @@ object TargetSelectionPopup {
     // targetSources
     .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (_, _, _, _, _, _, _) => propsCtx =>
       implicit val ctx = propsCtx
-      (Program.Id.parse("p-2").map(p => TargetSource.FromProgram[IO](p)).toList ++
-        TargetSource.forAllCatalogs[IO]).zipWithIndex
+      Program.Id.parse("p-2").map(p => TargetSource.FromProgram[IO](p)).toList ++
+        TargetSource.forAllCatalogs[IO]
     }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
@@ -107,40 +107,38 @@ object TargetSelectionPopup {
         val cleanState =
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
-        def addResults(source: TargetSource[IO], index: Int)(
+        def addResults(source: TargetSource[IO])(
           targets:             List[TargetSearchResult]
         ): IO[Unit] =
           NonEmptyList
             .fromList(targets)
             .map[IO[Unit]](nel =>
               results.modStateAsync(r =>
-                r.get(source).fold(r + (source -> ((index, nel)))) { case (i, ts) =>
-                  r + (source -> ((i,
-                                   // NonEmptyList doesn't have distinctBy
-                                   NonEmptyList.fromListUnsafe(
-                                     (ts.toList ++ nel.toList)
-                                       .distinctBy(_ match {
-                                         case TargetSearchResult(
-                                               TargetWithOptId(
-                                                 _,
-                                                 Target.Sidereal(name, _, _, catalogInfo)
-                                               ),
-                                               _
-                                             ) =>
-                                           catalogInfo.map(_.id.value).getOrElse(name.value)
-                                         case TargetSearchResult(
-                                               TargetWithOptId(
-                                                 _,
-                                                 Target.Nonsidereal(_, ephemerisKey, _)
-                                               ),
-                                               _
-                                             ) =>
-                                           ephemerisKey.toString
-                                       })
-                                       .sortBy(_.target.name.value)
-                                   )
-                                  )
-                  ))
+                r.get(source).fold(r + (source -> nel)) { case ts =>
+                  r + (source ->
+                    // NonEmptyList doesn't have distinctBy
+                    NonEmptyList.fromListUnsafe(
+                      (ts.toList ++ nel.toList)
+                        .distinctBy(_ match {
+                          case TargetSearchResult(
+                                TargetWithOptId(
+                                  _,
+                                  Target.Sidereal(name, _, _, catalogInfo)
+                                ),
+                                _
+                              ) =>
+                            catalogInfo.map(_.id.value).getOrElse(name.value)
+                          case TargetSearchResult(
+                                TargetWithOptId(
+                                  _,
+                                  Target.Nonsidereal(_, ephemerisKey, _)
+                                ),
+                                _
+                              ) =>
+                            ephemerisKey.toString
+                        })
+                        .sortBy(_.target.name.value)
+                    ))
                 }
               )
             )
@@ -154,9 +152,7 @@ object TargetSelectionPopup {
               .map(nonEmptyName =>
                 searching.setStateAsync(true) >>
                   targetSources.value
-                    .flatMap { case (source, index) =>
-                      source.searches(nonEmptyName).map(_ >>= addResults(source, index))
-                    }
+                    .flatMap(source => source.searches(nonEmptyName).map(_ >>= addResults(source)))
                     .parSequence_
                     .guaranteeCase {
                       // If it gets canceled, it's because another search has started
@@ -211,7 +207,7 @@ object TargetSelectionPopup {
                       Aladin.component
                         .withRef(aladinRef)
                         .withKey(
-                          selectedTarget.value.foldMap(t => s"${t.sourceIndex}-${t.resultIndex}")
+                          selectedTarget.value.foldMap(t => s"${t.source}-${t.resultIndex}")
                         )(
                           Aladin(
                             ExploreStyles.TargetSearchAladin,
@@ -229,7 +225,7 @@ object TargetSelectionPopup {
                 )
               ),
               SegmentGroup(raised = true, clazz = ExploreStyles.TargetSearchResults)(
-                results.value.map { case (source, (sourceIndex, sourceResults)) =>
+                results.value.map { case (source, sourceResults) =>
                   Segment(
                     <.div(
                       Header(size = Small)(
@@ -243,19 +239,18 @@ object TargetSelectionPopup {
                               onSelected(t.targetWithOptId) >> isOpen.setState(false) >> cleanState
                           ),
                           selectedIndex = selectedTarget.value
-                            .filter(_.sourceIndex === sourceIndex)
+                            .filter(_.source === source)
                             .map(_.resultIndex),
                           onClick = Reuse.always { case (result: TargetSearchResult, index: Int) =>
                             selectedTarget.setState(
                               if (
-                                selectedTarget.value.exists(st =>
-                                  st.sourceIndex === sourceIndex && st.resultIndex === index
-                                )
+                                selectedTarget.value
+                                  .exists(st => st.source === source && st.resultIndex === index)
                               )
                                 none
                               else
                                 SelectedTarget(result.target,
-                                               sourceIndex,
+                                               source,
                                                index,
                                                result.angularSize
                                 ).some
