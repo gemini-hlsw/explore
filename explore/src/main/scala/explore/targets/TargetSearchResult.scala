@@ -9,8 +9,8 @@ import explore.model.TargetWithOptId
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
-import lucuma.core.model.Target
 import lucuma.core.model.CatalogInfo
+import lucuma.core.model.Target
 
 final case class TargetSearchResult(
   targetWithOptId: TargetWithOptId,

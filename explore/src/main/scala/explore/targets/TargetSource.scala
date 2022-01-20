@@ -10,13 +10,13 @@ import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
+import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
-import japgolly.scalajs.react.Reusability
 
 protected sealed trait TargetSource[F[_]] {
   def name: String
