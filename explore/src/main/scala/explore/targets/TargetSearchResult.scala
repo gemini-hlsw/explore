@@ -10,6 +10,7 @@ import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.Target
+import lucuma.core.model.CatalogInfo
 
 final case class TargetSearchResult(
   targetWithOptId: TargetWithOptId,
@@ -23,7 +24,16 @@ object TargetSearchResult {
   def fromCatalogTargetResult(r: CatalogTargetResult): TargetSearchResult =
     TargetSearchResult(TargetWithOptId(none, r.target), r.angularSize)
 
-  implicit val EqTargetSearchResult: Eq[TargetSearchResult] = Eq.fromUniversalEquals
+  implicit val EqTargetSearchResult: Eq[TargetSearchResult] =
+    Eq.by(t =>
+      Target.catalogInfo
+        .getOption(t.target)
+        .flatten
+        .map(CatalogInfo.id.get)
+        .map(_.value)
+        .orElse(Target.ephemerisKey.getOption(t.target).map(_.toString))
+        .getOrElse(Target.name.get(t.target).value)
+    )
 
   implicit val reuseTargetSearchResult: Reusability[TargetSearchResult] =
     Reusability.byEq

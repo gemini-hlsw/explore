@@ -3,6 +3,7 @@
 
 package explore.targets
 
+import cats.Eq
 import cats.Order._
 import cats.data.NonEmptyList
 import cats.effect.FiberIO
@@ -51,18 +52,23 @@ final case class TargetSelectionPopup(
 object TargetSelectionPopup {
   type Props = TargetSelectionPopup
 
-  protected case class SelectedTarget(
+  protected final case class Result(target: TargetSearchResult, priority: Int)
+  protected object Result {
+    implicit val eqResult: Eq[Result] = Eq.fromUniversalEquals
+  }
+
+  protected final case class SelectedTarget(
     target:      Target,
     source:      TargetSource[IO],
     resultIndex: Int,
     angularSize: Option[AngularSize]
   )
 
-  implicit protected val reuseProps: Reusability[Props] = Reusability.derive[Props]
+  protected implicit val reuseProps: Reusability[Props] = Reusability.derive
 
-  implicit protected val reuseSelectedTarget: Reusability[SelectedTarget] = Reusability.derive
+  protected implicit val reuseSelectedTarget: Reusability[SelectedTarget] = Reusability.derive
 
-  implicit protected val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
+  protected implicit val reuseFiber: Reusability[FiberIO[Unit]] = Reusability.byRef
 
   protected val component = ScalaFnComponent
     .withHooks[Props]
@@ -70,7 +76,7 @@ object TargetSelectionPopup {
     .useStateView("")
     // results
     .useStateWithReuse(
-      SortedMap.empty[TargetSource[IO], NonEmptyList[TargetSearchResult]]
+      SortedMap.empty[TargetSource[IO], NonEmptyList[Result]]
     )
     // searching
     .useState(false)
@@ -107,38 +113,26 @@ object TargetSelectionPopup {
         val cleanState =
           inputValue.set("") >> searching.setState(false) >> cleanResults
 
-        def addResults(source: TargetSource[IO])(
+        def addResults(source: TargetSource[IO], priority: Int)(
           targets:             List[TargetSearchResult]
         ): IO[Unit] =
           NonEmptyList
-            .fromList(targets)
+            .fromList(targets.map(t => Result(t, priority)))
             .map[IO[Unit]](nel =>
               results.modStateAsync(r =>
-                r.get(source).fold(r + (source -> nel)) { case ts =>
+                r.get(source).fold(r + (source -> nel)) { case rs =>
                   r + (source ->
-                    // NonEmptyList doesn't have distinctBy
-                    NonEmptyList.fromListUnsafe(
-                      (ts.toList ++ nel.toList)
-                        .distinctBy(_ match {
-                          case TargetSearchResult(
-                                TargetWithOptId(
-                                  _,
-                                  Target.Sidereal(name, _, _, catalogInfo)
-                                ),
-                                _
-                              ) =>
-                            catalogInfo.map(_.id.value).getOrElse(name.value)
-                          case TargetSearchResult(
-                                TargetWithOptId(
-                                  _,
-                                  Target.Nonsidereal(_, ephemerisKey, _)
-                                ),
-                                _
-                              ) =>
-                            ephemerisKey.toString
-                        })
-                        .sortBy(_.target.name.value)
-                    ))
+                    NonEmptyList
+                      .fromListUnsafe {
+                        // Remove duplicates, keeping the one with the highest priority (lowest value).
+                        rs.filterNot(r =>
+                          nel.exists(r0 => r.target === r0.target && r0.priority < r.priority)
+                        ) ++
+                          nel.filterNot(r0 =>
+                            rs.exists(r => r.target === r0.target && r0.priority > r.priority)
+                          )
+                      }
+                      .sortBy(r => (r.priority, r.target.target.name.value)))
                 }
               )
             )
@@ -152,7 +146,11 @@ object TargetSelectionPopup {
               .map(nonEmptyName =>
                 searching.setStateAsync(true) >>
                   targetSources.value
-                    .flatMap(source => source.searches(nonEmptyName).map(_ >>= addResults(source)))
+                    .flatMap(source =>
+                      source.searches(nonEmptyName).zipWithIndex.map { case (search, priority) =>
+                        search >>= addResults(source, priority)
+                      }
+                    )
                     .parSequence_
                     .guaranteeCase {
                       // If it gets canceled, it's because another search has started
@@ -233,7 +231,7 @@ object TargetSelectionPopup {
                       ),
                       <.div(ExploreStyles.TargetSearchResultsSource)(
                         TargetSelectionTable(
-                          sourceResults.toList,
+                          sourceResults.toList.map(_.target),
                           onSelected = props.onSelected.map(onSelected =>
                             t =>
                               onSelected(t.targetWithOptId) >> isOpen.setState(false) >> cleanState

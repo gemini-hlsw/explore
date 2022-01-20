@@ -57,10 +57,10 @@ protected object TargetSource {
           // This a heuristic based on observed Simbad behavior.
           val wildcardSearches: List[F[List[CatalogTargetResult]]] = List(
             NonEmptyString.unsafeFrom(s"$escapedName*"),
-            NonEmptyString.unsafeFrom(s"NAME $escapedName*"),
             NonEmptyString.unsafeFrom(
               s"${escapedName.replaceFirst("([A-Za-z-\\.]+)(\\S.*)", "$1 $2")}*"
-            )
+            ),
+            NonEmptyString.unsafeFrom(s"NAME $escapedName*")
           ).distinct.map(term =>
             Logger[F].debug(s"Searching Simbad: [$term]") >>
               SimbadSearch.search[F](term, wildcard = true)
