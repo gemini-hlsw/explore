@@ -398,6 +398,7 @@ object ObsTabContents {
                   .zoom(atMapWithDefault(obsId, UndoStacks.empty))
               )
             ),
+            GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode
         }
