@@ -242,6 +242,7 @@ object ObsTabContents {
     options:            View[TargetVisualOptions],
     layouts:            View[LayoutsMap],
     resize:             UseResizeDetectorReturn,
+    debouncer:          Reusable[UseSingleEffect[IO]],
     obsWithConstraints: View[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
@@ -250,13 +251,15 @@ object ObsTabContents {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         panels.zoom(TwoPanelState.treeWidth[Observation.Id]).set(d.size.width) *>
-          UserWidthsCreation
-            .storeWidthPreference[IO](props.userId.get,
-                                      ResizableSection.ObservationsTree,
-                                      d.size.width
+          debouncer
+            .submit(
+              UserWidthsCreation
+                .storeWidthPreference[IO](props.userId.get,
+                                          ResizableSection.ObservationsTree,
+                                          d.size.width
+                )
             )
             .runAsyncAndForget
-            .debounce(1.second)
 
     val treeWidth =
       panels.get.treeWidth.toInt
@@ -473,10 +476,11 @@ object ObsTabContents {
             .runAsync
       }
       .useResizeDetector()
-      .renderWithReuse { (props, panels, options, layouts, resize) =>
+      .useSingleEffect(debounce = 1.second)
+      .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
         ObsLiveQuery(
-          Reuse(renderFn _)(props, panels, options, layouts, resize)
+          Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
         )
       }
 

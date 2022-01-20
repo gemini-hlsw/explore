@@ -69,15 +69,18 @@ object TargetTabContents {
     panelState:           View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
     resize:               UseResizeDetectorReturn,
+    debouncer:            Reusable[UseSingleEffect[IO]],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         panelState.zoom(treeWidthLens).set(d.size.width) *>
-          (UserWidthsCreation
-            .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width))
+          debouncer
+            .submit(
+              UserWidthsCreation
+                .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width)
+            )
             .runAsync
-            .debounce(1.second)
 
     val treeWidth    = panelState.get.treeWidth.toInt
     val selectedView = panelState.zoom(selectedLens)
@@ -329,10 +332,11 @@ object TargetTabContents {
           .runAsync
       }
       .useResizeDetector()
-      .renderWithReuse { (props, tps, opts, resize) =>
+      .useSingleEffect(debounce = 1.second)
+      .renderWithReuse { (props, tps, opts, resize, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
-          Reuse(renderFn _)(props, tps, opts, resize)
+          Reuse(renderFn _)(props, tps, opts, resize, debouncer)
         )
       }
 
