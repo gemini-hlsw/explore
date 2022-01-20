@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
 import crystal.react.implicits._
+import crystal.react.hooks._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.UserPreferencesQueries._
@@ -37,22 +38,30 @@ final case class TileController(
   defaultLayout:    LayoutsMap,
   layoutMap:        View[LayoutsMap],
   tiles:            List[Tile],
+  section:          GridLayoutSection,
   clazz:            Option[Css] = None
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[TileController](TileController.component)
+    extends ReactFnProps[TileController](TileController.component)
 
 object TileController {
   type Props = TileController
 
   implicit val propsReuse: Reusability[TileController] = Reusability.derive
 
-  def storeLayouts(userId: Option[User.Id], layouts: Layouts)(implicit
-    ctx:                   AppContextIO
+  def storeLayouts(
+    userId:    Option[User.Id],
+    section:   GridLayoutSection,
+    layouts:   Layouts,
+    debouncer: Reusable[UseSingleEffect[IO]]
+  )(implicit
+    ctx:       AppContextIO
   ): Callback =
-    UserGridLayoutUpsert
-      .storeLayoutsPreference[IO](userId, GridLayoutSection.ObservationsLayout, layouts)
-      .runAsync
-      .debounce(1.second)
+    debouncer
+      .submit(
+        UserGridLayoutUpsert
+          .storeLayoutsPreference[IO](userId, section, layouts)
+      )
+      .runAsyncAndForget
 
   val itemHeght = layoutItems.andThen(layoutItemHeight)
 
@@ -92,10 +101,10 @@ object TileController {
       }(p)
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_P { p =>
+    ScalaFnComponent
+      .withHooks[Props]
+      .useSingleEffect(debounce = 1.second)
+      .renderWithReuse { (p, debouncer) =>
         def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
           p.layoutMap
             .zoom(allTiles)
@@ -120,7 +129,8 @@ object TileController {
           containerPadding = (5, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-          onLayoutChange = (_: Layout, b: Layouts) => storeLayouts(p.userId, b)(p.ctx),
+          onLayoutChange =
+            (_: Layout, b: Layouts) => storeLayouts(p.userId, p.section, b, debouncer)(p.ctx),
           layouts = updateResizableState(p.layoutMap.get),
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
@@ -133,7 +143,5 @@ object TileController {
           }.toVdomArray
         )
       }
-      .configure(Reusability.shouldComponentUpdate)
-      .build
 
 }
