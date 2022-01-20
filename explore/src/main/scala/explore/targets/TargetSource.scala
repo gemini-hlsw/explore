@@ -10,6 +10,7 @@ import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
 import explore.common.TargetQueriesGQL
+import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enum.CatalogName
 import lucuma.core.model.Program
@@ -26,8 +27,8 @@ protected object TargetSource {
   case class FromProgram[F[_]: Async](programId: Program.Id)(implicit
     client:                                      TransactionalClient[F, ObservationDB]
   ) extends TargetSource[F] {
-    val name: String                                                               =
-      s"Program $programId"
+    val name: String = s"Program $programId"
+
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
@@ -40,11 +41,13 @@ protected object TargetSource {
               .distinct
           }
       )
+
+    override def toString: String = programId.toString
   }
 
   case class FromCatalog[F[_]: Async: Logger](catalogName: CatalogName) extends TargetSource[F] {
-    val name: String                                                               =
-      Enumerated[CatalogName].tag(catalogName)
+    val name: String = Enumerated[CatalogName].tag(catalogName)
+
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       catalogName match {
         case CatalogName.Simbad =>
@@ -54,10 +57,10 @@ protected object TargetSource {
           // This a heuristic based on observed Simbad behavior.
           val wildcardSearches: List[F[List[CatalogTargetResult]]] = List(
             NonEmptyString.unsafeFrom(s"$escapedName*"),
-            NonEmptyString.unsafeFrom(s"NAME $escapedName*"),
             NonEmptyString.unsafeFrom(
               s"${escapedName.replaceFirst("([A-Za-z-\\.]+)(\\S.*)", "$1 $2")}*"
-            )
+            ),
+            NonEmptyString.unsafeFrom(s"NAME $escapedName*")
           ).distinct.map(term =>
             Logger[F].debug(s"Searching Simbad: [$term]") >>
               SimbadSearch.search[F](term, wildcard = true)
@@ -70,6 +73,8 @@ protected object TargetSource {
           )
         case _                  => List.empty
       }
+
+    override def toString: String = catalogName.toString
   }
 
   def forAllCatalogs[F[_]: Async: Logger]: List[TargetSource[F]] =
@@ -82,4 +87,6 @@ protected object TargetSource {
     case (_, TargetSource.FromProgram(_))                                 => 1
     case (TargetSource.FromCatalog(cnA), TargetSource.FromCatalog(cnB))   => cnA.compare(cnB)
   }
+
+  implicit def reuseTargetSource[F[_]]: Reusability[TargetSource[F]] = Reusability.byEq
 }
