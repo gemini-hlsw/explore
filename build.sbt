@@ -10,7 +10,7 @@ val kindProjectorVersion = "0.13.2"
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+ThisBuild / scalafixDependencies += "com.github.liancheng"           %% "organize-imports" % "0.6.0"
 
 addCommandAlias(
   "quickTest",

@@ -79,7 +79,7 @@ class SUITableVirtuoso[D, Plugins](
                   clazz = addClass(header.className, header.clazz, ExploreStyles.THead)
             ))
             .some // Can't wait for Scala 3's union types
-        case _ => none
+        case _                   => none
       }
 
       val headerRowTag: TableRow = props.headerRow.copy(
