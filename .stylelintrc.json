@@ -1,7 +1,7 @@
 {
   "extends": "stylelint-config-standard",
   "plugins": [
-    "stylelint-value-no-unknown-custom-properties",
+    "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties",
     "stylelint-color-format"
   ],
   "rules": {
