@@ -463,8 +463,9 @@ object ObsTabContents {
       .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
         implicit val ctx = props.ctx
         _ =>
-          ObsTabPreferencesQuery
+          TabGridPreferencesQuery
             .queryWithDefault[IO](props.userId.get,
+                                  GridLayoutSection.ObservationsLayout,
                                   ResizableSection.ObservationsTree,
                                   (Constants.InitialTreeWidth.toInt, defaultLayout)
             )

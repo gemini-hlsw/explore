@@ -841,7 +841,6 @@ tfoot {
 .sky-plot-tile-body {
   display: flex;
   justify-content: stretch;
-  align-content: stretch;
 }
 
 // .target-skyplot-cell {
@@ -853,9 +852,18 @@ tfoot {
 //
 .sky-plot {
   height: 100%;
+  outline: 1px solid red;
 
   .highcharts-xaxis .highcharts-axis-title {
     fill: hsl(0, 87%, 66%);
+  }
+
+  > div {
+    height: 100%;
+    div[data-highcharts-chart] {
+  //background-color: red;
+      height: 100%;
+    }
   }
 }
 
@@ -865,8 +873,8 @@ tfoot {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: stretch;
-  align-content: stretch;
+  // justify-content: stretch;
+  // align-content: stretch;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 }
@@ -881,7 +889,7 @@ tfoot {
   align-items: baseline;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
-  margin-bottom: 0em;
+  margin: 0.2em;
 
   .ui.compact.buttons .button,
   .ui.compact.button {

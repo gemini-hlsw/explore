@@ -23,6 +23,7 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
+import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.targeteditor.AsterismEditor
@@ -92,8 +93,8 @@ object TargetTabContents {
   val defaultLayout: LayoutsMap =
     defineStdLayouts(
       Map(
-        (BreakpointName.lg, layoutLarge),
-        (BreakpointName.md, layoutLarge)
+        (BreakpointName.lg, layoutLarge)
+        // (BreakpointName.md, layoutLarge)
         // (BreakpointName.md, layoutMedium),
         // (BreakpointName.sm, layoutSmall)
       )
@@ -407,23 +408,29 @@ object TargetTabContents {
       .useStateView(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
       .useStateView(TargetVisualOptions.Default)
       .useStateView(defaultLayout)
-      .useEffectOnMountBy { (props, panels, _, _) =>
+      .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
         implicit val ctx = props.ctx
-        UserAreaWidths
-          .queryWithDefault[IO](props.userId,
-                                ResizableSection.TargetsTree,
-                                Constants.InitialTreeWidth.toInt
-          )
-          .attempt
-          .flatMap {
-            case Right(w) =>
-              panels
-                .zoom(TwoPanelState.treeWidth[ObsIdSet])
-                .set(w)
-                .to[IO]
-            case Left(_)  => IO.unit
-          }
-          .runAsync
+        _ =>
+          Callback.log("HEM") *>
+            TabGridPreferencesQuery
+              .queryWithDefault[IO](props.userId,
+                                    GridLayoutSection.TargetLayout,
+                                    ResizableSection.TargetsTree,
+                                    (Constants.InitialTreeWidth.toInt, defaultLayout)
+              )
+              .attempt
+              .flatMap {
+                case Right((w, l)) =>
+                  pprint.pprintln(l)
+                  pprint.pprintln(mergeMap(layout.get, l))
+                  (panels
+                    .mod(
+                      TwoPanelState.treeWidth[ObsIdSet].replace(w)
+                    ) *> layout.set(mergeMap(layout.get, l)))
+                    .to[IO]
+                case Left(_)       => IO.unit
+              }
+              .runAsync
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)

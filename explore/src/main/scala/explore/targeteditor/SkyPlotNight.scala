@@ -159,7 +159,7 @@ object SkyPlotNight {
       .withHooks[Props]
       .useState(HashSet.from(Enumerated[ElevationSeries].all))
       .useResizeDetector()
-      .renderWithReuse { (props, shownSeries, resize) =>
+      .render { (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ + series) >>
             Callback(
@@ -387,8 +387,8 @@ object SkyPlotNight {
         val (moonPhase, moonIllum) = skyCalcResults(
           skyCalcResults.length / 2
         ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
-        println(resize.height)
-        org.scalajs.dom.window.console.log(resize.ref.raw.current)
+        // println(resize.height)
+        // org.scalajs.dom.window.console.log(resize.ref.raw.current)
 
         <.div(
           Chart(options).withKey(props.toString),

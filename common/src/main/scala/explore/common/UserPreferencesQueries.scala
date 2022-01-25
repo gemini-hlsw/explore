@@ -67,7 +67,7 @@ object UserPreferencesQueries {
       } yield w).value.map(_.flatten.getOrElse(defaultValue))
   }
 
-  implicit class ObsTabPreferencesQueryOps(val self: ObsTabPreferencesQuery.type) extends AnyVal {
+  implicit class TabGridPreferencesQueryOps(val self: TabGridPreferencesQuery.type) extends AnyVal {
     import self._
     import UserPreferencesDB.Scalars._
 
@@ -88,7 +88,7 @@ object UserPreferencesQueries {
     // there is no data or errors
     def queryWithDefault[F[_]: MonadError[*[_], Throwable]](
       userId:        Option[User.Id],
-      // layoutSection: GridLayoutSection,
+      layoutSection: GridLayoutSection,
       resizableArea: ResizableSection,
       defaultValue:  (Int, LayoutsMap)
     )(implicit cl:   TransactionalClient[F, UserPreferencesDB]): F[(Int, LayoutsMap)] =
@@ -96,7 +96,10 @@ object UserPreferencesQueries {
         uid <- OptionT.fromOption[F](userId)
         c   <-
           OptionT.pure(
-            GridLayoutPositionsBoolExp(user_id = StringComparisonExp(uid.show.assign).assign)
+            GridLayoutPositionsBoolExp(
+              user_id = StringComparisonExp(uid.show.assign).assign,
+              section = GridLayoutAreaComparisonExp(layoutSection.value.assign).assign
+            )
           )
         r   <-
           OptionT
