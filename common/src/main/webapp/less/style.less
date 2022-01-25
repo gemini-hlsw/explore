@@ -1229,6 +1229,53 @@ img.partner-split-flag {
   font-size: larger;
 }
 
+.explore-table {
+  position: relative;
+  grid-area: table;
+  overflow-y: hidden;
+  height: 100%;
+  border: 0.2px solid var(--site-border-color);
+  border-radius: @menuBorderRadius;
+
+  .table {
+    height: 100%;
+    border-collapse: collapse;
+  }
+
+  tr.explore-table-row-selected,
+  .tr.explore-table-row-selected {
+    box-shadow:
+      inset 0 1px 0 0 var(--explore-selected-box-color),
+      inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
+
+    background: var(--table-selected-background) !important;
+  }
+
+  th,
+  .th {
+    border: 0 !important;
+  }
+
+  td,
+  .td {
+    border: 0 !important;
+  }
+
+  .scroll-button {
+    position: absolute;
+    right: 1em;
+    border-color: var(--explore-selected-box-color) !important;
+  }
+
+  & .selected-up {
+    top: 2.5em;
+  }
+
+  & .selected-down {
+    bottom: 1.1em;
+  }
+}
+
 // For very small tables hide the headers and add fake "header" to the left of the row
 .tile-xs-width {
   .target-grid {
@@ -1252,6 +1299,15 @@ img.partner-split-flag {
       top: -9999px;
       left: -9999px;
     }
+  }
+}
+
+.ui.segment.explore-brightnesses-container {
+  padding: 0;
+  display: inline-block;
+
+  th {
+    white-space: nowrap;
   }
 }
 
@@ -1464,15 +1520,6 @@ html {
 
 .observer-notes {
   padding: 1em;
-}
-
-.ui.segment.explore-brightnesses-container {
-  padding: 0;
-  display: inline-block;
-
-  th {
-    white-space: nowrap;
-  }
 }
 
 // https://css-tricks.com/responsive-data-tables/
@@ -1865,53 +1912,6 @@ html {
   grid-area: form;
 }
 
-.explore-table {
-  position: relative;
-  grid-area: table;
-  overflow-y: hidden;
-  height: 100%;
-  border: 0.2px solid var(--site-border-color);
-  border-radius: @menuBorderRadius;
-
-  .table {
-    height: 100%;
-    border-collapse: collapse;
-  }
-
-  tr.explore-table-row-selected,
-  .tr.explore-table-row-selected {
-    box-shadow:
-      inset 0 1px 0 0 var(--explore-selected-box-color),
-      inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
-
-    background: var(--table-selected-background) !important;
-  }
-
-  th,
-  .th {
-    border: 0 !important;
-  }
-
-  td,
-  .td {
-    border: 0 !important;
-  }
-
-  .scroll-button {
-    position: absolute;
-    right: 1em;
-    border-color: var(--explore-selected-box-color) !important;
-  }
-
-  & .selected-up {
-    top: 2.5em;
-  }
-
-  & .selected-down {
-    bottom: 1.1em;
-  }
-}
-
 .explore-modes-header {
   top: 0;
   white-space: nowrap;
@@ -2039,19 +2039,6 @@ td.sticky {
   clip-path: inset(2px 0); // Avoids overwriting the box-shadow.
 }
 
-.ui.striped.table tr:nth-child(2n + 1) td.sticky {
-  background-color: var(--table-background);
-}
-
-.ui.striped.table tr:nth-child(2n) td.sticky {
-  background-color: var(--table-striped-background);
-}
-
-.ui.striped.table tr:hover td.sticky {
-  background: var(--table-selectable-background);
-  color: var(--table-selectable-color);
-}
-
 .ui.table tr.explore-table-row-selected td.sticky {
   background-color:
     var(
@@ -2076,4 +2063,17 @@ td.sticky {
   .CircularProgressbar-path {
     stroke: var(--site-text-color) !important;
   }
+}
+
+.ui.striped.table tr:nth-child(2n + 1) td.sticky {
+  background-color: var(--table-background);
+}
+
+.ui.striped.table tr:nth-child(2n) td.sticky {
+  background-color: var(--table-striped-background);
+}
+
+.ui.striped.table tr:hover td.sticky {
+  background: var(--table-selectable-background);
+  color: var(--table-selectable-color);
 }
