@@ -23,7 +23,6 @@ import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
-import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.targeteditor.AsterismEditor
@@ -69,36 +68,64 @@ object TargetTabContents {
   val TargetId: NonEmptyString = "target"
   val PlotId: NonEmptyString   = "skyPlot"
 
-  val TargetMaxHeight: NonNegInt = 3
-  val TargetMinHeight: NonNegInt = 3
-  val DefaultWidth: NonNegInt    = 12
+  private val TargetIntialHeightFraction   = 6
+  private val SkyPlotInitialHeightFraction = 4
+  private val TotalHeightFractions         = TargetIntialHeightFraction + SkyPlotInitialHeightFraction
+  val TargetMaxHeight: NonNegInt           = 3
+  val TargetMinHeight: NonNegInt           = 3
+  val DefaultWidth: NonNegInt              = 12
 
   val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
                  w = DefaultWidth.value,
-                 h = TargetMaxHeight.value,
+                 h = TargetIntialHeightFraction,
+                 minH = TargetIntialHeightFraction,
                  i = TargetId.value
       ),
       LayoutItem(x = 0,
                  y = TargetMaxHeight.value,
                  w = DefaultWidth.value,
-                 h = TargetMinHeight.value,
+                 h = SkyPlotInitialHeightFraction,
+                 minH = SkyPlotInitialHeightFraction,
                  i = PlotId.value
       )
     )
   )
 
-  val defaultLayout: LayoutsMap =
-    defineStdLayouts(
-      Map(
-        (BreakpointName.lg, layoutLarge)
-        // (BreakpointName.md, layoutLarge)
-        // (BreakpointName.md, layoutMedium),
-        // (BreakpointName.sm, layoutSmall)
-      )
+  private val proportionalLayouts = defineStdLayouts(
+    Map(
+      (BreakpointName.lg, layoutLarge),
+      (BreakpointName.md, layoutLarge)
     )
+  )
+
+  private def scaleLayout(l: Layout, h: Int): Layout =
+    layoutItems.modify { l =>
+      l.i match {
+        case r if r === TargetId.value =>
+          val height =
+            (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + 2*Constants.GridRowPadding)
+          (layoutItemHeight
+            .replace(height)
+            .andThen(layoutItemMaxHeight.replace(2 * height))
+            .andThen(layoutItemMinHeight.replace(height / 2)))(l)
+        case r if r === PlotId.value   =>
+          val height =
+            (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + 2*Constants.GridRowPadding)
+          (layoutItemHeight
+            .replace(height)
+            .andThen(layoutItemMaxHeight.replace(2 * height))
+            .andThen(layoutItemMinHeight.replace(height / 2)))(l)
+        case _                         => l
+      }
+    }(l)
+
+  private def scaledLayout(h: Int, l: LayoutsMap): LayoutsMap =
+    l.map { case (k, (a, b, l)) =>
+      (k, (a, b, scaleLayout(l, h)))
+    }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -107,25 +134,25 @@ object TargetTabContents {
 
   protected def renderFn(
     props:                Props,
-    panelState:           View[TwoPanelState[ObsIdSet]],
+    panels:               View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
-    val treeResize =
+    val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        panelState.zoom(treeWidthLens).set(d.size.width) *>
+        panels.zoom(treeWidthLens).set(d.size.width) *>
           debouncer
             .submit(
               UserWidthsCreation
                 .storeWidthPreference[IO](props.userId, ResizableSection.TargetsTree, d.size.width)
             )
-            .runAsync
+            .runAsyncAndForget
 
-    val treeWidth    = panelState.get.treeWidth.toInt
-    val selectedView = panelState.zoom(selectedLens)
+    val treeWidth    = panels.get.treeWidth.toInt
+    val selectedView = panels.zoom(selectedLens)
 
     val targetMap = asterismGroupWithObs.get.targetGroups
 
@@ -347,7 +374,7 @@ object TargetTabContents {
       TileController(
         props.userId,
         coreWidth,
-        defaultLayout,
+        null,
         layouts,
         List(testTile, skyPlotTile),
         GridLayoutSection.TargetLayout,
@@ -355,7 +382,7 @@ object TargetTabContents {
       )
     }
 
-    val selectedPanel = panelState.get.selected
+    val selectedPanel = panels.get.selected
     val rightSide     = selectedPanel.optValue
       .flatMap(ids =>
         findAsterismGroup(ids, asterismGroupWithObs.get.asterismGroups).map(ag => (ids, ag))
@@ -385,7 +412,7 @@ object TargetTabContents {
           height = coreHeight,
           minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
           maxConstraints = (coreWidth / 2, 0),
-          onResize = treeResize,
+          onResize = panelsResize,
           resizeHandles = List(ResizeHandleAxis.East),
           content = tree(asterismGroupWithObs),
           clazz = ExploreStyles.ResizableSeparator
@@ -402,39 +429,43 @@ object TargetTabContents {
     body.withRef(resize.ref)
   }
 
+  var u = 0
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
       .useStateView(TargetVisualOptions.Default)
-      .useStateView(defaultLayout)
-      .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
-        implicit val ctx = props.ctx
-        _ =>
-          Callback.log("HEM") *>
-            TabGridPreferencesQuery
-              .queryWithDefault[IO](props.userId,
-                                    GridLayoutSection.TargetLayout,
-                                    ResizableSection.TargetsTree,
-                                    (Constants.InitialTreeWidth.toInt, defaultLayout)
-              )
-              .attempt
-              .flatMap {
-                case Right((w, l)) =>
-                  pprint.pprintln(l)
-                  pprint.pprintln(mergeMap(layout.get, l))
-                  (panels
-                    .mod(
-                      TwoPanelState.treeWidth[ObsIdSet].replace(w)
-                    ) *> layout.set(mergeMap(layout.get, l)))
-                    .to[IO]
-                case Left(_)       => IO.unit
-              }
-              .runAsync
-      }
       .useResizeDetector()
+      .useStateView(proportionalLayouts)
+      .useEffectWithDepsBy((_, _, _, r, _) => r.height) {
+        (_, _, _, _, l) =>
+          h =>
+            h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
+      }
+      // .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) { (props, panels, _, _, layout) =>
+      //   implicit val ctx = props.ctx
+      //   _ =>
+      //     TabGridPreferencesQuery
+      //       .queryWithDefault[IO](props.userId,
+      //                             GridLayoutSection.TargetLayout,
+      //                             ResizableSection.TargetsTree,
+      //                             (Constants.InitialTreeWidth.toInt, defaultLayout)
+      //       )
+      //       .attempt
+      //       .flatMap {
+      //         case Right((w, l)) =>
+      //           (panels
+      //             .mod(
+      //               TwoPanelState.treeWidth[ObsIdSet].replace(w)
+      //             ) *> layout.set(mergeMap(layout.get, l)))
+      //             .to[IO]
+      //         case Left(_)       => IO.unit
+      //       }
+      //       .runAsync
+      // }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, layout, resize, debouncer) =>
+      .render { (props, tps, opts, resize, layout, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
           Reuse(renderFn _)(props, tps, opts, layout, resize, debouncer)

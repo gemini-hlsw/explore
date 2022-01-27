@@ -34,7 +34,7 @@ import scala.scalajs.js.|
 
 final case class TileController(
   userId:           Option[User.Id],
-  coreWidth:        Int,
+  gridWidth:        Int,
   defaultLayout:    LayoutsMap,
   layoutMap:        View[LayoutsMap],
   tiles:            List[Tile],
@@ -124,9 +124,9 @@ object TileController {
             }
 
         ResponsiveReactGridLayout(
-          width = p.coreWidth,
-          margin = (5, 5),
-          containerPadding = (5, 0),
+          width = p.gridWidth,
+          margin = (Constants.GridRowPadding, Constants.GridRowPadding),
+          containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
           onLayoutChange =
