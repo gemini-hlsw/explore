@@ -265,7 +265,7 @@ object SkyPlotNight {
             .data(seriesData)
             .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
 
-        def options = Options()
+        val options = Options()
           .setChart(
             ChartOptions()
               .setHeight(resize.height.getOrElse(1).toDouble)

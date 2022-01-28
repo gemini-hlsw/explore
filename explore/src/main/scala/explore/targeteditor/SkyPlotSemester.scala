@@ -25,6 +25,8 @@ import lucuma.core.model.Semester
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
+import lucuma.ui.reusability._
+import explore.model.reusability._
 import org.typelevel.cats.time._
 import react.common._
 import react.highcharts.Chart
@@ -95,13 +97,14 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
 object SkyPlotSemester {
   type Props = SkyPlotSemester
 
-  case class State(cancelToken: Option[IO[Unit]])
-
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+  implicit val propsReuse: Reusability[Props]           = Reusability.derive
+  implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
 
   val component =
     ScalaFnComponent
@@ -109,7 +112,7 @@ object SkyPlotSemester {
       .useStateView(none[IO[Unit]])
       .useResizeDetector()
       // This component can't be updated, it must be rerendered. Don't add reuse
-      .render { (props, cancel, resize) =>
+      .renderWithReuse { (props, cancel, resize) =>
         implicit val ct = props.ctx
 
         val plotter = SemesterPlotCalc(props.semester, props.site)
@@ -238,7 +241,7 @@ object SkyPlotSemester {
               .toJSArray
           )
 
-        <.span(
+        <.div(
           Chart(
             options,
             chart =>
@@ -246,7 +249,8 @@ object SkyPlotSemester {
                 cancel.set(cancelToken.some).to[IO]
               )).runAsync
           )
-            .withKey(props.toString)
+            .withKey(s"$props-$resize")
+            .when(resize.height.isDefined)
         )
           .withRef(resize.ref)
       }
