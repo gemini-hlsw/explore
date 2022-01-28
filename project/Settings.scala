@@ -29,7 +29,7 @@ object Settings {
     val lucumaSchemas     = "0.9.0"
     val lucumaSSO         = "0.0.14"
     val monocle           = "3.1.0"
-    val mouse             = "1.0.8"
+    val mouse             = "1.0.9"
     val mUnit             = "0.7.29"
     val mUnitCatsEffect   = "1.0.7"
     val reactAladin       = "0.12.1"
