@@ -101,23 +101,23 @@ object TargetTabContents {
     )
   )
 
+  def layoutLens(height: Int) =
+    layoutItemHeight
+      .replace(height)
+      .andThen(layoutItemMaxHeight.replace(2 * height))
+      .andThen(layoutItemMinHeight.replace(height / 2))
+
   private def scaleLayout(l: Layout, h: Int): Layout =
     layoutItems.modify { l =>
       l.i match {
         case r if r === TargetId.value =>
           val height =
-            (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + 2*Constants.GridRowPadding)
-          (layoutItemHeight
-            .replace(height)
-            .andThen(layoutItemMaxHeight.replace(2 * height))
-            .andThen(layoutItemMinHeight.replace(height / 2)))(l)
+            (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
+          layoutLens(height)(l)
         case r if r === PlotId.value   =>
           val height =
-            (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + 2*Constants.GridRowPadding)
-          (layoutItemHeight
-            .replace(height)
-            .andThen(layoutItemMaxHeight.replace(2 * height))
-            .andThen(layoutItemMinHeight.replace(height / 2)))(l)
+            (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
+          layoutLens(height)(l)
         case _                         => l
       }
     }(l)
@@ -438,10 +438,8 @@ object TargetTabContents {
       .useStateView(TargetVisualOptions.Default)
       .useResizeDetector()
       .useStateView(proportionalLayouts)
-      .useEffectWithDepsBy((_, _, _, r, _) => r.height) {
-        (_, _, _, _, l) =>
-          h =>
-            h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
+      .useEffectWithDepsBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
+        h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
       }
       // .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) { (props, panels, _, _, layout) =>
       //   implicit val ctx = props.ctx
@@ -465,7 +463,7 @@ object TargetTabContents {
       //       .runAsync
       // }
       .useSingleEffect(debounce = 1.second)
-      .render { (props, tps, opts, resize, layout, debouncer) =>
+      .renderWithReuse { (props, tps, opts, resize, layout, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
           Reuse(renderFn _)(props, tps, opts, layout, resize, debouncer)

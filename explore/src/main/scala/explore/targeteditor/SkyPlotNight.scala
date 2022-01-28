@@ -23,6 +23,7 @@ import lucuma.ui.reusability._
 import react.common._
 import react.highcharts.Chart
 import react.moon.MoonPhase
+import react.resizeDetector._
 import react.resizeDetector.hooks._
 import shapeless._
 
@@ -154,12 +155,15 @@ object SkyPlotNight {
         .setZIndex(1)
     )
 
+  implicit val reusabilityUseResizeDetectorReturn: Reusability[UseResizeDetectorReturn] =
+    Reusability.never
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(HashSet.from(Enumerated[ElevationSeries].all))
       .useResizeDetector()
-      .render { (props, shownSeries, resize) =>
+      .renderWithReuse { (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ + series) >>
             Callback(
@@ -261,10 +265,10 @@ object SkyPlotNight {
             .data(seriesData)
             .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
 
-        val options = Options()
+        def options = Options()
           .setChart(
             ChartOptions()
-              .setHeight(resize.height.getOrElse(10).toDouble)
+              .setHeight(resize.height.getOrElse(1).toDouble)
               .setStyledMode(true)
               .setAlignTicks(false)
           )
@@ -387,11 +391,10 @@ object SkyPlotNight {
         val (moonPhase, moonIllum) = skyCalcResults(
           skyCalcResults.length / 2
         ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
-        // println(resize.height)
-        // org.scalajs.dom.window.console.log(resize.ref.raw.current)
 
         <.div(
-          Chart(options).withKey(props.toString),
+          // Include the size in the key
+          Chart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
           <.div(ExploreStyles.MoonPhase)(
             <.span(
               MoonPhase(phase = moonPhase,
