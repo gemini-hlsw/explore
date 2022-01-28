@@ -136,6 +136,7 @@ object TargetTabContents {
     props:                Props,
     panels:               View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
+    defaultLayouts:              LayoutsMap,
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
@@ -374,7 +375,7 @@ object TargetTabContents {
       TileController(
         props.userId,
         coreWidth,
-        null,
+        defaultLayouts,
         layouts,
         List(testTile, skyPlotTile),
         GridLayoutSection.TargetLayout,
@@ -438,7 +439,11 @@ object TargetTabContents {
       .useStateView(TargetVisualOptions.Default)
       .useResizeDetector()
       .useStateView(proportionalLayouts)
-      .useEffectWithDepsBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
+      .useMemoBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
+        // Memoize the initial result
+        h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
+      }
+      .useEffectWithDepsBy((_, _, _, r, _, _) => r.height) { (_, _, _, _, l, _) => h =>
         h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
       }
       // .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) { (props, panels, _, _, layout) =>
@@ -463,10 +468,10 @@ object TargetTabContents {
       //       .runAsync
       // }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, resize, layout, debouncer) =>
+      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
-          Reuse(renderFn _)(props, tps, opts, layout, resize, debouncer)
+          Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
         )
       }
 

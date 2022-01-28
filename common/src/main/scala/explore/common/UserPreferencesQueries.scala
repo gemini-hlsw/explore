@@ -131,7 +131,7 @@ object UserPreferencesQueries {
       userId.traverse { uid =>
         execute[F](
           layouts.layouts.flatMap { bl =>
-            val rl = bl.layout.l.collect {
+            bl.layout.l.collect {
               case i if i.i.nonEmpty =>
                 GridLayoutPositionsInsertInput(
                   user_id = uid.show.assign,
@@ -144,8 +144,6 @@ object UserPreferencesQueries {
                   tile = i.i.getOrElse("").assign
                 )
             }
-            println(rl)
-            rl
           }
         ).adaptErr { r => println(r); r }.attempt
       }.void
