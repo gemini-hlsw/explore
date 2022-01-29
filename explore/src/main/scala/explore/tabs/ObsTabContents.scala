@@ -475,7 +475,7 @@ object ObsTabContents {
                 (panels
                   .mod(
                     TwoPanelState.treeWidth[Observation.Id].replace(w)
-                  ) *> layout.set(mergeMap(layout.get, l)))
+                  ) *> layout.mod(o => mergeMap(o, l)))
                   .to[IO]
               case Left(_)       => IO.unit
             }

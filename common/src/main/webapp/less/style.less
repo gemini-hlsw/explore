@@ -966,6 +966,7 @@ tfoot {
 .aladin-container-body {
   grid-area: aladin;
   margin-bottom: 0.2em;
+  background: pink;
 }
 
 .aladin-status-fov {
@@ -1069,6 +1070,17 @@ tfoot {
   }
 }
 
+.target-tile-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.target-asterism-editor {
+  height: 100%;
+  align-self: stretch;
+  outline: 3px solid pink !important;
+}
+
 .target-grid {
   display: grid;
   grid-gap: 1em;
@@ -1090,7 +1102,7 @@ tfoot {
 
   .target-aladin-cell {
     grid-row: span 3;
-    max-height: 500px;
+    max-height: 100px;
   }
 
 }

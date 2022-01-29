@@ -24,6 +24,7 @@ import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.reusability._
+import explore.model.layout.unsafe._
 import explore.observationtree.AsterismGroupObsList
 import explore.targeteditor.AsterismEditor
 import explore.undo._
@@ -136,7 +137,7 @@ object TargetTabContents {
     props:                Props,
     panels:               View[TwoPanelState[ObsIdSet]],
     options:              View[TargetVisualOptions],
-    defaultLayouts:              LayoutsMap,
+    defaultLayouts:       LayoutsMap,
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
@@ -311,7 +312,12 @@ object TargetTabContents {
           asterismView.zoom(optional)
         }
 
-      val targetEditorTile = Tile(TargetId, title, backButton.some, canMaximize = true)(
+      val targetEditorTile = Tile(TargetId,
+                                  title,
+                                  backButton.some,
+                                  canMinimize = true,
+                                  bodyClass = ExploreStyles.TargetTileBody.some
+      )(
         Reuse
           .by(
             (props.userId,
@@ -324,24 +330,18 @@ object TargetTabContents {
             )
           )((renderInTitle: Tile.RenderInTitle) =>
             props.userId.map { uid =>
-              <.div(
-                AsterismEditor(uid,
-                               idsToEdit,
-                               asterismView,
-                               props.targetsUndoStacks,
-                               props.searching,
-                               options,
-                               props.hiddenColumns,
-                               renderInTitle
-                )
+              AsterismEditor(uid,
+                             idsToEdit,
+                             asterismView,
+                             props.targetsUndoStacks,
+                             props.searching,
+                             options,
+                             props.hiddenColumns,
+                             renderInTitle
               )
             }: VdomNode
           )
           .reuseAlways
-      )
-
-      val testTile = Tile(TargetId, s"Test $focusedObs")(
-        Reuse.by(focusedObs)(_ => <.div("ABC").reuseAlways)
       )
 
       val skyPlotTile =
@@ -377,7 +377,7 @@ object TargetTabContents {
         coreWidth,
         defaultLayouts,
         layouts,
-        List(testTile, skyPlotTile),
+        List(targetEditorTile, skyPlotTile),
         GridLayoutSection.TargetLayout,
         None
       )
@@ -443,30 +443,33 @@ object TargetTabContents {
         // Memoize the initial result
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
       }
-      .useEffectWithDepsBy((_, _, _, r, _, _) => r.height) { (_, _, _, _, l, _) => h =>
-        h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
-      }
-      // .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) { (props, panels, _, _, layout) =>
-      //   implicit val ctx = props.ctx
-      //   _ =>
-      //     TabGridPreferencesQuery
-      //       .queryWithDefault[IO](props.userId,
-      //                             GridLayoutSection.TargetLayout,
-      //                             ResizableSection.TargetsTree,
-      //                             (Constants.InitialTreeWidth.toInt, defaultLayout)
-      //       )
-      //       .attempt
-      //       .flatMap {
-      //         case Right((w, l)) =>
-      //           (panels
-      //             .mod(
-      //               TwoPanelState.treeWidth[ObsIdSet].replace(w)
-      //             ) *> layout.set(mergeMap(layout.get, l)))
-      //             .to[IO]
-      //         case Left(_)       => IO.unit
-      //       }
-      //       .runAsync
+      // .useEffectWithDepsBy((_, _, _, r, _, _) => r.height) { (_, _, _, _, l, _) => h =>
+      //   h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
       // }
+      .useEffectWithDepsBy((p, _, _, r, _, _) => (p.userId, r.height)) {
+        (props, panels, _, _, layout, defaultLayout) =>
+          implicit val ctx = props.ctx
+          (params: (Option[User.Id], Option[Int])) => {
+            val (u, h) = params
+            TabGridPreferencesQuery
+              .queryWithDefault[IO](u,
+                                    GridLayoutSection.TargetLayout,
+                                    ResizableSection.TargetsTree,
+                                    (Constants.InitialTreeWidth.toInt, defaultLayout)
+              )
+              .attempt
+              .flatMap {
+                case Right((w, l)) =>
+                  (panels
+                    .mod(
+                      TwoPanelState.treeWidth[ObsIdSet].replace(w)
+                    ) *> layout.mod(o => mergeMap(o, l)))
+                    .to[IO]
+                case Left(_)       =>
+                  h.map(h => layout.mod(l => scaledLayout(h, l)).to[IO]).getOrElse(IO.unit)
+              }
+          }
+      }
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx

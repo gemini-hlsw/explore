@@ -111,13 +111,15 @@ object TileController {
             .mod {
               case l if l.i.forall(_ === id.value) =>
                 if (st === TileSizeState.Minimized)
-                  l.copy(h = 1, isResizable = false)
+                  l.copy(h = 1, minH = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight = unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
                   // restore the resizable state
                   val resizable     =
                     tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
                   // TODO: Restore to the previous size
+                  println(scala.math.max(l.minH.getOrElse(1), defaultHeight))
+                  println(defaultHeight)
                   l.copy(h = defaultHeight,
                          isResizable = resizable,
                          minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)

@@ -97,7 +97,8 @@ object AsterismEditor {
             (mod, _) => selectedTargetIdState.modState(mod)
           )
 
-        <.div(
+        React.Fragment(
+          // ExploreStyles.AsterismEditor,
           props.renderInTitle(
             TargetSelectionPopup(
               trigger = Reuse.by(adding.value)(
@@ -156,7 +157,6 @@ object AsterismEditor {
                 }
               )
             }
-            .whenDefined
         )
       }
 }

@@ -184,7 +184,10 @@ object ExploreStyles {
   val ConstraintsTile: Css  = Css("constraints-tile")
 
   // The Target tab contents
-  val TargetGrid: Css          = Css("target-grid")
+  val TargetGrid: Css     = Css("target-grid")
+  val TargetTileBody: Css = Css("target-tile-body")
+  val AsterismEditor: Css = Css("target-asterism-editor")
+
   val TargetAladinCell: Css    = Css("target-aladin-cell")
   val TargetAladin: Css        = Css("aladin-target")
   // val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
