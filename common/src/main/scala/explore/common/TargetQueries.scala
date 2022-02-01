@@ -63,7 +63,7 @@ object TargetQueries {
 
   def toTargetEndo(setSidereal: Endo[SiderealInput]): Endo[EditTargetInput] = eti =>
     eti match {
-      case EditTargetInput(_, _, _, Assign(editSidereal), _) =>
+      case EditTargetInput(_, _, _, Assign(editSidereal), _, _) =>
         eti.copy(sidereal = setSidereal(editSidereal).assign)
       case _                                                 => eti
     }

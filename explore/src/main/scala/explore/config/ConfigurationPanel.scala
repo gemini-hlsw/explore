@@ -105,7 +105,7 @@ object ConfigurationPanel {
         val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
         val spectroscopy = requirementsViewSet(
-          ScienceRequirementsData.spectroscopyRequirements,
+          ScienceRequirementsData.spectroscopy,
           UpdateScienceRequirements.spectroscopyRequirements
         )
 

@@ -77,7 +77,7 @@ object AsterismQueries {
                               obsR.status,
                               obsR.activeStatus,
                               obsR.plannedTime.execution,
-                              obsR.targets.asterism.map(_.id).toSet
+                              obsR.targetEnvironment.asterism.map(_.id).toSet
     )
 
   private val queryToAsterismGroupWithObsGetter
@@ -122,7 +122,7 @@ object AsterismQueries {
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
     val input = BulkEditTargetEnvironmentInput(
       selectObservations = obsIds.assign,
-      edit = EditTargetEnvironmentInput(asterism = targetIds.assign)
+      edit = TargetEnvironmentInput(asterism = targetIds.assign)
     )
     UpdateTargetEnvironmentMutation.execute[F](input).void
   }

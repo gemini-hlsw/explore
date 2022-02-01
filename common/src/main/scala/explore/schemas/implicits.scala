@@ -104,105 +104,105 @@ object implicits {
   }
 
   implicit class IntegratedBandNormalizedOps(b: SpectralDefinition.BandNormalized[Integrated]) {
-    def toCreateInput: CreateBandNormalizedIntegrated =
-      CreateBandNormalizedIntegrated(
-        sed = b.sed.toInput,
+    def toCreateInput: BandNormalizedIntegratedInput =
+      BandNormalizedIntegratedInput(
+        sed = b.sed.toInput.assign,
         brightnesses = b.brightnesses.toList.map { case (band, measure) =>
-          CreateBandBrightnessIntegrated(
+          BandBrightnessIntegratedInput(
             band = band,
-            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value),
-            units = Measure.unitsTagged.get(measure),
+            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+            units = Measure.unitsTagged.get(measure).assign,
             error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
           )
-        }
+        }.assign
       )
   }
 
   implicit class SurfaceBandNormalizedOps(b: SpectralDefinition.BandNormalized[Surface]) {
-    def toCreateInput: CreateBandNormalizedSurface =
-      CreateBandNormalizedSurface(
-        sed = b.sed.toInput,
+    def toCreateInput: BandNormalizedSurfaceInput =
+      BandNormalizedSurfaceInput(
+        sed = b.sed.toInput.assign,
         brightnesses = b.brightnesses.toList.map { case (band, measure) =>
-          CreateBandBrightnessSurface(
+          BandBrightnessSurfaceInput(
             band = band,
-            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value),
-            units = Measure.unitsTagged.get(measure),
+            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+            units = Measure.unitsTagged.get(measure).assign,
             error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
           )
-        }
+        }.assign
       )
   }
 
   implicit class IntegratedEmissionLinesOps(e: SpectralDefinition.EmissionLines[Integrated]) {
-    def toCreateInput: CreateEmissionLinesIntegrated =
-      CreateEmissionLinesIntegrated(
+    def toCreateInput: EmissionLinesIntegratedInput =
+      EmissionLinesIntegratedInput(
         lines = e.lines.toList.map { case (wavelength, line) =>
-          CreateEmissionLineIntegrated(
+          EmissionLineIntegratedInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.value,
-            lineFlux = CreateLineFluxIntegrated(
+            lineWidth = line.lineWidth.value.value.assign,
+            lineFlux = LineFluxIntegratedInput(
               line.lineFlux.value.value,
               Measure.unitsTagged.get(line.lineFlux)
-            )
+            ).assign
           )
-        },
-        fluxDensityContinuum = CreateFluxDensityContinuumIntegrated(
+        }.assign,
+        fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
           value = e.fluxDensityContinuum.value.value,
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        )
+        ).assign
       )
   }
 
   implicit class SurfaceEmissionLinesOps(e: SpectralDefinition.EmissionLines[Surface]) {
-    def toCreateInput: CreateEmissionLinesSurface =
-      CreateEmissionLinesSurface(
+    def toCreateInput: EmissionLinesSurfaceInput =
+      EmissionLinesSurfaceInput(
         lines = e.lines.toList.map { case (wavelength, line) =>
-          CreateEmissionLineSurface(
+          EmissionLineSurfaceInput(
             wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.value,
-            lineFlux = CreateLineFluxSurface(
+            lineWidth = line.lineWidth.value.value.assign,
+            lineFlux = LineFluxSurfaceInput(
               line.lineFlux.value.value,
               Measure.unitsTagged.get(line.lineFlux)
-            )
+            ).assign
           )
-        },
-        fluxDensityContinuum = CreateFluxDensityContinuumSurface(
+        }.assign,
+        fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
           value = e.fluxDensityContinuum.value.value,
           units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        )
+        ).assign
       )
   }
 
   implicit class IntegratedSpectralDefinitionOps(s: SpectralDefinition[Integrated]) {
-    def toCreateInput: CreateSpectralDefinitionIntegrated =
+    def toCreateInput: SpectralDefinitionIntegratedInput =
       s match {
         case b @ SpectralDefinition.BandNormalized(_, _) =>
-          CreateSpectralDefinitionIntegrated(bandNormalized = b.toCreateInput.assign)
+          SpectralDefinitionIntegratedInput(bandNormalized = b.toCreateInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          CreateSpectralDefinitionIntegrated(emissionLines = e.toCreateInput.assign)
+          SpectralDefinitionIntegratedInput(emissionLines = e.toCreateInput.assign)
       }
   }
 
   implicit class SurfaceSpectralDefinitionOps(s: SpectralDefinition[Surface]) {
-    def toCreateInput: CreateSpectralDefinitionSurface =
+    def toCreateInput: SpectralDefinitionSurfaceInput =
       s match {
         case b @ SpectralDefinition.BandNormalized(_, _) =>
-          CreateSpectralDefinitionSurface(bandNormalized = b.toCreateInput.assign)
+          SpectralDefinitionSurfaceInput(bandNormalized = b.toCreateInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          CreateSpectralDefinitionSurface(emissionLines = e.toCreateInput.assign)
+          SpectralDefinitionSurfaceInput(emissionLines = e.toCreateInput.assign)
       }
   }
 
   implicit class SourceProfileOps(s: SourceProfile) {
-    def toCreateInput: CreateSourceProfile =
+    def toCreateInput: SourceProfileInput =
       s match {
         case SourceProfile.Point(definition)          =>
-          CreateSourceProfile(point = definition.toCreateInput.assign)
+          SourceProfileInput(point = definition.toCreateInput.assign)
         case SourceProfile.Uniform(definition)        =>
-          CreateSourceProfile(uniform = definition.toCreateInput.assign)
+          SourceProfileInput(uniform = definition.toCreateInput.assign)
         case SourceProfile.Gaussian(fwhm, definition) =>
-          CreateSourceProfile(gaussian =
-            CreateGaussian(fwhm.toInput, definition.toCreateInput).assign
+          SourceProfileInput(gaussian =
+            GaussianInput(fwhm.toInput.assign, definition.toCreateInput.assign).assign
           )
       }
   }

@@ -62,7 +62,7 @@ object AsterismQueriesGQL {
                   name
                   id
                   objectType
-                }                
+                }
               }
               sourceProfile {
                 point {
@@ -113,7 +113,7 @@ object AsterismQueriesGQL {
                 microseconds
               }
             }
-            targets {
+            targetEnvironment {
               asterism {
                 id
               }

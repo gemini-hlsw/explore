@@ -36,7 +36,7 @@ object ConstraintGroupQueries {
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
 
   private def convertTarget(
-    target: ConstraintGroupObsQuery.Data.Observations.Nodes.Targets.Asterism
+    target: ConstraintGroupObsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
   ): TargetSummary = TargetSummary(target.id, target.name)
 
   type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintGroup]
@@ -57,7 +57,7 @@ object ConstraintGroupQueries {
 
   private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTargetsAndConf =
     ObsSummaryWithTargetsAndConf(obsR.id,
-                                 obsR.targets.asterism.map(convertTarget),
+                                 obsR.targetEnvironment.asterism.map(convertTarget),
                                  obsR.status,
                                  obsR.activeStatus,
                                  obsR.plannedTime.execution

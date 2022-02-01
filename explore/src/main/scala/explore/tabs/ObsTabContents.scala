@@ -369,7 +369,7 @@ object ObsTabContents {
                 props.userId.get,
                 obsId,
                 obsView.map(
-                  _.zoom(ObservationData.targets.andThen(ObservationData.Targets.asterism))
+                  _.zoom(ObservationData.targetEnvironment.andThen(ObservationData.TargetEnvironment.asterism))
                 ),
                 props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
                 props.searching,

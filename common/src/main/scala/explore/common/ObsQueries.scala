@@ -48,9 +48,9 @@ object ObsQueries {
   val ObservationData = ObsEditQuery.Data.Observation
   type ScienceRequirementsData = ObservationData.ScienceRequirements
   val ScienceRequirementsData = ObservationData.ScienceRequirements
-  type Targets                      = ObservationData.Targets
-  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
-  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
+  type Targets                      = ObservationData.TargetEnvironment
+  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
+  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   type ScienceConfigurationData = ObservationData.ScienceConfiguration
   val ScienceConfigurationData = ObservationData.ScienceConfiguration
 
@@ -75,7 +75,7 @@ object ObsQueries {
     disjointZip(ObservationData.scienceRequirements,
                 ObservationData.scienceConfiguration,
                 ObservationData.constraintSet,
-                ObservationData.targets
+                ObservationData.targetEnvironment
     )
       .andThen(GenIso.fields[ScienceData].reverse)
 
@@ -93,7 +93,7 @@ object ObsQueries {
   }
 
   private def convertTarget(
-    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.Asterism
+    target: ProgramObservationsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
   ): TargetSummary =
     TargetSummary(target.id, target.name)
 
@@ -104,7 +104,7 @@ object ObsQueries {
         data.observations.nodes.map(node =>
           ObsSummaryWithTargetsAndConstraints(
             node.id,
-            node.targets.asterism.map(convertTarget),
+            node.targetEnvironment.asterism.map(convertTarget),
             node.constraintSet,
             node.status,
             node.activeStatus,
@@ -143,17 +143,17 @@ object ObsQueries {
   )(implicit
     c:           TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
-    val createER: CreateElevationRangeInput = constraints.elevationRange match {
+    val createER: ElevationRangeInput = constraints.elevationRange match {
       case AirMassRange(min, max)   =>
-        CreateElevationRangeInput(airmassRange =
-          CreateAirmassRangeInput(min = min.value, max = max.value).assign
+        ElevationRangeInput(airmassRange =
+          AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
         )
       case HourAngleRange(min, max) =>
-        CreateElevationRangeInput(hourAngleRange =
-          CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
+        ElevationRangeInput(hourAngleRange =
+          HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
     }
-    val editInput                           = EditConstraintSetInput(
+    val editInput                     = ConstraintSetInput(
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,
       skyBackground = constraints.skyBackground.assign,

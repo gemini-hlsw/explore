@@ -47,11 +47,11 @@ object ConstraintGroupQueriesGQL {
             }
           }
         }
-            
+
         observations(programId: "p-2") {
           nodes {
             id
-            targets {
+            targetEnvironment {
               asterism {
                 id
                 name
@@ -64,7 +64,7 @@ object ConstraintGroupQueriesGQL {
           	    microseconds
           	  }
           	}
-          }              
+          }
         }
       }
       """
