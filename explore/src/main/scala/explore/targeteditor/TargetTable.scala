@@ -160,7 +160,7 @@ object TargetTable {
               )
             )
           ),
-          <.div(ExploreStyles.ExploreTable)(
+          <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
             TargetTableComponent(
               table = Table(celled = true,
                             selectable = true,

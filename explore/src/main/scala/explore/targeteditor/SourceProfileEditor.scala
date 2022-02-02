@@ -10,6 +10,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SourceProfile
 import react.common._
+import explore.components.ui.ExploreStyles
 
 case class SourceProfileEditor(sourceProfile: View[SourceProfile], disabled: Boolean)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)
@@ -21,6 +22,7 @@ object SourceProfileEditor {
 
   val component = ScalaFnComponent.withReuse[Props](props =>
     <.div(
+      ExploreStyles.BrightnessCell,
       props.sourceProfile
         .zoom(SourceProfile.integratedBrightnesses)
         .mapValue(integratedBrightnessesView =>

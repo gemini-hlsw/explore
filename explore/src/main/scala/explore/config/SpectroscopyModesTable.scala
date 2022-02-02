@@ -80,9 +80,9 @@ object SpectroscopyModesTable {
 
   protected val ModesTableDef = TableDef[SpectroscopyModeRow].withSortBy.withBlockLayout
 
-  val decFormat = new DecimalFormat("0.###")
-
   protected val ModesTable = new SUITableVirtuoso(ModesTableDef)
+
+  val decFormat = new DecimalFormat("0.###")
 
   val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
     case ModeDisperser.NoDisperser      => "-"

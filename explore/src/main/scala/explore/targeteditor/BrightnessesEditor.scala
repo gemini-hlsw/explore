@@ -4,6 +4,7 @@
 package explore.targeteditor
 
 import cats.Order._
+import cats.syntax.all._
 import crystal.ViewF
 import crystal.react.View
 import crystal.react.implicits._
@@ -28,6 +29,7 @@ import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
+import react.common.implicits._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
@@ -66,9 +68,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val BrightnessTable = TableDef[RowValue].withSortBy
+  private val BrightnessTable = TableDef[RowValue].withSortBy.withBlockLayout
 
-  private val BrightnessTableComponent = new SUITable(BrightnessTable)
+  private val BrightnessTableComponent = new SUITableVirtuoso(BrightnessTable)
 
   private val deleteButton = Button(
     size = Small,
@@ -97,6 +99,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .Column("band", _._1)
               .setHeader("Band")
               .setCell(_.value.shortName)
+              .setWidth(66)
+              .setMinWidth(66)
+              .setMaxWidth(66)
               .setSortByAuto,
             BrightnessTable
               .Column("value", _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]))
@@ -134,6 +139,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   wrapperClass = ExploreStyles.BrightnessesTableDeletButtonWrapper
                 )
               )
+              .setWidth(46)
+              .setMinWidth(46)
+              .setMaxWidth(46)
           )
         }
       }
@@ -162,77 +170,67 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             )
           )
 
-        val footer = TableFooter(
-          TableRow(
-            TableHeaderCell()(^.colSpan := 4)(
-              <.div(
-                ExploreStyles.BrightnessesTableFooter,
-                newBandView.whenDefined { bandView =>
-                  val addBrightness =
-                    props.brightnesses.mod(brightnesses =>
-                      (brightnesses +
-                        (bandView.get ->
-                          defaultBandUnits(bandView.get).withValueTagged(BrightnessValue(0))))
-                    )
+        val footer =
+          <.div(
+            ExploreStyles.BrightnessesTableFooter,
+            newBandView.whenDefined { bandView =>
+              val addBrightness =
+                props.brightnesses.mod(brightnesses =>
+                  (brightnesses +
+                    (bandView.get ->
+                      defaultBandUnits(bandView.get).withValueTagged(BrightnessValue(0))))
+                )
 
-                  React.Fragment(
-                    EnumViewSelect(
-                      id = "NEW_BAND",
-                      value = bandView,
-                      exclude = state.value.usedBands,
-                      clazz = ExploreStyles.FlatFormField,
-                      disabled = props.disabled
-                    ),
-                    Button(size = Mini,
-                           compact = true,
-                           onClick = addBrightness,
-                           disabled = props.disabled
-                    )(^.marginLeft := "5px")(
-                      Icons.New
-                    )
-                  )
-
-                  React.Fragment(
-                    EnumViewSelect(
-                      id = "NEW_BAND",
-                      value = bandView,
-                      exclude = state.value.usedBands,
-                      clazz = ExploreStyles.FlatFormField,
-                      disabled = props.disabled
-                    ),
-                    Button(size = Mini,
-                           compact = true,
-                           onClick = addBrightness,
-                           disabled = props.disabled
-                    )(^.marginLeft := "5px")(
-                      Icons.New
-                    )
-                  )
-                }
+              React.Fragment(
+                EnumViewSelect(
+                  id = "NEW_BAND",
+                  value = bandView,
+                  exclude = state.value.usedBands,
+                  clazz = ExploreStyles.FlatFormField,
+                  disabled = props.disabled
+                ),
+                Button(size = Mini,
+                       compact = true,
+                       onClick = addBrightness,
+                       disabled = props.disabled
+                )(^.marginLeft := "5px")(
+                  Icons.New
+                )
               )
-            )
+
+              React.Fragment(
+                EnumViewSelect(
+                  id = "NEW_BAND",
+                  value = bandView,
+                  exclude = state.value.usedBands,
+                  clazz = ExploreStyles.FlatFormField,
+                  disabled = props.disabled
+                ),
+                Button(size = Mini,
+                       compact = true,
+                       onClick = addBrightness,
+                       disabled = props.disabled
+                )(^.marginLeft := "5px")(
+                  Icons.New
+                )
+              )
+            }
           )
-        )
 
         // Put it inside a form to get the SUI styles right
         Form(as = <.div, size = Small)(
           <.div(
-            ExploreStyles.BrightnessesTableSection,
+            ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer,
             <.label("Brightnesses"),
-            Segment(attached = SegmentAttached.Attached,
-                    compact = true,
-                    clazz = ExploreStyles.BrightnessesTableContainer
-            )(
-              BrightnessTableComponent(
-                Table(celled = true,
-                      selectable = true,
-                      striped = true,
-                      compact = TableCompact.Very
-                ),
-                header = TableHeader(),
-                footer = footer.vdomElement
-              )(tableInstance)
-            )
+            BrightnessTableComponent.Component(
+              table = Table(celled = true,
+                            selectable = true,
+                            striped = true,
+                            compact = TableCompact.Very
+              ),
+              header = TableHeader()
+            )(tableInstance),
+            footer
           )
         )
 
