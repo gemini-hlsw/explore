@@ -119,7 +119,7 @@ object ConstraintsPanel {
         label:     String,
         helpId:    Help.Id,
         lens:      Lens[ConstraintSet, A],
-        remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+        remoteSet: A => ConstraintSetInput => ConstraintSetInput
       ) = {
         val id = label.toLowerCase().replaceAll(" ", "-")
         ReactFragment(

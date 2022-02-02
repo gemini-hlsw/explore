@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import explore.model.ConstraintsSummary
-import lucuma.core.math.Angle
 import lucuma.schemas.ObservationDB
 
 import java.time
@@ -25,7 +24,7 @@ object ObsQueriesGQL {
         observations(programId: "p-2") {
           nodes {
             id
-            targets {
+            targetEnvironment {
               asterism {
                 id
                 name
@@ -55,12 +54,11 @@ object ObsQueriesGQL {
                 skyBackground
                 waterVapor
                 elevationRange {
-                  type: __typename
-                  ... on AirMassRange {
+                  airmassRange {
                     min
                     max
                   }
-                  ... on HourAngleRange {
+                  hourAngleRange {
                     minHours
                     maxHours
                   }
@@ -143,7 +141,7 @@ object ObsQueriesGQL {
       query($obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
-          targets {
+          targetEnvironment {
             asterism {
               id
               name
@@ -173,7 +171,7 @@ object ObsQueriesGQL {
                   name
                   id
                   objectType
-                }                
+                }
               }
               sourceProfile {
                 point {
@@ -203,7 +201,7 @@ object ObsQueriesGQL {
                     }
                   }
                 }
-              }            
+              }
             }
           }
           constraintSet {
@@ -212,12 +210,11 @@ object ObsQueriesGQL {
             skyBackground
             waterVapor
             elevationRange {
-              type: __typename
-              ... on AirMassRange {
+              airmassRange {
                 min
                 max
               }
-              ... on HourAngleRange {
+              hourAngleRange {
                 minHours
                 maxHours
               }
@@ -225,7 +222,7 @@ object ObsQueriesGQL {
           }
           scienceRequirements {
             mode
-            spectroscopyRequirements {
+            spectroscopy {
               wavelength {
                 picometers
               }
@@ -245,17 +242,17 @@ object ObsQueriesGQL {
             }
           }
           scienceConfiguration {
-            ... on GmosNorthLongSlit {
-              filterN:filter
-              disperserN:disperser
-              slitWidthN:slitWidth {
+            gmosNorthLongSlit {
+              filter
+              disperser
+              slitWidth {
                 microarcseconds
               }
             }
-            ... on GmosSouthLongSlit {
-              filterS:filter
-              disperserS:disperser
-              slitWidthS:slitWidth {
+            gmosSouthLongSlit {
+              filter
+              disperser
+              slitWidth {
                 microarcseconds
               }
             }
@@ -266,13 +263,13 @@ object ObsQueriesGQL {
 
     object Data {
       object Observation {
-        object Targets {
+        object TargetEnvironment {
           type Asterism = model.TargetWithId
         }
         type ConstraintSet = model.ConstraintSet
 
         object ScienceRequirements {
-          object SpectroscopyRequirements {
+          object Spectroscopy {
             type Wavelength         = lucuma.core.math.Wavelength
             type SignalToNoiseAt    = lucuma.core.math.Wavelength
             type WavelengthCoverage = lucuma.core.math.Wavelength
@@ -280,16 +277,11 @@ object ObsQueriesGQL {
           }
         }
 
-        object ScienceConfiguration {
-          object GmosNorthLongSlit {
-            type SlitWidthN = Angle
-          }
-          object GmosSouthLongSlit {
-            type SlitWidthS = Angle
-          }
-        }
+        type ScienceConfiguration = model.ScienceConfiguration
+
       }
     }
+
   }
 
   @GraphQL
@@ -317,7 +309,7 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsIds: [ObservationId!]!, $input: EditConstraintSetInput!){
+      mutation ($obsIds: [ObservationId!]!, $input: ConstraintSetInput!){
         updateConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
           id
         }
@@ -328,7 +320,7 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsIds: ObservationId!, $input: EditScienceRequirementsInput!){
+      mutation ($obsIds: ObservationId!, $input: ScienceRequirementsInput!){
         updateScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
           id
         }
@@ -339,8 +331,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceConfigurationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: CreateObservationConfigInput){
-        updateObservation(input: {observationId: $obsId, scienceConfiguration: {set: $input}}) {
+      mutation ($obsId: ObservationId!, $input: ScienceConfigurationInput){
+        updateObservation(input: {observationId: $obsId, scienceConfiguration: $input}) {
           id
         }
       }

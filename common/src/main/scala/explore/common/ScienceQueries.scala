@@ -12,6 +12,9 @@ import crystal.react.implicits._
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
+import explore.model.GmosNorthLongSlit
+import explore.model.GmosSouthLongSlit
+import explore.model.ScienceConfiguration
 import explore.undo.UndoSetter
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
@@ -30,27 +33,27 @@ object ScienceQueries {
     def apply[A](
       modelGet:  ScienceRequirementsData => A,
       modelMod:  (A => A) => ScienceRequirementsData => ScienceRequirementsData,
-      remoteSet: A => EditScienceRequirementsInput => EditScienceRequirementsInput
+      remoteSet: A => ScienceRequirementsInput => ScienceRequirementsInput
     ): View[A] =
       scienceRequirementsUndo
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateScienceRequirementsMutation
-            .execute(obsId, remoteSet(value)(EditScienceRequirementsInput()))
+            .execute(obsId, remoteSet(value)(ScienceRequirementsInput()))
             .void
             .runAsync
         )
 
     def apply[A](
       lens:      Lens[ScienceRequirementsData, A],
-      remoteSet: A => EditScienceRequirementsInput => EditScienceRequirementsInput
+      remoteSet: A => ScienceRequirementsInput => ScienceRequirementsInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
   }
 
   object UpdateScienceRequirements {
-    def mode(n: ScienceMode): Endo[EditScienceRequirementsInput] =
-      EditScienceRequirementsInput.mode.replace(n.assign)
+    def mode(n: ScienceMode): Endo[ScienceRequirementsInput] =
+      ScienceRequirementsInput.mode.replace(n.assign)
 
     def angle(w: Angle): FocalPlaneAngleInput =
       (FocalPlaneAngleInput.microarcseconds := w.toMicroarcseconds.assign)
@@ -66,14 +69,19 @@ object ScienceQueries {
 
     def spectroscopyRequirements(
       op: SpectroscopyRequirementsData
-    ): Endo[EditScienceRequirementsInput] = {
+    ): Endo[ScienceRequirementsInput] = {
       val input =
         for {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.signalToNoise      := op.signalToNoise.orUnassign
+          _ <-
+            SpectroscopyScienceRequirementsInput.resolution := op.resolution
+              .map(_.value)
+              .orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.signalToNoise      := op.signalToNoise
+                 .map(_.value)
+                 .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.signalToNoiseAt    := op.signalToNoiseAt
                  .map(wavelength)
                  .orUnassign
@@ -86,38 +94,38 @@ object ScienceQueries {
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.capabilities       := op.capabilities.orUnassign
         } yield ()
-      EditScienceRequirementsInput.spectroscopyRequirements.replace(
+      ScienceRequirementsInput.spectroscopy.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign
       )
     }
   }
 
-  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfigurationData])(
-    implicit client:                 TransactionalClient[IO, ObservationDB]
+  implicit class SlitWidthOps(val b: Angle) extends AnyVal {
+    def toSlitWidthInput: SlitWidthInput =
+      SlitWidthInput(b.toMicroarcseconds.assign)
+  }
+
+  implicit class ScienceConfigurationOps(val b: ScienceConfiguration) extends AnyVal {
+    def toScienceInput: ScienceConfigurationInput =
+      b match {
+        case GmosNorthLongSlit(f, d, s) =>
+          ScienceConfigurationInput(gmosNorthLongSlit =
+            GmosNorthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+          )
+        case GmosSouthLongSlit(f, d, s) =>
+          ScienceConfigurationInput(gmosSouthLongSlit =
+            GmosSouthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+          )
+      }
+  }
+
+  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfiguration])(implicit
+    client:                          TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
     UpdateScienceConfigurationMutation
       .execute[IO](
         obsId,
-        conf
-          .map(_ match {
-            case ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, slitWidth) =>
-              CreateObservationConfigInput(gmosNorthLongSlit =
-                CreateGmosNorthLongSlit(
-                  filter.orUnassign,
-                  disperser,
-                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign)
-                ).assign
-              )
-            case ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, slitWidth) =>
-              CreateObservationConfigInput(gmosSouthLongSlit =
-                CreateGmosSouthLongSlit(
-                  filter.orUnassign,
-                  disperser,
-                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign)
-                ).assign
-              )
-          })
-          .orUnassign
+        conf.map(_.toScienceInput).orUnassign
       )
       .void
 }

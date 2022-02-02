@@ -29,12 +29,11 @@ object ConstraintGroupQueriesGQL {
               skyBackground
               waterVapor
               elevationRange {
-                type: __typename
-                ... on AirMassRange {
+                airmassRange {
                   min
                   max
                 }
-                ... on HourAngleRange {
+                hourAngleRange {
                   minHours
                   maxHours
                 }
@@ -43,15 +42,15 @@ object ConstraintGroupQueriesGQL {
             observations {
               nodes {
                 id
-              } 
+              }
             }
           }
         }
-            
+
         observations(programId: "p-2") {
           nodes {
             id
-            targets {
+            targetEnvironment {
               asterism {
                 id
                 name
@@ -64,7 +63,7 @@ object ConstraintGroupQueriesGQL {
           	    microseconds
           	  }
           	}
-          }              
+          }
         }
       }
       """

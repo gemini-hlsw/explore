@@ -20,6 +20,7 @@ import explore.model.ConstraintSet
 import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.ScienceConfiguration
 import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
@@ -48,34 +49,32 @@ object ObsQueries {
   val ObservationData = ObsEditQuery.Data.Observation
   type ScienceRequirementsData = ObservationData.ScienceRequirements
   val ScienceRequirementsData = ObservationData.ScienceRequirements
-  type Targets                      = ObservationData.Targets
-  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
-  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.SpectroscopyRequirements
-  type ScienceConfigurationData = ObservationData.ScienceConfiguration
-  val ScienceConfigurationData = ObservationData.ScienceConfiguration
+  type Targets                      = ObservationData.TargetEnvironment
+  type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
+  val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
   case class ScienceData(
     requirements:  ScienceRequirementsData,
-    configuration: Option[ScienceConfigurationData],
+    configuration: Option[ScienceConfiguration],
     constraints:   ConstraintSet,
     targets:       Targets
   )
 
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]           =
+    val requirements: Lens[ScienceData, ScienceRequirementsData]       =
       Focus[ScienceData](_.requirements)
-    val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] =
+    val configuration: Lens[ScienceData, Option[ScienceConfiguration]] =
       Focus[ScienceData](_.configuration)
-    val constraints: Lens[ScienceData, ConstraintSet]                      =
+    val constraints: Lens[ScienceData, ConstraintSet]                  =
       Focus[ScienceData](_.constraints)
-    implicit val reusabilityScienceData: Reusability[ScienceData]          = Reusability.derive
+    implicit val reusabilityScienceData: Reusability[ScienceData]      = Reusability.derive
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
     disjointZip(ObservationData.scienceRequirements,
                 ObservationData.scienceConfiguration,
                 ObservationData.constraintSet,
-                ObservationData.targets
+                ObservationData.targetEnvironment
     )
       .andThen(GenIso.fields[ScienceData].reverse)
 
@@ -93,7 +92,7 @@ object ObsQueries {
   }
 
   private def convertTarget(
-    target: ProgramObservationsQuery.Data.Observations.Nodes.Targets.Asterism
+    target: ProgramObservationsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
   ): TargetSummary =
     TargetSummary(target.id, target.name)
 
@@ -104,7 +103,7 @@ object ObsQueries {
         data.observations.nodes.map(node =>
           ObsSummaryWithTargetsAndConstraints(
             node.id,
-            node.targets.asterism.map(convertTarget),
+            node.targetEnvironment.asterism.map(convertTarget),
             node.constraintSet,
             node.status,
             node.activeStatus,
@@ -143,17 +142,17 @@ object ObsQueries {
   )(implicit
     c:           TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
-    val createER: CreateElevationRangeInput = constraints.elevationRange match {
+    val createER: ElevationRangeInput = constraints.elevationRange match {
       case AirMassRange(min, max)   =>
-        CreateElevationRangeInput(airmassRange =
-          CreateAirmassRangeInput(min = min.value, max = max.value).assign
+        ElevationRangeInput(airmassRange =
+          AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
         )
       case HourAngleRange(min, max) =>
-        CreateElevationRangeInput(hourAngleRange =
-          CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
+        ElevationRangeInput(hourAngleRange =
+          HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
     }
-    val editInput                           = EditConstraintSetInput(
+    val editInput                     = ConstraintSetInput(
       imageQuality = constraints.imageQuality.assign,
       cloudExtinction = constraints.cloudExtinction.assign,
       skyBackground = constraints.skyBackground.assign,

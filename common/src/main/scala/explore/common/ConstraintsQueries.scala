@@ -27,50 +27,50 @@ object ConstraintsQueries {
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
-      remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+      remoteSet: A => ConstraintSetInput => ConstraintSetInput
     ): View[A] =
       undoCtx
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateConstraintSetMutation
-            .execute(obsIds, remoteSet(value)(EditConstraintSetInput()))
+            .execute(obsIds, remoteSet(value)(ConstraintSetInput()))
             .void
             .runAsync
         )
 
     def apply[A](
       lens:      Lens[ConstraintSet, A],
-      remoteSet: A => EditConstraintSetInput => EditConstraintSetInput
+      remoteSet: A => ConstraintSetInput => ConstraintSetInput
     ): View[A] =
       apply(lens.get, lens.modify, remoteSet)
   }
 
   object UpdateConstraintSet {
-    def imageQuality(iq: ImageQuality): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.imageQuality.replace(iq.assign)
+    def imageQuality(iq: ImageQuality): Endo[ConstraintSetInput] =
+      ConstraintSetInput.imageQuality.replace(iq.assign)
 
-    def cloudExtinction(ce: CloudExtinction): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.cloudExtinction.replace(ce.assign)
+    def cloudExtinction(ce: CloudExtinction): Endo[ConstraintSetInput] =
+      ConstraintSetInput.cloudExtinction.replace(ce.assign)
 
-    def skyBackground(sb: SkyBackground): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.skyBackground.replace(sb.assign)
+    def skyBackground(sb: SkyBackground): Endo[ConstraintSetInput] =
+      ConstraintSetInput.skyBackground.replace(sb.assign)
 
-    def waterVapor(wv: WaterVapor): Endo[EditConstraintSetInput] =
-      EditConstraintSetInput.waterVapor.replace(wv.assign)
+    def waterVapor(wv: WaterVapor): Endo[ConstraintSetInput] =
+      ConstraintSetInput.waterVapor.replace(wv.assign)
 
-    def elevationRange(er: ElevationRange): Endo[EditConstraintSetInput] = {
-      val createER: CreateElevationRangeInput = er match {
+    def elevationRange(er: ElevationRange): Endo[ConstraintSetInput] = {
+      val createER: ElevationRangeInput = er match {
         case AirMassRange(min, max)   =>
-          CreateElevationRangeInput(airmassRange =
-            CreateAirmassRangeInput(min = min.value, max = max.value).assign
+          ElevationRangeInput(airmassRange =
+            AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
           )
         case HourAngleRange(min, max) =>
-          CreateElevationRangeInput(hourAngleRange =
-            CreateHourAngleRangeInput(minHours = min.value, maxHours = max.value).assign
+          ElevationRangeInput(hourAngleRange =
+            HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
           )
       }
-      CreateElevationRangeInput()
-      EditConstraintSetInput.elevationRange.replace(createER.assign)
+      ElevationRangeInput()
+      ConstraintSetInput.elevationRange.replace(createER.assign)
     }
   }
 }
