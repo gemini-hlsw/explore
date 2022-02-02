@@ -65,7 +65,7 @@ object TargetQueries {
     eti match {
       case EditTargetInput(_, _, _, Assign(editSidereal), _, _) =>
         eti.copy(sidereal = setSidereal(editSidereal).assign)
-      case _                                                 => eti
+      case _                                                    => eti
     }
   object UpdateSiderealTracking {
 

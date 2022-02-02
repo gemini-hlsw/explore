@@ -22,8 +22,11 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
 import explore.model.ConstraintSet
+import explore.model.GmosNorthLongSlit
+import explore.model.GmosSouthLongSlit
 import explore.model.ITCTarget
 import explore.model.Progress
+import explore.model.ScienceConfiguration
 import explore.model.reusability._
 import explore.modes._
 import japgolly.scalajs.react._
@@ -56,7 +59,7 @@ import java.text.DecimalFormat
 import scalajs.js.|
 
 final case class SpectroscopyModesTable(
-  scienceConfiguration:     View[Option[ScienceConfigurationData]],
+  scienceConfiguration:     View[Option[ScienceConfiguration]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
@@ -307,20 +310,20 @@ object SpectroscopyModesTable {
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
     row.instrument match {
       case GmosNorthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
+        GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
       case GmosSouthSpectroscopyRow(disperser, _, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
+        GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
       case _ => none
     }
 
   protected def equalsConf(
     row:  SpectroscopyModeRow,
-    conf: ScienceConfigurationData
+    conf: ScienceConfiguration
   ): Boolean =
     rowToConf(row).exists(_ === conf)
 
@@ -329,7 +332,7 @@ object SpectroscopyModesTable {
       row.focalPlane === FocalPlane.SingleSlit
 
   protected def selectedRowIndex(
-    scienceConfiguration: Option[ScienceConfigurationData],
+    scienceConfiguration: Option[ScienceConfiguration],
     rows:                 List[SpectroscopyModeRow]
   ): Option[Int] =
     scienceConfiguration
@@ -482,7 +485,7 @@ object SpectroscopyModesTable {
           atTop,
           _
         ) =>
-          def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfigurationData] =
+          def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
             rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
 
           def scrollButton(

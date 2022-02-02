@@ -20,6 +20,7 @@ import explore.model.ConstraintSet
 import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.ScienceConfiguration
 import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
@@ -51,24 +52,22 @@ object ObsQueries {
   type Targets                      = ObservationData.TargetEnvironment
   type SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
-  type ScienceConfigurationData = ObservationData.ScienceConfiguration
-  val ScienceConfigurationData = ObservationData.ScienceConfiguration
 
   case class ScienceData(
     requirements:  ScienceRequirementsData,
-    configuration: Option[ScienceConfigurationData],
+    configuration: Option[ScienceConfiguration],
     constraints:   ConstraintSet,
     targets:       Targets
   )
 
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]           =
+    val requirements: Lens[ScienceData, ScienceRequirementsData]       =
       Focus[ScienceData](_.requirements)
-    val configuration: Lens[ScienceData, Option[ScienceConfigurationData]] =
+    val configuration: Lens[ScienceData, Option[ScienceConfiguration]] =
       Focus[ScienceData](_.configuration)
-    val constraints: Lens[ScienceData, ConstraintSet]                      =
+    val constraints: Lens[ScienceData, ConstraintSet]                  =
       Focus[ScienceData](_.constraints)
-    implicit val reusabilityScienceData: Reusability[ScienceData]          = Reusability.derive
+    implicit val reusabilityScienceData: Reusability[ScienceData]      = Reusability.derive
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =

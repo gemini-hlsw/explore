@@ -12,6 +12,9 @@ import crystal.react.implicits._
 import explore.common.ObsQueries._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
+import explore.model.GmosNorthLongSlit
+import explore.model.GmosSouthLongSlit
+import explore.model.ScienceConfiguration
 import explore.undo.UndoSetter
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
@@ -97,32 +100,32 @@ object ScienceQueries {
     }
   }
 
-  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfigurationData])(
-    implicit client:                 TransactionalClient[IO, ObservationDB]
+  implicit class SlitWidthOps(val b: Angle) extends AnyVal {
+    def toSlitWidthInput: SlitWidthInput =
+      SlitWidthInput(b.toMicroarcseconds.assign)
+  }
+
+  implicit class ScienceConfigurationOps(val b: ScienceConfiguration) extends AnyVal {
+    def toScienceInput: ScienceConfigurationInput =
+      b match {
+        case GmosNorthLongSlit(f, d, s) =>
+          ScienceConfigurationInput(gmosNorthLongSlit =
+            GmosNorthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+          )
+        case GmosSouthLongSlit(f, d, s) =>
+          ScienceConfigurationInput(gmosSouthLongSlit =
+            GmosSouthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+          )
+      }
+  }
+
+  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfiguration])(implicit
+    client:                          TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
     UpdateScienceConfigurationMutation
       .execute[IO](
         obsId,
-        conf
-          .map(_ match {
-            case ScienceConfigurationData.GmosNorthLongSlit(filter, disperser, slitWidth) =>
-              ScienceConfigurationInput(gmosNorthLongSlit =
-                GmosNorthLongSlitInput(
-                  filter.orUnassign,
-                  disperser.assign,
-                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign).assign
-                ).assign
-              )
-            case ScienceConfigurationData.GmosSouthLongSlit(filter, disperser, slitWidth) =>
-              ScienceConfigurationInput(gmosSouthLongSlit =
-                GmosSouthLongSlitInput(
-                  filter.orUnassign,
-                  disperser.assign,
-                  SlitWidthInput(microarcseconds = slitWidth.toMicroarcseconds.assign).assign
-                ).assign
-              )
-          })
-          .orUnassign
+        conf.map(_.toScienceInput).orUnassign
       )
       .void
 }

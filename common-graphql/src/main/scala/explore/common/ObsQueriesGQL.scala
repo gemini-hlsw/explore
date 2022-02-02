@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import explore.model.ConstraintsSummary
-import lucuma.core.math.Angle
 import lucuma.schemas.ObservationDB
 
 import java.time
@@ -55,12 +54,11 @@ object ObsQueriesGQL {
                 skyBackground
                 waterVapor
                 elevationRange {
-                  type: __typename
-                  ... on AirMassRange {
+                  airmassRange {
                     min
                     max
                   }
-                  ... on HourAngleRange {
+                  hourAngleRange {
                     minHours
                     maxHours
                   }
@@ -212,12 +210,11 @@ object ObsQueriesGQL {
             skyBackground
             waterVapor
             elevationRange {
-              type: __typename
-              ... on AirMassRange {
+              airmassRange {
                 min
                 max
               }
-              ... on HourAngleRange {
+              hourAngleRange {
                 minHours
                 maxHours
               }
@@ -245,17 +242,17 @@ object ObsQueriesGQL {
             }
           }
           scienceConfiguration {
-            ... on GmosNorthLongSlit {
-              filterN:filter
-              disperserN:disperser
-              slitWidthN:slitWidth {
+            gmosNorthLongSlit {
+              filter
+              disperser
+              slitWidth {
                 microarcseconds
               }
             }
-            ... on GmosSouthLongSlit {
-              filterS:filter
-              disperserS:disperser
-              slitWidthS:slitWidth {
+            gmosSouthLongSlit {
+              filter
+              disperser
+              slitWidth {
                 microarcseconds
               }
             }
@@ -280,16 +277,11 @@ object ObsQueriesGQL {
           }
         }
 
-        object ScienceConfiguration {
-          object GmosNorthLongSlit {
-            type SlitWidthN = Angle
-          }
-          object GmosSouthLongSlit {
-            type SlitWidthS = Angle
-          }
-        }
+        type ScienceConfiguration = model.ScienceConfiguration
+
       }
     }
+
   }
 
   @GraphQL
@@ -340,7 +332,7 @@ object ObsQueriesGQL {
   trait UpdateScienceConfigurationMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($obsId: ObservationId!, $input: ScienceConfigurationInput){
-        updateObservation(input: {observationId: $obsId, scienceConfiguration: {set: $input}}) {
+        updateObservation(input: {observationId: $obsId, scienceConfiguration: $input}) {
           id
         }
       }

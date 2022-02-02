@@ -96,6 +96,8 @@ object reusability {
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions]                = Reusability.derive
   implicit val percentageReuse: Reusability[Progress]                                = Reusability.derive
 
-  implicit val angularSizeReuse: Reusability[AngularSize]                 = Reusability.derive
-  implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult] = Reusability.derive
+  implicit val angularSizeReuse: Reusability[AngularSize]                          = Reusability.derive
+  implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult]          = Reusability.derive
+  implicit val scienceConfigurationnResultReuse: Reusability[ScienceConfiguration] =
+    Reusability.byEq
 }
