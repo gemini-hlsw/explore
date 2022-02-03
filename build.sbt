@@ -132,7 +132,7 @@ lazy val explore: Project = project
   .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    Test / test := {},
+    Test / test     := {},
     coverageEnabled := false,
     libraryDependencies ++=
       GeminiLocales.value ++
