@@ -344,6 +344,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
   )
 )
 
+ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCache, npmInstall)
 

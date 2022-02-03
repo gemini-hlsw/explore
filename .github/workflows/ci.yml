@@ -92,21 +92,6 @@ jobs:
       - name: Test
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' test
 
-      - name: Make target directories
-        if: github.event_name != 'pull_request' && ()
-        run: mkdir -p explore/target model-testkit/jvm/target model-testkit/js/target target .js/target model-tests/jvm/target common/target .jvm/target .native/target model-tests/js/target model/jvm/target model/js/target common-graphql/target project/target
-
-      - name: Compress target directories
-        if: github.event_name != 'pull_request' && ()
-        run: tar cf targets.tar explore/target model-testkit/jvm/target model-testkit/js/target target .js/target model-tests/jvm/target common/target .jvm/target .native/target model-tests/js/target model/jvm/target model/js/target common-graphql/target project/target
-
-      - name: Upload target directories
-        if: github.event_name != 'pull_request' && ()
-        uses: actions/upload-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-${{ matrix.scala }}-${{ matrix.project }}
-          path: targets.tar
-
   full:
     name: full
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
