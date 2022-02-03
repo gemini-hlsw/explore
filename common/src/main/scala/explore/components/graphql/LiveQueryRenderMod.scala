@@ -20,7 +20,6 @@ import org.typelevel.log4cats.Logger
 import react.common._
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 final case class LiveQueryRenderMod[S, D, A](
   query:               Reuse[IO[D]],
