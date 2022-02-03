@@ -246,11 +246,6 @@ lazy val setupNode = WorkflowStep.Use(
   env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
 )
 
-lazy val npmCache = WorkflowStep.Use(
-  UseRef.Public("c-hive", "gha-npm-cache", "v1"),
-  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
-)
-
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 // https://stackoverflow.com/a/55610612
@@ -347,7 +342,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
-ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCache, npmInstall)
+ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -355,7 +350,6 @@ ThisBuild / githubWorkflowAddedJobs +=
     "full",
     WorkflowStep.Checkout ::
       setupNode ::
-      npmCache ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
       npmInstall ::
@@ -375,7 +369,6 @@ ThisBuild / githubWorkflowAddedJobs +=
     WorkflowStep.Checkout ::
       herokuProvision ::
       setupNode ::
-      npmCache ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
       npmInstall ::
@@ -391,7 +384,6 @@ ThisBuild / githubWorkflowAddedJobs +=
     "Run linters",
     WorkflowStep.Checkout ::
       setupNode ::
-      npmCache ::
       npmInstall ::
       setupVars("dark") ::
       runLinters("dark") ::
