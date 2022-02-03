@@ -234,9 +234,9 @@ fixCSS := {
 val pushCond                 = "github.event_name == 'push'"
 val prCond                   = "github.event_name == 'pull_request'"
 val masterCond               = "github.ref == 'refs/heads/master'"
+val notMasterCond            = "github.ref != 'refs/heads/master'"
 val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
 val notDependabotCond        = "github.actor != 'dependabot[bot]'"
-val notStewardCond           = "github.actor != 'scala-steward'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
 def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
@@ -391,5 +391,5 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupVars("light") ::
       runLinters("light") ::
       Nil,
-    cond = Some(allConds(prCond, geminiRepoCond, notDependabotCond))
+    cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
   )
