@@ -133,6 +133,7 @@ lazy val explore: Project = project
   .enablePlugins(ScalaJSPlugin)
   .settings(
     Test / test := {},
+    coverageEnabled := false,
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
