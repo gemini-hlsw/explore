@@ -108,13 +108,21 @@ object ScienceQueries {
   implicit class ScienceConfigurationOps(val b: ScienceConfiguration) extends AnyVal {
     def toScienceInput: ScienceConfigurationInput =
       b match {
-        case GmosNorthLongSlit(f, d, s) =>
+        case GmosNorthLongSlit(f, d, u, s) =>
           ScienceConfigurationInput(gmosNorthLongSlit =
-            GmosNorthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+            GmosNorthLongSlitInput(f.orUnassign,
+                                   d.assign,
+                                   u.assign,
+                                   s.toSlitWidthInput.assign
+            ).assign
           )
-        case GmosSouthLongSlit(f, d, s) =>
+        case GmosSouthLongSlit(f, d, u, s) =>
           ScienceConfigurationInput(gmosSouthLongSlit =
-            GmosSouthLongSlitInput(f.orUnassign, d.assign, s.toSlitWidthInput.assign).assign
+            GmosSouthLongSlitInput(f.orUnassign,
+                                   d.assign,
+                                   u.assign,
+                                   s.toSlitWidthInput.assign
+            ).assign
           )
       }
   }

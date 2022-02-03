@@ -245,6 +245,7 @@ object ObsQueriesGQL {
             gmosNorthLongSlit {
               filter
               disperser
+              fpu
               slitWidth {
                 microarcseconds
               }
@@ -252,6 +253,7 @@ object ObsQueriesGQL {
             gmosSouthLongSlit {
               filter
               disperser
+              fpu
               slitWidth {
                 microarcseconds
               }

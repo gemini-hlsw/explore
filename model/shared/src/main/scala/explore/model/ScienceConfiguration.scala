@@ -10,8 +10,10 @@ import io.circe._
 import io.circe.generic.semiauto._
 import lucuma.core.enum.GmosNorthDisperser
 import lucuma.core.enum.GmosNorthFilter
+import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthDisperser
 import lucuma.core.enum.GmosSouthFilter
+import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.math.Angle
 import lucuma.schemas.decoders._
 
@@ -37,12 +39,13 @@ object ScienceConfiguration {
 final case class GmosNorthLongSlit(
   filter:    Option[GmosNorthFilter],
   disperser: GmosNorthDisperser,
+  fpu:       GmosNorthFpu,
   slitWidth: Angle
 ) extends ScienceConfiguration
 
 object GmosNorthLongSlit {
   implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
-    Eq.by(x => (x.filter, x.disperser, x.slitWidth))
+    Eq.by(x => (x.filter, x.disperser, x.fpu, x.slitWidth))
 
   implicit val gmosNDecoder: Decoder[GmosNorthLongSlit] = deriveDecoder
 }
@@ -50,12 +53,13 @@ object GmosNorthLongSlit {
 final case class GmosSouthLongSlit(
   filter:    Option[GmosSouthFilter],
   disperser: GmosSouthDisperser,
+  fpu:       GmosSouthFpu,
   slitWidth: Angle
 ) extends ScienceConfiguration
 
 object GmosSouthLongSlit {
   implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
-    Eq.by(x => (x.filter, x.disperser, x.slitWidth))
+    Eq.by(x => (x.filter, x.disperser, x.fpu, x.slitWidth))
 
   implicit val gmosSDecoder: Decoder[GmosSouthLongSlit] = deriveDecoder
 }
