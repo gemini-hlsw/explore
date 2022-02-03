@@ -312,12 +312,12 @@ object SpectroscopyModesTable {
 
   protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
     row.instrument match {
-      case GmosNorthSpectroscopyRow(disperser, _, filter)
+      case GmosNorthSpectroscopyRow(disperser, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosNorthLongSlit(filter, disperser, row.slitWidth.size).some
-      case GmosSouthSpectroscopyRow(disperser, _, filter)
+        GmosNorthLongSlit(filter, disperser, fpu, row.slitWidth.size).some
+      case GmosSouthSpectroscopyRow(disperser, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosSouthLongSlit(filter, disperser, row.slitWidth.size).some
+        GmosSouthLongSlit(filter, disperser, fpu, row.slitWidth.size).some
       case _ => none
     }
 
