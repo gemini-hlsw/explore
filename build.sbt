@@ -1,6 +1,4 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
-import sbtcrossproject.crossProject
-import sbtcrossproject.CrossType
 import Settings.Libraries._
 import scala.sys.process._
 
@@ -27,19 +25,11 @@ addCommandAlias(
   "; headerCreateAll; fixImports; scalafmtAll; fixCSS"
 )
 
-inThisBuild(
-  Seq(
-    homepage                      := Some(url("https://github.com/gemini-hlsw/explore")),
-    addCompilerPlugin(
-      ("org.typelevel"             % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
-    ),
-    description                   := "Explore",
-    scalacOptions += "-Ymacro-annotations",
-    Global / onChangedBuildSource := ReloadOnSourceChanges,
-    scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value,
-    scalafixScalaBinaryVersion    := "2.13"
-  ) ++ lucumaPublishSettings
-)
+ThisBuild / description                := "Explore"
+ThisBuild / scalacOptions += "-Ymacro-annotations"
+Global / onChangedBuildSource          := ReloadOnSourceChanges
+ThisBuild / scalafixDependencies ++= ClueGenerator.value ++ LucumaSchemas.value
+ThisBuild / scalafixScalaBinaryVersion := "2.13"
 
 val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
 
@@ -54,21 +44,15 @@ stage := {
   }
 }
 
-lazy val root = project
-  .in(file("."))
+lazy val root = tlCrossRootProject
+  .aggregate(model, modelTests, graphql, common, explore)
   .settings(name := "explore-root")
-  .settings(commonSettings: _*)
-  .aggregate(model.jvm, model.js, modelTests.jvm, modelTests.js, graphql, common, explore)
 
 lazy val model = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("model"))
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
-  .jsSettings(
-    // TODO We can remove explicit dependency on FS2Node once http4s-core releases with fs2 3.2.0+.
-    ((libraryDependencies ++= FS2Node.value) +: commonModuleTest): _*
-  )
   .jvmSettings(commonJVMSettings)
 
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
@@ -162,13 +146,7 @@ lazy val explore: Project = project
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
-  // don't publish anything
-  publish         := {},
-  publishLocal    := {},
-  publishArtifact := false,
-  Keys.`package`  := file(""),
-  scalacOptions ~= (_.filterNot(Set("-Vtype-diffs"))),
-  scalacOptions --= Seq("-Xfatal-warnings").filterNot(_ => insideCI.value)
+  scalacOptions ~= (_.filterNot(Set("-Vtype-diffs")))
 )
 
 lazy val commonLibSettings = Seq(
@@ -211,7 +189,7 @@ lazy val commonJVMSettings = Seq(
       )
 )
 
-lazy val commonJsLibSettings = lucumaScalaJsSettings ++ commonLibSettings ++ Seq(
+lazy val commonJsLibSettings = commonLibSettings ++ Seq(
   libraryDependencies ++=
     ClueScalaJS.value ++
       Http4sDom.value ++
@@ -252,3 +230,168 @@ fixCSS := {
   if (("npm run fix-dark" #&& "npm run fix-light" !) != 0)
     throw new Exception("Error in CSS fix")
 }
+
+val pushCond                 = "github.event_name == 'push'"
+val prCond                   = "github.event_name == 'pull_request'"
+val masterCond               = "github.ref == 'refs/heads/master'"
+val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
+val notDependabotCond        = "github.actor != 'dependabot[bot]'"
+def allConds(conds: String*) = conds.mkString("(", " && ", ")")
+def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
+
+lazy val setupNode = WorkflowStep.Use(
+  UseRef.Public("actions", "setup-node", "v2"),
+  name = Some("Use Node.js"),
+  params = Map("node-version" -> "14", "cache" -> "npm")
+)
+
+lazy val npmCache = WorkflowStep.Use(
+  UseRef.Public("c-hive", "gha-npm-cache", "v1"),
+  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
+)
+
+lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
+
+// https://stackoverflow.com/a/55610612
+lazy val npmInstall = WorkflowStep.Run(
+  List(
+    "rm .npmrc",
+    """npm config set "@fortawesome:registry" https://npm.fontawesome.com/""",
+    """npm config set "//npm.fontawesome.com/:_authToken" ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}""",
+    "npm install"
+  ),
+  name = Some("npm install")
+)
+
+lazy val npmBuild = WorkflowStep.Run(
+  List("npm run build"),
+  name = Some("Build application"),
+  env = Map("NODE_OPTIONS" -> "--max-old-space-size=6144")
+)
+
+// https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
+lazy val overrideCiCommit = WorkflowStep.Run(
+  List("""echo "CI_COMMIT_SHA=${{ github.event.pull_request.head.sha}}" >> $GITHUB_ENV"""),
+  name = Some("override CI_COMMIT_SHA"),
+  cond = Some(prCond)
+)
+
+lazy val bundlemon = WorkflowStep.Run(
+  List("yarn bundlemon"),
+  name = Some("Run BundleMon"),
+  env = Map(
+    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
+    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
+  )
+)
+
+def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use(
+  UseRef.Public("FirebaseExtended", "action-hosting-deploy", "v0"),
+  name = Some(name),
+  cond = Some(cond),
+  params = Map(
+    "repoToken"              -> "${{ secrets.GITHUB_TOKEN }}",
+    "firebaseServiceAccount" -> "${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}",
+    "projectId"              -> "explore-gemini",
+    "target"                 -> "staging"
+  ) ++ (if (live) Map("channelId" -> "live") else Map.empty)
+)
+
+lazy val firebaseDeployReview = firebaseDeploy(
+  "Deploy review app to Firebase",
+  allConds(prCond,
+           notDependabotCond,
+           "github.event.pull_request.head.repo.full_name == github.repository"
+  ),
+  live = false
+)
+
+lazy val firebaseDeployStaging = firebaseDeploy(
+  "Deploy staging app to Firebase",
+  pushCond,
+  live = true
+)
+
+lazy val herokuProvision = WorkflowStep.Run(
+  List("heroku plugins:install heroku-cli-static"),
+  name = Some("Heroku - Provision static plugin")
+)
+
+lazy val herokuDeploy = WorkflowStep.Run(
+  List("cd ./heroku", "heroku static:deploy -a ${{ secrets.HEROKU_APP_NAME }}"),
+  name = Some("Heroku - Deploy"),
+  env = Map("HEROKU_API_KEY" -> "${{ secrets.HEROKU_API_KEY }}")
+)
+
+def setupVars(mode: String) = WorkflowStep.Run(
+  List(
+    raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > common/src/main/webapp/less/vars.css""",
+    "cat common/src/main/webapp/less/vars.css"
+  ),
+  name = Some(s"Setup and expand vars $mode")
+)
+
+def runLinters(mode: String) = WorkflowStep.Use(
+  UseRef.Public("wearerequired", "lint-action", "v1"),
+  name = Some(s"Run linters in $mode mode"),
+  params = Map(
+    "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
+    "auto_fix"             -> "true",
+    "stylelint"            -> "true",
+    "stylelint_args"       -> "common/src/main/webapp/less",
+    "stylelint_dir"        -> "common/src/main/webapp/less",
+    "stylelint_extensions" -> "css,less"
+  )
+)
+
+ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
+ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCache, npmInstall)
+
+ThisBuild / githubWorkflowAddedJobs +=
+  WorkflowJob(
+    "full",
+    "full",
+    setupNode ::
+      npmCache ::
+      githubWorkflowGeneratedCacheSteps.value.toList :::
+      sbtStage ::
+      npmInstall ::
+      npmBuild ::
+      overrideCiCommit ::
+      bundlemon ::
+      firebaseDeployReview ::
+      firebaseDeployStaging ::
+      Nil,
+    cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
+  )
+
+ThisBuild / githubWorkflowAddedJobs +=
+  WorkflowJob(
+    "heroku",
+    "Deploy to Heroku",
+    herokuProvision ::
+      setupNode ::
+      npmCache ::
+      githubWorkflowGeneratedCacheSteps.value.toList :::
+      sbtStage ::
+      npmInstall ::
+      npmBuild ::
+      herokuDeploy ::
+      Nil,
+    cond = Some(allConds(pushCond, masterCond, geminiRepoCond))
+  )
+
+ThisBuild / githubWorkflowAddedJobs +=
+  WorkflowJob(
+    "lint",
+    "Run linters",
+    setupNode ::
+      npmCache ::
+      npmInstall ::
+      setupVars("dark") ::
+      runLinters("dark") ::
+      setupVars("light") ::
+      runLinters("light") ::
+      Nil,
+    cond = Some(allConds(pushCond, notDependabotCond))
+  )
