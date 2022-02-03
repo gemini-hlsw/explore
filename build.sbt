@@ -350,6 +350,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "full",
     "full",
     WorkflowStep.Checkout ::
+      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNode ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
@@ -360,6 +361,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       firebaseDeployReview ::
       firebaseDeployStaging ::
       Nil,
+    javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
 
@@ -369,6 +371,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "Deploy to Heroku",
     WorkflowStep.Checkout ::
       herokuProvision ::
+      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNode ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
@@ -376,6 +379,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       npmBuild ::
       herokuDeploy ::
       Nil,
+    javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(pushCond, masterCond, geminiRepoCond))
   )
 
@@ -391,5 +395,6 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupVars("light") ::
       runLinters("light") ::
       Nil,
+    javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
   )
