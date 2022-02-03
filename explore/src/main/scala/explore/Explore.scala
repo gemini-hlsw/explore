@@ -55,7 +55,6 @@ object ExploreMain extends IOApp.Simple {
   implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
   @JSExport
-  @nowarn
   def resetIOApp(): Unit =
     // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
     cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
