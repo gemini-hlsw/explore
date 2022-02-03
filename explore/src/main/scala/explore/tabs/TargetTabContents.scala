@@ -430,8 +430,6 @@ object TargetTabContents {
     body.withRef(resize.ref)
   }
 
-  var u = 0
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -443,9 +441,6 @@ object TargetTabContents {
         // Memoize the initial result
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
       }
-      // .useEffectWithDepsBy((_, _, _, r, _, _) => r.height) { (_, _, _, _, l, _) => h =>
-      //   h.map(h => l.mod(l => scaledLayout(h, l))).getOrEmpty
-      // }
       .useEffectWithDepsBy((p, _, _, r, _, _) => (p.userId, r.height)) {
         (props, panels, _, _, layout, defaultLayout) =>
           implicit val ctx = props.ctx

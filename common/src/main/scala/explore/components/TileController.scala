@@ -118,8 +118,6 @@ object TileController {
                   val resizable     =
                     tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
                   // TODO: Restore to the previous size
-                  println(scala.math.max(l.minH.getOrElse(1), defaultHeight))
-                  println(defaultHeight)
                   l.copy(h = defaultHeight,
                          isResizable = resizable,
                          minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)

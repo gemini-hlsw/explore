@@ -98,7 +98,6 @@ object AsterismEditor {
           )
 
         React.Fragment(
-          // ExploreStyles.AsterismEditor,
           props.renderInTitle(
             TargetSelectionPopup(
               trigger = Reuse.by(adding.value)(

@@ -145,7 +145,7 @@ object UserPreferencesQueries {
                 )
             }
           }
-        ).adaptErr { r => println(r); r }.attempt
+        ).attempt
       }.void
   }
 
