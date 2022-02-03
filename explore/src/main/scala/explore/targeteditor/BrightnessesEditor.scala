@@ -33,8 +33,6 @@ import react.common.implicits._
 import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
-import react.semanticui.elements.segment.Segment
-import react.semanticui.elements.segment.SegmentAttached
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule

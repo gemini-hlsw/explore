@@ -12,7 +12,6 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
@@ -26,7 +25,6 @@ import explore.model.layout._
 import explore.model.reusability._
 import explore.model.layout.unsafe._
 import explore.observationtree.AsterismGroupObsList
-import explore.targeteditor.AsterismEditor
 import explore.undo._
 import explore.syntax.ui._
 import react.gridlayout._
@@ -49,9 +47,10 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import explore.targeteditor.SkyPlotSection
 import monocle.Optional
 import explore.components.TileController
+import crystal.Pot
+import crystal.react._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -66,8 +65,6 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
-  val TargetId: NonEmptyString = "target"
-  val PlotId: NonEmptyString   = "skyPlot"
 
   private val TargetIntialHeightFraction   = 6
   private val SkyPlotInitialHeightFraction = 4
@@ -83,14 +80,14 @@ object TargetTabContents {
                  w = DefaultWidth.value,
                  h = TargetIntialHeightFraction,
                  minH = TargetIntialHeightFraction,
-                 i = TargetId.value
+                 i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
                  y = TargetMaxHeight.value,
                  w = DefaultWidth.value,
                  h = SkyPlotInitialHeightFraction,
                  minH = SkyPlotInitialHeightFraction,
-                 i = PlotId.value
+                 i = ObsTabTiles.PlotId.value
       )
     )
   )
@@ -111,15 +108,15 @@ object TargetTabContents {
   private def scaleLayout(l: Layout, h: Int): Layout =
     layoutItems.modify { l =>
       l.i match {
-        case r if r === TargetId.value =>
+        case r if r === ObsTabTiles.TargetId.value =>
           val height =
             (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
           layoutLens(height)(l)
-        case r if r === PlotId.value   =>
+        case r if r === ObsTabTiles.PlotId.value   =>
           val height =
             (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
           layoutLens(height)(l)
-        case _                         => l
+        case _                                     => l
       }
     }(l)
 
@@ -302,7 +299,7 @@ object TargetTabContents {
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget =
+      val selectedTarget: Option[ViewOpt[Target]] =
         asterismView.get.headOption.map(_.id).map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
@@ -312,65 +309,20 @@ object TargetTabContents {
           asterismView.zoom(optional)
         }
 
-      val targetEditorTile = Tile(TargetId,
-                                  title,
-                                  backButton.some,
-                                  canMinimize = true,
-                                  bodyClass = ExploreStyles.TargetTileBody.some
-      )(
-        Reuse
-          .by(
-            (props.userId,
-             idsToEdit,
-             asterismView,
-             props.targetsUndoStacks,
-             props.searching,
-             options,
-             props.hiddenColumns
-            )
-          )((renderInTitle: Tile.RenderInTitle) =>
-            props.userId.map { uid =>
-              AsterismEditor(uid,
-                             idsToEdit,
-                             asterismView,
-                             props.targetsUndoStacks,
-                             props.searching,
-                             options,
-                             props.hiddenColumns,
-                             renderInTitle
-              )
-            }: VdomNode
-          )
-          .reuseAlways
-      )
+      val targetEditorTile =
+        TargetTile.targetTile(props.userId,
+                              idsToEdit,
+                              Pot(asterismView),
+                              props.targetsUndoStacks,
+                              props.searching,
+                              options,
+                              title,
+                              backButton.some,
+                              props.hiddenColumns
+        )
 
       val skyPlotTile =
-        Tile(PlotId,
-             "Elevation Plot",
-             canMinimize = true,
-             bodyClass = ExploreStyles.SkyPlotTileBody.some,
-             tileClass = ExploreStyles.SkyPlotTile.some
-        )(
-          Reuse
-            .by(
-              (props.userId, coreWidth, coreHeight, selectedTarget)
-            ) { (_: Tile.RenderInTitle) =>
-              selectedTarget
-                .flatMap(
-                  _.mapValue(targetView =>
-                    targetView.get match {
-                      case t @ Target.Sidereal(_, _, _, _) =>
-                        val baseCoordinates =
-                          Target.Sidereal.baseCoordinates.get(t)
-                        SkyPlotSection(baseCoordinates): VdomNode
-                      case _                               => EmptyVdom
-                    }
-                  )
-                )
-                .getOrElse(EmptyVdom)
-            }
-            .reuseAlways
-        )
+        ElevationPlotTile.elevationPlotTile(props.userId, coreWidth, coreHeight, selectedTarget)
 
       TileController(
         props.userId,

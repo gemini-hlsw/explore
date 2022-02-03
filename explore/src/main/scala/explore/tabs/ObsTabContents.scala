@@ -77,6 +77,7 @@ final case class ObsTabContents(
 object ObsTabTiles {
   val NotesId: NonEmptyString         = "notes"
   val TargetId: NonEmptyString        = "target"
+  val PlotId: NonEmptyString          = "elevationPlot"
   val ConstraintsId: NonEmptyString   = "constraints"
   val ConfigurationId: NonEmptyString = "configuration"
 }
@@ -84,6 +85,7 @@ object ObsTabTiles {
 object ObsTabContents {
   private val NotesMaxHeight: NonNegInt         = 3
   private val TargetMinHeight: NonNegInt        = 12
+  private val ElevationPlotMinHeight: NonNegInt = 8
   private val ConstraintsMaxHeight: NonNegInt   = 6
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 12
@@ -106,12 +108,20 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
+        w = DefaultWidth.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -137,12 +147,20 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
+        w = DefaultWidth.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -168,14 +186,22 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
         w = DefaultWidth.value,
-        h = 2 * ConfigurationMaxHeight.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
       )
     )
@@ -300,12 +326,13 @@ object ObsTabContents {
       )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
     )
 
-    val coreWidth =
+    val coreWidth  =
       if (window.canFitTwoPanels) {
         resize.width.getOrElse(0)
       } else {
         resize.width.getOrElse(0) - treeWidth
       }
+    val coreHeight = resize.height.getOrElse(0)
 
     val notesTile =
       Tile(
@@ -358,6 +385,13 @@ object ObsTabContents {
               makeConstraintsSelector(constraintGroups, obsView)
             )
 
+          val skyPlotTile =
+            ElevationPlotTile.elevationPlotTile(props.userId.get,
+                                                coreWidth,
+                                                coreHeight,
+                                                props.baseCoordinates
+            )
+
           TileController(
             props.userId.get,
             coreWidth,
@@ -367,7 +401,7 @@ object ObsTabContents {
               notesTile,
               TargetTile.targetTile(
                 props.userId.get,
-                obsId,
+                ObsIdSet.one(obsId),
                 obsView.map(
                   _.zoom(
                     ObservationData.targetEnvironment.andThen(
@@ -378,8 +412,11 @@ object ObsTabContents {
                 props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
                 props.searching,
                 options,
+                "Targets",
+                none,
                 props.hiddenColumns
               ),
+              skyPlotTile,
               // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
               // so that the constraints selector dropdown always appears in front of any other tiles. If more
               // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
