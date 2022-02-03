@@ -391,5 +391,5 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupVars("light") ::
       runLinters("light") ::
       Nil,
-    cond = Some(allConds(notDependabotCond, notStewardCond))
+    cond = Some(allConds(prCond, geminiRepoCond, notDependabotCond))
   )

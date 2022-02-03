@@ -227,7 +227,7 @@ jobs:
 
   lint:
     name: Run linters
-    if: (github.actor != 'dependabot[bot]' && github.actor != 'scala-steward')
+    if: (github.event_name == 'pull_request' && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
     strategy:
       matrix:
         os: [ubuntu-latest]
