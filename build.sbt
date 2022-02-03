@@ -242,7 +242,8 @@ def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v2"),
   name = Some("Use Node.js"),
-  params = Map("node-version" -> "14", "cache" -> "npm")
+  params = Map("node-version" -> "14", "cache" -> "npm"),
+  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
 )
 
 lazy val npmCache = WorkflowStep.Use(

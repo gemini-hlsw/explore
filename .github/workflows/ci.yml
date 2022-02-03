@@ -62,6 +62,8 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Use Node.js
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -103,6 +105,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Use Node.js
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -182,6 +186,8 @@ jobs:
         run: 'heroku plugins:install heroku-cli-static'
 
       - name: Use Node.js
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -236,6 +242,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Use Node.js
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
