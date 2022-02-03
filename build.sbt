@@ -2,9 +2,8 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 import Settings.Libraries._
 import scala.sys.process._
 
-val reactJS              = "17.0.2"
-val FUILess              = "2.8.7"
-val kindProjectorVersion = "0.13.2"
+val reactJS = "17.0.2"
+val FUILess = "2.8.7"
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
