@@ -43,7 +43,6 @@ import org.typelevel.log4cats.Logger
 import react.common.implicits._
 
 import java.util.concurrent.TimeUnit
-import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.scalajs.js
 
