@@ -104,6 +104,9 @@ jobs:
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout current branch (fast)
+        uses: actions/checkout@v2
+
       - name: Use Node.js
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
@@ -182,6 +185,9 @@ jobs:
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout current branch (fast)
+        uses: actions/checkout@v2
+
       - name: Heroku - Provision static plugin
         run: 'heroku plugins:install heroku-cli-static'
 
@@ -241,6 +247,9 @@ jobs:
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout current branch (fast)
+        uses: actions/checkout@v2
+
       - name: Use Node.js
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}

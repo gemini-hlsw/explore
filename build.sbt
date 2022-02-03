@@ -353,7 +353,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "full",
     "full",
-    setupNode ::
+    WorkflowStep.Checkout ::
+      setupNode ::
       npmCache ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
       sbtStage ::
@@ -371,7 +372,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "heroku",
     "Deploy to Heroku",
-    herokuProvision ::
+    WorkflowStep.Checkout ::
+      herokuProvision ::
       setupNode ::
       npmCache ::
       githubWorkflowGeneratedCacheSteps.value.toList :::
@@ -387,7 +389,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "lint",
     "Run linters",
-    setupNode ::
+    WorkflowStep.Checkout ::
+      setupNode ::
       npmCache ::
       npmInstall ::
       setupVars("dark") ::
