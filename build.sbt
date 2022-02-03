@@ -361,6 +361,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       firebaseDeployReview ::
       firebaseDeployStaging ::
       Nil,
+    scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
@@ -379,6 +380,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       npmBuild ::
       herokuDeploy ::
       Nil,
+    scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(pushCond, masterCond, geminiRepoCond))
   )
@@ -395,6 +397,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupVars("light") ::
       runLinters("light") ::
       Nil,
+    scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(pushCond, geminiRepoCond, notMasterCond, notDependabotCond))
   )
