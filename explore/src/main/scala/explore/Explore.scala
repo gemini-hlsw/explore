@@ -43,7 +43,6 @@ import org.typelevel.log4cats.Logger
 import react.common.implicits._
 
 import java.util.concurrent.TimeUnit
-import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.scalajs.js
 
@@ -55,7 +54,6 @@ object ExploreMain extends IOApp.Simple {
   implicit val reuseContext: Reusability[AppContextIO] = Reusability.never
 
   @JSExport
-  @nowarn
   def resetIOApp(): Unit =
     // https://github.com/typelevel/cats-effect/pull/2114#issue-687064738
     cats.effect.unsafe.IORuntime.asInstanceOf[{ def resetGlobal(): Unit }].resetGlobal()
