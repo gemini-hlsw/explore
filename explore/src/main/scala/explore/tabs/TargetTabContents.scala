@@ -6,7 +6,9 @@ package explore.tabs
 import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
 import crystal.react.View
+import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -17,27 +19,29 @@ import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
 import explore.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
 import explore.model.layout._
-import explore.model.reusability._
 import explore.model.layout.unsafe._
+import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
-import explore.undo._
 import explore.syntax.ui._
-import react.gridlayout._
+import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
+import monocle.Optional
 import org.scalajs.dom.window
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis
+import react.gridlayout._
 import react.resizable._
 import react.resizeDetector._
 import react.resizeDetector.hooks._
@@ -47,10 +51,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import monocle.Optional
-import explore.components.TileController
-import crystal.Pot
-import crystal.react._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -321,26 +321,28 @@ object TargetTabContents {
                               props.hiddenColumns
         )
 
-        val selectedCoordinates = selectedTarget
-          .flatMap(
-            _.mapValue(targetView =>
-              targetView.get match {
-                case t @ Target.Sidereal(_, _, _, _) =>
-                    Target.Sidereal.baseCoordinates.get(t).some
-                case _                               => none
-              }
-            )
+      val selectedCoordinates = selectedTarget
+        .flatMap(
+          _.mapValue(targetView =>
+            targetView.get match {
+              case t @ Target.Sidereal(_, _, _, _) =>
+                Target.Sidereal.baseCoordinates.get(t).some
+              case _                               => none
+            }
           )
+        )
 
       val skyPlotTile =
-        selectedCoordinates.flatten.map(ElevationPlotTile.elevationPlotTile( coreWidth, coreHeight, _))
+        selectedCoordinates.flatten.map(
+          ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _)
+        )
 
       TileController(
         props.userId,
         coreWidth,
         defaultLayouts,
         layouts,
-        List(targetEditorTile.some, skyPlotTile).collect { case Some(x) => x},
+        List(targetEditorTile.some, skyPlotTile).collect { case Some(x) => x },
         GridLayoutSection.TargetLayout,
         None
       )

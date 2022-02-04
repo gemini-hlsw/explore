@@ -5,12 +5,12 @@ package explore.targeteditor
 
 import crystal.react.View
 import crystal.react.implicits._
+import explore.components.ui.ExploreStyles
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.SourceProfile
 import react.common._
-import explore.components.ui.ExploreStyles
 
 case class SourceProfileEditor(sourceProfile: View[SourceProfile], disabled: Boolean)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)

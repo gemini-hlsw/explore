@@ -6,13 +6,13 @@ package explore.tabs
 import cats.syntax.all._
 import crystal.react.reuse._
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.targeteditor.SkyPlotSection
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
 import react.common._
-import explore.components.ui.ExploreStyles
-import explore.targeteditor.SkyPlotSection
-import lucuma.core.math.Coordinates
 
 object ElevationPlotTile {
 

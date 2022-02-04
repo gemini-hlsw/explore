@@ -3,13 +3,14 @@
 
 package explore.tabs
 
-import cats.syntax.all._
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.TargetVisualOptions
@@ -23,7 +24,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
-import explore.components.ui.ExploreStyles
 
 object TargetTile {
 

@@ -184,10 +184,10 @@ object ExploreStyles {
   val ConstraintsTile: Css  = Css("constraints-tile")
 
   // The Target tab contents
-  val TargetGrid: Css      = Css("target-grid")
-  val TargetTileBody: Css  = Css("target-tile-body")
-  val AsterismEditor: Css  = Css("target-asterism-editor")
-  val AsterismTable: Css   = Css("target-asterism-table")
+  val TargetGrid: Css     = Css("target-grid")
+  val TargetTileBody: Css = Css("target-tile-body")
+  val AsterismEditor: Css = Css("target-asterism-editor")
+  val AsterismTable: Css  = Css("target-asterism-table")
   val BrightnessCell: Css = Css("target-brightness-cell")
 
   val TargetAladinCell: Css    = Css("target-aladin-cell")
@@ -235,7 +235,7 @@ object ExploreStyles {
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
-  val EmptyTreeContent: Css = Css("explore-empty-tree-content")
+  val EmptyTreeContent: Css                    = Css("explore-empty-tree-content")
 
   // This is rendered without React, so we include SUI classes.
   val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))

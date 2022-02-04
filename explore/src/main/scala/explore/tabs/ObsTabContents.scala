@@ -39,6 +39,7 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -61,7 +62,6 @@ import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import lucuma.core.math.Coordinates
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -395,49 +395,48 @@ object ObsTabContents {
             )
 
           val skyPlotTile =
-            targetCoords.map( ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
+            targetCoords.map(ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
 
           val targetTile = TargetTile.targetTile(
-                props.userId.get,
-                ObsIdSet.one(obsId),
-                obsView.map(
-                  _.zoom(
-                    ObservationData.targetEnvironment.andThen(
-                      ObservationData.TargetEnvironment.asterism
-                    )
-                  )
-                ),
-                props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
-                props.searching,
-                options,
-                "Targets",
-                none,
-                props.hiddenColumns
-              )
-
-              // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
-              // so that the constraints selector dropdown always appears in front of any other tiles. If more
-              // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
-              // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-              val constraintsTile = ConstraintsTile
-                .constraintsTile(
-                  obsId,
-                  obsView.map(_.zoom(ObservationData.constraintSet)),
-                  props.undoStacks
-                    .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                    .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
-                  control = constraintsSelector.some,
-                  clazz = ExploreStyles.ConstraintsTile.some
+            props.userId.get,
+            ObsIdSet.one(obsId),
+            obsView.map(
+              _.zoom(
+                ObservationData.targetEnvironment.andThen(
+                  ObservationData.TargetEnvironment.asterism
                 )
-
-              val configurationTile = ConfigurationTile.configurationTile(
-
-                obsId,
-                obsView.map(_.zoom(scienceDataForObs)),
-                props.undoStacks
-                  .zoom(ModelUndoStacks.forScienceData[IO])
-                  .zoom(atMapWithDefault(obsId, UndoStacks.empty))
               )
+            ),
+            props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
+            props.searching,
+            options,
+            "Targets",
+            none,
+            props.hiddenColumns
+          )
+
+          // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+          // so that the constraints selector dropdown always appears in front of any other tiles. If more
+          // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+          // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+          val constraintsTile = ConstraintsTile
+            .constraintsTile(
+              obsId,
+              obsView.map(_.zoom(ObservationData.constraintSet)),
+              props.undoStacks
+                .zoom(ModelUndoStacks.forConstraintGroup[IO])
+                .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
+              control = constraintsSelector.some,
+              clazz = ExploreStyles.ConstraintsTile.some
+            )
+
+          val configurationTile = ConfigurationTile.configurationTile(
+            obsId,
+            obsView.map(_.zoom(scienceDataForObs)),
+            props.undoStacks
+              .zoom(ModelUndoStacks.forScienceData[IO])
+              .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+          )
 
           TileController(
             props.userId.get,
@@ -449,8 +448,8 @@ object ObsTabContents {
               notesTile.some,
               skyPlotTile,
               constraintsTile.some,
-              configurationTile.some,
-              ).collect { case Some(x) => x },
+              configurationTile.some
+            ).collect { case Some(x) => x },
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode

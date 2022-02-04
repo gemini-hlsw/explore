@@ -6,8 +6,8 @@ package explore.model
 import cats.Eq
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.model.Target
 import lucuma.core.math.Coordinates
+import lucuma.core.model.Target
 
 case class TargetSummary(id: Target.Id, name: NonEmptyString, coords: Option[Coordinates])
 

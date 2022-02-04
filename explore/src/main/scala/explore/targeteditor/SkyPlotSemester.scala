@@ -6,9 +6,10 @@ package explore.targeteditor
 import cats.Eval
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.implicits._
 import crystal.react.hooks._
+import crystal.react.implicits._
 import explore.implicits._
+import explore.model.reusability._
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
@@ -26,7 +27,6 @@ import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
 import lucuma.ui.reusability._
-import explore.model.reusability._
 import org.typelevel.cats.time._
 import react.common._
 import react.highcharts.Chart
