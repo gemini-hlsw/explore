@@ -17,7 +17,6 @@ import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
@@ -25,7 +24,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.Focus
 import react.aladin.Fov
 import react.common._
 import react.fa.Transform
@@ -42,7 +40,7 @@ final case class AladinCell(
   target:           View[Coordinates],
   options:          View[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[AladinCell](AladinCell.component) {
+    extends ReactFnProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get
 }
 
@@ -50,90 +48,65 @@ object AladinCell extends ModelOptics {
   type Props = AladinCell
   val AladinRef = AladinContainer.component
 
-  final case class State(fov: Fov, current: Coordinates)
+  implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
-  object State {
-    val fov     = Focus[State](_.fov)
-    val current = Focus[State](_.current)
-    val Zero    = State(Fov(Angle.Angle0, Angle.Angle0), Coordinates.Zero)
-  }
-  implicit val propsReuse = Reusability.derive[Props]
-  implicit val stateReuse = Reusability.never[State]
+  val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateBy(_.aladinCoords)
+      .useState(Fov(Angle.Angle0, Angle.Angle0))
+      .useRefToScalaComponent(AladinContainer.component)
+      // Waiting on how to make a Reusability to the ref
+      .render { (props, coords, fov, aladinRef) =>
+        val coordinatesSetter =
+          ((c: Coordinates) => coords.setState(c)).reuseAlways
 
-  class Backend($ : BackendScope[Props, State]) {
-    // Create a mutable reference
-    private val aladinRef = Ref.toScalaComponent(AladinRef)
+        def fovSetter(props: Props, newFov: Fov): Callback =
+          if (newFov.x.toMicroarcseconds === 0L) Callback.empty
+          else {
+            implicit val ctx = props.ctx
+            fov.setState(newFov) >>
+              UserTargetPreferencesUpsert
+                .updateFov[IO](props.uid, props.tid, newFov.x)
+                .runAsyncAndForget
+                .debounce(1.seconds)
+          }
 
-    val centerOnTarget =
-      aladinRef.get.asCBO
-        .flatMapCB(_.backend.centerOnTarget)
-        .toCallback
+        val centerOnTarget =
+          aladinRef.get.asCBO
+            .flatMapCB(_.backend.centerOnTarget)
+            .toCallback
 
-    val gotoRaDec = (coords: Coordinates) =>
-      $.setStateL(State.current)(coords) *>
-        aladinRef.get.asCBO
-          .flatMapCB(_.backend.gotoRaDec(coords))
-          .toCallback
-
-    val coordinatesSetter =
-      ((coords: Coordinates) => $.setStateL(State.current)(coords)).reuseAlways
-
-    def fovSetter(props: Props, fov: Fov): Callback =
-      if (fov.x.toMicroarcseconds === 0L) Callback.empty
-      else {
-        implicit val ctx = props.ctx
-        $.setStateL(State.fov)(fov) >>
-          UserTargetPreferencesUpsert
-            .updateFov[IO](props.uid, props.tid, fov.x)
-            .runAsyncAndForget
-            .debounce(1.seconds)
-      }
-
-    def render(props: Props, state: State) =
-      React.Fragment(
-        <.div(
-          ExploreStyles.TargetAladinCell,
+        React.Fragment(
           <.div(
-            ExploreStyles.AladinContainerColumn,
-            AladinRef
-              .withRef(aladinRef) {
-                AladinContainer(
-                  props.target,
-                  props.options.get,
-                  coordinatesSetter,
-                  Reuse.currying(props).in(fovSetter _)
-                )
-              },
-            AladinToolbar(state.fov, state.current),
+            ExploreStyles.TargetAladinCell,
             <.div(
-              ExploreStyles.AladinCenterButton,
-              Popup(
-                content = "Center on target",
-                position = PopupPosition.BottomLeft,
-                trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
-                  Icons.Bullseye
-                    .transform(Transform(size = 24))
-                    .clazz(ExploreStyles.Accented)
+              ExploreStyles.AladinContainerColumn,
+              AladinRef
+                .withRef(aladinRef) {
+                  AladinContainer(
+                    props.target,
+                    props.options.get,
+                    coordinatesSetter,
+                    Reuse.currying(props).in(fovSetter _)
+                  )
+                },
+              AladinToolbar(fov.value, coords.value),
+              <.div(
+                ExploreStyles.AladinCenterButton,
+                Popup(
+                  content = "Center on target",
+                  position = PopupPosition.BottomLeft,
+                  trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
+                    Icons.Bullseye
+                      .transform(Transform(size = 24))
+                      .clazz(ExploreStyles.Accented)
+                  )
                 )
               )
             )
           )
         )
-      )
-
-    def newProps(currentProps: Props, nextProps: Props): Callback =
-      gotoRaDec(nextProps.aladinCoords)
-        .when(nextProps.aladinCoords =!= currentProps.aladinCoords)
-        .void
-  }
-
-  val component =
-    ScalaComponent
-      .builder[Props]
-      .initialStateFromProps(p => State.Zero.copy(current = p.aladinCoords))
-      .renderBackend[Backend]
-      .componentDidUpdate($ => $.backend.newProps($.prevProps, $.currentProps))
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+      }
 
 }

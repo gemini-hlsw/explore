@@ -50,16 +50,14 @@ object TargetTile {
             (
               (asterism: View[List[TargetWithId]]) =>
                 userId.map(uid =>
-                  <.div(
-                    AsterismEditor(uid,
-                                   obsId,
-                                   asterism,
-                                   undoStacks,
-                                   searching,
-                                   options,
-                                   hiddenColumns,
-                                   renderInTitle
-                    )
+                  AsterismEditor(uid,
+                                 obsId,
+                                 asterism,
+                                 undoStacks,
+                                 searching,
+                                 options,
+                                 hiddenColumns,
+                                 renderInTitle
                   )
                 ): VdomNode
             ).reuseAlways
