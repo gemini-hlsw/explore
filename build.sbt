@@ -251,12 +251,7 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List(
-    "rm .npmrc",
-    """npm config set "@fortawesome:registry" https://npm.fontawesome.com/""",
-    """npm config set "//npm.fontawesome.com/:_authToken" ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}""",
-    "npm install"
-  ),
+  List("npm install"),
   name = Some("npm install")
 )
 
