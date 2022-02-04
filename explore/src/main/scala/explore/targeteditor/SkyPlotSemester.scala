@@ -6,8 +6,10 @@ package explore.targeteditor
 import cats.Eval
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.implicits._
+import explore.model.reusability._
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
@@ -24,9 +26,11 @@ import lucuma.core.model.Semester
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.syntax.boundedInterval._
 import lucuma.core.syntax.time._
+import lucuma.ui.reusability._
 import org.typelevel.cats.time._
 import react.common._
 import react.highcharts.Chart
+import react.resizeDetector.hooks._
 import spire.math.Bounded
 
 import java.time.Duration
@@ -43,10 +47,9 @@ import js.JSConverters._
 final case class SkyPlotSemester(
   site:             Site,
   coords:           Coordinates,
-  semester:         Semester,
-  height:           Int
+  semester:         Semester
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[SkyPlotSemester](SkyPlotSemester.component)
+    extends ReactFnProps[SkyPlotSemester](SkyPlotSemester.component)
 
 final case class SemesterPlotCalc(semester: Semester, site: Site) {
   protected val SampleRate: Duration = Duration.ofMinutes(1)
@@ -94,158 +97,161 @@ final case class SemesterPlotCalc(semester: Semester, site: Site) {
 object SkyPlotSemester {
   type Props = SkyPlotSemester
 
-  case class State(cancelToken: Option[IO[Unit]])
-
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000
   private val MillisPerDay: Double  = MillisPerHour * 24
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  class Backend($ : BackendScope[Props, State]) {
-
-    def render(props: Props) = {
-      implicit val ct = props.ctx
-
-      val plotter = SemesterPlotCalc(props.semester, props.site)
-
-      def renderPoints(chart: Chart_): IO[IO[Unit]] = {
-        val series = chart.series(0)
-        val xAxis  = chart.xAxis(0)
-        Stream
-          .fromIterator[IO](plotter.samples(_ => props.coords, PlotDayRate).iterator, 1)
-          .evalMap { case (instant, visibilityDuration) =>
-            val value = instant.toEpochMilli.toDouble
-            IO(
-              xAxis.addPlotLine(
-                AxisPlotLinesOptions
-                  .XAxisPlotLinesOptions()
-                  .setId("progress")
-                  .setValue(value - PlotDayRate * MillisPerDay) // Draw line on last drawn point.
-                  .setZIndex(1000)
-                  .setClassName("plot-plot-line-progress")
-              )
-            ) >>
-              IO.cede >>
-              IO {
-                val visibility = visibilityDuration.toMillis
-                series.addPoint(
-                  PointOptionsObject(accessibility = js.undefined)
-                    .setX(value)
-                    // Trick to leave small values out of the plot
-                    .setY(if (visibility > 0.1) visibility / MillisPerHour else -1),
-                  redraw = true,
-                  shift = false,
-                  animation = false
-                )
-              } >>
-              IO(xAxis.removePlotLine("progress"))
-          }
-          .compile
-          .drain
-          .start
-          .map(_.cancel)
-      }
-
-      def timeFormat(value: Double): String =
-        ZonedDateTime
-          .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
-          .format(dateTimeFormatter)
-
-      val tickFormatter: AxisLabelsFormatterCallbackFunction =
-        (
-          labelValue: AxisLabelsFormatterContextObject, // [Double],
-          _:          AxisLabelsFormatterContextObject  // [String]
-        ) =>
-          (labelValue.value: Any) match {
-            case ms: Double => timeFormat(ms)
-            case s          => s.toString
-          }
-
-      def dateFormat(value: Double): String =
-        ZonedDateTime
-          .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
-          .format(dateTimeFormatter)
-
-      val tooltipFormatter: TooltipFormatterCallbackFunction = {
-        (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-          val date       = dateFormat(ctx.x)
-          val visibility = Duration.ofMillis((ctx.y * MillisPerHour).toLong)
-          val minutes    = visibility.getSeconds / 60
-          s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
-      }
-
-      val options = Options()
-        .setChart(ChartOptions().setHeight(props.height).setStyledMode(true).setAlignTicks(false))
-        .setTitle(
-          TitleOptions().setText(
-            s"Semester ${props.semester.format}"
-          )
-        )
-        .setCredits(CreditsOptions().setEnabled(false))
-        .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
-        .setXAxis(
-          XAxisOptions()
-            .setType(AxisTypeValue.datetime)
-            .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
-            .setTickInterval(MillisPerDay * 10)
-            .setMinorTickInterval(MillisPerDay * 5)
-            .setMin(plotter.interval.lower.toEpochMilli.toDouble)
-            .setMax(plotter.interval.upper.toEpochMilli.toDouble)
-        )
-        .setYAxis(
-          List(
-            YAxisOptions()
-              .setTitle(YAxisTitleOptions().setText("Hours"))
-              .setAllowDecimals(false)
-              .setMin(0)
-              .setMax(15)
-              .setTickInterval(1)
-              .setMinorTickInterval(0.5)
-              .setLabels(YAxisLabelsOptions().setFormat("{value}"))
-          ).toJSArray
-        )
-        .setPlotOptions(
-          PlotOptions()
-            .setSeries(
-              PlotSeriesOptions()
-                .setLineWidth(4)
-                .setMarker(PointMarkerOptionsObject().setEnabled(false))
-                .setStates(
-                  SeriesStatesOptionsObject()
-                    .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
-                )
-            )
-        )
-        .setSeries(
-          List(
-            SeriesLineOptions((), (), line)
-              .setName("Visibility")
-              .setYAxis(0)
-            // .setData(series.toJSArray)
-          )
-            .map(_.asInstanceOf[SeriesOptionsType])
-            .toJSArray
-        )
-
-      <.span(
-        Chart(options,
-              chart =>
-                (renderPoints(chart) >>= (cancelToken =>
-                  $.setStateIn[IO](State(cancelToken.some))
-                )).runAsync
-        )
-          .withKey(props.toString)
-      )
-    }
-  }
+  implicit val propsReuse: Reusability[Props]           = Reusability.derive
+  implicit val taksReuse: Reusability[Option[IO[Unit]]] = Reusability.always
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(State(none))
-      .renderBackend[Backend]
-      .shouldComponentUpdateConst(false) // This component can't be updated, it must be rerendered.
-      .componentWillUnmount($ => $.state.cancelToken.orEmpty)
-      .build
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateView(none[IO[Unit]])
+      .useResizeDetector()
+      // This component can't be updated, it must be rerendered. Don't add reuse
+      .renderWithReuse { (props, cancel, resize) =>
+        implicit val ct = props.ctx
+
+        val plotter = SemesterPlotCalc(props.semester, props.site)
+
+        def renderPoints(chart: Chart_): IO[IO[Unit]] = {
+          val series = chart.series(0)
+          val xAxis  = chart.xAxis(0)
+          Stream
+            .fromIterator[IO](plotter.samples(_ => props.coords, PlotDayRate).iterator, 1)
+            .evalMap { case (instant, visibilityDuration) =>
+              val value = instant.toEpochMilli.toDouble
+              IO(
+                xAxis.addPlotLine(
+                  AxisPlotLinesOptions
+                    .XAxisPlotLinesOptions()
+                    .setId("progress")
+                    .setValue(value - PlotDayRate * MillisPerDay) // Draw line on last drawn point.
+                    .setZIndex(1000)
+                    .setClassName("plot-plot-line-progress")
+                )
+              ) >>
+                IO.cede >>
+                IO {
+                  val visibility = visibilityDuration.toMillis
+                  series.addPoint(
+                    PointOptionsObject(accessibility = js.undefined)
+                      .setX(value)
+                      // Trick to leave small values out of the plot
+                      .setY(if (visibility > 0.1) visibility / MillisPerHour else -1),
+                    redraw = true,
+                    shift = false,
+                    animation = false
+                  )
+                } >>
+                IO(xAxis.removePlotLine("progress"))
+            }
+            .compile
+            .drain
+            .start
+            .map(_.cancel)
+        }
+
+        def timeFormat(value: Double): String =
+          ZonedDateTime
+            .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
+            .format(dateTimeFormatter)
+
+        val tickFormatter: AxisLabelsFormatterCallbackFunction =
+          (
+            labelValue: AxisLabelsFormatterContextObject, // [Double],
+            _:          AxisLabelsFormatterContextObject  // [String]
+          ) =>
+            (labelValue.value: Any) match {
+              case ms: Double => timeFormat(ms)
+              case s          => s.toString
+            }
+
+        def dateFormat(value: Double): String =
+          ZonedDateTime
+            .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
+            .format(dateTimeFormatter)
+
+        val tooltipFormatter: TooltipFormatterCallbackFunction = {
+          (ctx: TooltipFormatterContextObject, _: Tooltip) =>
+            val date       = dateFormat(ctx.x)
+            val visibility = Duration.ofMillis((ctx.y * MillisPerHour).toLong)
+            val minutes    = visibility.getSeconds / 60
+            s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
+        }
+
+        val options = Options()
+          .setChart(
+            ChartOptions()
+              .setHeight(resize.height.getOrElse(1).toDouble)
+              .setStyledMode(true)
+              .setAlignTicks(false)
+          )
+          .setTitle(
+            TitleOptions().setText(
+              s"Semester ${props.semester.format}"
+            )
+          )
+          .setCredits(CreditsOptions().setEnabled(false))
+          .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
+          .setXAxis(
+            XAxisOptions()
+              .setType(AxisTypeValue.datetime)
+              .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
+              .setTickInterval(MillisPerDay * 10)
+              .setMinorTickInterval(MillisPerDay * 5)
+              .setMin(plotter.interval.lower.toEpochMilli.toDouble)
+              .setMax(plotter.interval.upper.toEpochMilli.toDouble)
+          )
+          .setYAxis(
+            List(
+              YAxisOptions()
+                .setTitle(YAxisTitleOptions().setText("Hours"))
+                .setAllowDecimals(false)
+                .setMin(0)
+                .setMax(15)
+                .setTickInterval(1)
+                .setMinorTickInterval(0.5)
+                .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+            ).toJSArray
+          )
+          .setPlotOptions(
+            PlotOptions()
+              .setSeries(
+                PlotSeriesOptions()
+                  .setLineWidth(4)
+                  .setMarker(PointMarkerOptionsObject().setEnabled(false))
+                  .setStates(
+                    SeriesStatesOptionsObject()
+                      .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
+                  )
+              )
+          )
+          .setSeries(
+            List(
+              SeriesLineOptions((), (), line)
+                .setName("Visibility")
+                .setYAxis(0)
+              // .setData(series.toJSArray)
+            )
+              .map(_.asInstanceOf[SeriesOptionsType])
+              .toJSArray
+          )
+
+        <.div(
+          Chart(
+            options,
+            chart =>
+              (renderPoints(chart) >>= (cancelToken =>
+                cancel.set(cancelToken.some).to[IO]
+              )).runAsync
+          )
+            .withKey(s"$props-$resize")
+            .when(resize.height.isDefined)
+        )
+          .withRef(resize.ref)
+      }
 }

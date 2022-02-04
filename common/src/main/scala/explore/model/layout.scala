@@ -54,6 +54,8 @@ object layout {
   val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.each
   val layoutItemName                                            = Focus[LayoutItem](_.i)
   val layoutItemHeight                                          = Focus[LayoutItem](_.h)
+  val layoutItemMaxHeight                                       = Focus[LayoutItem](_.maxH)
+  val layoutItemMinHeight                                       = Focus[LayoutItem](_.minH)
   val layoutItemWidth                                           = Focus[LayoutItem](_.w)
   val layoutItemX                                               = Focus[LayoutItem](_.x)
   val layoutItemY                                               = Focus[LayoutItem](_.y)

@@ -10,7 +10,6 @@ import explore.implicits._
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions
 import gpp.highcharts.mod._
-import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Site
@@ -21,10 +20,11 @@ import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.util.Enumerated
 import lucuma.ui.reusability._
-import monocle.Focus
 import react.common._
 import react.highcharts.Chart
 import react.moon.MoonPhase
+import react.resizeDetector._
+import react.resizeDetector.hooks._
 import shapeless._
 
 import java.time.Duration
@@ -43,25 +43,16 @@ final case class SkyPlotNight(
   site:        Site,
   coords:      Coordinates,
   date:        LocalDate,
-  timeDisplay: SkyPlotNight.TimeDisplay,
-  height:      Int
-) extends ReactProps[SkyPlotNight](SkyPlotNight.component)
+  timeDisplay: SkyPlotNight.TimeDisplay
+) extends ReactFnProps[SkyPlotNight](SkyPlotNight.component)
 
 object SkyPlotNight {
   type Props = SkyPlotNight
 
-  case class State(
-    shownSeries: HashSet[ElevationSeries] = HashSet.from(Enumerated[ElevationSeries].all)
-  )
-
-  object State {
-    val shownSeries = Focus[State](_.shownSeries)
-  }
-
-  implicit private val propsReuse: Reusability[Props] = Reusability.derive
-  // State doesn't trigger rerenders. We keep track of what is shown in case there is a
+  implicit private val propsReuse: Reusability[Props]                    = Reusability.derive
+  // series doesn't trigger rerenders. We keep track of what is shown in case there is a
   // rerender due to a change of properties.
-  implicit private val stateReuse: Reusability[State] = Reusability.always
+  implicit private val stateReuse: Reusability[HashSet[ElevationSeries]] = Reusability.always
 
   sealed trait TimeDisplay
   object TimeDisplay {
@@ -164,252 +155,257 @@ object SkyPlotNight {
         .setZIndex(1)
     )
 
-  class Backend($ : BackendScope[Props, State]) {
-    def hideSeries(series: ElevationSeries, chart: Chart_): Callback =
-      $.modStateL(State.shownSeries)(_ - series) >>
-        Callback(
-          skyBrightnessPercentiles
-            .flatMap(_.id.toList)
-            .foreach(id => chart.yAxis(2).removePlotLine(id))
-        )
-          .when(series === ElevationSeries.SkyBrightness)
-          .void
-
-    def showSeries(series: ElevationSeries, chart: Chart_): Callback =
-      $.modStateL(State.shownSeries)(_ + series) >>
-        Callback(
-          skyBrightnessPercentiles
-            .foreach(line => chart.yAxis(2).addPlotLine(line))
-        )
-          .when(series === ElevationSeries.SkyBrightness)
-          .void
-
-    def render(props: Props, state: State) = {
-      val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
-      val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightType.Official)
-      val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
-
-      val start          = tbOfficialNight.start
-      val end            = tbOfficialNight.end
-      val skyCalcResults =
-        SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
-      val series         = skyCalcResults
-        .map { case (instant, results) =>
-          val millisSinceEpoch = instant.toEpochMilli.toDouble
-
-          def point(value: Double): Chart.Data =
-            PointOptionsObject(js.undefined)
-              .setX(millisSinceEpoch)
-              .setY(value)
-
-          def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
-            point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
-
-          pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
-            point(results.totalSkyBrightness) ::
-            point(results.parallacticAngle.toSignedDoubleDegrees) ::
-            point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
-            HNil
-        }
-
-      val seriesData = seriesDataGen.from(series.unzipN)
-
-      def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
-        ZonedDateTime
-          .ofInstant(instant, zoneId)
-          .format(dateTimeFormatter)
-
-      def instantFormat(instant: Instant): String =
-        props.timeDisplay match {
-          case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
-          case TimeDisplay.UTC      => timezoneInstantFormat(instant, ZoneOffset.UTC)
-          case TimeDisplay.Sidereal =>
-            val skycalc = ImprovedSkyCalc(props.site.place)
-            val sid     = skycalc.getSiderealTime(instant)
-            val hours   = sid.toInt
-            val minutes = Math.round((sid % 1) * 60).toInt
-            f"$hours%02d:$minutes%02d"
-        }
-
-      def timeFormat(value: Double): String =
-        instantFormat(Instant.ofEpochMilli(value.toLong))
-
-      val timeDisplay: String =
-        props.timeDisplay match {
-          case TimeDisplay.Site     => props.site.timezone.getId
-          case TimeDisplay.UTC      => "UTC"
-          case TimeDisplay.Sidereal => "Site Sidereal"
-        }
-
-      val tickFormatter: AxisLabelsFormatterCallbackFunction =
-        (
-          labelValue: AxisLabelsFormatterContextObject,
-          _:          AxisLabelsFormatterContextObject
-        ) => timeFormat(labelValue.value.asInstanceOf[Double])
-
-      val tooltipFormatter: TooltipFormatterCallbackFunction = {
-        (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-          val time  = timeFormat(ctx.x)
-          val value = ctx.series.index match {
-            case 0 =>                      // Target elevation with airmass
-              formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
-            case 2 => "%.2f".format(ctx.y) // Sky Brightness
-            case _ => formatAngle(ctx.y)   // Other elevations
-          }
-          s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
-      }
-
-      val sunset  = instantFormat(tbNauticalNight.start)
-      val sunrise = instantFormat(tbNauticalNight.end)
-
-      val targetBelowHorizon =
-        ElevationSeries.Elevation
-          .data(seriesData)
-          .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
-
-      val options = Options()
-        .setChart(ChartOptions().setHeight(props.height).setStyledMode(true).setAlignTicks(false))
-        .setTitle(
-          TitleOptions().setText(
-            s"Sunset ${observingNight.toLocalDate.minusDays(1)} ➟ Sunrise ${observingNight.toLocalDate} "
-          )
-        )
-        .setCredits(CreditsOptions().setEnabled(false))
-        .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
-        .setXAxis(
-          XAxisOptions()
-            .setType(AxisTypeValue.datetime)
-            .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
-            .setTickInterval(MillisPerHour)
-            .setMinorTickInterval(MillisPerHour / 2)
-            .setTitle(
-              if (targetBelowHorizon) XAxisTitleOptions().setText("Target is below horizon")
-              else XAxisTitleOptions()
-            )
-            .setPlotBands(
-              List(
-                XAxisPlotBandsOptions()
-                  .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
-                  .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
-                  .setClassName("plot-band-twilight-nautical")
-                  // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
-                  .setZIndex(1)
-                  .setLabel(
-                    XAxisPlotBandsLabelOptions()
-                      .setText(s"  Evening 12° - Twilight: $sunset")
-                      .setRotation(270)
-                      .setAlign(AlignValue.left)
-                      .setTextAlign(AlignValue.center)
-                      .setVerticalAlign(VerticalAlignValue.middle)
-                  ),
-                XAxisPlotBandsOptions() // Empty band, just to draw the label
-                  .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
-                  .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
-                  .setClassName("plot-band-twilight-nautical-end")
-                  .setZIndex(1)
-                  .setLabel(
-                    XAxisPlotBandsLabelOptions()
-                      .setText(s"  Morning 12° - Twilight: $sunrise")
-                      .setRotation(270)
-                      .setAlign(AlignValue.left)
-                      .setTextAlign(AlignValue.center)
-                      .setVerticalAlign(VerticalAlignValue.middle)
-                  )
-              ).toJSArray
-            )
-        )
-        .setYAxis(
-          List(
-            YAxisOptions()
-              .setTitle(YAxisTitleOptions().setText("Elevation"))
-              .setAllowDecimals(false)
-              .setMin(0)
-              .setMax(90)
-              .setTickInterval(10)
-              .setMinorTickInterval(5)
-              .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
-            YAxisOptions()
-              .setOpposite(true)
-              .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
-              .setMin(-180)
-              .setMax(180)
-              .setTickInterval(60)
-              .setClassName("plot-axis-parallactic-angle")
-              .setShowEmpty(false)
-              .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
-            YAxisOptions()
-              .setOpposite(true)
-              .setTitle(YAxisTitleOptions().setText("Brightness (mags/arcsec²)"))
-              .setMin(17)
-              .setMax(22)
-              .setReversed(true)
-              .setTickInterval(1)
-              .setClassName("plot-axis-sky-brightness")
-              .setShowEmpty(false)
-              .setLabels(YAxisLabelsOptions().setFormat("{value}"))
-              .setPlotLines(
-                if (state.shownSeries.contains(ElevationSeries.SkyBrightness))
-                  skyBrightnessPercentiles.toJSArray
-                else
-                  js.Array()
-              )
-          ).toJSArray
-        )
-        .setPlotOptions(
-          PlotOptions()
-            .setSeries(
-              PlotSeriesOptions()
-                .setLineWidth(4)
-                .setMarker(PointMarkerOptionsObject().setEnabled(false))
-                .setStates(
-                  SeriesStatesOptionsObject()
-                    .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
-                )
-            )
-        )
-        .setSeries(
-          Enumerated[ElevationSeries].all
-            .map(series =>
-              SeriesLineOptions((), (), line)
-                .setName(series.name)
-                .setYAxis(series.yAxis)
-                .setData(series.data(seriesData).toJSArray)
-                .setVisible(state.shownSeries.contains(series))
-                .setEvents(
-                  SeriesEventsOptionsObject()
-                    .setHide((s, _) => hideSeries(series, s.chart).runNow())
-                    .setShow((s, _) => showSeries(series, s.chart).runNow())
-                )
-            )
-            .map(_.asInstanceOf[SeriesOptionsType])
-            .toJSArray
-        )
-
-      val (moonPhase, moonIllum) = skyCalcResults(
-        skyCalcResults.length / 2
-      ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
-
-      <.span(
-        Chart(options).withKey(props.toString),
-        <.div(ExploreStyles.MoonPhase)(
-          <.span(
-            MoonPhase(phase = moonPhase,
-                      size = 20,
-                      border = "1px solid black",
-                      darkColor = "#303030"
-            ),
-            <.small("%1.0f%%".format(moonIllum * 100))
-          )
-        )
-      )
-    }
-  }
+  implicit val reusabilityUseResizeDetectorReturn: Reusability[UseResizeDetectorReturn] =
+    Reusability.never
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(State())
-      .renderBackend[Backend]
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+    ScalaFnComponent
+      .withHooks[Props]
+      .useState(HashSet.from(Enumerated[ElevationSeries].all))
+      .useResizeDetector()
+      .renderWithReuse { (props, shownSeries, resize) =>
+        def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
+          shownSeries.modState(_ + series) >>
+            Callback(
+              skyBrightnessPercentiles
+                .foreach(line => chart.yAxis(2).addPlotLine(line))
+            )
+              .when(series === ElevationSeries.SkyBrightness)
+              .void
+
+        def hideSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
+          shownSeries.modState(_ - series) >>
+            Callback(
+              skyBrightnessPercentiles
+                .flatMap(_.id.toList)
+                .foreach(id => chart.yAxis(2).removePlotLine(id))
+            )
+              .when(series === ElevationSeries.SkyBrightness)
+              .void
+
+        val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
+        val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightType.Official)
+        val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
+
+        val start          = tbOfficialNight.start
+        val end            = tbOfficialNight.end
+        val skyCalcResults =
+          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords)
+        val series         = skyCalcResults
+          .map { case (instant, results) =>
+            val millisSinceEpoch = instant.toEpochMilli.toDouble
+
+            def point(value: Double): Chart.Data =
+              PointOptionsObject(js.undefined)
+                .setX(millisSinceEpoch)
+                .setY(value)
+
+            def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
+              point(value).asInstanceOf[PointOptionsWithAirmass].setAirMass(airmass)
+
+            pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees, results.airmass) ::
+              point(results.totalSkyBrightness) ::
+              point(results.parallacticAngle.toSignedDoubleDegrees) ::
+              point(results.lunarElevation.toAngle.toSignedDoubleDegrees) ::
+              HNil
+          }
+
+        val seriesData = seriesDataGen.from(series.unzipN)
+
+        def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
+          ZonedDateTime
+            .ofInstant(instant, zoneId)
+            .format(dateTimeFormatter)
+
+        def instantFormat(instant: Instant): String =
+          props.timeDisplay match {
+            case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
+            case TimeDisplay.UTC      => timezoneInstantFormat(instant, ZoneOffset.UTC)
+            case TimeDisplay.Sidereal =>
+              val skycalc = ImprovedSkyCalc(props.site.place)
+              val sid     = skycalc.getSiderealTime(instant)
+              val hours   = sid.toInt
+              val minutes = Math.round((sid % 1) * 60).toInt
+              f"$hours%02d:$minutes%02d"
+          }
+
+        def timeFormat(value: Double): String =
+          instantFormat(Instant.ofEpochMilli(value.toLong))
+
+        val timeDisplay: String =
+          props.timeDisplay match {
+            case TimeDisplay.Site     => props.site.timezone.getId
+            case TimeDisplay.UTC      => "UTC"
+            case TimeDisplay.Sidereal => "Site Sidereal"
+          }
+
+        val tickFormatter: AxisLabelsFormatterCallbackFunction =
+          (
+            labelValue: AxisLabelsFormatterContextObject,
+            _:          AxisLabelsFormatterContextObject
+          ) => timeFormat(labelValue.value.asInstanceOf[Double])
+
+        val tooltipFormatter: TooltipFormatterCallbackFunction = {
+          (ctx: TooltipFormatterContextObject, _: Tooltip) =>
+            val time  = timeFormat(ctx.x)
+            val value = ctx.series.index match {
+              case 0 =>                      // Target elevation with airmass
+                formatAngle(ctx.y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
+              case 2 => "%.2f".format(ctx.y) // Sky Brightness
+              case _ => formatAngle(ctx.y)   // Other elevations
+            }
+            s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
+        }
+
+        val sunset  = instantFormat(tbNauticalNight.start)
+        val sunrise = instantFormat(tbNauticalNight.end)
+
+        val targetBelowHorizon =
+          ElevationSeries.Elevation
+            .data(seriesData)
+            .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
+
+        val options = Options()
+          .setChart(
+            ChartOptions()
+              .setHeight(resize.height.getOrElse(1).toDouble)
+              .setStyledMode(true)
+              .setAlignTicks(false)
+          )
+          .setTitle(
+            TitleOptions().setText(
+              s"Sunset ${observingNight.toLocalDate.minusDays(1)} ➟ Sunrise ${observingNight.toLocalDate} "
+            )
+          )
+          .setCredits(CreditsOptions().setEnabled(false))
+          .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
+          .setXAxis(
+            XAxisOptions()
+              .setType(AxisTypeValue.datetime)
+              .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
+              .setTickInterval(MillisPerHour)
+              .setMinorTickInterval(MillisPerHour / 2)
+              .setTitle(
+                if (targetBelowHorizon) XAxisTitleOptions().setText("Target is below horizon")
+                else XAxisTitleOptions()
+              )
+              .setPlotBands(
+                List(
+                  XAxisPlotBandsOptions()
+                    .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
+                    .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                    .setClassName("plot-band-twilight-nautical")
+                    // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
+                    .setZIndex(1)
+                    .setLabel(
+                      XAxisPlotBandsLabelOptions()
+                        .setText(s"  Evening 12° - Twilight: $sunset")
+                        .setRotation(270)
+                        .setAlign(AlignValue.left)
+                        .setTextAlign(AlignValue.center)
+                        .setVerticalAlign(VerticalAlignValue.middle)
+                    ),
+                  XAxisPlotBandsOptions() // Empty band, just to draw the label
+                    .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
+                    .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                    .setClassName("plot-band-twilight-nautical-end")
+                    .setZIndex(1)
+                    .setLabel(
+                      XAxisPlotBandsLabelOptions()
+                        .setText(s"  Morning 12° - Twilight: $sunrise")
+                        .setRotation(270)
+                        .setAlign(AlignValue.left)
+                        .setTextAlign(AlignValue.center)
+                        .setVerticalAlign(VerticalAlignValue.middle)
+                    )
+                ).toJSArray
+              )
+          )
+          .setYAxis(
+            List(
+              YAxisOptions()
+                .setTitle(YAxisTitleOptions().setText("Elevation"))
+                .setAllowDecimals(false)
+                .setMin(0)
+                .setMax(90)
+                .setTickInterval(10)
+                .setMinorTickInterval(5)
+                .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
+              YAxisOptions()
+                .setOpposite(true)
+                .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
+                .setMin(-180)
+                .setMax(180)
+                .setTickInterval(60)
+                .setClassName("plot-axis-parallactic-angle")
+                .setShowEmpty(false)
+                .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
+              YAxisOptions()
+                .setOpposite(true)
+                .setTitle(YAxisTitleOptions().setText("Brightness (mags/arcsec²)"))
+                .setMin(17)
+                .setMax(22)
+                .setReversed(true)
+                .setTickInterval(1)
+                .setClassName("plot-axis-sky-brightness")
+                .setShowEmpty(false)
+                .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+                .setPlotLines(
+                  if (shownSeries.value.contains(ElevationSeries.SkyBrightness))
+                    skyBrightnessPercentiles.toJSArray
+                  else
+                    js.Array()
+                )
+            ).toJSArray
+          )
+          .setPlotOptions(
+            PlotOptions()
+              .setSeries(
+                PlotSeriesOptions()
+                  .setLineWidth(4)
+                  .setMarker(PointMarkerOptionsObject().setEnabled(false))
+                  .setStates(
+                    SeriesStatesOptionsObject()
+                      .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
+                  )
+              )
+          )
+          .setSeries(
+            Enumerated[ElevationSeries].all
+              .map(series =>
+                SeriesLineOptions((), (), line)
+                  .setName(series.name)
+                  .setYAxis(series.yAxis)
+                  .setData(series.data(seriesData).toJSArray)
+                  .setVisible(shownSeries.value.contains(series))
+                  .setEvents(
+                    SeriesEventsOptionsObject()
+                      .setHide((s, _) => hideSeriesCB(series, s.chart).runNow())
+                      .setShow((s, _) => showSeriesCB(series, s.chart).runNow())
+                  )
+              )
+              .map(_.asInstanceOf[SeriesOptionsType])
+              .toJSArray
+          )
+
+        val (moonPhase, moonIllum) = skyCalcResults(
+          skyCalcResults.length / 2
+        ).bimap(MoonCalc.approxPhase, _.lunarIlluminatedFraction.toDouble)
+
+        <.div(
+          // Include the size in the key
+          Chart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
+          <.div(ExploreStyles.MoonPhase)(
+            <.span(
+              MoonPhase(phase = moonPhase,
+                        size = 20,
+                        border = "1px solid black",
+                        darkColor = "#303030"
+              ),
+              <.small("%1.0f%%".format(moonIllum * 100))
+            )
+          )
+        )
+          .withRef(resize.ref)
+      }
 }

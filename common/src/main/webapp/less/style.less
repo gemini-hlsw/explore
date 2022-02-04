@@ -834,17 +834,37 @@ tfoot {
   background-color: var(--explore-group-dragging) !important;
 }
 
+.sky-plot-tile {
+  background-color: var(--plot-background-color);
+}
+
+.sky-plot-tile-body {
+  display: flex;
+  justify-content: stretch;
+}
+
 .sky-plot {
-  height: 350px;
+  height: 100%;
 
   .highcharts-xaxis .highcharts-axis-title {
     fill: hsl(0, 87%, 66%);
   }
+
+  > div {
+    height: 100%;
+
+    div[data-highcharts-chart] {
+      height: 100%;
+    }
+  }
 }
 
 .sky-plot-section {
-  height: 390px;
-  padding: 0 !important;
+  min-width: 1px; // Needed to help highcharts recompute width on the fly.
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
 }
@@ -859,6 +879,7 @@ tfoot {
   align-items: baseline;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+  margin: 0.2em;
 
   .ui.compact.buttons .button,
   .ui.compact.button {
@@ -932,7 +953,6 @@ tfoot {
 }
 
 .aladin-container-column {
-  min-height: 500px;
   height: 100%;
   display: grid;
   grid-template-rows: 1fr min-content;
@@ -1049,39 +1069,44 @@ tfoot {
   }
 }
 
-.target-grid {
-  display: grid;
-  grid-gap: 1em;
-  padding: 0.5em;
+.target-tile-body {
+  display: flex;
+  flex-direction: column;
 }
 
-.target-skyplot-cell {
-  margin: 0 1em 1em;
-  position: relative;
-  min-width: 1px; // Needed to help highcharts recompute width on the fly.
+.target-brightness-cell {
+  .form {
+    height: 100%;
+  }
+}
+
+.explore-table.target-asterism-table {
+  height: unset;
+}
+
+.target-asterism-editor {
+  height: 100%;
+  align-self: stretch;
+  outline: 3px solid pink !important;
+}
+
+.target-grid {
+  display: grid;
+  grid-gap: 0.5em;
+  padding: 0.5em;
+  height: 100%;
 }
 
 .tile-xl-width,
 .tile-lg-width,
 .tile-md-width {
   .target-grid {
-    grid-template-columns: repeat(auto-fit, minmax(40ch, 1fr));
-  }
-
-  @supports (grid-template-rows: masonry) {
-    .target-grid {
-      grid-template-rows: masonry;
-    }
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: min-content min-content 1fr;
   }
 
   .target-aladin-cell {
     grid-row: span 3;
-    max-height: 500px;
-  }
-
-  .target-skyplot-cell {
-    grid-column-start: 1;
-    grid-column-end: 3;
   }
 }
 
@@ -1273,6 +1298,16 @@ img.partner-split-flag {
 
   & .selected-down {
     bottom: 1.1em;
+  }
+}
+
+.explore-brightnesses-container {
+  display: flex;
+  flex-direction: column;
+  border: none;
+
+  .table {
+    margin: 0;
   }
 }
 
@@ -1589,7 +1624,10 @@ html {
 
 .explore-brightnesses-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  padding: 0.2em;
+  border-top: 0.2px solid var(--under-tab-border-color);
+  background-color: var(--table-footer-background);
 }
 
 .obs-badge-header {
@@ -1830,7 +1868,6 @@ html {
 }
 
 .explore-title-undo-buttons {
-  flex-grow: 2;
   text-align: right;
 }
 

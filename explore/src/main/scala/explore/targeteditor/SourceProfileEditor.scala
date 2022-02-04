@@ -5,6 +5,7 @@ package explore.targeteditor
 
 import crystal.react.View
 import crystal.react.implicits._
+import explore.components.ui.ExploreStyles
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -21,6 +22,7 @@ object SourceProfileEditor {
 
   val component = ScalaFnComponent.withReuse[Props](props =>
     <.div(
+      ExploreStyles.BrightnessCell,
       props.sourceProfile
         .zoom(SourceProfile.integratedBrightnesses)
         .mapValue(integratedBrightnessesView =>

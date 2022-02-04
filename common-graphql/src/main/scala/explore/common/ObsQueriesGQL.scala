@@ -28,6 +28,14 @@ object ObsQueriesGQL {
               asterism {
                 id
                 name
+                sidereal {
+                  ra {
+                    microarcseconds
+                  }
+                  dec {
+                    microarcseconds
+                  }
+                }
               }
             }
             constraintSet {
@@ -77,8 +85,13 @@ object ObsQueriesGQL {
     object Data {
       object Observations {
         object Nodes {
+          object TargetEnvironment {
+            object Asterism {
+              type Sidereal = lucuma.core.math.Coordinates
+            }
+          }
           trait ConstraintSet extends ConstraintsSummary
-          object PlannedTime {
+          object PlannedTime       {
             type Execution = time.Duration
           }
         }

@@ -46,7 +46,7 @@ final case class AsterismEditor(
   hiddenColumns:    View[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AsterismEditor](AsterismEditor.component)
+    extends ReactFnProps[AsterismEditor](AsterismEditor.component) {}
 
 object AsterismEditor {
   type Props = AsterismEditor
@@ -97,7 +97,7 @@ object AsterismEditor {
             (mod, _) => selectedTargetIdState.modState(mod)
           )
 
-        <.div(
+        React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
               trigger = Reuse.by(adding.value)(
@@ -156,7 +156,6 @@ object AsterismEditor {
                 }
               )
             }
-            .whenDefined
         )
       }
 }

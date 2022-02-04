@@ -4,11 +4,13 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.syntax.all._
 import crystal.Pot
 import crystal.react.View
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.TargetVisualOptions
@@ -18,7 +20,6 @@ import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -28,15 +29,22 @@ object TargetTile {
 
   def targetTile(
     userId:        Option[User.Id],
-    obsId:         Observation.Id,
+    obsId:         ObsIdSet,
     asterismPot:   Pot[View[List[TargetWithId]]],
     undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:     View[Set[Target.Id]],
     options:       View[TargetVisualOptions],
+    title:         String,
+    backButton:    Option[Reuse[VdomNode]] = None,
     hiddenColumns: View[Set[String]]
   )(implicit ctx:  AppContextIO) =
-    Tile(ObsTabTiles.TargetId, "Targets", canMinimize = true)(
-      Reuse.by((userId, obsId, asterismPot, undoStacks, searching, options))(
+    Tile(ObsTabTiles.TargetId,
+         title,
+         back = backButton,
+         canMinimize = true,
+         bodyClass = ExploreStyles.TargetTileBody.some
+    )(
+      Reuse.by((userId, obsId, asterismPot, undoStacks, searching, options, hiddenColumns))(
         (renderInTitle: Tile.RenderInTitle) =>
           potRender[View[List[TargetWithId]]](
             (
@@ -44,7 +52,7 @@ object TargetTile {
                 userId.map(uid =>
                   <.div(
                     AsterismEditor(uid,
-                                   ObsIdSet.one(obsId),
+                                   obsId,
                                    asterism,
                                    undoStacks,
                                    searching,

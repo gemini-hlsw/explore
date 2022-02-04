@@ -124,6 +124,8 @@ object ExploreStyles {
 
   val DraggingOver: Css = Css("dragging-over")
 
+  val SkyPlotTile: Css               = Css("sky-plot-tile")
+  val SkyPlotTileBody: Css           = Css("sky-plot-tile-body")
   val SkyPlot: Css                   = Css("sky-plot")
   val SkyPlotSection: Css            = Css("sky-plot-section")
   val SkyPlotControls: Css           = Css("sky-plot-controls")
@@ -182,10 +184,14 @@ object ExploreStyles {
   val ConstraintsTile: Css  = Css("constraints-tile")
 
   // The Target tab contents
-  val TargetGrid: Css          = Css("target-grid")
+  val TargetGrid: Css     = Css("target-grid")
+  val TargetTileBody: Css = Css("target-tile-body")
+  val AsterismEditor: Css = Css("target-asterism-editor")
+  val AsterismTable: Css  = Css("target-asterism-table")
+  val BrightnessCell: Css = Css("target-brightness-cell")
+
   val TargetAladinCell: Css    = Css("target-aladin-cell")
   val TargetAladin: Css        = Css("aladin-target")
-  val TargetSkyplotCell: Css   = Css("target-skyplot-cell")
   val TargetRaDecMinWidth: Css = Css("target-ra-dec-min-width")
   val TargetForm: Css          = Css("target-form")
   val SearchForm: Css          = Css("target-search-form")
@@ -229,9 +235,7 @@ object ExploreStyles {
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
-  val BrightnessesTableSection: Css            = Css("explore-brightnesses-section")
-
-  val EmptyTreeContent: Css = Css("explore-empty-tree-content")
+  val EmptyTreeContent: Css                    = Css("explore-empty-tree-content")
 
   // This is rendered without React, so we include SUI classes.
   val CrashMessage: Css = Css(List("ui", "large", "label", "crash-message"))

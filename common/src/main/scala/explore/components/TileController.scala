@@ -34,7 +34,7 @@ import scala.scalajs.js.|
 
 final case class TileController(
   userId:           Option[User.Id],
-  coreWidth:        Int,
+  gridWidth:        Int,
   defaultLayout:    LayoutsMap,
   layoutMap:        View[LayoutsMap],
   tiles:            List[Tile],
@@ -111,22 +111,25 @@ object TileController {
             .mod {
               case l if l.i.forall(_ === id.value) =>
                 if (st === TileSizeState.Minimized)
-                  l.copy(h = 1, isResizable = false)
+                  l.copy(h = 1, minH = 1, isResizable = false)
                 else if (st === TileSizeState.Normal) {
                   val defaultHeight = unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
                   // restore the resizable state
                   val resizable     =
                     tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
                   // TODO: Restore to the previous size
-                  l.copy(h = defaultHeight, isResizable = resizable)
+                  l.copy(h = defaultHeight,
+                         isResizable = resizable,
+                         minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
+                  )
                 } else l
               case l                               => l
             }
 
         ResponsiveReactGridLayout(
-          width = p.coreWidth,
-          margin = (5, 5),
-          containerPadding = (5, 0),
+          width = p.gridWidth,
+          margin = (Constants.GridRowPadding, Constants.GridRowPadding),
+          containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
           onLayoutChange =

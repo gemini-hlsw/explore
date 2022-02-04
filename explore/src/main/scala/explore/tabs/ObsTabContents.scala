@@ -39,6 +39,7 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -77,6 +78,7 @@ final case class ObsTabContents(
 object ObsTabTiles {
   val NotesId: NonEmptyString         = "notes"
   val TargetId: NonEmptyString        = "target"
+  val PlotId: NonEmptyString          = "elevationPlot"
   val ConstraintsId: NonEmptyString   = "constraints"
   val ConfigurationId: NonEmptyString = "configuration"
 }
@@ -84,6 +86,7 @@ object ObsTabTiles {
 object ObsTabContents {
   private val NotesMaxHeight: NonNegInt         = 3
   private val TargetMinHeight: NonNegInt        = 12
+  private val ElevationPlotMinHeight: NonNegInt = 8
   private val ConstraintsMaxHeight: NonNegInt   = 6
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 12
@@ -106,12 +109,20 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
+        w = DefaultWidth.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -137,12 +148,20 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
+        w = DefaultWidth.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -168,14 +187,22 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = (NotesMaxHeight |+| TargetMinHeight).value,
                  w = DefaultWidth.value,
-                 h = ConstraintsMaxHeight.value,
-                 i = ObsTabTiles.ConstraintsId.value
+                 h = ElevationPlotMinHeight.value,
+                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
         w = DefaultWidth.value,
-        h = 2 * ConfigurationMaxHeight.value,
+        h = ConstraintsMaxHeight.value,
+        i = ObsTabTiles.ConstraintsId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y =
+          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
+        w = DefaultWidth.value,
+        h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
       )
     )
@@ -284,10 +311,18 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetId = obsSummaryOpt.collect {
-      case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
-        tid
+    val targetInfo                        = obsSummaryOpt.collect {
+      case ObsSummaryWithTargetsAndConstraints(_,
+                                               List(TargetSummary(tid, _, coords)),
+                                               _,
+                                               _,
+                                               _,
+                                               _
+          ) =>
+        (tid, coords)
     }
+    val targetId                          = targetInfo.map(_._1)
+    val targetCoords: Option[Coordinates] = targetInfo.flatMap(_._2)
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -300,12 +335,13 @@ object ObsTabContents {
       )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
     )
 
-    val coreWidth =
+    val coreWidth  =
       if (window.canFitTwoPanels) {
         resize.width.getOrElse(0)
       } else {
         resize.width.getOrElse(0) - treeWidth
       }
+    val coreHeight = resize.height.getOrElse(0)
 
     val notesTile =
       Tile(
@@ -358,50 +394,62 @@ object ObsTabContents {
               makeConstraintsSelector(constraintGroups, obsView)
             )
 
+          val skyPlotTile =
+            targetCoords.map(ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
+
+          val targetTile = TargetTile.targetTile(
+            props.userId.get,
+            ObsIdSet.one(obsId),
+            obsView.map(
+              _.zoom(
+                ObservationData.targetEnvironment.andThen(
+                  ObservationData.TargetEnvironment.asterism
+                )
+              )
+            ),
+            props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
+            props.searching,
+            options,
+            "Targets",
+            none,
+            props.hiddenColumns
+          )
+
+          // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+          // so that the constraints selector dropdown always appears in front of any other tiles. If more
+          // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+          // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+          val constraintsTile = ConstraintsTile
+            .constraintsTile(
+              obsId,
+              obsView.map(_.zoom(ObservationData.constraintSet)),
+              props.undoStacks
+                .zoom(ModelUndoStacks.forConstraintGroup[IO])
+                .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
+              control = constraintsSelector.some,
+              clazz = ExploreStyles.ConstraintsTile.some
+            )
+
+          val configurationTile = ConfigurationTile.configurationTile(
+            obsId,
+            obsView.map(_.zoom(scienceDataForObs)),
+            props.undoStacks
+              .zoom(ModelUndoStacks.forScienceData[IO])
+              .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+          )
+
           TileController(
             props.userId.get,
             coreWidth,
             defaultLayout,
             layouts,
             List(
-              notesTile,
-              TargetTile.targetTile(
-                props.userId.get,
-                obsId,
-                obsView.map(
-                  _.zoom(
-                    ObservationData.targetEnvironment.andThen(
-                      ObservationData.TargetEnvironment.asterism
-                    )
-                  )
-                ),
-                props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
-                props.searching,
-                options,
-                props.hiddenColumns
-              ),
-              // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
-              // so that the constraints selector dropdown always appears in front of any other tiles. If more
-              // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
-              // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-              ConstraintsTile
-                .constraintsTile(
-                  obsId,
-                  obsView.map(_.zoom(ObservationData.constraintSet)),
-                  props.undoStacks
-                    .zoom(ModelUndoStacks.forConstraintGroup[IO])
-                    .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
-                  control = constraintsSelector.some,
-                  clazz = ExploreStyles.ConstraintsTile.some
-                ),
-              ConfigurationTile.configurationTile(
-                obsId,
-                obsView.map(_.zoom(scienceDataForObs)),
-                props.undoStacks
-                  .zoom(ModelUndoStacks.forScienceData[IO])
-                  .zoom(atMapWithDefault(obsId, UndoStacks.empty))
-              )
-            ),
+              targetTile.some,
+              notesTile.some,
+              skyPlotTile,
+              constraintsTile.some,
+              configurationTile.some
+            ).collect { case Some(x) => x },
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode
@@ -463,8 +511,9 @@ object ObsTabContents {
       .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
         implicit val ctx = props.ctx
         _ =>
-          ObsTabPreferencesQuery
+          TabGridPreferencesQuery
             .queryWithDefault[IO](props.userId.get,
+                                  GridLayoutSection.ObservationsLayout,
                                   ResizableSection.ObservationsTree,
                                   (Constants.InitialTreeWidth.toInt, defaultLayout)
             )
@@ -474,7 +523,7 @@ object ObsTabContents {
                 (panels
                   .mod(
                     TwoPanelState.treeWidth[Observation.Id].replace(w)
-                  ) *> layout.set(mergeMap(layout.get, l)))
+                  ) *> layout.mod(o => mergeMap(o, l)))
                   .to[IO]
               case Left(_)       => IO.unit
             }

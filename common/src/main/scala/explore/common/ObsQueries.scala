@@ -94,7 +94,7 @@ object ObsQueries {
   private def convertTarget(
     target: ProgramObservationsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
   ): TargetSummary =
-    TargetSummary(target.id, target.name)
+    TargetSummary(target.id, target.name, target.sidereal)
 
   private val queryToObsSummariesWithConstraintsGetter
     : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
