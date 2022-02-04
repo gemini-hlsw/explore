@@ -291,7 +291,10 @@ def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use
     "firebaseServiceAccount" -> "${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}",
     "projectId"              -> "explore-gemini",
     "target"                 -> "staging"
-  ) ++ (if (live) Map("channelId" -> "live") else Map.empty)
+  ) ++ (if (live) Map("channelId" -> "live") else Map.empty),
+  env = Map(
+    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+  )
 )
 
 lazy val firebaseDeployReview = firebaseDeploy(
