@@ -240,11 +240,13 @@ val notDependabotCond        = "github.actor != 'dependabot[bot]'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
 def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
+val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v2"),
   name = Some("Use Node.js"),
   params = Map("node-version" -> "14", "cache" -> "npm"),
-  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
+  env = Map(faNpmAuthToken)
 )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
@@ -253,15 +255,15 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 lazy val npmInstall = WorkflowStep.Run(
   List("npm install"),
   name = Some("npm install"),
-  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
+  env = Map(faNpmAuthToken)
 )
 
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
   name = Some("Build application"),
   env = Map(
-    "NODE_OPTIONS"               -> "--max-old-space-size=6144",
-    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+    "NODE_OPTIONS" -> "--max-old-space-size=6144",
+    faNpmAuthToken
   )
 )
 
@@ -276,9 +278,9 @@ lazy val bundlemon = WorkflowStep.Run(
   List("yarn bundlemon"),
   name = Some("Run BundleMon"),
   env = Map(
-    "BUNDLEMON_PROJECT_ID"       -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY"   -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}",
-    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
+    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}",
+    faNpmAuthToken
   )
 )
 
@@ -293,7 +295,7 @@ def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use
     "target"                 -> "staging"
   ) ++ (if (live) Map("channelId" -> "live") else Map.empty),
   env = Map(
-    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+    faNpmAuthToken
   )
 )
 
