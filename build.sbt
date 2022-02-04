@@ -251,19 +251,18 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List(
-    "rm .npmrc",
-    """npm config set "@fortawesome:registry" https://npm.fontawesome.com/""",
-    """npm config set "//npm.fontawesome.com/:_authToken" ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}""",
-    "npm install"
-  ),
-  name = Some("npm install")
+  List("npm install"),
+  name = Some("npm install"),
+  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
 )
 
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
   name = Some("Build application"),
-  env = Map("NODE_OPTIONS" -> "--max-old-space-size=6144")
+  env = Map(
+    "NODE_OPTIONS"               -> "--max-old-space-size=6144",
+    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+  )
 )
 
 // https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
@@ -277,8 +276,9 @@ lazy val bundlemon = WorkflowStep.Run(
   List("yarn bundlemon"),
   name = Some("Run BundleMon"),
   env = Map(
-    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
+    "BUNDLEMON_PROJECT_ID"       -> "61a698e5de59ab000954f941",
+    "BUNDLEMON_PROJECT_APIKEY"   -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}",
+    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
   )
 )
 
