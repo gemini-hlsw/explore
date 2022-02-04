@@ -245,8 +245,7 @@ val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NP
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v2"),
   name = Some("Use Node.js"),
-  params = Map("node-version" -> "14", "cache" -> "npm"),
-  env = Map(faNpmAuthToken)
+  params = Map("node-version" -> "14", "cache" -> "npm")
 )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
@@ -254,16 +253,14 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
   List("npm install"),
-  name = Some("npm install"),
-  env = Map(faNpmAuthToken)
+  name = Some("npm install")
 )
 
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
   name = Some("Build application"),
   env = Map(
-    "NODE_OPTIONS" -> "--max-old-space-size=6144",
-    faNpmAuthToken
+    "NODE_OPTIONS" -> "--max-old-space-size=6144"
   )
 )
 
@@ -279,8 +276,7 @@ lazy val bundlemon = WorkflowStep.Run(
   name = Some("Run BundleMon"),
   env = Map(
     "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}",
-    faNpmAuthToken
+    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
   )
 )
 
@@ -293,10 +289,7 @@ def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use
     "firebaseServiceAccount" -> "${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}",
     "projectId"              -> "explore-gemini",
     "target"                 -> "staging"
-  ) ++ (if (live) Map("channelId" -> "live") else Map.empty),
-  env = Map(
-    faNpmAuthToken
-  )
+  ) ++ (if (live) Map("channelId" -> "live") else Map.empty)
 )
 
 lazy val firebaseDeployReview = firebaseDeploy(
@@ -349,6 +342,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
+ThisBuild / githubWorkflowEnv += faNpmAuthToken
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(

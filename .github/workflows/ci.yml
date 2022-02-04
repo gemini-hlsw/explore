@@ -15,6 +15,7 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
 jobs:
   build:
@@ -52,16 +53,12 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Use Node.js
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
           cache: npm
 
       - name: npm install
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Check that workflows are up to date
@@ -105,8 +102,6 @@ jobs:
           java-version: 17
 
       - name: Use Node.js
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -128,14 +123,11 @@ jobs:
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
       - name: npm install
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=6144'
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm run build
 
       - name: override CI_COMMIT_SHA
@@ -146,13 +138,10 @@ jobs:
         env:
           BUNDLEMON_PROJECT_ID: 61a698e5de59ab000954f941
           BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: yarn bundlemon
 
       - name: Deploy review app to Firebase
         if: (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository)
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -162,8 +151,6 @@ jobs:
 
       - name: Deploy staging app to Firebase
         if: github.event_name == 'push'
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}
@@ -196,8 +183,6 @@ jobs:
           java-version: 17
 
       - name: Use Node.js
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -219,14 +204,11 @@ jobs:
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
       - name: npm install
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=6144'
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm run build
 
       - name: Heroku - Deploy
@@ -250,16 +232,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node.js
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         uses: actions/setup-node@v2
         with:
           node-version: 14
           cache: npm
 
       - name: npm install
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Setup and expand vars dark
