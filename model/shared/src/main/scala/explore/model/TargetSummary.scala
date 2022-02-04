@@ -7,14 +7,10 @@ import cats.Eq
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.model.Target
+import lucuma.core.math.Coordinates
 
-// trait TargetSummary {
-//   val id: Target.Id
-//   val name: NonEmptyString
-// }
-
-case class TargetSummary(id: Target.Id, val name: NonEmptyString)
+case class TargetSummary(id: Target.Id, name: NonEmptyString, coords: Option[Coordinates])
 
 object TargetSummary {
-  implicit val targetSummaryEq: Eq[TargetSummary] = Eq.by(t => (t.id, t.name))
+  implicit val targetSummaryEq: Eq[TargetSummary] = Eq.by(t => (t.id, t.name, t.coords))
 }

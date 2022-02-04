@@ -321,15 +321,26 @@ object TargetTabContents {
                               props.hiddenColumns
         )
 
+        val selectedCoordinates = selectedTarget
+          .flatMap(
+            _.mapValue(targetView =>
+              targetView.get match {
+                case t @ Target.Sidereal(_, _, _, _) =>
+                    Target.Sidereal.baseCoordinates.get(t).some
+                case _                               => none
+              }
+            )
+          )
+
       val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(props.userId, coreWidth, coreHeight, selectedTarget)
+        selectedCoordinates.flatten.map(ElevationPlotTile.elevationPlotTile( coreWidth, coreHeight, _))
 
       TileController(
         props.userId,
         coreWidth,
         defaultLayouts,
         layouts,
-        List(targetEditorTile, skyPlotTile),
+        List(targetEditorTile.some, skyPlotTile).collect { case Some(x) => x},
         GridLayoutSection.TargetLayout,
         None
       )

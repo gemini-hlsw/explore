@@ -50,7 +50,7 @@ object TargetQueriesGQL {
                   name
                   id
                   objectType
-                }                
+                }
               }
               sourceProfile {
                 point {

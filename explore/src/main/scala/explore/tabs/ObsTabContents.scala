@@ -61,6 +61,7 @@ import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import lucuma.core.math.Coordinates
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
@@ -310,10 +311,18 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetId = obsSummaryOpt.collect {
-      case ObsSummaryWithTargetsAndConstraints(_, List(TargetSummary(tid, _)), _, _, _, _) =>
-        tid
+    val targetInfo                        = obsSummaryOpt.collect {
+      case ObsSummaryWithTargetsAndConstraints(_,
+                                               List(TargetSummary(tid, _, coords)),
+                                               _,
+                                               _,
+                                               _,
+                                               _
+          ) =>
+        (tid, coords)
     }
+    val targetId                          = targetInfo.map(_._1)
+    val targetCoords: Option[Coordinates] = targetInfo.flatMap(_._2)
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -386,20 +395,9 @@ object ObsTabContents {
             )
 
           val skyPlotTile =
-            ElevationPlotTile.elevationPlotTile(props.userId.get,
-                                                coreWidth,
-                                                coreHeight,
-                                                props.baseCoordinates
-            )
+            targetCoords.map( ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
 
-          TileController(
-            props.userId.get,
-            coreWidth,
-            defaultLayout,
-            layouts,
-            List(
-              notesTile,
-              TargetTile.targetTile(
+          val targetTile = TargetTile.targetTile(
                 props.userId.get,
                 ObsIdSet.one(obsId),
                 obsView.map(
@@ -415,13 +413,13 @@ object ObsTabContents {
                 "Targets",
                 none,
                 props.hiddenColumns
-              ),
-              skyPlotTile,
+              )
+
               // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
               // so that the constraints selector dropdown always appears in front of any other tiles. If more
               // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
               // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-              ConstraintsTile
+              val constraintsTile = ConstraintsTile
                 .constraintsTile(
                   obsId,
                   obsView.map(_.zoom(ObservationData.constraintSet)),
@@ -430,15 +428,29 @@ object ObsTabContents {
                     .zoom(atMapWithDefault(ObsIdSet.one(obsId), UndoStacks.empty)),
                   control = constraintsSelector.some,
                   clazz = ExploreStyles.ConstraintsTile.some
-                ),
-              ConfigurationTile.configurationTile(
+                )
+
+              val configurationTile = ConfigurationTile.configurationTile(
+
                 obsId,
                 obsView.map(_.zoom(scienceDataForObs)),
                 props.undoStacks
                   .zoom(ModelUndoStacks.forScienceData[IO])
                   .zoom(atMapWithDefault(obsId, UndoStacks.empty))
               )
-            ),
+
+          TileController(
+            props.userId.get,
+            coreWidth,
+            defaultLayout,
+            layouts,
+            List(
+              targetTile.some,
+              notesTile.some,
+              skyPlotTile,
+              constraintsTile.some,
+              configurationTile.some,
+              ).collect { case Some(x) => x },
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode

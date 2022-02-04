@@ -37,7 +37,7 @@ object ConstraintGroupQueries {
 
   private def convertTarget(
     target: ConstraintGroupObsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
-  ): TargetSummary = TargetSummary(target.id, target.name)
+  ): TargetSummary = TargetSummary(target.id, target.name, none)
 
   type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintGroup]
   type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTargetsAndConf]
