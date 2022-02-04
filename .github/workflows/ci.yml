@@ -60,6 +60,8 @@ jobs:
           cache: npm
 
       - name: npm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Check that workflows are up to date
@@ -126,6 +128,8 @@ jobs:
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
       - name: npm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Build application
@@ -209,6 +213,8 @@ jobs:
         run: sbt -v -J-Xmx6g '++${{ matrix.scala }}' stage
 
       - name: npm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Build application
@@ -245,6 +251,8 @@ jobs:
           cache: npm
 
       - name: npm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm install
 
       - name: Setup and expand vars dark

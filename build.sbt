@@ -252,7 +252,8 @@ lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
   List("npm install"),
-  name = Some("npm install")
+  name = Some("npm install"),
+  env = Map("FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}")
 )
 
 lazy val npmBuild = WorkflowStep.Run(
