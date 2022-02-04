@@ -412,7 +412,9 @@ object ObsTabContents {
             options,
             "Targets",
             none,
-            props.hiddenColumns
+            props.hiddenColumns,
+            coreWidth,
+            coreHeight
           )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

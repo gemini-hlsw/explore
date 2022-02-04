@@ -310,15 +310,18 @@ object TargetTabContents {
         }
 
       val targetEditorTile =
-        TargetTile.targetTile(props.userId,
-                              idsToEdit,
-                              Pot(asterismView),
-                              props.targetsUndoStacks,
-                              props.searching,
-                              options,
-                              title,
-                              backButton.some,
-                              props.hiddenColumns
+        TargetTile.targetTile(
+          props.userId,
+          idsToEdit,
+          Pot(asterismView),
+          props.targetsUndoStacks,
+          props.searching,
+          options,
+          title,
+          backButton.some,
+          props.hiddenColumns,
+          coreWidth,
+          coreHeight
         )
 
       val selectedCoordinates = selectedTarget
