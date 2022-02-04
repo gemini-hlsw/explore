@@ -70,6 +70,7 @@ object RootModel {
     Eq.by(m =>
       (m.vault,
        m.tabs,
+       m.localPreferences,
        m.focusedObs,
        m.expandedIds,
        m.searchingTarget,
