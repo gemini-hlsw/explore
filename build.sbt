@@ -259,7 +259,10 @@ lazy val npmInstall = WorkflowStep.Run(
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
   name = Some("Build application"),
-  env = Map("NODE_OPTIONS" -> "--max-old-space-size=6144")
+  env = Map(
+    "NODE_OPTIONS"               -> "--max-old-space-size=6144",
+    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+  )
 )
 
 // https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout

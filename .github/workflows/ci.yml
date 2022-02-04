@@ -135,6 +135,7 @@ jobs:
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=6144'
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm run build
 
       - name: override CI_COMMIT_SHA
@@ -220,6 +221,7 @@ jobs:
       - name: Build application
         env:
           NODE_OPTIONS: '--max-old-space-size=6144'
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: npm run build
 
       - name: Heroku - Deploy
