@@ -276,8 +276,9 @@ lazy val bundlemon = WorkflowStep.Run(
   List("yarn bundlemon"),
   name = Some("Run BundleMon"),
   env = Map(
-    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
+    "BUNDLEMON_PROJECT_ID"       -> "61a698e5de59ab000954f941",
+    "BUNDLEMON_PROJECT_APIKEY"   -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}",
+    "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
   )
 )
 
