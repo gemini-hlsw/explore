@@ -36,7 +36,9 @@ object TargetTile {
     options:       View[TargetVisualOptions],
     title:         String,
     backButton:    Option[Reuse[VdomNode]] = None,
-    hiddenColumns: View[Set[String]]
+    hiddenColumns: View[Set[String]],
+    width:         Int,
+    height:        Int
   )(implicit ctx:  AppContextIO) =
     Tile(ObsTabTiles.TargetId,
          title,
@@ -44,29 +46,28 @@ object TargetTile {
          canMinimize = true,
          bodyClass = ExploreStyles.TargetTileBody.some
     )(
-      Reuse.by((userId, obsId, asterismPot, undoStacks, searching, options, hiddenColumns))(
-        (renderInTitle: Tile.RenderInTitle) =>
-          potRender[View[List[TargetWithId]]](
-            (
-              (asterism: View[List[TargetWithId]]) =>
-                userId.map(uid =>
-                  <.div(
-                    AsterismEditor(uid,
-                                   obsId,
-                                   asterism,
-                                   undoStacks,
-                                   searching,
-                                   options,
-                                   hiddenColumns,
-                                   renderInTitle
-                    )
-                  )
-                ): VdomNode
-            ).reuseAlways
-          )(
-            asterismPot
-          )
-      )
+      Reuse.by(
+        (userId, obsId, asterismPot, undoStacks, searching, options, hiddenColumns, width, height)
+      ) { (renderInTitle: Tile.RenderInTitle) =>
+        potRender[View[List[TargetWithId]]](
+          (
+            (asterism: View[List[TargetWithId]]) =>
+              userId.map(uid =>
+                AsterismEditor(uid,
+                               obsId,
+                               asterism,
+                               undoStacks,
+                               searching,
+                               options,
+                               hiddenColumns,
+                               renderInTitle
+                )
+              ): VdomNode
+          ).reuseAlways
+        )(
+          asterismPot
+        )
+      }
     )
 
 }

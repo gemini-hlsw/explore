@@ -162,8 +162,14 @@ object SiderealTargetEditor {
           val disabled = props.searching.get.exists(_ === props.id)
 
           React.Fragment(
-            <.div(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
             <.div(ExploreStyles.TargetGrid)(
+              <.div(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
+              AladinCell(
+                props.uid,
+                props.id,
+                props.target.zoom(Target.Sidereal.baseCoordinates),
+                props.options
+              ),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
                 SearchForm(
@@ -197,12 +203,6 @@ object SiderealTargetEditor {
                   errorClazz = ExploreStyles.InputErrorTooltip,
                   disabled = disabled
                 )
-              ),
-              AladinCell(
-                props.uid,
-                props.id,
-                props.target.zoom(Target.Sidereal.baseCoordinates),
-                props.options
               ),
               CataloguesForm(props.options).when(false),
               Form(as = <.div, size = Small)(
