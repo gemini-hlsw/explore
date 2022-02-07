@@ -285,7 +285,6 @@ object ExploreStyles {
 
   val Sticky: Css                  = Css("sticky")
   val TargetSummaryDelete: Css     = Css("explore-target-summary-delete")
-  val TargetSummaryExpander: Css   = Css("explore-target-summary-expander")
   val TargetSummarySelect: Css     = Css("explore-target-summary-select")
   val TargetSummaryType: Css       = Css("explore-target-summary-type")
   val TargetSummaryName: Css       = Css("explore-target-summary-name")

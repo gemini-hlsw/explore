@@ -17,7 +17,6 @@ import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraints
-import explore.model.TargetWithId
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -43,8 +42,11 @@ object AsterismQueries {
   type ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = AsterismGroupObsQuery.Data.Observations.Nodes
 
+  type TargetGroup = AsterismGroupObsQuery.Data.TargetGroup.Nodes
+  val TargetGroup = AsterismGroupObsQuery.Data.TargetGroup.Nodes
+
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
-  type TargetGroupList   = SortedMap[Target.Id, TargetWithId]
+  type TargetGroupList   = SortedMap[Target.Id, TargetGroup]
   type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraints]
 
   case class AsterismGroupsWithObs(
@@ -90,7 +92,7 @@ object AsterismQueries {
       }
       .flatten
       .toSortedMap(_.obsIds)
-    val targetGroups   = data.targetGroup.nodes.map(_.target).toSortedMap(_.id)
+    val targetGroups   = data.targetGroup.nodes.toSortedMap(_.target.id)
     AsterismGroupsWithObs(
       asterismGroups,
       targetGroups,

@@ -144,7 +144,7 @@ object AsterismGroupObsList {
 
       val observations   = props.asterismsWithObs.get.observations
       val asterismGroups = props.asterismsWithObs.get.asterismGroups.map(_._2)
-      val targetMap      = props.asterismsWithObs.get.targetGroups
+      val targetGroupMap = props.asterismsWithObs.get.targetGroups
 
       val state   = ViewF.fromState($)
       val undoCtx = UndoContext(
@@ -215,9 +215,9 @@ object AsterismGroupObsList {
         }
 
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
-        val targets = asterismGroup.targetIds.toList.map(targetMap.get).flatten
+        val targets = asterismGroup.targetIds.toList.map(targetGroupMap.get).flatten
         if (targets.isEmpty) "<No Targets>"
-        else targets.map(_.target.name).mkString(";")
+        else targets.map(_.target.target.name).mkString(";")
       }
 
       def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {
@@ -333,7 +333,7 @@ object AsterismGroupObsList {
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
-              "Asterism Summary"
+              "Target Summary"
             )
           ),
           ReflexContainer()(
@@ -356,8 +356,9 @@ object AsterismGroupObsList {
                       ),
                       <.div(ExploreStyles.ObsTree)(
                         <.div(ExploreStyles.ObsScrollTree)(
-                          targetMap.toList.map(_._2).zipWithIndex.toTagMod { case (twid, idx) =>
-                            renderTarget(twid, idx)
+                          targetGroupMap.toList.map(_._2.target).zipWithIndex.toTagMod {
+                            case (twid, idx) =>
+                              renderTarget(twid, idx)
                           },
                           provided.placeholder
                         )
