@@ -56,13 +56,11 @@ object TargetColumns {
         .Column(id, getTarget.andThen(_.map(accessor)))
         .setHeader(baseColNames(id))
 
-    val typeColumn = baseColumn("type", _ => ())
-      .setCell(_ => Icons.Star)
-      .setWidth(30)
-
     val baseColumns =
       List(
-        typeColumn,
+        baseColumn("type", _ => ())
+          .setCell(_ => Icons.Star)
+          .setWidth(30),
         baseColumn("name", Target.name.get)
           .setCell(_.value.map(_.toString).orEmpty)
           .setSortByFn(_.toString)

@@ -3,6 +3,7 @@
 
 package explore.targets
 
+import cats.Order._
 import cats.syntax.all._
 import crystal.react.View
 import crystal.react.implicits._
@@ -45,8 +46,9 @@ object TargetSummaryTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
-    "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType),
-    "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName)
+    "id"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryId),
+    "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
+    "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
 
   protected val component =
@@ -60,17 +62,16 @@ object TargetSummaryTable {
             .setHeader(TargetColumns.allColNames(id))
 
         List(
-          // TODO: Add Id column?
-          TargetColumns.BaseColumnBuilder(TargetTable)(_.target.target.some).typeColumn,
-          column("name", _.target.target.name)
-            .setCell(cell =>
-              // TODO: Make this clickable when it is possible to edit an individual target.
-              cell.value.toString
-            )
-            .setSortByFn(_.toString)
+          // TODO: Add a delete button
+          TargetTable
+            .Column("id", _.target.id)
+            .setHeader("id")
+            // TODO: Make this a link when targets can be editied individually.
+            .setCell(_.value.toString)
+            .setSortByAuto
         ) ++
           TargetColumns
-            .NonBaseSiderealColumnBuilder(TargetTable)(_.target.target.some)
+            .BaseColumnBuilder(TargetTable)(_.target.target.some)
             .allColumns ++
           List(
             column("count", _.observationIds.length) // TODO Right align
