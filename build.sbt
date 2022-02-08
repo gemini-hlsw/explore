@@ -9,6 +9,8 @@ ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / scalafixDependencies += "com.github.liancheng"           %% "organize-imports" % "0.6.0"
 
+ThisBuild / evictionErrorLevel := Level.Info
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
