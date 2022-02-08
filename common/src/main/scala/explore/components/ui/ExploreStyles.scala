@@ -285,13 +285,14 @@ object ExploreStyles {
 
   val Sticky: Css                  = Css("sticky")
   val TargetSummaryDelete: Css     = Css("explore-target-summary-delete")
-  val TargetSummaryExpander: Css   = Css("explore-target-summary-expander")
   val TargetSummarySelect: Css     = Css("explore-target-summary-select")
+  val TargetSummaryId: Css         = Css("explore-target-summary-id")
   val TargetSummaryType: Css       = Css("explore-target-summary-type")
   val TargetSummaryName: Css       = Css("explore-target-summary-name")
   val WithDelete: Css              = Css("with-delete")
   val WithExpander: Css            = Css("with-expander")
   val WithSelect: Css              = Css("with-select")
+  val WithId: Css                  = Css("with-id")
   val TargetSummarySubRowCell: Css = Css("explore-target-summary-subrow-cell")
   val ConstraintsSummaryEdit: Css  = Css("explore-constraints-summary-edit")
 

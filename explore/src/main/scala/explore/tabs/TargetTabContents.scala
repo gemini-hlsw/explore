@@ -29,9 +29,11 @@ import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
 import explore.syntax.ui._
+import explore.targets.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -177,6 +179,20 @@ object TargetTabContents {
       agl:    AsterismGroupList
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
+    def selectObservation(
+      focusedObs:    View[Option[FocusedObs]],
+      expandedIds:   View[SortedSet[ObsIdSet]],
+      selectedPanel: View[SelectedPanel[ObsIdSet]],
+      obsId:         Observation.Id
+    ): Callback = {
+      val obsIdSet = ObsIdSet.one(obsId)
+      findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
+        .map(ag => expandedIds.mod(_ + ag.obsIds))
+        .orEmpty >>
+        focusedObs.set(FocusedObs(obsId).some) >>
+        selectedPanel.set(SelectedPanel.editor(obsIdSet))
+    }
+
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
       editedIds: ObsIdSet
@@ -215,20 +231,19 @@ object TargetTabContents {
      * Render the summary table.
      */
     def renderSummary: VdomNode =
-      Tile("asterismSummary", "Asterism Summary", backButton.some)(
+      Tile("targetSummary", "Target Summary", backButton.some)(
         Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
           (asterismGroupWithObs.get, props.hiddenColumns, props.focusedObs, props.expandedIds)
-        )((_: Tile.RenderInTitle) => explore.UnderConstruction())
-        // TODO: Fix the summary table and reinstate
-        // )((renderInTitle: Tile.RenderInTitle) =>
-        //   TargetSummaryTable(asterismGroupWithObs.get,
-        //                      props.hiddenColumns,
-        //                      selectedView,
-        //                      props.focusedObs,
-        //                      props.expandedIds,
-        //                      renderInTitle
-        //   ): VdomNode
-        // )
+        )((renderInTitle: Tile.RenderInTitle) =>
+          TargetSummaryTable(
+            targetMap,
+            props.hiddenColumns,
+            Reuse
+              .currying(props.focusedObs, props.expandedIds, selectedView)
+              .in(selectObservation _),
+            renderInTitle
+          ): VdomNode
+        )
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth
@@ -249,7 +264,7 @@ object TargetTabContents {
       val groupIds   = asterismGroup.obsIds
       val targetIds  = asterismGroup.targetIds
 
-      val asterism = targetIds.toList.map(targetMap.get).flatten
+      val asterism = targetIds.toList.map(id => targetMap.get(id).map(_.target)).flatten
 
       val getAsterism: AsterismGroupsWithObs => List[TargetWithId] = _ => asterism
       def modAsterism(
@@ -260,7 +275,11 @@ object TargetTabContents {
         val moddedAsterism      = mod(asterism)
         val newTargetIds        = SortedSet.from(moddedAsterism.map(_.id))
         // make sure any added targets are in the map and update modified ones.
-        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi => (twi.id, twi))
+        // Note that the observation id list for the target groups may be incorrect, but they are
+        // currently only used for the target summary and will get updated by the server.
+        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi =>
+          (twi.id, TargetGroup(observationIds = idsToEdit.toList, target = twi))
+        )
 
         val splitAsterisms =
           if (targetIds === newTargetIds)
