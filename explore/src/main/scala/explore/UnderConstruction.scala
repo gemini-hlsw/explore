@@ -20,7 +20,7 @@ object UnderConstruction {
           ExploreStyles.HVCenter,
           <.div(
             <.div("Under Construction"),
-            <.div(ExploreStyles.HVCenter, Icons.Cogs.size(IconSize.X5).title("Under construction"))
+            <.div(ExploreStyles.HVCenter, Icons.Gears.size(IconSize.X5).title("Under construction"))
           )
         )
       }

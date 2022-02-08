@@ -15,15 +15,15 @@ import scala.scalajs.js.annotation._
 @nowarn
 object Icons {
   @js.native
-  @JSImport("@fortawesome/pro-duotone-svg-icons", "faCogs")
-  val faCogs: FAIcon = js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faGears")
+  val faGears: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faUndo")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowRotateLeft")
   val faUndo: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faRedo")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowRotateRight")
   val faRedo: FAIcon = js.native
 
   @js.native
@@ -39,7 +39,7 @@ object Icons {
   val faStarExclamation: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashAlt")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashCan")
   val faTrash: FAIcon = js.native
 
   @js.native
@@ -55,11 +55,11 @@ object Icons {
   val faPlus: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faEdit")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faPenToSquare")
   val faEdit: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSearch")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faMagnifyingGlass")
   val faSearch: FAIcon = js.native
 
   @js.native
@@ -67,15 +67,15 @@ object Icons {
   val faBan: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faMousePointer")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowPointer")
   val faMousePointer: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSignOutAlt")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faRightFromBracket")
   val faSignOutAlt: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faInfoCircle")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faCircleInfo")
   val faInfoCircle: FAIcon = js.native
 
   @js.native
@@ -87,7 +87,7 @@ object Icons {
   val faClipboardCheck: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faTimes")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faXmark")
   val faTimes: FAIcon = js.native
 
   @js.native
@@ -95,7 +95,7 @@ object Icons {
   val faUserAstronaut: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faExclamationTriangle")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faExclamationTriangle: FAIcon = js.native
 
   @js.native
@@ -139,15 +139,15 @@ object Icons {
   val faChevronDown: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronDoubleUp")
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsUp")
   val faChevronDoubleUp: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronDoubleDown")
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsDown")
   val faChevronDoubleDown: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faListAlt")
+  @JSImport("@fortawesome/pro-light-svg-icons", "faRectangleList")
   val faListAlt: FAIcon = js.native
 
   @js.native
@@ -179,12 +179,12 @@ object Icons {
   val faSunBright: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faExclamationTriangle")
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faTriangleSolid: FAIcon = js.native
 
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
-    faCogs,
+    faGears,
     faBars,
     faBarCodeRead,
     faStarExclamation,
@@ -231,7 +231,7 @@ object Icons {
   val Bars                = FontAwesomeIcon(faBars)
   val BarCodeRead         = FontAwesomeIcon(faBarCodeRead)
   val StarExclamation     = FontAwesomeIcon(faStarExclamation)
-  val Cogs                = FontAwesomeIcon(faCogs)
+  val Gears               = FontAwesomeIcon(faGears)
   val Undo                = FontAwesomeIcon(faUndo)
   val Redo                = FontAwesomeIcon(faRedo)
   val New                 = FontAwesomeIcon(faPlus)
