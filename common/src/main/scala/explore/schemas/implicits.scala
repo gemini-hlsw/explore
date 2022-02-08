@@ -248,7 +248,7 @@ object implicits {
 object itcschema {
   object implicits {
 
-    import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCMagnitudeInput }
+    import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCBrightnessInput }
     import explore.schemas.ITC.Types.RadialVelocityInput
 
     type InstrumentModes = ITC.Types.InstrumentModes
@@ -294,8 +294,8 @@ object itcschema {
     }
 
     implicit class BrightnessMeasureOps(val b: (Band, Measure[BrightnessValue])) {
-      def toITCInput: ITCMagnitudeInput =
-        ITCMagnitudeInput(
+      def toITCInput: ITCBrightnessInput =
+        ITCBrightnessInput(
           b._1,
           b._2.value.toDouble,
           b._2.error.map(_.toBigDecimal).orIgnore,
