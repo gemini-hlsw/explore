@@ -43,3 +43,4 @@ stats.html
 
 # Firebase
 .firebase/
+.direnv
