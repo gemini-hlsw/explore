@@ -50,7 +50,7 @@ import scala.collection.immutable.SortedSet
 final case class AsterismGroupObsList(
   asterismsWithObs: View[AsterismGroupsWithObs],
   focusedObs:       View[Option[FocusedObs]],
-  selected:         View[SelectedPanel[ObsIdSet]],
+  selected:         View[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupList]]
 )(implicit val ctx: AppContextIO)
@@ -59,6 +59,9 @@ final case class AsterismGroupObsList(
 
 object AsterismGroupObsList {
   type Props = AsterismGroupObsList
+
+  // Would be better respresented as a union type in scala 3
+  type TargetOrObsSet = Either[Target.Id, ObsIdSet]
 
   case class State(dragging: Boolean = false)
 
@@ -93,12 +96,12 @@ object AsterismGroupObsList {
      * items in the selection. However, the user may have something selected, but be dragging
      * something that is NOT in the selection - in which case we just drag the individual item.
      */
-    def getDraggedIds(dragId: String, props: Props): Option[Either[Target.Id, ObsIdSet]] =
-      // The return type would be better represented as Option[Target.Id | ObsIdSet] in scala 3
+    def getDraggedIds(dragId: String, props: Props): Option[TargetOrObsSet] =
       parseDragId(dragId).map {
         case Left(targetId) => targetId.asLeft
         case Right(obsId)   =>
           props.selected.get.optValue
+            .flatMap(_.toOption)
             .fold(ObsIdSet.one(obsId)) { selectedIds =>
               if (selectedIds.contains(obsId)) selectedIds
               else ObsIdSet.one(obsId)
@@ -110,7 +113,7 @@ object AsterismGroupObsList {
       undoCtx:     UndoContext[AsterismGroupList],
       expandedIds: View[SortedSet[ObsIdSet]],
       focusedObs:  View[Option[FocusedObs]],
-      selected:    View[SelectedPanel[ObsIdSet]]
+      selected:    View[SelectedPanel[TargetOrObsSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>
@@ -181,11 +184,17 @@ object AsterismGroupObsList {
 
       val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.focusedObs, props.selected)
 
+      def isTargetSelected(targetId: Target.Id): Boolean =
+        props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
+
+      def setSelectedPanelToTarget(targetId: Target.Id): Callback =
+        props.focusedObs.set(none) >> props.selected.set(SelectedPanel.editor(targetId.asLeft))
+
       def isObsSelected(obsId: Observation.Id): Boolean =
-        props.selected.get.optValue.exists(_.exists(_ === obsId))
+        props.selected.get.optValue.flatMap(_.toOption).exists(_.exists(_ === obsId))
 
       def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
-        props.selected.set(SelectedPanel.editor(obsIdSet))
+        props.selected.set(SelectedPanel.editor(obsIdSet.asRight))
 
       def setSelectedPanelToSingle(obsId: Observation.Id): Callback =
         setSelectedPanelToSet(ObsIdSet.one(obsId))
@@ -203,15 +212,16 @@ object AsterismGroupObsList {
         props.focusedObs.set(None) >> props.selected.set(SelectedPanel.tree)
 
       def handleCtrlClick(obsIds: Observation.Id, groupIds: ObsIdSet) =
-        props.selected.get.optValue.fold(setSelectedPanelAndObs(obsIds)) { selectedIds =>
-          if (selectedIds.subsetOf(groupIds)) {
-            if (selectedIds.contains(obsIds)) {
-              selectedIds.removeOne(obsIds).fold(clearSelectedPanelAndObs) {
-                setSelectedPanelAndObsToSet
-              }
-            } else
-              setSelectedPanelAndObsToSet(selectedIds.add(obsIds))
-          } else Callback.empty // Not in the same group
+        props.selected.get.optValue.flatMap(_.toOption).fold(setSelectedPanelAndObs(obsIds)) {
+          selectedIds =>
+            if (selectedIds.subsetOf(groupIds)) {
+              if (selectedIds.contains(obsIds)) {
+                selectedIds.removeOne(obsIds).fold(clearSelectedPanelAndObs) {
+                  setSelectedPanelAndObsToSet
+                }
+              } else
+                setSelectedPanelAndObsToSet(selectedIds.add(obsIds))
+            } else Callback.empty // Not in the same group
         }
 
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
@@ -225,7 +235,7 @@ object AsterismGroupObsList {
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
         val groupSelected =
-          props.selected.get.optValue.exists(_.intersects(obsIds))
+          props.selected.get.optValue.flatMap(_.toOption).exists(_.intersects(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
           .exists(_ === obsIds)
@@ -300,10 +310,11 @@ object AsterismGroupObsList {
           <.div(
             provided.innerRef,
             provided.draggableProps,
-            props.getDraggedStyle(provided.draggableStyle, snapshot)
+            props.getDraggedStyle(provided.draggableStyle, snapshot),
+            ^.onClick ==> { _ => setSelectedPanelToTarget(twid.id) }
           )(
             <.span(provided.dragHandleProps)(
-              Card()(ExploreStyles.ObsBadge)(
+              Card(raised = isTargetSelected(twid.id))(ExploreStyles.ObsBadge)(
                 CardContent(
                   CardHeader(
                     <.div(
@@ -399,12 +410,15 @@ object AsterismGroupObsList {
             )
 
           selected
-            .set(infoFromFocused.fold(SelectedPanel.tree[ObsIdSet]) { case (id, _) =>
-              SelectedPanel.editor(ObsIdSet.one(id))
+            .set(infoFromFocused.fold(SelectedPanel.tree[TargetOrObsSet]) { case (id, _) =>
+              SelectedPanel.editor(ObsIdSet.one(id).asRight)
             })
             .as(infoFromFocused.map(_._2))
-        case Editor(ids)   =>
-          CallbackTo(asterismGroups.find(_._1.intersect(ids).nonEmpty).map(_._2))
+        case Editor(tOrOs) =>
+          tOrOs match {
+            case Left(_)       => CallbackTo(none)
+            case Right(obsIds) => CallbackTo(asterismGroups.find(_._1.intersects(obsIds)).map(_._2))
+          }
         case _             => CallbackTo(none)
       }
 

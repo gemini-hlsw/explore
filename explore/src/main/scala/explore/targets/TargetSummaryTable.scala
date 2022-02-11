@@ -32,6 +32,7 @@ final case class TargetSummaryTable(
   targetGroupList:   TargetGroupList,
   hiddenColumns:     View[Set[String]],
   selectObservation: Observation.Id ==> Callback,
+  selectTarget:      Target.Id ==> Callback,
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
 
@@ -66,8 +67,9 @@ object TargetSummaryTable {
           TargetTable
             .Column("id", _.target.id)
             .setHeader("id")
-            // TODO: Make this a link when targets can be editied individually.
-            .setCell(_.value.toString)
+            .setCell(cell =>
+              <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
+            )
             .setSortByAuto
         ) ++
           TargetColumns

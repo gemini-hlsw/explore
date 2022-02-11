@@ -25,9 +25,9 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
 
-object TargetTile {
+object AsterismEditorTile {
 
-  def targetTile(
+  def asterismEditorTile(
     userId:        Option[User.Id],
     obsId:         ObsIdSet,
     asterismPot:   Pot[View[List[TargetWithId]]],
@@ -44,7 +44,7 @@ object TargetTile {
          title,
          back = backButton,
          canMinimize = true,
-         bodyClass = ExploreStyles.TargetTileBody.some
+         bodyClass = ExploreStyles.AsterismEditorTileBody.some
     )(
       Reuse.by(
         (userId, obsId, asterismPot, undoStacks, searching, options, hiddenColumns, width, height)
