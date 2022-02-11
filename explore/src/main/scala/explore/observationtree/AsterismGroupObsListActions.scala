@@ -132,7 +132,7 @@ object AsterismGroupObsListActions {
   }
 
   private def updateSelected(
-    selected:   View[SelectedPanel[ObsIdSet]],
+    selected:   View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
     focusedObs: View[Option[FocusedObs]],
     draggedIds: ObsIdSet,
     optDestIds: Option[ObsIdSet]
@@ -142,7 +142,7 @@ object AsterismGroupObsListActions {
     selected.mod(panel =>
       panel match {
         // If in edit mode, always edit the destination.
-        case Editor(_) => Editor(ids)
+        case Editor(_) => Editor(ids.asRight)
         case _         => panel
       }
     ) >> focusedObs.set(focused)
@@ -151,7 +151,7 @@ object AsterismGroupObsListActions {
   def dropObservations(
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
-    selected:    View[SelectedPanel[ObsIdSet]],
+    selected:    View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
     focusedObs:  View[Option[FocusedObs]]
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds))(

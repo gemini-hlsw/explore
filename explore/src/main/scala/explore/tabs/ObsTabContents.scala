@@ -397,7 +397,7 @@ object ObsTabContents {
           val skyPlotTile =
             targetCoords.map(ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
 
-          val targetTile = TargetTile.targetTile(
+          val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,
             ObsIdSet.one(obsId),
             obsView.map(

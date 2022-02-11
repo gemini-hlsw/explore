@@ -17,6 +17,7 @@ import explore.common.SimbadSearch
 import explore.common.TargetQueries
 import explore.common.TargetQueries._
 import explore.components.HelpIcon
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
@@ -54,12 +55,13 @@ final case class SearchCallback(
 }
 
 final case class SiderealTargetEditor(
-  uid:        User.Id,
-  id:         Target.Id,
-  target:     View[Target.Sidereal],
-  undoStacks: View[UndoStacks[IO, Target.Sidereal]],
-  searching:  View[Set[Target.Id]],
-  options:    View[TargetVisualOptions]
+  uid:           User.Id,
+  id:            Target.Id,
+  target:        View[Target.Sidereal],
+  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
+  searching:     View[Set[Target.Id]],
+  options:       View[TargetVisualOptions],
+  renderInTitle: Option[Tile.RenderInTitle] = none
 ) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
     target.zoom(Target.Sidereal.baseCoordinates).get
@@ -162,6 +164,8 @@ object SiderealTargetEditor {
           val disabled = props.searching.get.exists(_ === props.id)
 
           React.Fragment(
+            props.renderInTitle
+              .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
             <.div(ExploreStyles.TargetGrid)(
               <.div(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
               AladinCell(

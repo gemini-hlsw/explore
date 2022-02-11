@@ -28,6 +28,7 @@ import explore.model.layout._
 import explore.model.layout.unsafe._
 import explore.model.reusability._
 import explore.observationtree.AsterismGroupObsList
+import explore.optics._
 import explore.syntax.ui._
 import explore.targets.TargetSummaryTable
 import explore.undo._
@@ -35,6 +36,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.core.model.Target.Nonsidereal
+import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -67,6 +70,8 @@ final case class TargetTabContents(
 
 object TargetTabContents {
   type Props = TargetTabContents
+
+  import AsterismGroupObsList.TargetOrObsSet
 
   private val TargetIntialHeightFraction   = 6
   private val SkyPlotInitialHeightFraction = 4
@@ -129,12 +134,12 @@ object TargetTabContents {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[ObsIdSet]
-  val selectedLens  = TwoPanelState.selected[ObsIdSet]
+  val treeWidthLens = TwoPanelState.treeWidth[TargetOrObsSet]
+  val selectedLens  = TwoPanelState.selected[TargetOrObsSet]
 
   protected def renderFn(
     props:                Props,
-    panels:               View[TwoPanelState[ObsIdSet]],
+    panels:               View[TwoPanelState[TargetOrObsSet]],
     options:              View[TargetVisualOptions],
     defaultLayouts:       LayoutsMap,
     layouts:              View[LayoutsMap],
@@ -182,7 +187,7 @@ object TargetTabContents {
     def selectObservation(
       focusedObs:    View[Option[FocusedObs]],
       expandedIds:   View[SortedSet[ObsIdSet]],
-      selectedPanel: View[SelectedPanel[ObsIdSet]],
+      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
       obsId:         Observation.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
@@ -190,8 +195,15 @@ object TargetTabContents {
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         focusedObs.set(FocusedObs(obsId).some) >>
-        selectedPanel.set(SelectedPanel.editor(obsIdSet))
+        selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
+
+    def selectTarget(
+      focusedObs:    View[Option[FocusedObs]],
+      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
+      targetId:      Target.Id
+    ): Callback =
+      focusedObs.set(none) >> selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -241,6 +253,7 @@ object TargetTabContents {
             Reuse
               .currying(props.focusedObs, props.expandedIds, selectedView)
               .in(selectObservation _),
+            Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
             renderInTitle
           ): VdomNode
         )
@@ -259,7 +272,7 @@ object TargetTabContents {
      *   The AsterismGroup that is the basis for editing. All or part of it may be included in the
      *   edit.
      */
-    def renderEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
+    def renderAsterismEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
       val focusedObs = props.focusedObs.get
       val groupIds   = asterismGroup.obsIds
       val targetIds  = asterismGroup.targetIds
@@ -328,8 +341,8 @@ object TargetTabContents {
           asterismView.zoom(optional)
         }
 
-      val targetEditorTile =
-        TargetTile.targetTile(
+      val asterismEditorTile =
+        AsterismEditorTile.asterismEditorTile(
           props.userId,
           idsToEdit,
           Pot(asterismView),
@@ -364,19 +377,74 @@ object TargetTabContents {
         coreWidth,
         defaultLayouts,
         layouts,
-        List(targetEditorTile.some, skyPlotTile).collect { case Some(x) => x },
+        List(asterismEditorTile.some, skyPlotTile).flatten,
         GridLayoutSection.TargetLayout,
         None
       )
     }
 
+    def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
+      val getTarget: TargetGroupList => Target.Sidereal                                          = _ => target
+      def modTarget(mod: Target.Sidereal => Target.Sidereal): TargetGroupList => TargetGroupList =
+        tgl => {
+          val newTarget = mod(target)
+          targetMap.get(targetId).fold(tgl) { group =>
+            val newGroup = group.copy(target = TargetWithId(targetId, newTarget))
+            tgl.updated(targetId, newGroup)
+          }
+        }
+
+      val targetView: View[Target.Sidereal] =
+        asterismGroupWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+
+      val title = s"Editing Target ${target.name.value} [$targetId]"
+
+      val targetTile = SiderealTargetEditorTile.sideralTargetEditorTile(
+        props.userId,
+        targetId,
+        targetView,
+        props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+        props.searching,
+        options,
+        title,
+        backButton.some,
+        coreWidth,
+        coreHeight
+      )
+
+      val skyPlotTile =
+        ElevationPlotTile.elevationPlotTile(coreWidth,
+                                            coreHeight,
+                                            Target.Sidereal.baseCoordinates.get(target)
+        )
+
+      TileController(props.userId,
+                     coreWidth,
+                     defaultLayouts,
+                     layouts,
+                     List(targetTile, skyPlotTile),
+                     GridLayoutSection.TargetLayout,
+                     None
+      )
+    }
+
     val selectedPanel = panels.get.selected
     val rightSide     = selectedPanel.optValue
-      .flatMap(ids =>
-        findAsterismGroup(ids, asterismGroupWithObs.get.asterismGroups).map(ag => (ids, ag))
-      )
-      .fold[VdomNode](renderSummary) { case (idsToEdit, asterismGroup) =>
-        renderEditor(idsToEdit, asterismGroup)
+      .fold(renderSummary) {
+        _ match {
+          case Left(targetId) =>
+            targetMap
+              .get(targetId)
+              .fold(renderSummary)(_.target.target match {
+                case Nonsidereal(_, _, _)     => <.div("Editing of Non-Sidereal targets not supported")
+                case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
+              })
+          case Right(obsIds)  =>
+            findAsterismGroup(obsIds, asterismGroupWithObs.get.asterismGroups)
+              .fold(renderSummary) { asterismGroup =>
+                renderAsterismEditor(obsIds, asterismGroup)
+              }
+        }
       }
 
     // It would be nice to make a single component here but it gets hard when you
@@ -420,7 +488,7 @@ object TargetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
+      .useStateView(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
       .useStateView(TargetVisualOptions.Default)
       .useResizeDetector()
       .useStateView(proportionalLayouts)
@@ -444,7 +512,7 @@ object TargetTabContents {
                 case Right((w, l)) =>
                   (panels
                     .mod(
-                      TwoPanelState.treeWidth[ObsIdSet].replace(w)
+                      TwoPanelState.treeWidth[TargetOrObsSet].replace(w)
                     ) *> layout.mod(o => mergeMap(o, l)))
                     .to[IO]
                 case Left(_)       =>
