@@ -14,6 +14,8 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import lucuma.core.`enum`
 import lucuma.core.model
+import lucuma.core.math.dimensional._
+import lucuma.core.math.BrightnessUnits._
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema
@@ -105,25 +107,61 @@ trait ITC {
   }
 
   object Enums {
-    type Band                       = enum.Band
-    type ImageQuality               = enum.ImageQuality
-    type CloudExtinction            = enum.CloudExtinction
-    type WaterVapor                 = enum.WaterVapor
-    type SkyBackground              = enum.SkyBackground
-    type GmosNorthDisperser         = enum.GmosNorthDisperser
-    type GmosNorthFilter            = enum.GmosNorthFilter
-    type GmosNorthFpu               = enum.GmosNorthFpu
-    type GmosSouthDisperser         = enum.GmosSouthDisperser
-    type GmosSouthFilter            = enum.GmosSouthFilter
-    type GmosSouthFpu               = enum.GmosSouthFpu
-    type GmosCustomSlitWidth        = enum.GmosCustomSlitWidth
-    type StellarLibrarySpectrum     = enum.StellarLibrarySpectrum
-    type NoneStellarLibrarySpectrum = enum.NonStellarLibrarySpectrum
+    type Band                                = enum.Band
+    type BrightnessIntegratedUnits           = Units Of Brightness[Integrated]
+    type BrightnessSurfaceUnits              = Units Of Brightness[Surface]
+    type CoolStarTemperature                 = enum.CoolStarTemperature
+    type FluxDensityContinuumIntegratedUnits = Units Of FluxDensityContinuum[Integrated]
+    type FluxDensityContinuumSurfaceUnits    = Units Of FluxDensityContinuum[Surface]
+    type HiiRegionSpectrum                   = enum.HIIRegionSpectrum
+    type GalaxySpectrum                      = enum.GalaxySpectrum
+    type LineFluxIntegratedUnits             = Units Of LineFlux[Integrated]
+    type PlanetSpectrum                      = enum.PlanetSpectrum
+    type PlanetaryNebulaSpectrum             = enum.PlanetaryNebulaSpectrum
+    type QuasarSpectrum                      = enum.QuasarSpectrum
+    type LineFluxSurfaceUnits                = Units Of LineFlux[Surface]
+    type ImageQuality                        = enum.ImageQuality
+    type CloudExtinction                     = enum.CloudExtinction
+    type WaterVapor                          = enum.WaterVapor
+    type SkyBackground                       = enum.SkyBackground
+    type GmosNorthDisperser                  = enum.GmosNorthDisperser
+    type GmosNorthFilter                     = enum.GmosNorthFilter
+    type GmosNorthFpu                        = enum.GmosNorthFpu
+    type GmosSouthDisperser                  = enum.GmosSouthDisperser
+    type GmosSouthFilter                     = enum.GmosSouthFilter
+    type GmosSouthFpu                        = enum.GmosSouthFpu
+    type GmosCustomSlitWidth                 = enum.GmosCustomSlitWidth
+    type StellarLibrarySpectrum              = enum.StellarLibrarySpectrum
+    type NoneStellarLibrarySpectrum          = enum.NonStellarLibrarySpectrum
   }
 
   object Types {
-    type SpectralDistributionInput = model.SpectralDistribution
-    type ConstraintsSetInput       = explore.model.ConstraintSet
+    type SpectralDistributionInput      = model.SpectralDistribution
+    type ConstraintSetInput             = explore.model.ConstraintSet
+    type BandNormalizedIntegrated       = model.SpectralDefinition.BandNormalized[Integrated]
+    type BandNormalizedSurface          = model.SpectralDefinition.BandNormalized[Surface]
+    type BrightnessIntegrated           = Measure[BigDecimal] Of Brightness[Integrated]
+    type BrightnessSurface              = Measure[BigDecimal] Of Brightness[Surface]
+    type BlackBody                      = model.UnnormalizedSED.BlackBody
+    type CoolStarModel                  = model.UnnormalizedSED.CoolStarModel
+    type EmissionLineIntegrated         = model.EmissionLine[Integrated]
+    type EmissionLineSurface            = model.EmissionLine[Surface]
+    type EmissionLinesIntegrated        = model.SpectralDefinition.EmissionLines[Integrated]
+    type EmissionLinesSurface           = model.SpectralDefinition.EmissionLines[Surface]
+    type FluxDensityContinuumIntegrated = Measure[BigDecimal] Of FluxDensityContinuum[Integrated]
+    type FluxDensityContinuumSurface    = Measure[BigDecimal] Of FluxDensityContinuum[Surface]
+    type Galaxy                         = model.UnnormalizedSED.Galaxy
+    type GaussianSource                 = model.SourceProfile.Gaussian
+    type HiiRegion                      = model.UnnormalizedSED.HIIRegion
+    type LineFluxIntegrated             = Measure[BigDecimal] Of LineFlux[Integrated]
+    type LineFluxSurface                = Measure[BigDecimal] Of LineFlux[Surface]
+    type Planet                         = model.UnnormalizedSED.Planet
+    type PlanetaryNebula                = model.UnnormalizedSED.PlanetaryNebula
+    type PointSource                    = model.SourceProfile.Point
+    type Quasar                         = model.UnnormalizedSED.Quasar
+    type StellarLibrary                 = model.UnnormalizedSED.StellarLibrary
+    type UniformSource                  = model.SourceProfile.Uniform
+    type UserDefined                    = model.UnnormalizedSED.UserDefined
   }
 
 }

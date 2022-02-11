@@ -2,34 +2,34 @@
 # ODB schema
 #############
 
-"""DatasetEvent creation parameters"""
-input AddDatasetEventInput {
-  eventId: ExecutionEventId
-  observationId: ObservationId!
-  generated: Instant!
-  stepId: StepId!
-  datasetIndex: Int!
-  filename: DatasetFilename
-  stageType: DatasetStage!
-}
+# """DatasetEvent creation parameters"""
+# input AddDatasetEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   stepId: StepId!
+#   datasetIndex: Int!
+#   filename: DatasetFilename
+#   stageType: DatasetStage!
+# }
 
-"""SequenceEvent creation parameters"""
-input AddSequenceEventInput {
-  eventId: ExecutionEventId
-  observationId: ObservationId!
-  generated: Instant!
-  command: SequenceCommand!
-}
+# """SequenceEvent creation parameters"""
+# input AddSequenceEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   command: SequenceCommand!
+# }
 
-"""StepEvent creation parameters"""
-input AddStepEventInput {
-  eventId: ExecutionEventId
-  observationId: ObservationId!
-  generated: Instant!
-  stepId: StepId!
-  sequenceType: SequenceType!
-  stage: StepStage!
-}
+# """StepEvent creation parameters"""
+# input AddStepEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   stepId: StepId!
+#   sequenceType: SequenceType!
+#   stage: StepStage!
+# }
 
 """Airmass range creation and edit parameters"""
 input AirmassRangeInput {
@@ -180,53 +180,53 @@ input BandNormalizedSurfaceInput {
   deleteBrightnesses: [Band!]
 }
 
-"""Input for bulk editing multiple observations"""
-input BulkEditAsterismInput {
-  selectProgram: ProgramId
-  selectObservations: [ObservationId!]
-  edit: [EditAsterismInput!]!
-}
+# """Input for bulk editing multiple observations"""
+# input BulkEditAsterismInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: [EditAsterismInput!]!
+# }
 
-"""Input for bulk editing multiple observations"""
-input BulkEditConstraintSetInput {
-  selectProgram: ProgramId
-  selectObservations: [ObservationId!]
-  edit: ConstraintSetInput!
-}
+# """Input for bulk editing multiple observations"""
+# input BulkEditConstraintSetInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: ConstraintSetInput!
+# }
 
-"""Input for bulk editing multiple observations"""
-input BulkEditScienceRequirementsInput {
-  selectProgram: ProgramId
-  selectObservations: [ObservationId!]
-  edit: ScienceRequirementsInput!
-}
+# """Input for bulk editing multiple observations"""
+# input BulkEditScienceRequirementsInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: ScienceRequirementsInput!
+# }
 
-"""Input for bulk editing multiple observations"""
-input BulkEditTargetEnvironmentInput {
-  selectProgram: ProgramId
-  selectObservations: [ObservationId!]
-  edit: TargetEnvironmentInput!
-}
+# """Input for bulk editing multiple observations"""
+# input BulkEditTargetEnvironmentInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: TargetEnvironmentInput!
+# }
 
-"""
-Catalog id consisting of catalog name, string identifier and an optional object type
-"""
-input CatalogInfoInput {
-  """
-  The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  name: CatalogName
-
-  """
-  The id field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  id: NonEmptyString
-
-  """
-  The objectType field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  objectType: NonEmptyString
-}
+# """
+# Catalog id consisting of catalog name, string identifier and an optional object type
+# """
+# input CatalogInfoInput {
+#   """
+#   The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   name: CatalogName
+#
+#   """
+#   The id field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   id: NonEmptyString
+#
+#   """
+#   The objectType field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   objectType: NonEmptyString
+# }
 
 """Constraint set creation and editing parameters"""
 input ConstraintSetInput {
@@ -256,72 +256,72 @@ input ConstraintSetInput {
   elevationRange: ElevationRangeInput
 }
 
-"""Absolute coordinates relative base epoch"""
-input CoordinatesInput {
-  ra: RightAscensionInput!
-  dec: DeclinationInput!
-}
+# """Absolute coordinates relative base epoch"""
+# input CoordinatesInput {
+#   ra: RightAscensionInput!
+#   dec: DeclinationInput!
+# }
 
-"""Observation creation parameters"""
-input CreateObservationInput {
-  observationId: ObservationId
-  programId: ProgramId!
-  name: NonEmptyString
-  status: ObsStatus
-  activeStatus: ObsActiveStatus
-  targetEnvironment: TargetEnvironmentInput
-  constraintSet: ConstraintSetInput
-  scienceRequirements: ScienceRequirementsInput
-  scienceConfiguration: ScienceConfigurationInput
-}
-
-"""Program creation parameters"""
-input CreateProgramInput {
-  programId: ProgramId
-  name: NonEmptyString
-}
-
-"""Target creation parameters"""
-input CreateTargetInput {
-  targetId: TargetId
-  name: NonEmptyString!
-  sidereal: SiderealInput
-  nonsidereal: NonsiderealInput
-  sourceProfile: SourceProfileInput!
-}
-
+# """Observation creation parameters"""
+# input CreateObservationInput {
+#   observationId: ObservationId
+#   programId: ProgramId!
+#   name: NonEmptyString
+#   status: ObsStatus
+#   activeStatus: ObsActiveStatus
+#   targetEnvironment: TargetEnvironmentInput
+#   constraintSet: ConstraintSetInput
+#   scienceRequirements: ScienceRequirementsInput
+#   scienceConfiguration: ScienceConfigurationInput
+# }
+#
+# """Program creation parameters"""
+# input CreateProgramInput {
+#   programId: ProgramId
+#   name: NonEmptyString
+# }
+#
+# """Target creation parameters"""
+# input CreateTargetInput {
+#   targetId: TargetId
+#   name: NonEmptyString!
+#   sidereal: SiderealInput
+#   nonsidereal: NonsiderealInput
+#   sourceProfile: SourceProfileInput!
+# }
+#
 """Create an angle from a signed decimal value and its units."""
 input DecimalAngleInput {
   value: BigDecimal!
   units: AngleUnits!
 }
-
-"""Decimal value in Declination"""
-input DeclinationDecimalInput {
-  """decimal value in associated units"""
-  value: BigDecimal!
-
-  """units for associated value"""
-  units: DeclinationUnits!
-}
-
-"""Declination, choose one of the available units"""
-input DeclinationInput {
-  microarcseconds: Long
-  degrees: BigDecimal
-  dms: DmsString
-  fromLong: DeclinationLongInput
-  fromDecimal: DeclinationDecimalInput
-}
-
-"""Integral value in Declination"""
-input DeclinationLongInput {
-  """integral value in associated units"""
-  value: Long!
-
-  """units for associated value"""
-  units: DeclinationUnits!
-}
+#
+# """Decimal value in Declination"""
+# input DeclinationDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: DeclinationUnits!
+# }
+#
+# """Declination, choose one of the available units"""
+# input DeclinationInput {
+#   microarcseconds: Long
+#   degrees: BigDecimal
+#   dms: DmsString
+#   fromLong: DeclinationLongInput
+#   fromDecimal: DeclinationDecimalInput
+# }
+#
+# """Integral value in Declination"""
+# input DeclinationLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: DeclinationUnits!
+# }
 
 """Unit options for Declination values"""
 enum DeclinationUnits {
@@ -332,82 +332,82 @@ enum DeclinationUnits {
   DEGREES
 }
 
-"""Add or delete targets in an asterism"""
-input EditAsterismInput {
-  add: TargetId
-  delete: TargetId
-}
-
-"""Edit observation"""
-input EditObservationInput {
-  observationId: ObservationId!
-
-  """
-  The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  existence: Existence
-
-  """
-  The name field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  name: NonEmptyString
-
-  """
-  The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  status: ObsStatus
-
-  """
-  The activeStatus field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  activeStatus: ObsActiveStatus
-
-  """
-  The targetEnvironment field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  targetEnvironment: TargetEnvironmentInput
-
-  """
-  The constraintSet field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  constraintSet: ConstraintSetInput
-
-  """
-  The scienceRequirements field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  scienceRequirements: ScienceRequirementsInput
-
-  """
-  The scienceConfiguration field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  scienceConfiguration: ScienceConfigurationInput
-}
-
-"""Edit program"""
-input EditProgramInput {
-  programId: ProgramId!
-
-  """
-  The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  existence: Existence
-
-  """
-  The name field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  name: NonEmptyString
-}
-
-"""Single target edit options"""
-input EditTargetInput {
-  targetId: TargetId!
-  existence: Existence
-  name: NonEmptyString
-  sidereal: SiderealInput
-  nonsidereal: NonsiderealInput
-  sourceProfile: SourceProfileInput
-}
-
+# """Add or delete targets in an asterism"""
+# input EditAsterismInput {
+#   add: TargetId
+#   delete: TargetId
+# }
+#
+# """Edit observation"""
+# input EditObservationInput {
+#   observationId: ObservationId!
+#
+#   """
+#   The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   existence: Existence
+#
+#   """
+#   The name field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   name: NonEmptyString
+#
+#   """
+#   The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   status: ObsStatus
+#
+#   """
+#   The activeStatus field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   activeStatus: ObsActiveStatus
+#
+#   """
+#   The targetEnvironment field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   targetEnvironment: TargetEnvironmentInput
+#
+#   """
+#   The constraintSet field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   constraintSet: ConstraintSetInput
+#
+#   """
+#   The scienceRequirements field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   scienceRequirements: ScienceRequirementsInput
+#
+#   """
+#   The scienceConfiguration field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   scienceConfiguration: ScienceConfigurationInput
+# }
+#
+# """Edit program"""
+# input EditProgramInput {
+#   programId: ProgramId!
+#
+#   """
+#   The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   existence: Existence
+#
+#   """
+#   The name field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   name: NonEmptyString
+# }
+#
+# """Single target edit options"""
+# input EditTargetInput {
+#   targetId: TargetId!
+#   existence: Existence
+#   name: NonEmptyString
+#   sidereal: SiderealInput
+#   nonsidereal: NonsiderealInput
+#   sourceProfile: SourceProfileInput
+# }
+#
 """Type of edit that triggered an event"""
 enum EditType {
   """EditType Created"""
@@ -532,12 +532,12 @@ input FluxDensityContinuumSurfaceInput {
   units: FluxDensityContinuumSurfaceUnits!
 }
 
-"""Focal plane angle source angle in appropriate units"""
-input FocalPlaneAngleInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  arcseconds: BigDecimal
-}
+# """Focal plane angle source angle in appropriate units"""
+# input FocalPlaneAngleInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   arcseconds: BigDecimal
+# }
 
 """
 Create or edit a gaussian source.  Specify both "fwhm" and "spectralDefinition" when creating a new Gaussian.
@@ -828,29 +828,29 @@ type GmosNorthGrating {
   wavelength: Wavelength!
 }
 
-"""Edit or create GMOS North Long Slit configuration"""
-input GmosNorthLongSlitInput {
-  """
-  The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  filter: GmosNorthFilter
-
-  """
-  The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  disperser: GmosNorthDisperser
-
-  """
-  The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  fpu: GmosNorthFpu
-
-  """
-  The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  slitWidth: SlitWidthInput
-}
-
+# """Edit or create GMOS North Long Slit configuration"""
+# input GmosNorthLongSlitInput {
+#   """
+#   The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   filter: GmosNorthFilter
+#
+#   """
+#   The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   disperser: GmosNorthDisperser
+#
+#   """
+#   The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   fpu: GmosNorthFpu
+#
+#   """
+#   The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   slitWidth: SlitWidthInput
+# }
+#
 """A series of GmosNorth atoms that comprise the sequence"""
 type GmosNorthSequence {
   """Sequence atoms"""
@@ -1048,29 +1048,29 @@ type GmosSouthGrating {
   wavelength: Wavelength!
 }
 
-"""Edit or create GMOS South Long Slit configuration"""
-input GmosSouthLongSlitInput {
-  """
-  The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  filter: GmosSouthFilter
-
-  """
-  The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  disperser: GmosSouthDisperser
-
-  """
-  The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  fpu: GmosSouthFpu
-
-  """
-  The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  slitWidth: SlitWidthInput
-}
-
+# """Edit or create GMOS South Long Slit configuration"""
+# input GmosSouthLongSlitInput {
+#   """
+#   The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   filter: GmosSouthFilter
+#
+#   """
+#   The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   disperser: GmosSouthDisperser
+#
+#   """
+#   The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   fpu: GmosSouthFpu
+#
+#   """
+#   The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   slitWidth: SlitWidthInput
+# }
+#
 """A series of GmosSouth atoms that comprise the sequence"""
 type GmosSouthSequence {
   """Sequence atoms"""
@@ -1188,126 +1188,24 @@ enum MosPreImaging {
   IS_NOT_MOS_PRE_IMAGING
 }
 
-type Mutation {
-  createProgram(
-    """Program description"""
-    input: CreateProgramInput!
-  ): Program
-  updateProgram(
-    """Edit program"""
-    input: EditProgramInput!
-  ): Program!
-  createObservation(
-    """Observation description"""
-    input: CreateObservationInput!
-  ): Observation
-  updateObservation(
-    """Edit observation"""
-    input: EditObservationInput!
-  ): Observation!
-  updateAsterism(
-    """Bulk edit asterism"""
-    input: BulkEditAsterismInput!
-  ): [Observation!]!
-  updateTargetEnvironment(
-    """Bulk edit targetEnvironment"""
-    input: BulkEditTargetEnvironmentInput!
-  ): [Observation!]!
-  updateConstraintSet(
-    """Bulk edit constraintSet"""
-    input: BulkEditConstraintSetInput!
-  ): [Observation!]!
-  updateScienceRequirements(
-    """Bulk edit scienceRequirements"""
-    input: BulkEditScienceRequirementsInput!
-  ): [Observation!]!
-  deleteObservation(
-    """Observation ID"""
-    observationId: ObservationId!
-  ): Observation!
-  undeleteObservation(
-    """Observation ID"""
-    observationId: ObservationId!
-  ): Observation!
-
-  """
-  Creates a new target according to the provided parameters.  Only one of sidereal or nonsidereal may be specified.
-  """
-  createTarget(
-    """Program ID"""
-    programId: ProgramId!
-
-    """
-    Target description.  One (and only one) of sidereal or nonsidereal must be specified.
-    """
-    input: CreateTargetInput!
-  ): Target!
-
-  """
-  Makes a copy of an existing target, setting it to unobserved and to PRESENT.  If observationIds is specified, the clone will replace the existing target in those observations
-  """
-  cloneTarget(
-    """The existing target's id"""
-    existingTargetId: TargetId!
-
-    """The new target clone's id (will be generated if not supplied)"""
-    suggestedCloneId: TargetId
-
-    """Observation IDs"""
-    observationIds: [ObservationId!]
-  ): Target!
-
-  """Edits an existing target"""
-  updateTarget(
-    """
-    Parameters for editing an existing target. Nonsidereal edits are ignored for sidereal targets and vice versa.
-    """
-    input: EditTargetInput!
-  ): Target!
-
-  """Marks the target as DELETED.  Use undeleteTarget to retrieve it."""
-  deleteTarget(
-    """Target ID"""
-    targetId: TargetId!
-  ): Target!
-
-  """Marks the target as PRESENT."""
-  undeleteTarget(
-    """Target ID"""
-    targetId: TargetId!
-  ): Target!
-  addSequenceEvent(
-    """Sequence event description"""
-    input: AddSequenceEventInput!
-  ): SequenceEvent!
-  addStepEvent(
-    """Step event description"""
-    input: AddStepEventInput!
-  ): StepEvent!
-  addDatasetEvent(
-    """Dataset event description"""
-    input: AddDatasetEventInput!
-  ): DatasetEvent!
-}
-
-"""Nonsidereal target parameters.  Supply `keyType` and `des` or `key`"""
-input NonsiderealInput {
-  """
-  The keyType field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  keyType: EphemerisKeyType
-
-  """
-  The des field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  des: NonEmptyString
-
-  """
-  The key field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  key: NonEmptyString
-}
-
+# """Nonsidereal target parameters.  Supply `keyType` and `des` or `key`"""
+# input NonsiderealInput {
+#   """
+#   The keyType field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   keyType: EphemerisKeyType
+#
+#   """
+#   The des field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   des: NonEmptyString
+#
+#   """
+#   The key field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   key: NonEmptyString
+# }
+#
 """Event sent when a new object is created or updated"""
 type ObservationEdit implements Event {
   """Type of edit"""
@@ -1318,32 +1216,32 @@ type ObservationEdit implements Event {
   id: Long!
 }
 
-"""Decimal value in Parallax"""
-input ParallaxDecimalInput {
-  """decimal value in associated units"""
-  value: BigDecimal!
-
-  """units for associated value"""
-  units: ParallaxUnits!
-}
-
-"""Integral value in Parallax"""
-input ParallaxLongInput {
-  """integral value in associated units"""
-  value: Long!
-
-  """units for associated value"""
-  units: ParallaxUnits!
-}
-
-"""Parallax, choose one of the available units"""
-input ParallaxModelInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  fromLong: ParallaxLongInput
-  fromDecimal: ParallaxDecimalInput
-}
-
+# """Decimal value in Parallax"""
+# input ParallaxDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: ParallaxUnits!
+# }
+#
+# """Integral value in Parallax"""
+# input ParallaxLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: ParallaxUnits!
+# }
+#
+# """Parallax, choose one of the available units"""
+# input ParallaxModelInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   fromLong: ParallaxLongInput
+#   fromDecimal: ParallaxDecimalInput
+# }
+#
 """Unit options for parallax values"""
 enum ParallaxUnits {
   """ParallaxUnits Microarcseconds"""
@@ -1363,32 +1261,32 @@ type ProgramEdit implements Event {
   id: Long!
 }
 
-"""Decimal value in ProperMotionComponent"""
-input ProperMotionComponentDecimalInput {
-  """decimal value in associated units"""
-  value: BigDecimal!
-
-  """units for associated value"""
-  units: ProperMotionComponentUnits!
-}
-
-"""Proper motion component, choose one of the available units"""
-input ProperMotionComponentInput {
-  microarcsecondsPerYear: Long
-  milliarcsecondsPerYear: BigDecimal
-  fromLong: ProperMotionComponentLongInput
-  fromDecimal: ProperMotionComponentDecimalInput
-}
-
-"""Integral value in ProperMotionComponent"""
-input ProperMotionComponentLongInput {
-  """integral value in associated units"""
-  value: Long!
-
-  """units for associated value"""
-  units: ProperMotionComponentUnits!
-}
-
+# """Decimal value in ProperMotionComponent"""
+# input ProperMotionComponentDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: ProperMotionComponentUnits!
+# }
+#
+# """Proper motion component, choose one of the available units"""
+# input ProperMotionComponentInput {
+#   microarcsecondsPerYear: Long
+#   milliarcsecondsPerYear: BigDecimal
+#   fromLong: ProperMotionComponentLongInput
+#   fromDecimal: ProperMotionComponentDecimalInput
+# }
+#
+# """Integral value in ProperMotionComponent"""
+# input ProperMotionComponentLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: ProperMotionComponentUnits!
+# }
+#
 """Unit options for proper motion components (RA and Dec)"""
 enum ProperMotionComponentUnits {
   """ProperMotionComponentUnits MicroarcsecondsPerYear"""
@@ -1398,12 +1296,12 @@ enum ProperMotionComponentUnits {
   MILLIARCSECONDS_PER_YEAR
 }
 
-"""Proper motion, choose one of the available units"""
-input ProperMotionInput {
-  ra: ProperMotionComponentInput!
-  dec: ProperMotionComponentInput!
-}
-
+# """Proper motion, choose one of the available units"""
+# input ProperMotionInput {
+#   ra: ProperMotionComponentInput!
+#   dec: ProperMotionComponentInput!
+# }
+#
 """Decimal value in RadialVelocity"""
 input RadialVelocityDecimalInput {
   """decimal value in associated units"""
@@ -1443,33 +1341,33 @@ enum RadialVelocityUnits {
   KILOMETERS_PER_SECOND
 }
 
-"""Decimal value in RightAscension"""
-input RightAscensionDecimalInput {
-  """decimal value in associated units"""
-  value: BigDecimal!
-
-  """units for associated value"""
-  units: RightAscensionUnits!
-}
-
-"""Right Ascension, choose one of the available units"""
-input RightAscensionInput {
-  microarcseconds: Long
-  degrees: BigDecimal
-  hours: BigDecimal
-  hms: HmsString
-  fromLong: RightAscensionLongInput
-  fromDecimal: RightAscensionDecimalInput
-}
-
-"""Integral value in RightAscension"""
-input RightAscensionLongInput {
-  """integral value in associated units"""
-  value: Long!
-
-  """units for associated value"""
-  units: RightAscensionUnits!
-}
+# """Decimal value in RightAscension"""
+# input RightAscensionDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: RightAscensionUnits!
+# }
+#
+# """Right Ascension, choose one of the available units"""
+# input RightAscensionInput {
+#   microarcseconds: Long
+#   degrees: BigDecimal
+#   hours: BigDecimal
+#   hms: HmsString
+#   fromLong: RightAscensionLongInput
+#   fromDecimal: RightAscensionDecimalInput
+# }
+#
+# """Integral value in RightAscension"""
+# input RightAscensionLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: RightAscensionUnits!
+# }
 
 """Unit options for RightAscension values"""
 enum RightAscensionUnits {
@@ -1483,77 +1381,77 @@ enum RightAscensionUnits {
   HOURS
 }
 
-"""Edit or create an observation's science configuration"""
-input ScienceConfigurationInput {
-  """
-  The gmosNorthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  gmosNorthLongSlit: GmosNorthLongSlitInput
-
-  """
-  The gmosSouthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  gmosSouthLongSlit: GmosSouthLongSlitInput
-}
-
-"""Edit science requirements"""
-input ScienceRequirementsInput {
-  """
-  The mode field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  mode: ScienceMode
-
-  """
-  The spectroscopy field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  spectroscopy: SpectroscopyScienceRequirementsInput
-}
-
-"""Sidereal target edit parameters"""
-input SiderealInput {
-  """
-  The ra field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  ra: RightAscensionInput
-
-  """
-  The dec field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  dec: DeclinationInput
-
-  """
-  The epoch field must be either specified or skipped altogether.  It cannot be unset with a null value.
-  """
-  epoch: EpochString
-
-  """
-  The properMotion field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  properMotion: ProperMotionInput
-
-  """
-  The radialVelocity field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  radialVelocity: RadialVelocityInput
-
-  """
-  The parallax field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  parallax: ParallaxModelInput
-
-  """
-  The catalogInfo field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  catalogInfo: CatalogInfoInput
-}
-
-"""Slit width in appropriate units"""
-input SlitWidthInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  arcseconds: BigDecimal
-}
-
+# """Edit or create an observation's science configuration"""
+# input ScienceConfigurationInput {
+#   """
+#   The gmosNorthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   gmosNorthLongSlit: GmosNorthLongSlitInput
+#
+#   """
+#   The gmosSouthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   gmosSouthLongSlit: GmosSouthLongSlitInput
+# }
+#
+# """Edit science requirements"""
+# input ScienceRequirementsInput {
+#   """
+#   The mode field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   mode: ScienceMode
+#
+#   """
+#   The spectroscopy field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   spectroscopy: SpectroscopyScienceRequirementsInput
+# }
+#
+# """Sidereal target edit parameters"""
+# input SiderealInput {
+#   """
+#   The ra field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   ra: RightAscensionInput
+#
+#   """
+#   The dec field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   dec: DeclinationInput
+#
+#   """
+#   The epoch field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   epoch: EpochString
+#
+#   """
+#   The properMotion field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   properMotion: ProperMotionInput
+#
+#   """
+#   The radialVelocity field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   radialVelocity: RadialVelocityInput
+#
+#   """
+#   The parallax field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   parallax: ParallaxModelInput
+#
+#   """
+#   The catalogInfo field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   catalogInfo: CatalogInfoInput
+# }
+#
+# """Slit width in appropriate units"""
+# input SlitWidthInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   arcseconds: BigDecimal
+# }
+#
 """
 Create or edit a source profile.  Exactly one of "point", "uniform" or "gaussian" is required.
 """
@@ -1579,97 +1477,49 @@ input SpectralDefinitionSurfaceInput {
   emissionLines: EmissionLinesSurfaceInput
 }
 
-"""Edit or create spectroscopy science requirements"""
-input SpectroscopyScienceRequirementsInput {
-  """
-  The wavelength field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  wavelength: WavelengthInput
-
-  """
-  The resolution field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  resolution: Int
-
-  """
-  The signalToNoise field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  signalToNoise: BigDecimal
-
-  """
-  The signalToNoiseAt field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  signalToNoiseAt: WavelengthInput
-
-  """
-  The wavelengthCoverage field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  wavelengthCoverage: WavelengthInput
-
-  """
-  The focalPlane field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  focalPlane: FocalPlane
-
-  """
-  The focalPlaneAngle field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  focalPlaneAngle: FocalPlaneAngleInput
-
-  """
-  The capabilities field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  capabilities: SpectroscopyCapabilities
-}
-
-type Subscription {
-  """
-
-  Subscribes to an event that is generated whenever a(n) observation is
-  created or updated.  If a(n) observation id is provided, the event is only
-  generated for edits to that particular observation.  If a program id is
-  provided then the event must correspond to a(n) observation referenced by
-  that program.
-
-  """
-  observationEdit(
-    """Observation ID"""
-    observationId: ObservationId
-
-    """Program ID"""
-    programId: ProgramId
-  ): ObservationEdit!
-
-  """
-
-  Subscribes to an event that is generated whenever a(n) target is
-  created or updated.  If a(n) target id is provided, the event is only
-  generated for edits to that particular target.  If a program id is
-  provided then the event must correspond to a(n) target referenced by
-  that program.
-
-  """
-  targetEdit(
-    """Target ID"""
-    targetId: TargetId
-
-    """Program ID"""
-    programId: ProgramId
-  ): TargetEdit!
-
-  """
-
-  Subscribes to an event that is generated whenever a program is created
-  or edited. A particular program id may be provided to limit events to
-  that program.
-
-  """
-  programEdit(
-    """Program ID"""
-    programId: ProgramId
-  ): ProgramEdit!
-}
-
+# """Edit or create spectroscopy science requirements"""
+# input SpectroscopyScienceRequirementsInput {
+#   """
+#   The wavelength field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   wavelength: WavelengthInput
+#
+#   """
+#   The resolution field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   resolution: Int
+#
+#   """
+#   The signalToNoise field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   signalToNoise: BigDecimal
+#
+#   """
+#   The signalToNoiseAt field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   signalToNoiseAt: WavelengthInput
+#
+#   """
+#   The wavelengthCoverage field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   wavelengthCoverage: WavelengthInput
+#
+#   """
+#   The focalPlane field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   focalPlane: FocalPlane
+#
+#   """
+#   The focalPlaneAngle field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   focalPlaneAngle: FocalPlaneAngleInput
+#
+#   """
+#   The capabilities field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   capabilities: SpectroscopyCapabilities
+# }
+#
 """Event sent when a new object is created or updated"""
 type TargetEdit implements Event {
   """Type of edit"""
@@ -1680,15 +1530,15 @@ type TargetEdit implements Event {
   id: Long!
 }
 
-"""Target environment editing and creation parameters"""
-input TargetEnvironmentInput {
-  """
-  The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
-  """
-  explicitBase: CoordinatesInput
-  asterism: [TargetId!]
-}
-
+# """Target environment editing and creation parameters"""
+# input TargetEnvironmentInput {
+#   """
+#   The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   explicitBase: CoordinatesInput
+#   asterism: [TargetId!]
+# }
+#
 """Un-normalized SED input parameters.  Define one value only."""
 input UnnormalizedSedInput {
   stellarLibrary: StellarLibrarySpectrum
@@ -4282,13 +4132,6 @@ scalar Long
 # ITC schema
 ##############
 
-# Gaussian source angle in appropriate units
-input GaussianSourceAngleInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  arcseconds: BigDecimal
-}
-
 # ITC error result
 type ItcError implements ItcResult {
   # Message
@@ -4333,11 +4176,6 @@ type ObservingModeSpectroscopy {
 }
 
 type Query {
-  basiccase(
-    # Configuration alternatives search parameters.
-    input: QueryConfigurationAlternativeSearchInput!
-  ): SpectroscopyResult!
-
   spectroscopy(
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
@@ -4412,7 +4250,7 @@ input SpectroscopyModeInput {
   # Spatial profile PointSource/UniformSource/GaussianSource.
   sourceProfile: SourceProfileInput!
 
-  # band
+  # Observing Band
   band: Band!
 
   # Target radial velocity
@@ -4425,27 +4263,6 @@ input SpectroscopyModeInput {
   modes: [InstrumentModes]!
 }
 
-# Configuration alternatives query
-input QueryConfigurationAlternativeSearchInput {
-  # Observing wavelength.
-  wavelength: WavelengthModelInput!
-
-  # Minimum desired simultaneous wavelength coverage.
-  simultaneousCoverage: WavelengthModelInput!
-
-  # Minimum desired resolution.
-  resolution: PosInt!
-
-  # Minimum desired signal-to-noise ratio.
-  signalToNoise: PosBigDecimal!
-
-  # Source profile PointSource/UniformSource/GaussianSource.
-  sourceProfile: SourceProfileInput!
-
-  # Target radial velocity
-  radialVelocity: RadialVelocityInput!
-}
-
 type Result {
   # Spectroscopy mode
   mode: ObservingModeSpectroscopy!
@@ -4454,144 +4271,6 @@ type Result {
   itc: ItcResult!
 }
 
-# # Spatial profile PointSource/UniformSource/GaussianSource
-# input SpatialProfileModelInput {
-#   # Spatial profile type: Point/Uniform/Gaussian
-#   sourceType: SpatialProfileType!
-#
-#   # Full width half maximum (including seeing) in suitable units. Required for the Gaussian spatial profile, ignored otherwise.
-#   fwhm: GaussianSourceAngleInput
-# }
-
-# Spatial profile type: Point/Uniform/Gaussian
-# enum SpatialProfileType {
-#   # SpatialProfileType PointSource
-#   POINT_SOURCE
-#
-#   # SpatialProfileType UniformSource
-#   UNIFORM_SOURCE
-#
-#   # SpatialProfileType GaussianSource
-#   GAUSSIAN_SOURCE
-# }
-
-# A black body with a temperature in Kelvin.
-# input BlackBody {
-#   temperature: BigDecimal
-# }
-
-# Defined by power law function.
-# input PowerLaw {
-#   index: BigDecimal
-# }
-
-# # Library defined Stellar spectrum
-# enum StellarLibrarySpectrum {
-#   O5V
-#   O8III
-#   B0V
-#   B5_7V
-#   B5III
-#   B5I
-#   A0V
-#   A0III
-#   A0I
-#   A5V
-#   A5III
-#   F0V
-#   F0III
-#   F0I
-#   F5V
-#   F5V_W
-#   F6V_R
-#   F5III
-#   F5I
-#   G0V
-#   G0V_W
-#   G0V_R
-#   G0III
-#   G0I
-#   G2V
-#   G5V
-#   G5V_W
-#   G5V_R
-#   G5III
-#   G5III_W
-#   G5III_R
-#   G5I
-#   K0V
-#   K0V_R
-#   K0III
-#   K0III_W
-#   K0III_R
-#   K0_1II
-#   K4V
-#   K4III
-#   K4III_W
-#   K4III_R
-#   K4I
-#   M0V
-#   M0III
-#   M3V
-#   M3III
-#   M6V
-#   M6III
-#   M9III
-# }
-
-# Library defined Non Stellar spectrum
-# enum NonStellarLibrarySpectrum {
-#   ELLIPTICAL_GALAXY
-#   SPIRAL_GALAXY
-#   QS0
-#   QS02
-#   ORION_NEBULA
-#   PLANETARY_NEBULA
-#   PLANETARY_NEBULA2
-#   PLANETARY_NEBULA3
-#   STARBURST_GALAXY
-#   PMS_STAR
-#   GALACTIC_CENTER
-#   AFGL_230
-#   AFGL_3068
-#   ALPHA_BOO
-#   ALPHA_CAR
-#   BETA_AND
-#   BETA_GRU
-#   GAMMA_CAS
-#   GAMMA_DRA
-#   L1511_IRS
-#   NGC1068
-#   NGC2023
-#   NGC2440
-#   O_CET
-#   ORION_BAR
-#   RSCL
-#   TXPSC
-#   WR104
-#   WR34
-#   MARS
-#   JUPITER
-#   SATURN
-#   URANUS
-#   NEPTUNE
-# }
-
-# # Spectral distribution variant
-# input SpectralDistributionInput {
-#   # SpectralDistribution BlackBody
-#   blackBody: BlackBody
-#
-#   # SpectralDistribution PowerLaw
-#   powerLaw: PowerLaw
-#
-#   # SpectralDistribution Stellar
-#   stellar: StellarLibrarySpectrum
-#
-#   # SpectralDistribution NonStellar
-#   nonStellar: NonStellarLibrarySpectrum
-# }
-#
 type SpectroscopyResult {
   # Search results
   results: [Result!]!
