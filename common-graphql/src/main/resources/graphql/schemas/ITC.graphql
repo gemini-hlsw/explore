@@ -1,218 +1,1569 @@
 ##############
-# From common schema
-##############
+# ODB schema
+#############
 
-# Instrument
-enum InstrumentType {
-  # InstrumentType AcqCam
-  ACQ_CAM
+# """DatasetEvent creation parameters"""
+# input AddDatasetEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   stepId: StepId!
+#   datasetIndex: Int!
+#   filename: DatasetFilename
+#   stageType: DatasetStage!
+# }
 
-  # InstrumentType Bhros
-  BHROS
+# """SequenceEvent creation parameters"""
+# input AddSequenceEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   command: SequenceCommand!
+# }
 
-  # InstrumentType Flamingos2
-  FLAMINGOS2
+# """StepEvent creation parameters"""
+# input AddStepEventInput {
+#   eventId: ExecutionEventId
+#   observationId: ObservationId!
+#   generated: Instant!
+#   stepId: StepId!
+#   sequenceType: SequenceType!
+#   stage: StepStage!
+# }
 
-  # InstrumentType Ghost
-  GHOST
-
-  # InstrumentType GmosNorth
-  GMOS_NORTH
-
-  # InstrumentType GmosSouth
-  GMOS_SOUTH
-
-  # InstrumentType Gnirs
-  GNIRS
-
-  # InstrumentType Gpi
-  GPI
-
-  # InstrumentType Gsaoi
-  GSAOI
-
-  # InstrumentType Michelle
-  MICHELLE
-
-  # InstrumentType Nici
-  NICI
-
-  # InstrumentType Nifs
-  NIFS
-
-  # InstrumentType Niri
-  NIRI
-
-  # InstrumentType Phoenix
-  PHOENIX
-
-  # InstrumentType Trecs
-  TRECS
-
-  # InstrumentType Visitor
-  VISITOR
-
-  # InstrumentType Scorpio
-  SCORPIO
-
-  # InstrumentType Alopeke
-  ALOPEKE
-
-  # InstrumentType Zorro
-  ZORRO
+"""Airmass range creation and edit parameters"""
+input AirmassRangeInput {
+  min: BigDecimal
+  max: BigDecimal
 }
 
-# Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
-type Duration {
-  # Duration in µs
-  microseconds: Long!
-
-  # Duration in ms
-  milliseconds: BigDecimal!
-
-  # Duration in seconds
-  seconds: BigDecimal!
-
-  # Duration in minutes
-  minutes: BigDecimal!
-
-  # Duration in hours
-  hours: BigDecimal!
+"""
+Create an angle from a signed value.  Choose exactly one of the available units.
+"""
+input AngleInput {
+  microarcseconds: Long
+  microseconds: BigDecimal
+  milliarcseconds: BigDecimal
+  milliseconds: BigDecimal
+  arcseconds: BigDecimal
+  seconds: BigDecimal
+  arcminutes: BigDecimal
+  minutes: BigDecimal
+  degrees: BigDecimal
+  hours: BigDecimal
+  dms: String
+  hms: String
+  fromLong: LongAngleInput
+  fromDecimal: DecimalAngleInput
 }
 
-# Magnitude band
-enum Band {
-  # Band SloanU
-  SLOAN_U
+"""Angle units"""
+enum AngleUnits {
+  """AngleUnits Microarcseconds"""
+  MICROARCSECONDS
 
-  # Band SloanG
-  SLOAN_G
+  """AngleUnits Microseconds"""
+  MICROSECONDS
 
-  # Band SloanR
-  SLOAN_R
+  """AngleUnits Milliarcseconds"""
+  MILLIARCSECONDS
 
-  # Band SloanI
-  SLOAN_I
+  """AngleUnits Milliseconds"""
+  MILLISECONDS
 
-  # Band SloanZ
-  SLOAN_Z
+  """AngleUnits Arcseconds"""
+  ARCSECONDS
 
-  # Band U
-  U
+  """AngleUnits Seconds"""
+  SECONDS
 
-  # Band B
-  B
+  """AngleUnits Arcminutes"""
+  ARCMINUTES
 
-  # Band V
-  V
+  """AngleUnits Minutes"""
+  MINUTES
 
-  # Band Uc
-  UC
+  """AngleUnits Degrees"""
+  DEGREES
 
-  # Band R
-  R
-
-  # Band I
-  I
-
-  # Band Y
-  Y
-
-  # Band J
-  J
-
-  # Band H
-  H
-
-  # Band K
-  K
-
-  # Band L
-  L
-
-  # Band M
-  M
-
-  # Band N
-  N
-
-  # Band Q
-  Q
-
-  # Band Ap
-  AP
+  """AngleUnits Hours"""
+  HOURS
 }
 
-# Magnitude creation parameters
-input MagnitudeCreateInput {
+"""
+Create or edit a band brightness value with integrated magnitude units.  When creating a new value, all fields except "error" are required.
+"""
+input BandBrightnessIntegratedInput {
   band: Band!
-  value: BigDecimal!
+
+  """
+  The value field is required when creating a new instance of BandBrightnessIntegrated, but optional when editing
+  """
+  value: BigDecimal
+
+  """
+  The units field is required when creating a new instance of BandBrightnessIntegrated, but optional when editing
+  """
+  units: BrightnessIntegratedUnits
+
+  """Error values are optional"""
   error: BigDecimal
-  system: MagnitudeSystem = VEGA
 }
 
-# Magnitude system
-enum MagnitudeSystem {
-  # MagnitudeSystem Vega
-  VEGA
+"""
+Create or edit a band brightness value with surface magnitude units.  When creating a new value, all fields except "error" are required.
+"""
+input BandBrightnessSurfaceInput {
+  band: Band!
 
-  # MagnitudeSystem AB
-  AB
+  """
+  The value field is required when creating a new instance of BandBrightnessSurface, but optional when editing
+  """
+  value: BigDecimal
 
-  # MagnitudeSystem Jy
-  JY
+  """
+  The units field is required when creating a new instance of BandBrightnessSurface, but optional when editing
+  """
+  units: BrightnessSurfaceUnits
 
-  # MagnitudeSystem Watts
-  WATTS
-
-  # MagnitudeSystem ErgsWavelength
-  ERGS_WAVELENGTH
-
-  # MagnitudeSystem ErgsFrequency
-  ERGS_FREQUENCY
+  """Error values are optional"""
+  error: BigDecimal
 }
 
-# Radial velocity, choose one of the available units
+"""
+Create or edit a band normalized value with integrated magnitude units.  Specify both "sed" and "brightnesses" when creating a new BandNormalizedIntegrated.
+"""
+input BandNormalizedIntegratedInput {
+  """
+  The sed field is required when creating a new instance of BandNormalizedIntegrated, but optional when editing
+  """
+  sed: UnnormalizedSedInput
+
+  """
+  The brightnesses field is required when creating a new instance of BandNormalizedIntegrated, but optional when editing
+  """
+  brightnesses: [BandBrightnessIntegratedInput!]
+
+  """
+  Optional field that may be provided to edit existing brightness definitions or add new ones
+  """
+  editBrightnesses: [BandBrightnessIntegratedInput!]
+
+  """
+  Optional field that may be provided to delete existing brightness definitions identified by band
+  """
+  deleteBrightnesses: [Band!]
+}
+
+"""
+Create or edit a band normalized value with surface magnitude units.  Specify both "sed" and "brightnesses" when creating a new BandNormalizedSurface.
+"""
+input BandNormalizedSurfaceInput {
+  """
+  The sed field is required when creating a new instance of BandNormalizedSurface, but optional when editing
+  """
+  sed: UnnormalizedSedInput
+
+  """
+  The brightnesses field is required when creating a new instance of BandNormalizedSurface, but optional when editing
+  """
+  brightnesses: [BandBrightnessSurfaceInput!]
+
+  """
+  Optional field that may be provided to edit existing brightness definitions or add new ones
+  """
+  editBrightnesses: [BandBrightnessSurfaceInput!]
+
+  """
+  Optional field that may be provided to delete existing brightness definitions identified by band
+  """
+  deleteBrightnesses: [Band!]
+}
+
+# """Input for bulk editing multiple observations"""
+# input BulkEditAsterismInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: [EditAsterismInput!]!
+# }
+
+# """Input for bulk editing multiple observations"""
+# input BulkEditConstraintSetInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: ConstraintSetInput!
+# }
+
+# """Input for bulk editing multiple observations"""
+# input BulkEditScienceRequirementsInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: ScienceRequirementsInput!
+# }
+
+# """Input for bulk editing multiple observations"""
+# input BulkEditTargetEnvironmentInput {
+#   selectProgram: ProgramId
+#   selectObservations: [ObservationId!]
+#   edit: TargetEnvironmentInput!
+# }
+
+# """
+# Catalog id consisting of catalog name, string identifier and an optional object type
+# """
+# input CatalogInfoInput {
+#   """
+#   The name field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   name: CatalogName
+#
+#   """
+#   The id field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   id: NonEmptyString
+#
+#   """
+#   The objectType field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   objectType: NonEmptyString
+# }
+
+"""Constraint set creation and editing parameters"""
+input ConstraintSetInput {
+  """
+  The imageQuality field is required when creating a new instance of ConstraintSet, but optional when editing
+  """
+  imageQuality: ImageQuality
+
+  """
+  The cloudExtinction field is required when creating a new instance of ConstraintSet, but optional when editing
+  """
+  cloudExtinction: CloudExtinction
+
+  """
+  The skyBackground field is required when creating a new instance of ConstraintSet, but optional when editing
+  """
+  skyBackground: SkyBackground
+
+  """
+  The waterVapor field is required when creating a new instance of ConstraintSet, but optional when editing
+  """
+  waterVapor: WaterVapor
+
+  """
+  The elevationRange field is required when creating a new instance of ConstraintSet, but optional when editing
+  """
+  elevationRange: ElevationRangeInput
+}
+
+# """Absolute coordinates relative base epoch"""
+# input CoordinatesInput {
+#   ra: RightAscensionInput!
+#   dec: DeclinationInput!
+# }
+
+# """Observation creation parameters"""
+# input CreateObservationInput {
+#   observationId: ObservationId
+#   programId: ProgramId!
+#   name: NonEmptyString
+#   status: ObsStatus
+#   activeStatus: ObsActiveStatus
+#   targetEnvironment: TargetEnvironmentInput
+#   constraintSet: ConstraintSetInput
+#   scienceRequirements: ScienceRequirementsInput
+#   scienceConfiguration: ScienceConfigurationInput
+# }
+#
+# """Program creation parameters"""
+# input CreateProgramInput {
+#   programId: ProgramId
+#   name: NonEmptyString
+# }
+#
+# """Target creation parameters"""
+# input CreateTargetInput {
+#   targetId: TargetId
+#   name: NonEmptyString!
+#   sidereal: SiderealInput
+#   nonsidereal: NonsiderealInput
+#   sourceProfile: SourceProfileInput!
+# }
+#
+"""Create an angle from a signed decimal value and its units."""
+input DecimalAngleInput {
+  value: BigDecimal!
+  units: AngleUnits!
+}
+#
+# """Decimal value in Declination"""
+# input DeclinationDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: DeclinationUnits!
+# }
+#
+# """Declination, choose one of the available units"""
+# input DeclinationInput {
+#   microarcseconds: Long
+#   degrees: BigDecimal
+#   dms: DmsString
+#   fromLong: DeclinationLongInput
+#   fromDecimal: DeclinationDecimalInput
+# }
+#
+# """Integral value in Declination"""
+# input DeclinationLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: DeclinationUnits!
+# }
+
+"""Unit options for Declination values"""
+enum DeclinationUnits {
+  """DeclinationUnits Microarcseconds"""
+  MICROARCSECONDS
+
+  """DeclinationUnits Degrees"""
+  DEGREES
+}
+
+# """Add or delete targets in an asterism"""
+# input EditAsterismInput {
+#   add: TargetId
+#   delete: TargetId
+# }
+#
+# """Edit observation"""
+# input EditObservationInput {
+#   observationId: ObservationId!
+#
+#   """
+#   The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   existence: Existence
+#
+#   """
+#   The name field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   name: NonEmptyString
+#
+#   """
+#   The status field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   status: ObsStatus
+#
+#   """
+#   The activeStatus field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   activeStatus: ObsActiveStatus
+#
+#   """
+#   The targetEnvironment field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   targetEnvironment: TargetEnvironmentInput
+#
+#   """
+#   The constraintSet field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   constraintSet: ConstraintSetInput
+#
+#   """
+#   The scienceRequirements field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   scienceRequirements: ScienceRequirementsInput
+#
+#   """
+#   The scienceConfiguration field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   scienceConfiguration: ScienceConfigurationInput
+# }
+#
+# """Edit program"""
+# input EditProgramInput {
+#   programId: ProgramId!
+#
+#   """
+#   The existence field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   existence: Existence
+#
+#   """
+#   The name field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   name: NonEmptyString
+# }
+#
+# """Single target edit options"""
+# input EditTargetInput {
+#   targetId: TargetId!
+#   existence: Existence
+#   name: NonEmptyString
+#   sidereal: SiderealInput
+#   nonsidereal: NonsiderealInput
+#   sourceProfile: SourceProfileInput
+# }
+#
+"""Type of edit that triggered an event"""
+enum EditType {
+  """EditType Created"""
+  CREATED
+
+  """EditType Updated"""
+  UPDATED
+}
+
+"""
+Elevation range creation and edit parameters.  Choose one of airmass or hour angle constraints.
+"""
+input ElevationRangeInput {
+  airmassRange: AirmassRangeInput
+  hourAngleRange: HourAngleRangeInput
+}
+
+"""
+Create or edit an emission line with integrated line flux units.  When creating a new value, all fields are required.
+"""
+input EmissionLineIntegratedInput {
+  wavelength: WavelengthInput!
+
+  """
+  The lineWidth field is required when creating a new instance of EmissionLineIntegrated, but optional when editing
+  """
+  lineWidth: BigDecimal
+
+  """
+  The lineFlux field is required when creating a new instance of EmissionLineIntegrated, but optional when editing
+  """
+  lineFlux: LineFluxIntegratedInput
+}
+
+"""
+Create or edit an emission line with surface line flux units.  When creating a new value, all fields are required.
+"""
+input EmissionLineSurfaceInput {
+  wavelength: WavelengthInput!
+
+  """
+  The lineWidth field is required when creating a new instance of EmissionLineSurface, but optional when editing
+  """
+  lineWidth: BigDecimal
+
+  """
+  The lineFlux field is required when creating a new instance of EmissionLineSurface, but optional when editing
+  """
+  lineFlux: LineFluxSurfaceInput
+}
+
+"""
+Create or edit emission lines with integrated line flux and flux density continuum units. Both "lines" and "fluxDensityContinuum" are required when creating a new EmissionLinesIntegrated.
+"""
+input EmissionLinesIntegratedInput {
+  """
+  The lines field is required when creating a new instance of EmissionLinesIntegrated, but optional when editing
+  """
+  lines: [EmissionLineIntegratedInput!]
+
+  """
+  Optional field that may be provided to edit existing emission line definitions or add new ones
+  """
+  editLines: [EmissionLineIntegratedInput!]
+
+  """
+  Optional field that may be provided to delete existing emission lines identified by wavelength
+  """
+  deleteLines: [WavelengthInput!]
+
+  """
+  The fluxDensityContinuum field is required when creating a new instance of EmissionLinesIntegrated, but optional when editing
+  """
+  fluxDensityContinuum: FluxDensityContinuumIntegratedInput
+}
+
+"""
+Create or edit emission lines with surface line flux and flux density continuum units. Both "lines" and "fluxDensityContinuum" are required when creating a new EmissionLinesSurface.
+"""
+input EmissionLinesSurfaceInput {
+  """
+  The lines field is required when creating a new instance of EmissionLinesSurface, but optional when editing
+  """
+  lines: [EmissionLineSurfaceInput!]
+
+  """
+  Optional field that may be provided to edit existing emission line definitions or add new ones
+  """
+  editLines: [EmissionLineSurfaceInput!]
+
+  """
+  Optional field that may be provided to delete existing emission lines identified by wavelength
+  """
+  deleteLines: [WavelengthInput!]
+
+  """
+  The fluxDensityContinuum field is required when creating a new instance of EmissionLinesSurface, but optional when editing
+  """
+  fluxDensityContinuum: FluxDensityContinuumSurfaceInput
+}
+
+"""Common fields shared by all events"""
+interface Event {
+  id: Long!
+}
+
+"""Flux density entry"""
+input FluxDensity {
+  wavelength: WavelengthInput!
+  density: BigDecimal!
+}
+
+"""A flux density continuum value with integrated units"""
+input FluxDensityContinuumIntegratedInput {
+  value: BigDecimal!
+  units: FluxDensityContinuumIntegratedUnits!
+}
+
+"""A flux density continuum value with surface units"""
+input FluxDensityContinuumSurfaceInput {
+  value: BigDecimal!
+  units: FluxDensityContinuumSurfaceUnits!
+}
+
+# """Focal plane angle source angle in appropriate units"""
+# input FocalPlaneAngleInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   arcseconds: BigDecimal
+# }
+
+"""
+Create or edit a gaussian source.  Specify both "fwhm" and "spectralDefinition" when creating a new Gaussian.
+"""
+input GaussianInput {
+  """
+  The fwhm field is required when creating a new instance of Gaussian, but optional when editing
+  """
+  fwhm: AngleInput
+
+  """
+  The spectralDefinition field is required when creating a new instance of Gaussian, but optional when editing
+  """
+  spectralDefinition: SpectralDefinitionIntegratedInput
+}
+
+"""GMOS amp count"""
+enum GmosAmpCount {
+  """GmosAmpCount Three"""
+  THREE
+
+  """GmosAmpCount Six"""
+  SIX
+
+  """GmosAmpCount Twelve"""
+  TWELVE
+}
+
+"""GMOS amp gain"""
+enum GmosAmpGain {
+  """GmosAmpGain Low"""
+  LOW
+
+  """GmosAmpGain High"""
+  HIGH
+}
+
+"""GMOS amp read mode"""
+enum GmosAmpReadMode {
+  """GmosAmpReadMode Slow"""
+  SLOW
+
+  """GmosAmpReadMode Fast"""
+  FAST
+}
+
+"""CCD Readout Configuration"""
+type GmosCcdMode {
+  """GMOS X-binning"""
+  xBin: GmosXBinning!
+
+  """GMOS Y-binning"""
+  yBin: GmosYBinning!
+
+  """GMOS Amp Count"""
+  ampCount: GmosAmpCount!
+
+  """GMOS Amp Gain"""
+  ampGain: GmosAmpGain!
+
+  """GMOS Amp Read Mode"""
+  ampReadMode: GmosAmpReadMode!
+}
+
+"""GMOS Custom Mask"""
+type GmosCustomMask {
+  """Custom Mask Filename"""
+  filename: String!
+
+  """Custom Slit Width"""
+  slitWidth: GmosCustomSlitWidth!
+}
+
+"""GMOS Custom Slit Width"""
+enum GmosCustomSlitWidth {
+  """GmosCustomSlitWidth CustomWidth_0_25"""
+  CUSTOM_WIDTH_0_25
+
+  """GmosCustomSlitWidth CustomWidth_0_50"""
+  CUSTOM_WIDTH_0_50
+
+  """GmosCustomSlitWidth CustomWidth_0_75"""
+  CUSTOM_WIDTH_0_75
+
+  """GmosCustomSlitWidth CustomWidth_1_00"""
+  CUSTOM_WIDTH_1_00
+
+  """GmosCustomSlitWidth CustomWidth_1_50"""
+  CUSTOM_WIDTH_1_50
+
+  """GmosCustomSlitWidth CustomWidth_2_00"""
+  CUSTOM_WIDTH_2_00
+
+  """GmosCustomSlitWidth CustomWidth_5_00"""
+  CUSTOM_WIDTH_5_00
+}
+
+"""GMOS disperser order"""
+enum GmosDisperserOrder {
+  """GmosDisperserOrder Zero"""
+  ZERO
+
+  """GmosDisperserOrder One"""
+  ONE
+
+  """GmosDisperserOrder Two"""
+  TWO
+}
+
+"""GMOS Detector Translation X Offset"""
+enum GmosDtax {
+  """GmosDtax MinusSix"""
+  MINUS_SIX
+
+  """GmosDtax MinusFive"""
+  MINUS_FIVE
+
+  """GmosDtax MinusFour"""
+  MINUS_FOUR
+
+  """GmosDtax MinusThree"""
+  MINUS_THREE
+
+  """GmosDtax MinusTwo"""
+  MINUS_TWO
+
+  """GmosDtax MinusOne"""
+  MINUS_ONE
+
+  """GmosDtax Zero"""
+  ZERO
+
+  """GmosDtax One"""
+  ONE
+
+  """GmosDtax Two"""
+  TWO
+
+  """GmosDtax Three"""
+  THREE
+
+  """GmosDtax Four"""
+  FOUR
+
+  """GmosDtax Five"""
+  FIVE
+
+  """GmosDtax Six"""
+  SIX
+}
+
+"""Electronic offsetting"""
+enum GmosEOffsetting {
+  """GmosEOffsetting On"""
+  ON
+
+  """GmosEOffsetting Off"""
+  OFF
+}
+
+type GmosNodAndShuffle {
+  """Offset position A"""
+  posA: Offset!
+
+  """Offset position B"""
+  posB: Offset!
+
+  """Whether to use electronic offsetting"""
+  eOffset: GmosEOffsetting!
+
+  """Shuffle offset"""
+  shuffleOffset: Int!
+
+  """Shuffle cycles"""
+  shuffleCycles: Int!
+}
+
+"""
+GmosNorth atom, a collection of steps that should be executed in their entirety
+"""
+type GmosNorthAtom implements Atom {
+  """Individual steps that comprise the atom"""
+  steps: [GmosNorthStep!]!
+
+  """Time estimate for this atom's execution, the sum of each step's time."""
+  time: StepTime!
+
+  """Atom id"""
+  id: AtomId!
+}
+
+"""GMOS North builtin-in FPU"""
+type GmosNorthBuiltinFpu {
+  """GMOS North builtin-fpu"""
+  builtin: GmosNorthFpu!
+}
+
+"""GMOS North Configuration"""
+type GmosNorthConfig implements Config {
+  """Static/unchanging configuration"""
+  static: GmosNorthStatic!
+
+  """Acquisition sequence."""
+  acquisition: GmosNorthSequence!
+
+  """Science sequence."""
+  science: GmosNorthSequence!
+
+  """Instrument type"""
+  instrument: InstrumentType!
+
+  """Planned time for this configuration"""
+  plannedTime: PlannedTime!
+
+  """Estimated setup time"""
+  setupTime: Duration!
+}
+
+"""GmosNorth Detector type"""
+enum GmosNorthDetector {
+  """GmosNorthDetector E2V"""
+  E2_V
+
+  """GmosNorthDetector HAMAMATSU"""
+  HAMAMATSU
+}
+
+"""GMOS North dynamic step configuration"""
+type GmosNorthDynamic {
+  """GMOS exposure time"""
+  exposure: Duration!
+
+  """GMOS CCD Readout"""
+  readout: GmosCcdMode!
+
+  """GMOS detector x offset"""
+  dtax: GmosDtax!
+
+  """GMOS region of interest"""
+  roi: GmosRoi!
+
+  """GMOS North grating"""
+  grating: GmosNorthGrating
+
+  """GMOS North filter"""
+  filter: GmosNorthFilter
+
+  """GMOS North FPU"""
+  fpu: GmosNorthFpuUnion
+}
+
+"""GMOS North Execution Config"""
+type GmosNorthExecutionConfig implements ExecutionConfig {
+  """GMOS North static configuration"""
+  static: GmosNorthStatic!
+
+  """GMOS North acquisition execution"""
+  acquisition: GmosNorthExecutionSequence!
+
+  """GMOS North science execution"""
+  science: GmosNorthExecutionSequence!
+
+  """Instrument type"""
+  instrument: InstrumentType!
+}
+
+"""Next atom to execute and potential future atoms"""
+type GmosNorthExecutionSequence {
+  """Next atom to execute, if any"""
+  nextAtom: GmosNorthAtom
+
+  """Remaining atoms to execute, if any"""
+  possibleFuture: [GmosNorthAtom!]!
+}
+
+"""Either custom mask or builtin-FPU"""
+union GmosNorthFpuUnion = GmosCustomMask | GmosNorthBuiltinFpu
+
+"""GMOS North Grating"""
+type GmosNorthGrating {
+  """GMOS North Disperser"""
+  disperser: GmosNorthDisperser!
+
+  """GMOS disperser order"""
+  order: GmosDisperserOrder!
+
+  """Grating wavelength"""
+  wavelength: Wavelength!
+}
+
+# """Edit or create GMOS North Long Slit configuration"""
+# input GmosNorthLongSlitInput {
+#   """
+#   The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   filter: GmosNorthFilter
+#
+#   """
+#   The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   disperser: GmosNorthDisperser
+#
+#   """
+#   The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   fpu: GmosNorthFpu
+#
+#   """
+#   The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   slitWidth: SlitWidthInput
+# }
+#
+"""A series of GmosNorth atoms that comprise the sequence"""
+type GmosNorthSequence {
+  """Sequence atoms"""
+  atoms: [GmosNorthAtom!]!
+
+  """Time required for the full execution of this sequence"""
+  time: StepTime!
+}
+
+"""GMOS North stage mode"""
+enum GmosNorthStageMode {
+  """GmosNorthStageMode NoFollow"""
+  NO_FOLLOW
+
+  """GmosNorthStageMode FollowXyz"""
+  FOLLOW_XYZ
+
+  """GmosNorthStageMode FollowXy"""
+  FOLLOW_XY
+
+  """GmosNorthStageMode FollowZ"""
+  FOLLOW_Z
+}
+
+"""Unchanging (over the course of the sequence) configuration values"""
+type GmosNorthStatic {
+  """Stage mode"""
+  stageMode: GmosNorthStageMode!
+
+  """Detector in use (always HAMAMATSU for recent and new observations)"""
+  detector: GmosNorthDetector!
+
+  """Is MOS Pre-Imaging Observation"""
+  mosPreImaging: MosPreImaging!
+
+  """Nod-and-shuffle configuration"""
+  nodAndShuffle: GmosNodAndShuffle
+}
+
+"""GmosNorth step with potential breakpoint"""
+type GmosNorthStep implements Step {
+  """Instrument configuration for this step"""
+  instrumentConfig: GmosNorthDynamic!
+
+  """Step id"""
+  id: StepId!
+
+  """Whether to pause before the execution of this step"""
+  breakpoint: Breakpoint!
+
+  """Step type"""
+  stepType: StepType!
+
+  """The sequence step itself"""
+  stepConfig: StepConfig!
+
+  """Time estimate for this step's execution"""
+  time: StepTime!
+}
+
+"""GMOS Region Of Interest"""
+enum GmosRoi {
+  """GmosRoi FullFrame"""
+  FULL_FRAME
+
+  """GmosRoi Ccd2"""
+  CCD2
+
+  """GmosRoi CentralSpectrum"""
+  CENTRAL_SPECTRUM
+
+  """GmosRoi CentralStamp"""
+  CENTRAL_STAMP
+
+  """GmosRoi TopSpectrum"""
+  TOP_SPECTRUM
+
+  """GmosRoi BottomSpectrum"""
+  BOTTOM_SPECTRUM
+
+  """GmosRoi Custom"""
+  CUSTOM
+}
+
+"""
+GmosSouth atom, a collection of steps that should be executed in their entirety
+"""
+type GmosSouthAtom implements Atom {
+  """Individual steps that comprise the atom"""
+  steps: [GmosSouthStep!]!
+
+  """Time estimate for this atom's execution, the sum of each step's time."""
+  time: StepTime!
+
+  """Atom id"""
+  id: AtomId!
+}
+
+"""GMOS South builtin-in FPU"""
+type GmosSouthBuiltinFpu {
+  """GMOS South builtin-fpu"""
+  builtin: GmosSouthFpu!
+}
+
+"""GMOS South Configuration"""
+type GmosSouthConfig implements Config {
+  """Static/unchanging configuration"""
+  static: GmosSouthStatic!
+
+  """Acquisition sequence."""
+  acquisition: GmosSouthSequence!
+
+  """Science sequence."""
+  science: GmosSouthSequence!
+
+  """Instrument type"""
+  instrument: InstrumentType!
+
+  """Planned time for this configuration"""
+  plannedTime: PlannedTime!
+
+  """Estimated setup time"""
+  setupTime: Duration!
+}
+
+"""GmosSouth Detector type"""
+enum GmosSouthDetector {
+  """GmosSouthDetector E2V"""
+  E2_V
+
+  """GmosSouthDetector HAMAMATSU"""
+  HAMAMATSU
+}
+
+"""GMOS South dynamic step configuration"""
+type GmosSouthDynamic {
+  """GMOS exposure time"""
+  exposure: Duration!
+
+  """GMOS CCD Readout"""
+  readout: GmosCcdMode!
+
+  """GMOS detector x offset"""
+  dtax: GmosDtax!
+
+  """GMOS region of interest"""
+  roi: GmosRoi!
+
+  """GMOS South grating"""
+  grating: GmosSouthGrating
+
+  """GMOS South filter"""
+  filter: GmosSouthFilter
+
+  """GMOS South FPU"""
+  fpu: GmosSouthFpuUnion
+}
+
+"""GMOS South Execution Config"""
+type GmosSouthExecutionConfig implements ExecutionConfig {
+  """GMOS South static configuration"""
+  static: GmosSouthStatic!
+
+  """GMOS South acquisition execution"""
+  acquisition: GmosSouthExecutionSequence!
+
+  """GMOS South science execution"""
+  science: GmosSouthExecutionSequence!
+
+  """Instrument type"""
+  instrument: InstrumentType!
+}
+
+"""Next atom to execute and potential future atoms"""
+type GmosSouthExecutionSequence {
+  """Next atom to execute, if any"""
+  nextAtom: GmosSouthAtom
+
+  """Remaining atoms to execute, if any"""
+  possibleFuture: [GmosSouthAtom!]!
+}
+
+"""Either custom mask or builtin-FPU"""
+union GmosSouthFpuUnion = GmosCustomMask | GmosSouthBuiltinFpu
+
+"""GMOS South Grating"""
+type GmosSouthGrating {
+  """GMOS South Disperser"""
+  disperser: GmosSouthDisperser!
+
+  """GMOS disperser order"""
+  order: GmosDisperserOrder!
+
+  """Grating wavelength"""
+  wavelength: Wavelength!
+}
+
+# """Edit or create GMOS South Long Slit configuration"""
+# input GmosSouthLongSlitInput {
+#   """
+#   The filter field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   filter: GmosSouthFilter
+#
+#   """
+#   The disperser field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   disperser: GmosSouthDisperser
+#
+#   """
+#   The fpu field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   fpu: GmosSouthFpu
+#
+#   """
+#   The slitWidth field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   slitWidth: SlitWidthInput
+# }
+#
+"""A series of GmosSouth atoms that comprise the sequence"""
+type GmosSouthSequence {
+  """Sequence atoms"""
+  atoms: [GmosSouthAtom!]!
+
+  """Time required for the full execution of this sequence"""
+  time: StepTime!
+}
+
+"""GMOS South stage mode"""
+enum GmosSouthStageMode {
+  """GmosSouthStageMode NoFollow"""
+  NO_FOLLOW
+
+  """GmosSouthStageMode FollowXyz"""
+  FOLLOW_XYZ
+
+  """GmosSouthStageMode FollowXy"""
+  FOLLOW_XY
+
+  """GmosSouthStageMode FollowZ"""
+  FOLLOW_Z
+}
+
+"""Unchanging (over the course of the sequence) configuration values"""
+type GmosSouthStatic {
+  """Stage mode"""
+  stageMode: GmosSouthStageMode!
+
+  """Detector in use (always HAMAMATSU for recent and new observations)"""
+  detector: GmosSouthDetector!
+
+  """Is MOS Pre-Imaging Observation"""
+  mosPreImaging: MosPreImaging!
+
+  """Nod-and-shuffle configuration"""
+  nodAndShuffle: GmosNodAndShuffle
+}
+
+"""GmosSouth step with potential breakpoint"""
+type GmosSouthStep implements Step {
+  """Instrument configuration for this step"""
+  instrumentConfig: GmosSouthDynamic!
+
+  """Step id"""
+  id: StepId!
+
+  """Whether to pause before the execution of this step"""
+  breakpoint: Breakpoint!
+
+  """Step type"""
+  stepType: StepType!
+
+  """The sequence step itself"""
+  stepConfig: StepConfig!
+
+  """Time estimate for this step's execution"""
+  time: StepTime!
+}
+
+"""GMOS X Binning"""
+enum GmosXBinning {
+  """GmosXBinning One"""
+  ONE
+
+  """GmosXBinning Two"""
+  TWO
+
+  """GmosXBinning Four"""
+  FOUR
+}
+
+"""GMOS Y Binning"""
+enum GmosYBinning {
+  """GmosYBinning One"""
+  ONE
+
+  """GmosYBinning Two"""
+  TWO
+
+  """GmosYBinning Four"""
+  FOUR
+}
+
+"""Hour angle range creation parameters"""
+input HourAngleRangeInput {
+  minHours: BigDecimal
+  maxHours: BigDecimal
+}
+
+"""A line flux value with integrated units"""
+input LineFluxIntegratedInput {
+  value: BigDecimal!
+  units: LineFluxIntegratedUnits!
+}
+
+"""A line flux value with surface units"""
+input LineFluxSurfaceInput {
+  value: BigDecimal!
+  units: LineFluxSurfaceUnits!
+}
+
+"""Create an angle from a signed integral value and its units."""
+input LongAngleInput {
+  value: Long!
+  units: AngleUnits!
+}
+
+"""MOS pre-imaging observation"""
+enum MosPreImaging {
+  """MosPreImaging IsMosPreImaging"""
+  IS_MOS_PRE_IMAGING
+
+  """MosPreImaging IsNotMosPreImaging"""
+  IS_NOT_MOS_PRE_IMAGING
+}
+
+# """Nonsidereal target parameters.  Supply `keyType` and `des` or `key`"""
+# input NonsiderealInput {
+#   """
+#   The keyType field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   keyType: EphemerisKeyType
+#
+#   """
+#   The des field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   des: NonEmptyString
+#
+#   """
+#   The key field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   key: NonEmptyString
+# }
+#
+"""Event sent when a new object is created or updated"""
+type ObservationEdit implements Event {
+  """Type of edit"""
+  editType: EditType!
+
+  """Edited object"""
+  value: Observation!
+  id: Long!
+}
+
+# """Decimal value in Parallax"""
+# input ParallaxDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: ParallaxUnits!
+# }
+#
+# """Integral value in Parallax"""
+# input ParallaxLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: ParallaxUnits!
+# }
+#
+# """Parallax, choose one of the available units"""
+# input ParallaxModelInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   fromLong: ParallaxLongInput
+#   fromDecimal: ParallaxDecimalInput
+# }
+#
+"""Unit options for parallax values"""
+enum ParallaxUnits {
+  """ParallaxUnits Microarcseconds"""
+  MICROARCSECONDS
+
+  """ParallaxUnits Milliarcseconds"""
+  MILLIARCSECONDS
+}
+
+"""Event sent when a new object is created or updated"""
+type ProgramEdit implements Event {
+  """Type of edit"""
+  editType: EditType!
+
+  """Edited object"""
+  value: Program!
+  id: Long!
+}
+
+# """Decimal value in ProperMotionComponent"""
+# input ProperMotionComponentDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: ProperMotionComponentUnits!
+# }
+#
+# """Proper motion component, choose one of the available units"""
+# input ProperMotionComponentInput {
+#   microarcsecondsPerYear: Long
+#   milliarcsecondsPerYear: BigDecimal
+#   fromLong: ProperMotionComponentLongInput
+#   fromDecimal: ProperMotionComponentDecimalInput
+# }
+#
+# """Integral value in ProperMotionComponent"""
+# input ProperMotionComponentLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: ProperMotionComponentUnits!
+# }
+#
+"""Unit options for proper motion components (RA and Dec)"""
+enum ProperMotionComponentUnits {
+  """ProperMotionComponentUnits MicroarcsecondsPerYear"""
+  MICROARCSECONDS_PER_YEAR
+
+  """ProperMotionComponentUnits MilliarcsecondsPerYear"""
+  MILLIARCSECONDS_PER_YEAR
+}
+
+# """Proper motion, choose one of the available units"""
+# input ProperMotionInput {
+#   ra: ProperMotionComponentInput!
+#   dec: ProperMotionComponentInput!
+# }
+#
+"""Decimal value in RadialVelocity"""
+input RadialVelocityDecimalInput {
+  """decimal value in associated units"""
+  value: BigDecimal!
+
+  """units for associated value"""
+  units: RadialVelocityUnits!
+}
+
+"""Radial velocity, choose one of the available units"""
 input RadialVelocityInput {
   centimetersPerSecond: Long
   metersPerSecond: BigDecimal
   kilometersPerSecond: BigDecimal
+  fromLong: RadialVelocityLongInput
+  fromDecimal: RadialVelocityDecimalInput
 }
 
-type Wavelength {
-  # Wavelength in pm
-  picometers: Int!
-
-  # Wavelength in Å
-  angstroms: BigDecimal!
-
-  # Wavelength in nm
-  nanometers: BigDecimal!
-
-  # Wavelength in µm
-  micrometers: BigDecimal!
-}
-
-# Decimal value in Wavelength
-input WavelengthDecimalInput {
-  # decimal value in associated units
-  value: BigDecimal!
-
-  # units for associated value
-  units: WavelengthUnits!
-}
-
-# Integral value in Wavelength
-input WavelengthLongInput {
-  # integral value in associated units
+"""Integral value in RadialVelocity"""
+input RadialVelocityLongInput {
+  """integral value in associated units"""
   value: Long!
 
-  # units for associated value
+  """units for associated value"""
+  units: RadialVelocityUnits!
+}
+
+"""Unit options for radial velocity values"""
+enum RadialVelocityUnits {
+  """RadialVelocityUnits CentimetersPerSecond"""
+  CENTIMETERS_PER_SECOND
+
+  """RadialVelocityUnits MetersPerSecond"""
+  METERS_PER_SECOND
+
+  """RadialVelocityUnits KilometersPerSecond"""
+  KILOMETERS_PER_SECOND
+}
+
+# """Decimal value in RightAscension"""
+# input RightAscensionDecimalInput {
+#   """decimal value in associated units"""
+#   value: BigDecimal!
+#
+#   """units for associated value"""
+#   units: RightAscensionUnits!
+# }
+#
+# """Right Ascension, choose one of the available units"""
+# input RightAscensionInput {
+#   microarcseconds: Long
+#   degrees: BigDecimal
+#   hours: BigDecimal
+#   hms: HmsString
+#   fromLong: RightAscensionLongInput
+#   fromDecimal: RightAscensionDecimalInput
+# }
+#
+# """Integral value in RightAscension"""
+# input RightAscensionLongInput {
+#   """integral value in associated units"""
+#   value: Long!
+#
+#   """units for associated value"""
+#   units: RightAscensionUnits!
+# }
+
+"""Unit options for RightAscension values"""
+enum RightAscensionUnits {
+  """RightAscensionUnits Microarcseconds"""
+  MICROARCSECONDS
+
+  """RightAscensionUnits Degrees"""
+  DEGREES
+
+  """RightAscensionUnits Hours"""
+  HOURS
+}
+
+# """Edit or create an observation's science configuration"""
+# input ScienceConfigurationInput {
+#   """
+#   The gmosNorthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   gmosNorthLongSlit: GmosNorthLongSlitInput
+#
+#   """
+#   The gmosSouthLongSlit field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   gmosSouthLongSlit: GmosSouthLongSlitInput
+# }
+#
+# """Edit science requirements"""
+# input ScienceRequirementsInput {
+#   """
+#   The mode field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   mode: ScienceMode
+#
+#   """
+#   The spectroscopy field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   spectroscopy: SpectroscopyScienceRequirementsInput
+# }
+#
+# """Sidereal target edit parameters"""
+# input SiderealInput {
+#   """
+#   The ra field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   ra: RightAscensionInput
+#
+#   """
+#   The dec field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   dec: DeclinationInput
+#
+#   """
+#   The epoch field must be either specified or skipped altogether.  It cannot be unset with a null value.
+#   """
+#   epoch: EpochString
+#
+#   """
+#   The properMotion field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   properMotion: ProperMotionInput
+#
+#   """
+#   The radialVelocity field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   radialVelocity: RadialVelocityInput
+#
+#   """
+#   The parallax field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   parallax: ParallaxModelInput
+#
+#   """
+#   The catalogInfo field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   catalogInfo: CatalogInfoInput
+# }
+#
+# """Slit width in appropriate units"""
+# input SlitWidthInput {
+#   microarcseconds: Long
+#   milliarcseconds: BigDecimal
+#   arcseconds: BigDecimal
+# }
+#
+"""
+Create or edit a source profile.  Exactly one of "point", "uniform" or "gaussian" is required.
+"""
+input SourceProfileInput {
+  point: SpectralDefinitionIntegratedInput
+  uniform: SpectralDefinitionSurfaceInput
+  gaussian: GaussianInput
+}
+
+"""
+Spectral definition input with integrated units.  Specify exactly one of "bandNormalized" or "emissionLines"
+"""
+input SpectralDefinitionIntegratedInput {
+  bandNormalized: BandNormalizedIntegratedInput
+  emissionLines: EmissionLinesIntegratedInput
+}
+
+"""
+Spectral definition input with surface units.  Specify exactly one of "bandNormalized" or "emissionLines"
+"""
+input SpectralDefinitionSurfaceInput {
+  bandNormalized: BandNormalizedSurfaceInput
+  emissionLines: EmissionLinesSurfaceInput
+}
+
+# """Edit or create spectroscopy science requirements"""
+# input SpectroscopyScienceRequirementsInput {
+#   """
+#   The wavelength field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   wavelength: WavelengthInput
+#
+#   """
+#   The resolution field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   resolution: Int
+#
+#   """
+#   The signalToNoise field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   signalToNoise: BigDecimal
+#
+#   """
+#   The signalToNoiseAt field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   signalToNoiseAt: WavelengthInput
+#
+#   """
+#   The wavelengthCoverage field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   wavelengthCoverage: WavelengthInput
+#
+#   """
+#   The focalPlane field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   focalPlane: FocalPlane
+#
+#   """
+#   The focalPlaneAngle field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   focalPlaneAngle: FocalPlaneAngleInput
+#
+#   """
+#   The capabilities field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   capabilities: SpectroscopyCapabilities
+# }
+#
+"""Event sent when a new object is created or updated"""
+type TargetEdit implements Event {
+  """Type of edit"""
+  editType: EditType!
+
+  """Edited object"""
+  value: Target!
+  id: Long!
+}
+
+# """Target environment editing and creation parameters"""
+# input TargetEnvironmentInput {
+#   """
+#   The explicitBase field may be unset by assigning a null value, or ignored by skipping it altogether
+#   """
+#   explicitBase: CoordinatesInput
+#   asterism: [TargetId!]
+# }
+#
+"""Un-normalized SED input parameters.  Define one value only."""
+input UnnormalizedSedInput {
+  stellarLibrary: StellarLibrarySpectrum
+  coolStar: CoolStarTemperature
+  galaxy: GalaxySpectrum
+  planet: PlanetSpectrum
+  quasar: QuasarSpectrum
+  hiiRegion: HiiRegionSpectrum
+  planetaryNebula: PlanetaryNebulaSpectrum
+  powerLaw: BigDecimal
+  blackBodyTempK: BigDecimal
+  fluxDensities: [FluxDensity!]
+}
+
+"""Decimal value in Wavelength"""
+input WavelengthDecimalInput {
+  """decimal value in associated units"""
+  value: BigDecimal!
+
+  """units for associated value"""
   units: WavelengthUnits!
 }
 
-# Wavelength, choose one of the available units
-input WavelengthModelInput {
+"""Wavelength, choose one of the available units"""
+input WavelengthInput {
   picometers: Long
   angstroms: BigDecimal
   nanometers: BigDecimal
@@ -221,515 +1572,2565 @@ input WavelengthModelInput {
   fromDecimal: WavelengthDecimalInput
 }
 
-# Wavelength units
+"""Integral value in Wavelength"""
+input WavelengthLongInput {
+  """integral value in associated units"""
+  value: Long!
+
+  """units for associated value"""
+  units: WavelengthUnits!
+}
+
+"""Wavelength units"""
 enum WavelengthUnits {
-  # WavelengthUnits Picometers
+  """WavelengthUnits Picometers"""
   PICOMETERS
 
-  # WavelengthUnits Angstroms
+  """WavelengthUnits Angstroms"""
   ANGSTROMS
 
-  # WavelengthUnits Nanometers
+  """WavelengthUnits Nanometers"""
   NANOMETERS
 
-  # WavelengthUnits Micrometers
+  """WavelengthUnits Micrometers"""
   MICROMETERS
 }
 
-# GMOS North Disperser
-enum GmosNorthDisperser {
-  # GmosNorthDisperser B1200_G5301
-  B1200_G5301
-
-  # GmosNorthDisperser R831_G5302
-  R831_G5302
-
-  # GmosNorthDisperser B600_G5303
-  B600_G5303
-
-  # GmosNorthDisperser B600_G5307
-  B600_G5307
-
-  # GmosNorthDisperser R600_G5304
-  R600_G5304
-
-  # GmosNorthDisperser B480_G5309
-  B480_G5309
-
-  # GmosNorthDisperser R400_G5305
-  R400_G5305
-
-  # GmosNorthDisperser R150_G5306
-  R150_G5306
-
-  # GmosNorthDisperser R150_G5308
-  R150_G5308
-}
-# GMOS North FPU
-enum GmosNorthFpu {
-  # GmosNorthFpu Ns0
-  NS0
-
-  # GmosNorthFpu Ns1
-  NS1
-
-  # GmosNorthFpu Ns2
-  NS2
-
-  # GmosNorthFpu Ns3
-  NS3
-
-  # GmosNorthFpu Ns4
-  NS4
-
-  # GmosNorthFpu Ns5
-  NS5
-
-  # GmosNorthFpu LongSlit_0_25
-  LONG_SLIT_0_25
-
-  # GmosNorthFpu LongSlit_0_50
-  LONG_SLIT_0_50
-
-  # GmosNorthFpu LongSlit_0_75
-  LONG_SLIT_0_75
-
-  # GmosNorthFpu LongSlit_1_00
-  LONG_SLIT_1_00
-
-  # GmosNorthFpu LongSlit_1_50
-  LONG_SLIT_1_50
-
-  # GmosNorthFpu LongSlit_2_00
-  LONG_SLIT_2_00
-
-  # GmosNorthFpu LongSlit_5_00
-  LONG_SLIT_5_00
-
-  # GmosNorthFpu Ifu2Slits
-  IFU2_SLITS
-
-  # GmosNorthFpu IfuBlue
-  IFU_BLUE
-
-  # GmosNorthFpu IfuRed
-  IFU_RED
-}
-
-# GMOS North builtin-in FPU
-type GmosNorthBuiltinFpu {
-  # GMOS North builtin-fpu
-  builtin: GmosNorthFpu!
-}
-
-# GMOS Custom Mask
-type GmosCustomMask {
-  # Custom Mask Filename
-  filename: String!
-
-  # Custom Slit Width
-  slitWidth: GmosCustomSlitWidth!
-}
-
-# GMOS Custom Slit Width
-enum GmosCustomSlitWidth {
-  # GmosCustomSlitWidth CustomWidth_0_25
-  CUSTOM_WIDTH_0_25
-
-  # GmosCustomSlitWidth CustomWidth_0_50
-  CUSTOM_WIDTH_0_50
-
-  # GmosCustomSlitWidth CustomWidth_0_75
-  CUSTOM_WIDTH_0_75
-
-  # GmosCustomSlitWidth CustomWidth_1_00
-  CUSTOM_WIDTH_1_00
-
-  # GmosCustomSlitWidth CustomWidth_1_50
-  CUSTOM_WIDTH_1_50
-
-  # GmosCustomSlitWidth CustomWidth_2_00
-  CUSTOM_WIDTH_2_00
-
-  # GmosCustomSlitWidth CustomWidth_5_00
-  CUSTOM_WIDTH_5_00
-}
-
-# Either custom mask or builtin-FPU
-union GmosNorthFpuUnion = GmosCustomMask | GmosNorthBuiltinFpu
-
-# GMOS North Filter
-enum GmosNorthFilter {
-  # GmosNorthFilter GPrime
-  G_PRIME
-
-  # GmosNorthFilter RPrime
-  R_PRIME
-
-  # GmosNorthFilter IPrime
-  I_PRIME
-
-  # GmosNorthFilter ZPrime
-  Z_PRIME
-
-  # GmosNorthFilter Z
-  Z
-
-  # GmosNorthFilter Y
-  Y
-
-  # GmosNorthFilter GG455
-  GG455
-
-  # GmosNorthFilter OG515
-  OG515
-
-  # GmosNorthFilter RG610
-  RG610
-
-  # GmosNorthFilter CaT
-  CA_T
-
-  # GmosNorthFilter Ha
-  HA
-
-  # GmosNorthFilter HaC
-  HA_C
-
-  # GmosNorthFilter DS920
-  DS920
-
-  # GmosNorthFilter SII
-  SII
-
-  # GmosNorthFilter OIII
-  OIII
-
-  # GmosNorthFilter OIIIC
-  OIIIC
-
-  # GmosNorthFilter HeII
-  HE_II
-
-  # GmosNorthFilter HeIIC
-  HE_IIC
-
-  # GmosNorthFilter HartmannA_RPrime
-  HARTMANN_A_R_PRIME
-
-  # GmosNorthFilter HartmannB_RPrime
-  HARTMANN_B_R_PRIME
-
-  # GmosNorthFilter GPrime_GG455
-  G_PRIME_GG455
-
-  # GmosNorthFilter GPrime_OG515
-  G_PRIME_OG515
-
-  # GmosNorthFilter RPrime_RG610
-  R_PRIME_RG610
-
-  # GmosNorthFilter IPrime_CaT
-  I_PRIME_CA_T
-
-  # GmosNorthFilter ZPrime_CaT
-  Z_PRIME_CA_T
-
-  # GmosNorthFilter UPrime
-  U_PRIME
-}
-
-# GMOS South FPU
-enum GmosSouthFpu {
-  # GmosSouthFpu Bhros
-  BHROS
-
-  # GmosSouthFpu Ns1
-  NS1
-
-  # GmosSouthFpu Ns2
-  NS2
-
-  # GmosSouthFpu Ns3
-  NS3
-
-  # GmosSouthFpu Ns4
-  NS4
-
-  # GmosSouthFpu Ns5
-  NS5
-
-  # GmosSouthFpu LongSlit_0_25
-  LONG_SLIT_0_25
-
-  # GmosSouthFpu LongSlit_0_50
-  LONG_SLIT_0_50
-
-  # GmosSouthFpu LongSlit_0_75
-  LONG_SLIT_0_75
-
-  # GmosSouthFpu LongSlit_1_00
-  LONG_SLIT_1_00
-
-  # GmosSouthFpu LongSlit_1_50
-  LONG_SLIT_1_50
-
-  # GmosSouthFpu LongSlit_2_00
-  LONG_SLIT_2_00
-
-  # GmosSouthFpu LongSlit_5_00
-  LONG_SLIT_5_00
-
-  # GmosSouthFpu Ifu2Slits
-  IFU2_SLITS
-
-  # GmosSouthFpu IfuBlue
-  IFU_BLUE
-
-  # GmosSouthFpu IfuRed
-  IFU_RED
-
-  # GmosSouthFpu IfuNS2Slits
-  IFU_NS2_SLITS
-
-  # GmosSouthFpu IfuNSBlue
-  IFU_NS_BLUE
-
-  # GmosSouthFpu IfuNSRed
-  IFU_NS_RED
-}
-
-# GMOS South Disperser
-enum GmosSouthDisperser {
-  # GmosSouthDisperser B1200_G5321
-  B1200_G5321
-
-  # GmosSouthDisperser R831_G5322
-  R831_G5322
-
-  # GmosSouthDisperser B600_G5323
-  B600_G5323
-
-  # GmosSouthDisperser R600_G5324
-  R600_G5324
-
-  # GmosSouthDisperser B480_G5327
-  B480_G5327
-
-  # GmosSouthDisperser R400_G5325
-  R400_G5325
-
-  # GmosSouthDisperser R150_G5326
-  R150_G5326
-}
-
-# GMOS South Filter
-enum GmosSouthFilter {
-  # GmosSouthFilter UPrime
-  U_PRIME
-
-  # GmosSouthFilter GPrime
-  G_PRIME
-
-  # GmosSouthFilter RPrime
-  R_PRIME
-
-  # GmosSouthFilter IPrime
-  I_PRIME
-
-  # GmosSouthFilter ZPrime
-  Z_PRIME
-
-  # GmosSouthFilter Z
-  Z
-
-  # GmosSouthFilter Y
-  Y
-
-  # GmosSouthFilter GG455
-  GG455
-
-  # GmosSouthFilter OG515
-  OG515
-
-  # GmosSouthFilter RG610
-  RG610
-
-  # GmosSouthFilter RG780
-  RG780
-
-  # GmosSouthFilter CaT
-  CA_T
-
-  # GmosSouthFilter HartmannA_RPrime
-  HARTMANN_A_R_PRIME
-
-  # GmosSouthFilter HartmannB_RPrime
-  HARTMANN_B_R_PRIME
-
-  # GmosSouthFilter GPrime_GG455
-  G_PRIME_GG455
-
-  # GmosSouthFilter GPrime_OG515
-  G_PRIME_OG515
-
-  # GmosSouthFilter RPrime_RG610
-  R_PRIME_RG610
-
-  # GmosSouthFilter IPrime_RG780
-  I_PRIME_RG780
-
-  # GmosSouthFilter IPrime_CaT
-  I_PRIME_CA_T
-
-  # GmosSouthFilter ZPrime_CaT
-  Z_PRIME_CA_T
-
-  # GmosSouthFilter Ha
-  HA
-
-  # GmosSouthFilter SII
-  SII
-
-  # GmosSouthFilter HaC
-  HA_C
-
-  # GmosSouthFilter OIII
-  OIII
-
-  # GmosSouthFilter OIIIC
-  OIIIC
-
-  # GmosSouthFilter HeII
-  HE_II
-
-  # GmosSouthFilter HeIIC
-  HE_IIC
-
-  # GmosSouthFilter Lya395
-  LYA395
-}
-
-# Image quality
-enum ImageQuality {
-  # ImageQuality PointOne
-  POINT_ONE
-
-  # ImageQuality PointTwo
-  POINT_TWO
-
-  # ImageQuality PointThree
-  POINT_THREE
-
-  # ImageQuality PointFour
-  POINT_FOUR
-
-  # ImageQuality PointSix
-  POINT_SIX
-
-  # ImageQuality PointEight
-  POINT_EIGHT
-
-  # ImageQuality OnePointZero
-  ONE_POINT_ZERO
-
-  # ImageQuality OnePointFive
-  ONE_POINT_FIVE
-
-  # ImageQuality TwoPointZero
-  TWO_POINT_ZERO
-}
-
-# Cloud extinction
-enum CloudExtinction {
-  # CloudExtinction PointOne
-  POINT_ONE
-
-  # CloudExtinction PointThree
-  POINT_THREE
-
-  # CloudExtinction PointFive
-  POINT_FIVE
-
-  # CloudExtinction OnePointZero
-  ONE_POINT_ZERO
-
-  # CloudExtinction OnePointFive
-  ONE_POINT_FIVE
-
-  # CloudExtinction TwoPointZero
-  TWO_POINT_ZERO
-
-  # CloudExtinction ThreePointZero
-  THREE_POINT_ZERO
-}
-
-enum SkyBackground {
-  # SkyBackground Darkest
-  DARKEST
-
-  # SkyBackground Dark
-  DARK
-
-  # SkyBackground Gray
-  GRAY
-
-  # SkyBackground Bright
-  BRIGHT
-}
-
-# Water vapor
-enum WaterVapor {
-  # WaterVapor VeryDry
-  VERY_DRY
-
-  # WaterVapor Dry
-  DRY
-
-  # WaterVapor Median
-  MEDIAN
-
-  # WaterVapor Wet
-  WET
-}
-
-# Airmass range creation parameters
-input AirmassRangeInput {
+type AirMassRange {
+  """Minimum Airmass (unitless)"""
   min: BigDecimal!
+
+  """Maximum Airmass (unitless)"""
   max: BigDecimal!
 }
 
-# Hour Angle creation parameters
-input HourAngleRangeInput {
+type Angle {
+  """Angle in µas"""
+  microarcseconds: Long!
+
+  """Angle in µs"""
+  microseconds: BigDecimal!
+
+  """Angle in mas"""
+  milliarcseconds: BigDecimal!
+
+  """Angle in ms"""
+  milliseconds: BigDecimal!
+
+  """Angle in asec"""
+  arcseconds: BigDecimal!
+
+  """Angle in sec"""
+  seconds: BigDecimal!
+
+  """Angle in amin"""
+  arcminutes: BigDecimal!
+
+  """Angle in min"""
+  minutes: BigDecimal!
+
+  """Angle in deg"""
+  degrees: BigDecimal!
+
+  """Angle in hrs"""
+  hours: BigDecimal!
+}
+
+type AsterismGroup {
+  """IDs of observations that use the same constraints"""
+  observationIds: [ObservationId!]!
+
+  """Observations that use this constraint set"""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Commonly held value across the observations"""
+  asterism: [Target!]!
+}
+
+"""Observations grouped by common properties"""
+type AsterismGroupConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [AsterismGroup!]!
+
+  """Edges in the current page"""
+  edges: [AsterismGroupEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation group and its cursor"""
+type AsterismGroupEdge {
+  """AsterismGroupEdge element"""
+  node: AsterismGroup!
+
+  """AsterismGroupEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""Sequence atom"""
+interface Atom {
+  """Atom id"""
+  id: AtomId!
+}
+
+"""AtomId id formatted as `m-([1-9a-f][0-9a-f]*)`"""
+scalar AtomId
+
+"""Brightness bands"""
+enum Band {
+  """Band SloanU"""
+  SLOAN_U
+
+  """Band SloanG"""
+  SLOAN_G
+
+  """Band SloanR"""
+  SLOAN_R
+
+  """Band SloanI"""
+  SLOAN_I
+
+  """Band SloanZ"""
+  SLOAN_Z
+
+  """Band U"""
+  U
+
+  """Band B"""
+  B
+
+  """Band V"""
+  V
+
+  """Band R"""
+  R
+
+  """Band I"""
+  I
+
+  """Band Y"""
+  Y
+
+  """Band J"""
+  J
+
+  """Band H"""
+  H
+
+  """Band K"""
+  K
+
+  """Band L"""
+  L
+
+  """Band M"""
+  M
+
+  """Band N"""
+  N
+
+  """Band Q"""
+  Q
+
+  """Band Ap"""
+  AP
+}
+
+type BandBrightnessIntegrated {
+  """Magnitude band"""
+  band: Band!
+  value: BigDecimal!
+  units: BrightnessIntegratedUnits!
+
+  """Error, if any"""
+  error: BigDecimal
+}
+
+type BandBrightnessSurface {
+  """Magnitude band"""
+  band: Band!
+  value: BigDecimal!
+  units: BrightnessSurfaceUnits!
+
+  """Error, if any"""
+  error: BigDecimal
+}
+
+"""Band normalized common interface"""
+interface BandNormalized {
+  """Un-normalized spectral energy distribution"""
+  sed: UnnormalizedSed!
+}
+
+type BandNormalizedIntegrated implements BandNormalized {
+  brightnesses: [BandBrightnessIntegrated!]!
+
+  """Un-normalized spectral energy distribution"""
+  sed: UnnormalizedSed!
+}
+
+type BandNormalizedSurface implements BandNormalized {
+  brightnesses: [BandBrightnessSurface!]!
+
+  """Un-normalized spectral energy distribution"""
+  sed: UnnormalizedSed!
+}
+
+"""Bias calibration step"""
+type Bias implements StepConfig {
+  """Step type"""
+  stepType: StepType!
+}
+
+"""Stopping point in a series of steps"""
+enum Breakpoint {
+  """Breakpoint Enabled"""
+  ENABLED
+
+  """Breakpoint Disabled"""
+  DISABLED
+}
+
+"""Brightness integrated units"""
+enum BrightnessIntegratedUnits {
+  """Vega mag"""
+  VEGA_MAGNITUDE
+
+  """AB mag"""
+  AB_MAGNITUDE
+
+  """Jy"""
+  JANSKY
+
+  """W/m²/µm"""
+  W_PER_M_SQUARED_PER_UM
+
+  """erg/s/cm²/Å"""
+  ERG_PER_S_PER_CM_SQUARED_PER_A
+
+  """erg/s/cm²/Hz"""
+  ERG_PER_S_PER_CM_SQUARED_PER_HZ
+}
+
+"""Brightness surface units"""
+enum BrightnessSurfaceUnits {
+  """Vega mag/arcsec²"""
+  VEGA_MAG_PER_ARCSEC_SQUARED
+
+  """AB mag/arcsec²"""
+  AB_MAG_PER_ARCSEC_SQUARED
+
+  """Jy/arcsec²"""
+  JY_PER_ARCSEC_SQUARED
+
+  """W/m²/µm/arcsec²"""
+  W_PER_M_SQUARED_PER_UM_PER_ARCSEC_SQUARED
+
+  """erg/s/cm²/Å/arcsec²"""
+  ERG_PER_S_PER_CM_SQUARED_PER_A_PER_ARCSEC_SQUARED
+
+  """erg/s/cm²/Hz/arcsec²"""
+  ERG_PER_S_PER_CM_SQUARED_PER_HZ_PER_ARCSEC_SQUARED
+}
+
+type CatalogInfo {
+  """Catalog name option"""
+  name: CatalogName!
+
+  """Catalog id string"""
+  id: String!
+
+  """Catalog description of object morphology"""
+  objectType: String
+}
+
+"""Catalog name values"""
+enum CatalogName {
+  """CatalogName Simbad"""
+  SIMBAD
+
+  """CatalogName Horizon"""
+  HORIZON
+
+  """CatalogName Gaia"""
+  GAIA
+}
+
+"""Cloud extinction"""
+enum CloudExtinction {
+  """CloudExtinction PointOne"""
+  POINT_ONE
+
+  """CloudExtinction PointThree"""
+  POINT_THREE
+
+  """CloudExtinction PointFive"""
+  POINT_FIVE
+
+  """CloudExtinction OnePointZero"""
+  ONE_POINT_ZERO
+
+  """CloudExtinction OnePointFive"""
+  ONE_POINT_FIVE
+
+  """CloudExtinction TwoPointZero"""
+  TWO_POINT_ZERO
+
+  """CloudExtinction ThreePointZero"""
+  THREE_POINT_ZERO
+}
+
+"""Instrument configuration"""
+interface Config {
+  """Instrument type"""
+  instrument: InstrumentType!
+
+  """Planned time for this configuration"""
+  plannedTime: PlannedTime!
+
+  """Estimated setup time"""
+  setupTime: Duration!
+}
+
+"""ConfigurationMode"""
+enum ConfigurationModeType {
+  """ConfigurationModeType GmosNorthLongSlit"""
+  GMOS_NORTH_LONG_SLIT
+
+  """ConfigurationModeType GmosSouthLongSlit"""
+  GMOS_SOUTH_LONG_SLIT
+}
+
+type ConstraintSet {
+  """Image quality"""
+  imageQuality: ImageQuality!
+
+  """Cloud extinction"""
+  cloudExtinction: CloudExtinction!
+
+  """Sky background"""
+  skyBackground: SkyBackground!
+
+  """Water vapor"""
+  waterVapor: WaterVapor!
+
+  """Either airmass range or elevation range"""
+  elevationRange: ElevationRange!
+}
+
+type ConstraintSetGroup {
+  """IDs of observations that use the same constraints"""
+  observationIds: [ObservationId!]!
+
+  """Observations that use this constraint set"""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Commonly held value across the observations"""
+  constraintSet: ConstraintSet!
+}
+
+"""Observations grouped by common properties"""
+type ConstraintSetGroupConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [ConstraintSetGroup!]!
+
+  """Edges in the current page"""
+  edges: [ConstraintSetGroupEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation group and its cursor"""
+type ConstraintSetGroupEdge {
+  """ConstraintSetGroupEdge element"""
+  node: ConstraintSetGroup!
+
+  """ConstraintSetGroupEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""Cool star temperature options"""
+enum CoolStarTemperature {
+  """400 K"""
+  T400_K
+
+  """600 K"""
+  T600_K
+
+  """800 K"""
+  T800_K
+
+  """900 K"""
+  T900_K
+
+  """1000 K"""
+  T1000_K
+
+  """1200 K"""
+  T1200_K
+
+  """1400 K"""
+  T1400_K
+
+  """1600 K"""
+  T1600_K
+
+  """1800 K"""
+  T1800_K
+
+  """2000 K"""
+  T2000_K
+
+  """2200 K"""
+  T2200_K
+
+  """2400 K"""
+  T2400_K
+
+  """2600 K"""
+  T2600_K
+
+  """2800 K"""
+  T2800_K
+}
+
+type Coordinates {
+  """Right Ascension"""
+  ra: RightAscension!
+
+  """Declination"""
+  dec: Declination!
+}
+
+"""Opaque object cursor"""
+scalar Cursor
+
+"""Dark calibration step"""
+type Dark implements StepConfig {
+  """Step type"""
+  stepType: StepType!
+}
+
+type Dataset {
+  """Observation associated with this dataset"""
+  observation: Observation!
+
+  """Step that produced the dataset"""
+  step: Step!
+
+  """Dataset index"""
+  index: Int!
+
+  """Dataset filename"""
+  filename: DatasetFilename!
+}
+
+"""Datasets in the current page"""
+type DatasetConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [Dataset!]!
+
+  """Edges in the current page"""
+  edges: [DatasetEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""A Dataset and its cursor"""
+type DatasetEdge {
+  """DatasetEdge element"""
+  node: Dataset!
+
+  """DatasetEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""Dataset-level events"""
+type DatasetEvent implements ExecutionEvent {
+  """Step from which the dataset comes"""
+  step: Step!
+
+  """Dataset filename, when known"""
+  filename: DatasetFilename
+
+  """Dataset stage"""
+  stage: DatasetStage!
+
+  """Event id"""
+  id: ExecutionEventId!
+
+  """Observation whose execution produced this event"""
+  observation: Observation!
+
+  """
+  Time at which this event was generated, according to the caller (e.g., Observe)
+  """
+  generated: Instant!
+
+  """Time at which this event was received"""
+  received: Instant!
+}
+
+"""Dataset filename in standard format in format 'N20210519S0001.fits'"""
+scalar DatasetFilename
+
+"""Execution stage or phase of an individual dataset"""
+enum DatasetStage {
+  """DatasetStage END_OBSERVE"""
+  END_OBSERVE
+
+  """DatasetStage END_READOUT"""
+  END_READOUT
+
+  """DatasetStage END_WRITE"""
+  END_WRITE
+
+  """DatasetStage START_OBSERVE"""
+  START_OBSERVE
+
+  """DatasetStage START_READOUT"""
+  START_READOUT
+
+  """DatasetStage START_WRITE"""
+  START_WRITE
+}
+
+type Declination {
+  """Declination in DD:MM:SS.SS format"""
+  dms: DmsString!
+
+  """Declination in signed degrees"""
+  degrees: BigDecimal!
+
+  """Declination in signed µas"""
+  microarcseconds: Long!
+}
+
+"""Target declination coordinate in format '[+/-]DD:MM:SS.sss'"""
+scalar DmsString
+
+"""
+Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
+"""
+type Duration {
+  """Duration in µs"""
+  microseconds: Long!
+
+  """Duration in ms"""
+  milliseconds: BigDecimal!
+
+  """Duration in seconds"""
+  seconds: BigDecimal!
+
+  """Duration in minutes"""
+  minutes: BigDecimal!
+
+  """Duration in hours"""
+  hours: BigDecimal!
+}
+
+"""Either airmass range or elevation range"""
+type ElevationRange {
+  """Airmass range if elevation range is an Airmass range"""
+  airmassRange: AirMassRange
+
+  """Hour angle range if elevation range is an Hour angle range"""
+  hourAngleRange: HourAngleRange
+}
+
+type EmissionLineIntegrated {
+  wavelength: Wavelength!
+
+  """km/s"""
+  lineWidth: BigDecimal!
+  lineFlux: LineFluxIntegrated!
+}
+
+type EmissionLineSurface {
+  wavelength: Wavelength!
+
+  """km/s"""
+  lineWidth: BigDecimal!
+  lineFlux: LineFluxSurface!
+}
+
+type EmissionLinesIntegrated {
+  lines: [EmissionLineIntegrated!]!
+  fluxDensityContinuum: FluxDensityContinuumIntegrated!
+}
+
+type EmissionLinesSurface {
+  lines: [EmissionLineSurface!]!
+  fluxDensityContinuum: FluxDensityContinuumSurface!
+}
+
+"""Ephemeris key type options"""
+enum EphemerisKeyType {
+  """EphemerisKeyType Comet"""
+  COMET
+
+  """EphemerisKeyType AsteroidNew"""
+  ASTEROID_NEW
+
+  """EphemerisKeyType AsteroidOld"""
+  ASTEROID_OLD
+
+  """EphemerisKeyType MajorBody"""
+  MAJOR_BODY
+
+  """EphemerisKeyType UserSupplied"""
+  USER_SUPPLIED
+}
+
+"""Reference observation epoch in format '[JB]YYYY.YYY'"""
+scalar EpochString
+
+"""Executed step"""
+type ExecutedStep {
+  """Step id"""
+  id: StepId!
+
+  """The executed step itself"""
+  step: Step!
+
+  """The atom containing the executed step"""
+  atom: Atom!
+
+  """Datasets associated with this step"""
+  datasets(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+  ): DatasetConnection!
+}
+
+"""Executed steps in the current page"""
+type ExecutedStepConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [ExecutedStep!]!
+
+  """Edges in the current page"""
+  edges: [ExecutedStepEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An executed step and its cursor"""
+type ExecutedStepEdge {
+  """ExecutedStepEdge element"""
+  node: ExecutedStep!
+
+  """ExecutedStepEdge element cursor"""
+  cursor: Cursor!
+}
+
+type Execution {
+  """Datasets associated with the observation"""
+  datasets(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+  ): DatasetConnection!
+
+  """Events associated with the observation"""
+  events(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+  ): ExecutionEventConnection!
+
+  """Executed steps associated with the observation"""
+  executedSteps(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+  ): ExecutedStepConnection!
+
+  """Execution config"""
+  executionConfig: ExecutionConfig
+}
+
+"""Execution configuration"""
+interface ExecutionConfig {
+  """Instrument type"""
+  instrument: InstrumentType!
+}
+
+"""Execution event (sequence, step, or dataset events)"""
+interface ExecutionEvent {
+  """Event id"""
+  id: ExecutionEventId!
+
+  """Observation whose execution produced this event"""
+  observation: Observation!
+
+  """
+  Time at which this event was generated, according to the caller (e.g., Observe)
+  """
+  generated: Instant!
+
+  """Time at which this event was received"""
+  received: Instant!
+}
+
+"""ExecutionEvents in the current page"""
+type ExecutionEventConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [ExecutionEvent!]!
+
+  """Edges in the current page"""
+  edges: [ExecutionEventEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An ExecutionEvent and its cursor"""
+type ExecutionEventEdge {
+  """ExecutionEventEdge element"""
+  node: ExecutionEvent!
+
+  """ExecutionEventEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""ExecutionEventId id formatted as `e-([1-9a-f][0-9a-f]*)`"""
+scalar ExecutionEventId
+
+"""State of being: either Deleted or Present"""
+enum Existence {
+  """Existence Present"""
+  PRESENT
+
+  """Existence Deleted"""
+  DELETED
+}
+
+type FluxDensityContinuumIntegrated {
+  value: BigDecimal!
+  units: FluxDensityContinuumIntegratedUnits!
+}
+
+"""Flux density continuum integrated units"""
+enum FluxDensityContinuumIntegratedUnits {
+  """W/m²/µm"""
+  W_PER_M_SQUARED_PER_UM
+
+  """erg/s/cm²/Å"""
+  ERG_PER_S_PER_CM_SQUARED_PER_A
+}
+
+type FluxDensityContinuumSurface {
+  value: BigDecimal!
+  units: FluxDensityContinuumSurfaceUnits!
+}
+
+"""Flux density continuum surface units"""
+enum FluxDensityContinuumSurfaceUnits {
+  """W/m²/µm/arcsec²"""
+  W_PER_M_SQUARED_PER_UM_PER_ARCSEC_SQUARED
+
+  """erg/s/cm²/Å/arcsec²"""
+  ERG_PER_S_PER_CM_SQUARED_PER_A_PER_ARCSEC_SQUARED
+}
+
+type FluxDensityEntry {
+  wavelength: Wavelength!
+  density: BigDecimal!
+}
+
+"""Focal plane Single/Multi/IFU"""
+enum FocalPlane {
+  """FocalPlane SingleSlit"""
+  SINGLE_SLIT
+
+  """FocalPlane MultipleSlit"""
+  MULTIPLE_SLIT
+
+  """FocalPlane IFU"""
+  IFU
+}
+
+"""Galaxy spectrum"""
+enum GalaxySpectrum {
+  """GalaxySpectrum Elliptical"""
+  ELLIPTICAL
+
+  """GalaxySpectrum Spiral"""
+  SPIRAL
+}
+
+"""
+Gaussian source, one of bandNormalized and emissionLines will be defined.
+"""
+type GaussianSource {
+  """full width at half maximum"""
+  fwhm: Angle!
+
+  """Band normalized spectral definition"""
+  bandNormalized: BandNormalizedIntegrated
+
+  """Emission lines spectral definition"""
+  emissionLines: EmissionLinesIntegrated
+}
+
+"""GCAL calibration step (flat / arc)"""
+type Gcal implements StepConfig {
+  """GCAL continuum, present if no arcs are used"""
+  continuum: GcalContinuum
+
+  """GCAL arcs, one or more present if no continuum is used"""
+  arcs: [GcalArc!]!
+
+  """GCAL filter"""
+  filter: GcalFilter!
+
+  """GCAL diffuser"""
+  diffuser: GcalDiffuser!
+
+  """GCAL shutter"""
+  shutter: GcalShutter!
+
+  """Step type"""
+  stepType: StepType!
+}
+
+"""GCAL arc"""
+enum GcalArc {
+  """GcalArc ArArc"""
+  AR_ARC
+
+  """GcalArc ThArArc"""
+  TH_AR_ARC
+
+  """GcalArc CuArArc"""
+  CU_AR_ARC
+
+  """GcalArc XeArc"""
+  XE_ARC
+}
+
+"""GCAL continuum"""
+enum GcalContinuum {
+  """GcalContinuum IrGreyBodyLow"""
+  IR_GREY_BODY_LOW
+
+  """GcalContinuum IrGreyBodyHigh"""
+  IR_GREY_BODY_HIGH
+
+  """GcalContinuum QuartzHalogen"""
+  QUARTZ_HALOGEN
+}
+
+"""GCAL diffuser"""
+enum GcalDiffuser {
+  """GcalDiffuser Ir"""
+  IR
+
+  """GcalDiffuser Visible"""
+  VISIBLE
+}
+
+"""GCAL filter"""
+enum GcalFilter {
+  """GcalFilter None"""
+  NONE
+
+  """GcalFilter Gmos"""
+  GMOS
+
+  """GcalFilter Hros"""
+  HROS
+
+  """GcalFilter Nir"""
+  NIR
+
+  """GcalFilter Nd10"""
+  ND10
+
+  """GcalFilter Nd16"""
+  ND16
+
+  """GcalFilter Nd20"""
+  ND20
+
+  """GcalFilter Nd30"""
+  ND30
+
+  """GcalFilter Nd40"""
+  ND40
+
+  """GcalFilter Nd45"""
+  ND45
+
+  """GcalFilter Nd50"""
+  ND50
+}
+
+"""GCAL shutter"""
+enum GcalShutter {
+  """GcalShutter Open"""
+  OPEN
+
+  """GcalShutter Closed"""
+  CLOSED
+}
+
+"""GMOS North Disperser"""
+enum GmosNorthDisperser {
+  """GmosNorthDisperser B1200_G5301"""
+  B1200_G5301
+
+  """GmosNorthDisperser R831_G5302"""
+  R831_G5302
+
+  """GmosNorthDisperser B600_G5303"""
+  B600_G5303
+
+  """GmosNorthDisperser B600_G5307"""
+  B600_G5307
+
+  """GmosNorthDisperser R600_G5304"""
+  R600_G5304
+
+  """GmosNorthDisperser B480_G5309"""
+  B480_G5309
+
+  """GmosNorthDisperser R400_G5305"""
+  R400_G5305
+
+  """GmosNorthDisperser R150_G5306"""
+  R150_G5306
+
+  """GmosNorthDisperser R150_G5308"""
+  R150_G5308
+}
+
+"""GMOS North Filter"""
+enum GmosNorthFilter {
+  """GmosNorthFilter GPrime"""
+  G_PRIME
+
+  """GmosNorthFilter RPrime"""
+  R_PRIME
+
+  """GmosNorthFilter IPrime"""
+  I_PRIME
+
+  """GmosNorthFilter ZPrime"""
+  Z_PRIME
+
+  """GmosNorthFilter Z"""
+  Z
+
+  """GmosNorthFilter Y"""
+  Y
+
+  """GmosNorthFilter GG455"""
+  GG455
+
+  """GmosNorthFilter OG515"""
+  OG515
+
+  """GmosNorthFilter RG610"""
+  RG610
+
+  """GmosNorthFilter CaT"""
+  CA_T
+
+  """GmosNorthFilter Ha"""
+  HA
+
+  """GmosNorthFilter HaC"""
+  HA_C
+
+  """GmosNorthFilter DS920"""
+  DS920
+
+  """GmosNorthFilter SII"""
+  SII
+
+  """GmosNorthFilter OIII"""
+  OIII
+
+  """GmosNorthFilter OIIIC"""
+  OIIIC
+
+  """GmosNorthFilter HeII"""
+  HE_II
+
+  """GmosNorthFilter HeIIC"""
+  HE_IIC
+
+  """GmosNorthFilter HartmannA_RPrime"""
+  HARTMANN_A_R_PRIME
+
+  """GmosNorthFilter HartmannB_RPrime"""
+  HARTMANN_B_R_PRIME
+
+  """GmosNorthFilter GPrime_GG455"""
+  G_PRIME_GG455
+
+  """GmosNorthFilter GPrime_OG515"""
+  G_PRIME_OG515
+
+  """GmosNorthFilter RPrime_RG610"""
+  R_PRIME_RG610
+
+  """GmosNorthFilter IPrime_CaT"""
+  I_PRIME_CA_T
+
+  """GmosNorthFilter ZPrime_CaT"""
+  Z_PRIME_CA_T
+
+  """GmosNorthFilter UPrime"""
+  U_PRIME
+}
+
+"""GMOS North FPU"""
+enum GmosNorthFpu {
+  """GmosNorthFpu Ns0"""
+  NS0
+
+  """GmosNorthFpu Ns1"""
+  NS1
+
+  """GmosNorthFpu Ns2"""
+  NS2
+
+  """GmosNorthFpu Ns3"""
+  NS3
+
+  """GmosNorthFpu Ns4"""
+  NS4
+
+  """GmosNorthFpu Ns5"""
+  NS5
+
+  """GmosNorthFpu LongSlit_0_25"""
+  LONG_SLIT_0_25
+
+  """GmosNorthFpu LongSlit_0_50"""
+  LONG_SLIT_0_50
+
+  """GmosNorthFpu LongSlit_0_75"""
+  LONG_SLIT_0_75
+
+  """GmosNorthFpu LongSlit_1_00"""
+  LONG_SLIT_1_00
+
+  """GmosNorthFpu LongSlit_1_50"""
+  LONG_SLIT_1_50
+
+  """GmosNorthFpu LongSlit_2_00"""
+  LONG_SLIT_2_00
+
+  """GmosNorthFpu LongSlit_5_00"""
+  LONG_SLIT_5_00
+
+  """GmosNorthFpu Ifu2Slits"""
+  IFU2_SLITS
+
+  """GmosNorthFpu IfuBlue"""
+  IFU_BLUE
+
+  """GmosNorthFpu IfuRed"""
+  IFU_RED
+}
+
+"""Basic configuration for GMOS North Long Slit"""
+type GmosNorthLongSlit {
+  """GMOS North Filter"""
+  filter: GmosNorthFilter
+
+  """GMOS North Disperser"""
+  disperser: GmosNorthDisperser!
+
+  """GMOS North FPU"""
+  fpu: GmosNorthFpu!
+
+  """Slit width in appropriate units"""
+  slitWidth: slitWidth!
+}
+
+"""GMOS South Disperser"""
+enum GmosSouthDisperser {
+  """GmosSouthDisperser B1200_G5321"""
+  B1200_G5321
+
+  """GmosSouthDisperser R831_G5322"""
+  R831_G5322
+
+  """GmosSouthDisperser B600_G5323"""
+  B600_G5323
+
+  """GmosSouthDisperser R600_G5324"""
+  R600_G5324
+
+  """GmosSouthDisperser B480_G5327"""
+  B480_G5327
+
+  """GmosSouthDisperser R400_G5325"""
+  R400_G5325
+
+  """GmosSouthDisperser R150_G5326"""
+  R150_G5326
+}
+
+"""GMOS South Filter"""
+enum GmosSouthFilter {
+  """GmosSouthFilter UPrime"""
+  U_PRIME
+
+  """GmosSouthFilter GPrime"""
+  G_PRIME
+
+  """GmosSouthFilter RPrime"""
+  R_PRIME
+
+  """GmosSouthFilter IPrime"""
+  I_PRIME
+
+  """GmosSouthFilter ZPrime"""
+  Z_PRIME
+
+  """GmosSouthFilter Z"""
+  Z
+
+  """GmosSouthFilter Y"""
+  Y
+
+  """GmosSouthFilter GG455"""
+  GG455
+
+  """GmosSouthFilter OG515"""
+  OG515
+
+  """GmosSouthFilter RG610"""
+  RG610
+
+  """GmosSouthFilter RG780"""
+  RG780
+
+  """GmosSouthFilter CaT"""
+  CA_T
+
+  """GmosSouthFilter HartmannA_RPrime"""
+  HARTMANN_A_R_PRIME
+
+  """GmosSouthFilter HartmannB_RPrime"""
+  HARTMANN_B_R_PRIME
+
+  """GmosSouthFilter GPrime_GG455"""
+  G_PRIME_GG455
+
+  """GmosSouthFilter GPrime_OG515"""
+  G_PRIME_OG515
+
+  """GmosSouthFilter RPrime_RG610"""
+  R_PRIME_RG610
+
+  """GmosSouthFilter IPrime_RG780"""
+  I_PRIME_RG780
+
+  """GmosSouthFilter IPrime_CaT"""
+  I_PRIME_CA_T
+
+  """GmosSouthFilter ZPrime_CaT"""
+  Z_PRIME_CA_T
+
+  """GmosSouthFilter Ha"""
+  HA
+
+  """GmosSouthFilter SII"""
+  SII
+
+  """GmosSouthFilter HaC"""
+  HA_C
+
+  """GmosSouthFilter OIII"""
+  OIII
+
+  """GmosSouthFilter OIIIC"""
+  OIIIC
+
+  """GmosSouthFilter HeII"""
+  HE_II
+
+  """GmosSouthFilter HeIIC"""
+  HE_IIC
+
+  """GmosSouthFilter Lya395"""
+  LYA395
+}
+
+"""GMOS South FPU"""
+enum GmosSouthFpu {
+  """GmosSouthFpu Bhros"""
+  BHROS
+
+  """GmosSouthFpu Ns1"""
+  NS1
+
+  """GmosSouthFpu Ns2"""
+  NS2
+
+  """GmosSouthFpu Ns3"""
+  NS3
+
+  """GmosSouthFpu Ns4"""
+  NS4
+
+  """GmosSouthFpu Ns5"""
+  NS5
+
+  """GmosSouthFpu LongSlit_0_25"""
+  LONG_SLIT_0_25
+
+  """GmosSouthFpu LongSlit_0_50"""
+  LONG_SLIT_0_50
+
+  """GmosSouthFpu LongSlit_0_75"""
+  LONG_SLIT_0_75
+
+  """GmosSouthFpu LongSlit_1_00"""
+  LONG_SLIT_1_00
+
+  """GmosSouthFpu LongSlit_1_50"""
+  LONG_SLIT_1_50
+
+  """GmosSouthFpu LongSlit_2_00"""
+  LONG_SLIT_2_00
+
+  """GmosSouthFpu LongSlit_5_00"""
+  LONG_SLIT_5_00
+
+  """GmosSouthFpu Ifu2Slits"""
+  IFU2_SLITS
+
+  """GmosSouthFpu IfuBlue"""
+  IFU_BLUE
+
+  """GmosSouthFpu IfuRed"""
+  IFU_RED
+
+  """GmosSouthFpu IfuNS2Slits"""
+  IFU_NS2_SLITS
+
+  """GmosSouthFpu IfuNSBlue"""
+  IFU_NS_BLUE
+
+  """GmosSouthFpu IfuNSRed"""
+  IFU_NS_RED
+}
+
+"""Basic configuration for GMOS South Long Slit"""
+type GmosSouthLongSlit {
+  """GMOS South Filter"""
+  filter: GmosSouthFilter
+
+  """GMOS South Disperser"""
+  disperser: GmosSouthDisperser!
+
+  """GMOS South  FPU"""
+  fpu: GmosSouthFpu!
+
+  """Slit width in appropriate units"""
+  slitWidth: slitWidth!
+}
+
+"""HII Region spectrum"""
+enum HiiRegionSpectrum {
+  """HiiRegionSpectrum OrionNebula"""
+  ORION_NEBULA
+}
+
+"""Target right ascension coordinate in format 'HH:MM:SS.sss'"""
+scalar HmsString
+
+type HourAngleRange {
+  """Minimum Hour Angle (hours)"""
   minHours: BigDecimal!
+
+  """Maximum Hour Angle (hours)"""
   maxHours: BigDecimal!
 }
 
-# Elevation range creation parameters
-input ElevationRangeInput {
-  airmassRange: AirmassRangeInput
-  hourAngleRange: HourAngleRangeInput
+"""Image quality"""
+enum ImageQuality {
+  """ImageQuality PointOne"""
+  POINT_ONE
+
+  """ImageQuality PointTwo"""
+  POINT_TWO
+
+  """ImageQuality PointThree"""
+  POINT_THREE
+
+  """ImageQuality PointFour"""
+  POINT_FOUR
+
+  """ImageQuality PointSix"""
+  POINT_SIX
+
+  """ImageQuality PointEight"""
+  POINT_EIGHT
+
+  """ImageQuality OnePointZero"""
+  ONE_POINT_ZERO
+
+  """ImageQuality OnePointFive"""
+  ONE_POINT_FIVE
+
+  """ImageQuality TwoPointZero"""
+  TWO_POINT_ZERO
 }
 
-# Constraint set creation parameters
-input ConstraintsSetInput {
-  imageQuality: ImageQuality!
-  cloudExtinction: CloudExtinction!
-  skyBackground: SkyBackground!
-  waterVapor: WaterVapor!
-  elevationRange: ElevationRangeInput!
+"""
+Instant of time in ISO-8601 representation in format '2011-12-03T10:15:30Z'
+"""
+scalar Instant
+
+"""Instrument"""
+enum InstrumentType {
+  """InstrumentType AcqCam"""
+  ACQ_CAM
+
+  """InstrumentType Bhros"""
+  BHROS
+
+  """InstrumentType Flamingos2"""
+  FLAMINGOS2
+
+  """InstrumentType Ghost"""
+  GHOST
+
+  """InstrumentType GmosNorth"""
+  GMOS_NORTH
+
+  """InstrumentType GmosSouth"""
+  GMOS_SOUTH
+
+  """InstrumentType Gnirs"""
+  GNIRS
+
+  """InstrumentType Gpi"""
+  GPI
+
+  """InstrumentType Gsaoi"""
+  GSAOI
+
+  """InstrumentType Michelle"""
+  MICHELLE
+
+  """InstrumentType Nici"""
+  NICI
+
+  """InstrumentType Nifs"""
+  NIFS
+
+  """InstrumentType Niri"""
+  NIRI
+
+  """InstrumentType Phoenix"""
+  PHOENIX
+
+  """InstrumentType Trecs"""
+  TRECS
+
+  """InstrumentType Visitor"""
+  VISITOR
+
+  """InstrumentType Scorpio"""
+  SCORPIO
+
+  """InstrumentType Alopeke"""
+  ALOPEKE
+
+  """InstrumentType Zorro"""
+  ZORRO
 }
+
+type LineFluxIntegrated {
+  value: BigDecimal!
+  units: LineFluxIntegratedUnits!
+}
+
+"""Line flux integrated units"""
+enum LineFluxIntegratedUnits {
+  """W/m²"""
+  W_PER_M_SQUARED
+
+  """erg/s/cm²"""
+  ERG_PER_S_PER_CM_SQUARED
+}
+
+type LineFluxSurface {
+  value: BigDecimal!
+  units: LineFluxSurfaceUnits!
+}
+
+"""Line flux surface units"""
+enum LineFluxSurfaceUnits {
+  """W/m²/arcsec²"""
+  W_PER_M_SQUARED_PER_ARCSEC_SQUARED
+
+  """erg/s/cm²/arcsec²"""
+  ERG_PER_S_PER_CM_SQUARED_PER_ARCSEC_SQUARED
+}
+
+"""A String value that cannot be empty"""
+scalar NonEmptyString
+
+type Nonsidereal {
+  """
+  Human readable designation that discriminates among ephemeris keys of the same type.
+  """
+  des: String!
+
+  """Nonsidereal target lookup type."""
+  keyType: EphemerisKeyType!
+
+  """Synthesis of `keyType` and `des`"""
+  key: String!
+}
+
+"""Observation operational/active status options"""
+enum ObsActiveStatus {
+  """ObsActiveStatus Active"""
+  ACTIVE
+
+  """ObsActiveStatus Inactive"""
+  INACTIVE
+}
+
+"""Observation status options"""
+enum ObsStatus {
+  """ObsStatus New"""
+  NEW
+
+  """ObsStatus Included"""
+  INCLUDED
+
+  """ObsStatus Proposed"""
+  PROPOSED
+
+  """ObsStatus Approved"""
+  APPROVED
+
+  """ObsStatus ForReview"""
+  FOR_REVIEW
+
+  """ObsStatus Ready"""
+  READY
+
+  """ObsStatus Ongoing"""
+  ONGOING
+
+  """ObsStatus Observed"""
+  OBSERVED
+}
+
+type Observation {
+  """Observation ID"""
+  id: ObservationId!
+
+  """DELETED or PRESENT"""
+  existence: Existence!
+
+  """Observation name"""
+  name: NonEmptyString
+
+  """Observation status"""
+  status: ObsStatus!
+
+  """Observation operational status"""
+  activeStatus: ObsActiveStatus!
+
+  """Observation planned time calculation."""
+  plannedTime: PlannedTimeSummary!
+
+  """The program that contains this observation"""
+  program(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): Program!
+
+  """The observation's target(s)"""
+  targetEnvironment: TargetEnvironment!
+
+  """The constraint set for the observation"""
+  constraintSet: ConstraintSet!
+
+  """The top level science requirements"""
+  scienceRequirements(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ScienceRequirements!
+
+  """The science configuration"""
+  scienceConfiguration(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ScienceConfiguration
+
+  """Manual instrument configuration"""
+  manualConfig: Config
+
+  """Execution sequence and runtime artifacts"""
+  execution: Execution!
+}
+
+"""Matching observations"""
+type ObservationConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [Observation!]!
+
+  """Edges in the current page"""
+  edges: [ObservationEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation and its cursor"""
+type ObservationEdge {
+  """ObservationEdge element"""
+  node: Observation!
+
+  """ObservationEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""ObservationId id formatted as `o-([1-9a-f][0-9a-f]*)`"""
+scalar ObservationId
+
+type Offset {
+  """Offset in p"""
+  p: p!
+
+  """Offset in q"""
+  q: q!
+}
+
+"""Information that supports paging through a list of elements"""
+type PageInfo {
+  """Cursor pointing to the first element in the result set, if any"""
+  startCursor: Cursor
+
+  """Cursor pointing to the last element in the result set, if any"""
+  endCursor: Cursor
+
+  """Whether there are any pages left to retrieve"""
+  hasNextPage: Boolean!
+}
+
+type Parallax {
+  """Parallax in microarcseconds"""
+  microarcseconds: Long!
+
+  """Parallax in milliarcseconds"""
+  milliarcseconds: BigDecimal!
+}
+
+"""Planet spectrum"""
+enum PlanetSpectrum {
+  """PlanetSpectrum Mars"""
+  MARS
+
+  """PlanetSpectrum Jupiter"""
+  JUPITER
+
+  """PlanetSpectrum Saturn"""
+  SATURN
+
+  """PlanetSpectrum Uranus"""
+  URANUS
+
+  """PlanetSpectrum Neptune"""
+  NEPTUNE
+}
+
+"""Planetary nebula spectrum"""
+enum PlanetaryNebulaSpectrum {
+  """PlanetaryNebulaSpectrum NGC7009"""
+  NGC7009
+
+  """PlanetaryNebulaSpectrum IC5117"""
+  IC5117
+}
+
+"""Time estimates for executing this configuration"""
+type PlannedTime {
+  """Estimated setup time"""
+  setup: Duration!
+
+  """Estimated acquisition time for each atom"""
+  acquisition: [StepTime!]!
+
+  """Total estimated acquisition time"""
+  acquisitionTotal: StepTime!
+
+  """Estimated science time for each atom"""
+  science: [StepTime!]!
+
+  """Total estimated science time"""
+  scienceTotal: StepTime!
+
+  """Total planned time across acquisition and science"""
+  total: Duration!
+}
+
+type PlannedTimeSummary {
+  """The portion of planned time that will be charged"""
+  pi: Duration!
+
+  """The portion of planned time that will not be charged"""
+  uncharged: Duration!
+
+  """The total estimated execution time"""
+  execution: Duration!
+}
+
+"""A `BigDecimal` greater than 0"""
+scalar PosBigDecimal
+
+"""An `Int` in the range from 1 to `Int.MaxValue`"""
+scalar PosInt
+
+type Program {
+  """Program ID"""
+  id: ProgramId!
+
+  """DELETED or PRESENT"""
+  existence: Existence!
+
+  """Program name"""
+  name: NonEmptyString
+
+  """All observations associated with the program (needs pagination)."""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Program planned time calculation."""
+  plannedTime(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): PlannedTimeSummary!
+}
+
+"""Programs in the current page"""
+type ProgramConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [Program!]!
+
+  """Edges in the current page"""
+  edges: [ProgramEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""A Program node and its cursor"""
+type ProgramEdge {
+  """ProgramEdge element"""
+  node: Program!
+
+  """ProgramEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""ProgramId id formatted as `p-([1-9a-f][0-9a-f]*)`"""
+scalar ProgramId
+
+type ProperMotion {
+  """Proper motion in RA"""
+  ra: ProperMotionRA!
+
+  """Proper motion in declination"""
+  dec: ProperMotionDeclination!
+}
+
+type ProperMotionDeclination {
+  """Proper motion in properMotion μas/year"""
+  microarcsecondsPerYear: Long!
+
+  """Proper motion in properMotion mas/year"""
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+type ProperMotionRA {
+  """Proper motion in properMotion μas/year"""
+  microarcsecondsPerYear: Long!
+
+  """Proper motion in properMotion mas/year"""
+  milliarcsecondsPerYear: BigDecimal!
+}
+
+"""Quasar spectrum"""
+enum QuasarSpectrum {
+  """QuasarSpectrum QS0"""
+  QS0
+
+  """QuasarSpectrum QS02"""
+  QS02
+}
+
+type RadialVelocity {
+  """Radial velocity in cm/s"""
+  centimetersPerSecond: Long!
+
+  """Radial velocity in m/s"""
+  metersPerSecond: BigDecimal!
+
+  """Radial velocity in km/s"""
+  kilometersPerSecond: BigDecimal!
+}
+
+type RightAscension {
+  """Right Ascension (RA) in HH:MM:SS.SSS format"""
+  hms: HmsString!
+
+  """Right Ascension (RA) in hours"""
+  hours: BigDecimal!
+
+  """Right Ascension (RA) in degrees"""
+  degrees: BigDecimal!
+
+  """Right Ascension (RA) in µas"""
+  microarcseconds: Long!
+}
+
+"""Science step"""
+type Science implements StepConfig {
+  """Offset"""
+  offset: Offset!
+
+  """Step type"""
+  stepType: StepType!
+}
+
+"""Base science configuration"""
+type ScienceConfiguration {
+  """Instrument"""
+  instrument: InstrumentType!
+
+  """Configuration mode"""
+  mode: ConfigurationModeType!
+
+  """GMOS North Long Slit configuration"""
+  gmosNorthLongSlit: GmosNorthLongSlit
+
+  """GMOS South Long Slit configuration"""
+  gmosSouthLongSlit: GmosSouthLongSlit
+}
+
+"""Mode Spectroscopy/Imaging"""
+enum ScienceMode {
+  """ScienceMode Imaging"""
+  IMAGING
+
+  """ScienceMode Spectroscopy"""
+  SPECTROSCOPY
+}
+
+type ScienceRequirements {
+  """Science mode"""
+  mode: ScienceMode!
+
+  """Spectroscopy requirements"""
+  spectroscopy: SpectroscopyScienceRequirements!
+}
+
+type ScienceRequirementsGroup {
+  """IDs of observations that use the same constraints"""
+  observationIds: [ObservationId!]!
+
+  """Observations that use this constraint set"""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Commonly held value across the observations"""
+  scienceRequirements: ScienceRequirements!
+}
+
+"""Observations grouped by common properties"""
+type ScienceRequirementsGroupConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [ScienceRequirementsGroup!]!
+
+  """Edges in the current page"""
+  edges: [ScienceRequirementsGroupEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation group and its cursor"""
+type ScienceRequirementsGroupEdge {
+  """ScienceRequirementsGroupEdge element"""
+  node: ScienceRequirementsGroup!
+
+  """ScienceRequirementsGroupEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""Sequence-level command"""
+enum SequenceCommand {
+  """SequenceCommand ABORT"""
+  ABORT
+
+  """SequenceCommand CONTINUE"""
+  CONTINUE
+
+  """SequenceCommand PAUSE"""
+  PAUSE
+
+  """SequenceCommand SLEW"""
+  SLEW
+
+  """SequenceCommand START"""
+  START
+
+  """SequenceCommand STOP"""
+  STOP
+}
+
+"""Sequence-level events"""
+type SequenceEvent implements ExecutionEvent {
+  """Sequence command"""
+  command: SequenceCommand!
+
+  """Event id"""
+  id: ExecutionEventId!
+
+  """Observation whose execution produced this event"""
+  observation: Observation!
+
+  """
+  Time at which this event was generated, according to the caller (e.g., Observe)
+  """
+  generated: Instant!
+
+  """Time at which this event was received"""
+  received: Instant!
+}
+
+"""Type of sequence, acquisition or science"""
+enum SequenceType {
+  """SequenceType ACQUISITION"""
+  ACQUISITION
+
+  """SequenceType SCIENCE"""
+  SCIENCE
+}
+
+type Sidereal {
+  """Right ascension at epoch"""
+  ra: RightAscension!
+
+  """Declination at epoch"""
+  dec: Declination!
+
+  """Epoch, time of base observation"""
+  epoch: EpochString!
+
+  """Proper motion per year in right ascension and declination"""
+  properMotion: ProperMotion
+
+  """Radial velocity"""
+  radialVelocity: RadialVelocity
+
+  """Parallax"""
+  parallax: Parallax
+
+  """
+  Catalog info, if any, describing from where the information in this target was obtained
+  """
+  catalogInfo: CatalogInfo
+}
+
+"""Sky background"""
+enum SkyBackground {
+  """SkyBackground Darkest"""
+  DARKEST
+
+  """SkyBackground Dark"""
+  DARK
+
+  """SkyBackground Gray"""
+  GRAY
+
+  """SkyBackground Bright"""
+  BRIGHT
+}
+
+"""Source profile, exactly one of the fields will be defined"""
+type SourceProfile {
+  """point source, integrated units"""
+  point: SpectralDefinitionIntegrated
+
+  """uniform source, surface units"""
+  uniform: SpectralDefinitionSurface
+
+  """gaussian source, integrated units"""
+  gaussian: GaussianSource
+}
+
+"""
+Spectral definition integrated.  Exactly one of the fields will be defined.
+"""
+type SpectralDefinitionIntegrated {
+  """Band normalized spectral definition"""
+  bandNormalized: BandNormalizedIntegrated
+
+  """Emission lines spectral definition"""
+  emissionLines: EmissionLinesIntegrated
+}
+
+"""
+Spectral definition surface.  Exactly one of the fields will be defined.
+"""
+type SpectralDefinitionSurface {
+  """Band normalized spectral definition"""
+  bandNormalized: BandNormalizedSurface
+
+  """Emission lines spectral definition"""
+  emissionLines: EmissionLinesSurface
+}
+
+"""Spectroscopy capabilities Nod&Shuffle/Polarimetry/Corongraphy"""
+enum SpectroscopyCapabilities {
+  """SpectroscopyCapabilities NodAndShuffle"""
+  NOD_AND_SHUFFLE
+
+  """SpectroscopyCapabilities Polarimetry"""
+  POLARIMETRY
+
+  """SpectroscopyCapabilities Coronagraphy"""
+  CORONAGRAPHY
+}
+
+type SpectroscopyScienceRequirements {
+  """Requested central wavelength"""
+  wavelength: Wavelength
+
+  """Requested resolution"""
+  resolution: PosInt
+
+  """Requested signal to noise ratio"""
+  signalToNoise: PosBigDecimal
+
+  """Requested wavelength for the requested signal to noise"""
+  signalToNoiseAt: Wavelength
+
+  """Wavelength range"""
+  wavelengthCoverage: Wavelength
+
+  """Focal plane choice"""
+  focalPlane: FocalPlane
+
+  """Focal plane angle"""
+  focalPlaneAngle: focalPlaneAngle
+
+  """Spectroscopy Capabilities"""
+  capabilities: SpectroscopyCapabilities
+}
+
+"""Stellar library spectrum"""
+enum StellarLibrarySpectrum {
+  """StellarLibrarySpectrum O5V"""
+  O5_V
+
+  """StellarLibrarySpectrum O8III"""
+  O8_III
+
+  """StellarLibrarySpectrum B0V"""
+  B0_V
+
+  """StellarLibrarySpectrum B5_7V"""
+  B5_7_V
+
+  """StellarLibrarySpectrum B5III"""
+  B5_III
+
+  """StellarLibrarySpectrum B5I"""
+  B5_I
+
+  """StellarLibrarySpectrum A0V"""
+  A0_V
+
+  """StellarLibrarySpectrum A0III"""
+  A0_III
+
+  """StellarLibrarySpectrum A0I"""
+  A0_I
+
+  """StellarLibrarySpectrum A5V"""
+  A5_V
+
+  """StellarLibrarySpectrum A5III"""
+  A5_III
+
+  """StellarLibrarySpectrum F0V"""
+  F0_V
+
+  """StellarLibrarySpectrum F0III"""
+  F0_III
+
+  """StellarLibrarySpectrum F0I"""
+  F0_I
+
+  """StellarLibrarySpectrum F5V"""
+  F5_V
+
+  """StellarLibrarySpectrum F5V_w"""
+  F5_V_W
+
+  """StellarLibrarySpectrum F6V_r"""
+  F6_V_R
+
+  """StellarLibrarySpectrum F5III"""
+  F5_III
+
+  """StellarLibrarySpectrum F5I"""
+  F5_I
+
+  """StellarLibrarySpectrum G0V"""
+  G0_V
+
+  """StellarLibrarySpectrum G0V_w"""
+  G0_V_W
+
+  """StellarLibrarySpectrum G0V_r"""
+  G0_V_R
+
+  """StellarLibrarySpectrum G0III"""
+  G0_III
+
+  """StellarLibrarySpectrum G0I"""
+  G0_I
+
+  """StellarLibrarySpectrum G2V"""
+  G2_V
+
+  """StellarLibrarySpectrum G5V"""
+  G5_V
+
+  """StellarLibrarySpectrum G5V_w"""
+  G5_V_W
+
+  """StellarLibrarySpectrum G5V_r"""
+  G5_V_R
+
+  """StellarLibrarySpectrum G5III"""
+  G5_III
+
+  """StellarLibrarySpectrum G5III_w"""
+  G5_III_W
+
+  """StellarLibrarySpectrum G5III_r"""
+  G5_III_R
+
+  """StellarLibrarySpectrum G5I"""
+  G5_I
+
+  """StellarLibrarySpectrum K0V"""
+  K0_V
+
+  """StellarLibrarySpectrum K0V_r"""
+  K0_V_R
+
+  """StellarLibrarySpectrum K0III"""
+  K0_III
+
+  """StellarLibrarySpectrum K0III_w"""
+  K0_III_W
+
+  """StellarLibrarySpectrum K0III_r"""
+  K0_III_R
+
+  """StellarLibrarySpectrum K0_1II"""
+  K0_1_II
+
+  """StellarLibrarySpectrum K4V"""
+  K4_V
+
+  """StellarLibrarySpectrum K4III"""
+  K4_III
+
+  """StellarLibrarySpectrum K4III_w"""
+  K4_III_W
+
+  """StellarLibrarySpectrum K4III_r"""
+  K4_III_R
+
+  """StellarLibrarySpectrum K4I"""
+  K4_I
+
+  """StellarLibrarySpectrum M0V"""
+  M0_V
+
+  """StellarLibrarySpectrum M0III"""
+  M0_III
+
+  """StellarLibrarySpectrum M3V"""
+  M3_V
+
+  """StellarLibrarySpectrum M3III"""
+  M3_III
+
+  """StellarLibrarySpectrum M6V"""
+  M6_V
+
+  """StellarLibrarySpectrum M6III"""
+  M6_III
+
+  """StellarLibrarySpectrum M9III"""
+  M9_III
+}
+
+"""Sequence step"""
+interface Step {
+  """Step id"""
+  id: StepId!
+
+  """Whether to pause before the execution of this step"""
+  breakpoint: Breakpoint!
+
+  """Step type"""
+  stepType: StepType!
+
+  """The sequence step itself"""
+  stepConfig: StepConfig!
+
+  """Time estimate for this step's execution"""
+  time: StepTime!
+}
+
+"""Step (bias, dark, gcal, science, etc.)"""
+interface StepConfig {
+  """Step type"""
+  stepType: StepType!
+}
+
+"""Step-level events"""
+type StepEvent implements ExecutionEvent {
+  """Step to which the event applies"""
+  step: Step!
+
+  """Sequence type"""
+  sequenceType: SequenceType!
+
+  """Step stage"""
+  stage: StepStage!
+
+  """Event id"""
+  id: ExecutionEventId!
+
+  """Observation whose execution produced this event"""
+  observation: Observation!
+
+  """
+  Time at which this event was generated, according to the caller (e.g., Observe)
+  """
+  generated: Instant!
+
+  """Time at which this event was received"""
+  received: Instant!
+}
+
+"""StepId id formatted as `s-([1-9a-f][0-9a-f]*)`"""
+scalar StepId
+
+"""Execution stage or phase of an individual step"""
+enum StepStage {
+  """StepStage END_CONFIGURE"""
+  END_CONFIGURE
+
+  """StepStage END_OBSERVE"""
+  END_OBSERVE
+
+  """StepStage END_STEP"""
+  END_STEP
+
+  """StepStage START_CONFIGURE"""
+  START_CONFIGURE
+
+  """StepStage START_OBSERVE"""
+  START_OBSERVE
+
+  """StepStage START_STEP"""
+  START_STEP
+}
+
+"""Time required for a step or steps, categorized according to use"""
+type StepTime {
+  """Time spent making configuration changes"""
+  configChange: Duration!
+
+  """Time spent collecting photons"""
+  exposure: Duration!
+
+  """Time spent reading out the detector"""
+  readout: Duration!
+
+  """Time spent writing the dataset file"""
+  write: Duration!
+
+  """Total time across all categories"""
+  total: Duration!
+}
+
+"""Step type"""
+enum StepType {
+  """StepType Bias"""
+  BIAS
+
+  """StepType Dark"""
+  DARK
+
+  """StepType Gcal"""
+  GCAL
+
+  """StepType Science"""
+  SCIENCE
+
+  """StepType SmartGcal"""
+  SMART_GCAL
+}
+
+"""Target description"""
+type Target {
+  """Target ID"""
+  id: TargetId!
+
+  """DELETED or PRESENT"""
+  existence: Existence!
+
+  """Target name."""
+  name: NonEmptyString!
+
+  """Program that contains this target"""
+  program(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): Program!
+
+  """source profile"""
+  sourceProfile: SourceProfile!
+
+  """Sidereal tracking information, if this is a sidereal target"""
+  sidereal: Sidereal
+
+  """Nonsidereal tracking information, if this is a nonsidereal target"""
+  nonsidereal: Nonsidereal
+}
+
+"""Targets in the current page"""
+type TargetConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [Target!]!
+
+  """Edges in the current page"""
+  edges: [TargetEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""A Target and its cursor"""
+type TargetEdge {
+  """TargetEdge element"""
+  node: Target!
+
+  """TargetEdge element cursor"""
+  cursor: Cursor!
+}
+
+type TargetEnvironment {
+  """All the observation's science targets, if any"""
+  asterism(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): [Target!]!
+
+  """First, perhaps only, science target in the asterism"""
+  firstScienceTarget(
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): Target
+
+  """When set, overrides the default base position of the target group"""
+  explicitBase: Coordinates
+}
+
+type TargetEnvironmentGroup {
+  """IDs of observations that use the same constraints"""
+  observationIds: [ObservationId!]!
+
+  """Observations that use this constraint set"""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Commonly held value across the observations"""
+  targetEnvironment: TargetEnvironment!
+}
+
+"""Observations grouped by common properties"""
+type TargetEnvironmentGroupConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [TargetEnvironmentGroup!]!
+
+  """Edges in the current page"""
+  edges: [TargetEnvironmentGroupEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation group and its cursor"""
+type TargetEnvironmentGroupEdge {
+  """TargetEnvironmentGroupEdge element"""
+  node: TargetEnvironmentGroup!
+
+  """TargetEnvironmentGroupEdge element cursor"""
+  cursor: Cursor!
+}
+
+type TargetGroup {
+  """IDs of observations that use the same constraints"""
+  observationIds: [ObservationId!]!
+
+  """Observations that use this constraint set"""
+  observations(
+    """Retrieve `first` values after the given cursor"""
+    first: Int
+
+    """Retrieve values after the one associated with this cursor"""
+    after: Cursor
+
+    """Set to true to include deleted values"""
+    includeDeleted: Boolean! = false
+  ): ObservationConnection!
+
+  """Commonly held value across the observations"""
+  target: Target!
+}
+
+"""Observations grouped by common properties"""
+type TargetGroupConnection {
+  """The nodes in all the edges from the current page"""
+  nodes: [TargetGroup!]!
+
+  """Edges in the current page"""
+  edges: [TargetGroupEdge!]!
+
+  """Count of all nodes in all pages"""
+  totalCount: Int!
+
+  """Paging information"""
+  pageInfo: PageInfo!
+}
+
+"""An observation group and its cursor"""
+type TargetGroupEdge {
+  """TargetGroupEdge element"""
+  node: TargetGroup!
+
+  """TargetGroupEdge element cursor"""
+  cursor: Cursor!
+}
+
+"""TargetId id formatted as `t-([1-9a-f][0-9a-f]*)`"""
+scalar TargetId
+
+"""
+Un-normalized spectral energy distribution.  Exactly one of the definitions will be non-null.
+"""
+type UnnormalizedSed {
+  stellarLibrary: StellarLibrarySpectrum
+  coolStar: CoolStarTemperature
+  galaxy: GalaxySpectrum
+  planet: PlanetSpectrum
+  quasar: QuasarSpectrum
+  hiiRegion: HiiRegionSpectrum
+  planetaryNebula: PlanetaryNebulaSpectrum
+  powerLaw: BigDecimal
+  blackBodyTempK: BigDecimal
+  fluxDensities: [FluxDensityEntry!]
+}
+
+"""Water vapor"""
+enum WaterVapor {
+  """WaterVapor VeryDry"""
+  VERY_DRY
+
+  """WaterVapor Dry"""
+  DRY
+
+  """WaterVapor Median"""
+  MEDIAN
+
+  """WaterVapor Wet"""
+  WET
+}
+
+type Wavelength {
+  """Wavelength in pm"""
+  picometers: Int!
+
+  """Wavelength in Å"""
+  angstroms: BigDecimal!
+
+  """Wavelength in nm"""
+  nanometers: BigDecimal!
+
+  """Wavelength in µm"""
+  micrometers: BigDecimal!
+}
+
+type focalPlaneAngle {
+  """Focal plane angle in µas"""
+  microarcseconds: Long!
+
+  """Focal plane angle in mas"""
+  milliarcseconds: BigDecimal!
+
+  """Focal plane angle in arcsec"""
+  arcseconds: BigDecimal!
+}
+
+type p {
+  """p offset in µas"""
+  microarcseconds: Long!
+
+  """p offset in mas"""
+  milliarcseconds: BigDecimal!
+
+  """p offset in arcsec"""
+  arcseconds: BigDecimal!
+}
+
+type q {
+  """q offset in µas"""
+  microarcseconds: Long!
+
+  """q offset in mas"""
+  milliarcseconds: BigDecimal!
+
+  """q offset in arcsec"""
+  arcseconds: BigDecimal!
+}
+
+type slitWidth {
+  """Slit width in µas"""
+  microarcseconds: Long!
+
+  """Slit width in mas"""
+  milliarcseconds: BigDecimal!
+
+  """Slit width in arcsec"""
+  arcseconds: BigDecimal!
+}
+
+"""
+The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
+"""
+scalar BigDecimal
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
 
 ##############
 # ITC schema
 ##############
-
-# Gaussian source angle in appropriate units
-input GaussianSourceAngleInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  arcseconds: BigDecimal
-}
 
 # ITC error result
 type ItcError implements ItcResult {
@@ -774,18 +4175,7 @@ type ObservingModeSpectroscopy {
   instrument: InstrumentType
 }
 
-# An `Int` in the range from 1 to `Int.MaxValue`
-scalar PosInt
-
-# A `BigDecimal` above 0
-scalar PosBigDecimal
-
 type Query {
-  basiccase(
-    # Configuration alternatives search parameters.
-    input: QueryConfigurationAlternativeSearchInput!
-  ): SpectroscopyResult!
-
   spectroscopy(
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
@@ -852,55 +4242,25 @@ input InstrumentModes {
 # Configuration alternatives query
 input SpectroscopyModeInput {
   # Observing wavelength.
-  wavelength: WavelengthModelInput!
+  wavelength: WavelengthInput!
 
   # Minimum desired signal-to-noise ratio.
   signalToNoise: PosBigDecimal!
 
   # Spatial profile PointSource/UniformSource/GaussianSource.
-  spatialProfile: SpatialProfileModelInput!
+  sourceProfile: SourceProfileInput!
 
-  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
-  spectralDistribution: SpectralDistributionInput!
-
-  # Target magnitude/system/band.
-  magnitude: MagnitudeCreateInput!
+  # Observing Band
+  band: Band!
 
   # Target radial velocity
   radialVelocity: RadialVelocityInput!
 
   # Conditions
-  constraints: ConstraintsSetInput!
+  constraints: ConstraintSetInput!
 
   # Instrument modes
   modes: [InstrumentModes]!
-}
-
-# Configuration alternatives query
-input QueryConfigurationAlternativeSearchInput {
-  # Observing wavelength.
-  wavelength: WavelengthModelInput!
-
-  # Minimum desired simultaneous wavelength coverage.
-  simultaneousCoverage: WavelengthModelInput!
-
-  # Minimum desired resolution.
-  resolution: PosInt!
-
-  # Minimum desired signal-to-noise ratio.
-  signalToNoise: PosBigDecimal!
-
-  # Spatial profile PointSource/UniformSource/GaussianSource.
-  spatialProfile: SpatialProfileModelInput!
-
-  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
-  spectralDistribution: SpectralDistributionInput!
-
-  # Target magnitude/system/band.
-  magnitude: MagnitudeCreateInput!
-
-  # Target radial velocity
-  radialVelocity: RadialVelocityInput!
 }
 
 type Result {
@@ -911,151 +4271,8 @@ type Result {
   itc: ItcResult!
 }
 
-# Spatial profile PointSource/UniformSource/GaussianSource
-input SpatialProfileModelInput {
-  # Spatial profile type: Point/Uniform/Gaussian
-  sourceType: SpatialProfileType!
-
-  # Full width half maximum (including seeing) in suitable units. Required for the Gaussian spatial profile, ignored otherwise.
-  fwhm: GaussianSourceAngleInput
-}
-
-# Spatial profile type: Point/Uniform/Gaussian
-enum SpatialProfileType {
-  # SpatialProfileType PointSource
-  POINT_SOURCE
-
-  # SpatialProfileType UniformSource
-  UNIFORM_SOURCE
-
-  # SpatialProfileType GaussianSource
-  GAUSSIAN_SOURCE
-}
-
-# A black body with a temperature in Kelvin.
-input BlackBody {
-  temperature: BigDecimal
-}
-
-# Defined by power law function.
-input PowerLaw {
-  index: BigDecimal
-}
-
-# Library defined Stellar spectrum
-enum StellarLibrarySpectrum {
-  O5V
-  O8III
-  B0V
-  B5_7V
-  B5III
-  B5I
-  A0V
-  A0III
-  A0I
-  A5V
-  A5III
-  F0V
-  F0III
-  F0I
-  F5V
-  F5V_W
-  F6V_R
-  F5III
-  F5I
-  G0V
-  G0V_W
-  G0V_R
-  G0III
-  G0I
-  G2V
-  G5V
-  G5V_W
-  G5V_R
-  G5III
-  G5III_W
-  G5III_R
-  G5I
-  K0V
-  K0V_R
-  K0III
-  K0III_W
-  K0III_R
-  K0_1II
-  K4V
-  K4III
-  K4III_W
-  K4III_R
-  K4I
-  M0V
-  M0III
-  M3V
-  M3III
-  M6V
-  M6III
-  M9III
-}
-
-# Library defined Non Stellar spectrum
-enum NonStellarLibrarySpectrum {
-  ELLIPTICAL_GALAXY
-  SPIRAL_GALAXY
-  QS0
-  QS02
-  ORION_NEBULA
-  PLANETARY_NEBULA
-  PLANETARY_NEBULA2
-  PLANETARY_NEBULA3
-  STARBURST_GALAXY
-  PMS_STAR
-  GALACTIC_CENTER
-  AFGL_230
-  AFGL_3068
-  ALPHA_BOO
-  ALPHA_CAR
-  BETA_AND
-  BETA_GRU
-  GAMMA_CAS
-  GAMMA_DRA
-  L1511_IRS
-  NGC1068
-  NGC2023
-  NGC2440
-  O_CET
-  ORION_BAR
-  RSCL
-  TXPSC
-  WR104
-  WR34
-  MARS
-  JUPITER
-  SATURN
-  URANUS
-  NEPTUNE
-}
-
-# Spectral distribution variant
-input SpectralDistributionInput {
-  # SpectralDistribution BlackBody
-  blackBody: BlackBody
-
-  # SpectralDistribution PowerLaw
-  powerLaw: PowerLaw
-
-  # SpectralDistribution Stellar
-  stellar: StellarLibrarySpectrum
-
-  # SpectralDistribution NonStellar
-  nonStellar: NonStellarLibrarySpectrum
-}
-
 type SpectroscopyResult {
   # Search results
   results: [Result!]!
 }
 
-# The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
-scalar BigDecimal
-
-# The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1.
-scalar Long

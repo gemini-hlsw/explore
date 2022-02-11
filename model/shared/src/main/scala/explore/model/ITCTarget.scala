@@ -5,22 +5,19 @@ package explore.model
 
 import cats.Hash
 import lucuma.core.enum.Band
-import lucuma.core.math.BrightnessValue
 import lucuma.core.math.RadialVelocity
-import lucuma.core.math.dimensional.Measure
-
-import scala.collection.immutable.SortedMap
+import lucuma.core.model.SourceProfile
 
 final case class ITCTarget(
-  rv:           RadialVelocity,
-  brightnesses: SortedMap[Band, Measure[BrightnessValue]]
+  rv:      RadialVelocity,
+  profile: SourceProfile
 )
 
 object ITCTarget {
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations
-  implicit val hashRadialVelocity: Hash[RadialVelocity]              = Hash.by(_.rv.value)
-  implicit val hashBand: Hash[Band]                                  = Hash.by(_.tag)
-  implicit val hashBrightnessMeasure: Hash[Measure[BrightnessValue]] = Hash.fromUniversalHashCode
-  implicit val hashITCTarget: Hash[ITCTarget]                        = Hash.by(x => (x.rv, x.brightnesses))
+  implicit val hashRadialVelocity: Hash[RadialVelocity] = Hash.by(_.rv.value)
+  implicit val hashBand: Hash[Band]                     = Hash.by(_.tag)
+  implicit val hashProfile: Hash[SourceProfile]         = Hash.fromUniversalHashCode
+  implicit val hashITCTarget: Hash[ITCTarget]           = Hash.by(x => (x.rv, x.profile))
 }

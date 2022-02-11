@@ -4,27 +4,13 @@
 package explore.schemas
 
 import cats.syntax.all._
-import clue.data.Input
 import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ITCQueriesGQL
-import explore.common.ObsQueries
-import explore.model.ITCTarget
-import explore.model.TargetWithId
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
-import explore.optics.ModelOptics._
 import io.circe.syntax._
-import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
-import lucuma.core.math.dimensional.UnitOfMeasure
-import lucuma.core.math.dimensional.Units
-import lucuma.core.math.units._
 import lucuma.core.model._
-import lucuma.core.optics.syntax.lens._
 import lucuma.schemas.ObservationDB.Types._
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
@@ -243,99 +229,4 @@ object implicits {
       w.user.toString.assign,
       w.width.assign
     )
-}
-
-object itcschema {
-  object implicits {
-
-    import explore.schemas.ITC.Types.{ MagnitudeCreateInput => ITCMagnitudeInput }
-    import explore.schemas.ITC.Types.RadialVelocityInput
-
-    type InstrumentModes = ITC.Types.InstrumentModes
-    val InstrumentModes = ITC.Types.InstrumentModes
-    type GmosNITCInput = ITC.Types.GmosNITCInput
-    val GmosNITCInput = ITC.Types.GmosNITCInput
-    type GmosSITCInput = ITC.Types.GmosSITCInput
-    val GmosSITCInput = ITC.Types.GmosSITCInput
-    type ITCWavelengthInput = ITC.Types.WavelengthModelInput
-    val ITCWavelengthInput = ITC.Types.WavelengthModelInput
-    type ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
-    val ITCSpectroscopyInput = ITC.Types.SpectroscopyModeInput
-    type ITCMagnitudeSystem = ITC.Enums.MagnitudeSystem
-    val ITCMagnitudeSystem = ITC.Enums.MagnitudeSystem
-    type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
-    type ItcError   = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
-    val ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
-    type ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
-    val ItcSuccess = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcSuccess
-
-    implicit class WavelengthOps(val w: Wavelength) extends AnyVal {
-      def toITCInput: ITCWavelengthInput =
-        (ITCWavelengthInput.nanometers := Wavelength.decimalNanometers
-          .reverseGet(w)
-          .assign)
-          .runS(ITC.Types.WavelengthModelInput())
-          .value
-    }
-
-    implicit class UnitsOps(val u: Units) extends AnyVal {
-      // If we will keep using this logic, we must add the Surface units too.
-      def toITCInputOpt: Option[ITCMagnitudeSystem] = u match {
-        case _ if u === UnitOfMeasure[VegaMagnitude]                    => ITCMagnitudeSystem.Vega.some
-        case _ if u === UnitOfMeasure[ABMagnitude]                      => ITCMagnitudeSystem.Ab.some
-        case _ if u === UnitOfMeasure[Jansky]                           => ITCMagnitudeSystem.Jy.some
-        case _ if u === UnitOfMeasure[WattsPerMeter2Micrometer]         => ITCMagnitudeSystem.Watts.some
-        case _ if u === UnitOfMeasure[ErgsPerSecondCentimeter2Angstrom] =>
-          ITCMagnitudeSystem.ErgsWavelength.some
-        case _ if u === UnitOfMeasure[ErgsPerSecondCentimeter2Hertz]    =>
-          ITCMagnitudeSystem.ErgsFrequency.some
-        case _                                                          => none
-      }
-    }
-
-    implicit class BrightnessMeasureOps(val b: (Band, Measure[BrightnessValue])) {
-      def toITCInput: ITCMagnitudeInput =
-        ITCMagnitudeInput(
-          b._1,
-          b._2.value.toDouble,
-          b._2.error.map(_.toBigDecimal).orIgnore,
-          b._2.units.toITCInputOpt.orUnassign
-        )
-    }
-
-    implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
-      def toGmosNITCInput: Input[GmosNITCInput] =
-        GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
-    }
-
-    implicit class GmosSouthSpectropyRowOps(val r: GmosSouthSpectroscopyRow) extends AnyVal {
-      def toGmosSITCInput: Input[GmosSITCInput] =
-        GmosSITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
-    }
-
-    implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
-      def toITCInput: RadialVelocityInput =
-        RadialVelocityInput(metersPerSecond = r.rv.value.assign)
-    }
-
-    implicit class ScienceDataOps(val s: ObsQueries.ScienceData) extends AnyVal {
-      // From the list of targets selects the ones relevant for ITC
-      def itcTargets: List[ITCTarget] = s.targets.asterism
-        .map { case TargetWithId(_, target) =>
-          (targetRV.getOption(target), targetBrightnesses.get(target)).mapN(ITCTarget.apply)
-        }
-        .flatten
-        .hashDistinct
-    }
-
-    implicit class ITCInstrumentModesOps(val m: InstrumentRow) extends AnyVal {
-      def toITCInput: Option[InstrumentModes] = m match {
-        case r: GmosNorthSpectroscopyRow =>
-          InstrumentModes(gmosN = r.toGmosNITCInput).some
-        case r: GmosSouthSpectroscopyRow =>
-          InstrumentModes(gmosS = r.toGmosSITCInput).some
-        case _                           => none
-      }
-    }
-  }
 }

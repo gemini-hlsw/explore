@@ -14,7 +14,7 @@ import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
 import explore.model.reusability._
-import explore.schemas.itcschema.implicits._
+import explore.schemas.itc.implicits._
 import explore.undo._
 import explore.utils.potRender
 import lucuma.core.model.Observation

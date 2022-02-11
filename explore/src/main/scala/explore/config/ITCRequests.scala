@@ -23,19 +23,15 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
-import explore.schemas.ITC.Enums._
-import explore.schemas.ITC.Types._
-import explore.schemas.itcschema.implicits._
+import explore.schemas.itc.implicits._
 import japgolly.scalajs.react._
 import lucuma.core.enum.Band
-import lucuma.core.enum.StellarLibrarySpectrum
-import lucuma.core.math.BrightnessValue
+import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Measure
-import lucuma.core.model.SpectralDistribution
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
 import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class ITCRequestParams(
@@ -65,6 +61,77 @@ object ITCRequests {
     cache:         ViewF[F, ItcResultsCache],
     progress:      ViewF[F, Option[Progress]]
   ): F[Unit] = {
+    def itcResults(
+      r: List[ItcResults]
+    ): List[(Long, Int, EitherNec[ItcQueryProblems, ItcResult])] =
+      // Convert to usable types
+      r.toList
+        .flatMap(x =>
+          x.spectroscopy.flatMap(_.results).map { r =>
+            r.itc match {
+              case ItcError(m)      => (Long.MinValue, 0, ItcQueryProblems.GenericError(m).leftNec)
+              case ItcSuccess(e, t) =>
+                (t.microseconds, e, ItcResult.Result(t.microseconds.microseconds, e).rightNec)
+            }
+          }
+        )
+
+    // Find the magnitude closest to the requested wavelength
+    def selectedBrightness(
+      sourceProfile: SourceProfile,
+      wavelength:    Wavelength
+    ): Option[Band] =
+      SourceProfile.integratedBandNormalizedSpectralDefinition
+        .andThen(
+          SpectralDefinition.BandNormalized.brightnesses[Integrated]
+        )
+        .getOption(sourceProfile)
+        .traverse(_.minByOption { case (band, _) =>
+          (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+        }.map(_._1))
+        .orElse {
+          SourceProfile.surfaceBandNormalizedSpectralDefinition
+            .andThen(
+              SpectralDefinition.BandNormalized.brightnesses[Surface]
+            )
+            .getOption(sourceProfile)
+            .traverse(_.minByOption { case (band, _) =>
+              (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
+            }.map(_._1))
+        }
+        .collect { case Some(b) => b }
+
+    def doRequest(
+      request:  ITCRequestParams,
+      callback: List[ItcResults] => F[Unit]
+    ): F[Unit] =
+      Logger[F].debug(
+        s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
+      ) *>
+        request.target
+          .fproduct(t => selectedBrightness(t.profile, request.wavelength))
+          .collect { case (t, Some(brightness)) =>
+            SpectroscopyITCQuery
+              .query(
+                SpectroscopyModeInput(
+                  request.wavelength.toInput,
+                  request.signalToNoise,
+                  t.profile.toInput,
+                  brightness,
+                  t.rv.toITCInput,
+                  request.constraints,
+                  request.mode.toITCInput.map(_.assign).toList
+                ).assign
+              )
+          }
+          .parSequence
+          .flatTap(r =>
+            Logger[F].debug(
+              s"ITC: Result for mode ${request.mode}: ${itcResults(r)
+                .map(r => s"${r._2} x ${r._1.microseconds.toSeconds} s")}"
+            )
+          )
+          .flatMap(callback)
     val itcRowsParams = modes
       .map(_.instrument)
       // Only handle known modes
@@ -101,62 +168,4 @@ object ITCRequests {
       } >> progress.set(none)
   }
 
-  private def itcResults(
-    r: List[ItcResults]
-  ): List[(Long, Int, EitherNec[ItcQueryProblems, ItcResult])] =
-    // Convert to usable types
-    r.toList
-      .flatMap(x =>
-        x.spectroscopy.flatMap(_.results).map { r =>
-          r.itc match {
-            case ItcError(m)      => (Long.MinValue, 0, ItcQueryProblems.GenericError(m).leftNec)
-            case ItcSuccess(e, t) =>
-              (t.microseconds, e, ItcResult.Result(t.microseconds.microseconds, e).rightNec)
-          }
-        }
-      )
-
-  // Find the magnitude closest to the requested wavelength
-  def selectedBrightness(
-    mags:       SortedMap[Band, Measure[BrightnessValue]],
-    wavelength: Wavelength
-  ): Option[(Band, Measure[BrightnessValue])] =
-    mags
-      .minByOption { case (band, _) =>
-        (band.center.toPicometers.value.value - wavelength.toPicometers.value.value).abs
-      }
-
-  private def doRequest[F[_]: Parallel: Monad: Logger: TransactionalClient[*[_], ITC]](
-    request:  ITCRequestParams,
-    callback: List[ItcResults] => F[Unit]
-  ): F[Unit] =
-    Logger[F].debug(
-      s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
-    ) *>
-      request.target
-        .fproduct(t => selectedBrightness(t.brightnesses, request.wavelength))
-        .collect { case (t, Some(brightness)) =>
-          SpectroscopyITCQuery
-            .query(
-              ITCSpectroscopyInput(
-                request.wavelength.toITCInput,
-                request.signalToNoise,
-                // TODO Link sp and SED info to explore
-                SpatialProfileModelInput(SpatialProfileType.PointSource),
-                SpectralDistribution.Library(StellarLibrarySpectrum.A0I.asLeft),
-                brightness.toITCInput,
-                t.rv.toITCInput,
-                request.constraints,
-                request.mode.toITCInput.map(_.assign).toList
-              ).assign
-            )
-        }
-        .parSequence
-        .flatTap(r =>
-          Logger[F].debug(
-            s"ITC: Result for mode ${request.mode}: ${itcResults(r)
-              .map(r => s"${r._2} x ${r._1.microseconds.toSeconds} s")}"
-          )
-        )
-        .flatMap(callback)
 }
