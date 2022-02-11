@@ -13,9 +13,9 @@ import io.circe.Json
 import io.circe.generic.semiauto._
 import io.circe.syntax._
 import lucuma.core.`enum`
-import lucuma.core.model
-import lucuma.core.math.dimensional._
 import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.dimensional._
+import lucuma.core.model
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema

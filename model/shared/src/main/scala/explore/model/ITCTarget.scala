@@ -6,7 +6,6 @@ package explore.model
 import cats.Hash
 import lucuma.core.enum.Band
 import lucuma.core.math.RadialVelocity
-
 import lucuma.core.model.SourceProfile
 
 final case class ITCTarget(

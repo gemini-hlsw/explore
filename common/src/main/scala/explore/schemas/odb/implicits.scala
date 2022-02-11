@@ -4,25 +4,13 @@
 package explore.schemas
 
 import cats.syntax.all._
-import clue.data.Input
 import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.ITCQueriesGQL
-import explore.common.ObsQueries
-import explore.model.ITCTarget
-import explore.model.TargetWithId
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
-import explore.optics.ModelOptics._
 import io.circe.syntax._
-import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
-import lucuma.core.math.dimensional.Units
 import lucuma.core.model._
-import lucuma.core.optics.syntax.lens._
 import lucuma.schemas.ObservationDB.Types._
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
@@ -242,4 +230,3 @@ object implicits {
       w.width.assign
     )
 }
-

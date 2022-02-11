@@ -6,42 +6,29 @@ package explore.schemas
 import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ITCQueriesGQL
+import explore.common.ObsQueries
 import explore.model.ITCTarget
 import explore.model.TargetWithId
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import explore.common.ObsQueries
 import explore.optics.ModelOptics._
-import io.circe.syntax._
-import lucuma.core.enum.Band
+import explore.schemas.ITC.Types._
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
-import lucuma.core.math.dimensional.Units
 import lucuma.core.model._
 import lucuma.core.optics.syntax.lens._
-import explore.schemas.ITC.Types._
 
-object itcschema {
+// There is a lot of duplication here with the odb.implicits package
+package itc {
   object implicits {
     implicit class AngleOps(val a: Angle) extends AnyVal {
       def toInput: AngleInput =
         AngleInput(microarcseconds = a.toMicroarcseconds.assign)
     }
 
-    // import explore.schemas.ITC.Types.RadialVelocityInput
-    //
-    // type InstrumentModes = ITC.Types.InstrumentModes
-    // val InstrumentModes = ITC.Types.InstrumentModes
-    // type GmosNITCInput = ITC.Types.GmosNITCInput
-    // val GmosNITCInput = ITC.Types.GmosNITCInput
-    // type GmosSITCInput = ITC.Types.GmosSITCInput
-    // val GmosSITCInput = ITC.Types.GmosSITCInput
-    // type ITCWavelengthInput = ITC.Types.WavelengthInput
-    // val ITCWavelengthInput = ITC.Types.WavelengthInput
     type SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
     val SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
     type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
@@ -59,6 +46,7 @@ object itcschema {
           .value
     }
 
+    // These are copied from the odb side
     implicit class UnnormalizedSedOps(u: UnnormalizedSED) {
       def toInput: UnnormalizedSedInput =
         u match {
@@ -190,31 +178,6 @@ object itcschema {
             )
         }
     }
-    // implicit class UnitsOps(val u: Units) extends AnyVal {
-    // If we will keep using this logic, we must add the Surface units too.
-    // def toITCInputOpt: Option[ITCMagnitudeSystem] = u match {
-    //   case _ if u === UnitOfMeasure[VegaMagnitude]                    => ITCMagnitudeSystem.Vega.some
-    //   case _ if u === UnitOfMeasure[ABMagnitude]                      => ITCMagnitudeSystem.Ab.some
-    //   case _ if u === UnitOfMeasure[Jansky]                           => ITCMagnitudeSystem.Jy.some
-    //   case _ if u === UnitOfMeasure[WattsPerMeter2Micrometer]         => ITCMagnitudeSystem.Watts.some
-    //   case _ if u === UnitOfMeasure[ErgsPerSecondCentimeter2Angstrom] =>
-    //     ITCMagnitudeSystem.ErgsWavelength.some
-    //   case _ if u === UnitOfMeasure[ErgsPerSecondCentimeter2Hertz]    =>
-    //     ITCMagnitudeSystem.ErgsFrequency.some
-    //   case _                                                          => none
-    // }
-    // }
-
-    // implicit class IntegratedBrightnessMeasureOps(val b: (Band, Measure[BrightnessValue])) {
-    // def toITCInput: BandBrightnessIntegratedInput =
-    //   ???
-    // BrightnessInput(
-    //   b._1,
-    //   b._2.value.toDouble,
-    //   b._2.error.map(_.toBigDecimal).orIgnore,
-    //   b._2.units.toITCInputOpt.orUnassign
-    // )
-    // }
 
     implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
       def toGmosNITCInput: Input[GmosNITCInput] =

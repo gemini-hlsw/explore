@@ -23,16 +23,16 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import explore.schemas.ITC
-import explore.schemas.itcschema.implicits._
+import explore.schemas.itc.implicits._
 import japgolly.scalajs.react._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.SpectralDefinition
 import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration._
-import lucuma.core.model.SourceProfile
-import lucuma.core.model.SpectralDefinition
 
 final case class ITCRequestParams(
   wavelength:    Wavelength,
@@ -111,7 +111,6 @@ object ITCRequests {
         request.target
           .fproduct(t => selectedBrightness(t.profile, request.wavelength))
           .collect { case (t, Some(brightness)) =>
-            println(t.profile)
             SpectroscopyITCQuery
               .query(
                 SpectroscopyModeInput(
