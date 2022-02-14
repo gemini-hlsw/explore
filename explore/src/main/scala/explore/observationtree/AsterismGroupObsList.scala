@@ -19,7 +19,6 @@ import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
-import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
@@ -42,6 +41,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
+import react.semanticui.shorthand._
 import react.semanticui.sizes._
 import react.semanticui.views.card._
 
@@ -52,7 +52,7 @@ final case class AsterismGroupObsList(
   focusedObs:       View[Option[FocusedObs]],
   selected:         View[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
   expandedIds:      View[SortedSet[ObsIdSet]],
-  undoStacks:       View[UndoStacks[IO, AsterismGroupList]]
+  undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon
@@ -110,7 +110,7 @@ object AsterismGroupObsList {
       }
 
     def onDragEnd(
-      undoCtx:     UndoContext[AsterismGroupList],
+      undoCtx:     UndoContext[AsterismGroupsWithObs],
       expandedIds: View[SortedSet[ObsIdSet]],
       focusedObs:  View[Option[FocusedObs]],
       selected:    View[SelectedPanel[TargetOrObsSet]]
@@ -152,7 +152,7 @@ object AsterismGroupObsList {
       val state   = ViewF.fromState($)
       val undoCtx = UndoContext(
         props.undoStacks,
-        props.asterismsWithObs.zoom(AsterismGroupsWithObs.asterismGroups)
+        props.asterismsWithObs
       )
 
       def renderObsClone(obsIds: ObsIdSet): Option[TagMod] =
@@ -305,23 +305,37 @@ object AsterismGroupObsList {
         }
       }
 
-      def renderTarget(twid: TargetWithId, index: Int): VdomNode =
-        Draggable(twid.id.toString, index) { case (provided, snapshot, _) =>
+      def renderTarget(targetGroup: TargetGroup, index: Int): VdomNode = {
+        val targetId     = targetGroup.target.id
+        val deleteButton = Button(
+          size = Small,
+          compact = true,
+          clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+          icon = Icons.Trash,
+          onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+            e.preventDefaultCB *>
+              e.stopPropagationCB *>
+              AsterismGroupObsListActions.targetExistence(targetId).set(undoCtx)(targetGroup.some)
+        )
+
+        Draggable(targetId.toString, index) { case (provided, snapshot, _) =>
           <.div(
             provided.innerRef,
             provided.draggableProps,
             props.getDraggedStyle(provided.draggableStyle, snapshot),
-            ^.onClick ==> { _ => setSelectedPanelToTarget(twid.id) }
+            ^.onClick ==> { _ => setSelectedPanelToTarget(targetId) }
           )(
             <.span(provided.dragHandleProps)(
-              Card(raised = isTargetSelected(twid.id))(ExploreStyles.ObsBadge)(
+              Card(raised = isTargetSelected(targetId))(ExploreStyles.ObsBadge)(
                 CardContent(
                   CardHeader(
                     <.div(
                       ExploreStyles.ObsBadgeHeader,
-                      <.div(ExploreStyles.ObsBadgeTargetAndId,
-                            <.div(twid.target.name.value),
-                            <.div(ExploreStyles.ObsBadgeId, s"[${twid.id.value.value.toHexString}]")
+                      <.div(
+                        ExploreStyles.ObsBadgeTargetAndId,
+                        <.div(targetGroup.target.target.name.value),
+                        <.div(ExploreStyles.ObsBadgeId, s"[${targetId.value.value.toHexString}]"),
+                        deleteButton
                       )
                     )
                   )
@@ -330,6 +344,7 @@ object AsterismGroupObsList {
             )
           )
         }
+      }
 
       DragDropContext(
         onDragStart = (_: DragStart, _: ResponderProvided) => state.zoom(State.dragging).set(true),
@@ -367,9 +382,8 @@ object AsterismGroupObsList {
                       ),
                       <.div(ExploreStyles.ObsTree)(
                         <.div(ExploreStyles.ObsScrollTree)(
-                          targetGroupMap.toList.map(_._2.target).zipWithIndex.toTagMod {
-                            case (twid, idx) =>
-                              renderTarget(twid, idx)
+                          targetGroupMap.toList.map(_._2).zipWithIndex.toTagMod { case (tg, idx) =>
+                            renderTarget(tg, idx)
                           },
                           provided.placeholder
                         )

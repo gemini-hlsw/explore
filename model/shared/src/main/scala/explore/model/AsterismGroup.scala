@@ -14,7 +14,9 @@ case class AsterismGroup(
   obsIds:    ObsIdSet,
   targetIds: SortedSet[Target.Id]
 ) {
-  // Note: This should only be used while waiting for the server roundtrip
+  def addTargetId(targetId: Target.Id): AsterismGroup =
+    AsterismGroup.targetIds.modify(_ + targetId)(this)
+
   def addObsIds(newIds: ObsIdSet): AsterismGroup =
     AsterismGroup.obsIds.modify(_ ++ newIds)(this)
 
