@@ -16,6 +16,10 @@
       {
         devShell = pkgs.devshell.mkShell {
           imports = [ typelevel-nix.typelevelShell ];
+          packages = [
+            pkgs.nodePackages.vscode-langservers-extracted
+            pkgs.nodePackages.prettier
+          ];
           typelevelShell = {
             nodejs.enable = true;
             jdk.package = pkgs.jdk17;
