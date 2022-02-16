@@ -11,7 +11,7 @@ import lucuma.schemas.ObservationDB
 import java.time
 
 // gql: import explore.model.reusability._
-// gql: import explore.model.TargetWithId._
+// gql: import explore.model.TargetGroup._
 // gql: import lucuma.schemas.decoders._
 // gql: import lucuma.ui.reusability._
 
@@ -125,9 +125,7 @@ object AsterismQueriesGQL {
 
     object Data {
       object TargetGroup {
-        object Nodes {
-          type Target = model.TargetWithId
-        }
+        type Nodes = explore.model.TargetGroup
       }
 
       object Observations {

@@ -11,6 +11,7 @@ import crystal.react.reuse._
 import explore.common.AsterismQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.TargetGroup
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
@@ -65,7 +66,7 @@ object TargetSummaryTable {
         List(
           // TODO: Add a delete button
           TargetTable
-            .Column("id", _.target.id)
+            .Column("id", _.targetWithId.id)
             .setHeader("id")
             .setCell(cell =>
               <.a(^.onClick ==> (_ => props.selectTarget(cell.value)), cell.value.toString)
@@ -73,13 +74,13 @@ object TargetSummaryTable {
             .setSortByAuto
         ) ++
           TargetColumns
-            .BaseColumnBuilder(TargetTable)(_.target.target.some)
+            .BaseColumnBuilder(TargetTable)(_.targetWithId.target.some)
             .allColumns ++
           List(
-            column("count", _.observationIds.length) // TODO Right align
+            column("count", _.obsIds.size) // TODO Right align
               .setCell(_.value.toString)
               .setSortType(DefaultSortTypes.number),
-            column("observations", _.observationIds)
+            column("observations", _.obsIds.toList)
               .setCell(cell =>
                 <.span(
                   cell.value
