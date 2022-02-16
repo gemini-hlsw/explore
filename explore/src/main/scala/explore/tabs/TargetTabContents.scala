@@ -60,7 +60,7 @@ import scala.concurrent.duration._
 final case class TargetTabContents(
   userId:            Option[User.Id],
   focusedObs:        View[Option[FocusedObs]],
-  listUndoStacks:    View[UndoStacks[IO, AsterismGroupList]],
+  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
   expandedIds:       View[SortedSet[ObsIdSet]],
@@ -290,6 +290,7 @@ object TargetTabContents {
         // make sure any added targets are in the map and update modified ones.
         // Note that the observation id list for the target groups may be incorrect, but they are
         // currently only used for the target summary and will get updated by the server.
+        // BUT, they will be used for warning or preventing editing of "subsets" of a target.
         val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi =>
           (twi.id, TargetGroup(observationIds = idsToEdit.toList, target = twi))
         )

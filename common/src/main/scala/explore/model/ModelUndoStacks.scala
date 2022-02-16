@@ -4,7 +4,7 @@
 package explore.model
 
 import cats.Eq
-import explore.common.AsterismQueries.AsterismGroupList
+import explore.common.AsterismQueries.AsterismGroupsWithObs
 import explore.common.ConstraintGroupQueries.ConstraintGroupList
 import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
@@ -16,7 +16,8 @@ import monocle.Focus
 
 case class ModelUndoStacks[F[_]](
   forObsList:           UndoStacks[F, ObservationList] = UndoStacks.empty[F, ObservationList],
-  forAsterismGroupList: UndoStacks[F, AsterismGroupList] = UndoStacks.empty[F, AsterismGroupList],
+  forAsterismGroupList: UndoStacks[F, AsterismGroupsWithObs] =
+    UndoStacks.empty[F, AsterismGroupsWithObs],
   forSiderealTarget:    Map[Target.Id, UndoStacks[F, Target.Sidereal]] =
     Map.empty[Target.Id, UndoStacks[F, Target.Sidereal]],
   forConstraintList:    UndoStacks[F, ConstraintGroupList] = UndoStacks.empty[F, ConstraintGroupList],
