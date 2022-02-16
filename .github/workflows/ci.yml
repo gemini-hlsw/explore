@@ -249,10 +249,12 @@ jobs:
         uses: wearerequired/lint-action@v1
         with:
           stylelint: true
+          prettier_dir: common/src/main/webapp
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less
+          prettier: true
           auto_fix: true
 
       - name: Setup and expand vars light
@@ -264,8 +266,10 @@ jobs:
         uses: wearerequired/lint-action@v1
         with:
           stylelint: true
+          prettier_dir: common/src/main/webapp
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less
+          prettier: true
           auto_fix: true

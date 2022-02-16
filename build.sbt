@@ -334,6 +334,8 @@ def runLinters(mode: String) = WorkflowStep.Use(
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
     "auto_fix"             -> "true",
+    "prettier"             -> "true",
+    "prettier_dir"         -> "common/src/main/webapp",
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/less",
     "stylelint_dir"        -> "common/src/main/webapp/less",

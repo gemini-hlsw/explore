@@ -14,19 +14,19 @@ import { Explore } from "@sjs/main.js";
 // but for now we can survive setting this only on dev
 if (!process) {
   process = {
-    env: {}
+    env: {},
   };
 }
 
 if (import.meta.env.DEV) {
-  process.env = {CATS_EFFECT_TRACING_MODE: "none"};
+  process.env = { CATS_EFFECT_TRACING_MODE: "none" };
 }
 
 Explore.runIOApp();
 
 if (import.meta.hot) {
   import.meta.hot.accept();
-  import.meta.hot.dispose(_ => {
+  import.meta.hot.dispose((_) => {
     // Reset the IO runtime
     Explore.resetIOApp();
   });
