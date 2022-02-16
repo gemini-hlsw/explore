@@ -277,23 +277,37 @@ object TargetTabContents {
       val groupIds   = asterismGroup.obsIds
       val targetIds  = asterismGroup.targetIds
 
-      val asterism = targetIds.toList.map(id => targetMap.get(id).map(_.target)).flatten
+      val asterism = targetIds.toList.map(id => targetMap.get(id).map(_.targetWithId)).flatten
 
       val getAsterism: AsterismGroupsWithObs => List[TargetWithId] = _ => asterism
       def modAsterism(
         mod: List[TargetWithId] => List[TargetWithId]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
-        val asterismGroups      = agwo.asterismGroups
-        val targetGroups        = agwo.targetGroups
-        val moddedAsterism      = mod(asterism)
-        val newTargetIds        = SortedSet.from(moddedAsterism.map(_.id))
+        val asterismGroups = agwo.asterismGroups
+        val targetGroups   = agwo.targetGroups
+        val moddedAsterism = mod(asterism)
+        val newTargetIds   = SortedSet.from(moddedAsterism.map(_.id))
+
         // make sure any added targets are in the map and update modified ones.
-        // Note that the observation id list for the target groups may be incorrect, but they are
-        // currently only used for the target summary and will get updated by the server.
-        // BUT, they will be used for warning or preventing editing of "subsets" of a target.
-        val updatedTargetGroups = targetGroups ++ moddedAsterism.map(twi =>
-          (twi.id, TargetGroup(observationIds = idsToEdit.toList, target = twi))
-        )
+        val addedIds  = newTargetIds -- targetIds
+        val tgUpdate1 =
+          moddedAsterism.foldRight(targetGroups) { case (twid, groups) =>
+            if (addedIds.contains(twid.id))
+              // it's new to this asterism, but the target itself may or may not be new. So we
+              // either add a new target group or update the existing one.
+              groups.updatedWith(twid.id)(
+                _.map(_.addObsIds(idsToEdit).copy(targetWithId = twid))
+                  .orElse(TargetGroup(idsToEdit.toSortedSet, twid).some)
+              )
+            else // just update the current target, observations should be the same
+              groups.updatedWith(twid.id)(_.map(_.copy(targetWithId = twid)))
+          }
+
+        val removedIds          = targetIds -- newTargetIds
+        // If we removed a target, just update the observation ids for that target group
+        val updatedTargetGroups = removedIds.foldRight(tgUpdate1) { case (id, groups) =>
+          groups.updatedWith(id)(_.map(_.removeObsIds(idsToEdit)))
+        }
 
         val splitAsterisms =
           if (targetIds === newTargetIds)
@@ -387,13 +401,9 @@ object TargetTabContents {
     def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
       val getTarget: TargetGroupList => Target.Sidereal                                          = _ => target
       def modTarget(mod: Target.Sidereal => Target.Sidereal): TargetGroupList => TargetGroupList =
-        tgl => {
-          val newTarget = mod(target)
-          targetMap.get(targetId).fold(tgl) { group =>
-            val newGroup = group.copy(target = TargetWithId(targetId, newTarget))
-            tgl.updated(targetId, newGroup)
-          }
-        }
+        _.updatedWith(targetId)(
+          _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
+        )
 
       val targetView: View[Target.Sidereal] =
         asterismGroupWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
@@ -436,7 +446,7 @@ object TargetTabContents {
           case Left(targetId) =>
             targetMap
               .get(targetId)
-              .fold(renderSummary)(_.target.target match {
+              .fold(renderSummary)(_.targetWithId.target match {
                 case Nonsidereal(_, _, _)     => <.div("Editing of Non-Sidereal targets not supported")
                 case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
               })

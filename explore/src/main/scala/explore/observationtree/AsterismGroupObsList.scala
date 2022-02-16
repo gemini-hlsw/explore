@@ -19,6 +19,7 @@ import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
+import explore.model.TargetGroup
 import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
@@ -227,7 +228,7 @@ object AsterismGroupObsList {
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
         val targets = asterismGroup.targetIds.toList.map(targetGroupMap.get).flatten
         if (targets.isEmpty) "<No Targets>"
-        else targets.map(_.target.target.name).mkString(";")
+        else targets.map(_.targetWithId.target.name).mkString(";")
       }
 
       def renderAsterismGroup(asterismGroup: AsterismGroup): VdomNode = {
@@ -306,7 +307,7 @@ object AsterismGroupObsList {
       }
 
       def renderTarget(targetGroup: TargetGroup, index: Int): VdomNode = {
-        val targetId     = targetGroup.target.id
+        val targetId     = targetGroup.targetWithId.id
         val deleteButton = Button(
           size = Small,
           compact = true,
@@ -333,7 +334,7 @@ object AsterismGroupObsList {
                       ExploreStyles.ObsBadgeHeader,
                       <.div(
                         ExploreStyles.ObsBadgeTargetAndId,
-                        <.div(targetGroup.target.target.name.value),
+                        <.div(targetGroup.targetWithId.target.name.value),
                         <.div(ExploreStyles.ObsBadgeId, s"[${targetId.value.value.toHexString}]"),
                         deleteButton
                       )

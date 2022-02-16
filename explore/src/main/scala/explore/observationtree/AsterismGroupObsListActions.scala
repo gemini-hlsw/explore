@@ -18,10 +18,10 @@ import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
+import explore.model.TargetGroup
 import explore.undo._
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
-import mouse.boolean._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet
@@ -35,25 +35,44 @@ object AsterismGroupObsListActions {
   private def obsDropSetter(draggedIds: ObsIdSet)(
     oAsterismGroup:                     Option[AsterismGroup]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
-    val originalGroupList = agwo.asterismGroups
+    val origAsterismGroups = agwo.asterismGroups
+
     // should always have an asterism group and be able to find the dragged Ids in the list
-    val updatedGroupList  = (oAsterismGroup, originalGroupList.findContainingObsIds(draggedIds))
+    (oAsterismGroup, origAsterismGroups.findContainingObsIds(draggedIds))
       .mapN { case (destGroup, srcGroup) =>
-        val tempList    = originalGroupList - srcGroup.obsIds
+        // no matter what, the src group goes away because all or some of the obs were moved.
+        val tempList    = origAsterismGroups - srcGroup.obsIds
+        // if we didn't move all of the obs, we need to add the remnant back into the list
         val updatedList =
           srcGroup.removeObsIds(draggedIds).fold(tempList) { filteredGroup =>
             tempList + filteredGroup.asObsKeyValue
           }
 
-        originalGroupList
+        // Look for an asterism group with the exact target ids. If we find it, it is a do/redo,
+        // if we don't find it, it's an undo
+        val updatedGroupList = origAsterismGroups
           .findWithTargetIds(destGroup.targetIds)
-          .fold(updatedList + destGroup.asObsKeyValue) { newGroup =>
+          .fold(
+            // undo - we just have to put the destination group back
+            updatedList + destGroup.asObsKeyValue
+          ) { newGroup =>
+            // do/redo - we have to remove the original and add it back with the extra observations
             updatedList - newGroup.obsIds + newGroup.addObsIds(draggedIds).asObsKeyValue
           }
-      }
-      .getOrElse(originalGroupList)
 
-    agwo.copy(asterismGroups = updatedGroupList)
+        // remove the dragged ids from all the targets in the src
+        val tempTargetGroups = srcGroup.targetIds.foldRight(agwo.targetGroups) {
+          case (tid, groups) => groups.updatedWith(tid)(_.map(_.removeObsIds(draggedIds)))
+        }
+
+        // add the dragged ids to all the targets in the destination
+        val updatedTargetGroups = destGroup.targetIds.foldRight(tempTargetGroups) {
+          case (tid, groups) => groups.updatedWith(tid)(_.map(_.addObsIds(draggedIds)))
+        }
+
+        agwo.copy(asterismGroups = updatedGroupList, targetGroups = updatedTargetGroups)
+      }
+      .getOrElse(agwo)
   }
 
   // Any value returned by using this is wrong under too many circumstances. So, we always just get
@@ -64,32 +83,40 @@ object AsterismGroupObsListActions {
     // We always need to get the most recent group from the list, so we ignore this.
     @unused oAsterismGroup:            Option[AsterismGroup]
   ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
-    val originalList = agwo.asterismGroups
+    val origAsterismGroups = agwo.asterismGroups
+
     // Note: We always need to get the most current asterism group from the list.
-    val updatedList  = originalList
+    origAsterismGroups
       .findContainingObsIds(obsIds)
-      .fold(originalList) { currentAg =>
+      .fold(agwo) { currentAg =>
         val currentObsIds = currentAg.obsIds
+
         // It seems the only way to know if we're setting or restoring is if the asterism group
         // currently contains the target id or not.
-        val newTargetIds  = currentAg.targetIds
-          .contains(targetId)
-          .fold(currentAg.targetIds - targetId, currentAg.targetIds + targetId)
+        val isUndo       = currentAg.targetIds.contains(targetId)
+        val newTargetIds =
+          if (isUndo) currentAg.targetIds - targetId
+          else currentAg.targetIds + targetId
 
-        val split = if (currentObsIds === obsIds) {
-          originalList + currentAg.copy(targetIds = newTargetIds).asObsKeyValue
+        val splitAsterismGroups = if (currentObsIds === obsIds) {
+          origAsterismGroups + currentAg.copy(targetIds = newTargetIds).asObsKeyValue
         } else {
-          originalList - currentObsIds +
+          origAsterismGroups - currentObsIds +
             currentAg.removeObsIdsUnsafe(obsIds).asObsKeyValue +
             AsterismGroup(obsIds, newTargetIds).asObsKeyValue
         }
 
-        originalList.findWithTargetIds(newTargetIds).fold(split) { ag =>
-          split - obsIds - ag.obsIds + ag.addObsIds(obsIds).asObsKeyValue
-        }
-      }
+        val updatedAsterismGroups =
+          origAsterismGroups.findWithTargetIds(newTargetIds).fold(splitAsterismGroups) { ag =>
+            splitAsterismGroups - obsIds - ag.obsIds + ag.addObsIds(obsIds).asObsKeyValue
+          }
 
-    agwo.copy(asterismGroups = updatedList)
+        val updatedTargetGroups = agwo.targetGroups.updatedWith(targetId)(
+          _.map(tg => if (isUndo) tg.removeObsIds(obsIds) else tg.addObsIds(obsIds))
+        )
+
+        agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
+      }
   }
 
   private def updateExpandedIds(
@@ -218,7 +245,7 @@ object AsterismGroupObsListActions {
             // Undelete: Should always have a TargetGroup at this point.
             otg.fold(agwo) { tg =>
               val newTargetGroups   = agwo.targetGroups.updated(targetId, tg)
-              val obsInTg           = SortedSet.from(tg.observationIds)
+              val obsInTg           = tg.obsIds
               // update the asterism groups
               val newAsterismGroups = agwo.asterismGroups
                 .map { case (_, ag) =>
