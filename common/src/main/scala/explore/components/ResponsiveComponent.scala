@@ -8,30 +8,28 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import react.common._
 import react.common.implicits._
-import react.resizeDetector.ResizeDetector
+import react.resizeDetector.hooks._
 
 final case class ResponsiveComponent(
   widthBreakpoints:  List[(Int, Css)],
   heightBreakpoints: List[(Int, Css)] = Nil,
   clazz:             Css = Css.Empty
-) extends ReactPropsWithChildren[ResponsiveComponent](ResponsiveComponent.component)
+) extends ReactFnPropsWithChildren[ResponsiveComponent](ResponsiveComponent.component)
 
 object ResponsiveComponent {
   type Props = ResponsiveComponent
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .stateless
-      .render_PC { (p, c) =>
-        ResizeDetector() { s =>
-          val heightClass =
-            p.heightBreakpoints.findLast(_._1 < s.height.orEmpty).foldMap(_._2)
-          val widthClass  =
-            p.widthBreakpoints.findLast(_._1 < s.width.orEmpty).foldMap(_._2)
-          <.div(p.clazz |+| widthClass |+| heightClass, s.targetRef, c)
-        }
+    ScalaFnComponent
+      .withHooks[Props]
+      .withPropsChildren
+      .useResizeDetector()
+      .render { (p, c, s) =>
+        val heightClass =
+          p.heightBreakpoints.findLast(_._1 < s.height.orEmpty).foldMap(_._2)
+        val widthClass  =
+          p.widthBreakpoints.findLast(_._1 < s.width.orEmpty).foldMap(_._2)
+        <.div(p.clazz |+| widthClass |+| heightClass, c).withRef(s.ref)
       }
-      .build
 
 }
