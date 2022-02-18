@@ -517,7 +517,6 @@ object TargetTabContents {
                                     (Constants.InitialTreeWidth.toInt, defaultLayout)
               )
               .attempt
-              .flatTap(x => IO(println(s"Query result: $x")))
               .flatMap {
                 case Right((w, l)) =>
                   (panels
