@@ -19,7 +19,7 @@ object ElevationPlotTile {
   def elevationPlotTile(
     coreWidth:    Int,
     coreHeight:   Int,
-    coordinates:  Coordinates
+    coordinates:  Option[Coordinates]
   )(implicit ctx: AppContextIO) =
     Tile(ObsTabTiles.PlotId,
          "Elevation Plot",
@@ -31,7 +31,7 @@ object ElevationPlotTile {
         .by(
           (coreWidth, coreHeight, coordinates)
         ) { (_: Tile.RenderInTitle) =>
-          SkyPlotSection(coordinates): VdomNode
+          coordinates.fold(EmptyVdom)(c => SkyPlotSection(c): VdomNode)
         }
         .reuseAlways
     )

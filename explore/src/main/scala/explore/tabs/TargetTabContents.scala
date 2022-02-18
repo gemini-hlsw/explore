@@ -383,16 +383,14 @@ object TargetTabContents {
         )
 
       val skyPlotTile =
-        selectedCoordinates.flatten.map(
-          ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _)
-        )
+        ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, selectedCoordinates.flatten)
 
       TileController(
         props.userId,
         coreWidth,
         defaultLayouts,
         layouts,
-        List(asterismEditorTile.some, skyPlotTile).flatten,
+        List(asterismEditorTile, skyPlotTile),
         GridLayoutSection.TargetLayout,
         None
       )
@@ -426,7 +424,7 @@ object TargetTabContents {
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(coreWidth,
                                             coreHeight,
-                                            Target.Sidereal.baseCoordinates.get(target)
+                                            Target.Sidereal.baseCoordinates.get(target).some
         )
 
       TileController(props.userId,

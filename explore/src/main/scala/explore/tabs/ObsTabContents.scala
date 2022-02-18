@@ -395,7 +395,7 @@ object ObsTabContents {
             )
 
           val skyPlotTile =
-            targetCoords.map(ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, _))
+            ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, targetCoords)
 
           val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,
@@ -446,12 +446,12 @@ object ObsTabContents {
             defaultLayout,
             layouts,
             List(
-              targetTile.some,
-              notesTile.some,
+              targetTile,
+              notesTile,
               skyPlotTile,
-              constraintsTile.some,
-              configurationTile.some
-            ).collect { case Some(x) => x },
+              constraintsTile,
+              configurationTile
+            ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode
