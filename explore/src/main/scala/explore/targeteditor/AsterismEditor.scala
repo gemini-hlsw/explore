@@ -11,7 +11,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
 import explore.common.AsterismQueries
-import explore.common.TargetQueries
+import explore.common.TargetQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -21,6 +21,7 @@ import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.optics._
+import explore.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
@@ -61,7 +62,12 @@ object AsterismEditor {
     selectedTarget: View[Option[Target.Id]]
   )(implicit ctx:   AppContextIO): Callback = {
     val (targetId, createTarget) = oTargetId.fold(
-      (newId, ((tid: Target.Id) => TargetQueries.createSiderealTarget[IO](tid, target)))
+      (newId,
+       (tid: Target.Id) =>
+         CreateTargetMutation
+           .execute("p-2", target.toCreateTargetInput(tid.some))
+           .void
+      )
     )(tid => (CallbackTo(tid), (_: Target.Id) => IO.unit))
     targetId.flatMap(tid =>
       asterism.mod(_ :+ TargetWithId(tid, target)) >> selectedTarget.set(tid.some) >>
