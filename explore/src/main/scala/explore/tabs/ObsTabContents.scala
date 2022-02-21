@@ -39,7 +39,6 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -270,6 +269,7 @@ object ObsTabContents {
     layouts:            View[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
+    selectedTargetId:   View[Option[Target.Id]],
     obsWithConstraints: View[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
@@ -311,18 +311,9 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetInfo                        = obsSummaryOpt.collect {
-      case ObsSummaryWithTargetsAndConstraints(_,
-                                               List(TargetSummary(tid, _, coords)),
-                                               _,
-                                               _,
-                                               _,
-                                               _
-          ) =>
-        (tid, coords)
-    }
-    val targetId                          = targetInfo.map(_._1)
-    val targetCoords: Option[Coordinates] = targetInfo.flatMap(_._2)
+    val targetCoords = (obsSummaryOpt, selectedTargetId.get)
+      .mapN((summ, id) => summ.targets.find(_.id === id).flatMap(_.coords))
+      .flatten
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -379,7 +370,7 @@ object ObsTabContents {
            defaultLayout,
            layouts,
            notesTile,
-           targetId,
+           targetCoords,
            props.undoStacks,
            props.searching,
            options,
@@ -407,6 +398,7 @@ object ObsTabContents {
                 )
               )
             ),
+            selectedTargetId,
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,
@@ -533,10 +525,11 @@ object ObsTabContents {
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
+      .useStateView(none[Target.Id])
+      .renderWithReuse { (props, panels, options, layouts, resize, debouncer, selectedTargetId) =>
         implicit val ctx = props.ctx
         ObsLiveQuery(
-          Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
+          Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer, selectedTargetId)
         )
       }
 

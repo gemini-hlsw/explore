@@ -145,6 +145,7 @@ object TargetTabContents {
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
+    selectedTargetId:     View[Option[Target.Id]],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
@@ -347,7 +348,7 @@ object TargetTabContents {
       }
 
       val selectedTarget: Option[ViewOpt[Target]] =
-        asterismView.get.headOption.map(_.id).map { targetId =>
+        selectedTargetId.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
@@ -361,6 +362,7 @@ object TargetTabContents {
           props.userId,
           idsToEdit,
           Pot(asterismView),
+          selectedTargetId,
           props.targetsUndoStacks,
           props.searching,
           options,
@@ -530,11 +532,26 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
-        implicit val ctx = props.ctx
-        AsterismGroupLiveQuery(
-          Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
-        )
+      .useStateView(none[Target.Id])
+      .renderWithReuse {
+        (props, tps, opts, resize, layout, defaultLayout, debouncer, selectedTargetId) =>
+          implicit val ctx = props.ctx
+          AsterismGroupLiveQuery(
+            Reuse
+              .by((props, tps, opts, defaultLayout, layout, resize, debouncer, selectedTargetId)) {
+                agwo =>
+                  renderFn(props,
+                           tps,
+                           opts,
+                           defaultLayout,
+                           layout,
+                           resize,
+                           debouncer,
+                           selectedTargetId,
+                           agwo
+                  )
+              }
+          )
       }
 
 }
