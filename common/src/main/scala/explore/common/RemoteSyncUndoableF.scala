@@ -8,7 +8,6 @@ import crystal.react.View
 import crystal.react.implicits._
 import explore.undo.UndoContext
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
 import monocle.Lens
 import monocle.Optional
@@ -59,10 +58,7 @@ trait RemoteSyncUndoableF[F[_], B, S] { self =>
   ): View[B] =
     _undoCtx
       .undoableView(_modelGet, _modelMod)
-      .withOnMod(value =>
-        Callback.log(_remoteMod(toInput(value))(_remoteBaseInput)) >>
-          _onMod(_remoteMod(toInput(value))(_remoteBaseInput)).runAsync
-      )
+      .withOnMod(value => _onMod(_remoteMod(toInput(value))(_remoteBaseInput)).runAsync)
 
   /**
    * Build an undoable `View` at the current level, specifying a conversion from the model to the
