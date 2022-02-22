@@ -246,7 +246,7 @@ object AladinContainer {
         )
       )
 
-    def render(props: Props) =
+    def render(@scala.annotation.unused props: Props) =
       <.div(
         ExploreStyles.AladinContainerBody
         // AladinComp.withRef(aladinRef) {
