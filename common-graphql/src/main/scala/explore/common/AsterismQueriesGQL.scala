@@ -92,6 +92,63 @@ object AsterismQueriesGQL {
                     }
                   }
                 }
+                uniform {
+                  bandNormalized {
+                    sed {
+                      stellarLibrary
+                      coolStar
+                      galaxy
+                      planet
+                      quasar
+                      hiiRegion
+                      planetaryNebula
+                      powerLaw
+                      blackBodyTempK
+                      fluxDensities {
+                        wavelength {
+                          picometers
+                        }
+                        density
+                      }
+                    }
+                    brightnesses {
+                      band
+                      value
+                      units
+                      error
+                    }
+                  }
+                }
+                gaussian {
+                  fwhm {
+                    microarcseconds
+                  }
+                  bandNormalized {
+                    sed {
+                      stellarLibrary
+                      coolStar
+                      galaxy
+                      planet
+                      quasar
+                      hiiRegion
+                      planetaryNebula
+                      powerLaw
+                      blackBodyTempK
+                      fluxDensities {
+                        wavelength {
+                          picometers
+                        }
+                        density
+                      }
+                    }
+                    brightnesses {
+                      band
+                      value
+                      units
+                      error
+                    }
+                  }
+                }
               }
             }
           }

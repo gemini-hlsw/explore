@@ -7,11 +7,14 @@ import cats.syntax.all._
 import clue.data.syntax._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
+import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.model._
 import lucuma.schemas.ObservationDB.Types._
+
+import scala.collection.immutable.SortedMap
 
 import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
@@ -28,22 +31,22 @@ object implicits {
       WavelengthInput(picometers = w.toPicometers.value.value.toLong.assign)
   }
 
-  implicit class CatalogInfoOps(info: CatalogInfo) {
+  implicit class CatalogInfoOps(val info: CatalogInfo) extends AnyVal {
     def toInput: CatalogInfoInput =
       CatalogInfoInput(info.catalog.assign, info.id.assign, info.objectType.orIgnore)
   }
 
-  implicit class RightAscensionOps(ra: RightAscension) {
+  implicit class RightAscensionOps(val ra: RightAscension) extends AnyVal {
     def toInput: RightAscensionInput =
       RightAscensionInput(microarcseconds = ra.toAngle.toMicroarcseconds.assign)
   }
 
-  implicit class DeclinationOps(dec: Declination) {
+  implicit class DeclinationOps(val dec: Declination) extends AnyVal {
     def toInput: DeclinationInput =
       DeclinationInput(microarcseconds = dec.toAngle.toMicroarcseconds.assign)
   }
 
-  implicit class ProperMotionOps(pm: ProperMotion) {
+  implicit class ProperMotionOps(val pm: ProperMotion) extends AnyVal {
     def toInput: ProperMotionInput =
       ProperMotionInput(
         ra = ProperMotionComponentInput(microarcsecondsPerYear = pm.ra.μasy.value.assign),
@@ -51,17 +54,17 @@ object implicits {
       )
   }
 
-  implicit class RadialVelocityOps(rv: RadialVelocity) {
+  implicit class RadialVelocityOps(val rv: RadialVelocity) extends AnyVal {
     def toInput: RadialVelocityInput =
       RadialVelocityInput(metersPerSecond = rv.rv.value.assign)
   }
 
-  implicit class ParallaxOps(p: Parallax) {
+  implicit class ParallaxOps(val p: Parallax) extends AnyVal {
     def toInput: ParallaxModelInput =
       ParallaxModelInput(microarcseconds = p.μas.value.value.assign)
   }
 
-  implicit class UnnormalizedSedOps(u: UnnormalizedSED) {
+  implicit class UnnormalizedSedOps(val u: UnnormalizedSED) extends AnyVal {
     def toInput: UnnormalizedSedInput =
       u match {
         case UnnormalizedSED.StellarLibrary(librarySpectrum)          =>
@@ -89,38 +92,55 @@ object implicits {
       }
   }
 
-  implicit class IntegratedBandNormalizedOps(b: SpectralDefinition.BandNormalized[Integrated]) {
-    def toCreateInput: BandNormalizedIntegratedInput =
+  implicit class IntegratedBandBrightnessesOps(
+    val bs: SortedMap[Band, BrightnessMeasure[Integrated]]
+  ) extends AnyVal {
+    def toInput: List[BandBrightnessIntegratedInput] =
+      bs.toList.map { case (band, measure) =>
+        BandBrightnessIntegratedInput(
+          band = band,
+          value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+          units = Measure.unitsTagged.get(measure).assign,
+          error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+        )
+      }
+  }
+
+  implicit class SurfaceBandBrightnessesOps(
+    val bs: SortedMap[Band, BrightnessMeasure[Surface]]
+  ) extends AnyVal {
+    def toInput: List[BandBrightnessSurfaceInput] =
+      bs.toList.map { case (band, measure) =>
+        BandBrightnessSurfaceInput(
+          band = band,
+          value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+          units = Measure.unitsTagged.get(measure).assign,
+          error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+        )
+      }
+  }
+
+  implicit class IntegratedBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Integrated])
+      extends AnyVal {
+    def toInput: BandNormalizedIntegratedInput =
       BandNormalizedIntegratedInput(
         sed = b.sed.toInput.assign,
-        brightnesses = b.brightnesses.toList.map { case (band, measure) =>
-          BandBrightnessIntegratedInput(
-            band = band,
-            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
-            units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
-          )
-        }.assign
+        brightnesses = b.brightnesses.toInput.assign
       )
   }
 
-  implicit class SurfaceBandNormalizedOps(b: SpectralDefinition.BandNormalized[Surface]) {
-    def toCreateInput: BandNormalizedSurfaceInput =
+  implicit class SurfaceBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Surface])
+      extends AnyVal {
+    def toInput: BandNormalizedSurfaceInput =
       BandNormalizedSurfaceInput(
         sed = b.sed.toInput.assign,
-        brightnesses = b.brightnesses.toList.map { case (band, measure) =>
-          BandBrightnessSurfaceInput(
-            band = band,
-            value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
-            units = Measure.unitsTagged.get(measure).assign,
-            error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
-          )
-        }.assign
+        brightnesses = b.brightnesses.toInput.assign
       )
   }
 
-  implicit class IntegratedEmissionLinesOps(e: SpectralDefinition.EmissionLines[Integrated]) {
-    def toCreateInput: EmissionLinesIntegratedInput =
+  implicit class IntegratedEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Integrated])
+      extends AnyVal {
+    def toInput: EmissionLinesIntegratedInput =
       EmissionLinesIntegratedInput(
         lines = e.lines.toList.map { case (wavelength, line) =>
           EmissionLineIntegratedInput(
@@ -139,8 +159,9 @@ object implicits {
       )
   }
 
-  implicit class SurfaceEmissionLinesOps(e: SpectralDefinition.EmissionLines[Surface]) {
-    def toCreateInput: EmissionLinesSurfaceInput =
+  implicit class SurfaceEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Surface])
+      extends AnyVal {
+    def toInput: EmissionLinesSurfaceInput =
       EmissionLinesSurfaceInput(
         lines = e.lines.toList.map { case (wavelength, line) =>
           EmissionLineSurfaceInput(
@@ -159,67 +180,72 @@ object implicits {
       )
   }
 
-  implicit class IntegratedSpectralDefinitionOps(s: SpectralDefinition[Integrated]) {
-    def toCreateInput: SpectralDefinitionIntegratedInput =
+  implicit class IntegratedSpectralDefinitionOps(val s: SpectralDefinition[Integrated])
+      extends AnyVal {
+    def toInput: SpectralDefinitionIntegratedInput =
       s match {
         case b @ SpectralDefinition.BandNormalized(_, _) =>
-          SpectralDefinitionIntegratedInput(bandNormalized = b.toCreateInput.assign)
+          SpectralDefinitionIntegratedInput(bandNormalized = b.toInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          SpectralDefinitionIntegratedInput(emissionLines = e.toCreateInput.assign)
+          SpectralDefinitionIntegratedInput(emissionLines = e.toInput.assign)
       }
   }
 
-  implicit class SurfaceSpectralDefinitionOps(s: SpectralDefinition[Surface]) {
-    def toCreateInput: SpectralDefinitionSurfaceInput =
+  implicit class SurfaceSpectralDefinitionOps(val s: SpectralDefinition[Surface]) extends AnyVal {
+    def toInput: SpectralDefinitionSurfaceInput =
       s match {
         case b @ SpectralDefinition.BandNormalized(_, _) =>
-          SpectralDefinitionSurfaceInput(bandNormalized = b.toCreateInput.assign)
+          SpectralDefinitionSurfaceInput(bandNormalized = b.toInput.assign)
         case e @ SpectralDefinition.EmissionLines(_, _)  =>
-          SpectralDefinitionSurfaceInput(emissionLines = e.toCreateInput.assign)
+          SpectralDefinitionSurfaceInput(emissionLines = e.toInput.assign)
       }
   }
 
-  implicit class SourceProfileOps(s: SourceProfile) {
-    def toCreateInput: SourceProfileInput =
+  implicit class SourceProfileOps(val s: SourceProfile) extends AnyVal {
+    def toInput: SourceProfileInput =
       s match {
         case SourceProfile.Point(definition)          =>
-          SourceProfileInput(point = definition.toCreateInput.assign)
+          SourceProfileInput(point = definition.toInput.assign)
         case SourceProfile.Uniform(definition)        =>
-          SourceProfileInput(uniform = definition.toCreateInput.assign)
+          SourceProfileInput(uniform = definition.toInput.assign)
         case SourceProfile.Gaussian(fwhm, definition) =>
           SourceProfileInput(gaussian =
-            GaussianInput(fwhm.toInput.assign, definition.toCreateInput.assign).assign
+            GaussianInput(fwhm.toInput.assign, definition.toInput.assign).assign
           )
       }
   }
 
-  implicit class SiderealTargetOps(sidereal: Target.Sidereal) {
-    def toCreateInput(id: Option[Target.Id] = none): CreateTargetInput =
+  implicit class SiderealTargetOps(val sidereal: Target.Sidereal) extends AnyVal {
+    def toInput: SiderealInput = SiderealInput(
+      ra = sidereal.tracking.baseCoordinates.ra.toInput.assign,
+      dec = sidereal.tracking.baseCoordinates.dec.toInput.assign,
+      epoch = Epoch.fromString.reverseGet(sidereal.tracking.epoch).assign,
+      properMotion = sidereal.tracking.properMotion.map(_.toInput).orIgnore,
+      radialVelocity = sidereal.tracking.radialVelocity.map(_.toInput).orIgnore,
+      parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore,
+      catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore
+    )
+
+    def toCreateTargetInput(id: Option[Target.Id] = none): CreateTargetInput =
       CreateTargetInput(
         targetId = id.orIgnore,
         name = sidereal.name,
-        sidereal = SiderealInput(
-          ra = sidereal.tracking.baseCoordinates.ra.toInput.assign,
-          dec = sidereal.tracking.baseCoordinates.dec.toInput.assign,
-          epoch = Epoch.fromString.reverseGet(sidereal.tracking.epoch).assign,
-          properMotion = sidereal.tracking.properMotion.map(_.toInput).orIgnore,
-          radialVelocity = sidereal.tracking.radialVelocity.map(_.toInput).orIgnore,
-          parallax = sidereal.tracking.parallax.map(_.toInput).orIgnore,
-          catalogInfo = sidereal.catalogInfo.map(_.toInput).orIgnore
-        ).assign,
-        sourceProfile = sidereal.sourceProfile.toCreateInput
+        sidereal = toInput.assign,
+        sourceProfile = sidereal.sourceProfile.toInput
       )
   }
 
-  implicit class NonsiderealTargetOps(nonsidereal: Target.Nonsidereal) {
-    def toCreateInput(id: Option[Target.Id] = none): CreateTargetInput =
+  implicit class NonsiderealTargetOps(val nonsidereal: Target.Nonsidereal) extends AnyVal {
+    def toInput: NonsiderealInput = NonsiderealInput(
+      key = NonEmptyString.unsafeFrom(nonsidereal.ephemerisKey.asJson.toString).assign
+    )
+
+    def toCreateTargetInput(id: Option[Target.Id] = none): CreateTargetInput =
       CreateTargetInput(
         targetId = id.orIgnore,
         name = nonsidereal.name,
-        nonsidereal = NonsiderealInput(
-          key = NonEmptyString.unsafeFrom(nonsidereal.ephemerisKey.asJson.toString).assign
-        ).assign,
-        sourceProfile = nonsidereal.sourceProfile.toCreateInput
+        nonsidereal = toInput.assign,
+        sourceProfile = nonsidereal.sourceProfile.toInput
       )
   }
 

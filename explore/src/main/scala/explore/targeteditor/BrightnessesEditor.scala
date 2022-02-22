@@ -59,6 +59,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
     }
   }
 
+  protected val label: String // Abstract
+
   protected def defaultBandUnits: Band => Units Of Brightness[T] // Abstract
 
   implicit protected def propsReuse: Reusability[Props] // Abstract
@@ -217,9 +219,10 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
         // Put it inside a form to get the SUI styles right
         Form(as = <.div, size = Small)(
+          // props.toString,
           <.div(
             ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer,
-            <.label("Brightnesses"),
+            <.label(label),
             BrightnessTableComponent.Component(
               table = Table(celled = true,
                             selectable = true,
@@ -243,8 +246,23 @@ final case class IntegratedBrightnessEditor(
 
 object IntegratedBrightnessEditor
     extends BrightnessesEditorBuilder[Integrated, IntegratedBrightnessEditor] {
+  protected val label                                                             = "Brightness"
   protected lazy val defaultBandUnits: Band => Units Of Brightness[Integrated]    =
     _.defaultIntegrated.units
   implicit protected lazy val propsReuse: Reusability[IntegratedBrightnessEditor] =
+    Reusability.derive
+}
+
+final case class SurfaceBrightnessEditor(
+  brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
+  disabled:     Boolean
+) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
+    with BrightnessesEditor[Surface]
+
+object SurfaceBrightnessEditor extends BrightnessesEditorBuilder[Surface, SurfaceBrightnessEditor] {
+  protected val label                                                          = "Surface Brightness"
+  protected lazy val defaultBandUnits: Band => Units Of Brightness[Surface]    =
+    _.defaultSurface.units
+  implicit protected lazy val propsReuse: Reusability[SurfaceBrightnessEditor] =
     Reusability.derive
 }
