@@ -55,7 +55,7 @@
     "process": "^0.11.10",
     "rollup-plugin-visualizer": "^5.5.4",
     "sass": "^1.49.0",
-    "stylelint": "^13.13.1",
+    "stylelint": "^14.5.2",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard": "^22.0.0",
