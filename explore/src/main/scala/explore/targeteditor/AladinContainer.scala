@@ -248,18 +248,18 @@ object AladinContainer {
 
     def render(props: Props) =
       <.div(
-        ExploreStyles.AladinContainerBody,
-        AladinComp.withRef(aladinRef) {
-          Aladin(
-            ExploreStyles.TargetAladin,
-            showReticle = false,
-            showLayersControl = false,
-            target = props.aladinCoordsStr,
-            fov = props.options.fovAngle.toDoubleDegrees,
-            showGotoControl = false,
-            customize = includeSvg _
-          )
-        }
+        ExploreStyles.AladinContainerBody
+        // AladinComp.withRef(aladinRef) {
+        // Aladin(
+        //   ExploreStyles.TargetAladin,
+        //   showReticle = false,
+        //   showLayersControl = false,
+        //   target = props.aladinCoordsStr,
+        //   fov = props.options.fovAngle.toDoubleDegrees,
+        //   showGotoControl = false,
+        //   customize = includeSvg _
+        // )
+        // }
       )
 
     def recalculateView =
