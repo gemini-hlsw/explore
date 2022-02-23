@@ -11,6 +11,7 @@ import clue.data.syntax._
 import coulomb._
 import coulomb.si.Kelvin
 import crystal.react.View
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.implicits._
 import explore.schemas.implicits._
@@ -38,6 +39,11 @@ import lucuma.ui.forms.EnumViewSelect
 import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
+import lucuma.ui.forms.FormInputEV
+import explore.components.ui.ExploreStyles
+import react.semanticui.elements.label.LabelPointing
+import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.optics.ChangeAuditor
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
@@ -199,13 +205,13 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    // val powerLawIndexRSUOpt: Option[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]] =
-    //   props.sedRSUOpt.flatMap(
-    //     _.zoomOpt(
-    //       UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
-    //       UnnormalizedSedInput.powerLaw.modify
-    //     )
-    //   )
+    val powerLawIndexRSUOpt: Option[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]] =
+      props.sedRSUOpt.flatMap(
+        _.zoomOpt(
+          UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
+          UnnormalizedSedInput.powerLaw.modify
+        )
+      )
 
     // val blackBodyTemperatureRSUOpt: Option[
     //   RemoteSyncUndoable[Quantity[PosBigDecimal, Kelvin], Input[BigDecimal]]
@@ -265,6 +271,20 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         .whenDefined,
       planetaryNebulaSpectrumRSUOpt
         .map(rsu => EnumViewSelect("pnSpectrum", rsu.view(_.assign)))
+        .whenDefined,
+      powerLawIndexRSUOpt
+        .map(rsu =>
+          FormInputEV(
+            id = "powerLawIndex",
+            label = "Index",
+            value = rsu.view(_.assign),
+            validFormat = ValidFormatInput.bigDecimalValidFormat(),
+            changeAuditor =
+              ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
+            errorClazz = ExploreStyles.InputErrorTooltip,
+            errorPointing = LabelPointing.Below
+          )
+        )
         .whenDefined,
       props.bandBrightnessesViewOpt
         .map(bandBrightnessesView =>
