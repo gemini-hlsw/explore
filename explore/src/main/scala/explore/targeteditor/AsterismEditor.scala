@@ -111,7 +111,7 @@ object AsterismEditor {
           case 2 => 91
           case _ => 110
         }
-        val editorHeight      = resize.height.map(h => math.max(0, h - targetTableHeight)).getOrElse(0)
+        val editorHeight      = resize.height.foldMap(h => math.max(0, h - targetTableHeight))
 
         React.Fragment(
           props.renderInTitle(
