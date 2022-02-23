@@ -31,6 +31,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Optional
 import react.common.ReactFnProps
+import react.resizeDetector.hooks._
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
@@ -93,7 +94,8 @@ object AsterismEditor {
       .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, _, adding) =>
         _ => adding.setState(false)
       )
-      .renderWithReuse { (props, selectedTargetIdState, adding) =>
+      .useResizeDetector()
+      .renderWithReuse { (props, selectedTargetIdState, adding, resize) =>
         implicit val ctx = props.ctx
 
         // TODO We will add this generic state => view conversion in crystal
@@ -102,6 +104,14 @@ object AsterismEditor {
             selectedTargetIdState.value,
             (mod, _) => selectedTargetIdState.modState(mod)
           )
+
+        val targetTableHeight = props.asterism.get.length match {
+          case 0 => 27
+          case 1 => 57
+          case 2 => 91
+          case _ => 110
+        }
+        val editorHeight      = resize.height.map(h => math.max(0, h - targetTableHeight)).getOrElse(0)
 
         React.Fragment(
           props.renderInTitle(
@@ -126,42 +136,47 @@ object AsterismEditor {
                 })
             )
           ),
-          TargetTable(
-            props.obsIds,
-            props.asterism,
-            props.hiddenColumns,
-            selectedTargetId,
-            props.renderInTitle
-          ),
-          selectedTargetId.get
-            .flatMap[VdomElement] { targetId =>
-              val optional =
-                Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
-                  target =>
-                    _.map(twid =>
-                      if (twid.id === targetId) TargetWithId(targetId, target) else twid
-                    )
+          <.div(^.height := s"${targetTableHeight}px",
+                TargetTable(
+                  props.obsIds,
+                  props.asterism,
+                  props.hiddenColumns,
+                  selectedTargetId,
+                  props.renderInTitle
                 )
+          ),
+          <.div(
+            ^.height     := s"${editorHeight}px",
+            selectedTargetId.get
+              .flatMap[VdomElement] { targetId =>
+                val optional =
+                  Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
+                    target =>
+                      _.map(twid =>
+                        if (twid.id === targetId) TargetWithId(targetId, target) else twid
+                      )
+                  )
 
-              val selectedTargetView = props.asterism.zoom(optional)
+                val selectedTargetView = props.asterism.zoom(optional)
 
-              selectedTargetView.mapValue(targetView =>
-                targetView.get match {
-                  case Target.Sidereal(_, _, _, _) =>
-                    SiderealTargetEditor(
-                      props.userId,
-                      targetId,
-                      targetView
-                        .unsafeNarrow[Target.Sidereal],
-                      props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                      props.searching,
-                      props.options
-                    )
-                  case _                           =>
-                    <.div("Non-sidereal targets not supported")
-                }
-              )
-            }
+                selectedTargetView.mapValue(targetView =>
+                  targetView.get match {
+                    case Target.Sidereal(_, _, _, _) =>
+                      SiderealTargetEditor(
+                        props.userId,
+                        targetId,
+                        targetView
+                          .unsafeNarrow[Target.Sidereal],
+                        props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+                        props.searching,
+                        props.options
+                      )
+                    case _                           =>
+                      <.div("Non-sidereal targets not supported")
+                  }
+                )
+              }
+          )
         )
       }
 }
