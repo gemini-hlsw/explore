@@ -12,7 +12,10 @@ import coulomb._
 import coulomb.si.Kelvin
 import crystal.react.View
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.implicits._
 import explore.schemas.implicits._
 import explore.utils._
@@ -44,6 +47,7 @@ import explore.components.ui.ExploreStyles
 import react.semanticui.elements.label.LabelPointing
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.optics.ChangeAuditor
+import explore.optics._
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
@@ -112,9 +116,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
     case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
     case object BlackBodyType
-        extends BandNormalizedSED("Black Body",
-                                  BlackBody(PosBigDecimal(BigDecimal(1)).withUnit[Kelvin])
-        )
+        extends BandNormalizedSED("Black Body", BlackBody(PosInt(1000).withUnit[Kelvin]))
     case object UserDefinedType
         extends BandNormalizedSED("User Defined",
                                   UserDefined(
@@ -213,15 +215,15 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    // val blackBodyTemperatureRSUOpt: Option[
-    //   RemoteSyncUndoable[Quantity[PosBigDecimal, Kelvin], Input[BigDecimal]]
-    // ] =
-    //   props.sedRSUOpt.flatMap(
-    //     _.zoomOpt(
-    //       UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
-    //       UnnormalizedSedInput.blackBodyTempK.modify
-    //     )
-    //   )
+    val blackBodyTemperatureRSUOpt: Option[RemoteSyncUndoable[PosInt, Input[BigDecimal]]] =
+      props.sedRSUOpt.flatMap(
+        _.zoomOpt(
+          UnnormalizedSED.blackBody
+            .andThen(UnnormalizedSED.BlackBody.temperature)
+            .andThen(coulombIso[PosInt, Kelvin].asLens),
+          UnnormalizedSedInput.blackBodyTempK.modify
+        )
+      )
 
     val currentType: SEDType =
       props.spectralDefinition.get match {
@@ -274,7 +276,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         .whenDefined,
       powerLawIndexRSUOpt
         .map(rsu =>
-          FormInputEV(
+          FormInputEV( // Power-law index can be any decimal
             id = "powerLawIndex",
             label = "Index",
             value = rsu.view(_.assign),
@@ -283,6 +285,20 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
             errorClazz = ExploreStyles.InputErrorTooltip,
             errorPointing = LabelPointing.Below
+          )
+        )
+        .whenDefined,
+      blackBodyTemperatureRSUOpt
+        .map(rsu =>
+          InputWithUnits( // Temperature is in K, a positive integer
+            rsu.view(t => BigDecimal(t.value).assign),
+            ValidFormatInput.forRefinedInt[Positive](),
+            ChangeAuditor
+              .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
+              .deny("-"),
+            label = "Temperature",
+            id = "bbTempK",
+            units = "°K"
           )
         )
         .whenDefined,

@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
