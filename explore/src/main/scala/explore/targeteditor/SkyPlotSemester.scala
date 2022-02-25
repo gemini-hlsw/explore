@@ -9,7 +9,6 @@ import cats.syntax.all._
 import crystal.react.hooks._
 import crystal.react.implicits._
 import explore.implicits._
-import explore.model.reusability._
 import fs2.Stream
 import gpp.highcharts.highchartsStrings.line
 import gpp.highcharts.mod.XAxisLabelsOptions

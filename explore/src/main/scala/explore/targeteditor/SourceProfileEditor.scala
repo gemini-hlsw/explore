@@ -3,28 +3,28 @@
 
 package explore.targeteditor
 
-import eu.timepit.refined.auto._
 import cats.data.NonEmptyChain
+import cats.data.Validated
 import cats.syntax.all._
+import clue.data.syntax._
+import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.model.reusability._
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Angle
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
-import react.common._
-import lucuma.core.math.Angle
-import lucuma.ui.optics.ValidFormatInput
-import clue.data.syntax._
-import cats.data.Validated
 import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.reusability._
+import react.common._
 
 case class SourceProfileEditor(
   sourceProfile:       RemoteSyncUndoable[SourceProfile, SourceProfileInput],
@@ -81,12 +81,9 @@ object SourceProfileEditor {
 
     <.div(
       ExploreStyles.BrightnessCell,
-      // TODO make some of the parameters optional in lucuma-ui
       EnumSelect[SourceProfileType](
         label = "Profile",
         value = currentType.some,
-        placeholder = "",
-        disabled = false,
         onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert)
       ),
       props.sourceProfile
@@ -110,7 +107,6 @@ object SourceProfileEditor {
       gaussianRSUOpt
         .map(gaussianRSU =>
           React.Fragment(
-            // <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits( // FWHM is positive arcsec accepting decimals
               gaussianRSU.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
               angleValidFormatInput,

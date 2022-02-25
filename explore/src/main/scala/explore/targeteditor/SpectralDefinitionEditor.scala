@@ -16,7 +16,9 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
+import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.optics._
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -34,20 +36,19 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional._
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
-import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.forms.EnumViewSelect
-import react.common.ReactFnProps
-
-import scala.collection.immutable.SortedMap
 import lucuma.ui.forms.FormInputEV
-import explore.components.ui.ExploreStyles
-import react.semanticui.elements.label.LabelPointing
-import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
-import explore.optics._
+import lucuma.ui.optics.ValidFormatInput
+import react.common.ReactFnProps
+import react.semanticui.elements.label.LabelPointing
+
+import scala.collection.immutable.HashSet
+import scala.collection.immutable.SortedMap
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
@@ -237,21 +238,15 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         case EmissionLines(_, _)                   => SEDType.EmissionLineType
         case BandNormalized(PowerLaw(_), _)        => SEDType.PowerLawType
         case BandNormalized(BlackBody(_), _)       => SEDType.BlackBodyType
-        case BandNormalized(UserDefined(_), _)     => SEDType.StellarLibraryType
-        // SEDType.UserDefinedType // Not supported in XT
+        case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
       }
-
-    // TODO Do we want this to be shared? Maybe move to lucuma-ui? Maybe it's already there?
-    implicit def displayEnumByTag[A: Enumerated]: Display[A] =
-      Display.byShortName(Enumerated[A].tag)
 
     <.div(
       EnumSelect[SEDType](
         label = "SED",
         value = currentType.some,
-        placeholder = "",
-        disabled = false,
-        onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert)
+        onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
+        disabledItems = HashSet(SEDType.UserDefinedType)
       ),
       stellarLibrarySpectrumRSUOpt
         .map(rsu => EnumViewSelect("slSpectrum", rsu.view(_.assign)))
