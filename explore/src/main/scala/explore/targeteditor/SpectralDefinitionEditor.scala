@@ -34,6 +34,7 @@ import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional._
+import lucuma.core.math.dimensional.Units._
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Enumerated
@@ -49,6 +50,7 @@ import react.semanticui.elements.label.LabelPointing
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.EmissionLine
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
@@ -60,6 +62,10 @@ sealed trait SpectralDefinitionEditor[T, S] {
   val sedRSUOpt: Option[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]
 
   val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
+
+  val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
+
+  val fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
 }
 
 sealed abstract class SpectralDefinitionEditorBuilder[
@@ -137,8 +143,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           PlanetaryNebulaType,
           EmissionLineType,
           PowerLawType,
-          BlackBodyType
-          // UserDefinedType // Not supported in XT
+          BlackBodyType,
+          UserDefinedType
         )
         .withTag(_.name)
   }
@@ -298,9 +304,26 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
         .whenDefined,
       props.bandBrightnessesViewOpt
-        .map(bandBrightnessesView =>
-          brightnessEditor(
-            bandBrightnessesView
+        .map(bandBrightnessesView => brightnessEditor(bandBrightnessesView))
+        .whenDefined,
+      props.fluxDensityContinuumOpt
+        .map(fluxDensityContinuum =>
+          React.Fragment(
+            FormInputEV( // [View, PosBigDecimal](
+              id = "fluxValue",
+              value = fluxDensityContinuum.zoom(
+                Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+              ),
+              validFormat = ValidFormatInput.forRefinedBigDecimal[Positive](),
+              changeAuditor = ChangeAuditor.fromValidFormatInput(
+                ValidFormatInput.forRefinedBigDecimal[Positive]()
+              )
+            ),
+            EnumViewSelect(
+              "Units",
+              fluxDensityContinuum
+                .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+            )
           )
         )
         .whenDefined
@@ -346,6 +369,33 @@ final case class IntegratedSpectralDefinitionEditor(
       )
         .view(_.toInput.assign)
     )
+
+  private val emissionLinesRSUOpt: Option[
+    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Integrated], EmissionLinesIntegratedInput]
+  ] =
+    spectralDefinition.zoomOpt(
+      SpectralDefinition.emissionLines[Integrated],
+      forceAssign(SpectralDefinitionIntegratedInput.emissionLines.modify)(
+        EmissionLinesIntegratedInput()
+      )
+    )
+
+  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
+             EmissionLinesIntegratedInput.lines.modify
+      )
+        .view(_.toInput.assign)
+    )
+
+  override val fluxDensityContinuumOpt
+    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
+             EmissionLinesIntegratedInput.fluxDensityContinuum.modify
+      )
+        .view(_.toInput.assign)
+    )
 }
 
 object IntegratedSpectralDefinitionEditor
@@ -366,6 +416,7 @@ final case class SurfaceSpectralDefinitionEditor(
       SurfaceSpectralDefinitionEditor.component
     )
     with SpectralDefinitionEditor[Surface, SpectralDefinitionSurfaceInput] {
+
   val toInput: SpectralDefinition[Surface] => SpectralDefinitionSurfaceInput = _.toInput
 
   private val bandNormalizedRSUOpt: Option[
@@ -391,6 +442,33 @@ final case class SurfaceSpectralDefinitionEditor(
     bandNormalizedRSUOpt.map(
       _.zoom(SpectralDefinition.BandNormalized.brightnesses[Surface],
              BandNormalizedSurfaceInput.brightnesses.modify
+      )
+        .view(_.toInput.assign)
+    )
+
+  private val emissionLinesRSUOpt: Option[
+    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Surface], EmissionLinesSurfaceInput]
+  ] =
+    spectralDefinition.zoomOpt(
+      SpectralDefinition.emissionLines[Surface],
+      forceAssign(SpectralDefinitionSurfaceInput.emissionLines.modify)(
+        EmissionLinesSurfaceInput()
+      )
+    )
+
+  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Surface]]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.lines[Surface],
+             EmissionLinesSurfaceInput.lines.modify
+      )
+        .view(_.toInput.assign)
+    )
+
+  override val fluxDensityContinuumOpt
+    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
+             EmissionLinesSurfaceInput.fluxDensityContinuum.modify
       )
         .view(_.toInput.assign)
     )

@@ -79,6 +79,22 @@ object TargetQueriesGQL {
                       error
                     }
                   }
+                  emissionLines {
+                    lines {
+                      wavelength {
+                        picometers
+                      }
+                      lineWidth
+                      lineFlux {
+                        value
+                        units
+                      }
+                    }
+                    fluxDensityContinuum {
+                      value
+                      units
+                    }
+                  }        
                 }
                 uniform {
                   bandNormalized {
@@ -106,6 +122,22 @@ object TargetQueriesGQL {
                       error
                     }
                   }
+                  emissionLines {
+                    lines {
+                      wavelength {
+                        picometers
+                      }
+                      lineWidth
+                      lineFlux {
+                        value
+                        units
+                      }
+                    }
+                    fluxDensityContinuum {
+                      value
+                      units
+                    }
+                  }        
                 }
                 gaussian {
                   fwhm {
@@ -134,6 +166,22 @@ object TargetQueriesGQL {
                       value
                       units
                       error
+                    }
+                  }
+                  emissionLines {
+                    lines {
+                      wavelength {
+                        picometers
+                      }
+                      lineWidth
+                      lineFlux {
+                        value
+                        units
+                      }
+                    }
+                    fluxDensityContinuum {
+                      value
+                      units
                     }
                   }
                 }
