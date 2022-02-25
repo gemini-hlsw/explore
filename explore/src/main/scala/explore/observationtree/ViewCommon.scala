@@ -7,7 +7,6 @@ import cats.syntax.all._
 import crystal.react.View
 import explore._
 import explore.components.ui.ExploreStyles
-import explore.model.FocusedObs
 import explore.model.ObsSummary
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
@@ -18,7 +17,7 @@ import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
-  def focusedObs: View[Option[FocusedObs]]
+  def focusedObs: View[Option[Observation.Id]]
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -27,8 +26,7 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      selected =
-        forceHighlight || (highlightSelected && focusedObs.get.exists(_ === FocusedObs(obs.id)))
+      selected = forceHighlight || (highlightSelected && focusedObs.get.exists(_ === obs.id))
     )
 
   def renderObsBadgeItem(
@@ -53,11 +51,11 @@ trait ViewCommon {
               (if (e.ctrlKey || e.metaKey)
                  onCtrlClick(obs.id)
                else
-                 (focusedObs.set(FocusedObs(obs.id).some) >> onSelect(obs.id)))
+                 (focusedObs.set(obs.id.some) >> onSelect(obs.id)))
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some)
+              ctx.setPage(explore.model.enum.AppTab.Observations, obs.id.some, None)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

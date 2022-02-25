@@ -15,13 +15,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AirMassRange
 import explore.model.ConstraintGroup
 import explore.model.ConstraintSet
-import explore.model.FocusedObs
 import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -43,7 +42,7 @@ final case class ConstraintsSummaryTable(
   hiddenColumns:  View[Set[String]],
   summarySorting: View[List[(String, Boolean)]],
   selectedPanel:  View[SelectedPanel[ObsIdSet]],
-  focusedObs:     View[Option[FocusedObs]],
+  focusedObs:     View[Option[Observation.Id]],
   expandedIds:    View[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
@@ -157,7 +156,7 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.focusedObs.set(FocusedObs(obsId).some)
+                        (props.focusedObs.set(obsId.some)
                           >> props.expandedIds.mod(_ + cell.value)
                           >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
                       ),

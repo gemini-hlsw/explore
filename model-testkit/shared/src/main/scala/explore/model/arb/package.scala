@@ -5,7 +5,6 @@ package explore.model.arb
 
 object all
     extends ArbTargetVisualOptions
-    with ArbFocusedObs
     with CogenUUID
     with ArbKeyedIndexedList
     with ArbTree

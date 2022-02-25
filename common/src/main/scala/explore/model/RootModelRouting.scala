@@ -4,58 +4,81 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import monocle.Lens
 
 object RootModelRouting {
 
   protected def getPage(model: RootModel): Page =
-    getPage(model.tabs.focus, model.focusedObs)
+    getPage(model.tabs.focus, model.focusedObs, model.focusedTarget)
 
-  def getPage(tab: AppTab, focusedObs: Option[FocusedObs]): Page =
+  def getPage(
+    tab:           AppTab,
+    focusedObs:    Option[Observation.Id],
+    focusedTarget: Option[Target.Id]
+  ): Page =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        focusedObs
-          .map(fo => ObsPage(fo.obsId))
-          .getOrElse(ObservationsBasePage)
+        (focusedObs, focusedTarget) match {
+          case (Some(obsId), Some(targetId)) => ObsTargetPage(obsId, targetId)
+          case (Some(obsId), _)              => ObsPage(obsId)
+          case _                             => ObservationsBasePage
+        }
       case AppTab.Targets        =>
-        focusedObs
-          .map(fo => TargetsObsPage(fo.obsId))
-          .getOrElse(TargetsBasePage)
+        (focusedObs, focusedTarget) match {
+          case (Some(obsId), _)    => TargetsObsPage(obsId)
+          case (_, Some(targetId)) => TargetPage(targetId)
+          case _                   => TargetsBasePage
+        }
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
-        focusedObs
-          .map(fo => ConstraintsObsPage(fo.obsId))
-          .getOrElse(ConstraintsBasePage)
+        focusedObs.map(ConstraintsObsPage(_)).getOrElse(ConstraintsBasePage)
     }
 
   protected def setTab(tab: AppTab): RootModel => RootModel =
     RootModel.tabs.modify(_.withFocus(tab))
 
+  protected def setFocusedObs(obsId: Observation.Id): RootModel => RootModel =
+    RootModel.focusedObs.replace(obsId.some)
+
+  protected val unsetFocusedObs: RootModel => RootModel =
+    RootModel.focusedObs.replace(none)
+
+  protected def setFocusedTarget(targetId: Target.Id): RootModel => RootModel =
+    RootModel.focusedTarget.replace(targetId.some)
+
+  protected val unsetFocusedTarget: RootModel => RootModel =
+    RootModel.focusedTarget.replace(none)
+
   protected def setPage(page: Page): RootModel => RootModel =
     page match {
-      case ProposalPage               => setTab(AppTab.Proposal) >>> RootModel.focusedObs.replace(none)
-      case ObservationsBasePage       =>
-        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(none)
-      case ObsPage(obsId)             =>
-        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
-      case ObsAdvancedConfPage(obsId) =>
-        setTab(AppTab.Observations) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
-      case TargetsBasePage            =>
-        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(none)
-      case TargetsObsPage(obsId)      =>
-        setTab(AppTab.Targets) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
-      case ConstraintsBasePage        =>
+      case ProposalPage                   => setTab(AppTab.Proposal) >>> unsetFocusedObs
+      case ObservationsBasePage           =>
+        setTab(AppTab.Observations) >>> unsetFocusedObs >>> unsetFocusedTarget
+      case ObsPage(obsId)                 =>
+        setTab(AppTab.Observations) >>> setFocusedObs(obsId)
+      case ObsTargetPage(obsId, targetId) =>
+        setTab(AppTab.Observations) >>> setFocusedObs(obsId) >>> setFocusedTarget(targetId)
+      case ObsAdvancedConfPage(obsId)     =>
+        setTab(AppTab.Observations) >>> setFocusedObs(obsId)
+      case TargetsBasePage                =>
+        setTab(AppTab.Targets) >>> unsetFocusedObs >>> unsetFocusedTarget
+      case TargetsObsPage(obsId)          =>
+        setTab(AppTab.Targets) >>> setFocusedObs(obsId)
+      case TargetPage(targetId)           =>
+        setTab(AppTab.Targets) >>> unsetFocusedObs >>> setFocusedTarget(targetId)
+      case ConstraintsBasePage            =>
         setTab(AppTab.Constraints)
-      case ConstraintsObsPage(obsId)  =>
-        setTab(AppTab.Constraints) >>> RootModel.focusedObs.replace(FocusedObs(obsId).some)
-      case ConfigurationsPage         =>
+      case ConstraintsObsPage(obsId)      =>
+        setTab(AppTab.Constraints) >>> setFocusedObs(obsId)
+      case ConfigurationsPage             =>
         setTab(AppTab.Configurations)
-      case HomePage                   =>
+      case HomePage                       =>
         setTab(AppTab.Overview)
     }
 

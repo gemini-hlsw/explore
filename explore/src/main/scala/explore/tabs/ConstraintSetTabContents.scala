@@ -29,6 +29,7 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -47,7 +48,7 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
-  focusedObs:       View[Option[FocusedObs]],
+  focusedObs:       View[Option[Observation.Id]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
@@ -160,7 +161,7 @@ object ConstraintSetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](state.zoom(selectedLens).set(SelectedPanel.tree))
-      )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Constraints, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
@@ -235,8 +236,8 @@ object ConstraintSetTabContents {
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
         val title = props.focusedObs.get match {
-          case Some(FocusedObs(id)) => s"Observation $id"
-          case None                 =>
+          case Some(id) => s"Observation $id"
+          case None     =>
             val titleSfx = if (idsToEdit.size == 1) "" else "s"
             s"Editing Constraints for ${idsToEdit.size} Observation$titleSfx"
         }

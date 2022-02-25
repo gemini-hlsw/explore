@@ -15,7 +15,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.AsterismGroup
-import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
@@ -50,7 +49,8 @@ import scala.collection.immutable.SortedSet
 
 final case class AsterismGroupObsList(
   asterismsWithObs: View[AsterismGroupsWithObs],
-  focusedObs:       View[Option[FocusedObs]],
+  focusedObs:       View[Option[Observation.Id]],
+  focusedTarget:    View[Option[Target.Id]],
   selected:         View[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
@@ -113,7 +113,7 @@ object AsterismGroupObsList {
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupsWithObs],
       expandedIds: View[SortedSet[ObsIdSet]],
-      focusedObs:  View[Option[FocusedObs]],
+      focusedObs:  View[Option[Observation.Id]],
       selected:    View[SelectedPanel[TargetOrObsSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
@@ -189,7 +189,8 @@ object AsterismGroupObsList {
         props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
 
       def setSelectedPanelToTarget(targetId: Target.Id): Callback =
-        props.focusedObs.set(none) >> props.selected.set(SelectedPanel.editor(targetId.asLeft))
+        props.focusedObs.set(none) >> props.focusedTarget.set(targetId.some) >>
+          props.selected.set(SelectedPanel.editor(targetId.asLeft))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.selected.get.optValue.flatMap(_.toOption).exists(_.exists(_ === obsId))
@@ -201,11 +202,11 @@ object AsterismGroupObsList {
         setSelectedPanelToSet(ObsIdSet.one(obsId))
 
       def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        props.focusedObs.set(FocusedObs(obsId).some) >>
+        props.focusedObs.set(obsId.some) >>
           setSelectedPanelToSingle(obsId)
 
       def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
-        val focused = obsIdSet.single.map(FocusedObs(_))
+        val focused = obsIdSet.single
         props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
       }
 
@@ -413,22 +414,25 @@ object AsterismGroupObsList {
 
       // Unfocus if focused element is not there
       val unfocus = $.props.focusedObs.mod(_.flatMap {
-        case FocusedObs(obsId) if !observations.contains(obsId) => none
-        case other                                              => other.some
+        case obsId if !observations.contains(obsId) => none
+        case other                                  => other.some
       })
 
       val setAndGetSelected: CallbackTo[Option[AsterismGroup]] = selected.get match {
         case Uninitialized =>
-          val infoFromFocused: Option[(Observation.Id, AsterismGroup)] =
-            $.props.focusedObs.get.flatMap(fo =>
-              (fo.obsId.some, asterismGroups.find(_._1.exists(_ === fo.obsId)).map(_._2)).tupled
-            )
-
+          val (optTorObs, optAG) =
+            ($.props.focusedObs.get, $.props.focusedTarget.get) match {
+              case (Some(obsId), _)    =>
+                (ObsIdSet.one(obsId).asRight.some,
+                 asterismGroups.find(_._1.exists(_ === obsId)).map(_._2)
+                )
+              case (_, Some(targetId)) =>
+                (targetId.asLeft.some, none)
+              case _                   => (none, none)
+            }
           selected
-            .set(infoFromFocused.fold(SelectedPanel.tree[TargetOrObsSet]) { case (id, _) =>
-              SelectedPanel.editor(ObsIdSet.one(id).asRight)
-            })
-            .as(infoFromFocused.map(_._2))
+            .set(optTorObs.fold(SelectedPanel.tree[TargetOrObsSet])(SelectedPanel.editor))
+            .as(optAG)
         case Editor(tOrOs) =>
           tOrOs match {
             case Left(_)       => CallbackTo(none)

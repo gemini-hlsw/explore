@@ -59,7 +59,8 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        View[Option[FocusedObs]],
+  focusedObs:        View[Option[Observation.Id]],
+  focusedTarget:     View[Option[Target.Id]],
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
@@ -173,6 +174,7 @@ object TargetTabContents {
         AsterismGroupObsList(
           objectsWithObs,
           props.focusedObs,
+          props.focusedTarget,
           selectedView,
           props.expandedIds,
           props.listUndoStacks
@@ -184,22 +186,25 @@ object TargetTabContents {
       agl:    AsterismGroupList
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
-    def selectObservation(
-      focusedObs:    View[Option[FocusedObs]],
+    def selectObservationAndTarget(
+      focusedObs:    View[Option[Observation.Id]],
+      focusedTarget: View[Option[Target.Id]],
       expandedIds:   View[SortedSet[ObsIdSet]],
       selectedPanel: View[SelectedPanel[TargetOrObsSet]],
-      obsId:         Observation.Id
+      obsId:         Observation.Id,
+      targetId:      Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
-        focusedObs.set(FocusedObs(obsId).some) >>
+        focusedObs.set(obsId.some) >>
+        focusedTarget.set(targetId.some) >>
         selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
     def selectTarget(
-      focusedObs:    View[Option[FocusedObs]],
+      focusedObs:    View[Option[Observation.Id]],
       selectedPanel: View[SelectedPanel[TargetOrObsSet]],
       targetId:      Target.Id
     ): Callback =
@@ -236,7 +241,7 @@ object TargetTabContents {
         onClickE = linkOverride[ButtonProps](
           selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Targets, none, none), Icons.ChevronLeft)
     )
 
     /**
@@ -250,9 +255,11 @@ object TargetTabContents {
           TargetSummaryTable(
             targetMap,
             props.hiddenColumns,
-            Reuse
-              .currying(props.focusedObs, props.expandedIds, selectedView)
-              .in(selectObservation _),
+            Reuse(selectObservationAndTarget _)(props.focusedObs,
+                                                props.focusedTarget,
+                                                props.expandedIds,
+                                                selectedView
+            ),
             Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
             renderInTitle
           ): VdomNode
@@ -341,13 +348,13 @@ object TargetTabContents {
         .zoom(getAsterism)(modAsterism)
 
       val title = focusedObs match {
-        case Some(FocusedObs(id)) => s"Observation $id"
-        case None                 =>
+        case Some(id) => s"Observation $id"
+        case None     =>
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
       val selectedTarget: Option[ViewOpt[Target]] =
-        asterismView.get.headOption.map(_.id).map { targetId =>
+        props.focusedTarget.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
@@ -361,6 +368,7 @@ object TargetTabContents {
           props.userId,
           idsToEdit,
           Pot(asterismView),
+          props.focusedTarget,
           props.targetsUndoStacks,
           props.searching,
           options,

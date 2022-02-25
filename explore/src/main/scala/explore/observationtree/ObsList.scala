@@ -17,7 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintsSummary
-import explore.model.FocusedObs
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
 import explore.model.reusability._
@@ -30,7 +29,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
@@ -45,7 +46,8 @@ import ObsQueries._
 
 final case class ObsList(
   observations:     View[ObservationList],
-  focusedObs:       View[Option[FocusedObs]],
+  focusedObs:       View[Option[Observation.Id]],
+  focusedTarget:    View[Option[Target.Id]],
   undoStacks:       View[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsList](ObsList.component)
@@ -63,7 +65,7 @@ object ObsList {
   protected class Backend {
     protected def insertObs(
       pos:        Int,
-      focusedObs: View[Option[FocusedObs]],
+      focusedObs: View[Option[Observation.Id]],
       undoCtx:    UndoContext[ObservationList]
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]
@@ -111,10 +113,13 @@ object ObsList {
                 )
               ),
               observations.toTagMod { obs =>
-                val focusedObs = FocusedObs(obs.id)
+                val focusedObs = obs.id
                 val selected   = props.focusedObs.get.exists(_ === focusedObs)
                 <.a(
-                  ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
+                  ^.href := ctx.pageUrl(AppTab.Observations,
+                                        focusedObs.some,
+                                        props.focusedTarget.get
+                  ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                   ^.onClick ==> linkOverride(
                     props.focusedObs.set(focusedObs.some)
@@ -152,8 +157,8 @@ object ObsList {
 
         // If focused observation does not exist anymore, then unfocus.
         $.props.focusedObs.mod(_.flatMap {
-          case FocusedObs(oid) if !observations.contains(oid) => none
-          case other                                          => other.some
+          case oid if !observations.contains(oid) => none
+          case other                              => other.some
         })
       }
       .componentDidUpdate { $ =>
@@ -162,14 +167,14 @@ object ObsList {
 
         // If focused observation does not exist anymore, then focus on closest one.
         $.currentProps.focusedObs.mod(_.flatMap {
-          case FocusedObs(oid) if !observations.contains(oid) =>
+          case oid if !observations.contains(oid) =>
             prevObservations
               .getIndex(oid)
               .flatMap { idx =>
                 observations.toList.get(math.min(idx, observations.length - 1).toLong)
               }
-              .map(newObs => FocusedObs(newObs.id))
-          case other                                          => other.some
+              .map(_.id)
+          case other                              => other.some
         })
       }
       .configure(Reusability.shouldComponentUpdate)

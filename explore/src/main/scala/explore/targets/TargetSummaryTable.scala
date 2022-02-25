@@ -32,7 +32,7 @@ import scalajs.js.JSConverters._
 final case class TargetSummaryTable(
   targetGroupList:   TargetGroupList,
   hiddenColumns:     View[Set[String]],
-  selectObservation: Observation.Id ==> Callback,
+  selectObservation: (Observation.Id, Target.Id) ==> Callback,
   selectTarget:      Target.Id ==> Callback,
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps[TargetSummaryTable](TargetSummaryTable.component)
@@ -86,7 +86,9 @@ object TargetSummaryTable {
                   cell.value
                     .map(obsId =>
                       <.a(
-                        ^.onClick ==> (_ => props.selectObservation(obsId)),
+                        ^.onClick ==> (_ =>
+                          props.selectObservation(obsId, cell.row.original.targetWithId.id)
+                        ),
                         obsId.toString
                       )
                     )

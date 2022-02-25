@@ -28,18 +28,19 @@ import react.common._
 object AsterismEditorTile {
 
   def asterismEditorTile(
-    userId:        Option[User.Id],
-    obsId:         ObsIdSet,
-    asterismPot:   Pot[View[List[TargetWithId]]],
-    undoStacks:    View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:     View[Set[Target.Id]],
-    options:       View[TargetVisualOptions],
-    title:         String,
-    backButton:    Option[Reuse[VdomNode]] = None,
-    hiddenColumns: View[Set[String]],
-    width:         Int,
-    height:        Int
-  )(implicit ctx:  AppContextIO) =
+    userId:           Option[User.Id],
+    obsId:            ObsIdSet,
+    asterismPot:      Pot[View[List[TargetWithId]]],
+    selectedTargetId: View[Option[Target.Id]],
+    undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:        View[Set[Target.Id]],
+    options:          View[TargetVisualOptions],
+    title:            String,
+    backButton:       Option[Reuse[VdomNode]] = None,
+    hiddenColumns:    View[Set[String]],
+    width:            Int,
+    height:           Int
+  )(implicit ctx:     AppContextIO) =
     Tile(ObsTabTiles.TargetId,
          title,
          back = backButton,
@@ -47,7 +48,17 @@ object AsterismEditorTile {
          bodyClass = ExploreStyles.AsterismEditorTileBody.some
     )(
       Reuse.by(
-        (userId, obsId, asterismPot, undoStacks, searching, options, hiddenColumns, width, height)
+        (userId,
+         obsId,
+         asterismPot,
+         selectedTargetId,
+         undoStacks,
+         searching,
+         options,
+         hiddenColumns,
+         width,
+         height
+        )
       ) { (renderInTitle: Tile.RenderInTitle) =>
         potRender[View[List[TargetWithId]]](
           (
@@ -56,6 +67,7 @@ object AsterismEditorTile {
                 AsterismEditor(uid,
                                obsId,
                                asterism,
+                               selectedTargetId,
                                undoStacks,
                                searching,
                                options,

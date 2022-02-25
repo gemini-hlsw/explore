@@ -42,6 +42,7 @@ final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
   asterism:         View[List[TargetWithId]],
+  selectedTargetId: View[Option[Target.Id]],
   undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:        View[Set[Target.Id]],
   options:          View[TargetVisualOptions],
@@ -86,24 +87,25 @@ object AsterismEditor {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      // selectedTargetIdState
-      .useStateBy(_.asterism.get.headOption.map(_.id))
       // adding
       .useState(false)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, _, adding) =>
+      .useEffectWithDepsBy((props, _) => props.asterism.get)((_, adding) =>
         _ => adding.setState(false)
       )
+      .useEffectWithDepsBy((props, _) => (props.asterism.get, props.selectedTargetId.get))(
+        (props, _) => { case (asterism, oTargetId) =>
+          // if the selected targetId is None, or not in the asterism, select the first target (if any)
+          oTargetId
+            .flatMap(id => if (asterism.exists(_.id === id)) id.some else none)
+            .fold(props.selectedTargetId.set(asterism.headOption.map(_.id)))(_ => Callback.empty)
+        }
+      )
       .useResizeDetector()
-      .renderWithReuse { (props, selectedTargetIdState, adding, resize) =>
+      .renderWithReuse { (props, adding, resize) =>
         implicit val ctx = props.ctx
 
-        // TODO We will add this generic state => view conversion in crystal
-        val selectedTargetId =
-          View[Option[Target.Id]](
-            selectedTargetIdState.value,
-            (mod, _) => selectedTargetIdState.modState(mod)
-          )
+        val selectedTargetId = props.selectedTargetId
 
         val targetTableHeight = props.asterism.get.length match {
           case 0 => 27

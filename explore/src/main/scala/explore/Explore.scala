@@ -18,7 +18,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
-import explore.model.FocusedObs
 import explore.model.RootModel
 import explore.model.RootModelRouting
 import explore.model.UserVault
@@ -33,6 +32,8 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.data.EnumZipper
+import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -148,11 +149,19 @@ object ExploreMain extends IOApp.Simple {
             router(routingView(view))
           )
 
-        def pageUrl(tab: AppTab, focusedObs: Option[FocusedObs]): String =
-          routerCtl.urlFor(RootModelRouting.getPage(tab, focusedObs)).value
+        def pageUrl(
+          tab:           AppTab,
+          focusedObs:    Option[Observation.Id],
+          focusedTarget: Option[Target.Id]
+        ): String =
+          routerCtl.urlFor(RootModelRouting.getPage(tab, focusedObs, focusedTarget)).value
 
-        def setPage(tab: AppTab, focusedObs: Option[FocusedObs]) =
-          routerCtl.set(RootModelRouting.getPage(tab, focusedObs))
+        def setPage(
+          tab:           AppTab,
+          focusedObs:    Option[Observation.Id],
+          focusedTarget: Option[Target.Id]
+        ) =
+          routerCtl.set(RootModelRouting.getPage(tab, focusedObs, focusedTarget))
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)

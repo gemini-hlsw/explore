@@ -39,7 +39,6 @@ import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -65,14 +64,15 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
-  focusedObs:       View[Option[FocusedObs]],
+  focusedObs:       View[Option[Observation.Id]],
+  focusedTarget:    View[Option[Target.Id]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   hiddenColumns:    View[Set[String]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
   def selectedPanel: SelectedPanel[Observation.Id] =
-    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(fo => SelectedPanel.editor(fo.obsId))
+    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
 }
 
 object ObsTabTiles {
@@ -302,6 +302,7 @@ object ObsTabContents {
         ObsList(
           observations,
           props.focusedObs,
+          props.focusedTarget,
           props.undoStacks.zoom(ModelUndoStacks.forObsList)
         )
       )
@@ -311,18 +312,9 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetInfo                        = obsSummaryOpt.collect {
-      case ObsSummaryWithTargetsAndConstraints(_,
-                                               List(TargetSummary(tid, _, coords)),
-                                               _,
-                                               _,
-                                               _,
-                                               _
-          ) =>
-        (tid, coords)
-    }
-    val targetId                          = targetInfo.map(_._1)
-    val targetCoords: Option[Coordinates] = targetInfo.flatMap(_._2)
+    val targetCoords = (obsSummaryOpt, props.focusedTarget.get)
+      .mapN((summ, id) => summ.targets.find(_.id === id).flatMap(_.coords))
+      .flatten
 
     val backButton = Reuse.always[VdomNode](
       Button(
@@ -332,7 +324,7 @@ object ObsTabContents {
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
-      )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Observations, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  =
@@ -379,7 +371,7 @@ object ObsTabContents {
            defaultLayout,
            layouts,
            notesTile,
-           targetId,
+           targetCoords,
            props.undoStacks,
            props.searching,
            options,
@@ -407,6 +399,7 @@ object ObsTabContents {
                 )
               )
             ),
+            props.focusedTarget,
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,

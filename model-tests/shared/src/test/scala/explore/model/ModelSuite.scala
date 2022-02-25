@@ -12,7 +12,6 @@ import munit.DisciplineSuite
 class ModelSuite extends DisciplineSuite {
   checkAll("Eq[TargetVisualOptions]", EqTests[TargetVisualOptions].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
-  checkAll("Eq[FocusedObs]", EqTests[FocusedObs].eqv)
   checkAll("Eq[UserVault]", EqTests[UserVault].eqv)
 
 }

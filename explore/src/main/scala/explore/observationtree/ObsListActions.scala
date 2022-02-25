@@ -12,7 +12,6 @@ import crystal.react.implicits._
 import explore.common.ObsQueriesGQL._
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.FocusedObs
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.optics.GetAdjust
 import explore.undo.Action
@@ -63,7 +62,7 @@ object ObsListActions {
         .void
   )
 
-  def obsExistence(obsId: Observation.Id, focusedObs: View[Option[FocusedObs]])(implicit
+  def obsExistence(obsId: Observation.Id, focusedObs: View[Option[Observation.Id]])(implicit
     c:                    TransactionalClient[IO, ObservationDB]
   ) =
     Action(
@@ -76,14 +75,14 @@ object ObsListActions {
           ProgramCreateObservation
             .execute[IO](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
             .void >>
-            focusedObs.set(FocusedObs(obs.id).some).to[IO]
+            focusedObs.set(obs.id.some).to[IO]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
           ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
           ProgramUndeleteObservation.execute[IO](obs.id).void >>
-            focusedObs.set(FocusedObs(obs.id).some).to[IO]
+            focusedObs.set(obs.id.some).to[IO]
         }
     )
 }
