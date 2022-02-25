@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.FocusedObs
 import explore.model.Page._
 import explore.model.enum.AppTab
 import lucuma.core.model.Observation
@@ -16,34 +15,36 @@ object RootModelRouting {
   protected def getPage(model: RootModel): Page =
     getPage(model.tabs.focus, model.focusedObs, model.focusedTarget)
 
-  def getPage(tab: AppTab, focusedObs: Option[FocusedObs], focusedTarget: Option[Target.Id]): Page =
+  def getPage(
+    tab:           AppTab,
+    focusedObs:    Option[Observation.Id],
+    focusedTarget: Option[Target.Id]
+  ): Page =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
         (focusedObs, focusedTarget) match {
-          case (Some(fo), Some(targetId)) => ObsTargetPage(fo.obsId, targetId)
-          case (Some(fo), _)              => ObsPage(fo.obsId)
-          case _                          => ObservationsBasePage
+          case (Some(obsId), Some(targetId)) => ObsTargetPage(obsId, targetId)
+          case (Some(obsId), _)              => ObsPage(obsId)
+          case _                             => ObservationsBasePage
         }
       case AppTab.Targets        =>
         (focusedObs, focusedTarget) match {
-          case (Some(fo), _)       => TargetsObsPage(fo.obsId)
+          case (Some(obsId), _)    => TargetsObsPage(obsId)
           case (_, Some(targetId)) => TargetPage(targetId)
           case _                   => TargetsBasePage
         }
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
-        focusedObs
-          .map(fo => ConstraintsObsPage(fo.obsId))
-          .getOrElse(ConstraintsBasePage)
+        focusedObs.map(ConstraintsObsPage(_)).getOrElse(ConstraintsBasePage)
     }
 
   protected def setTab(tab: AppTab): RootModel => RootModel =
     RootModel.tabs.modify(_.withFocus(tab))
 
   protected def setFocusedObs(obsId: Observation.Id): RootModel => RootModel =
-    RootModel.focusedObs.replace(FocusedObs(obsId).some)
+    RootModel.focusedObs.replace(obsId.some)
 
   protected val unsetFocusedObs: RootModel => RootModel =
     RootModel.focusedObs.replace(none)

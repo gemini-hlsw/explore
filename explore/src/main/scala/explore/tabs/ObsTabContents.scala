@@ -64,7 +64,7 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
-  focusedObs:       View[Option[FocusedObs]],
+  focusedObs:       View[Option[Observation.Id]],
   focusedTarget:    View[Option[Target.Id]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
@@ -72,7 +72,7 @@ final case class ObsTabContents(
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
   def selectedPanel: SelectedPanel[Observation.Id] =
-    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(fo => SelectedPanel.editor(fo.obsId))
+    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
 }
 
 object ObsTabTiles {

@@ -12,6 +12,7 @@ import explore.model.enum.AppTab
 import lucuma.core.data.EnumZipper
 import lucuma.core.enum.Band
 import lucuma.core.model.GuestUser
+import lucuma.core.model.Observation
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
@@ -25,7 +26,7 @@ case class RootModel(
   vault:                          Option[UserVault],
   tabs:                           EnumZipper[AppTab],
   localPreferences:               ExploreLocalPreferences,
-  focusedObs:                     Option[FocusedObs] = none,
+  focusedObs:                     Option[Observation.Id] = none,
   focusedTarget:                  Option[Target.Id] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[Target.Id] = HashSet.empty,

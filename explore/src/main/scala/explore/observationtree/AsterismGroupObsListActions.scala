@@ -14,12 +14,12 @@ import explore.common.AsterismQueries._
 import explore.common.TargetQueriesGQL
 import explore.implicits._
 import explore.model.AsterismGroup
-import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
 import explore.model.TargetGroup
 import explore.undo._
+import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 
@@ -169,12 +169,12 @@ object AsterismGroupObsListActions {
 
   private def updateSelected(
     selected:   View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
-    focusedObs: View[Option[FocusedObs]],
+    focusedObs: View[Option[Observation.Id]],
     draggedIds: ObsIdSet,
     optDestIds: Option[ObsIdSet]
   ) = {
     val ids     = optDestIds.fold(draggedIds)(_ ++ draggedIds)
-    val focused = ids.single.map(FocusedObs(_))
+    val focused = ids.single
     selected.mod(panel =>
       panel match {
         // If in edit mode, always edit the destination.
@@ -188,7 +188,7 @@ object AsterismGroupObsListActions {
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     selected:    View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
-    focusedObs:  View[Option[FocusedObs]]
+    focusedObs:  View[Option[Observation.Id]]
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds))(
       onSet = (agwo, oAsterismGroup) =>

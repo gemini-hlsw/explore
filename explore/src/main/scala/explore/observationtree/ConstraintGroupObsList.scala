@@ -15,7 +15,6 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintGroup
-import explore.model.FocusedObs
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
@@ -43,7 +42,7 @@ import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: View[ConstraintSummaryWithObervations],
-  focusedObs:         View[Option[FocusedObs]],
+  focusedObs:         View[Option[Observation.Id]],
   selected:           View[SelectedPanel[ObsIdSet]],
   expandedIds:        View[SortedSet[ObsIdSet]],
   undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
@@ -157,10 +156,10 @@ object ConstraintGroupObsList {
         setSelectedPanelToSet(ObsIdSet.one(obsId))
 
       def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        props.focusedObs.set(FocusedObs(obsId).some) >> setSelectedPanelToSingle(obsId)
+        props.focusedObs.set(obsId.some) >> setSelectedPanelToSingle(obsId)
 
       def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
-        val focused = if (obsIdSet.size === 1) FocusedObs(obsIdSet.head).some else none
+        val focused = obsIdSet.single
         props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
       }
 
@@ -287,15 +286,15 @@ object ConstraintGroupObsList {
 
       // Unfocus if focused element is not there
       val unfocus = $.props.focusedObs.mod(_.flatMap {
-        case FocusedObs(obsId) if !observations.contains(obsId) => none
-        case other                                              => other.some
+        case obsId if !observations.contains(obsId) => none
+        case other                                  => other.some
       })
 
       val setAndGetSelected = selected.get match {
         case Uninitialized =>
           val infoFromFocused: Option[(Observation.Id, ConstraintGroup)] =
-            $.props.focusedObs.get.flatMap(fo =>
-              constraintGroups.find(_._1.contains(fo.obsId)).map { case (_, cg) => (fo.obsId, cg) }
+            $.props.focusedObs.get.flatMap(obsId =>
+              constraintGroups.find(_._1.contains(obsId)).map { case (_, cg) => (obsId, cg) }
             )
 
           selected

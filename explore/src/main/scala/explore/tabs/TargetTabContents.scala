@@ -59,7 +59,7 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        View[Option[FocusedObs]],
+  focusedObs:        View[Option[Observation.Id]],
   focusedTarget:     View[Option[Target.Id]],
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
@@ -187,7 +187,7 @@ object TargetTabContents {
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
     def selectObservationAndTarget(
-      focusedObs:    View[Option[FocusedObs]],
+      focusedObs:    View[Option[Observation.Id]],
       focusedTarget: View[Option[Target.Id]],
       expandedIds:   View[SortedSet[ObsIdSet]],
       selectedPanel: View[SelectedPanel[TargetOrObsSet]],
@@ -198,13 +198,13 @@ object TargetTabContents {
       findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
-        focusedObs.set(FocusedObs(obsId).some) >>
+        focusedObs.set(obsId.some) >>
         focusedTarget.set(targetId.some) >>
         selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
     def selectTarget(
-      focusedObs:    View[Option[FocusedObs]],
+      focusedObs:    View[Option[Observation.Id]],
       selectedPanel: View[SelectedPanel[TargetOrObsSet]],
       targetId:      Target.Id
     ): Callback =
@@ -348,8 +348,8 @@ object TargetTabContents {
         .zoom(getAsterism)(modAsterism)
 
       val title = focusedObs match {
-        case Some(FocusedObs(id)) => s"Observation $id"
-        case None                 =>
+        case Some(id) => s"Observation $id"
+        case None     =>
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
