@@ -21,6 +21,7 @@ import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.util.Effect
+import lucuma.core.model.Target
 import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
@@ -103,8 +104,8 @@ case class AppContext[F[_]](
   staticData:  StaticData,
   actions:     Actions[F],
   sso:         SSOClient[F],
-  pageUrl:     (AppTab, Option[FocusedObs]) => String,
-  setPage:     (AppTab, Option[FocusedObs]) => Callback,
+  pageUrl:     (AppTab, Option[FocusedObs], Option[Target.Id]) => String,
+  setPage:     (AppTab, Option[FocusedObs], Option[Target.Id]) => Callback,
   environment: ExecutionEnvironment
 )(implicit
   val F:       Applicative[F],
@@ -116,8 +117,8 @@ object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[FocusedObs]) => String,
-    setPage:              (AppTab, Option[FocusedObs]) => Callback
+    pageUrl:              (AppTab, Option[FocusedObs], Option[Target.Id]) => String,
+    setPage:              (AppTab, Option[FocusedObs], Option[Target.Id]) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-

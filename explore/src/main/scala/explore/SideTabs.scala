@@ -47,7 +47,7 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
               onClickE = onClickE[ButtonProps](tab)
-            )(^.href := ctx.pageUrl(tab, none), tab.title)
+            )(^.href := ctx.pageUrl(tab, none, none), tab.title)
 
           def tab(tab: AppTab): Label =
             Label(
@@ -56,7 +56,7 @@ object SideTabs {
               clazz = ExploreStyles.TabSelector,
               size = Tiny,
               onClickE = onClickE[LabelProps](tab)
-            )(^.href := ctx.pageUrl(tab, none), tab.title)
+            )(^.href := ctx.pageUrl(tab, none, none), tab.title)
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
             case justOne :: Nil => VerticalSection()(tabButton(justOne))

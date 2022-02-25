@@ -65,6 +65,7 @@ import scala.concurrent.duration._
 final case class ObsTabContents(
   userId:           ViewOpt[User.Id],
   focusedObs:       View[Option[FocusedObs]],
+  focusedTarget:    View[Option[Target.Id]],
   undoStacks:       View[ModelUndoStacks[IO]],
   searching:        View[Set[Target.Id]],
   hiddenColumns:    View[Set[String]]
@@ -269,7 +270,6 @@ object ObsTabContents {
     layouts:            View[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
-    selectedTargetId:   View[Option[Target.Id]],
     obsWithConstraints: View[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
@@ -302,6 +302,7 @@ object ObsTabContents {
         ObsList(
           observations,
           props.focusedObs,
+          props.focusedTarget,
           props.undoStacks.zoom(ModelUndoStacks.forObsList)
         )
       )
@@ -311,7 +312,7 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetCoords = (obsSummaryOpt, selectedTargetId.get)
+    val targetCoords = (obsSummaryOpt, props.focusedTarget.get)
       .mapN((summ, id) => summ.targets.find(_.id === id).flatMap(_.coords))
       .flatten
 
@@ -323,7 +324,7 @@ object ObsTabContents {
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
-      )(^.href := ctx.pageUrl(AppTab.Observations, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Observations, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  =
@@ -398,7 +399,7 @@ object ObsTabContents {
                 )
               )
             ),
-            selectedTargetId,
+            props.focusedTarget,
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,
@@ -525,11 +526,10 @@ object ObsTabContents {
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .useStateView(none[Target.Id])
-      .renderWithReuse { (props, panels, options, layouts, resize, debouncer, selectedTargetId) =>
+      .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
         ObsLiveQuery(
-          Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer, selectedTargetId)
+          Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
         )
       }
 

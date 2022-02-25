@@ -160,7 +160,7 @@ object ConstraintSetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](state.zoom(selectedLens).set(SelectedPanel.tree))
-      )(^.href := ctx.pageUrl(AppTab.Constraints, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Constraints, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth

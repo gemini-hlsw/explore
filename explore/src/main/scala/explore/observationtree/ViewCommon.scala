@@ -57,7 +57,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some)
+              ctx.setPage(explore.model.enum.AppTab.Observations, FocusedObs(obs.id).some, None)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

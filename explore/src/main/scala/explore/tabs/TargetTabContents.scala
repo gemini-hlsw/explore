@@ -60,6 +60,7 @@ import scala.concurrent.duration._
 final case class TargetTabContents(
   userId:            Option[User.Id],
   focusedObs:        View[Option[FocusedObs]],
+  focusedTarget:     View[Option[Target.Id]],
   listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         View[Set[Target.Id]],
@@ -145,7 +146,6 @@ object TargetTabContents {
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
-    selectedTargetId:     View[Option[Target.Id]],
     asterismGroupWithObs: View[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
@@ -174,6 +174,7 @@ object TargetTabContents {
         AsterismGroupObsList(
           objectsWithObs,
           props.focusedObs,
+          props.focusedTarget,
           selectedView,
           props.expandedIds,
           props.listUndoStacks
@@ -185,17 +186,20 @@ object TargetTabContents {
       agl:    AsterismGroupList
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
-    def selectObservation(
+    def selectObservationAndTarget(
       focusedObs:    View[Option[FocusedObs]],
+      focusedTarget: View[Option[Target.Id]],
       expandedIds:   View[SortedSet[ObsIdSet]],
       selectedPanel: View[SelectedPanel[TargetOrObsSet]],
-      obsId:         Observation.Id
+      obsId:         Observation.Id,
+      targetId:      Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         focusedObs.set(FocusedObs(obsId).some) >>
+        focusedTarget.set(targetId.some) >>
         selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
@@ -237,7 +241,7 @@ object TargetTabContents {
         onClickE = linkOverride[ButtonProps](
           selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Targets, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Targets, none, none), Icons.ChevronLeft)
     )
 
     /**
@@ -251,9 +255,11 @@ object TargetTabContents {
           TargetSummaryTable(
             targetMap,
             props.hiddenColumns,
-            Reuse
-              .currying(props.focusedObs, props.expandedIds, selectedView)
-              .in(selectObservation _),
+            Reuse(selectObservationAndTarget _)(props.focusedObs,
+                                                props.focusedTarget,
+                                                props.expandedIds,
+                                                selectedView
+            ),
             Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
             renderInTitle
           ): VdomNode
@@ -348,7 +354,7 @@ object TargetTabContents {
       }
 
       val selectedTarget: Option[ViewOpt[Target]] =
-        selectedTargetId.get.map { targetId =>
+        props.focusedTarget.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
@@ -362,7 +368,7 @@ object TargetTabContents {
           props.userId,
           idsToEdit,
           Pot(asterismView),
-          selectedTargetId,
+          props.focusedTarget,
           props.targetsUndoStacks,
           props.searching,
           options,
@@ -532,26 +538,11 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .useStateView(none[Target.Id])
-      .renderWithReuse {
-        (props, tps, opts, resize, layout, defaultLayout, debouncer, selectedTargetId) =>
-          implicit val ctx = props.ctx
-          AsterismGroupLiveQuery(
-            Reuse
-              .by((props, tps, opts, defaultLayout, layout, resize, debouncer, selectedTargetId)) {
-                agwo =>
-                  renderFn(props,
-                           tps,
-                           opts,
-                           defaultLayout,
-                           layout,
-                           resize,
-                           debouncer,
-                           selectedTargetId,
-                           agwo
-                  )
-              }
-          )
+      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
+        implicit val ctx = props.ctx
+        AsterismGroupLiveQuery(
+          Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
+        )
       }
 
 }

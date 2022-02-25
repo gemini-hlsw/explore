@@ -26,6 +26,7 @@ case class RootModel(
   tabs:                           EnumZipper[AppTab],
   localPreferences:               ExploreLocalPreferences,
   focusedObs:                     Option[FocusedObs] = none,
+  focusedTarget:                  Option[Target.Id] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[Target.Id] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
@@ -42,6 +43,7 @@ case class RootModel(
 object RootModel {
   val vault                          = Focus[RootModel](_.vault)
   val focusedObs                     = Focus[RootModel](_.focusedObs)
+  val focusedTarget                  = Focus[RootModel](_.focusedTarget)
   val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
   val tabs                           = Focus[RootModel](_.tabs)
   val searchingTarget                = Focus[RootModel](_.searchingTarget)
@@ -72,6 +74,7 @@ object RootModel {
        m.tabs,
        m.localPreferences,
        m.focusedObs,
+       m.focusedTarget,
        m.expandedIds,
        m.searchingTarget,
        m.userSelectionMessage,

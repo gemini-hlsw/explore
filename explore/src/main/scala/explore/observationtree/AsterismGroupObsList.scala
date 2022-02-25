@@ -51,6 +51,7 @@ import scala.collection.immutable.SortedSet
 final case class AsterismGroupObsList(
   asterismsWithObs: View[AsterismGroupsWithObs],
   focusedObs:       View[Option[FocusedObs]],
+  focusedTarget:    View[Option[Target.Id]],
   selected:         View[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
   expandedIds:      View[SortedSet[ObsIdSet]],
   undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
@@ -189,7 +190,8 @@ object AsterismGroupObsList {
         props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
 
       def setSelectedPanelToTarget(targetId: Target.Id): Callback =
-        props.focusedObs.set(none) >> props.selected.set(SelectedPanel.editor(targetId.asLeft))
+        props.focusedObs.set(none) >> props.focusedTarget.set(targetId.some) >>
+          props.selected.set(SelectedPanel.editor(targetId.asLeft))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.selected.get.optValue.flatMap(_.toOption).exists(_.exists(_ === obsId))
@@ -419,16 +421,19 @@ object AsterismGroupObsList {
 
       val setAndGetSelected: CallbackTo[Option[AsterismGroup]] = selected.get match {
         case Uninitialized =>
-          val infoFromFocused: Option[(Observation.Id, AsterismGroup)] =
-            $.props.focusedObs.get.flatMap(fo =>
-              (fo.obsId.some, asterismGroups.find(_._1.exists(_ === fo.obsId)).map(_._2)).tupled
-            )
-
+          val (optTorObs, optAG) =
+            ($.props.focusedObs.get, $.props.focusedTarget.get) match {
+              case (Some(FocusedObs(obsId)), _) =>
+                (ObsIdSet.one(obsId).asRight.some,
+                 asterismGroups.find(_._1.exists(_ === obsId)).map(_._2)
+                )
+              case (_, Some(targetId))          =>
+                (targetId.asLeft.some, none)
+              case _                            => (none, none)
+            }
           selected
-            .set(infoFromFocused.fold(SelectedPanel.tree[TargetOrObsSet]) { case (id, _) =>
-              SelectedPanel.editor(ObsIdSet.one(id).asRight)
-            })
-            .as(infoFromFocused.map(_._2))
+            .set(optTorObs.fold(SelectedPanel.tree[TargetOrObsSet])(SelectedPanel.editor))
+            .as(optAG)
         case Editor(tOrOs) =>
           tOrOs match {
             case Left(_)       => CallbackTo(none)

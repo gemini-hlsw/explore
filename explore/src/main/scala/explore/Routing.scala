@@ -18,10 +18,10 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
 
-import scala.annotation.unused
 import scala.scalajs.LinkingInfo
 import scala.util.Random
 
@@ -38,11 +38,12 @@ object Routing {
       )
     }
 
-  private def targetTab(@unused model: View[RootModel]): VdomElement =
+  private def targetTab(model: View[RootModel]): VdomElement =
     AppCtx.using(implicit ctx =>
       TargetTabContents(
         model.zoom(RootModel.userId).get,
         model.zoom(RootModel.focusedObs),
+        model.zoom(RootModel.focusedTarget),
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
         model.zoom(RootModel.searchingTarget),
@@ -56,6 +57,7 @@ object Routing {
       ObsTabContents(
         model.zoom(RootModel.userId),
         model.zoom(RootModel.focusedObs),
+        model.zoom(RootModel.focusedTarget),
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.targetSummaryHiddenColumns)
@@ -85,7 +87,8 @@ object Routing {
       import dsl._
 
       def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
-        string(gid.regexPattern).pmapL(gid.fromString)
+        // We can't use gid.regexPattern because capture groups don't work here.
+        string(s"${gid.tag.value.toString}-[1-9a-f][0-9a-f]*").pmapL(gid.fromString)
 
       val rules =
         (emptyRule
@@ -94,10 +97,21 @@ object Routing {
             AppCtx.using(implicit ctx => ProposalTabContents())
           )
           | staticRoute("/observations", ObservationsBasePage) ~> renderP(obsTab)
+          | dynamicRouteCT(
+            ("/observation" / id[Observation.Id] / "target" / id[Target.Id])
+              .xmapL(ObsTargetPage.iso)
+          ) ~> renderP(
+            obsTab
+          )
           | dynamicRouteCT(("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(
             obsTab
           )
           | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
+          | dynamicRouteCT(
+            ("/target" / id[Target.Id]).xmapL(TargetPage.targetId)
+          ) ~> renderP(
+            targetTab
+          )
           | dynamicRouteCT(
             ("/targets/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
           ) ~> renderP(
@@ -137,8 +151,10 @@ object Routing {
             ProposalPage,
             ObservationsBasePage,
             ObsPage(randomId(Observation.Id.fromLong)),
+            ObsTargetPage(randomId(Observation.Id.fromLong), randomId(Target.Id.fromLong)),
             TargetsBasePage,
             TargetsObsPage(randomId(Observation.Id.fromLong)),
+            TargetPage(randomId(Target.Id.fromLong)),
             ConfigurationsPage,
             ConstraintsBasePage
           )

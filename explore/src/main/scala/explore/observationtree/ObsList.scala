@@ -30,7 +30,9 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import react.common.ReactProps
 import react.common.implicits._
@@ -46,6 +48,7 @@ import ObsQueries._
 final case class ObsList(
   observations:     View[ObservationList],
   focusedObs:       View[Option[FocusedObs]],
+  focusedTarget:    View[Option[Target.Id]],
   undoStacks:       View[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsList](ObsList.component)
@@ -114,7 +117,10 @@ object ObsList {
                 val focusedObs = FocusedObs(obs.id)
                 val selected   = props.focusedObs.get.exists(_ === focusedObs)
                 <.a(
-                  ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some),
+                  ^.href := ctx.pageUrl(AppTab.Observations,
+                                        focusedObs.some,
+                                        props.focusedTarget.get
+                  ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                   ^.onClick ==> linkOverride(
                     props.focusedObs.set(focusedObs.some)
