@@ -566,7 +566,8 @@ object SpectroscopyModesTable {
                   rangeChanged = (
                     (range: ListRange) => visibleRange.setState(range.some)
                   ).some,
-                  atTopChange = ((value: Boolean) => atTop.setState(value)).some
+                  atTopChange = ((value: Boolean) => atTop.setState(value)).some,
+                  emptyMessage = "No matching modes"
                 )
                 .withRef(virtuosoRef),
               scrollButton(

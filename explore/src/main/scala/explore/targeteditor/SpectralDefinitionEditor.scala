@@ -79,6 +79,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   import UnnormalizedSED._
 
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
+  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
 
   private def toBandNormalized[T](
     sed: UnnormalizedSED
@@ -309,8 +310,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       props.fluxDensityContinuumOpt
         .map(fluxDensityContinuum =>
           React.Fragment(
-            FormInputEV( // [View, PosBigDecimal](
+            FormInputEV(
               id = "fluxValue",
+              label = "Continuum",
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),
@@ -326,7 +328,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           )
         )
-        .whenDefined
+        .whenDefined,
+      props.emissionLinesViewOpt.map(emissionLineEditor)
     )
   }
 
@@ -405,6 +408,10 @@ object IntegratedSpectralDefinitionEditor
     ] {
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
     brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
+
+  protected val emissionLineEditor
+    : View[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
+    emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
 }
 
 final case class SurfaceSpectralDefinitionEditor(
@@ -481,4 +488,8 @@ object SurfaceSpectralDefinitionEditor
     ] {
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
     brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
+
+  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
+    emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
+
 }

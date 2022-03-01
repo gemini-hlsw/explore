@@ -45,7 +45,8 @@ class SUITableVirtuoso[D, Plugins](
     val initialIndex:   Option[Int] = None,
     val rangeChanged:   Option[ListRange => Callback] = None,
     val atTopChange:    Option[Boolean => Callback] = None,
-    val atBottomChange: Option[Boolean => Callback] = None
+    val atBottomChange: Option[Boolean => Callback] = None,
+    val emptyMessage:   String = ""
   ) extends ReactPropsForwardRef[Component, RefType](component)
 
   def createRef = Ref.toJsComponent(GroupedVirtuoso.component)
@@ -196,7 +197,7 @@ class SUITableVirtuoso[D, Plugins](
               atBottomStateChange = props.atBottomChange.orUndefined
             )(ExploreStyles.TBody).withOptionalRef(ref)
           ),
-          TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
+          TagMod.when(tableInstance.rows.isEmpty)(props.emptyMessage)
         )
 
       def standardFooter(footerTag: TableFooter) =
