@@ -17,8 +17,6 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import explore.components.ui.ExploreStyles
-import explore.implicits._
-import explore.optics._
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -47,6 +45,7 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
+import explore.implicits._
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -223,12 +222,11 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    val blackBodyTemperatureRSUOpt: Option[RemoteSyncUndoable[PosInt, Input[BigDecimal]]] =
+    val blackBodyTemperatureRSUOpt
+      : Option[RemoteSyncUndoable[Quantity[PosInt, Kelvin], Input[BigDecimal]]] =
       props.sedRSUOpt.flatMap(
         _.zoomOpt(
-          UnnormalizedSED.blackBody
-            .andThen(UnnormalizedSED.BlackBody.temperature)
-            .andThen(coulombIso[PosInt, Kelvin].asLens),
+          UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
           UnnormalizedSedInput.blackBodyTempK.modify
         )
       )
@@ -293,7 +291,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       blackBodyTemperatureRSUOpt
         .map(rsu =>
           InputWithUnits( // Temperature is in K, a positive integer
-            rsu.view(t => BigDecimal(t.value).assign),
+            rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
             ValidFormatInput.forRefinedInt[Positive](),
             ChangeAuditor
               .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())

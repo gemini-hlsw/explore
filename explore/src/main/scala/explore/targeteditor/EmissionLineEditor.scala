@@ -37,7 +37,9 @@ import explore.model.formats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import lucuma.core.math.units._
 import coulomb._
-import explore.utils.ReactTableHelpers
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.cats._
+import lucuma.ui.forms.EnumViewSelect
 
 sealed trait EmissionLineEditor[T] {
   val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
@@ -57,40 +59,82 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private val EmissionLineTableComponent = new SUITableVirtuoso(EmissionLineTable)
 
-  private val deleteButton = Button(
-    size = Small,
-    compact = true,
-    clazz = ExploreStyles.DeleteButton
-  )(
-    Icons.Trash
-  )
-
   private val tableState = EmissionLineTable.State().setSortBy(SortingRule("wavelength"))
 
   val component = ScalaFnComponent
     .withHooks[Props]
     .useMemoBy(props => (props.emissionLines, props.disabled)) { _ => // Memo cols
       { case (emissionLines, disabled) =>
-        val deleteFn: Wavelength => Callback =
-          w => emissionLines.mod(_ - w)
-
         List(
           EmissionLineTable
             .Column("wavelength", _._1)
-            .setHeader("Wavelength")
+            .setHeader(_ => <.span(ExploreStyles.TextPlain, "λ (µm)"))
             .setCell(cell => Wavelength.decimalMicrometers.reverseGet(cell.value).toString)
             .setWidth(80)
             .setMinWidth(80)
             .setMaxWidth(80)
             .setSortByAuto,
           EmissionLineTable
-            .Column("delete", _._1)
-            .setCell(
-              ReactTableHelpers.buttonViewColumn(
-                button = deleteButton,
-                onClick = deleteFn,
+            .Column(
+              "width",
+              _._2.zoom(EmissionLine.lineWidth[T]).stripQuantity
+            )
+            .setHeader("Width (km/s)")
+            .setCell(cell =>
+              FormInputEV[View, PosBigDecimal](
+                id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
+                value = cell.value,
+                validFormat = ValidFormatInput.fromFormat(formatPosBigDecimal),
+                changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).decimal(3).allowEmpty,
+                disabled = disabled
+              )
+            ),
+          EmissionLineTable
+            .Column(
+              "lineValue",
+              _._2.zoom(
+                EmissionLine.lineFlux.andThen(Measure.valueTagged[PosBigDecimal, LineFlux[T]])
+              )
+            )
+            .setHeader("Brightness")
+            .setCell(cell =>
+              FormInputEV[View, PosBigDecimal](
+                id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
+                value = cell.value,
+                validFormat = ValidFormatInput.fromFormat(formatPosBigDecimal),
+                changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).decimal(3).allowEmpty,
+                disabled = disabled
+              )
+            ),
+          EmissionLineTable
+            .Column(
+              "lineUnits",
+              _._2.zoom(
+                EmissionLine.lineFlux.andThen(Measure.unitsTagged[PosBigDecimal, LineFlux[T]])
+              )
+            )
+            .setHeader("Units")
+            .setCell(cell =>
+              EnumViewSelect[View, Units Of LineFlux[T]](
+                id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
+                value = cell.value,
+                compact = true,
                 disabled = disabled,
-                wrapperClass = ExploreStyles.BrightnessesTableDeletButtonWrapper
+                clazz = ExploreStyles.BrightnessesTableUnitsDropdown
+              )
+            ),
+          EmissionLineTable
+            .Column("delete", _._1)
+            .setCell(cell =>
+              <.div(
+                ExploreStyles.BrightnessesTableDeletButtonWrapper,
+                Button(
+                  size = Small,
+                  compact = true,
+                  clazz = ExploreStyles.DeleteButton,
+                  disabled = disabled,
+                  onClick = emissionLines.mod(_ - cell.value)
+                )(Icons.Trash)
               )
             )
             .setWidth(46)
@@ -137,7 +181,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             value = newWavelength,
             validFormat = ValidFormatInput.fromFormatOptional(formatWavelengthMicron),
             changeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional,
-            onTextChange = s => Callback.log(s) >> addDisabled.set(s.isEmpty)
+            onTextChange = s => addDisabled.set(s.isEmpty)
           ),
           Button(size = Mini,
                  compact = true,
