@@ -176,6 +176,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       val footer =
         <.div(
           ExploreStyles.BrightnessesTableFooter,
+          "New line λ: ",
           FormInputEV(
             id = "newWavelength",
             value = newWavelength,
@@ -183,6 +184,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             changeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional,
             onTextChange = s => addDisabled.set(s.isEmpty)
           ),
+          "μm",
           Button(size = Mini,
                  compact = true,
                  onClick = addLine,
