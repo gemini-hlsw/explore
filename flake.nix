@@ -25,7 +25,6 @@
           packages = [
             pkgs.nodePackages.vscode-langservers-extracted
             pkgs.nodePackages.prettier
-            pkgs.coursier
           ];
           typelevelShell = {
             nodejs.enable = true;
