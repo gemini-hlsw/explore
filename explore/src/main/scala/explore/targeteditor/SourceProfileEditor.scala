@@ -7,6 +7,7 @@ import cats.data.NonEmptyChain
 import cats.data.Validated
 import cats.syntax.all._
 import clue.data.syntax._
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -25,7 +26,6 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-import crystal.react.reuse._
 
 case class SourceProfileEditor(
   sourceProfile:       RemoteSyncUndoable[SourceProfile, SourceProfileInput],

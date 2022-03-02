@@ -3,42 +3,43 @@
 
 package explore.targeteditor
 
+import cats.Order._
 import cats.syntax.all._
+import coulomb._
 import crystal.react.View
-import lucuma.core.math.dimensional._
-import lucuma.core.math.BrightnessUnits._
-import lucuma.core.util.Enumerated
-import scala.collection.immutable.SortedMap
-import lucuma.core.math.Wavelength
-import lucuma.core.model.EmissionLine
+import crystal.react.hooks._
+import crystal.react.implicits._
+import crystal.react.reuse._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
+import explore.components.ui.ExploreStyles
+import explore.implicits._
+import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common._
-import crystal.react.implicits._
+import lucuma.core.math.BrightnessUnits._
+import lucuma.core.math.Wavelength
+import lucuma.core.math.dimensional._
+import lucuma.core.math.units._
+import lucuma.core.model.EmissionLine
+import lucuma.core.util.Enumerated
+import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
-import reactST.reactTable._
-import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
-import explore.components.ui.ExploreStyles
-import explore.Icons
-import reactST.reactTable.mod.SortingRule
-import cats.Order._
-import explore.implicits._
-import crystal.react.reuse._
+import react.common._
 import react.common.implicits._
 import react.semanticui.collections.table._
-import crystal.react.hooks._
-import lucuma.ui.forms.FormInputEV
-import eu.timepit.refined.auto._
-import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.optics.ChangeAuditor
-import explore.model.formats._
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import lucuma.core.math.units._
-import coulomb._
-import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.cats._
-import lucuma.ui.forms.EnumViewSelect
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes._
+import reactST.reactTable._
+import reactST.reactTable.mod.SortingRule
+
+import scala.collection.immutable.SortedMap
 
 sealed trait EmissionLineEditor[T] {
   val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]

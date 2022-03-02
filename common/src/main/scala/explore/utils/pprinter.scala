@@ -3,11 +3,12 @@
 
 package explore.utils
 
-import cats.syntax.all._
-import scala.scalajs.LinkingInfo
-import pprint.PPrinter
-import org.typelevel.log4cats.Logger
 import cats.Monad
+import cats.syntax.all._
+import org.typelevel.log4cats.Logger
+import pprint.PPrinter
+
+import scala.scalajs.LinkingInfo
 
 trait pprinter {
   def apply(x: Any): String

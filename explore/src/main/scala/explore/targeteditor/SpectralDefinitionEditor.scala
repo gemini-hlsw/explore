@@ -11,12 +11,15 @@ import clue.data.syntax._
 import coulomb._
 import coulomb.si.Kelvin
 import crystal.react.View
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.string
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -31,8 +34,9 @@ import lucuma.core.enum.QuasarSpectrum
 import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional._
 import lucuma.core.math.dimensional.Units._
+import lucuma.core.math.dimensional._
+import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Enumerated
@@ -46,13 +50,9 @@ import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
-import explore.implicits._
-import crystal.react.reuse._
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.EmissionLine
-import eu.timepit.refined.types.string
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
