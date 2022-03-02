@@ -25,6 +25,7 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
+import crystal.react.reuse._
 
 case class SourceProfileEditor(
   sourceProfile:       RemoteSyncUndoable[SourceProfile, SourceProfileInput],
@@ -63,7 +64,8 @@ object SourceProfileEditor {
       a => (a.toMicroarcseconds / 1000000.0).toString
     )
 
-  protected val component = ScalaFnComponent.withReuse[Props] { props =>
+  protected val component = ScalaFnComponent[Props] // .withReuse[Props]
+  { props =>
     implicit val appCtx = props.appCtx
 
     val currentType: SourceProfileType = props.sourceProfile.get match {
@@ -81,10 +83,12 @@ object SourceProfileEditor {
 
     <.div(
       ExploreStyles.BrightnessCell,
-      EnumSelect[SourceProfileType](
+      EnumSelect(
         label = "Profile",
         value = currentType.some,
-        onChange = sp => props.sourceProfile.view(_.toInput).mod(sp.convert)
+        onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
+          props.sourceProfile.view(_.toInput).mod(sp.convert)
+        )
       ),
       props.sourceProfile
         .zoomOpt(

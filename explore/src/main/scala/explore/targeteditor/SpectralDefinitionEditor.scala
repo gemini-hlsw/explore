@@ -43,9 +43,11 @@ import lucuma.ui.forms.FormInputEV
 import lucuma.ui.implicits._
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.semanticui.elements.label.LabelPointing
 import explore.implicits._
+import crystal.react.reuse._
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -250,7 +252,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       EnumSelect[SEDType](
         label = "SED",
         value = currentType.some,
-        onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert),
+        onChange = Reuse.by(props.spectralDefinition)((sed: SEDType) =>
+          props.spectralDefinition.view(props.toInput).mod(sed.convert)
+        ),
         disabledItems = HashSet(SEDType.UserDefinedType)
       ),
       stellarLibrarySpectrumRSUOpt
