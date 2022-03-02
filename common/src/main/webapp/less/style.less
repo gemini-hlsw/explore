@@ -199,6 +199,10 @@ body.light-theme {
   text-transform: none;
 }
 
+.explore-text-nowrap {
+  white-space: nowrap;
+}
+
 tfoot {
   background-color: var(--table-footer-background);
 }
@@ -1259,7 +1263,6 @@ img.partner-split-flag {
 
 .explore-table {
   position: relative;
-  grid-area: table;
   overflow-y: hidden;
   height: 100%;
   border: 0.2px solid var(--site-border-color);
@@ -1304,10 +1307,10 @@ img.partner-split-flag {
 }
 
 .explore-brightnesses-container {
+  grid-column: span 3;
   display: flex;
   flex-direction: column;
   border: none;
-  height: 300px; // This is temporary
 
   .table {
     margin: 0;

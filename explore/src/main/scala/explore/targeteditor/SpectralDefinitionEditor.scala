@@ -52,6 +52,7 @@ import crystal.react.reuse._
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 import lucuma.core.model.EmissionLine
+import eu.timepit.refined.types.string
 
 sealed trait SpectralDefinitionEditor[T, S] {
   val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
@@ -248,73 +249,78 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
       }
 
-    <.div(
+    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: View[T]) =
+      React.Fragment(
+        <.span,
+        EnumViewSelect(id, view),
+        <.span
+      )
+
+    React.Fragment(
+      <.label("SED", ExploreStyles.SkipToNext),
       EnumSelect[SEDType](
-        label = "SED",
+        label = "",
         value = currentType.some,
         onChange = Reuse.by(props.spectralDefinition)((sed: SEDType) =>
           props.spectralDefinition.view(props.toInput).mod(sed.convert)
         ),
         disabledItems = HashSet(SEDType.UserDefinedType)
       ),
+      <.span,
       stellarLibrarySpectrumRSUOpt
-        .map(rsu => EnumViewSelect("slSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("slSpectrum", rsu.view(_.assign))),
       coolStarTemperatureRSUOpt
-        .map(rsu => EnumViewSelect("csTemp", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("csTemp", rsu.view(_.assign))),
       galaxySpectrumRSUOpt
-        .map(rsu => EnumViewSelect("gSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("gSpectrum", rsu.view(_.assign))),
       planetSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("pSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("pSpectrum", rsu.view(_.assign))),
       quasarSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("qSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("qSpectrum", rsu.view(_.assign))),
       hiiRegionSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("hiirSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("hiirSpectrum", rsu.view(_.assign))),
       planetaryNebulaSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("pnSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("pnSpectrum", rsu.view(_.assign))),
       powerLawIndexRSUOpt
         .map(rsu =>
-          FormInputEV( // Power-law index can be any decimal
-            id = "powerLawIndex",
-            label = "Index",
-            value = rsu.view(_.assign),
-            validFormat = ValidFormatInput.bigDecimalValidFormat(),
-            changeAuditor =
-              ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
-            errorClazz = ExploreStyles.InputErrorTooltip,
-            errorPointing = LabelPointing.Below
+          React.Fragment(
+            <.label("Index", ExploreStyles.SkipToNext),
+            FormInputEV( // Power-law index can be any decimal
+              id = "powerLawIndex",
+              value = rsu.view(_.assign),
+              validFormat = ValidFormatInput.bigDecimalValidFormat(),
+              changeAuditor =
+                ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
+              errorClazz = ExploreStyles.InputErrorTooltip,
+              errorPointing = LabelPointing.Below
+            ),
+            <.span
           )
-        )
-        .whenDefined,
+        ),
       blackBodyTemperatureRSUOpt
         .map(rsu =>
-          InputWithUnits( // Temperature is in K, a positive integer
-            rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
-            ValidFormatInput.forRefinedInt[Positive](),
-            ChangeAuditor
-              .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
-              .deny("-"),
-            label = "Temperature",
-            id = "bbTempK",
-            units = "°K"
+          React.Fragment(
+            <.label("Temperature", ExploreStyles.SkipToNext),
+            InputWithUnits( // Temperature is in K, a positive integer
+              rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
+              ValidFormatInput.forRefinedInt[Positive](),
+              ChangeAuditor
+                .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
+                .deny("-"),
+              id = "bbTempK",
+              units = "°K"
+            ),
+            <.span
           )
-        )
-        .whenDefined,
+        ),
       props.bandBrightnessesViewOpt
-        .map(bandBrightnessesView => brightnessEditor(bandBrightnessesView))
-        .whenDefined,
+        .map(bandBrightnessesView => brightnessEditor(bandBrightnessesView)),
       props.fluxDensityContinuumOpt
         .map(fluxDensityContinuum =>
           React.Fragment(
+            <.label("Continuum", ExploreStyles.SkipToNext),
             FormInputEV(
               id = "fluxValue",
-              label = "Continuum",
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),
@@ -329,8 +335,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
                 .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
             )
           )
-        )
-        .whenDefined,
+        ),
       props.emissionLinesViewOpt.map(emissionLineEditor)
     )
   }

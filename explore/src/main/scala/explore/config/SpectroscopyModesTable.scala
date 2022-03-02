@@ -559,15 +559,15 @@ object SpectroscopyModesTable {
                           selectedIndex.setState(rowData.index.toInt.some)
                       ),
                       props2Attrs(rowData.getRowProps())
-                    )
+                    ),
+                  emptyMessage = "No matching modes"
                 )(
                   tableInstance,
                   initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),
                   rangeChanged = (
                     (range: ListRange) => visibleRange.setState(range.some)
                   ).some,
-                  atTopChange = ((value: Boolean) => atTop.setState(value)).some,
-                  emptyMessage = "No matching modes"
+                  atTopChange = ((value: Boolean) => atTop.setState(value)).some
                 )
                 .withRef(virtuosoRef),
               scrollButton(

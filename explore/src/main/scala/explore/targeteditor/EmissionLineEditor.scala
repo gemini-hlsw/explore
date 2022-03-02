@@ -26,7 +26,6 @@ import cats.Order._
 import explore.implicits._
 import crystal.react.reuse._
 import react.common.implicits._
-import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import crystal.react.hooks._
 import lucuma.ui.forms.FormInputEV
@@ -55,9 +54,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private type RowValue = (Wavelength, View[EmissionLine[T]])
 
-  private val EmissionLineTable = TableDef[RowValue].withSortBy.withBlockLayout
+  private val EmissionLineTable = TableDef[RowValue].withSortBy
 
-  private val EmissionLineTableComponent = new SUITableVirtuoso(EmissionLineTable)
+  private val EmissionLineTableComponent = new SUITable(EmissionLineTable)
 
   private val tableState = EmissionLineTable.State().setSortBy(SortingRule("wavelength"))
 
@@ -69,7 +68,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           EmissionLineTable
             .Column("wavelength", _._1)
             .setHeader(_ => <.span(ExploreStyles.TextPlain, "λ (µm)"))
-            .setCell(cell => Wavelength.decimalMicrometers.reverseGet(cell.value).toString)
+            .setCell(cell =>
+              Wavelength.decimalMicrometers.reverseGet(cell.value).setScale(3).toString
+            )
             .setWidth(80)
             .setMinWidth(80)
             .setMaxWidth(80)
@@ -158,7 +159,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       )
     )
     // newWavelength
-    .useStateView(none[Wavelength]) // We need useStateViewWithReuse??
+    .useStateView(none[Wavelength])
     // addDisabled
     .useStateView(true)
     .renderWithReuse { (props, _, _, tableInstance, newWavelength, addDisabled) =>
@@ -167,7 +168,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           props.emissionLines.mod(emissionLines =>
             (emissionLines +
               (wavelength -> EmissionLine(
-                PosBigDecimal(BigDecimal(2)).withUnit[KilometersPerSecond],
+                PosBigDecimal(BigDecimal(1)).withUnit[KilometersPerSecond],
                 defaultLineUnits.withValueTagged(BigDecimal(1))
               )))
           ) >> newWavelength.set(none)
@@ -196,18 +197,19 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           )
         )
 
-      // Put it inside a form to get the SUI styles right
-      Form(as = <.div, size = Small)(
-        <.div(
-          ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer,
-          <.label("Brightness"),
-          EmissionLineTableComponent.Component(
-            table =
-              Table(celled = true, selectable = true, striped = true, compact = TableCompact.Very),
-            header = TableHeader()
-          )(tableInstance),
-          footer
-        )
+      <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
+        <.label("Brightness"),
+        EmissionLineTableComponent(
+          table = Table(celled = true,
+                        selectable = true,
+                        striped = true,
+                        unstackable = true,
+                        compact = TableCompact.Very
+          ),
+          header = TableHeader(),
+          emptyMessage = "No lines defined"
+        )(tableInstance),
+        footer
       )
     }
 

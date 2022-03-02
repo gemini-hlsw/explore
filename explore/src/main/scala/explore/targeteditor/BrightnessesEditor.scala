@@ -30,7 +30,6 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
 import react.common.implicits._
-import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -68,9 +67,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val BrightnessTable = TableDef[RowValue].withSortBy.withBlockLayout
+  private val BrightnessTable = TableDef[RowValue].withSortBy
 
-  private val BrightnessTableComponent = new SUITableVirtuoso(BrightnessTable)
+  private val BrightnessTableComponent = new SUITable(BrightnessTable)
 
   private val deleteButton = Button(
     size = Small,
@@ -200,21 +199,19 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             }
           )
 
-        // Put it inside a form to get the SUI styles right
-        Form(as = <.div, size = Small)(
-          <.div(
-            ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer,
-            <.label(label),
-            BrightnessTableComponent.Component(
-              table = Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very
-              ),
-              header = TableHeader()
-            )(tableInstance),
-            footer
-          )
+        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
+          <.label(label),
+          BrightnessTableComponent(
+            table = Table(celled = true,
+                          selectable = true,
+                          striped = true,
+                          unstackable = true,
+                          compact = TableCompact.Very
+            ),
+            header = TableHeader(),
+            emptyMessage = "No brightnesses defined"
+          )(tableInstance),
+          footer
         )
 
       }

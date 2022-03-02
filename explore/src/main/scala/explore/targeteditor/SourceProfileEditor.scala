@@ -81,15 +81,16 @@ object SourceProfileEditor {
           forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
         )
 
-    <.div(
-      ExploreStyles.BrightnessCell,
+    React.Fragment(
+      <.label("Profile", ExploreStyles.SkipToNext),
       EnumSelect(
-        label = "Profile",
+        label = "", // TODO Make optional in lucuma-ui
         value = currentType.some,
         onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
           props.sourceProfile.view(_.toInput).mod(sp.convert)
         )
       ),
+      <.span,
       props.sourceProfile
         .zoomOpt(
           SourceProfile.point.andThen(Point.spectralDefinition),
@@ -97,8 +98,7 @@ object SourceProfileEditor {
         )
         .map(pointSpectralDefinitionAccess =>
           IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess)
-        )
-        .whenDefined,
+        ),
       props.sourceProfile
         .zoomOpt(
           SourceProfile.uniform.andThen(Uniform.spectralDefinition),
@@ -106,16 +106,15 @@ object SourceProfileEditor {
         )
         .map(uniformSpectralDefinitionAccess =>
           SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess)
-        )
-        .whenDefined,
+        ),
       gaussianRSUOpt
         .map(gaussianRSU =>
           React.Fragment(
+            <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits( // FWHM is positive arcsec accepting decimals
               gaussianRSU.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
               angleValidFormatInput,
               ChangeAuditor.fromValidFormatInput(angleValidFormatInput).deny("-"),
-              label = "FWHM",
               id = "fwhm",
               units = "arcsec"
             ),
@@ -129,7 +128,6 @@ object SourceProfileEditor {
             )
           )
         )
-        .whenDefined
     )
   }
 }

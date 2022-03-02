@@ -97,7 +97,8 @@ protected case class SUITableProps[D, Plugins](
   cell:         BodyCell[D, Plugins],
   footer:       Boolean | TableFooter | VdomNode,
   footerRow:    TableRow,
-  footerCell:   HeaderCell[D, Plugins]
+  footerCell:   HeaderCell[D, Plugins],
+  emptyMessage: String
 )(val instance: TableInstance[D, Plugins])
 
 class SUITable[D, Plugins, Layout](
@@ -175,16 +176,18 @@ class SUITable[D, Plugins, Layout](
         )
       })(^.key := "header"))
 
-    val bodyElement: TableBody = props.body(tableInstance.getTableBodyProps())(
-      tableInstance.rows.toTagMod { rowData =>
-        tableInstance.prepareRow(rowData)
-        rowRender(rowData)(
-          rowData.cells.toTagMod(cellData =>
-            bodyCellRender(cellData)(cellData.getCellProps())(cellData.renderCell)
+    val bodyElement: TableBody =
+      props.body(tableInstance.getTableBodyProps())(
+        TagMod.when(tableInstance.rows.isEmpty)(props.emptyMessage),
+        tableInstance.rows.toTagMod { rowData =>
+          tableInstance.prepareRow(rowData)
+          rowRender(rowData)(
+            rowData.cells.toTagMod(cellData =>
+              bodyCellRender(cellData)(cellData.getCellProps())(cellData.renderCell)
+            )
           )
-        )
-      }
-    )(^.key := "body")
+        }
+      )(^.key := "body")
 
     def standardFooter(footerTag: TableFooter) =
       footerTag(tableInstance.footerGroups.toTagMod { footerRowData =>
@@ -215,28 +218,31 @@ class SUITable[D, Plugins, Layout](
   type Component = JsFn.UnmountedWithRoot[Props, Unit, Box[Props]]
 
   def apply(
-    table:      TableTemplate[D, Plugins] = Table(as = layout.tag),
-    header:     Boolean | TableHeader = false,
-    headerRow:  HeaderRowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),
-    headerCell: HeaderCell[D, Plugins] = TableHeaderCell(as = layout.tag),
-    body:       TableBody = TableBody(as = layout.tag),
-    row:        RowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),
-    cell:       BodyCell[D, Plugins] = TableCell(as = layout.tag),
-    footer:     Boolean | TableFooter | VdomNode = false,
-    footerRow:  TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
-    footerCell: HeaderCell[D, Plugins] = TableHeaderCell(as = layout.tag)
-  ): TableInstance[D, Plugins] => Component = (instance: TableInstance[D, Plugins]) =>
-    component(
-      SUITableProps(table,
-                    header,
-                    headerRow,
-                    headerCell,
-                    body,
-                    row,
-                    cell,
-                    footer,
-                    footerRow,
-                    footerCell
-      )(instance)
-    )
+    table:        TableTemplate[D, Plugins] = Table(as = layout.tag),
+    header:       Boolean | TableHeader = false,
+    headerRow:    HeaderRowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),
+    headerCell:   HeaderCell[D, Plugins] = TableHeaderCell(as = layout.tag),
+    body:         TableBody = TableBody(as = layout.tag),
+    row:          RowTemplate[D, Plugins] = TableRow(as = layout.tag, cellAs = layout.tag),
+    cell:         BodyCell[D, Plugins] = TableCell(as = layout.tag),
+    footer:       Boolean | TableFooter | VdomNode = false,
+    footerRow:    TableRow = TableRow(as = layout.tag, cellAs = layout.tag),
+    footerCell:   HeaderCell[D, Plugins] = TableHeaderCell(as = layout.tag),
+    emptyMessage: String = ""
+  ): TableInstance[D, Plugins] => Component =
+    instance =>
+      component(
+        SUITableProps(table,
+                      header,
+                      headerRow,
+                      headerCell,
+                      body,
+                      row,
+                      cell,
+                      footer,
+                      footerRow,
+                      footerCell,
+                      emptyMessage
+        )(instance)
+      )
 }

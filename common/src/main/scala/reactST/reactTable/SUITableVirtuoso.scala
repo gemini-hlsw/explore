@@ -39,14 +39,14 @@ class SUITableVirtuoso[D, Plugins](
     cell:               BodyCell[D, Plugins] = TableCell(): BodyCell[D, Plugins],
     footer:             Boolean | TableFooter | VdomNode = false,
     footerRow:          TableRow = TableRow(),
-    footerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins]
+    footerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins],
+    emptyMessage:       String = ""
   )(
     val instance:       TableInstance[D, Plugins],
     val initialIndex:   Option[Int] = None,
     val rangeChanged:   Option[ListRange => Callback] = None,
     val atTopChange:    Option[Boolean => Callback] = None,
-    val atBottomChange: Option[Boolean => Callback] = None,
-    val emptyMessage:   String = ""
+    val atBottomChange: Option[Boolean => Callback] = None
   ) extends ReactPropsForwardRef[Component, RefType](component)
 
   def createRef = Ref.toJsComponent(GroupedVirtuoso.component)

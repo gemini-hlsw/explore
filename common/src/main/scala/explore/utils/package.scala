@@ -24,7 +24,6 @@ import org.http4s.Uri
 import org.scalajs.dom
 import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
-import pprint.PPrinter
 
 import java.time.Instant
 import scala.scalajs.js

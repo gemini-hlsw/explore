@@ -271,9 +271,9 @@ object SiderealTargetEditor {
                   units = "mas",
                   disabled = disabled
                 ),
-                RVInput(radialVelocityView, disabled)
-              ),
-              SourceProfileEditor(sourceProfileRSU, disabled = disabled)
+                RVInput(radialVelocityView, disabled),
+                SourceProfileEditor(sourceProfileRSU, disabled = disabled)
+              )
             )
           )
         }
