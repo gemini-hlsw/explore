@@ -185,6 +185,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   id = "NEW_BAND",
                   value = bandView,
                   exclude = state.value.usedBands,
+                  upward = true,
                   clazz = ExploreStyles.FlatFormField,
                   disabled = props.disabled
                 ),

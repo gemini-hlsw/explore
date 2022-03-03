@@ -125,7 +125,8 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 disabled = disabled,
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               )
-            ),
+            )
+            .setMaxWidth(60),
           EmissionLineTable
             .Column("delete", _._1)
             .setCell(cell =>
