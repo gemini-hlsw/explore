@@ -247,7 +247,7 @@ val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NP
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v3"),
   name = Some("Use Node.js"),
-  params = Map("node-version" -> "14", "cache" -> "npm")
+  params = Map("node-version" -> "16", "cache" -> "npm")
 )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
@@ -329,7 +329,7 @@ def setupVars(mode: String) = WorkflowStep.Run(
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v1"),
+  UseRef.Public("wearerequired", "lint-action", "v1.11.1"),
   name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",

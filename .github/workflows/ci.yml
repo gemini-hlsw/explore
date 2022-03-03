@@ -55,7 +55,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: npm
 
       - name: npm install
@@ -104,7 +104,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: npm
 
       - name: Cache sbt
@@ -185,7 +185,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: npm
 
       - name: Cache sbt
@@ -234,7 +234,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: npm
 
       - name: npm install
@@ -246,7 +246,7 @@ jobs:
           cat common/src/main/webapp/less/vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v1
+        uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
           prettier_dir: common/src/main/webapp
@@ -263,7 +263,7 @@ jobs:
           cat common/src/main/webapp/less/vars.css
 
       - name: Run linters in light mode
-        uses: wearerequired/lint-action@v1
+        uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
           prettier_dir: common/src/main/webapp
