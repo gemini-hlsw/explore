@@ -136,7 +136,7 @@ module.exports = ({ command, mode }) => {
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     plugins: [
-      mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
+      isProduction ? null : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
       fontImport
     ]
