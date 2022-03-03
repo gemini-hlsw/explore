@@ -1314,6 +1314,10 @@ img.partner-split-flag {
 
   .table {
     margin: 0;
+
+    .th {
+      white-space: nowrap;
+    }
   }
 }
 
@@ -1340,15 +1344,6 @@ img.partner-split-flag {
       top: -9999px;
       left: -9999px;
     }
-  }
-}
-
-.ui.segment.explore-brightnesses-container {
-  padding: 0;
-  display: inline-block;
-
-  th {
-    white-space: nowrap;
   }
 }
 
@@ -2132,4 +2127,10 @@ td.sticky {
 .ui.striped.table tr:hover td.sticky {
   background: var(--table-selectable-background);
   color: var(--table-selectable-color);
+}
+
+.explore-new-emissionline-wavelength {
+  .ui.input {
+    padding: 0 0.5em;
+  }
 }

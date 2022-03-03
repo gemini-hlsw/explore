@@ -319,4 +319,6 @@ object ExploreStyles {
   val TargetSearchAladin: Css        = Css("aladin-search-target")
   val TargetSearchResults: Css       = Css("explore-target-search-results")
   val TargetSearchResultsSource: Css = Css("explore-target-search-results-source")
+
+  val NewEmissionLineWavelength: Css = Css("explore-new-emissionline-wavelength")
 }

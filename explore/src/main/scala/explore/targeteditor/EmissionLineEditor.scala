@@ -28,6 +28,7 @@ import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
 import lucuma.ui.forms.FormInputEV
+import lucuma.ui.optics.AuditResult
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
@@ -175,6 +176,17 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           ) >> newWavelength.set(none)
         )
 
+      // TODO Move to lucuma-ui
+      /**
+       * Unconditionally allows the field to be a zero. This is useful when using a ChangeAuditor
+       * made from a Format that only accepts positive numbers, but you want the user to be able to
+       * enter decimal numbers.
+       */
+      def allowZero[A](self: ChangeAuditor[A]): ChangeAuditor[A] =
+        ChangeAuditor { (s, c) =>
+          if (s == "0" || s == "0.") AuditResult.accept else self.audit(s, c)
+        }
+
       val footer =
         <.div(
           ExploreStyles.BrightnessesTableFooter,
@@ -183,8 +195,10 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             id = "newWavelength",
             value = newWavelength,
             validFormat = ValidFormatInput.fromFormatOptional(formatWavelengthMicron),
-            changeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional,
-            onTextChange = s => addDisabled.set(s.isEmpty)
+            changeAuditor =
+              allowZero(ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3)).optional,
+            onTextChange = s => addDisabled.set(s.isEmpty),
+            clazz = ExploreStyles.NewEmissionLineWavelength
           ),
           "μm",
           Button(size = Mini,
