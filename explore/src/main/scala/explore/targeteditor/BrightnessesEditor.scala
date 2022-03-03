@@ -30,7 +30,6 @@ import lucuma.ui.reusability._
 import monocle.Focus
 import react.common._
 import react.common.implicits._
-import react.semanticui.collections.form.Form
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
@@ -68,9 +67,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val BrightnessTable = TableDef[RowValue].withSortBy.withBlockLayout
+  private val BrightnessTable = TableDef[RowValue].withSortBy
 
-  private val BrightnessTableComponent = new SUITableVirtuoso(BrightnessTable)
+  private val BrightnessTableComponent = new SUITable(BrightnessTable)
 
   private val deleteButton = Button(
     size = Small,
@@ -91,8 +90,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       )
       .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
         { case (brightnesses, disabled) =>
-          val deleteFn: RowValue => Callback =
-            row => brightnesses.mod(_ - row._1)
+          val deleteFn: Band => Callback =
+            b => brightnesses.mod(_ - b)
 
           List(
             BrightnessTable
@@ -130,7 +129,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 )
               ),
             BrightnessTable
-              .Column("delete")
+              .Column("delete", _._1)
               .setCell(
                 ReactTableHelpers.buttonViewColumn(
                   button = deleteButton,
@@ -142,6 +141,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .setWidth(46)
               .setMinWidth(46)
               .setMaxWidth(46)
+              .setDisableSortBy(true)
           )
         }
       }
@@ -165,7 +165,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               band,
               (mod, _) =>
                 // This View will ignore Callbacks. This is OK as long as noone calls its .withOnMod.
-                // .withOnMod will likely become deprecated in the transition to hooks.
                 state.modState(State.newBand.some.modify(mod))
             )
           )
@@ -186,23 +185,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   id = "NEW_BAND",
                   value = bandView,
                   exclude = state.value.usedBands,
-                  clazz = ExploreStyles.FlatFormField,
-                  disabled = props.disabled
-                ),
-                Button(size = Mini,
-                       compact = true,
-                       onClick = addBrightness,
-                       disabled = props.disabled
-                )(^.marginLeft := "5px")(
-                  Icons.New
-                )
-              )
-
-              React.Fragment(
-                EnumViewSelect(
-                  id = "NEW_BAND",
-                  value = bandView,
-                  exclude = state.value.usedBands,
+                  upward = true,
                   clazz = ExploreStyles.FlatFormField,
                   disabled = props.disabled
                 ),
@@ -217,22 +200,19 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             }
           )
 
-        // Put it inside a form to get the SUI styles right
-        Form(as = <.div, size = Small)(
-          // props.toString,
-          <.div(
-            ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer,
-            <.label(label),
-            BrightnessTableComponent.Component(
-              table = Table(celled = true,
-                            selectable = true,
-                            striped = true,
-                            compact = TableCompact.Very
-              ),
-              header = TableHeader()
-            )(tableInstance),
-            footer
-          )
+        <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
+          <.label(label),
+          BrightnessTableComponent(
+            table = Table(celled = true,
+                          selectable = true,
+                          striped = true,
+                          unstackable = true,
+                          compact = TableCompact.Very
+            ),
+            header = TableHeader(),
+            emptyMessage = "No brightnesses defined"
+          )(tableInstance),
+          footer
         )
 
       }

@@ -77,7 +77,6 @@ object ProposalDetailsEditor {
       <.span(
         Icons.ExclamationTriangle,
         "Partner time allocations are required.",
-        ExploreStyles.TextInForm,
         FomanticStyles.WarningText
       )
     case _   =>
@@ -117,13 +116,13 @@ object ProposalDetailsEditor {
   private def timeSplit(ps: PartnerSplit, total: NonNegHour) = {
     val splitTime = ps.percent.to[Double, Unitless] * total
     val timeText  = formatTime(splitTime.value)
-    <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.PartnerSplitData)
+    <.span(timeText, ExploreStyles.PartnerSplitData)
   }
 
   private def minimumTime(pct: IntPercent, total: NonNegHour) = {
     val time     = pct.to[Double, Unitless] * total
     val timeText = formatTime(time.value)
-    <.span(timeText, ExploreStyles.TextInForm, ExploreStyles.MinimumPercent)
+    <.span(timeText, ExploreStyles.MinimumPercent)
   }
 
   private val categoryOptions = Enumerated[TacCategory].all

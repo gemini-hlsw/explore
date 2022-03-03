@@ -67,7 +67,7 @@ package itc {
           case UnnormalizedSED.PowerLaw(index)                          =>
             UnnormalizedSedInput(powerLaw = index.assign)
           case UnnormalizedSED.BlackBody(temperature)                   =>
-            UnnormalizedSedInput(blackBodyTempK = temperature.value.value.assign)
+            UnnormalizedSedInput(blackBodyTempK = BigDecimal(temperature.value.value).assign)
           case UnnormalizedSED.UserDefined(fluxDensities)               =>
             UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
               case (wavelength, value) => FluxDensity(wavelength.toInput, value.value)

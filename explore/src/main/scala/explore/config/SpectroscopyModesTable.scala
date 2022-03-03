@@ -559,7 +559,8 @@ object SpectroscopyModesTable {
                           selectedIndex.setState(rowData.index.toInt.some)
                       ),
                       props2Attrs(rowData.getRowProps())
-                    )
+                    ),
+                  emptyMessage = "No matching modes"
                 )(
                   tableInstance,
                   initialIndex = selectedIndex.value.map(idx => (idx - 2).max(0)),

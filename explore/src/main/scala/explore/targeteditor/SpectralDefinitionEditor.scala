@@ -11,7 +11,14 @@ import clue.data.syntax._
 import coulomb._
 import coulomb.si.Kelvin
 import crystal.react.View
+import crystal.react.reuse._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.string
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.schemas.implicits._
 import explore.utils._
@@ -27,16 +34,24 @@ import lucuma.core.enum.QuasarSpectrum
 import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
+import lucuma.core.math.dimensional.Units._
 import lucuma.core.math.dimensional._
+import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
-import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.forms.FormInputEV
+import lucuma.ui.implicits._
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.reusability._
 import react.common.ReactFnProps
+import react.semanticui.elements.label.LabelPointing
 
+import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 sealed trait SpectralDefinitionEditor[T, S] {
@@ -49,6 +64,10 @@ sealed trait SpectralDefinitionEditor[T, S] {
   val sedRSUOpt: Option[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]
 
   val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
+
+  val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
+
+  val fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
 }
 
 sealed abstract class SpectralDefinitionEditorBuilder[
@@ -62,6 +81,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   import UnnormalizedSED._
 
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
+  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
 
   private def toBandNormalized[T](
     sed: UnnormalizedSED
@@ -106,9 +126,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
     case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
     case object BlackBodyType
-        extends BandNormalizedSED("Black Body",
-                                  BlackBody(PosBigDecimal(BigDecimal(1)).withUnit[Kelvin])
-        )
+        extends BandNormalizedSED("Black Body", BlackBody(PosInt(1000).withUnit[Kelvin]))
     case object UserDefinedType
         extends BandNormalizedSED("User Defined",
                                   UserDefined(
@@ -128,8 +146,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           PlanetaryNebulaType,
           EmissionLineType,
           PowerLawType,
-          BlackBodyType
-          // UserDefinedType // Not supported in XT
+          BlackBodyType,
+          UserDefinedType
         )
         .withTag(_.name)
   }
@@ -199,23 +217,22 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    // val powerLawIndexRSUOpt: Option[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]] =
-    //   props.sedRSUOpt.flatMap(
-    //     _.zoomOpt(
-    //       UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
-    //       UnnormalizedSedInput.powerLaw.modify
-    //     )
-    //   )
+    val powerLawIndexRSUOpt: Option[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]] =
+      props.sedRSUOpt.flatMap(
+        _.zoomOpt(
+          UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
+          UnnormalizedSedInput.powerLaw.modify
+        )
+      )
 
-    // val blackBodyTemperatureRSUOpt: Option[
-    //   RemoteSyncUndoable[Quantity[PosBigDecimal, Kelvin], Input[BigDecimal]]
-    // ] =
-    //   props.sedRSUOpt.flatMap(
-    //     _.zoomOpt(
-    //       UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
-    //       UnnormalizedSedInput.blackBodyTempK.modify
-    //     )
-    //   )
+    val blackBodyTemperatureRSUOpt
+      : Option[RemoteSyncUndoable[Quantity[PosInt, Kelvin], Input[BigDecimal]]] =
+      props.sedRSUOpt.flatMap(
+        _.zoomOpt(
+          UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
+          UnnormalizedSedInput.blackBodyTempK.modify
+        )
+      )
 
     val currentType: SEDType =
       props.spectralDefinition.get match {
@@ -229,50 +246,97 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         case EmissionLines(_, _)                   => SEDType.EmissionLineType
         case BandNormalized(PowerLaw(_), _)        => SEDType.PowerLawType
         case BandNormalized(BlackBody(_), _)       => SEDType.BlackBodyType
-        case BandNormalized(UserDefined(_), _)     => SEDType.StellarLibraryType
-        // SEDType.UserDefinedType // Not supported in XT
+        case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
       }
 
-    // TODO Do we want this to be shared? Maybe move to lucuma-ui? Maybe it's already there?
-    implicit def displayEnumByTag[A: Enumerated]: Display[A] =
-      Display.byShortName(Enumerated[A].tag)
+    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: View[T]) =
+      React.Fragment(
+        <.span,
+        EnumViewSelect(id, view),
+        <.span
+      )
 
-    <.div(
+    React.Fragment(
+      <.label("SED", ExploreStyles.SkipToNext),
       EnumSelect[SEDType](
-        label = "SED",
+        label = "",
         value = currentType.some,
-        placeholder = "",
-        disabled = false,
-        onChange = sed => props.spectralDefinition.view(props.toInput).mod(sed.convert)
+        onChange = Reuse.by(props.spectralDefinition)((sed: SEDType) =>
+          props.spectralDefinition.view(props.toInput).mod(sed.convert)
+        ),
+        disabledItems = HashSet(SEDType.UserDefinedType)
       ),
+      <.span,
       stellarLibrarySpectrumRSUOpt
-        .map(rsu => EnumViewSelect("slSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("slSpectrum", rsu.view(_.assign))),
       coolStarTemperatureRSUOpt
-        .map(rsu => EnumViewSelect("csTemp", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("csTemp", rsu.view(_.assign))),
       galaxySpectrumRSUOpt
-        .map(rsu => EnumViewSelect("gSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("gSpectrum", rsu.view(_.assign))),
       planetSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("pSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("pSpectrum", rsu.view(_.assign))),
       quasarSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("qSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("qSpectrum", rsu.view(_.assign))),
       hiiRegionSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("hiirSpectrum", rsu.view(_.assign)))
-        .whenDefined,
+        .map(rsu => spectrumRow("hiirSpectrum", rsu.view(_.assign))),
       planetaryNebulaSpectrumRSUOpt
-        .map(rsu => EnumViewSelect("pnSpectrum", rsu.view(_.assign)))
-        .whenDefined,
-      props.bandBrightnessesViewOpt
-        .map(bandBrightnessesView =>
-          brightnessEditor(
-            bandBrightnessesView
+        .map(rsu => spectrumRow("pnSpectrum", rsu.view(_.assign))),
+      powerLawIndexRSUOpt
+        .map(rsu =>
+          React.Fragment(
+            <.label("Index", ExploreStyles.SkipToNext),
+            FormInputEV( // Power-law index can be any decimal
+              id = "powerLawIndex",
+              value = rsu.view(_.assign),
+              validFormat = ValidFormatInput.bigDecimalValidFormat(),
+              changeAuditor =
+                ChangeAuditor.fromValidFormatInput(ValidFormatInput.bigDecimalValidFormat()),
+              errorClazz = ExploreStyles.InputErrorTooltip,
+              errorPointing = LabelPointing.Below
+            ),
+            <.span
           )
-        )
-        .whenDefined
+        ),
+      blackBodyTemperatureRSUOpt
+        .map(rsu =>
+          React.Fragment(
+            <.label("Temperature", ExploreStyles.SkipToNext),
+            InputWithUnits( // Temperature is in K, a positive integer
+              rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
+              ValidFormatInput.forRefinedInt[Positive](),
+              ChangeAuditor
+                .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
+                .deny("-"),
+              id = "bbTempK",
+              units = "°K"
+            ),
+            <.span
+          )
+        ),
+      props.bandBrightnessesViewOpt
+        .map(bandBrightnessesView => brightnessEditor(bandBrightnessesView)),
+      props.fluxDensityContinuumOpt
+        .map(fluxDensityContinuum =>
+          React.Fragment(
+            <.label("Continuum", ExploreStyles.SkipToNext),
+            FormInputEV(
+              id = "fluxValue",
+              value = fluxDensityContinuum.zoom(
+                Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
+              ),
+              validFormat = ValidFormatInput.forRefinedBigDecimal[Positive](),
+              changeAuditor = ChangeAuditor.fromValidFormatInput(
+                ValidFormatInput.forRefinedBigDecimal[Positive]()
+              )
+            ),
+            EnumViewSelect(
+              "Units",
+              fluxDensityContinuum
+                .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
+            )
+          )
+        ),
+      props.emissionLinesViewOpt.map(emissionLineEditor)
     )
   }
 
@@ -315,6 +379,33 @@ final case class IntegratedSpectralDefinitionEditor(
       )
         .view(_.toInput.assign)
     )
+
+  private val emissionLinesRSUOpt: Option[
+    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Integrated], EmissionLinesIntegratedInput]
+  ] =
+    spectralDefinition.zoomOpt(
+      SpectralDefinition.emissionLines[Integrated],
+      forceAssign(SpectralDefinitionIntegratedInput.emissionLines.modify)(
+        EmissionLinesIntegratedInput()
+      )
+    )
+
+  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
+             EmissionLinesIntegratedInput.lines.modify
+      )
+        .view(_.toInput.assign)
+    )
+
+  override val fluxDensityContinuumOpt
+    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
+             EmissionLinesIntegratedInput.fluxDensityContinuum.modify
+      )
+        .view(_.toInput.assign)
+    )
 }
 
 object IntegratedSpectralDefinitionEditor
@@ -324,6 +415,10 @@ object IntegratedSpectralDefinitionEditor
     ] {
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
     brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
+
+  protected val emissionLineEditor
+    : View[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
+    emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
 }
 
 final case class SurfaceSpectralDefinitionEditor(
@@ -335,6 +430,7 @@ final case class SurfaceSpectralDefinitionEditor(
       SurfaceSpectralDefinitionEditor.component
     )
     with SpectralDefinitionEditor[Surface, SpectralDefinitionSurfaceInput] {
+
   val toInput: SpectralDefinition[Surface] => SpectralDefinitionSurfaceInput = _.toInput
 
   private val bandNormalizedRSUOpt: Option[
@@ -363,6 +459,33 @@ final case class SurfaceSpectralDefinitionEditor(
       )
         .view(_.toInput.assign)
     )
+
+  private val emissionLinesRSUOpt: Option[
+    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Surface], EmissionLinesSurfaceInput]
+  ] =
+    spectralDefinition.zoomOpt(
+      SpectralDefinition.emissionLines[Surface],
+      forceAssign(SpectralDefinitionSurfaceInput.emissionLines.modify)(
+        EmissionLinesSurfaceInput()
+      )
+    )
+
+  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Surface]]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.lines[Surface],
+             EmissionLinesSurfaceInput.lines.modify
+      )
+        .view(_.toInput.assign)
+    )
+
+  override val fluxDensityContinuumOpt
+    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
+    emissionLinesRSUOpt.map(
+      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
+             EmissionLinesSurfaceInput.fluxDensityContinuum.modify
+      )
+        .view(_.toInput.assign)
+    )
 }
 
 object SurfaceSpectralDefinitionEditor
@@ -372,4 +495,8 @@ object SurfaceSpectralDefinitionEditor
     ] {
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
     brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
+
+  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
+    emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
+
 }

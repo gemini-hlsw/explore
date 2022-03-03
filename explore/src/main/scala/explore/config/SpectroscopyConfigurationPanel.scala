@@ -50,8 +50,8 @@ object SpectroscopyConfigurationPanel {
         val spectroscopyCapabilities =
           p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
 
-        val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatWavelengthMicron)
-        val wvChangeAuditor = ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).optional
+        val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatMicron)
+        val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
 
         val wvUnits =
           <.span(

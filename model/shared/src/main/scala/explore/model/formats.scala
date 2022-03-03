@@ -88,13 +88,13 @@ trait formats {
   val formatCZ: Format[String, ApparentRadialVelocity] =
     formatBigDecimalCZ.andThen(fromKilometersPerSecondCZ)
 
-  val formatWavelength: Format[String, Wavelength] =
-    Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalNanometers.getOption),
-           _.nanometer.to[BigDecimal, Nanometer].value.toString
+  val formatWavelengthMicron: Format[String, Wavelength] =
+    Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
+           _.micrometer.to[BigDecimal, Micrometer].value.toString
     )
 
-  // Note this forma operates on Quantity to allow 0 values
-  val formatWavelengthMicron: Format[String, Quantity[BigDecimal, Micrometer]] =
+  // Note this format operates on Quantity to allow 0 values
+  val formatMicron: Format[String, Quantity[BigDecimal, Micrometer]] =
     Format[String, Quantity[BigDecimal, Micrometer]](
       b => b.parseBigDecimalOption.filter(_ >= 0).map(_.withUnit[Micrometer]),
       w => w.value.toString

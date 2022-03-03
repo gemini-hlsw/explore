@@ -5,12 +5,13 @@ package explore.schemas
 
 import cats.syntax.all._
 import clue.data.syntax._
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
-import lucuma.core.math.dimensional.Measure
+import lucuma.core.math.dimensional._
 import lucuma.core.model._
 import lucuma.schemas.ObservationDB.Types._
 
@@ -84,7 +85,7 @@ object implicits {
         case UnnormalizedSED.PowerLaw(index)                          =>
           UnnormalizedSedInput(powerLaw = index.assign)
         case UnnormalizedSED.BlackBody(temperature)                   =>
-          UnnormalizedSedInput(blackBodyTempK = temperature.value.value.assign)
+          UnnormalizedSedInput(blackBodyTempK = BigDecimal(temperature.value.value).assign)
         case UnnormalizedSED.UserDefined(fluxDensities)               =>
           UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
             case (wavelength, value) => FluxDensity(wavelength.toInput, value.value)
@@ -138,24 +139,62 @@ object implicits {
       )
   }
 
+  implicit class IntegratedEmissionLineMapOps(
+    val lines: SortedMap[Wavelength, EmissionLine[Integrated]]
+  ) extends AnyVal {
+    def toInput: List[EmissionLineIntegratedInput] =
+      lines.toList.map { case (wavelength, line) =>
+        EmissionLineIntegratedInput(
+          wavelength = wavelength.toInput,
+          lineWidth = line.lineWidth.value.value.assign,
+          lineFlux = LineFluxIntegratedInput(
+            line.lineFlux.value.value,
+            Measure.unitsTagged.get(line.lineFlux)
+          ).assign
+        )
+      }
+  }
+
+  implicit class SurfaceEmissionLineMapOps(
+    val lines: SortedMap[Wavelength, EmissionLine[Surface]]
+  ) extends AnyVal {
+    def toInput: List[EmissionLineSurfaceInput] =
+      lines.toList.map { case (wavelength, line) =>
+        EmissionLineSurfaceInput(
+          wavelength = wavelength.toInput,
+          lineWidth = line.lineWidth.value.value.assign,
+          lineFlux = LineFluxSurfaceInput(
+            line.lineFlux.value.value,
+            Measure.unitsTagged.get(line.lineFlux)
+          ).assign
+        )
+      }
+  }
+
+  implicit class IntegratedFluxDensityContinuumOps(
+    val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]
+  ) extends AnyVal {
+    def toInput: FluxDensityContinuumIntegratedInput = FluxDensityContinuumIntegratedInput(
+      value = fdc.value.value,
+      units = Measure.unitsTagged.get(fdc)
+    )
+  }
+
+  implicit class SurfaceFluxDensityContinuumOps(
+    val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]
+  ) extends AnyVal {
+    def toInput: FluxDensityContinuumSurfaceInput = FluxDensityContinuumSurfaceInput(
+      value = fdc.value.value,
+      units = Measure.unitsTagged.get(fdc)
+    )
+  }
+
   implicit class IntegratedEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Integrated])
       extends AnyVal {
     def toInput: EmissionLinesIntegratedInput =
       EmissionLinesIntegratedInput(
-        lines = e.lines.toList.map { case (wavelength, line) =>
-          EmissionLineIntegratedInput(
-            wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.value.assign,
-            lineFlux = LineFluxIntegratedInput(
-              line.lineFlux.value.value,
-              Measure.unitsTagged.get(line.lineFlux)
-            ).assign
-          )
-        }.assign,
-        fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
-          value = e.fluxDensityContinuum.value.value,
-          units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        ).assign
+        lines = e.lines.toInput.assign,
+        fluxDensityContinuum = e.fluxDensityContinuum.toInput.assign
       )
   }
 
@@ -163,20 +202,8 @@ object implicits {
       extends AnyVal {
     def toInput: EmissionLinesSurfaceInput =
       EmissionLinesSurfaceInput(
-        lines = e.lines.toList.map { case (wavelength, line) =>
-          EmissionLineSurfaceInput(
-            wavelength = wavelength.toInput,
-            lineWidth = line.lineWidth.value.value.assign,
-            lineFlux = LineFluxSurfaceInput(
-              line.lineFlux.value.value,
-              Measure.unitsTagged.get(line.lineFlux)
-            ).assign
-          )
-        }.assign,
-        fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
-          value = e.fluxDensityContinuum.value.value,
-          units = Measure.unitsTagged.get(e.fluxDensityContinuum)
-        ).assign
+        lines = e.lines.toInput.assign,
+        fluxDensityContinuum = e.fluxDensityContinuum.toInput.assign
       )
   }
 

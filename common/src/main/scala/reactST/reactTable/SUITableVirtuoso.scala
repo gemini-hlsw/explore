@@ -39,7 +39,8 @@ class SUITableVirtuoso[D, Plugins](
     cell:               BodyCell[D, Plugins] = TableCell(): BodyCell[D, Plugins],
     footer:             Boolean | TableFooter | VdomNode = false,
     footerRow:          TableRow = TableRow(),
-    footerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins]
+    footerCell:         HeaderCell[D, Plugins] = TableHeaderCell(): HeaderCell[D, Plugins],
+    emptyMessage:       String = ""
   )(
     val instance:       TableInstance[D, Plugins],
     val initialIndex:   Option[Int] = None,
@@ -196,7 +197,7 @@ class SUITableVirtuoso[D, Plugins](
               atBottomStateChange = props.atBottomChange.orUndefined
             )(ExploreStyles.TBody).withOptionalRef(ref)
           ),
-          TagMod.when(tableInstance.rows.isEmpty)("No matching modes")
+          TagMod.when(tableInstance.rows.isEmpty)(props.emptyMessage)
         )
 
       def standardFooter(footerTag: TableFooter) =

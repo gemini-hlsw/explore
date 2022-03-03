@@ -119,5 +119,4 @@ package utils {
       def unapply(l: Logout): Some[Long] = Some(l.nonce)
     }
   }
-
 }
