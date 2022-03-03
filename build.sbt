@@ -245,7 +245,7 @@ def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
 lazy val setupNode = WorkflowStep.Use(
-  UseRef.Public("actions", "setup-node", "v2"),
+  UseRef.Public("actions", "setup-node", "v3"),
   name = Some("Use Node.js"),
   params = Map("node-version" -> "14", "cache" -> "npm")
 )
