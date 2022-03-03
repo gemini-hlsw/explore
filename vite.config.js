@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
-import path from 'path';
-import fs from 'fs';
-import ViteFonts from 'vite-plugin-fonts';
-import mkcert from 'vite-plugin-mkcert';
+const { defineConfig } = require('vite')
+const react = require('@vitejs/plugin-react')
+const { visualizer } = require('rollup-plugin-visualizer')
+const path = require('path')
+const fs = require('fs')
+const ViteFonts = require('vite-plugin-fonts')
+const mkcert = require('vite-plugin-mkcert')
 
-const fontImport = ViteFonts({
+const fontImport = ViteFonts.Plugin({
   google: {
     families: [
       {
@@ -18,12 +18,13 @@ const fontImport = ViteFonts({
 });
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+module.exports = ({ command, mode }) => {
   const scalaClassesDir = path.resolve(__dirname, 'explore/target/scala-2.13');
   const isProduction = mode == 'production';
-  const sjs = isProduction
-    ? path.resolve(scalaClassesDir, 'explore-opt')
-    : path.resolve(scalaClassesDir, 'explore-fastopt');
+  const sjs =
+    isProduction
+      ? path.resolve(scalaClassesDir, 'explore-opt')
+      : path.resolve(scalaClassesDir, 'explore-fastopt');
   const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(__dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
@@ -55,7 +56,7 @@ export default defineConfig(({ command, mode }) => {
       alias: [
         {
           find: 'process',
-          replacement: 'process/browser',
+          replacement: 'process/browser'
         },
         {
           find: '@sjs',
@@ -86,14 +87,14 @@ export default defineConfig(({ command, mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          charset: false,
-        },
-      },
+          charset: false
+        }
+      }
     },
     server: {
       strictPort: true,
       fsServe: {
-        strict: true,
+        strict: true
       },
       host: '0.0.0.0',
       port: 8080,
@@ -107,7 +108,7 @@ export default defineConfig(({ command, mode }) => {
               _path.includes('/classes') ||
               _path.endsWith('.tmp');
             return sjsIgnored;
-          },
+          }
         ],
       },
       proxy: {
@@ -126,18 +127,18 @@ export default defineConfig(({ command, mode }) => {
         compress: {
           passes: 2,
           toplevel: true,
-          ecma: 2015,
-        },
+          ecma: 2015
+        }
       },
       rollupOptions: {
-        plugins: rollupPlugins,
+        plugins: rollupPlugins
       },
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     plugins: [
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
-      fontImport,
-    ],
+      fontImport
+    ]
   };
-});
+};
