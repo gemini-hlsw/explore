@@ -168,7 +168,6 @@ object AsterismEditor {
                   Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
                     target =>
                       _.map { twid =>
-                        println(s"targetId: $targetId selectedTargetId: ${selectedTargetId.get}")
                         if (twid.id === targetId) TargetWithId(targetId, target) else twid
                       }
                   )
