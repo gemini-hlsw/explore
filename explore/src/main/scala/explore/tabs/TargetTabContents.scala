@@ -138,6 +138,9 @@ object TargetTabContents {
   val treeWidthLens = TwoPanelState.treeWidth[TargetOrObsSet]
   val selectedLens  = TwoPanelState.selected[TargetOrObsSet]
 
+  def otherObsCount(targetGroupMap: TargetGroupList, obsIds: ObsIdSet, targetId: Target.Id): Int =
+    targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
+
   protected def renderFn(
     props:                Props,
     panels:               View[TwoPanelState[TargetOrObsSet]],
@@ -250,7 +253,12 @@ object TargetTabContents {
     def renderSummary: VdomNode =
       Tile("targetSummary", "Target Summary", backButton.some)(
         Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
-          (asterismGroupWithObs.get, props.hiddenColumns, props.focusedObs, props.expandedIds)
+          (asterismGroupWithObs.get,
+           props.hiddenColumns,
+           props.focusedObs,
+           props.focusedTarget,
+           props.expandedIds
+          )
         )((renderInTitle: Tile.RenderInTitle) =>
           TargetSummaryTable(
             targetMap,
@@ -369,6 +377,7 @@ object TargetTabContents {
           idsToEdit,
           Pot(asterismView),
           props.focusedTarget,
+          Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
           props.targetsUndoStacks,
           props.searching,
           options,

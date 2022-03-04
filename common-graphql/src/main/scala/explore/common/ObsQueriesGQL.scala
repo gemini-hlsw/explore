@@ -55,31 +55,40 @@ object ObsQueriesGQL {
         }
 
         constraintSetGroup(programId: "p-2") {
-            nodes {
-              constraintSet {
-                cloudExtinction
-                imageQuality
-                skyBackground
-                waterVapor
-                elevationRange {
-                  airmassRange {
-                    min
-                    max
-                  }
-                  hourAngleRange {
-                    minHours
-                    maxHours
-                  }
+          nodes {
+            constraintSet {
+              cloudExtinction
+              imageQuality
+              skyBackground
+              waterVapor
+              elevationRange {
+                airmassRange {
+                  min
+                  max
+                }
+                hourAngleRange {
+                  minHours
+                  maxHours
                 }
               }
-              observations {
-                nodes {
-                  id
-                }
+            }
+            observations {
+              nodes {
+                id
               }
             }
           }
         }
+
+        targetGroup(programId: "p-2") {
+          nodes {
+            observationIds
+            target {
+              id
+            }
+          }
+        }
+      }
     """
 
     object Data {

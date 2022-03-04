@@ -28,6 +28,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
@@ -80,7 +81,8 @@ object ObsQueries {
 
   case class ObsSummariesWithConstraints(
     observations:     ObservationList,
-    constraintGroups: ConstraintsList
+    constraintGroups: ConstraintsList,
+    targetMap:        SortedMap[Target.Id, Set[Observation.Id]]
   )
 
   object ObsSummariesWithConstraints {
@@ -112,7 +114,8 @@ object ObsQueries {
         ),
         ObsSummaryWithTargetsAndConstraints.id.get
       ),
-      data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get)
+      data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get),
+      data.targetGroup.nodes.toSortedMap(_.target.id, _.observationIds.toSet)
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
