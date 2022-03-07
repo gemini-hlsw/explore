@@ -20,7 +20,9 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ObsIdSet
 import explore.model.TargetVisualOptions
+import explore.model.TargetWithId
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.util._
@@ -61,6 +63,8 @@ final case class SiderealTargetEditor(
   undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
   searching:     View[Set[Target.Id]],
   options:       View[TargetVisualOptions],
+  obsIdSubset:   Option[ObsIdSet] = None,
+  onClone:       TargetWithId ==> Callback = ((_: TargetWithId) => Callback.empty).reuseAlways,
   renderInTitle: Option[Tile.RenderInTitle] = none
 ) extends ReactFnProps[SiderealTargetEditor](SiderealTargetEditor.component) {
   val baseCoordinates: Coordinates =
@@ -73,18 +77,51 @@ object SiderealTargetEditor {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  def readonlyView[A](view: View[A]): View[A] = {
+    val getA: A => A               = _ => view.get
+    def noModA: (A => A) => A => A = _ => identity
+    view.zoom(getA)(noModA)
+  }
+
   val component =
     ScalaFnComponent
-      .withReuse[Props] { props =>
+      .withHooks[Props]
+      // cloning
+      .useState(false)
+      .renderWithReuse { (props, cloning) =>
         AppCtx.using { implicit appCtx =>
-          val undoCtx = UndoContext(props.undoStacks, props.target)
-          val target  = props.target.get
+          // If we're going to clone on edit, use readonly views so we don't update the original
+          // target in the model or add the API clone to the undo stack for the original target.
+          val (targetView, undoStackView) =
+            props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
+              (readonlyView(props.target), readonlyView(props.undoStacks))
+            )
+          val undoCtx                     = UndoContext(undoStackView, targetView)
+          val target                      = props.target.get
+
+          val remoteOnMod: EditTargetInput => IO[Unit] =
+            props.obsIdSubset.fold((input: EditTargetInput) =>
+              TargetQueriesGQL.UpdateTargetMutation.execute(input).void
+            ) { obsIds => input =>
+              cloning.setState(true).to[IO] >>
+                TargetQueriesGQL.CloneTargetMutation
+                  .execute(props.id, obsIds.toList.assign)
+                  .flatMap { data =>
+                    val newId    = data.cloneTarget.id
+                    val newInput = EditTargetInput.targetId.replace(newId)(input)
+                    TargetQueriesGQL.UpdateTargetMutationWithResult
+                      .execute(newInput)
+                      .flatMap(data =>
+                        (props.onClone(data.updateTarget) >> cloning.setState(false)).to[IO]
+                      )
+                  }
+            }
 
           val siderealTargetRSU: RemoteSyncUndoable[Target.Sidereal, EditTargetInput] =
             RemoteSyncUndoable(
               undoCtx,
               EditTargetInput(targetId = props.id),
-              (input: EditTargetInput) => TargetQueriesGQL.UpdateTargetMutation.execute(input).void
+              remoteOnMod
             )
 
           val allView: View[Target.Sidereal] =
@@ -183,17 +220,22 @@ object SiderealTargetEditor {
                   nameView.set(s.searchTerm) >> s.onError(t)
               }
 
-          val disabled = props.searching.get.exists(_ === props.id)
+          val disabled = props.searching.get.exists(_ === props.id) || cloning.value
 
           React.Fragment(
             props.renderInTitle
               .map(_.apply(<.span(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx)))),
             <.div(ExploreStyles.TargetGrid)(
-              <.div(ExploreStyles.TitleUndoButtons, UndoButtons(undoCtx, disabled = disabled)),
+              <.div(
+                ExploreStyles.TitleUndoButtons,
+                // Don't show the undo/redo buttons if we are in cloning mode or they are in the title bar.
+                UndoButtons(undoCtx, disabled = disabled)
+                  .when(props.renderInTitle.isEmpty && props.obsIdSubset.isEmpty)
+              ),
               AladinCell(
                 props.uid,
                 props.id,
-                props.target.zoom(Target.Sidereal.baseCoordinates),
+                targetView.zoom(Target.Sidereal.baseCoordinates),
                 props.options
               ),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
@@ -203,7 +245,7 @@ object SiderealTargetEditor {
                   // SearchForm doesn't edit the name directly. It will set it atomically, together
                   // with coords & magnitudes from the catalog search, so that all 3 fields are
                   // a single undo/redo operation.
-                  props.target.zoom(Target.Sidereal.name).get,
+                  targetView.zoom(Target.Sidereal.name).get,
                   props.searching,
                   Reuse.currying(allView, nameView).in(searchAndSet _)
                 ),

@@ -246,6 +246,195 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
+  trait UpdateTargetMutationWithResult extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($input: EditTargetInput!) {
+        updateTarget(input: $input) {
+          id
+          name
+          sidereal {
+            ra {
+              microarcseconds
+            }
+            dec {
+              microarcseconds
+            }
+            epoch
+            properMotion {
+              ra {
+                microarcsecondsPerYear
+              }
+              dec {
+                microarcsecondsPerYear
+              }
+            }
+            radialVelocity {
+              centimetersPerSecond
+            }
+            parallax {
+              microarcseconds
+            }
+            catalogInfo {
+              name
+              id
+              objectType
+            }
+          }
+          sourceProfile {
+            point {
+              bandNormalized {
+                sed {
+                  stellarLibrary
+                  coolStar
+                  galaxy
+                  planet
+                  quasar
+                  hiiRegion
+                  planetaryNebula
+                  powerLaw
+                  blackBodyTempK
+                  fluxDensities {
+                    wavelength {
+                      picometers
+                    }
+                    density
+                  }
+                }
+                brightnesses {
+                  band
+                  value
+                  units
+                  error
+                }
+              }
+              emissionLines {
+                lines {
+                  wavelength {
+                    picometers
+                  }
+                  lineWidth
+                  lineFlux {
+                    value
+                    units
+                  }
+                }
+                fluxDensityContinuum {
+                  value
+                  units
+                }
+              }        
+            }
+            uniform {
+              bandNormalized {
+                sed {
+                  stellarLibrary
+                  coolStar
+                  galaxy
+                  planet
+                  quasar
+                  hiiRegion
+                  planetaryNebula
+                  powerLaw
+                  blackBodyTempK
+                  fluxDensities {
+                    wavelength {
+                      picometers
+                    }
+                    density
+                  }
+                }
+                brightnesses {
+                  band
+                  value
+                  units
+                  error
+                }
+              }
+              emissionLines {
+                lines {
+                  wavelength {
+                    picometers
+                  }
+                  lineWidth
+                  lineFlux {
+                    value
+                    units
+                  }
+                }
+                fluxDensityContinuum {
+                  value
+                  units
+                }
+              }        
+            }
+            gaussian {
+              fwhm {
+                microarcseconds
+              }
+              bandNormalized {
+                sed {
+                  stellarLibrary
+                  coolStar
+                  galaxy
+                  planet
+                  quasar
+                  hiiRegion
+                  planetaryNebula
+                  powerLaw
+                  blackBodyTempK
+                  fluxDensities {
+                    wavelength {
+                      picometers
+                    }
+                    density
+                  }
+                }
+                brightnesses {
+                  band
+                  value
+                  units
+                  error
+                }
+              }
+              emissionLines {
+                lines {
+                  wavelength {
+                    picometers
+                  }
+                  lineWidth
+                  lineFlux {
+                    value
+                    units
+                  }
+                }
+                fluxDensityContinuum {
+                  value
+                  units
+                }
+              }
+            }
+          }
+        }
+      }
+    """
+
+    object Data {
+      type UpdateTarget = model.TargetWithId
+    }
+  }
+
+  @GraphQL
+  trait CloneTargetMutation extends GraphQLOperation[ObservationDB] {
+    val document = """
+      mutation($existingTargetId: TargetId!, $observationIds: [ObservationId!]) {
+        cloneTarget(existingTargetId: $existingTargetId, observationIds: $observationIds) {
+          id
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait ProgramTargetEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
       subscription {

@@ -60,6 +60,7 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
@@ -254,6 +255,13 @@ object ObsTabContents {
       }
     }(obsView)
 
+  def otherObsCount(
+    targetObsMap: SortedMap[Target.Id, Set[Observation.Id]],
+    obsId:        Observation.Id,
+    targetId:     Target.Id
+  ): Int =
+    targetObsMap.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
+
   // TODO Use this method
   // def readTargetPreferences(p: Props, targetId: Target.Id, state: View[State])(implicit ctx: AppContextIO): Callback =
   //   p.userId.get.map { uid =>
@@ -400,6 +408,7 @@ object ObsTabContents {
               )
             ),
             props.focusedTarget,
+            Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,

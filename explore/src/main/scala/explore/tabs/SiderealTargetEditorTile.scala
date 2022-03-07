@@ -51,7 +51,7 @@ object SiderealTargetEditorTile {
                                  undoStacks,
                                  searching,
                                  options,
-                                 renderInTitle.some
+                                 renderInTitle = renderInTitle.some
             )
           ): VdomNode
         }

@@ -9,7 +9,7 @@
 @checkboxFocusBackground: var(--checkbox-focus-background);
 @checkboxActiveBackground: var(--checkbox-active-background);
 @checkboxActiveFocusBackground: var(--checkbox-active-focus-background);
-@checkboxActiveFocusCheckColor: @gray-base;
+@checkboxActiveFocusCheckColor: var(--checkbox-active-focus-check-color);
 
 /* @inputBorder: var(--input-border-color); */
 @checkboxBorder: 1px solid var(--checkbox-border-color);

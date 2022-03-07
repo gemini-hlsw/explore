@@ -33,6 +33,7 @@ import monocle.Optional
 import react.common.ReactFnProps
 import react.resizeDetector.hooks._
 import react.semanticui.elements.button._
+import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
@@ -43,6 +44,7 @@ final case class AsterismEditor(
   obsIds:           ObsIdSet,
   asterism:         View[List[TargetWithId]],
   selectedTargetId: View[Option[Target.Id]],
+  otherObsCount:    Target.Id ==> Int,
   undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:        View[Set[Target.Id]],
   options:          View[TargetVisualOptions],
@@ -81,6 +83,15 @@ object AsterismEditor {
     )
   }
 
+  private def onCloneTarget(
+    id:       Target.Id,
+    asterism: View[List[TargetWithId]],
+    selected: View[Option[Target.Id]],
+    newTwid:  TargetWithId
+  ): Callback =
+    asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >> selected
+      .set(newTwid.id.some)
+
   val newId =
     CallbackTo(Random.nextInt(0xfff)).map(int => Target.Id(PosLong.unsafeFrom(int.abs.toLong + 1)))
 
@@ -89,12 +100,14 @@ object AsterismEditor {
       .withHooks[Props]
       // adding
       .useState(false)
+      // edit target in current obs only (0), or all "instances" of the target (1)
+      .useState(0)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _) => props.asterism.get)((_, adding) =>
+      .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, adding, _) =>
         _ => adding.setState(false)
       )
-      .useEffectWithDepsBy((props, _) => (props.asterism.get, props.selectedTargetId.get))(
-        (props, _) => { case (asterism, oTargetId) =>
+      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.selectedTargetId.get))(
+        (props, _, _) => { case (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           oTargetId
             .flatMap(id => if (asterism.exists(_.id === id)) id.some else none)
@@ -102,7 +115,7 @@ object AsterismEditor {
         }
       )
       .useResizeDetector()
-      .renderWithReuse { (props, adding, resize) =>
+      .renderWithReuse { (props, adding, editScope, resize) =>
         implicit val ctx = props.ctx
 
         val selectedTargetId = props.selectedTargetId
@@ -154,26 +167,56 @@ object AsterismEditor {
                 val optional =
                   Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
                     target =>
-                      _.map(twid =>
+                      _.map { twid =>
                         if (twid.id === targetId) TargetWithId(targetId, target) else twid
-                      )
+                      }
                   )
 
                 val selectedTargetView = props.asterism.zoom(optional)
 
+                val otherObsCount = props.otherObsCount(targetId)
+                val plural        = if (otherObsCount === 1) "" else "s"
+
                 selectedTargetView.mapValue(targetView =>
                   targetView.get match {
-                    case Target.Sidereal(_, _, _, _) =>
-                      SiderealTargetEditor(
-                        props.userId,
-                        targetId,
-                        targetView
-                          .unsafeNarrow[Target.Sidereal],
-                        props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                        props.searching,
-                        props.options
+                    case t @ Target.Sidereal(_, _, _, _) =>
+                      <.div(
+                        <.div(
+                          ExploreStyles.SharedEditWarning,
+                          s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
+                          Checkbox(
+                            name = "editScope",
+                            label =
+                              if (props.obsIds.size === 1) "only this observation"
+                              else "only the current observations",
+                            value = 0,
+                            checked = editScope.value === 0,
+                            onChange = (_: Boolean) => editScope.setState(0)
+                          ),
+                          Checkbox(name = "editScope",
+                                   label = "all observations of this target",
+                                   value = 1,
+                                   checked = editScope.value === 1,
+                                   onChange = (_: Boolean) => editScope.setState(1)
+                          )
+                        ).when(otherObsCount > 0),
+                        SiderealTargetEditor(
+                          props.userId,
+                          targetId,
+                          targetView
+                            .unsafeNarrow[Target.Sidereal],
+                          props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+                          props.searching,
+                          props.options,
+                          onClone = Reuse
+                            .currying(targetId, props.asterism, props.selectedTargetId)
+                            .in(onCloneTarget _),
+                          obsIdSubset =
+                            if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
+                            else none
+                        )
                       )
-                    case _                           =>
+                    case _                               =>
                       <.div("Non-sidereal targets not supported")
                   }
                 )
