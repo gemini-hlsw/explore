@@ -170,7 +170,9 @@ object ExploreMain extends IOApp.Simple {
           _                    <- logger.info(s"Config: ${appConfig.show}")
           ctx                  <-
             AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage)
-          r                    <- (ctx.sso.whoami.handleError(_ => none), // recover to enable guest users on unauthorized domains
+          r                    <- (ctx.sso.whoami.handleError(_ =>
+                                     none
+                                   ), // recover to enable guest users on unauthorized domains
                                    setupDOM(),
                                    showEnvironment(appConfig.environment)
                                   ).parTupled
