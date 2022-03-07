@@ -194,6 +194,17 @@ jobs:
       - name: Run linters in dark mode
         uses: wearerequired/lint-action@v2.3.0
         with:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+          stylelint: true
+          stylelint_extensions: css,less
+          stylelint_args: common/src/main/webapp/less
+          git_no_verify: true
+>>>>>>> 1b8c3519c (Switch to esbuild)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
           stylelint_extensions: css,sass,scss
           stylelint_args: common/src/main/webapp/sass
@@ -210,6 +221,17 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: wearerequired/lint-action@v2.3.0
         with:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+          stylelint: true
+          stylelint_extensions: css,less
+          stylelint_args: common/src/main/webapp/less
+          git_no_verify: true
+>>>>>>> 1b8c3519c (Switch to esbuild)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
           stylelint_extensions: css,sass,scss
           stylelint_args: common/src/main/webapp/sass
