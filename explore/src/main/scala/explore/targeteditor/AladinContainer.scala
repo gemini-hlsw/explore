@@ -76,24 +76,6 @@ object AladinContainer {
         )
         .toCallback
 
-    def searchAndGo(
-      modify: ((String, RightAscension, Declination)) => Callback
-    )(search: String) =
-      aladinRef.get.asCBO
-        .flatMapCB(
-          _.backend
-            .gotoObject(
-              search,
-              (a, b) => {
-                val ra  = RightAscension.fromDoubleDegrees(a.toDouble)
-                val dec = Declination.fromDoubleDegrees(b.toDouble).getOrElse(Declination.Zero)
-                setRa(ra) *> setDec(dec) *> modify((search, ra, dec))
-              },
-              Callback.log("error")
-            )
-        )
-        .toCallback
-
     def toggleVisibility(g: Element, selector: String, option: Visible): Unit =
       g.querySelectorAll(selector).foreach {
         case e: Element =>
@@ -127,7 +109,6 @@ object AladinContainer {
             visualization
               .shapesToSvg(GmosGeometry.shapes(p.options.posAngle),
                            GmosGeometry.pp,
-                           v.pixelScale,
                            GmosGeometry.ScaleFactor
               )
           )
