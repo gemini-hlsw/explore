@@ -247,7 +247,7 @@ val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NP
 lazy val setupNode = WorkflowStep.Use(
   UseRef.Public("actions", "setup-node", "v3"),
   name = Some("Use Node.js"),
-  params = Map("node-version" -> "14", "cache" -> "npm")
+  params = Map("node-version" -> "16", "cache" -> "npm", "git_no_verify" -> "true")
 )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
