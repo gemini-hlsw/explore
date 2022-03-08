@@ -57,7 +57,6 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          git_no_verify: true
 
       - name: npm install
         run: npm install
@@ -107,7 +106,6 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          git_no_verify: true
 
       - name: Cache sbt
         uses: actions/cache@v2
@@ -189,7 +187,6 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          git_no_verify: true
 
       - name: Cache sbt
         uses: actions/cache@v2
@@ -239,7 +236,6 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          git_no_verify: true
 
       - name: npm install
         run: npm install
@@ -253,13 +249,10 @@ jobs:
         uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
-          prettier_dir: common/src/main/webapp
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less
-          prettier: true
-          auto_fix: true
 
       - name: Setup and expand vars light
         run: |
@@ -270,10 +263,7 @@ jobs:
         uses: wearerequired/lint-action@v1.11.1
         with:
           stylelint: true
-          prettier_dir: common/src/main/webapp
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
           github_token: ${{ secrets.GITHUB_TOKEN }}
           stylelint_dir: common/src/main/webapp/less
-          prettier: true
-          auto_fix: true
