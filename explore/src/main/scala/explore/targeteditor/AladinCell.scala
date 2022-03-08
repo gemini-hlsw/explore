@@ -83,7 +83,10 @@ object AladinCell extends ModelOptics {
             <.div(
               ExploreStyles.AladinContainerColumn,
               AladinRef
-                .withRef(aladinRef) {
+                .withRef(aladinRef)
+                .withKey(
+                  props.target.get.toString
+                ) {
                   AladinContainer(
                     props.target,
                     props.options.get,
