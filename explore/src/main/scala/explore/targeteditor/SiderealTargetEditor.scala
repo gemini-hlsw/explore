@@ -281,7 +281,7 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   epochView,
                   ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                  ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                  ChangeAuditor.maxLength(8).decimal(3).denyNeg.as[Epoch],
                   id = "epoch",
                   units = "years",
                   disabled = disabled

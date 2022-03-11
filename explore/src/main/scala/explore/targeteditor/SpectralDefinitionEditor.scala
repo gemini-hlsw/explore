@@ -306,7 +306,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               ValidFormatInput.forRefinedInt[Positive](),
               ChangeAuditor
                 .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
-                .deny("-"),
+                .denyNeg,
               id = "bbTempK",
               units = "°K"
             ),
@@ -324,7 +324,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),
-              validFormat = ValidFormatInput.forRefinedBigDecimal[Positive](),
+              validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
               changeAuditor = ChangeAuditor.posScientificNotation()
             ),
             EnumViewSelect(

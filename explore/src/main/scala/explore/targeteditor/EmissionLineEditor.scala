@@ -38,6 +38,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
+import scala.math.BigDecimal.RoundingMode
 
 import scala.collection.immutable.SortedMap
 
@@ -70,7 +71,10 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             .Column("wavelength", _._1)
             .setHeader(_ => <.span(ExploreStyles.TextPlain, "λ (µm)"))
             .setCell(cell =>
-              Wavelength.decimalMicrometers.reverseGet(cell.value).setScale(3).toString
+              Wavelength.decimalMicrometers
+                .reverseGet(cell.value)
+                .setScale(3, RoundingMode.HALF_UP)
+                .toString
             )
             .setWidth(80)
             .setMinWidth(80)
@@ -103,7 +107,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               FormInputEV[View, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
-                validFormat = ValidFormatInput.forPosBigDecimal(),
+                validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               )
@@ -184,8 +188,11 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             id = "newWavelength",
             value = newWavelength,
             validFormat = ValidFormatInput.fromFormat(formatWavelengthMicron).optional,
-            changeAuditor =
-              ChangeAuditor.fromFormat(formatWavelengthMicron).decimal(3).allow("0", "0.").optional,
+            changeAuditor = ChangeAuditor
+              .fromFormat(formatWavelengthMicron)
+              .decimal(3)
+              .allow(List("0", "0.").contains_)
+              .optional,
             onTextChange = s => addDisabled.set(s.isEmpty),
             clazz = ExploreStyles.NewEmissionLineWavelength
           ),
