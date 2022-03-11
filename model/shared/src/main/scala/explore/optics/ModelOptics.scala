@@ -25,9 +25,6 @@ import scala.collection.immutable.SortedMap
  */
 trait ModelOptics {
 
-  // Iso for coulumb quantities
-  def coulombIso[N, U] = Iso[Quantity[N, U], N](_.value)(_.withUnit[U])
-
   val fromKilometersPerSecondCZ: Iso[BigDecimal, ApparentRadialVelocity] =
     Iso[BigDecimal, ApparentRadialVelocity](b =>
       ApparentRadialVelocity(b.withUnit[KilometersPerSecond])

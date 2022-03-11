@@ -15,6 +15,7 @@ import explore.optics._
 import explore.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
+import lucuma.core.optics._
 import lucuma.schemas._
 import monocle.function.At.at
 import monocle.function.Index.index
@@ -123,12 +124,12 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
 
   // Coulomb implicits
   implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
-    def stripQuantity: ViewF[F, N] = self.as(coulombIso[N, U])
+    def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
   }
 
   implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
       extends AnyVal {
-    def stripQuantity: ViewOptF[F, N] = self.as(coulombIso[N, U])
+    def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
   }
 
   // Model implicits

@@ -84,7 +84,6 @@ object SourceProfileEditor {
     React.Fragment(
       <.label("Profile", ExploreStyles.SkipToNext),
       EnumSelect(
-        label = "", // TODO Make optional in lucuma-ui
         value = currentType.some,
         onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
           props.sourceProfile.view(_.toInput).mod(sp.convert)

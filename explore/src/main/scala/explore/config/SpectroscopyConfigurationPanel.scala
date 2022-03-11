@@ -50,7 +50,7 @@ object SpectroscopyConfigurationPanel {
         val spectroscopyCapabilities =
           p.options.zoom(SpectroscopyConfigurationOptions.capabilities)
 
-        val wvMicroInput    = ValidFormatInput.fromFormatOptional(formatMicron)
+        val wvMicroInput    = ValidFormatInput.fromFormat(formatMicron).optional
         val wvChangeAuditor = ChangeAuditor.fromFormat(formatMicron).decimal(3).optional
 
         val wvUnits =
@@ -77,16 +77,16 @@ object SpectroscopyConfigurationPanel {
           FormInputEV(
             id = "configuration-resolution-power",
             value = resolution,
-            validFormat = ValidFormatInput.fromFormatOptional(formatPosInt),
-            changeAuditor = ChangeAuditor.fromFormat(formatPosInt).optional
+            validFormat = ValidFormatInput.forPosInt().optional,
+            changeAuditor = ChangeAuditor.posInt.optional
           ),
           <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
           FormInputEV(
             id = "signal-to-noise",
             value = signalToNoise,
             clazz = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-            validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
-            changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
+            validFormat = ValidFormatInput.forPosBigDecimal().optional,
+            changeAuditor = ChangeAuditor.posBigDecimal().optional
           ),
           <.div(
             ExploreStyles.SignalToNoiseAt,
@@ -133,7 +133,7 @@ object SpectroscopyConfigurationPanel {
               clazz = Css.Empty,
               value = focalPlaneAngle,
               units = "arcsec",
-              validFormat = ValidFormatInput.fromFormatOptional(formatArcsec),
+              validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
               changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
               disabled = false
             )

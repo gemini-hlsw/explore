@@ -136,7 +136,7 @@ object ImagingConfigurationPanel {
             inline = true,
             value = fov,
             units = "arcsec",
-            validFormat = ValidFormatInput.fromFormatOptional(formatArcsec),
+            validFormat = ValidFormatInput.fromFormat(formatArcsec).optional,
             changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
             disabled = false
           ),
@@ -144,8 +144,8 @@ object ImagingConfigurationPanel {
           FormInputEV(
             id = "signal-to-noise",
             value = signalToNoise,
-            validFormat = ValidFormatInput.fromFormatOptional(formatPosBigDecimal),
-            changeAuditor = ChangeAuditor.fromFormat(formatPosBigDecimal).optional
+            validFormat = ValidFormatInput.forPosBigDecimal().optional,
+            changeAuditor = ChangeAuditor.posBigDecimal().optional
           ),
           <.label("Capabilities",
                   HelpIcon("configuration/capabilities.md"),

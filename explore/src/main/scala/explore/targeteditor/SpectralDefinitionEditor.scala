@@ -325,9 +325,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
               ),
               validFormat = ValidFormatInput.forRefinedBigDecimal[Positive](),
-              changeAuditor = ChangeAuditor.fromValidFormatInput(
-                ValidFormatInput.forRefinedBigDecimal[Positive]()
-              )
+              changeAuditor = ChangeAuditor.posScientificNotation()
             ),
             EnumViewSelect(
               "Units",
