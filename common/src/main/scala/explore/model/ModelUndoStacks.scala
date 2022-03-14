@@ -10,6 +10,7 @@ import explore.common.ObsQueries.ObservationList
 import explore.common.ObsQueries.ScienceData
 import explore.model.ObsIdSet
 import explore.undo.UndoStacks
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus

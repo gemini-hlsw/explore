@@ -17,17 +17,16 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.AirMassRange
-import explore.model.ConstraintSet
-import explore.model.ElevationRange
 import explore.model.Help
-import explore.model.HourAngleRange
+import explore.model.display._
 import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -56,10 +55,10 @@ object ConstraintsPanel {
   type Props = ConstraintsPanel
 
   val airMassErrorMsg   = NonEmptyString.unsafeFrom(
-    f"Must be ${AirMassRange.MinValue.toDouble}%.1f to ${AirMassRange.MaxValue.toDouble}%.1f"
+    f"Must be ${ElevationRange.AirMass.MinValue.toDouble}%.1f to ${ElevationRange.AirMass.MaxValue.toDouble}%.1f"
   )
   val hourAngleErrorMsg = NonEmptyString.unsafeFrom(
-    f"Must be ${HourAngleRange.MinHour.toDouble}%.1f to ${HourAngleRange.MaxHour.toDouble}%.1f"
+    f"Must be ${ElevationRange.HourAngle.MinHour.toDouble}%.1f to ${ElevationRange.HourAngle.MaxHour.toDouble}%.1f"
   )
 
   sealed abstract class ElevationRangeType(val label: String) extends Product with Serializable
@@ -80,24 +79,26 @@ object ConstraintsPanel {
   // State is read-only. Changes are written directly to View received in props, and state is always derived.
   final case class State(
     rangeType: ElevationRangeType,
-    airMass:   AirMassRange,
-    hourAngle: HourAngleRange
+    airMass:   ElevationRange.AirMass,
+    hourAngle: ElevationRange.HourAngle
   )
 
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
   protected implicit val stateReuse: Reusability[State] = Reusability.derive
 
   def initialState(props: Props): State = props.constraintSet.get.elevationRange match {
-    case am @ AirMassRange(_, _)   => State(ElevationRangeType.AirMass, am, HourAngleRange.Default)
-    case ha @ HourAngleRange(_, _) => State(ElevationRangeType.HourAngle, AirMassRange.Default, ha)
+    case am @ ElevationRange.AirMass(_, _)   =>
+      State(ElevationRangeType.AirMass, am, ElevationRange.HourAngle.Default)
+    case ha @ ElevationRange.HourAngle(_, _) =>
+      State(ElevationRangeType.HourAngle, ElevationRange.AirMass.Default, ha)
   }
 
   def updateState(props: Props, state: State): State =
     props.constraintSet.get.elevationRange match {
-      case am @ AirMassRange(_, _)
+      case am @ ElevationRange.AirMass(_, _)
           if state.rangeType =!= ElevationRangeType.AirMass | state.airMass =!= am =>
         state.copy(rangeType = ElevationRangeType.AirMass, airMass = am)
-      case ha @ HourAngleRange(_, _)
+      case ha @ ElevationRange.HourAngle(_, _)
           if state.rangeType =!= ElevationRangeType.HourAngle | state.hourAngle =!= ha =>
         state.copy(rangeType = ElevationRangeType.HourAngle, hourAngle = ha)
       case _ => state
@@ -139,14 +140,14 @@ object ConstraintsPanel {
                   case HourAngle => state.hourAngle
                 },
                 _ match {
-                  case AirMassRange(_, _)   => cb(AirMass)
-                  case HourAngleRange(_, _) => cb(HourAngle)
+                  case ElevationRange.AirMass(_, _)   => cb(AirMass)
+                  case ElevationRange.HourAngle(_, _) => cb(HourAngle)
                 }
               )
         )
 
-      val airMassView: View[AirMassRange] =
-        View[AirMassRange](
+      val airMassView: View[ElevationRange.AirMass] =
+        View[ElevationRange.AirMass](
           state.airMass,
           (mod, cb) =>
             erView
@@ -154,8 +155,8 @@ object ConstraintsPanel {
               .modCB(mod, _.map(cb).orEmpty)
         )
 
-      val hourAngleView: View[HourAngleRange] =
-        View[HourAngleRange](
+      val hourAngleView: View[ElevationRange.HourAngle] =
+        View[ElevationRange.HourAngle](
           state.hourAngle,
           (mod, cb) =>
             erView
@@ -202,17 +203,18 @@ object ConstraintsPanel {
               FormInputEV(
                 id = "minam",
                 value = airMassView
-                  .zoom(AirMassRange.min)
+                  .zoom(ElevationRange.AirMass.min)
                   .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                    TruncatedRefinedBigDecimal
+                      .unsafeRefinedBigDecimal[ElevationRange.AirMass.Value, 1]
                   ),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
+                  .forRefinedTruncatedBigDecimal[ElevationRange.AirMass.Value, 1](airMassErrorMsg)
                   .andThen(
                     ValidFormatNec.lte(
-                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
+                      TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1](
                         state.airMass.max
                       ).get,
                       "Must be <= Max"
@@ -225,17 +227,18 @@ object ConstraintsPanel {
               FormInputEV(
                 id = "maxam",
                 value = airMassView
-                  .zoom(AirMassRange.max)
+                  .zoom(ElevationRange.AirMass.max)
                   .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[AirMassRange.Value, 1]
+                    TruncatedRefinedBigDecimal
+                      .unsafeRefinedBigDecimal[ElevationRange.AirMass.Value, 1]
                   ),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[AirMassRange.Value, 1](airMassErrorMsg)
+                  .forRefinedTruncatedBigDecimal[ElevationRange.AirMass.Value, 1](airMassErrorMsg)
                   .andThen(
                     ValidFormatNec.gte(
-                      TruncatedRefinedBigDecimal[AirMassRange.Value, 1](
+                      TruncatedRefinedBigDecimal[ElevationRange.AirMass.Value, 1](
                         state.airMass.min
                       ).get,
                       "Must be >= Min"
@@ -250,16 +253,19 @@ object ConstraintsPanel {
               FormInputEV(
                 id = "minha",
                 value = hourAngleView
-                  .zoom(HourAngleRange.minHours)
+                  .zoom(ElevationRange.HourAngle.minHours)
                   .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                    TruncatedRefinedBigDecimal
+                      .unsafeRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]
                   ),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
+                  .forRefinedTruncatedBigDecimal[ElevationRange.HourAngle.Hour, 1](
+                    hourAngleErrorMsg
+                  )
                   .andThen(
-                    ValidFormatNec.lte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                    ValidFormatNec.lte(TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1](
                                          state.hourAngle.maxHours
                                        ).get,
                                        "Must be <= Max"
@@ -272,16 +278,19 @@ object ConstraintsPanel {
               FormInputEV(
                 id = "maxha",
                 value = hourAngleView
-                  .zoom(HourAngleRange.maxHours)
+                  .zoom(ElevationRange.HourAngle.maxHours)
                   .zoomSplitEpi(
-                    TruncatedRefinedBigDecimal.unsafeRefinedBigDecimal[HourAngleRange.Hour, 1]
+                    TruncatedRefinedBigDecimal
+                      .unsafeRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1]
                   ),
                 errorClazz = ExploreStyles.InputErrorTooltip,
                 errorPointing = LabelPointing.Below,
                 validFormat = ValidFormatInput
-                  .forRefinedTruncatedBigDecimal[HourAngleRange.Hour, 1](hourAngleErrorMsg)
+                  .forRefinedTruncatedBigDecimal[ElevationRange.HourAngle.Hour, 1](
+                    hourAngleErrorMsg
+                  )
                   .andThen(
-                    ValidFormatNec.gte(TruncatedRefinedBigDecimal[HourAngleRange.Hour, 1](
+                    ValidFormatNec.gte(TruncatedRefinedBigDecimal[ElevationRange.HourAngle.Hour, 1](
                                          state.hourAngle.minHours
                                        ).get,
                                        "Must be >= Min"

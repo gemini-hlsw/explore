@@ -7,6 +7,7 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import explore.model
 import explore.model.ConstraintsSummary
+import lucuma.core.{ model => coreModel }
 import lucuma.schemas.ObservationDB
 
 import java.time
@@ -395,7 +396,7 @@ object ObsQueriesGQL {
         object TargetEnvironment {
           type Asterism = model.TargetWithId
         }
-        type ConstraintSet = model.ConstraintSet
+        type ConstraintSet = coreModel.ConstraintSet
 
         object ScienceRequirements {
           object Spectroscopy {

@@ -28,6 +28,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
+import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
@@ -42,6 +43,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.syntax.all._
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -247,7 +249,7 @@ object ObsTabContents {
           options = constraintGroups.get
             .map(kv =>
               new SelectItem(value = ObsIdSet.fromString.reverseGet(kv._1),
-                             text = kv._2.constraintSet.displayName
+                             text = kv._2.constraintSet.shortName
               )
             )
             .toList

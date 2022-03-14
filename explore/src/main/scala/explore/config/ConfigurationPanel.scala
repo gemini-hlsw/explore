@@ -15,7 +15,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
-import explore.model.ConstraintSet
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
@@ -28,6 +27,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
 import lucuma.ui.forms.EnumViewSelect

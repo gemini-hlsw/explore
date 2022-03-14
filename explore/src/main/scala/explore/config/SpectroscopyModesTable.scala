@@ -21,7 +21,6 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
-import explore.model.ConstraintSet
 import explore.model.GmosNorthLongSlit
 import explore.model.GmosSouthLongSlit
 import explore.model.ITCTarget
@@ -35,6 +34,7 @@ import lucuma.core.enum.FocalPlane
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
+import lucuma.core.model.ConstraintSet
 import lucuma.core.util.Display
 import lucuma.ui.reusability._
 import react.CircularProgressbar.CircularProgressbar

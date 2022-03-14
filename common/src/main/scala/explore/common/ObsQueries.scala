@@ -14,10 +14,7 @@ import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.AirMassRange
 import explore.model.ConstraintGroup
-import explore.model.ConstraintSet
-import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.ScienceConfiguration
@@ -27,6 +24,8 @@ import explore.optics._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -146,11 +145,11 @@ object ObsQueries {
     c:           TransactionalClient[F, ObservationDB]
   ): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match {
-      case AirMassRange(min, max)   =>
+      case ElevationRange.AirMass(min, max)   =>
         ElevationRangeInput(airmassRange =
           AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
         )
-      case HourAngleRange(min, max) =>
+      case ElevationRange.HourAngle(min, max) =>
         ElevationRangeInput(hourAngleRange =
           HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )

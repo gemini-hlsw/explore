@@ -9,12 +9,10 @@ import crystal.react.View
 import crystal.react.implicits._
 import explore.common.ObsQueriesGQL._
 import explore.implicits._
-import explore.model.AirMassRange
-import explore.model.ConstraintSet
-import explore.model.ElevationRange
-import explore.model.HourAngleRange
 import explore.undo.UndoContext
 import lucuma.core.enum._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
@@ -60,11 +58,11 @@ object ConstraintsQueries {
 
     def elevationRange(er: ElevationRange): Endo[ConstraintSetInput] = {
       val createER: ElevationRangeInput = er match {
-        case AirMassRange(min, max)   =>
+        case ElevationRange.AirMass(min, max)   =>
           ElevationRangeInput(airmassRange =
             AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
           )
-        case HourAngleRange(min, max) =>
+        case ElevationRange.HourAngle(min, max) =>
           ElevationRangeInput(hourAngleRange =
             HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
           )

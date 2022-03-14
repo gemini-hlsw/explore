@@ -5,9 +5,8 @@ package explore.schemas
 
 import clue.annotation.GraphQLSchema
 import eu.timepit.refined.types.numeric
-import explore.model.AirMassRange
-import explore.model.ElevationRange
-import explore.model.HourAngleRange
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
@@ -77,13 +76,13 @@ trait ITC {
   }
 
   implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance {
-    case AirMassRange(mi, ma)   =>
+    case ElevationRange.AirMass(mi, ma)   =>
       Json.obj(
         ("airmassRange",
          Json.obj(("min", Json.fromBigDecimal(mi.value)), ("max", Json.fromBigDecimal(ma.value)))
         )
       )
-    case HourAngleRange(mi, ma) =>
+    case ElevationRange.HourAngle(mi, ma) =>
       Json.obj(
         ("hourAngleRange",
          Json.obj(("minHours", Json.fromBigDecimal(mi.value)),
@@ -93,7 +92,7 @@ trait ITC {
       )
   }
 
-  implicit val csEncoder: Encoder[explore.model.ConstraintSet] = deriveEncoder
+  implicit val csEncoder: Encoder[ConstraintSet] = deriveEncoder
 
   object Scalars {
     // Basic types
@@ -137,7 +136,7 @@ trait ITC {
 
   object Types {
     type SpectralDistributionInput      = model.SpectralDistribution
-    type ConstraintSetInput             = explore.model.ConstraintSet
+    type ConstraintSetInput             = ConstraintSet
     type BandNormalizedIntegrated       = model.SpectralDefinition.BandNormalized[Integrated]
     type BandNormalizedSurface          = model.SpectralDefinition.BandNormalized[Surface]
     type BrightnessIntegrated           = Measure[BigDecimal] Of Brightness[Integrated]
