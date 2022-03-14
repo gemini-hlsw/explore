@@ -1,4 +1,3 @@
-import org.scalajs.linker.interface.ESVersion
 import org.scalajs.linker.interface.ModuleSplitStyle
 import Settings.Libraries._
 import scala.sys.process._
@@ -212,7 +211,6 @@ lazy val commonModuleTest = Seq(
 
 lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
-  scalaJSLinkerConfig ~= { _.withESFeatures(_.withESVersion(ESVersion.ES2018)) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
