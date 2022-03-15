@@ -117,7 +117,6 @@ trait UndoSetter[M] { self =>
    */
   def undoableView[N](getN: M => N, modN: (N => N) => M => M): View[N] =
     View[N](
-      // model.zoom(getN)(modN).get,
       getN(model.get),
       (f, cb) => mod(getN, (n: N) => modN(_ => n), (n: N) => cb(n).to[DefaultA])(f)
     )
