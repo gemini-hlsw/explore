@@ -281,7 +281,7 @@ object SiderealTargetEditor {
                 InputWithUnits(
                   epochView,
                   ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
-                  ChangeAuditor.maxLength(8).decimal(3).deny("-").as[Epoch],
+                  ChangeAuditor.maxLength(8).decimal(3).denyNeg.as[Epoch],
                   id = "epoch",
                   units = "years",
                   disabled = disabled
@@ -289,7 +289,7 @@ object SiderealTargetEditor {
                 <.label("µ RA", ExploreStyles.SkipToNext),
                 InputWithUnits(
                   properMotionRAView,
-                  ValidFormatInput.fromFormatOptional(pmRAFormat, "Must be a number"),
+                  ValidFormatInput.fromFormat(pmRAFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
                   id = "raPM",
                   units = "mas/y",
@@ -298,7 +298,7 @@ object SiderealTargetEditor {
                 <.label("µ Dec", ExploreStyles.SkipToNext),
                 InputWithUnits(
                   properMotionDecView,
-                  ValidFormatInput.fromFormatOptional(pmDecFormat, "Must be a number"),
+                  ValidFormatInput.fromFormat(pmDecFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
                   id = "raDec",
                   units = "mas/y",
@@ -307,13 +307,18 @@ object SiderealTargetEditor {
                 <.label("Parallax", ExploreStyles.SkipToNext),
                 InputWithUnits(
                   parallaxView,
-                  ValidFormatInput.fromFormatOptional(pxFormat, "Must be a number"),
+                  ValidFormatInput.fromFormat(pxFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,
                   id = "parallax",
                   units = "mas",
                   disabled = disabled
                 ),
-                RVInput(radialVelocityView, disabled),
+                RVInput(radialVelocityView, disabled)
+              ),
+              Form(as = <.div, size = Small)(
+                ExploreStyles.Grid,
+                ExploreStyles.Compact,
+                ExploreStyles.ExploreForm,
                 SourceProfileEditor(sourceProfileRSU, disabled = disabled)
               )
             )

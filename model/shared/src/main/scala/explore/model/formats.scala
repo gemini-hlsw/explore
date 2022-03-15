@@ -5,16 +5,13 @@ package explore.model
 
 import cats.syntax.all._
 import coulomb._
-import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
 import explore.optics._
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion.AngularVelocityComponent
 import lucuma.core.math._
 import lucuma.core.math.units._
-import lucuma.core.optics.Format
+import lucuma.core.optics._
 import lucuma.core.syntax.string._
 
 import java.text.NumberFormat
@@ -99,12 +96,6 @@ trait formats {
       b => b.parseBigDecimalOption.filter(_ >= 0).map(_.withUnit[Micrometer]),
       w => w.value.toString
     )
-
-  val formatPosInt: Format[String, PosInt] =
-    Format(_.parseIntOption.flatMap(refineV[Positive](_).toOption), _.value.toString)
-
-  val formatPosBigDecimal: Format[String, PosBigDecimal] =
-    Format(_.parseBigDecimalOption.flatMap(refineV[Positive](_).toOption), _.value.toString)
 
   val formatArcsec: Format[String, Angle] =
     Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)

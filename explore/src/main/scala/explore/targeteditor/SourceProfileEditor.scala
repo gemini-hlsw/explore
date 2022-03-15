@@ -84,7 +84,6 @@ object SourceProfileEditor {
     React.Fragment(
       <.label("Profile", ExploreStyles.SkipToNext),
       EnumSelect(
-        label = "", // TODO Make optional in lucuma-ui
         value = currentType.some,
         onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
           props.sourceProfile.view(_.toInput).mod(sp.convert)
@@ -114,7 +113,7 @@ object SourceProfileEditor {
             InputWithUnits( // FWHM is positive arcsec accepting decimals
               gaussianRSU.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
               angleValidFormatInput,
-              ChangeAuditor.fromValidFormatInput(angleValidFormatInput).deny("-"),
+              ChangeAuditor.fromValidFormatInput(angleValidFormatInput).denyNeg,
               id = "fwhm",
               units = "arcsec"
             ),

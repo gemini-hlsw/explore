@@ -40,7 +40,7 @@ object TargetColumns {
     "parallax"     -> "Parallax",
     "morphology"   -> "Morphology",
     "sed"          -> "SED"
-  ) ++ Band.all.map(m => (m.shortName + "mag", m.shortName + "Mag")).toMap
+  ) ++ Band.all.map(m => (m.tag + "mag", m.shortName + "Mag")).toMap
 
   val allColNames: Map[String, String] = baseColNames ++ siderealColNames
 
@@ -102,7 +102,7 @@ object TargetColumns {
       ) ++
         Band.all.map(band =>
           siderealColumnOpt(
-            band.shortName + "mag",
+            band.tag + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           )
             .setCell(_.value.map(_.displayWithoutError).orEmpty)

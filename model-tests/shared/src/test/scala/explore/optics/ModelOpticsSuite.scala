@@ -3,9 +3,6 @@
 
 package explore.optics
 
-import coulomb.accepted.Percent
-import coulomb.cats.implicits._
-import coulomb.scalacheck.ArbQuantity
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbTarget
@@ -18,9 +15,7 @@ class ModelOpticsSuite extends DisciplineSuite {
   import ArbRadialVelocity._
   import ArbRedshift._
   import ArbTarget._
-  import ArbQuantity._ // This import has to be last.
 
-  checkAll("coulombIso", IsoTests(coulombIso[Int, Percent]))
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalIso))
   checkAll("targetRV", OptionalTests(targetRV))
 }

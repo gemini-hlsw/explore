@@ -93,7 +93,7 @@ object RVInput {
             value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatZ, "Must be a number"),
+            validFormat = ValidFormatInput.fromFormat(formatZ, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9).optional,
             clazz = baseCss,
             disabled = props.disabled
@@ -104,7 +104,7 @@ object RVInput {
             value = props.value.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatCZ, "Must be a number"),
+            validFormat = ValidFormatInput.fromFormat(formatCZ, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10).optional,
             clazz = baseCss,
             disabled = props.disabled
@@ -115,7 +115,7 @@ object RVInput {
             value = props.value,
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
-            validFormat = ValidFormatInput.fromFormatOptional(formatRV, "Must be a number"),
+            validFormat = ValidFormatInput.fromFormat(formatRV, "Must be a number").optional,
             changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3).optional,
             clazz = baseCss,
             disabled = props.disabled
