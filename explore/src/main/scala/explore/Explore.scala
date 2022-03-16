@@ -139,10 +139,11 @@ object ExploreMain extends IOApp.Simple {
           RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
         def routingView(view: View[RootModel]): View[RootModel] =
-          view.withOnMod { model =>
-            routerCtl
-              .set(RootModelRouting.lens.get(model))
-          }
+          view
+        // view.withOnMod { model =>
+        //   routerCtl
+        //     .set(RootModelRouting.lens.get(model))
+        // }
 
         def rootComponent(view: View[RootModel]): VdomElement =
           <.div(

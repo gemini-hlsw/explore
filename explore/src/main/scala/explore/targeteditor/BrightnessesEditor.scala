@@ -159,6 +159,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         )
       )
       .renderWithReuse { (props, state, _, _, tableInstance) =>
+        println("RENDERING BRIGHTNESS TABLE")
+
         val newBandView: Option[View[Band]] =
           state.value.newBand.map(band =>
             ViewF(

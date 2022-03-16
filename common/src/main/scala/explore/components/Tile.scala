@@ -76,6 +76,7 @@ object Tile {
     ScalaFnComponent
       .withHooks[Props]
       // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
+      // .useSerialStateView(none[html.Element])
       .useStateView(none[html.Element])
       .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
@@ -105,7 +106,11 @@ object Tile {
           )(Icons.Minimize)
 
         def setInfoRef(node: dom.Node | Null): Unit =
-          infoRef.set(Option(node.asInstanceOf[html.Element])).runNow()
+          infoRef.get
+            .fold(
+              infoRef.set(Option(node.asInstanceOf[html.Element]))
+            )(_ => Callback.empty)
+            .runNow()
 
         <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
               p.key.whenDefined(^.key := _)

@@ -151,17 +151,18 @@ object AsterismEditor {
                 })
             )
           ),
-          <.div(^.height := s"${targetTableHeight}px",
-                TargetTable(
-                  props.obsIds,
-                  props.asterism,
-                  props.hiddenColumns,
-                  selectedTargetId,
-                  props.renderInTitle
-                )
+          <.div(
+            ^.height := s"${targetTableHeight}px"
+            // TargetTable(
+            //   props.obsIds,
+            //   props.asterism,
+            //   props.hiddenColumns,
+            //   selectedTargetId,
+            //   props.renderInTitle
+            // )
           ),
           <.div(
-            ^.height     := s"${editorHeight}px",
+            ^.height := s"${editorHeight}px",
             selectedTargetId.get
               .flatMap[VdomElement] { targetId =>
                 val optional =

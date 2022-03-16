@@ -82,18 +82,18 @@ object AladinCell extends ModelOptics {
             ExploreStyles.TargetAladinCell,
             <.div(
               ExploreStyles.AladinContainerColumn,
-              AladinRef
-                .withRef(aladinRef)
-                .withKey(
-                  props.target.get.toString
-                ) {
-                  AladinContainer(
-                    props.target,
-                    props.options.get,
-                    coordinatesSetter,
-                    Reuse.currying(props).in(fovSetter _)
-                  )
-                },
+              // AladinRef
+              //   .withRef(aladinRef)
+              //   .withKey(
+              //     props.target.get.toString
+              // ) {
+              // AladinContainer(
+              //   props.target,
+              //   props.options.get,
+              //   coordinatesSetter,
+              //   Reuse.currying(props).in(fovSetter _)
+              // )
+              // },
               AladinToolbar(fov.value, coords.value),
               <.div(
                 ExploreStyles.AladinCenterButton,

@@ -492,9 +492,9 @@ object SurfaceSpectralDefinitionEditor
                                             SurfaceSpectralDefinitionEditor
     ] {
   protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
-    brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
+    brightnessesView => <.div // SurfaceBrightnessEditor(brightnessesView, false)
 
   protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
-    emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
+    emissionLinesView => <.div // SurfaceEmissionLineEditor(emissionLinesView, false)
 
 }
