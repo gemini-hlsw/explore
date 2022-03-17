@@ -15,7 +15,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.common.ITCQueriesGQL._
 import explore.model.Constants
-import explore.model.ConstraintSet
 import explore.model.ITCTarget
 import explore.model.Progress
 import explore.modes.GmosNorthSpectroscopyRow
@@ -28,6 +27,7 @@ import japgolly.scalajs.react._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import org.typelevel.log4cats.Logger

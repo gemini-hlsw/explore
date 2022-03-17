@@ -12,6 +12,5 @@ object all
     with ArbUserVault
     with ArbObsSummary
     with ArbConstraintsSummary
-    with ArbElevationRange
     with ArbTargetSummary
     with ArbSpectroscopyConfigurationOptions

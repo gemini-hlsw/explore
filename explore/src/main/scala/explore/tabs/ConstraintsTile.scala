@@ -11,11 +11,11 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.constraints.ConstraintsPanel
-import explore.model.ConstraintSet
 import explore.model.reusability._
 import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._

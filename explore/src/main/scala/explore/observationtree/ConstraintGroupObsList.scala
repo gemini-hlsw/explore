@@ -18,12 +18,14 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
+import explore.model.display._
 import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.syntax.all._
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
@@ -202,7 +204,7 @@ object ConstraintGroupObsList {
             val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
               icon,
               <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                constraintGroup.constraintSet.displayName
+                constraintGroup.constraintSet.shortName
               ),
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )

@@ -12,14 +12,13 @@ import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.AirMassRange
 import explore.model.ConstraintGroup
-import explore.model.ConstraintSet
-import explore.model.HourAngleRange
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
@@ -113,39 +112,39 @@ object ConstraintsSummaryTable {
             .setSortByFn(_.label),
           column("minam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
             .setCell(_.value match {
-              case AirMassRange(min, _) => f"${min.value}%.1f"
-              case HourAngleRange(_, _) => ""
+              case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
+              case ElevationRange.HourAngle(_, _) => ""
             })
             .setSortByFn(_ match {
-              case AirMassRange(min, _) => min.value
-              case HourAngleRange(_, _) => AirMassRange.MinValue - 1
+              case ElevationRange.AirMass(min, _) => min.value
+              case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
             }),
           column("maxam", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
             .setCell(_.value match {
-              case AirMassRange(_, max) => f"${max.value}%.1f"
-              case HourAngleRange(_, _) => ""
+              case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
+              case ElevationRange.HourAngle(_, _) => ""
             })
             .setSortByFn(_ match {
-              case AirMassRange(_, max) => max.value
-              case HourAngleRange(_, _) => AirMassRange.MinValue - 1
+              case ElevationRange.AirMass(_, max) => max.value
+              case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
             }),
           column("minha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
             .setCell(_.value match {
-              case AirMassRange(_, _)     => ""
-              case HourAngleRange(min, _) => f"${min.value}%.1f"
+              case ElevationRange.AirMass(_, _)     => ""
+              case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
             })
             .setSortByFn(_ match {
-              case AirMassRange(_, _)     => HourAngleRange.MinHour - 1
-              case HourAngleRange(min, _) => min.value
+              case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
+              case ElevationRange.HourAngle(min, _) => min.value
             }),
           column("maxha", ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get)
             .setCell(_.value match {
-              case AirMassRange(_, _)     => ""
-              case HourAngleRange(_, max) => f"${max.value}%.1f"
+              case ElevationRange.AirMass(_, _)     => ""
+              case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
             })
             .setSortByFn(_ match {
-              case AirMassRange(_, _)     => HourAngleRange.MinHour - 1
-              case HourAngleRange(_, max) => max.value
+              case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
+              case ElevationRange.HourAngle(_, max) => max.value
             }),
           column("count", _.obsIds.length)
             .setSortType(DefaultSortTypes.number),

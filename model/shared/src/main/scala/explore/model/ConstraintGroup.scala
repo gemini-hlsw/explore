@@ -6,7 +6,9 @@ package explore.model
 import cats.Eq
 import io.circe.Decoder
 import io.circe.generic.semiauto._
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
+import lucuma.schemas.decoders._
 import monocle.Focus
 
 import scala.annotation.unused
