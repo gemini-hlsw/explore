@@ -104,7 +104,7 @@ object AsterismQueries {
   }
 
   val AsterismGroupLiveQuery =
-    ScalaFnComponent[View[AsterismGroupsWithObs] ==> VdomNode](render =>
+    ScalaFnComponent[Reuse[View[AsterismGroupsWithObs]] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
           AsterismGroupObsQuery.query().reuseAlways,

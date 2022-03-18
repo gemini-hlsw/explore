@@ -42,7 +42,7 @@ import scala.util.Random
 final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
-  asterism:         View[List[TargetWithId]],
+  asterism:         Reuse[View[List[TargetWithId]]],
   selectedTargetId: View[Option[Target.Id]],
   otherObsCount:    Target.Id ==> Int,
   undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
@@ -103,10 +103,10 @@ object AsterismEditor {
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, adding, _) =>
+      .useEffectWithDepsBy((props, _, _) => props.asterism)((_, adding, _) =>
         _ => adding.setState(false)
       )
-      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.selectedTargetId.get))(
+      .useEffectWithDepsBy((props, _, _) => (props.asterism.value.get, props.selectedTargetId.get))(
         (props, _, _) => { case (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           oTargetId
@@ -120,7 +120,7 @@ object AsterismEditor {
 
         val selectedTargetId = props.selectedTargetId
 
-        val targetTableHeight = props.asterism.get.length match {
+        val targetTableHeight = props.asterism.value.get.length match {
           case 0 => 27
           case 1 => 57
           case 2 => 91
@@ -151,15 +151,14 @@ object AsterismEditor {
                 })
             )
           ),
-          <.div(
-            ^.height := s"${targetTableHeight}px"
-            // TargetTable(
-            //   props.obsIds,
-            //   props.asterism,
-            //   props.hiddenColumns,
-            //   selectedTargetId,
-            //   props.renderInTitle
-            // )
+          <.div(^.height := s"${targetTableHeight}px")(
+            TargetTable(
+              props.obsIds,
+              props.asterism,
+              props.hiddenColumns,
+              selectedTargetId,
+              props.renderInTitle
+            )
           ),
           <.div(
             ^.height := s"${editorHeight}px",
@@ -204,13 +203,15 @@ object AsterismEditor {
                         SiderealTargetEditor(
                           props.userId,
                           targetId,
-                          targetView
-                            .unsafeNarrow[Target.Sidereal],
+                          props.asterism.map(
+                            _ => // Ugly temporary hack until we have proper Reuse[View[A]].mapValue
+                              targetView.unsafeNarrow[Target.Sidereal]
+                          ),
                           props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                           props.searching,
                           props.options,
                           onClone = Reuse
-                            .currying(targetId, props.asterism, props.selectedTargetId)
+                            .currying(targetId, props.asterism.value, props.selectedTargetId)
                             .in(onCloneTarget _),
                           obsIdSubset =
                             if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some

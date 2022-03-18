@@ -28,7 +28,8 @@ object IfLogged {
   type Props = IfLogged
 
   protected implicit val propsReuse: Reusability[Props] =
-    Reusability.derive && Reusability.by(_.render)
+    // Reusability.derive && Reusability.by(_.render)
+    Reusability.by(x => (x.view.get, x.render))
 
   // Creates a "profile" for user preferences.
   private def createUserPrefs(vault: UserVault)(implicit ctx: AppContextIO): IO[Unit] =

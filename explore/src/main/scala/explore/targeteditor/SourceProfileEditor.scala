@@ -28,7 +28,7 @@ import lucuma.ui.reusability._
 import react.common._
 
 case class SourceProfileEditor(
-  sourceProfile:       RemoteSyncUndoable[SourceProfile, SourceProfileInput],
+  sourceProfile:       Reuse[RemoteSyncUndoable[SourceProfile, SourceProfileInput]],
   disabled:            Boolean
 )(implicit val appCtx: AppContextIO)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)
@@ -68,7 +68,7 @@ object SourceProfileEditor {
   { props =>
     implicit val appCtx = props.appCtx
 
-    val currentType: SourceProfileType = props.sourceProfile.get match {
+    val currentType: SourceProfileType = props.sourceProfile.value.get match {
       case Point(_)       => SourceProfileType.PointType
       case Uniform(_)     => SourceProfileType.UniformType
       case Gaussian(_, _) => SourceProfileType.GaussianType
@@ -90,7 +90,7 @@ object SourceProfileEditor {
         )
       ),
       <.span,
-      props.sourceProfile
+      props.sourceProfile // We need to turn Reuse[Option into Option[Reuse
         .zoomOpt(
           SourceProfile.point.andThen(Point.spectralDefinition),
           forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())

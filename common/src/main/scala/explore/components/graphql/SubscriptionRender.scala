@@ -17,6 +17,7 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
+import scala.reflect.ClassTag
 
 final case class SubscriptionRender[D, A](
   subscribe:      Reuse[IO[GraphQLSubscription[IO, D]]],
@@ -29,6 +30,7 @@ final case class SubscriptionRender[D, A](
   val F:          Async[IO],
   val dispatcher: Effect.Dispatch[IO],
   val logger:     Logger[IO],
+  val classTag:   ClassTag[A],
   val reuse:      Reusability[A]
 ) extends ReactProps(SubscriptionRender.component)
     with SubscriptionRender.Props[IO, D, A]

@@ -83,7 +83,7 @@ object ConstraintSetTabContents {
   protected def renderFn(
     props:              Props,
     state:              View[State],
-    constraintsWithObs: View[ConstraintSummaryWithObervations]
+    constraintsWithObs: Reuse[View[ConstraintSummaryWithObervations]]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -170,13 +170,15 @@ object ConstraintSetTabContents {
 
     val rightSide = state.get.selected.optValue
       .flatMap(ids =>
-        findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
+        findConstraintGroup(ids, constraintsWithObs.value.get.constraintGroups).map(cg => (ids, cg))
       )
-      .fold[VdomNode](
-        Tile("constraints", "Constraints Summary", backButton.some)(
+      .fold[VdomNode] {
+        println("rendering tile 1")
+
+        Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
           Reuse.by((constraintsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
             ConstraintsSummaryTable(
-              constraintsWithObs.get.constraintGroups,
+              constraintsWithObs.value.get.constraintGroups,
               props.hiddenColumns,
               props.summarySorting,
               state.zoom(TwoPanelState.selected),
@@ -186,7 +188,7 @@ object ConstraintSetTabContents {
             )
           )
         )
-      ) { case (idsToEdit, constraintGroup) =>
+      } { case (idsToEdit, constraintGroup) =>
         val groupObsIds   = constraintGroup.obsIds
         val constraintSet = constraintGroup.constraintSet
         val cglView       = constraintsWithObs
@@ -250,14 +252,18 @@ object ConstraintSetTabContents {
         )
       }
 
+    println(s"RENDERING!!!")
+
     if (window.canFitTwoPanels) {
-      <.div(
+      <.div(^.key := "constraints-base")(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, tree(constraintsWithObs))
           .when(state.get.selected.leftPanelVisible),
-        <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile)(
+        <.div(^.key := "constraintset-right-side", ExploreStyles.SinglePanelTile) {
+          println("Rendering rightside")
+
           rightSide
-        ).when(state.get.selected.rightPanelVisible)
+        }.when(state.get.selected.rightPanelVisible)
       )
     } else {
       <.div(
@@ -289,6 +295,9 @@ object ConstraintSetTabContents {
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props) = {
       implicit val ctx = props.ctx
+
+      println("render cs tab contents")
+
       ConstraintGroupLiveQuery(
         Reuse(renderFn _)(props, ViewF.fromState($))
       )

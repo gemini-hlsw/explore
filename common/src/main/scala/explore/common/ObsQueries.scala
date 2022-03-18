@@ -123,7 +123,7 @@ object ObsQueries {
   }
 
   val ObsLiveQuery =
-    ScalaFnComponent[View[ObsSummariesWithConstraints] ==> VdomNode](render =>
+    ScalaFnComponent[Reuse[View[ObsSummariesWithConstraints]] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ProgramObservationsQuery.Data,

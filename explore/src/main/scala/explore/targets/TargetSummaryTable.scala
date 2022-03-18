@@ -26,6 +26,7 @@ import react.semanticui.modules.dropdown._
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
+import explore.model.reusability._
 
 import scalajs.js.JSConverters._
 

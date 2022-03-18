@@ -20,29 +20,31 @@ import org.typelevel.log4cats.Logger
 import react.common._
 
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 final case class SubscriptionRenderMod[D, A](
   subscribe:      Reuse[IO[GraphQLSubscription[IO, D]]],
   streamModifier: fs2.Stream[IO, D] ==> fs2.Stream[IO, A] =
     Reuse.always(identity[fs2.Stream[IO, D]] _)
 )(
-  val render:     Pot[View[A]] ==> VdomNode,
+  val render:     Pot[ReuseView[A]] ==> VdomNode,
   val onNewData:  Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:          Async[IO],
   val dispatcher: Effect.Dispatch[IO],
   val logger:     Logger[IO],
+  val classTag:   ClassTag[A],
   val reuse:      Reusability[A]
 ) extends ReactProps(SubscriptionRenderMod.component)
     with SubscriptionRenderMod.Props[IO, D, A]
 
 object SubscriptionRenderMod {
-  trait Props[F[_], D, A] extends Render.Subscription.Props[F, View, D, A] {}
+  trait Props[F[_], D, A] extends Render.Subscription.Props[F, ReuseView, D, A] {}
 
   protected final case class State[F[_], D, A](
     subscription: GraphQLSubscription[F, D],
     renderer:     StreamRendererMod.Component[A]
-  ) extends Render.Subscription.State[F, View, D, A]
+  ) extends Render.Subscription.State[F, ReuseView, D, A]
 
   // Reusability should be controlled by enclosing components and reuse parameter. We allow rerender every time it's requested.
   implicit protected def propsReuse[F[_], D, A]: Reusability[Props[F, D, A]] =
@@ -53,11 +55,13 @@ object SubscriptionRenderMod {
     ScalaComponent
       .builder[Props[F, D, A]]
       .initialState[Option[State[F, D, A]]](none)
-      .render(Render.renderFn[F, View, D, A](_))
+      .render(Render.renderFn[F, ReuseView, D, A](_))
       .componentDidMount { $ =>
+        // import $.props._
         implicit val F          = $.props.F
         implicit val dispatcher = $.props.dispatcher
         implicit val logger     = $.props.logger
+        implicit val classTag   = $.props.classTag
         implicit val reuse      = $.props.reuse
 
         $.props.subscribe.value
@@ -78,7 +82,7 @@ object SubscriptionRenderMod {
           .handleErrorWith(t => logger.error(t)("Error initializing SubscriptionRenderMod"))
           .runAsync
       }
-      .componentWillUnmount(Render.Subscription.willUnmountFn[F, View, D, A](_))
+      .componentWillUnmount(Render.Subscription.willUnmountFn[F, ReuseView, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

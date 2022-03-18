@@ -6,7 +6,7 @@ package explore.config
 import cats.implicits._
 import coulomb.Quantity
 import crystal.react.View
-import crystal.react.implicits._
+import explore.model.reusability._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -45,11 +45,11 @@ object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities]               = Display.by(_.label, _.label)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]   = Reusability.derive
-  implicit val avalableFiltersReuse: Reusability[AvailableFilter]       = Reusability.by(_.tag)
-  implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
-  implicit val propsReuse: Reusability[Props]                           = Reusability.derive
+  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
+  implicit val avalableFiltersReuse: Reusability[AvailableFilter]     = Reusability.by(_.tag)
+  // implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
+  implicit val propsReuse: Reusability[Props]                         = Reusability.derive
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
   val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)

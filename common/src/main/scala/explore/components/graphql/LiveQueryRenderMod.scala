@@ -20,32 +20,34 @@ import org.typelevel.log4cats.Logger
 import react.common._
 
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 final case class LiveQueryRenderMod[S, D, A](
   query:               Reuse[IO[D]],
   extract:             D ==> A,
   changeSubscriptions: Reuse[List[IO[GraphQLSubscription[IO, _]]]]
 )(
-  val render:          Pot[View[A]] ==> VdomNode,
+  val render:          Pot[ReuseView[A]] ==> VdomNode,
   val onNewData:       Reuse[IO[Unit]] = Reuse.always(IO.unit)
 )(implicit
   val F:               Async[IO],
   val dispatcher:      Effect.Dispatch[IO],
   val logger:          Logger[IO],
+  val classTag:        ClassTag[A],
   val reuse:           Reusability[A],
   val client:          WebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRenderMod.component)
     with LiveQueryRenderMod.Props[IO, S, D, A]
 
 object LiveQueryRenderMod {
-  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, View, S, D, A]
+  trait Props[F[_], S, D, A] extends Render.LiveQuery.Props[F, ReuseView, S, D, A]
 
   final case class State[F[_], S, D, A](
     queue:                   Queue[F, A],
     subscriptions:           List[GraphQLSubscription[F, _]],
     cancelConnectionTracker: F[Unit],
     renderer:                StreamRendererMod.Component[A]
-  ) extends Render.LiveQuery.State[F, View, S, D, A]
+  ) extends Render.LiveQuery.State[F, ReuseView, S, D, A]
 
   implicit def propsReuse[F[_], S, D, A]: Reusability[Props[F, S, D, A]] =
     Reusability.by(p => (p.query, p.extract, p.changeSubscriptions, p.render, p.onNewData))
@@ -55,23 +57,25 @@ object LiveQueryRenderMod {
     ScalaComponent
       .builder[Props[F, S, D, A]]
       .initialState[Option[State[F, S, D, A]]](none)
-      .render(Render.renderFn[F, View, D, A](_))
+      .render(Render.renderFn[F, ReuseView, D, A](_))
       .componentDidMount(
         Render.LiveQuery
-          .didMountFn[F, View, S, D, A][Props[F, S, D, A], State[F, S, D, A]](
+          .didMountFn[F, ReuseView, S, D, A][Props[F, S, D, A], State[F, S, D, A]](
             "LiveQueryRenderMod",
             (stream, props) => {
-              implicit val F          = props.F
-              implicit val dispatcher = props.dispatcher
-              implicit val logger     = props.logger
-              implicit val reuse      = props.reuse
+              import props._
+              // implicit val F          = props.F
+              // implicit val dispatcher = props.dispatcher
+              // implicit val logger     = props.logger
+              // implicit val classTag   = props.classTag
+              // implicit val reuse      = props.reuse
 
               StreamRendererMod.build(stream, holdAfterMod = (2 seconds).some)
             },
             State.apply
           )
       )
-      .componentWillUnmount(Render.LiveQuery.willUnmountFn[F, View, S, D, A](_))
+      .componentWillUnmount(Render.LiveQuery.willUnmountFn[F, ReuseView, S, D, A](_))
       .configure(Reusability.shouldComponentUpdate)
       .build
 

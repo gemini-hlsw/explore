@@ -21,6 +21,7 @@ import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
+import scala.reflect.ClassTag
 
 object Render {
   trait Props[F[_], G[_], A] {
@@ -30,6 +31,7 @@ object Render {
     implicit val F: Async[F]
     implicit val dispatcher: Effect.Dispatch[F]
     implicit val logger: Logger[F]
+    implicit val classTag: ClassTag[A]
     implicit val reuse: Reusability[A]
   }
 
@@ -111,6 +113,7 @@ object Render {
           StreamRendererComponent[G, A]
         ) => ST
       )($            : ComponentDidMount[P, Option[ST], Unit]): Callback = {
+        // import $.props._
         implicit val F          = $.props.F
         implicit val dispatcher = $.props.dispatcher
         implicit val logger     = $.props.logger

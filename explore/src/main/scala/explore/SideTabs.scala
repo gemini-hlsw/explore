@@ -21,6 +21,7 @@ import react.semanticui.elements.divider.Divider
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
+import explore.model.reusability._
 
 final case class SideTabs(
   tabs: View[EnumZipper[AppTab]]

@@ -25,7 +25,7 @@ object SiderealTargetEditorTile {
   def sideralTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
-    target:     View[Target.Sidereal],
+    target:     Reuse[View[Target.Sidereal]],
     undoStacks: View[UndoStacks[IO, Target.Sidereal]],
     searching:  View[Set[Target.Id]],
     options:    View[TargetVisualOptions],

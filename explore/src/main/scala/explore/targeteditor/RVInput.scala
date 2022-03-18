@@ -28,9 +28,10 @@ import monocle.Focus
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
+import crystal.react.reuse.Reuse
 
 final case class RVInput(
-  value:    View[Option[RadialVelocity]],
+  value:    Reuse[View[Option[RadialVelocity]]],
   disabled: Boolean
 ) extends ReactProps[RVInput](RVInput.component)
 
@@ -86,7 +87,7 @@ object RVInput {
       val rvView   = ViewF.fromState($).zoom(State.rvView)
       val errorCss = ExploreStyles.InputErrorTooltip
       val baseCss  = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(
-        props.value.get.isEmpty
+        props.value.value.get.isEmpty
       )
       val input    = state.rvView match {
         case RVView.Z  =>
@@ -112,7 +113,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.RV =>
-          FormInputEV(
+          FormInputEV[View, Option[RadialVelocity]](
             id = state.rvView.tag,
             value = props.value,
             errorClazz = errorCss,
@@ -138,7 +139,7 @@ object RVInput {
           EnumViewSelect(id = "view", value = rvView, disabled = props.disabled),
           input
         ),
-        state.units(props.value.get)
+        state.units(props.value.value.get)
       )
     }
   }

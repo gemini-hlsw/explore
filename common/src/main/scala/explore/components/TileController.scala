@@ -18,6 +18,7 @@ import explore.model.Constants
 import explore.model.GridLayoutSection
 import explore.model.enum.TileSizeState
 import explore.model.layout._
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User

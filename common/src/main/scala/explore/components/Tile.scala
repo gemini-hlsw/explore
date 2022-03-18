@@ -58,9 +58,11 @@ object Tile {
 
   type RenderInTitle = VdomNode ==> VdomNode
 
-  implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
+  implicit val propsReuse: Reusability[Tile] = // Reusability.always
+    Reusability.derive && Reusability.by(_.render)
 
-  implicit val htmlElementReuse: Reusability[html.Element] = Reusability.byRefOr_==
+  implicit val htmlElementReuse: Reusability[html.Element] = // Reusability.always
+    Reusability.byRefOr_==
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -75,10 +77,14 @@ object Tile {
   val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useEffectOnMount(Callback.log("TILE MOUNTED"))
       // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
       // .useSerialStateView(none[html.Element])
-      .useStateView(none[html.Element])
+      // .useStateView { println("init inforef"); none[html.Element] }
+      .useStateWithReuse { println("init inforef"); none[html.Element] }
       .renderWithReuse { (p, infoRef) =>
+        println(s"RENDERING WITH INFOREF: ${infoRef.value}")
+
         val maximizeButton =
           Button(
             as = <.a,
@@ -105,17 +111,23 @@ object Tile {
               .when_(p.state === TileSizeState.Normal)
           )(Icons.Minimize)
 
-        def setInfoRef(node: dom.Node | Null): Unit =
-          infoRef.get
-            .fold(
-              infoRef.set(Option(node.asInstanceOf[html.Element]))
-            )(_ => Callback.empty)
-            .runNow()
+        // def setInfoRef(node: dom.Node | Null): Unit =
+        //   infoRef.value
+        //     .fold(
+        //       Callback.log(s"setting inforef from [${infoRef.value}] to [$node]") >>
+        //         infoRef.setState(Option(node.asInstanceOf[html.Element]))
+        //     )(_ => Callback.log("skipping inforef"))
+        //     .runNow()
+
+        println(s"RENDERING WITH INFOREF 2: ${infoRef.value}")
 
         <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
-              p.key.whenDefined(^.key := _)
+              ^.key := "tile"
+              // p.key.whenDefined(^.key := _)
         )(
           <.div(
+            // p.key.whenDefined(^.key := _),
+            ^.key   := "tile",
             ExploreStyles.TileTitle,
             p.back.map(b => <.div(ExploreStyles.TileButton, b)),
             Menu(
@@ -127,14 +139,27 @@ object Tile {
               MenuItem(as = <.a)(p.title)
             ),
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-            <.span(^.untypedRef(setInfoRef))(
+            <.span(
+              ^.key := "tileTitle",
+              ^.untypedRef(node =>
+                infoRef.value
+                  .fold(
+                    Callback.log(s"setting inforef from [${infoRef.value}] to [$node]") >>
+                      infoRef.modState(
+                        _.fold(Option(node.asInstanceOf[html.Element]))(_.some)
+                      ) // OK THIS WORKS!
+                    // infoRef.setState(Option(node.asInstanceOf[html.Element]))
+                  )(_ => Callback.log("skipping inforef"))
+                  .runNow()
+              ).when(infoRef.value.isEmpty)
+            )(
               ExploreStyles.TileTitleStrip,
               ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
             ),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
           ),
-          infoRef.get
+          infoRef.value
             .map(node =>
               ResponsiveComponent(
                 widthBreakpoints,
@@ -145,6 +170,7 @@ object Tile {
                   Reuse
                     .currying(node)
                     .in((mountNode, info: VdomNode) => ReactPortal(info, mountNode))
+                  // Reuse.always(info => info) // ReactPortal(info, node))
                 )
               ).when(p.state =!= TileSizeState.Minimized)
             )

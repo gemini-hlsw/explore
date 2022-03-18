@@ -6,7 +6,7 @@ package explore.constraints
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
-import crystal.react.implicits._
+import explore.model.reusability._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString

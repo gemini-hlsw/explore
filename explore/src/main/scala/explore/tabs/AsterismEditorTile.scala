@@ -30,7 +30,7 @@ object AsterismEditorTile {
   def asterismEditorTile(
     userId:           Option[User.Id],
     obsId:            ObsIdSet,
-    asterismPot:      Pot[View[List[TargetWithId]]],
+    asterismPot:      Pot[Reuse[View[List[TargetWithId]]]],
     selectedTargetId: View[Option[Target.Id]],
     otherObsCount:    Target.Id ==> Int,
     undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
@@ -62,9 +62,9 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRender[View[List[TargetWithId]]](
+        potRender[Reuse[View[List[TargetWithId]]]](
           (
-            (asterism: View[List[TargetWithId]]) =>
+            (asterism: Reuse[View[List[TargetWithId]]]) =>
               userId.map(uid =>
                 AsterismEditor(uid,
                                obsId,

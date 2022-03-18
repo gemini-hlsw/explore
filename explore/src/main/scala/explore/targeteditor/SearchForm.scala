@@ -28,6 +28,7 @@ import react.semanticui.collections.form.Form.FormProps
 import react.semanticui.collections.form._
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.shorthand._
+import explore.model.reusability._
 
 import scalajs.js.JSConverters._
 

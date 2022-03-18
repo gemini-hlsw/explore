@@ -411,7 +411,7 @@ object SpectroscopyModesTable {
         )
       }((_, _, _, _, _) => {
         case (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
-          columns(wavelength, focalPlane, sn, constraints, targets, itc.get, itcProgress.get)
+          columns(wavelength, focalPlane, sn, constraints, targets, itc.value.get, itcProgress.get)
       })
       // selectedIndex
       .useStateBy((props, rows, _, _, _, _) =>

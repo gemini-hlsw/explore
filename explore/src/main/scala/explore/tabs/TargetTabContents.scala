@@ -149,7 +149,7 @@ object TargetTabContents {
     layouts:              View[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
-    asterismGroupWithObs: View[AsterismGroupsWithObs]
+    asterismGroupWithObs: Reuse[View[AsterismGroupsWithObs]]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -164,7 +164,7 @@ object TargetTabContents {
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(selectedLens)
 
-    val targetMap = asterismGroupWithObs.get.targetGroups
+    val targetMap = asterismGroupWithObs.value.get.targetGroups
 
     // Tree area
     def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
@@ -198,7 +198,7 @@ object TargetTabContents {
       targetId:      Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
+      findAsterismGroup(obsIdSet, asterismGroupWithObs.value.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         focusedObs.set(obsId.some) >>
@@ -252,26 +252,27 @@ object TargetTabContents {
      */
     def renderSummary: VdomNode =
       Tile("targetSummary", "Target Summary", backButton.some)(
-        Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
-          (asterismGroupWithObs.get,
-           props.hiddenColumns,
-           props.focusedObs,
-           props.focusedTarget,
-           props.expandedIds
+        Reuse
+          .by( // TODO Add reuseCurrying for higher arities in crystal // I think we have this now
+            (asterismGroupWithObs.value.get,
+             props.hiddenColumns,
+             props.focusedObs,
+             props.focusedTarget,
+             props.expandedIds
+            )
+          )((renderInTitle: Tile.RenderInTitle) =>
+            TargetSummaryTable(
+              targetMap,
+              props.hiddenColumns,
+              Reuse(selectObservationAndTarget _)(props.focusedObs,
+                                                  props.focusedTarget,
+                                                  props.expandedIds,
+                                                  selectedView
+              ),
+              Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
+              renderInTitle
+            ): VdomNode
           )
-        )((renderInTitle: Tile.RenderInTitle) =>
-          TargetSummaryTable(
-            targetMap,
-            props.hiddenColumns,
-            Reuse(selectObservationAndTarget _)(props.focusedObs,
-                                                props.focusedTarget,
-                                                props.expandedIds,
-                                                selectedView
-            ),
-            Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
-            renderInTitle
-          ): VdomNode
-        )
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth
@@ -351,9 +352,10 @@ object TargetTabContents {
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
       }
 
-      val asterismView: View[List[TargetWithId]] = asterismGroupWithObs
-        .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-        .zoom(getAsterism)(modAsterism)
+      val asterismView: Reuse[View[List[TargetWithId]]] = asterismGroupWithObs.map(
+        _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+          .zoom(getAsterism)(modAsterism)
+      )
 
       val title = focusedObs match {
         case Some(id) => s"Observation $id"
@@ -361,14 +363,14 @@ object TargetTabContents {
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[ViewOpt[Target]] =
+      val selectedTarget: Option[Reuse[ViewOpt[Target]]] =
         props.focusedTarget.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
             )
 
-          asterismView.zoom(optional)
+          asterismView.map(_.zoom(optional))
         }
 
       val asterismEditorTile =
@@ -420,8 +422,10 @@ object TargetTabContents {
           _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
         )
 
-      val targetView: View[Target.Sidereal] =
-        asterismGroupWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+      val targetView: Reuse[View[Target.Sidereal]] =
+        asterismGroupWithObs.map(
+          _.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+        )
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -466,7 +470,7 @@ object TargetTabContents {
                 case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
               })
           case Right(obsIds)  =>
-            findAsterismGroup(obsIds, asterismGroupWithObs.get.asterismGroups)
+            findAsterismGroup(obsIds, asterismGroupWithObs.value.get.asterismGroups)
               .fold(renderSummary) { asterismGroup =>
                 renderAsterismEditor(obsIds, asterismGroup)
               }

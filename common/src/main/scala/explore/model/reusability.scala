@@ -17,6 +17,8 @@ import lucuma.core.model.Target
 import lucuma.ui.reusability._
 
 import scala.collection.immutable.TreeSeqMap
+import crystal.react.View
+import crystal.react.ViewOpt
 
 /**
  * Reusability instances for model classes
@@ -51,6 +53,16 @@ object reusability {
     Reusability.derive
   implicit val obsSummaryWithTargetsAndConstraintsReuse
     : Reusability[ObsSummaryWithTargetsAndConstraints] = Reusability.derive
+
+  // Views - These are temporary and will go away once we finish migrating
+  implicit def viewReusability[A: Reusability]: Reusability[View[A]] =
+    Reusability.by(_.get)
+
+  implicit def viewOptReusability[A: Reusability]: Reusability[ViewOpt[A]] =
+    Reusability.by(_.get)
+
+  // implicit def viewListReusability[A: Reusability]: Reusability[ViewList[A]] =
+  //   Reusability.by(_.get)
 
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =

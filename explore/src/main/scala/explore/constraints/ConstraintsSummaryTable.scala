@@ -31,6 +31,7 @@ import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.SortingRule
+import explore.model.reusability._
 
 import scala.collection.immutable.SortedSet
 

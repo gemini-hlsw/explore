@@ -48,6 +48,7 @@ import scala.concurrent.duration._
 import scala.scalajs.js
 
 import js.annotation._
+import japgolly.scalajs.react.callback.Callback
 
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
@@ -138,14 +139,15 @@ object ExploreMain extends IOApp.Simple {
         val (router, routerCtl) =
           RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-        def routingView(view: View[RootModel]): View[RootModel] =
-          view
-        // view.withOnMod { model =>
-        //   routerCtl
-        //     .set(RootModelRouting.lens.get(model))
-        // }
+        def routingView(view: Reuse[View[RootModel]]): View[RootModel] =
+          view.value.withOnMod { model =>
+            if (model =!= view.value.get)
+              routerCtl
+                .set(RootModelRouting.lens.get(model))
+            else Callback.empty
+          }
 
-        def rootComponent(view: View[RootModel]): VdomElement =
+        def rootComponent(view: Reuse[View[RootModel]]): VdomElement =
           <.div(
             router(routingView(view))
           )

@@ -25,6 +25,7 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
+import explore.model.reusability._
 
 final case class SpectroscopyConfigurationPanel(
   options: View[SpectroscopyConfigurationOptions]

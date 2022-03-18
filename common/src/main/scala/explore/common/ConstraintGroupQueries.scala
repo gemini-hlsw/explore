@@ -80,7 +80,7 @@ object ConstraintGroupQueries {
   }
 
   val ConstraintGroupLiveQuery =
-    ScalaFnComponent[View[ConstraintSummaryWithObervations] ==> VdomNode](render =>
+    ScalaFnComponent[Reuse[View[ConstraintSummaryWithObervations]] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ConstraintGroupObsQuery.Data,

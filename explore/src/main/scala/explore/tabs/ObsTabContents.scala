@@ -280,7 +280,7 @@ object ObsTabContents {
     layouts:            View[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
-    obsWithConstraints: View[ObsSummariesWithConstraints]
+    obsWithConstraints: Reuse[View[ObsSummariesWithConstraints]]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
@@ -387,13 +387,18 @@ object ObsTabContents {
            options,
            constraintGroups
           )
-        ) { (obsViewPot: Pot[View[Pot[ObservationData]]]) =>
-          val obsView: Pot[View[ObservationData]] =
-            obsViewPot.flatMap(view => view.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
+        ) { (obsViewPot: Pot[Reuse[View[Pot[ObservationData]]]]) =>
+          val obsView: Pot[Reuse[View[ObservationData]]] =
+            obsViewPot.flatMap(view =>
+              // view.map(_.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
+              view.value.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod))))
+            )
 
           val constraintsSelector =
-            Reuse.by((constraintGroups, obsView.map(_.get.constraintSet)))(
-              makeConstraintsSelector(constraintGroups, obsView)
+            Reuse.by((constraintGroups, obsView.map(_.value.get.constraintSet)))(
+              makeConstraintsSelector(constraintGroups,
+                                      obsView.map(_.value)
+              ) // TODO Make this Reuse too
             )
 
           val skyPlotTile =
@@ -403,14 +408,16 @@ object ObsTabContents {
             props.userId.get,
             ObsIdSet.one(obsId),
             obsView.map(
-              _.zoom(
-                ObservationData.targetEnvironment.andThen(
-                  ObservationData.TargetEnvironment.asterism
+              _.map(
+                _.zoom(
+                  ObservationData.targetEnvironment.andThen(
+                    ObservationData.TargetEnvironment.asterism
+                  )
                 )
               )
             ),
             props.focusedTarget,
-            Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
+            Reuse.currying(obsWithConstraints.value.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,

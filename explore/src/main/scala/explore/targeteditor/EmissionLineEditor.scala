@@ -39,6 +39,7 @@ import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 import scala.math.BigDecimal.RoundingMode
+import explore.model.reusability._
 
 import scala.collection.immutable.SortedMap
 

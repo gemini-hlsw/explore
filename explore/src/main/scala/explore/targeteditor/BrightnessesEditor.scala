@@ -35,6 +35,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
+import explore.model.reusability._
 
 import scala.collection.immutable.SortedMap
 
@@ -84,70 +85,70 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateBy(props => State.fromUsedBrightnesses(props.brightnesses.get))
-      .useEffectWithDepsBy((props, _) => props.brightnesses)((_, state) =>
-        brightnesses => state.setState(State.fromUsedBrightnesses(brightnesses.get))
+      .useStateBy(props => State.fromUsedBrightnesses(props.brightnesses.get)) // withReuse? !?!
+      .useEffectWithDepsBy((props, _) => props.brightnesses.get)((_, state) =>
+        brightnesses => state.setState(State.fromUsedBrightnesses(brightnesses))
       )
-      .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
-        { case (brightnesses, disabled) =>
-          val deleteFn: Band => Callback =
-            b => brightnesses.mod(_ - b)
+      .useMemoBy((props, _) => (props.brightnesses.get, props.disabled)) {
+        (props, _) => // Memo cols
+          _ =>
+            val deleteFn: Band => Callback =
+              b => props.brightnesses.mod(_ - b)
 
-          List(
-            BrightnessTable
-              .Column("band", _._1)
-              .setHeader("Band")
-              .setCell(_.value.shortName)
-              .setWidth(66)
-              .setMinWidth(66)
-              .setMaxWidth(66)
-              .setSortByAuto,
-            BrightnessTable
-              .Column("value", _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]))
-              .setHeader("Value")
-              .setCell(
-                ReactTableHelpers
-                  .editableViewColumn(
-                    validFormat = ValidFormatInput.fromFormat(
-                      BrightnessValue.fromString,
-                      "Invalid brightness value"
-                    ),
-                    changeAuditor = ChangeAuditor
-                      .fromFormat(BrightnessValue.fromString)
-                      .decimal(3)
-                      .allowEmpty,
-                    disabled = disabled
+            List(
+              BrightnessTable
+                .Column("band", _._1)
+                .setHeader("Band")
+                .setCell(_.value.shortName)
+                .setWidth(66)
+                .setMinWidth(66)
+                .setMaxWidth(66)
+                .setSortByAuto,
+              BrightnessTable
+                .Column("value", _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]))
+                .setHeader("Value")
+                .setCell(
+                  ReactTableHelpers
+                    .editableViewColumn(
+                      validFormat = ValidFormatInput.fromFormat(
+                        BrightnessValue.fromString,
+                        "Invalid brightness value"
+                      ),
+                      changeAuditor = ChangeAuditor
+                        .fromFormat(BrightnessValue.fromString)
+                        .decimal(3)
+                        .allowEmpty,
+                      disabled = props.disabled
+                    )
+                ),
+              BrightnessTable
+                .Column("units", _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]))
+                .setHeader("Units")
+                .setCell(
+                  ReactTableHelpers.editableEnumViewColumn[Units Of Brightness[T]](
+                    disabled = props.disabled,
+                    modifiers = List(ExploreStyles.BrightnessesTableUnitsDropdown)
                   )
-              ),
-            BrightnessTable
-              .Column("units", _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]))
-              .setHeader("Units")
-              .setCell(
-                ReactTableHelpers.editableEnumViewColumn[Units Of Brightness[T]](
-                  disabled = disabled,
-                  modifiers = List(ExploreStyles.BrightnessesTableUnitsDropdown)
+                ),
+              BrightnessTable
+                .Column("delete", _._1)
+                .setCell(
+                  ReactTableHelpers.buttonViewColumn(
+                    button = deleteButton,
+                    onClick = deleteFn,
+                    disabled = props.disabled,
+                    wrapperClass = ExploreStyles.BrightnessesTableDeletButtonWrapper
+                  )
                 )
-              ),
-            BrightnessTable
-              .Column("delete", _._1)
-              .setCell(
-                ReactTableHelpers.buttonViewColumn(
-                  button = deleteButton,
-                  onClick = deleteFn,
-                  disabled = disabled,
-                  wrapperClass = ExploreStyles.BrightnessesTableDeletButtonWrapper
-                )
-              )
-              .setWidth(46)
-              .setMinWidth(46)
-              .setMaxWidth(46)
-              .setDisableSortBy(true)
-          )
-        }
+                .setWidth(46)
+                .setMinWidth(46)
+                .setMaxWidth(46)
+                .setDisableSortBy(true)
+            )
       }
       // rows
-      .useMemoBy((props, _, _) => props.brightnesses)((_, _, _) =>
-        _.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
+      .useMemoBy((props, _, _) => props.brightnesses.get)((props, _, _) =>
+        _ => props.brightnesses.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
       )
       .useTableBy((_, _, cols, rows) =>
         BrightnessTable(cols,
