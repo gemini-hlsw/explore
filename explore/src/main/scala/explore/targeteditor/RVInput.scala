@@ -29,6 +29,8 @@ import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
 import crystal.react.reuse.Reuse
+import lucuma.core.math.Redshift
+import lucuma.core.math.ApparentRadialVelocity
 
 final case class RVInput(
   value:    Reuse[View[Option[RadialVelocity]]],
@@ -91,7 +93,7 @@ object RVInput {
       )
       val input    = state.rvView match {
         case RVView.Z  =>
-          FormInputEV(
+          FormInputEV[View, Option[Redshift]](
             id = state.rvView.tag,
             value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
@@ -102,7 +104,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.CZ =>
-          FormInputEV(
+          FormInputEV[View, Option[ApparentRadialVelocity]](
             id = state.rvView.tag,
             value = props.value.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
