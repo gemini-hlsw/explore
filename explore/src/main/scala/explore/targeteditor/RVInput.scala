@@ -84,8 +84,6 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      println(s"RENDER RV: ${props.value}")
-
       val rvView   = ViewF.fromState($).zoom(State.rvView)
       val errorCss = ExploreStyles.InputErrorTooltip
       val baseCss  = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(

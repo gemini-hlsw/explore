@@ -86,8 +86,7 @@ case class UndoContext[M](
     onSet:     (M, A) => DefaultA[Unit],
     onRestore: (M, A) => DefaultA[Unit]
   )(f:         A => A): DefaultS[Unit] =
-    DefaultS.delay(println(pprinter(model.get))) >>
-      set(getter, setter, onSet, onRestore)(f(getter(model.get)))
+    set(getter, setter, onSet, onRestore)(f(getter(model.get)))
 
   val undo: DefaultS[Unit] = undoStacks >>= restore
 

@@ -82,8 +82,6 @@ object ReactTableHelpers {
       .render_P { view =>
         val excluded = excludeFn.fold(Set.empty[A])(_.apply(view.get))
 
-        println(s"RENDERING ENUMVIEW COLUMN! ${view.get}")
-
         EnumViewSelect(
           id = newId,
           value = view,
