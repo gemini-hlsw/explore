@@ -4,8 +4,6 @@
 package explore.components
 
 import cats.syntax.all._
-import crystal.react.hooks._
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -77,14 +75,9 @@ object Tile {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useEffectOnMount(Callback.log("TILE MOUNTED"))
       // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
-      // .useSerialStateView(none[html.Element])
-      // .useStateView { println("init inforef"); none[html.Element] }
-      .useStateWithReuse { println("init inforef"); none[html.Element] }
+      .useStateWithReuse(none[html.Element])
       .renderWithReuse { (p, infoRef) =>
-        println(s"RENDERING WITH INFOREF: ${infoRef.value}")
-
         val maximizeButton =
           Button(
             as = <.a,
@@ -111,23 +104,19 @@ object Tile {
               .when_(p.state === TileSizeState.Normal)
           )(Icons.Minimize)
 
-        // def setInfoRef(node: dom.Node | Null): Unit =
-        //   infoRef.value
-        //     .fold(
-        //       Callback.log(s"setting inforef from [${infoRef.value}] to [$node]") >>
-        //         infoRef.setState(Option(node.asInstanceOf[html.Element]))
-        //     )(_ => Callback.log("skipping inforef"))
-        //     .runNow()
+        def setInfoRef(node: dom.Node | Null): Unit =
+          infoRef
+            .modState(
+              _.fold(Option(node.asInstanceOf[html.Element]))(_.some)
+            )
+            .runNow()
 
-        println(s"RENDERING WITH INFOREF 2: ${infoRef.value}")
-
-        <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
-              ^.key := "tile"
-              // p.key.whenDefined(^.key := _)
+        <.div(
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
+          ^.key   := "tile"
         )(
           <.div(
-            // p.key.whenDefined(^.key := _),
-            ^.key   := "tile",
+            ^.key := "tile",
             ExploreStyles.TileTitle,
             p.back.map(b => <.div(ExploreStyles.TileButton, b)),
             Menu(
@@ -139,20 +128,7 @@ object Tile {
               MenuItem(as = <.a)(p.title)
             ),
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-            <.span(
-              ^.key := "tileTitle",
-              ^.untypedRef(node =>
-                infoRef.value
-                  .fold(
-                    Callback.log(s"setting inforef from [${infoRef.value}] to [$node]") >>
-                      infoRef.modState(
-                        _.fold(Option(node.asInstanceOf[html.Element]))(_.some)
-                      ) // OK THIS WORKS!
-                    // infoRef.setState(Option(node.asInstanceOf[html.Element]))
-                  )(_ => Callback.log("skipping inforef"))
-                  .runNow()
-              ).when(infoRef.value.isEmpty)
-            )(
+            <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef))(
               ExploreStyles.TileTitleStrip,
               ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
             ),
@@ -170,7 +146,6 @@ object Tile {
                   Reuse
                     .currying(node)
                     .in((mountNode, info: VdomNode) => ReactPortal(info, mountNode))
-                  // Reuse.always(info => info) // ReactPortal(info, node))
                 )
               ).when(p.state =!= TileSizeState.Minimized)
             )
