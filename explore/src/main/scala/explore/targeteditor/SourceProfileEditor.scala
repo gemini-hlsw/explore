@@ -74,12 +74,15 @@ object SourceProfileEditor {
       case Gaussian(_, _) => SourceProfileType.GaussianType
     }
 
-    val gaussianRSUOpt: Option[RemoteSyncUndoable[Gaussian, GaussianInput]] =
-      props.sourceProfile
-        .zoomOpt(
-          SourceProfile.gaussian,
-          forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
+    val gaussianRSUOpt: Option[Reuse[RemoteSyncUndoable[Gaussian, GaussianInput]]] =
+      reuseOpt2OptReuse(
+        props.sourceProfile.map(
+          _.zoomOpt(
+            SourceProfile.gaussian,
+            forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
+          )
         )
+      )
 
     React.Fragment(
       <.label("Profile", ExploreStyles.SkipToNext),
@@ -90,19 +93,26 @@ object SourceProfileEditor {
         )
       ),
       <.span,
-      props.sourceProfile // We need to turn Reuse[Option into Option[Reuse
-        .zoomOpt(
-          SourceProfile.point.andThen(Point.spectralDefinition),
-          forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
+      reuseOpt2OptReuse(
+        props.sourceProfile.map(
+          _.zoomOpt(
+            SourceProfile.point.andThen(Point.spectralDefinition),
+            forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
+          )
         )
+      )
         .map(pointSpectralDefinitionAccess =>
           IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess)
         ),
-      props.sourceProfile
-        .zoomOpt(
-          SourceProfile.uniform.andThen(Uniform.spectralDefinition),
-          forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
-        )
+      reuseOpt2OptReuse(
+        props.sourceProfile
+          .map(
+            _.zoomOpt(
+              SourceProfile.uniform.andThen(Uniform.spectralDefinition),
+              forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
+            )
+          )
+      )
         .map(uniformSpectralDefinitionAccess =>
           SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess)
         ),
@@ -118,10 +128,12 @@ object SourceProfileEditor {
               units = "arcsec"
             ),
             IntegratedSpectralDefinitionEditor(
-              gaussianRSU.zoom(
-                Gaussian.spectralDefinition,
-                forceAssign(GaussianInput.spectralDefinition.modify)(
-                  SpectralDefinitionIntegratedInput()
+              gaussianRSU.map(
+                _.zoom(
+                  Gaussian.spectralDefinition,
+                  forceAssign(GaussianInput.spectralDefinition.modify)(
+                    SpectralDefinitionIntegratedInput()
+                  )
                 )
               )
             )

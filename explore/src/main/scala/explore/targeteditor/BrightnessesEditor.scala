@@ -40,7 +40,7 @@ import explore.model.reusability._
 import scala.collection.immutable.SortedMap
 
 sealed trait BrightnessesEditor[T] {
-  val brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
+  val brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[T]]]]
   val disabled: Boolean
 }
 
@@ -147,8 +147,8 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             )
       }
       // rows
-      .useMemoBy((props, _, _) => props.brightnesses.get)((props, _, _) =>
-        _ => props.brightnesses.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
+      .useMemoBy((props, _, _) => props.brightnesses)((props, _, _) =>
+        _ => props.brightnesses.value.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
       )
       .useTableBy((_, _, cols, rows) =>
         BrightnessTable(cols,
@@ -222,7 +222,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 }
 
 final case class IntegratedBrightnessEditor(
-  brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
+  brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[Integrated]]]],
   disabled:     Boolean
 ) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
     with BrightnessesEditor[Integrated]
@@ -237,7 +237,7 @@ object IntegratedBrightnessEditor
 }
 
 final case class SurfaceBrightnessEditor(
-  brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
+  brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[Surface]]]],
   disabled:     Boolean
 ) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
     with BrightnessesEditor[Surface]

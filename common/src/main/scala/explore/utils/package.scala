@@ -96,6 +96,9 @@ package object utils {
         case Assign(edit) => modS(edit).assign
         case _            => modS(base).assign
       }
+
+  def reuseOpt2OptReuse[A](reuseOpt: Reuse[Option[A]]): Option[Reuse[A]] =
+    reuseOpt.value.map(a => reuseOpt.map(_ => a))
 }
 
 package utils {

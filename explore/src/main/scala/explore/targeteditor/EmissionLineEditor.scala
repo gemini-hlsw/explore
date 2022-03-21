@@ -44,7 +44,7 @@ import explore.model.reusability._
 import scala.collection.immutable.SortedMap
 
 sealed trait EmissionLineEditor[T] {
-  val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
+  val emissionLines: Reuse[View[SortedMap[Wavelength, EmissionLine[T]]]]
   val disabled: Boolean
 }
 
@@ -154,7 +154,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
     }
     // rows
     .useMemoBy((props, _) => props.emissionLines)((_, _) =>
-      _.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
+      _.value.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
     )
     .useTableBy((_, cols, rows) =>
       EmissionLineTable(cols,
@@ -228,7 +228,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 }
 
 final case class IntegratedEmissionLineEditor(
-  emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
+  emissionLines: Reuse[View[SortedMap[Wavelength, EmissionLine[Integrated]]]],
   disabled:      Boolean
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
     with EmissionLineEditor[Integrated]
@@ -240,7 +240,7 @@ object IntegratedEmissionLineEditor
 }
 
 final case class SurfaceEmissionLineEditor(
-  emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
+  emissionLines: Reuse[View[SortedMap[Wavelength, EmissionLine[Surface]]]],
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)
     with EmissionLineEditor[Surface]
