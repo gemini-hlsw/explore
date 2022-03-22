@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions

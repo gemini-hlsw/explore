@@ -6,7 +6,6 @@ package explore.targets
 import cats.Order._
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.common.AsterismQueries._
 import explore.components.Tile
@@ -26,7 +25,6 @@ import react.semanticui.modules.dropdown._
 import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
-import explore.model.reusability._
 
 import scalajs.js.JSConverters._
 

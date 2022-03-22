@@ -19,7 +19,6 @@ import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.display._
-import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._

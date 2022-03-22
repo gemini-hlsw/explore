@@ -6,12 +6,10 @@ package explore.targeteditor
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle

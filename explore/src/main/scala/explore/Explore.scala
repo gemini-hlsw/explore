@@ -139,12 +139,12 @@ object ExploreMain extends IOApp.Simple {
         val (router, routerCtl) =
           RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-        def routingView(view: ReuseView[RootModel]): View[RootModel] =
-          view.value.withOnMod { model =>
-            if (model =!= view.value.get)
-              routerCtl
-                .set(RootModelRouting.lens.get(model))
-            else Callback.empty
+        def routingView(view: ReuseView[RootModel]): ReuseView[RootModel] =
+          view.withOnMod { model =>
+            if (model =!= view.get) // TODO Not sure if this is necessary
+              routerCtl.set(RootModelRouting.lens.get(model))
+            else
+              Callback.empty
           }
 
         def rootComponent(view: ReuseView[RootModel]): VdomElement =

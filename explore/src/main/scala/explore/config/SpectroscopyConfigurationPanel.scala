@@ -5,7 +5,6 @@ package explore.config
 
 import coulomb.cats.implicits._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -26,10 +25,12 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-import explore.model.reusability._
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import lucuma.core.math.Angle
+import lucuma.core.enum.FocalPlane
+import lucuma.core.enum.SpectroscopyCapabilities
 
 final case class SpectroscopyConfigurationPanel(
   options: ReuseView[SpectroscopyConfigurationOptions]
@@ -111,7 +112,7 @@ object SpectroscopyConfigurationPanel {
                   HelpIcon("configuration/wavelength_coverage.md"),
                   ExploreStyles.SkipToNext
           ),
-          InputWithUnits(
+          InputWithUnits[ReuseView, Option[Quantity[BigDecimal, Micrometer]]](
             id = "wavelength-coverage",
             clazz = Css.Empty,
             inline = true,
@@ -125,15 +126,16 @@ object SpectroscopyConfigurationPanel {
                   HelpIcon("configuration/focal_plane.md"),
                   ExploreStyles.SkipToNext
           ),
-          EnumViewOptionalSelect(id = "focal-plane",
-                                 placeholder = "Any",
-                                 upward = true,
-                                 value = focalPlane,
-                                 clearable = true
+          EnumViewOptionalSelect[ReuseView, FocalPlane](
+            id = "focal-plane",
+            placeholder = "Any",
+            upward = true,
+            value = focalPlane,
+            clearable = true
           ),
           <.div(
             ExploreStyles.SignalToNoiseAt,
-            InputWithUnits(
+            InputWithUnits[ReuseView, Option[Angle]](
               id = "spectroscopy-capabilities",
               clazz = Css.Empty,
               value = focalPlaneAngle,
@@ -147,7 +149,7 @@ object SpectroscopyConfigurationPanel {
                   HelpIcon("configuration/capabilities.md"),
                   ExploreStyles.SkipToNext
           ),
-          EnumViewOptionalSelect(
+          EnumViewOptionalSelect[ReuseView, SpectroscopyCapabilities](
             id = "spectroscopy-capabilities",
             clazz = ExploreStyles.ConfigurationCapabilities,
             clearable = true,

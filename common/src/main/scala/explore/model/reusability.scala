@@ -4,10 +4,7 @@
 package explore.model
 
 import clue.PersistentClientStatus
-import crystal.react.implicits._
 import explore.data.KeyedIndexedList
-import explore.undo.UndoContext
-import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -17,8 +14,6 @@ import lucuma.core.model.Target
 import lucuma.ui.reusability._
 
 import scala.collection.immutable.TreeSeqMap
-import crystal.react.View
-import crystal.react.ViewOpt
 
 /**
  * Reusability instances for model classes

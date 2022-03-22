@@ -64,8 +64,9 @@ object ProposalDetailsEditor {
     val splits = Focus[State](_.splits)
   }
 
-  implicit val propsReuse: Reusability[Props] = Reusability.derive
-  implicit val stateReuse: Reusability[State] = Reusability.derive
+  implicit val proposalDetailsReview: Reusability[View[ProposalDetails]] = Reusability.by(_.get)
+  implicit val propsReuse: Reusability[Props]                            = Reusability.derive
+  implicit val stateReuse: Reusability[State]                            = Reusability.derive
 
   private def formatTime(time: Double) = f"$time%.2fh"
 

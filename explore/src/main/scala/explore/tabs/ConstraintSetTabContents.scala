@@ -5,10 +5,10 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
+import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
@@ -21,13 +21,11 @@ import explore.constraints.ConstraintsSummaryTable
 import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.syntax.ui._
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.component.builder.Lifecycle.ComponentDidMount
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
@@ -46,6 +44,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
+import crystal.react.View
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
@@ -58,7 +57,7 @@ final case class ConstraintSetTabContents(
   summarySorting:   ReuseView[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
-    extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
+    extends ReactFnProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
 
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
@@ -70,14 +69,14 @@ object ConstraintSetTabContents {
   val treeWidthLens = TwoPanelState.treeWidth[ObsIdSet]
   val selectedLens  = TwoPanelState.selected[ObsIdSet]
 
-  def readWidthPreference(
-    $ : ComponentDidMount[Props, State, _]
-  ): Callback = {
-    implicit val ctx = $.props.ctx
-    (UserAreaWidths.queryWithDefault[IO]($.props.userId,
-                                         ResizableSection.ConstraintSetsTree,
-                                         Constants.InitialTreeWidth.toInt
-    ) >>= $.setStateLIn[IO](treeWidthLens)).runAsync
+  def readWidthPreference(props: Props, state: View[State]): Callback = {
+    implicit val ctx = props.ctx
+
+    (UserAreaWidths.queryWithDefault[IO](
+      props.userId,
+      ResizableSection.ConstraintSetsTree,
+      Constants.InitialTreeWidth.toInt
+    ) >>= (w => state.zoom(treeWidthLens).async.set(w))).runAsync
   }
 
   protected def renderFn(
@@ -229,11 +228,11 @@ object ConstraintSetTabContents {
               }
               .getOrElse(cgl) // shouldn't happen
 
-        val csView: View[ConstraintSet] =
+        val csView: ReuseView[ConstraintSet] =
           cglView
             .zoom(getCs)(modCs)
 
-        val csUndo: View[UndoStacks[IO, ConstraintSet]] =
+        val csUndo: ReuseView[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
         val title = props.focusedObs.get match {
@@ -286,22 +285,16 @@ object ConstraintSetTabContents {
 
   protected implicit val innerWidthReuse = Reusability.double(2.0)
 
-  protected class Backend($ : BackendScope[Props, State]) {
-    def render(props: Props) = {
-      implicit val ctx = props.ctx
-
-      ConstraintGroupLiveQuery(
-        Reuse(renderFn _)(props, ViewF.fromState($))
-      )
-    }
-  }
-
   protected val component =
-    ScalaComponent
-      .builder[Props]
-      .initialState(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
-      .renderBackend[Backend]
-      .componentDidMount(readWidthPreference)
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStateViewWithReuse(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
+      .useEffectOnMountBy((props, state) => readWidthPreference(props, state))
+      .renderWithReuse { (props, state) =>
+        implicit val ctx = props.ctx
+
+        ConstraintGroupLiveQuery(
+          Reuse(renderFn _)(props, state)
+        )
+      }
 }

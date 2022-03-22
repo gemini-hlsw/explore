@@ -11,7 +11,6 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.constraints.ConstraintsPanel
-import explore.model.reusability._
 import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -38,7 +37,7 @@ object ConstraintsTile {
       controllerClass = clazz
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
-        potRender[View[ConstraintSet]](
+        potRender[ReuseView[ConstraintSet]](
           Reuse.always(cs =>
             <.div(
               ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)

@@ -6,12 +6,10 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
-import explore.model.reusability._
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.vdom.html_<^._

@@ -11,7 +11,6 @@ import crystal.react.implicits._
 import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
 import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import org.typelevel.log4cats.Logger
-import explore.utils.pprinter
 
 /*
  * Combines a view of a model `M` and a view of `UndoStacks` over `M`.

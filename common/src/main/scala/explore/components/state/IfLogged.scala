@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.data.Input
 import crystal.react.View
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx

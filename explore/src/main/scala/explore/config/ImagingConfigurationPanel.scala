@@ -6,7 +6,6 @@ package explore.config
 import cats.implicits._
 import coulomb.Quantity
 import crystal.react.ReuseView
-import explore.model.reusability._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -159,7 +158,7 @@ object ImagingConfigurationPanel {
             clearable = true,
             upward = true,
             placeholder = "Extra capablities",
-            value = capabilities
+            value = capabilities.value
           )
         )
       }

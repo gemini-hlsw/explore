@@ -13,7 +13,6 @@ import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
-import explore.model.reusability._
 import explore.schemas.itc.implicits._
 import explore.undo._
 import explore.utils.potRender
@@ -36,7 +35,7 @@ object ConfigurationTile {
         potRender[ReuseView[ScienceData]](
           Reuse.always(scienceData_ =>
             ConfigurationPanel(obsId,
-                               UndoContext(undoStacks_, scienceData_),
+                               scienceData_.map(UndoContext(undoStacks_, _)),
                                scienceData_.get.constraints,
                                scienceData_.get.itcTargets,
                                renderInTitle

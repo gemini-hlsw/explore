@@ -6,7 +6,6 @@ package explore.constraints
 import cats.Order._
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
@@ -31,7 +30,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.DefaultSortTypes
 import reactST.reactTable.mod.IdType
 import reactST.reactTable.mod.SortingRule
-import explore.model.reusability._
 
 import scala.collection.immutable.SortedSet
 

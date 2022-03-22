@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
@@ -19,7 +18,6 @@ import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
 import explore.undo.UndoContext

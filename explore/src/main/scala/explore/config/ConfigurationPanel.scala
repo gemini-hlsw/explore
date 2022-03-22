@@ -5,6 +5,7 @@ package explore.config
 
 import cats.syntax.all._
 import coulomb.Quantity
+import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -129,7 +130,7 @@ object ConfigurationPanel {
             ExploreStyles.ConfigurationForm
           )(
             <.label("Mode", HelpIcon("configuration/mode.md")),
-            EnumViewSelect(id = "configuration-mode", value = mode.value),
+            EnumViewSelect[ReuseView, ScienceMode](id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
               .when(isSpectroscopy),
             ImagingConfigurationPanel(imaging)

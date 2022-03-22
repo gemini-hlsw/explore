@@ -31,7 +31,6 @@ import react.common._
 import react.highcharts.Chart
 import react.resizeDetector.hooks._
 import spire.math.Bounded
-import explore.model.reusability._
 
 import java.time.Duration
 import java.time.Instant

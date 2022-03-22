@@ -5,7 +5,6 @@ package explore
 
 import cats.syntax.all._
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
@@ -21,7 +20,6 @@ import react.semanticui.elements.divider.Divider
 import react.semanticui.elements.label.Label
 import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
-import explore.model.reusability._
 
 final case class SideTabs(
   tabs: ReuseView[EnumZipper[AppTab]]

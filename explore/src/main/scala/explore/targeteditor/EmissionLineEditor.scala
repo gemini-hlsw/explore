@@ -8,8 +8,6 @@ import cats.syntax.all._
 import coulomb._
 import crystal.react.ReuseView
 import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -39,7 +37,6 @@ import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 import scala.math.BigDecimal.RoundingMode
-import explore.model.reusability._
 
 import scala.collection.immutable.SortedMap
 

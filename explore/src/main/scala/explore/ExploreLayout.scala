@@ -5,13 +5,12 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.model._
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
