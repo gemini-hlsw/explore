@@ -5,17 +5,14 @@ package explore.targeteditor
 
 import cats.Order._
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react._
 import crystal.react.hooks._
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.display._
-import explore.utils.ReactTableHelpers
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -36,7 +33,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
-import explore.model.reusability._
 
 import scala.collection.immutable.SortedMap
 import lucuma.ui.forms.FormInputEV
@@ -75,14 +71,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private val BrightnessTableComponent = new SUITable(BrightnessTable)
 
-  private val deleteButton = Button(
-    size = Small,
-    compact = true,
-    clazz = ExploreStyles.DeleteButton
-  )(
-    Icons.Trash
-  )
-
   private val tableState = BrightnessTable.State().setSortBy(SortingRule("band"))
 
   val component =
@@ -94,9 +82,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       )
       .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
         { case (brightnesses, disabled) =>
-          val deleteFn: Band => Callback =
-            b => brightnesses.mod(_ - b)
-
           List(
             BrightnessTable
               .Column("band", _._1)
@@ -127,20 +112,26 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             BrightnessTable
               .Column("units", _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]))
               .setHeader("Units")
-              .setCell(
-                ReactTableHelpers.editableEnumViewColumn[Units Of Brightness[T]](
+              .setCell(cell =>
+                EnumViewSelect[ReuseView, Units Of Brightness[T]](
+                  id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
+                  value = cell.value,
+                  compact = true,
                   disabled = disabled,
-                  modifiers = List(ExploreStyles.BrightnessesTableUnitsDropdown)
+                  clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                 )
               ),
             BrightnessTable
               .Column("delete", _._1)
-              .setCell(
-                ReactTableHelpers.buttonViewColumn(
-                  button = deleteButton,
-                  onClick = deleteFn,
-                  disabled = disabled,
-                  wrapperClass = ExploreStyles.BrightnessesTableDeletButtonWrapper
+              .setCell(cell =>
+                <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
+                  Button(
+                    size = Small,
+                    compact = true,
+                    clazz = ExploreStyles.DeleteButton,
+                    disabled = disabled,
+                    onClick = brightnesses.mod(_ - cell.value)
+                  )(Icons.Trash)
                 )
               )
               .setWidth(46)
