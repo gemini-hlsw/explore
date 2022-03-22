@@ -31,6 +31,8 @@ import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.hooks.Hooks
+import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
 import lucuma.core.model.Target
@@ -84,6 +86,28 @@ object SiderealTargetEditor {
     view.map(_.zoom(getA)(noModA))
   }
 
+  def getRemoteOnMod(
+    id:      Target.Id,
+    optObs:  Option[ObsIdSet],
+    cloning: Hooks.UseStateF[DefaultS, Boolean],
+    onClone: TargetWithId ==> Callback,
+    input:   EditTargetInput
+  )(implicit
+    appCtx:  AppContextIO
+  ): IO[Unit] =
+    optObs.fold(TargetQueriesGQL.UpdateTargetMutation.execute(input).void) { obsIds =>
+      cloning.setState(true).to[IO] >>
+        TargetQueriesGQL.CloneTargetMutation
+          .execute(id, obsIds.toList.assign)
+          .flatMap { data =>
+            val newId    = data.cloneTarget.id
+            val newInput = EditTargetInput.targetId.replace(newId)(input)
+            TargetQueriesGQL.UpdateTargetMutationWithResult
+              .execute(newInput)
+              .flatMap(data => (onClone(data.updateTarget) >> cloning.setState(false)).to[IO])
+          }
+    }
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -105,26 +129,11 @@ object SiderealTargetEditor {
             targetView.map(tv => UndoContext(undoStackView, tv))
           val target: Target.Sidereal                      = props.target.value.get
 
-          val remoteOnMod: EditTargetInput => IO[Unit] =
-            props.obsIdSubset.fold((input: EditTargetInput) =>
-              TargetQueriesGQL.UpdateTargetMutation.execute(input).void
-            ) { obsIds => input =>
-              cloning.setState(true).to[IO] >>
-                TargetQueriesGQL.CloneTargetMutation
-                  .execute(props.id, obsIds.toList.assign)
-                  .flatMap { data =>
-                    val newId    = data.cloneTarget.id
-                    val newInput = EditTargetInput.targetId.replace(newId)(input)
-                    TargetQueriesGQL.UpdateTargetMutationWithResult
-                      .execute(newInput)
-                      .flatMap(data =>
-                        (props.onClone(data.updateTarget) >> cloning.setState(false)).to[IO]
-                      )
-                  }
-            }
+          val reuseRemoteOnMod =
+            Reuse(getRemoteOnMod _)(props.id, props.obsIdSubset, cloning, props.onClone)
 
           val siderealTargetRSU: Reuse[RemoteSyncUndoable[Target.Sidereal, EditTargetInput]] =
-            undoCtx.map(ctx =>
+            undoCtx.zipMap(reuseRemoteOnMod)((ctx, remoteOnMod) =>
               RemoteSyncUndoable(
                 ctx,
                 EditTargetInput(targetId = props.id),
