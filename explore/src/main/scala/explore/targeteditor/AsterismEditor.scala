@@ -31,7 +31,6 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Optional
 import react.common.ReactFnProps
-import react.resizeDetector.hooks._
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
@@ -116,19 +115,10 @@ object AsterismEditor {
             )
         }
       )
-      .useResizeDetector()
-      .renderWithReuse { (props, adding, editScope, resize) =>
+      .renderWithReuse { (props, adding, editScope) =>
         implicit val ctx = props.ctx
 
         val selectedTargetId = props.selectedTargetId
-
-        val targetTableHeight = props.asterism.value.get.length match {
-          case 0 => 27
-          case 1 => 57
-          case 2 => 91
-          case _ => 110
-        }
-        val editorHeight      = resize.height.foldMap(h => math.max(0, h - targetTableHeight))
 
         React.Fragment(
           props.renderInTitle(
@@ -153,79 +143,74 @@ object AsterismEditor {
                 })
             )
           ),
-          <.div(^.height := s"${targetTableHeight}px")(
-            TargetTable(
-              props.obsIds,
-              props.asterism,
-              props.hiddenColumns,
-              selectedTargetId,
-              props.renderInTitle
-            )
+          TargetTable(
+            props.obsIds,
+            props.asterism,
+            props.hiddenColumns,
+            selectedTargetId,
+            props.renderInTitle
           ),
-          <.div(
-            ^.height := s"${editorHeight}px",
-            selectedTargetId.get
-              .flatMap[VdomElement] { targetId =>
-                val optional =
-                  Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
-                    target =>
-                      _.map { twid =>
-                        if (twid.id === targetId) TargetWithId(targetId, target) else twid
-                      }
-                  )
-
-                val selectedTargetView = props.asterism.zoom(optional)
-
-                val otherObsCount = props.otherObsCount(targetId)
-                val plural        = if (otherObsCount === 1) "" else "s"
-
-                selectedTargetView.mapValue(targetView =>
-                  targetView.get match {
-                    case t @ Target.Sidereal(_, _, _, _) =>
-                      <.div(
-                        <.div(
-                          ExploreStyles.SharedEditWarning,
-                          s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
-                          Checkbox(
-                            name = "editScope",
-                            label =
-                              if (props.obsIds.size === 1) "only this observation"
-                              else "only the current observations",
-                            value = 0,
-                            checked = editScope.value === 0,
-                            onChange = (_: Boolean) => editScope.setState(0)
-                          ),
-                          Checkbox(name = "editScope",
-                                   label = "all observations of this target",
-                                   value = 1,
-                                   checked = editScope.value === 1,
-                                   onChange = (_: Boolean) => editScope.setState(1)
-                          )
-                        ).when(otherObsCount > 0),
-                        SiderealTargetEditor(
-                          props.userId,
-                          targetId,
-                          props.asterism.map(
-                            _ => // Ugly temporary hack until we have proper ReuseView[A]].mapValue
-                              targetView.unsafeNarrow[Target.Sidereal]
-                          ),
-                          props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
-                          props.searching,
-                          props.options,
-                          onClone = Reuse
-                            .currying(targetId, props.asterism, props.selectedTargetId)
-                            .in(onCloneTarget _),
-                          obsIdSubset =
-                            if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
-                            else none
-                        )
-                      )
-                    case _                               =>
-                      <.div("Non-sidereal targets not supported")
-                  }
+          selectedTargetId.get
+            .flatMap[VdomElement] { targetId =>
+              val optional =
+                Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
+                  target =>
+                    _.map { twid =>
+                      if (twid.id === targetId) TargetWithId(targetId, target) else twid
+                    }
                 )
-              }
-          )
+
+              val selectedTargetView = props.asterism.zoom(optional)
+
+              val otherObsCount = props.otherObsCount(targetId)
+              val plural        = if (otherObsCount === 1) "" else "s"
+
+              selectedTargetView.mapValue(targetView =>
+                targetView.get match {
+                  case t @ Target.Sidereal(_, _, _, _) =>
+                    <.div(
+                      <.div(
+                        ExploreStyles.SharedEditWarning,
+                        s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
+                        Checkbox(
+                          name = "editScope",
+                          label =
+                            if (props.obsIds.size === 1) "only this observation"
+                            else "only the current observations",
+                          value = 0,
+                          checked = editScope.value === 0,
+                          onChange = (_: Boolean) => editScope.setState(0)
+                        ),
+                        Checkbox(name = "editScope",
+                                 label = "all observations of this target",
+                                 value = 1,
+                                 checked = editScope.value === 1,
+                                 onChange = (_: Boolean) => editScope.setState(1)
+                        )
+                      ).when(otherObsCount > 0),
+                      SiderealTargetEditor(
+                        props.userId,
+                        targetId,
+                        props.asterism.map(
+                          _ => // Ugly temporary hack until we have proper ReuseView[A]].mapValue
+                            targetView.unsafeNarrow[Target.Sidereal]
+                        ),
+                        props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
+                        props.searching,
+                        props.options,
+                        onClone = Reuse
+                          .currying(targetId, props.asterism, props.selectedTargetId)
+                          .in(onCloneTarget _),
+                        obsIdSubset =
+                          if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some
+                          else none
+                      )
+                    )
+                  case _                               =>
+                    <.div("Non-sidereal targets not supported")
+                }
+              )
+            }
         )
       }
 }

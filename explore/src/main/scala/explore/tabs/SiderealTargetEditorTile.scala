@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.components.Tile
-import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
@@ -32,12 +31,7 @@ object SiderealTargetEditorTile {
     width:      Int,
     height:     Int
   ) =
-    Tile(ObsTabTiles.TargetId,
-         title,
-         back = backButton,
-         canMinimize = true,
-         bodyClass = ExploreStyles.SiderealTargetEditorTileBody.some
-    )(
+    Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
       Reuse
         .by(
           (userId, targetId, target, undoStacks, searching, options, width, height)
