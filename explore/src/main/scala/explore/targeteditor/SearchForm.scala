@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -35,7 +35,7 @@ import scalajs.js.JSConverters._
 final case class SearchForm(
   id:          Target.Id,
   name:        NonEmptyString,
-  searching:   View[Set[Target.Id]],
+  searching:   ReuseView[Set[Target.Id]],
   searchAndGo: SearchCallback ==> Callback
 ) extends ReactProps[SearchForm](SearchForm.component) {
   def submit(

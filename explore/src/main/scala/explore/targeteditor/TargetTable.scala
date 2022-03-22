@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -40,9 +40,9 @@ import scalajs.js.JSConverters._
 
 final case class TargetTable(
   obsIds:           ObsIdSet,
-  targets:          View[List[TargetWithId]],
-  hiddenColumns:    View[Set[String]],
-  selectedTarget:   View[Option[Target.Id]],
+  targets:          ReuseView[List[TargetWithId]],
+  hiddenColumns:    ReuseView[Set[String]],
+  selectedTarget:   ReuseView[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
   // undoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
 )(implicit val ctx: AppContextIO)

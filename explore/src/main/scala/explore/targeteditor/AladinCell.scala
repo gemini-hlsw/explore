@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -37,8 +37,8 @@ import scala.concurrent.duration._
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  target:           View[Coordinates],
-  options:          View[TargetVisualOptions]
+  target:           ReuseView[Coordinates],
+  options:          ReuseView[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get

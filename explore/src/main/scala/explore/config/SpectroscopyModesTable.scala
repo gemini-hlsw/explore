@@ -8,7 +8,7 @@ import cats.effect._
 import cats.syntax.all._
 import coulomb.Quantity
 import coulomb.refined._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -59,7 +59,7 @@ import java.text.DecimalFormat
 import scalajs.js.|
 
 final case class SpectroscopyModesTable(
-  scienceConfiguration:     View[Option[ScienceConfiguration]],
+  scienceConfiguration:     ReuseView[Option[ScienceConfiguration]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
@@ -398,7 +398,7 @@ object SpectroscopyModesTable {
           .distinct
       })
       // itcProgress
-      .useStateView(none[Progress])
+      .useStateViewWithReuse(none[Progress])
       // cols
       .useMemoBy { (props, _, itc, _, itcProgress) => // Memo Cols
         (props.spectroscopyRequirements.wavelength,

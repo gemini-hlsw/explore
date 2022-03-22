@@ -5,7 +5,7 @@ package explore.constraints
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import explore.model.reusability._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -46,8 +46,8 @@ import react.semanticui.elements.label.LabelPointing
 
 final case class ConstraintsPanel(
   obsIds:        List[Observation.Id],
-  constraintSet: View[ConstraintSet],
-  undoStacks:    View[UndoStacks[IO, ConstraintSet]],
+  constraintSet: ReuseView[ConstraintSet],
+  undoStacks:    ReuseView[UndoStacks[IO, ConstraintSet]],
   renderInTitle: Tile.RenderInTitle
 ) extends ReactProps[ConstraintsPanel](ConstraintsPanel.component)
 

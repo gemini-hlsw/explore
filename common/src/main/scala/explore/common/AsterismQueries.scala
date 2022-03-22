@@ -9,7 +9,7 @@ import cats.effect.IO
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -104,7 +104,7 @@ object AsterismQueries {
   }
 
   val AsterismGroupLiveQuery =
-    ScalaFnComponent[Reuse[View[AsterismGroupsWithObs]] ==> VdomNode](render =>
+    ScalaFnComponent[ReuseView[AsterismGroupsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
           AsterismGroupObsQuery.query().reuseAlways,

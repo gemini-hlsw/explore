@@ -5,7 +5,7 @@ package explore.config
 
 import cats.implicits._
 import coulomb.Quantity
-import crystal.react.View
+import crystal.react.ReuseView
 import explore.model.reusability._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -36,9 +36,11 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import lucuma.core.math.Angle
+import eu.timepit.refined.types.numeric.PosBigDecimal
 
 final case class ImagingConfigurationPanel(
-  options: View[ImagingConfigurationOptions]
+  options: ReuseView[ImagingConfigurationOptions]
 ) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
@@ -130,7 +132,7 @@ object ImagingConfigurationPanel {
                 .getOrEmpty
           ),
           <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
-          InputWithUnits(
+          InputWithUnits[ReuseView, Option[Angle]](
             id = "configuration-fov",
             clazz = Css.Empty,
             inline = true,
@@ -141,7 +143,7 @@ object ImagingConfigurationPanel {
             disabled = false
           ),
           <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
-          FormInputEV(
+          FormInputEV[ReuseView, Option[PosBigDecimal]](
             id = "signal-to-noise",
             value = signalToNoise,
             validFormat = ValidFormatInput.forPosBigDecimal().optional,

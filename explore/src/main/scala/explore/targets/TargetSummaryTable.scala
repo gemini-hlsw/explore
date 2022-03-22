@@ -5,7 +5,7 @@ package explore.targets
 
 import cats.Order._
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.common.AsterismQueries._
@@ -32,7 +32,7 @@ import scalajs.js.JSConverters._
 
 final case class TargetSummaryTable(
   targetGroupList:   TargetGroupList,
-  hiddenColumns:     View[Set[String]],
+  hiddenColumns:     ReuseView[Set[String]],
   selectObservation: (Observation.Id, Target.Id) ==> Callback,
   selectTarget:      Target.Id ==> Callback,
   renderInTitle:     Tile.RenderInTitle

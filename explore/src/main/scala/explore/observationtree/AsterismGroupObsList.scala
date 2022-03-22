@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.AsterismQueries._
@@ -48,12 +48,12 @@ import react.semanticui.views.card._
 import scala.collection.immutable.SortedSet
 
 final case class AsterismGroupObsList(
-  asterismsWithObs: View[AsterismGroupsWithObs],
-  focusedObs:       View[Option[Observation.Id]],
-  focusedTarget:    View[Option[Target.Id]],
-  selected:         View[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  undoStacks:       View[UndoStacks[IO, AsterismGroupsWithObs]]
+  asterismsWithObs: ReuseView[AsterismGroupsWithObs],
+  focusedObs:       ReuseView[Option[Observation.Id]],
+  focusedTarget:    ReuseView[Option[Target.Id]],
+  selected:         ReuseView[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
+  expandedIds:      ReuseView[SortedSet[ObsIdSet]],
+  undoStacks:       ReuseView[UndoStacks[IO, AsterismGroupsWithObs]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon
@@ -77,7 +77,7 @@ object AsterismGroupObsList {
 
     def toggleExpanded(
       obsIds:      ObsIdSet,
-      expandedIds: View[SortedSet[ObsIdSet]]
+      expandedIds: ReuseView[SortedSet[ObsIdSet]]
     ): Callback =
       expandedIds.mod { expanded =>
         expanded
@@ -112,9 +112,9 @@ object AsterismGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupsWithObs],
-      expandedIds: View[SortedSet[ObsIdSet]],
-      focusedObs:  View[Option[Observation.Id]],
-      selected:    View[SelectedPanel[TargetOrObsSet]]
+      expandedIds: ReuseView[SortedSet[ObsIdSet]],
+      focusedObs:  ReuseView[Option[Observation.Id]],
+      selected:    ReuseView[SelectedPanel[TargetOrObsSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>

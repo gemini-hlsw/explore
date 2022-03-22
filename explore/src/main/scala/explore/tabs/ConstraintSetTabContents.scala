@@ -6,7 +6,7 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -49,13 +49,13 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
-  focusedObs:       View[Option[Observation.Id]],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  listUndoStacks:   View[UndoStacks[IO, ConstraintGroupList]],
+  focusedObs:       ReuseView[Option[Observation.Id]],
+  expandedIds:      ReuseView[SortedSet[ObsIdSet]],
+  listUndoStacks:   ReuseView[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
-  groupUndoStack:   View[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
-  hiddenColumns:    View[Set[String]],
-  summarySorting:   View[List[(String, Boolean)]],
+  groupUndoStack:   ReuseView[Map[ObsIdSet, UndoStacks[IO, ConstraintSet]]],
+  hiddenColumns:    ReuseView[Set[String]],
+  summarySorting:   ReuseView[List[(String, Boolean)]],
   size:             ResizeDetector.Dimensions
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ConstraintSetTabContents](ConstraintSetTabContents.component)
@@ -82,8 +82,8 @@ object ConstraintSetTabContents {
 
   protected def renderFn(
     props:              Props,
-    state:              View[State],
-    constraintsWithObs: Reuse[View[ConstraintSummaryWithObervations]]
+    state:              ReuseView[State],
+    constraintsWithObs: ReuseView[ConstraintSummaryWithObervations]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -97,12 +97,12 @@ object ConstraintSetTabContents {
 
     val treeWidth = state.get.treeWidth.toInt
 
-    def tree(constraintWithObs: View[ConstraintSummaryWithObervations]) =
+    def tree(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
         treeInner(constraintWithObs)
       )
 
-    def treeInner(constraintWithObs: View[ConstraintSummaryWithObervations]) =
+    def treeInner(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(constraintWithObs,
                                props.focusedObs,

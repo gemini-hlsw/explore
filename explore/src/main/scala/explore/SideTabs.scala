@@ -4,7 +4,7 @@
 package explore
 
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.model.enum.AppTab
@@ -24,7 +24,7 @@ import react.semanticui.sizes._
 import explore.model.reusability._
 
 final case class SideTabs(
-  tabs: View[EnumZipper[AppTab]]
+  tabs: ReuseView[EnumZipper[AppTab]]
 ) extends ReactFnProps[SideTabs](SideTabs.component)
 
 object SideTabs {

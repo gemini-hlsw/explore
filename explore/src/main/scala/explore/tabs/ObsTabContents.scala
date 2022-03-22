@@ -7,8 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.implicits._
-import crystal.react.View
-import crystal.react.ViewOpt
+import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -66,12 +65,12 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class ObsTabContents(
-  userId:           ViewOpt[User.Id],
-  focusedObs:       View[Option[Observation.Id]],
-  focusedTarget:    View[Option[Target.Id]],
-  undoStacks:       View[ModelUndoStacks[IO]],
-  searching:        View[Set[Target.Id]],
-  hiddenColumns:    View[Set[String]]
+  userId:           ReuseViewOpt[User.Id],
+  focusedObs:       ReuseView[Option[Observation.Id]],
+  focusedTarget:    ReuseView[Option[Target.Id]],
+  undoStacks:       ReuseView[ModelUndoStacks[IO]],
+  searching:        ReuseView[Set[Target.Id]],
+  hiddenColumns:    ReuseView[Set[String]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
   def selectedPanel: SelectedPanel[Observation.Id] =
@@ -224,10 +223,10 @@ object ObsTabContents {
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def makeConstraintsSelector(
-    constraintGroups: View[ConstraintsList],
-    obsView:          Pot[View[ObservationData]]
+    constraintGroups: ReuseView[ConstraintsList],
+    obsView:          Pot[ReuseView[ObservationData]]
   )(implicit ctx:     AppContextIO): VdomNode =
-    potRender[View[ObservationData]] {
+    potRender[ReuseView[ObservationData]] {
       Reuse.always { vod =>
         val cgOpt: Option[ConstraintGroup] =
           constraintGroups.get.find(_._1.contains(vod.get.id)).map(_._2)
@@ -275,12 +274,12 @@ object ObsTabContents {
 
   protected def renderFn(
     props:              Props,
-    panels:             View[TwoPanelState[Observation.Id]],
-    options:            View[TargetVisualOptions],
-    layouts:            View[LayoutsMap],
+    panels:             ReuseView[TwoPanelState[Observation.Id]],
+    options:            ReuseView[TargetVisualOptions],
+    layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
-    obsWithConstraints: Reuse[View[ObsSummariesWithConstraints]]
+    obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
@@ -302,12 +301,12 @@ object ObsTabContents {
       panels.get.treeWidth.toInt
 
     // Tree area
-    def tree(observations: View[ObservationList]) =
+    def tree(observations: ReuseView[ObservationList]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableMultiPanel)(
         treeInner(observations)
       )
 
-    def treeInner(observations: View[ObservationList]) =
+    def treeInner(observations: ReuseView[ObservationList]) =
       <.div(ExploreStyles.TreeBody)(
         ObsList(
           observations,
@@ -387,18 +386,15 @@ object ObsTabContents {
            options,
            constraintGroups
           )
-        ) { (obsViewPot: Pot[Reuse[View[Pot[ObservationData]]]]) =>
-          val obsView: Pot[Reuse[View[ObservationData]]] =
+        ) { (obsViewPot: Pot[ReuseView[Pot[ObservationData]]]) =>
+          val obsView: Pot[ReuseView[ObservationData]] =
             obsViewPot.flatMap(view =>
-              // view.map(_.get.map(obs => view.zoom(_ => obs)(mod => _.map(mod))))
               view.value.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod))))
             )
 
           val constraintsSelector =
             Reuse.by((constraintGroups, obsView.map(_.value.get.constraintSet)))(
-              makeConstraintsSelector(constraintGroups,
-                                      obsView.map(_.value)
-              ) // TODO Make this Reuse too
+              makeConstraintsSelector(constraintGroups, obsView)
             )
 
           val skyPlotTile =
@@ -513,14 +509,14 @@ object ObsTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewBy(p => TwoPanelState.initial(p.selectedPanel))
+      .useStateViewWithReuseBy(p => TwoPanelState.initial(p.selectedPanel))
       .useEffectBy((p, panels) =>
         if (panels.get.selected =!= p.selectedPanel)
           panels.mod(TwoPanelState.selected.replace(p.selectedPanel))
         else Callback(panels.get)
       )
-      .useStateView(TargetVisualOptions.Default)
-      .useStateView(defaultLayout)
+      .useStateViewWithReuse(TargetVisualOptions.Default)
+      .useStateViewWithReuse(defaultLayout)
       .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
         implicit val ctx = props.ctx
         _ =>

@@ -5,7 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import crystal.Pot
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -25,8 +25,8 @@ object ConstraintsTile {
 
   def constraintsTile(
     obsId:      Observation.Id,
-    csPot:      Pot[View[ConstraintSet]],
-    undoStacks: View[UndoStacks[IO, ConstraintSet]],
+    csPot:      Pot[ReuseView[ConstraintSet]],
+    undoStacks: ReuseView[UndoStacks[IO, ConstraintSet]],
     control:    Option[Reuse[VdomNode]] = None,
     clazz:      Option[Css] = None
   ): Tile =

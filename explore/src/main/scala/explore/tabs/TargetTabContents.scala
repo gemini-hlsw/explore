@@ -7,7 +7,6 @@ import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
-import crystal.react.View
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -59,13 +58,13 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        View[Option[Observation.Id]],
-  focusedTarget:     View[Option[Target.Id]],
-  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
-  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:         View[Set[Target.Id]],
-  expandedIds:       View[SortedSet[ObsIdSet]],
-  hiddenColumns:     View[Set[String]]
+  focusedObs:        ReuseView[Option[Observation.Id]],
+  focusedTarget:     ReuseView[Option[Target.Id]],
+  listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
+  targetsUndoStacks: ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:         ReuseView[Set[Target.Id]],
+  expandedIds:       ReuseView[SortedSet[ObsIdSet]],
+  hiddenColumns:     ReuseView[Set[String]]
 )(implicit val ctx:  AppContextIO)
     extends ReactFnProps[TargetTabContents](TargetTabContents.component)
 
@@ -143,13 +142,13 @@ object TargetTabContents {
 
   protected def renderFn(
     props:                Props,
-    panels:               View[TwoPanelState[TargetOrObsSet]],
-    options:              View[TargetVisualOptions],
+    panels:               ReuseView[TwoPanelState[TargetOrObsSet]],
+    options:              ReuseView[TargetVisualOptions],
     defaultLayouts:       LayoutsMap,
-    layouts:              View[LayoutsMap],
+    layouts:              ReuseView[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
-    asterismGroupWithObs: Reuse[View[AsterismGroupsWithObs]]
+    asterismGroupWithObs: ReuseView[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -167,12 +166,12 @@ object TargetTabContents {
     val targetMap = asterismGroupWithObs.value.get.targetGroups
 
     // Tree area
-    def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
+    def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
         treeInner(objectsWithObs)
       )
 
-    def treeInner(objectsWithObs: View[AsterismGroupsWithObs]) =
+    def treeInner(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
       <.div(ExploreStyles.TreeBody)(
         AsterismGroupObsList(
           objectsWithObs,
@@ -190,10 +189,10 @@ object TargetTabContents {
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
     def selectObservationAndTarget(
-      focusedObs:    View[Option[Observation.Id]],
-      focusedTarget: View[Option[Target.Id]],
-      expandedIds:   View[SortedSet[ObsIdSet]],
-      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
+      focusedObs:    ReuseView[Option[Observation.Id]],
+      focusedTarget: ReuseView[Option[Target.Id]],
+      expandedIds:   ReuseView[SortedSet[ObsIdSet]],
+      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       obsId:         Observation.Id,
       targetId:      Target.Id
     ): Callback = {
@@ -207,8 +206,8 @@ object TargetTabContents {
     }
 
     def selectTarget(
-      focusedObs:    View[Option[Observation.Id]],
-      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
+      focusedObs:    ReuseView[Option[Observation.Id]],
+      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       targetId:      Target.Id
     ): Callback =
       focusedObs.set(none) >> selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
@@ -254,7 +253,7 @@ object TargetTabContents {
       Tile("targetSummary", "Target Summary", backButton.some)(
         Reuse
           .by( // TODO Add reuseCurrying for higher arities in crystal // I think we have this now
-            (asterismGroupWithObs.value.get,
+            (asterismGroupWithObs,
              props.hiddenColumns,
              props.focusedObs,
              props.focusedTarget,
@@ -352,7 +351,7 @@ object TargetTabContents {
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
       }
 
-      val asterismView: Reuse[View[List[TargetWithId]]] = asterismGroupWithObs.map(
+      val asterismView: ReuseView[List[TargetWithId]] = asterismGroupWithObs.map(
         _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
           .zoom(getAsterism)(modAsterism)
       )
@@ -363,7 +362,7 @@ object TargetTabContents {
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[Reuse[ViewOpt[Target]]] =
+      val selectedTarget: Option[ReuseViewOpt[Target]] =
         props.focusedTarget.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
@@ -422,7 +421,7 @@ object TargetTabContents {
           _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
         )
 
-      val targetView: Reuse[View[Target.Sidereal]] =
+      val targetView: ReuseView[Target.Sidereal] =
         asterismGroupWithObs.map(
           _.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
         )
@@ -518,10 +517,10 @@ object TargetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
-      .useStateView(TargetVisualOptions.Default)
+      .useStateViewWithReuse(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
+      .useStateViewWithReuse(TargetVisualOptions.Default)
       .useResizeDetector()
-      .useStateView(proportionalLayouts)
+      .useStateViewWithReuse(proportionalLayouts)
       .useMemoBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
         // Memoize the initial result
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)

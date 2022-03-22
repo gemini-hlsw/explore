@@ -55,11 +55,11 @@ object reusability {
     : Reusability[ObsSummaryWithTargetsAndConstraints] = Reusability.derive
 
   // Views - These are temporary and will go away once we finish migrating
-  implicit def viewReusability[A: Reusability]: Reusability[View[A]] =
-    Reusability.by(_.get)
+  // implicit def viewReusability[A: Reusability]: Reusability[View[A]] =
+  //   Reusability.by(_.get)
 
-  implicit def viewOptReusability[A: Reusability]: Reusability[ViewOpt[A]] =
-    Reusability.by(_.get)
+  // implicit def viewOptReusability[A: Reusability]: Reusability[ViewOpt[A]] =
+  //   Reusability.by(_.get)
 
   // implicit def viewListReusability[A: Reusability]: Reusability[ViewList[A]] =
   //   Reusability.by(_.get)
@@ -67,10 +67,10 @@ object reusability {
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
-  implicit def undoContextReuse[M: Reusability]: Reusability[UndoContext[M]]         =
-    Reusability.by(x => (x.model, x.stacks))
-  implicit def undoSetterReuse[M: Reusability]: Reusability[UndoSetter[M]]           =
-    Reusability.by(_.model)
+  // implicit def undoContextReuse[M: Reusability]: Reusability[UndoContext[M]]         =
+  //   Reusability.by(x => (x.model, x.stacks))
+  // implicit def undoSetterReuse[M: Reusability]: Reusability[UndoSetter[M]]           =
+  //   Reusability.by(_.model)
   implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]] =
     Reusability.by[Map[K, UndoStacks[F, M]], Int](_.size) && Reusability[Map[K, UndoStacks[F, M]]](
       (a, b) =>

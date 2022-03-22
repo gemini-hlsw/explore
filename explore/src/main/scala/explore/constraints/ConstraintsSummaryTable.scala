@@ -5,7 +5,7 @@ package explore.constraints
 
 import cats.Order._
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
@@ -39,11 +39,11 @@ import scalajs.js.JSConverters._
 
 final case class ConstraintsSummaryTable(
   constraintList: ConstraintGroupList,
-  hiddenColumns:  View[Set[String]],
-  summarySorting: View[List[(String, Boolean)]],
-  selectedPanel:  View[SelectedPanel[ObsIdSet]],
-  focusedObs:     View[Option[Observation.Id]],
-  expandedIds:    View[SortedSet[ObsIdSet]],
+  hiddenColumns:  ReuseView[Set[String]],
+  summarySorting: ReuseView[List[(String, Boolean)]],
+  selectedPanel:  ReuseView[SelectedPanel[ObsIdSet]],
+  focusedObs:     ReuseView[Option[Observation.Id]],
+  expandedIds:    ReuseView[SortedSet[ObsIdSet]],
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
 

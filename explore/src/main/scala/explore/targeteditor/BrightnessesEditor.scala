@@ -6,7 +6,7 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -40,7 +40,7 @@ import explore.model.reusability._
 import scala.collection.immutable.SortedMap
 
 sealed trait BrightnessesEditor[T] {
-  val brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[T]]]]
+  val brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[T]]]
   val disabled: Boolean
 }
 
@@ -220,7 +220,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 }
 
 final case class IntegratedBrightnessEditor(
-  brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[Integrated]]]],
+  brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]],
   disabled:     Boolean
 ) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
     with BrightnessesEditor[Integrated]
@@ -235,7 +235,7 @@ object IntegratedBrightnessEditor
 }
 
 final case class SurfaceBrightnessEditor(
-  brightnesses: Reuse[View[SortedMap[Band, BrightnessMeasure[Surface]]]],
+  brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]],
   disabled:     Boolean
 ) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
     with BrightnessesEditor[Surface]

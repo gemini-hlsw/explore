@@ -7,7 +7,7 @@ import cats.Endo
 import cats.effect.IO
 import cats.syntax.all._
 import clue.data.syntax._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -62,10 +62,10 @@ final case class SearchCallback(
 final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
-  target:        Reuse[View[Target.Sidereal]],
-  undoStacks:    View[UndoStacks[IO, Target.Sidereal]],
-  searching:     View[Set[Target.Id]],
-  options:       View[TargetVisualOptions],
+  target:        ReuseView[Target.Sidereal],
+  undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
+  searching:     ReuseView[Set[Target.Id]],
+  options:       ReuseView[TargetVisualOptions],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId ==> Callback = ((_: TargetWithId) => Callback.empty).reuseAlways,
   renderInTitle: Option[Tile.RenderInTitle] = none
@@ -80,7 +80,7 @@ object SiderealTargetEditor {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  def readonlyView[A](view: Reuse[View[A]]): Reuse[View[A]] = {
+  def readonlyView[A](view: ReuseView[A]): ReuseView[A] = {
     val getA: A => A               = identity
     val noModA: (A => A) => A => A = _ => identity
     view.map(_.zoom(getA)(noModA))
@@ -122,7 +122,7 @@ object SiderealTargetEditor {
               (readonlyView(props.target),
                readonlyView(
                  Reuse(props.undoStacks).by(props.undoStacks.get)
-               ) // TODO Proper Reuse[View[stacks]]
+               ) // TODO Proper ReuseView[stacks]]
               )
             )
           val undoCtx: Reuse[UndoContext[Target.Sidereal]] =
@@ -141,7 +141,7 @@ object SiderealTargetEditor {
               )
             )
 
-          val allView: Reuse[View[Target.Sidereal]] =
+          val allView: ReuseView[Target.Sidereal] =
             siderealTargetRSU.map(
               _.viewMod(t =>
                 EditTargetInput.name.replace(t.name.assign) >>>
@@ -153,13 +153,13 @@ object SiderealTargetEditor {
           val siderealToTargetEndo: Endo[SiderealInput] => Endo[EditTargetInput] =
             forceAssign(EditTargetInput.sidereal.modify)(SiderealInput())
 
-          val coordsRAView: Reuse[View[RightAscension]] =
+          val coordsRAView: ReuseView[RightAscension] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
                 .view(_.toInput.assign)
             )
 
-          val coordsDecView: Reuse[View[Declination]] =
+          val coordsDecView: ReuseView[Declination] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.baseDec,
                      siderealToTargetEndo.compose(SiderealInput.dec.modify)
@@ -167,7 +167,7 @@ object SiderealTargetEditor {
                 .view(_.toInput.assign)
             )
 
-          val epochView: Reuse[View[Epoch]] =
+          val epochView: ReuseView[Epoch] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.epoch,
                      siderealToTargetEndo.compose(SiderealInput.epoch.modify)
@@ -175,13 +175,13 @@ object SiderealTargetEditor {
                 .view((Epoch.fromString.reverseGet _).andThen(_.assign))
             )
 
-          val nameView: Reuse[View[NonEmptyString]] =
+          val nameView: ReuseView[NonEmptyString] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.name, EditTargetInput.name.modify)
                 .view(_.assign)
             )
 
-          val properMotionRAView: Reuse[View[Option[ProperMotion.RA]]] =
+          val properMotionRAView: ReuseView[Option[ProperMotion.RA]] =
             siderealTargetRSU.map(
               _.zoom(
                 Target.Sidereal.properMotionRA.getOption,
@@ -196,7 +196,7 @@ object SiderealTargetEditor {
                 )
             )
 
-          val properMotionDecView: Reuse[View[Option[ProperMotion.Dec]]] =
+          val properMotionDecView: ReuseView[Option[ProperMotion.Dec]] =
             siderealTargetRSU.map(
               _.zoom(
                 Target.Sidereal.properMotionDec.getOption,
@@ -211,7 +211,7 @@ object SiderealTargetEditor {
                 )
             )
 
-          val parallaxView: Reuse[View[Option[Parallax]]] =
+          val parallaxView: ReuseView[Option[Parallax]] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.parallax,
                      siderealToTargetEndo.compose(SiderealInput.parallax.modify)
@@ -219,7 +219,7 @@ object SiderealTargetEditor {
                 .view(_.map(_.toInput).orUnassign)
             )
 
-          val radialVelocityView: Reuse[View[Option[RadialVelocity]]] =
+          val radialVelocityView: ReuseView[Option[RadialVelocity]] =
             siderealTargetRSU.map(
               _.zoom(Target.Sidereal.radialVelocity,
                      siderealToTargetEndo.compose(SiderealInput.radialVelocity.modify)
@@ -236,8 +236,8 @@ object SiderealTargetEditor {
             )
 
           def searchAndSet(
-            allView:  Reuse[View[Target.Sidereal]],
-            nameView: Reuse[View[NonEmptyString]],
+            allView:  ReuseView[Target.Sidereal],
+            nameView: ReuseView[NonEmptyString],
             s:        SearchCallback
           ): Callback =
             SimbadSearch
@@ -282,7 +282,7 @@ object SiderealTargetEditor {
                   Reuse.currying(allView, nameView).in(searchAndSet _)
                 ),
                 <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-                FormInputEV[View, TruncatedRA](
+                FormInputEV[ReuseView, TruncatedRA](
                   id = "ra",
                   value = coordsRAView.map(_.zoomSplitEpi(TruncatedRA.rightAscension)),
                   validFormat = ValidFormatInput.truncatedRA,
@@ -293,7 +293,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
-                FormInputEV[View, TruncatedDec](
+                FormInputEV[ReuseView, TruncatedDec](
                   id = "dec",
                   value = coordsDecView.map(_.zoomSplitEpi(TruncatedDec.declination)),
                   validFormat = ValidFormatInput.truncatedDec,
@@ -310,7 +310,7 @@ object SiderealTargetEditor {
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
                 <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
-                InputWithUnits[View, Epoch](
+                InputWithUnits[ReuseView, Epoch](
                   epochView,
                   ValidFormatInput.fromFormat(Epoch.fromStringNoScheme, "Invalid Epoch"),
                   ChangeAuditor.maxLength(8).decimal(3).denyNeg.as[Epoch],
@@ -319,7 +319,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("µ RA", ExploreStyles.SkipToNext),
-                InputWithUnits[View, Option[ProperMotion.RA]](
+                InputWithUnits[ReuseView, Option[ProperMotion.RA]](
                   properMotionRAView,
                   ValidFormatInput.fromFormat(pmRAFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmRAFormat).decimal(3).optional,
@@ -328,7 +328,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("µ Dec", ExploreStyles.SkipToNext),
-                InputWithUnits[View, Option[ProperMotion.Dec]](
+                InputWithUnits[ReuseView, Option[ProperMotion.Dec]](
                   properMotionDecView,
                   ValidFormatInput.fromFormat(pmDecFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pmDecFormat).decimal(3).optional,
@@ -337,7 +337,7 @@ object SiderealTargetEditor {
                   disabled = disabled
                 ),
                 <.label("Parallax", ExploreStyles.SkipToNext),
-                InputWithUnits[View, Option[Parallax]](
+                InputWithUnits[ReuseView, Option[Parallax]](
                   parallaxView,
                   ValidFormatInput.fromFormat(pxFormat, "Must be a number").optional,
                   ChangeAuditor.fromFormat(pxFormat).decimal(3).optional,

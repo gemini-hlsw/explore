@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -25,7 +25,7 @@ import react.semanticui.sizes._
 import scala.collection.SortedMap
 
 final case class CataloguesForm(
-  options:          View[TargetVisualOptions]
+  options:          ReuseView[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CataloguesForm](CataloguesForm.component)
 

@@ -10,7 +10,7 @@ import clue.data.Input
 import clue.data.syntax._
 import coulomb._
 import coulomb.si.Kelvin
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -63,12 +63,12 @@ sealed trait SpectralDefinitionEditor[T, S] {
 
   val sedRSUOpt: Option[Reuse[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]]
 
-  val bandBrightnessesViewOpt: Option[Reuse[View[SortedMap[Band, BrightnessMeasure[T]]]]]
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[T]]]]
 
-  val emissionLinesViewOpt: Option[Reuse[View[SortedMap[Wavelength, EmissionLine[T]]]]]
+  val emissionLinesViewOpt: Option[ReuseView[SortedMap[Wavelength, EmissionLine[T]]]]
 
   val fluxDensityContinuumOpt: Option[
-    Reuse[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
+    ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]
   ]
 }
 
@@ -82,8 +82,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   import SpectralDefinition._
   import UnnormalizedSED._
 
-  protected val brightnessEditor: Reuse[View[SortedMap[Band, BrightnessMeasure[T]]]] => VdomNode
-  protected val emissionLineEditor: Reuse[View[SortedMap[Wavelength, EmissionLine[T]]]] => VdomNode
+  protected val brightnessEditor: ReuseView[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
+  protected val emissionLineEditor: ReuseView[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
 
   private def toBandNormalized[T](
     sed: UnnormalizedSED
@@ -292,7 +292,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
       }
 
-    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: Reuse[View[T]]) =
+    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: ReuseView[T]) =
       React.Fragment(
         <.span,
         EnumViewSelect(id, view.value), // TODO Implement reusability for EnumViewSelect???
@@ -345,7 +345,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Temperature", ExploreStyles.SkipToNext),
             InputWithUnits( // Temperature is in K, a positive integer
-              rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
+              rsu.map(_.view(t => BigDecimal(t.value).assign)).stripQuantity,
               ValidFormatInput.forRefinedInt[Positive](),
               ChangeAuditor
                 .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
@@ -362,7 +362,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         .map(fluxDensityContinuum =>
           React.Fragment(
             <.label("Continuum", ExploreStyles.SkipToNext),
-            FormInputEV[View, PosBigDecimal](
+            FormInputEV[ReuseView, PosBigDecimal](
               id = "fluxValue",
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
@@ -370,7 +370,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
               changeAuditor = ChangeAuditor.posScientificNotation()
             ),
-            EnumViewSelect[View, Units Of FluxDensityContinuum[T]](
+            EnumViewSelect[ReuseView, Units Of FluxDensityContinuum[T]](
               "Units",
               fluxDensityContinuum
                 .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
@@ -424,7 +424,7 @@ final case class IntegratedSpectralDefinitionEditor(
       )
     )
 
-  val bandBrightnessesViewOpt: Option[Reuse[View[SortedMap[Band, BrightnessMeasure[Integrated]]]]] =
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]]] =
     bandNormalizedRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.BandNormalized.brightnesses[Integrated],
@@ -451,7 +451,7 @@ final case class IntegratedSpectralDefinitionEditor(
     )
 
   override val emissionLinesViewOpt
-    : Option[Reuse[View[SortedMap[Wavelength, EmissionLine[Integrated]]]]] =
+    : Option[ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
     emissionLinesRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
@@ -462,7 +462,7 @@ final case class IntegratedSpectralDefinitionEditor(
     )
 
   override val fluxDensityContinuumOpt
-    : Option[Reuse[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]]] =
+    : Option[ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
     emissionLinesRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
@@ -479,11 +479,11 @@ object IntegratedSpectralDefinitionEditor
                                             IntegratedSpectralDefinitionEditor
     ] {
   protected val brightnessEditor
-    : Reuse[View[SortedMap[Band, BrightnessMeasure[Integrated]]]] => VdomNode =
+    : ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
     brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
 
   protected val emissionLineEditor
-    : Reuse[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] => VdomNode =
+    : ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
     emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
 }
 
@@ -526,7 +526,7 @@ final case class SurfaceSpectralDefinitionEditor(
       )
     )
 
-  val bandBrightnessesViewOpt: Option[Reuse[View[SortedMap[Band, BrightnessMeasure[Surface]]]]] =
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]]] =
     bandNormalizedRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.BandNormalized.brightnesses[Surface],
@@ -550,7 +550,7 @@ final case class SurfaceSpectralDefinitionEditor(
     )
 
   override val emissionLinesViewOpt
-    : Option[Reuse[View[SortedMap[Wavelength, EmissionLine[Surface]]]]] =
+    : Option[ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]]] =
     emissionLinesRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.EmissionLines.lines[Surface],
@@ -561,7 +561,7 @@ final case class SurfaceSpectralDefinitionEditor(
     )
 
   override val fluxDensityContinuumOpt
-    : Option[Reuse[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]]] =
+    : Option[ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
     emissionLinesRSUOpt.map(
       _.map(
         _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
@@ -578,11 +578,11 @@ object SurfaceSpectralDefinitionEditor
                                             SurfaceSpectralDefinitionEditor
     ] {
   protected val brightnessEditor
-    : Reuse[View[SortedMap[Band, BrightnessMeasure[Surface]]]] => VdomNode =
+    : ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
     brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
 
   protected val emissionLineEditor
-    : Reuse[View[SortedMap[Wavelength, EmissionLine[Surface]]]] => VdomNode =
+    : ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
     emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
 
 }

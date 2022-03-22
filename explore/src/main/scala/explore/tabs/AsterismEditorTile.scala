@@ -6,7 +6,7 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
@@ -30,15 +30,15 @@ object AsterismEditorTile {
   def asterismEditorTile(
     userId:           Option[User.Id],
     obsId:            ObsIdSet,
-    asterismPot:      Pot[Reuse[View[List[TargetWithId]]]],
-    selectedTargetId: View[Option[Target.Id]],
+    asterismPot:      Pot[ReuseView[List[TargetWithId]]],
+    selectedTargetId: ReuseView[Option[Target.Id]],
     otherObsCount:    Target.Id ==> Int,
-    undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:        View[Set[Target.Id]],
-    options:          View[TargetVisualOptions],
+    undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:        ReuseView[Set[Target.Id]],
+    options:          ReuseView[TargetVisualOptions],
     title:            String,
     backButton:       Option[Reuse[VdomNode]] = None,
-    hiddenColumns:    View[Set[String]],
+    hiddenColumns:    ReuseView[Set[String]],
     width:            Int,
     height:           Int
   )(implicit ctx:     AppContextIO) =
@@ -62,9 +62,9 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRender[Reuse[View[List[TargetWithId]]]](
+        potRender[ReuseView[List[TargetWithId]]](
           (
-            (asterism: Reuse[View[List[TargetWithId]]]) =>
+            (asterism: ReuseView[List[TargetWithId]]) =>
               userId.map(uid =>
                 AsterismEditor(uid,
                                obsId,

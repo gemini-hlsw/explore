@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -33,7 +33,7 @@ import lucuma.core.math.Redshift
 import lucuma.core.math.ApparentRadialVelocity
 
 final case class RVInput(
-  value:    Reuse[View[Option[RadialVelocity]]],
+  value:    ReuseView[Option[RadialVelocity]],
   disabled: Boolean
 ) extends ReactProps[RVInput](RVInput.component)
 
@@ -91,7 +91,7 @@ object RVInput {
       )
       val input    = state.rvView match {
         case RVView.Z  =>
-          FormInputEV[View, Option[Redshift]](
+          FormInputEV[ReuseView, Option[Redshift]](
             id = state.rvView.tag,
             value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
@@ -102,7 +102,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.CZ =>
-          FormInputEV[View, Option[ApparentRadialVelocity]](
+          FormInputEV[ReuseView, Option[ApparentRadialVelocity]](
             id = state.rvView.tag,
             value = props.value.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
@@ -113,7 +113,7 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.RV =>
-          FormInputEV[View, Option[RadialVelocity]](
+          FormInputEV[ReuseView, Option[RadialVelocity]](
             id = state.rvView.tag,
             value = props.value,
             errorClazz = errorCss,

@@ -26,14 +26,18 @@ import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
 
-final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
-  val view:                       View[RootModel]
+final case class ExploreLayout(
+  c:        RouterCtl[Page],
+  r:        ResolutionWithProps[Page, ReuseView[RootModel]]
+)(
+  val view: ReuseView[RootModel]
 ) extends ReactProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
   type Props = ExploreLayout
 
-  implicit val resolutionWithPropsReuse: Reusability[ResolutionWithProps[Page, View[RootModel]]] =
+  implicit val resolutionWithPropsReuse
+    : Reusability[ResolutionWithProps[Page, ReuseView[RootModel]]] =
     Reusability.byRefOr_==
 
   implicit val propsReuse: Reusability[Props] =
