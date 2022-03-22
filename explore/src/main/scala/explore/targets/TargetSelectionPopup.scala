@@ -42,6 +42,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import lucuma.core.math.Angle
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],
@@ -213,8 +214,11 @@ object TargetSelectionPopup {
                             showLayersControl = false,
                             target = Coordinates.fromHmsDms.reverseGet(coordinates),
                             fov = angSize
-                              .map(_.majorAxis.toDoubleDegrees * Constants.AngleSizeFovFactor)
-                              .getOrElse(Constants.InitialFov.toDoubleDegrees): Double,
+                              .map(m =>
+                                Angle.microarcseconds
+                                  .modify(Constants.AngleSizeFovFactor)(m.majorAxis)
+                              )
+                              .getOrElse(Constants.InitialFov): Angle,
                             showGotoControl = false
                           )
                         )

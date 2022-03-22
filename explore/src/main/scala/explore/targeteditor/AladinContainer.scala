@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
+import react.resizeDetector.hooks._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
@@ -50,7 +51,6 @@ object AladinContainer {
       .withHooks[Props]
       // Memoized svg
       .useMemoBy(p => (p.options.posAngle, p.fov))(_ => { case (posAngle, _) =>
-        println("SVG")
         visualization
           .shapesToSvg(GmosGeometry.shapes(posAngle), GmosGeometry.pp, GmosGeometry.ScaleFactor)
       })
@@ -68,7 +68,8 @@ object AladinContainer {
             .when(center)
         }
       )
-      .render { (props, svg, aladinRef) =>
+      .useResizeDetector()
+      .render { (props, svg, aladinRef, resize) =>
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
@@ -151,16 +152,9 @@ object AladinContainer {
           renderVisualization(div, size, v.pixelScale)
         }
 
-        def onZoom: Callback =
-          aladinRef.get.asCBO.flatMapCB(r =>
-            r.backend.recalculateView *>
-              r.backend.runOnAladinCB(v =>
-                updateVisualization(v) *>
-                  Callback.log(s"zoomw ${v.fov}") *>
-                  props.fov.set(v.fov) *>
-                  props.updateFov(v.fov)
-              )
-          )
+        def onZoom = (v: Fov) =>
+          props.fov.set(v) *>
+            props.updateFov(v) *> recalculateView
 
         def recalculateView =
           aladinRef.get.asCBO.flatMapCB { r =>
@@ -180,17 +174,20 @@ object AladinContainer {
 
         <.div(
           ExploreStyles.AladinContainerBody,
-          AladinComp.withRef(aladinRef) {
-            Aladin(
-              ExploreStyles.TargetAladin,
-              showReticle = false,
-              showLayersControl = false,
-              target = props.aladinCoordsStr,
-              fov = props.fov.get.x.toSignedDoubleDegrees,
-              showGotoControl = false,
-              customize = includeSvg _
-            )
-          }
+          if (resize.height.exists(_ > 0))
+            AladinComp.withRef(aladinRef) {
+              Aladin(
+                ExploreStyles.TargetAladin,
+                showReticle = false,
+                showLayersControl = false,
+                target = props.aladinCoordsStr,
+                fov = props.fov.get.x,
+                showGotoControl = false,
+                customize = includeSvg _
+              )
+            }
+          else EmptyVdom
         )
+          .withRef(resize.ref)
       }
 }
