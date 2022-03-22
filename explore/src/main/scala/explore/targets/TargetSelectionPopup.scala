@@ -24,6 +24,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.catalog.AngularSize
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -42,7 +43,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import lucuma.core.math.Angle
 
 final case class TargetSelectionPopup(
   trigger:          Reuse[Button],

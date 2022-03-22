@@ -5,8 +5,6 @@ package explore.schemas
 
 import clue.annotation.GraphQLSchema
 import eu.timepit.refined.types.numeric
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ElevationRange
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
@@ -15,6 +13,8 @@ import lucuma.core.`enum`
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
 import lucuma.core.model
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ElevationRange
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema

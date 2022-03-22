@@ -11,7 +11,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
-import react.resizeDetector.hooks._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
@@ -22,6 +21,7 @@ import org.scalajs.dom.document
 import react.aladin._
 import react.aladin.reusability._
 import react.common._
+import react.resizeDetector.hooks._
 
 import scala.annotation.nowarn
 import scala.concurrent.duration._
@@ -31,7 +31,7 @@ final case class AladinContainer(
   options:                TargetVisualOptions,
   fov:                    View[Fov],
   updateMouseCoordinates: Coordinates ==> Callback,
-  updateFov:              Fov ==> Callback,
+  updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   centerOnTarget:         View[Boolean]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component) {
   val aladinCoords: Coordinates = target.get
@@ -101,7 +101,7 @@ object AladinContainer {
                 case _         => Callback.empty
               }
               .toCallback
-          }.getOrEmpty *> props.centerOnTarget.set(false)
+          }.getOrEmpty *> props.centerOnTarget.set(false) // Reset center or we we cannot pan
         }
 
         def toggleVisibility(g: Element, selector: String, option: Visible): Unit =
@@ -174,6 +174,11 @@ object AladinContainer {
 
         <.div(
           ExploreStyles.AladinContainerBody,
+          // This is a bit tricky. Sometimes the height can be 0, this happens if
+          // during a second render. If we let the height to be zero, aladin will
+          // take it as 1 and miss calculate the amount of tiles needed.
+          // This can endup requesting a large amount of tiles and would
+          // freeze explore
           if (resize.height.exists(_ > 0))
             AladinComp.withRef(aladinRef) {
               Aladin(

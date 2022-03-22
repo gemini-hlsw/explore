@@ -38,9 +38,9 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
-import scala.math.BigDecimal.RoundingMode
 
 import scala.collection.immutable.SortedMap
+import scala.math.BigDecimal.RoundingMode
 
 sealed trait EmissionLineEditor[T] {
   val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]

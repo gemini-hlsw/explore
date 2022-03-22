@@ -6,9 +6,9 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
@@ -57,7 +57,8 @@ object AladinCell extends ModelOptics {
       .useStateBy(_.aladinCoords)
       // field of view
       .useStateViewBy((p, _) => Fov(p.options.get.fovAngle, p.options.get.fovAngle))
-      // flag to trigger centering
+      // flag to trigger centering. This is a bit brute force but
+      // avoids us needing a ref to a Fn component
       .useStateView(false)
       .renderWithReuse { (props, coords, fov, center) =>
         val coordinatesSetter =
@@ -67,14 +68,12 @@ object AladinCell extends ModelOptics {
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
-            // fov.setState(newFov) >>
             UserTargetPreferencesUpsert
               .updateFov[IO](props.uid, props.tid, newFov.x)
               .runAsyncAndForget
               .debounce(1.seconds)
           }
 
-        val centerOnTarget = center.set(true)
         React.Fragment(
           <.div(
             ExploreStyles.TargetAladinCell,
@@ -94,7 +93,7 @@ object AladinCell extends ModelOptics {
                 Popup(
                   content = "Center on target",
                   position = PopupPosition.BottomLeft,
-                  trigger = Button(size = Mini, icon = true, onClick = centerOnTarget)(
+                  trigger = Button(size = Mini, icon = true, onClick = center.set(true))(
                     Icons.Bullseye
                       .transform(Transform(size = 24))
                       .clazz(ExploreStyles.Accented)
