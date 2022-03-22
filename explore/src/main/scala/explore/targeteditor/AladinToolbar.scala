@@ -12,7 +12,7 @@ import lucuma.core.math._
 import lucuma.ui.reusability._
 import react.aladin.Fov
 import react.aladin.reusability._
-import react.common.ReactProps
+import react.common.ReactFnProps
 import react.semanticui.elements.label._
 import react.semanticui.shorthand._
 import react.semanticui.sizes.Small
@@ -22,7 +22,7 @@ import scala.math.rint
 final case class AladinToolbar(
   fov:     Fov,
   current: Coordinates
-) extends ReactProps[AladinToolbar](AladinToolbar.component)
+) extends ReactFnProps[AladinToolbar](AladinToolbar.component)
 
 object AladinToolbar {
   type Props = AladinToolbar
@@ -41,8 +41,8 @@ object AladinToolbar {
 
   val fromStringSignedDMS: Angle => String =
     a =>
-      if (Angle.signedMicroarcseconds.get(a) < 0) "-" + fromStringDMS(-a)
-      else "+" + fromStringDMS(a)
+      if (Angle.signedMicroarcseconds.get(a) < 0) s"-${fromStringDMS(-a)}"
+      else s"+${fromStringDMS(a)}"
 
   def formatCoordinates(coords: Coordinates): String = {
     val ra = HMS(coords.ra.toHourAngle)
@@ -66,9 +66,8 @@ object AladinToolbar {
   }
 
   val component =
-    ScalaComponent
-      .builder[Props]
-      .render_P((props: Props) =>
+    ScalaFnComponent
+      .withReuse[Props] { props =>
         React.Fragment(
           Label(
             icon = Icons.Maximize.clazz(ExploreStyles.Accented),
@@ -88,7 +87,5 @@ object AladinToolbar {
             )
           )
         )
-      )
-      .configure(Reusability.shouldComponentUpdate)
-      .build
+      }
 }
