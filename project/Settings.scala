@@ -7,7 +7,7 @@ object Settings {
 
   object LibraryVersions {
     val cats              = "2.7.0"
-    val catsEffect        = "3.3.7"
+    val catsEffect        = "3.3.8"
     val catsRetry         = "3.1.0"
     val circe             = "0.14.1"
     val circeGolden       = "0.3.0"
@@ -19,7 +19,7 @@ object Settings {
     val fs2Data           = "1.3.1"
     val geminiLocales     = "0.7.0"
     val http4s            = "0.23.11"
-    val http4sDom         = "0.2.0"
+    val http4sDom         = "0.2.1"
     val log4Cats          = "2.2.0"
     val log4CatsLogLevel  = "0.3.0"
     val lucumaBC          = "0.4.0"
