@@ -389,11 +389,11 @@ object ObsTabContents {
         ) { (obsViewPot: Pot[ReuseView[Pot[ObservationData]]]) =>
           val obsView: Pot[ReuseView[ObservationData]] =
             obsViewPot.flatMap(view =>
-              view.value.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod))))
+              view.get.map(obs => view.map(_.zoom(_ => obs)(mod => _.map(mod))))
             )
 
           val constraintsSelector =
-            Reuse.by((constraintGroups, obsView.map(_.value.get.constraintSet)))(
+            Reuse.by((constraintGroups, obsView.map(_.get.constraintSet)))(
               makeConstraintsSelector(constraintGroups, obsView)
             )
 
@@ -413,7 +413,7 @@ object ObsTabContents {
               )
             ),
             props.focusedTarget,
-            Reuse.currying(obsWithConstraints.value.get.targetMap, obsId).in(otherObsCount _),
+            Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
             options,

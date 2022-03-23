@@ -384,8 +384,7 @@ object SpectroscopyModesTable {
       }((_, _, _) => { case (wavelength, sn, targets, constraints, rows, itc) =>
         rows.value
           .map(
-            itc.value.get
-              .forRow(wavelength, sn, constraints, targets, _)
+            itc.get.forRow(wavelength, sn, constraints, targets, _)
           )
           .collect { case Left(p) =>
             p.toList.filter {
@@ -411,7 +410,7 @@ object SpectroscopyModesTable {
         )
       }((_, _, _, _, _) => {
         case (wavelength, focalPlane, sn, targets, constraints, itc, itcProgress) =>
-          columns(wavelength, focalPlane, sn, constraints, targets, itc.value.get, itcProgress.get)
+          columns(wavelength, focalPlane, sn, constraints, targets, itc.get, itcProgress.get)
       })
       // selectedIndex
       .useStateBy((props, rows, _, _, _, _) =>

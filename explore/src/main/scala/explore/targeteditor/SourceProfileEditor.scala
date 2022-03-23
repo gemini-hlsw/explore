@@ -68,7 +68,7 @@ object SourceProfileEditor {
   { props =>
     implicit val appCtx = props.appCtx
 
-    val currentType: SourceProfileType = props.sourceProfile.value.get match {
+    val currentType: SourceProfileType = props.sourceProfile.get match {
       case Point(_)       => SourceProfileType.PointType
       case Uniform(_)     => SourceProfileType.UniformType
       case Gaussian(_, _) => SourceProfileType.GaussianType

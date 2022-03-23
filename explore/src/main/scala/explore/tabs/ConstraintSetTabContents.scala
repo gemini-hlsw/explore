@@ -169,13 +169,13 @@ object ConstraintSetTabContents {
 
     val rightSide = state.get.selected.optValue
       .flatMap(ids =>
-        findConstraintGroup(ids, constraintsWithObs.value.get.constraintGroups).map(cg => (ids, cg))
+        findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
       )
       .fold[VdomNode] {
         Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
           Reuse.by((constraintsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
             ConstraintsSummaryTable(
-              constraintsWithObs.value.get.constraintGroups,
+              constraintsWithObs.get.constraintGroups,
               props.hiddenColumns,
               props.summarySorting,
               state.zoom(TwoPanelState.selected),

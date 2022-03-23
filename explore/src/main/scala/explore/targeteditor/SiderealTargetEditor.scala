@@ -127,7 +127,7 @@ object SiderealTargetEditor {
             )
           val undoCtx: Reuse[UndoContext[Target.Sidereal]] =
             targetView.map(tv => UndoContext(undoStackView, tv))
-          val target: Target.Sidereal                      = props.target.value.get
+          val target: Target.Sidereal                      = props.target.get
 
           val reuseRemoteOnMod =
             Reuse(getRemoteOnMod _)(props.id, props.obsIdSubset, cloning, props.onClone)

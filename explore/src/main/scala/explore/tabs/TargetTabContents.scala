@@ -163,7 +163,7 @@ object TargetTabContents {
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(selectedLens)
 
-    val targetMap = asterismGroupWithObs.value.get.targetGroups
+    val targetMap = asterismGroupWithObs.get.targetGroups
 
     // Tree area
     def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
@@ -197,7 +197,7 @@ object TargetTabContents {
       targetId:      Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, asterismGroupWithObs.value.get.asterismGroups)
+      findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         focusedObs.set(obsId.some) >>
@@ -469,7 +469,7 @@ object TargetTabContents {
                 case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
               })
           case Right(obsIds)  =>
-            findAsterismGroup(obsIds, asterismGroupWithObs.value.get.asterismGroups)
+            findAsterismGroup(obsIds, asterismGroupWithObs.get.asterismGroups)
               .fold(renderSummary) { asterismGroup =>
                 renderAsterismEditor(obsIds, asterismGroup)
               }
