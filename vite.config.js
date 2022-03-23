@@ -3,10 +3,10 @@ const react = require('@vitejs/plugin-react')
 const { visualizer } = require('rollup-plugin-visualizer')
 const path = require('path')
 const fs = require('fs')
-const ViteFonts = require('vite-plugin-fonts')
+import ViteFonts from 'vite-plugin-fonts'
 const mkcert = require('vite-plugin-mkcert')
 
-const fontImport = ViteFonts.Plugin({
+const fontImport = ViteFonts({
   google: {
     families: [
       {
