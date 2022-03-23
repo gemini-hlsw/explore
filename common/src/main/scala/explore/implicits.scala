@@ -27,8 +27,6 @@ import shapeless._
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration
-import crystal.ViewOptF
-import crystal.ViewF
 
 trait ListImplicits {
 
@@ -134,17 +132,6 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
   implicit class CoulombReuseViewOptOps[F[_], N, U](val self: ReuseViewOptF[F, Quantity[N, U]])
       extends AnyVal {
     def stripQuantity(implicit F: Monad[F]): ReuseViewOptF[F, N] = self.as(quantityIso[N, U])
-  }
-
-  // TODO Only used in proposals view. Remove when we migrate it to ReuseView?
-  implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
-    def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
-  }
-
-  // TODO Only used in proposals view. Remove when we migrate it to ReuseView?
-  implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
-      extends AnyVal {
-    def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
   }
 
   // Model implicits
