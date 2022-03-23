@@ -49,7 +49,6 @@ object ImagingConfigurationPanel {
   implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
   implicit val avalableFiltersReuse: Reusability[AvailableFilter]     = Reusability.by(_.tag)
-  // implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
   implicit val propsReuse: Reusability[Props]                         = Reusability.derive
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)

@@ -191,10 +191,7 @@ object AsterismEditor {
                       SiderealTargetEditor(
                         props.userId,
                         targetId,
-                        props.asterism.map(
-                          _ => // Ugly temporary hack until we have proper ReuseView[A]].mapValue
-                            targetView.unsafeNarrow[Target.Sidereal]
-                        ),
+                        targetView.unsafeNarrow[Target.Sidereal],
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
                         props.options,

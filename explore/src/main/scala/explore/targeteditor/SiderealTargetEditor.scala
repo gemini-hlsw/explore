@@ -119,11 +119,7 @@ object SiderealTargetEditor {
           // target in the model or add the API clone to the undo stack for the original target.
           val (targetView, undoStackView)                  =
             props.obsIdSubset.fold((props.target, props.undoStacks))(_ =>
-              (readonlyView(props.target),
-               readonlyView(
-                 Reuse(props.undoStacks).by(props.undoStacks.get)
-               ) // TODO Proper ReuseView[stacks]]
-              )
+              (readonlyView(props.target), readonlyView(props.undoStacks))
             )
           val undoCtx: Reuse[UndoContext[Target.Sidereal]] =
             targetView.map(tv => UndoContext(undoStackView, tv))

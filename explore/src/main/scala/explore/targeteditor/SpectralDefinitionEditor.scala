@@ -295,7 +295,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
     def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: ReuseView[T]) =
       React.Fragment(
         <.span,
-        EnumViewSelect(id, view.value), // TODO Implement reusability for EnumViewSelect???
+        EnumViewSelect(id, view.value),
         <.span
       )
 

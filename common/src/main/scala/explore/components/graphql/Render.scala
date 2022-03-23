@@ -113,7 +113,6 @@ object Render {
           StreamRendererComponent[G, A]
         ) => ST
       )($            : ComponentDidMount[P, Option[ST], Unit]): Callback = {
-        // import $.props._
         implicit val F          = $.props.F
         implicit val dispatcher = $.props.dispatcher
         implicit val logger     = $.props.logger

@@ -64,11 +64,6 @@ object LiveQueryRenderMod {
             "LiveQueryRenderMod",
             (stream, props) => {
               import props._
-              // implicit val F          = props.F
-              // implicit val dispatcher = props.dispatcher
-              // implicit val logger     = props.logger
-              // implicit val classTag   = props.classTag
-              // implicit val reuse      = props.reuse
 
               StreamRendererMod.build(stream, holdAfterMod = (2 seconds).some)
             },

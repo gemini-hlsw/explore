@@ -44,7 +44,6 @@ final case class TargetTable(
   hiddenColumns:    ReuseView[Set[String]],
   selectedTarget:   ReuseView[Option[Target.Id]],
   renderInTitle:    Tile.RenderInTitle
-  // undoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[TargetTable](TargetTable.component)
 

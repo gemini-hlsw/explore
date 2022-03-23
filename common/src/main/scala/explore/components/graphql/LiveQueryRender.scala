@@ -62,10 +62,6 @@ object LiveQueryRender {
             "LiveQueryRender",
             (stream, props) => {
               import props._
-              // implicit val F          = props.F
-              // implicit val dispatcher = props.dispatcher
-              // implicit val logger     = props.logger
-              // implicit val reuse      = props.reuse
 
               StreamRenderer.build(stream.map(a => Reuse(a).self))
             },
