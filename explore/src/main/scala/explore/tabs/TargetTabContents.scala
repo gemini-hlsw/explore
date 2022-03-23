@@ -137,7 +137,11 @@ object TargetTabContents {
   val treeWidthLens = TwoPanelState.treeWidth[TargetOrObsSet]
   val selectedLens  = TwoPanelState.selected[TargetOrObsSet]
 
-  def otherObsCount(targetGroupMap: TargetGroupList, obsIds: ObsIdSet, targetId: Target.Id): Int =
+  def otherObsCount(
+    targetGroupMap: Reuse[TargetGroupList],
+    obsIds:         ObsIdSet,
+    targetId:       Target.Id
+  ): Int =
     targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   protected def renderFn(
@@ -163,7 +167,7 @@ object TargetTabContents {
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(selectedLens)
 
-    val targetMap = asterismGroupWithObs.get.targetGroups
+    val targetMap = asterismGroupWithObs.map(_.get.targetGroups)
 
     // Tree area
     def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
@@ -252,25 +256,26 @@ object TargetTabContents {
     def renderSummary: VdomNode =
       Tile("targetSummary", "Target Summary", backButton.some)(
         Reuse
-          .by( // TODO Add reuseCurrying for higher arities in crystal // I think we have this now
-            (asterismGroupWithObs,
-             props.hiddenColumns,
-             props.focusedObs,
-             props.focusedTarget,
-             props.expandedIds
-            )
-          )((renderInTitle: Tile.RenderInTitle) =>
-            TargetSummaryTable(
-              targetMap,
-              props.hiddenColumns,
-              Reuse(selectObservationAndTarget _)(props.focusedObs,
-                                                  props.focusedTarget,
-                                                  props.expandedIds,
-                                                  selectedView
-              ),
-              Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
-              renderInTitle
-            ): VdomNode
+          .currying(
+            targetMap,
+            props.hiddenColumns,
+            props.focusedObs,
+            props.focusedTarget,
+            props.expandedIds
+          )
+          .in((targets, hiddenColumns, focusedObs, focusedTarget, expandedIds) =>
+            (renderInTitle: Tile.RenderInTitle) =>
+              TargetSummaryTable(
+                targets,
+                hiddenColumns,
+                Reuse(selectObservationAndTarget _)(focusedObs,
+                                                    focusedTarget,
+                                                    expandedIds,
+                                                    selectedView
+                ),
+                Reuse.currying(focusedObs, selectedView).in(selectTarget _),
+                renderInTitle
+              ): VdomNode
           )
       )
 
