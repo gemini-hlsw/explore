@@ -25,6 +25,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.catalog.AngularSize
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -214,8 +215,11 @@ object TargetSelectionPopup {
                             showLayersControl = false,
                             target = Coordinates.fromHmsDms.reverseGet(coordinates),
                             fov = angSize
-                              .map(_.majorAxis.toDoubleDegrees * Constants.AngleSizeFovFactor)
-                              .getOrElse(Constants.InitialFov.toDoubleDegrees): Double,
+                              .map(m =>
+                                Angle.microarcseconds
+                                  .modify(Constants.AngleSizeFovFactor)(m.majorAxis)
+                              )
+                              .getOrElse(Constants.InitialFov): Angle,
                             showGotoControl = false
                           )
                         )
