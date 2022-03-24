@@ -163,4 +163,20 @@ object ObsQueries {
     )
     UpdateConstraintSetMutation.execute[F](obsIds, editInput).void
   }
+
+  def createObservation[F[_]: Async]()(implicit
+    c: TransactionalClient[F, ObservationDB]
+  ): F[Option[ObsSummaryWithTargetsAndConstraints]] =
+    ProgramCreateObservation.execute[F](CreateObservationInput(programId = "p-2")).map { data =>
+      data.createObservation.map { obs =>
+        ObsSummaryWithTargetsAndConstraints(
+          obs.id,
+          obs.targetEnvironment.asterism.map(t => TargetSummary(t.id, t.name, t.sidereal)),
+          obs.constraintSet,
+          obs.status,
+          obs.activeStatus,
+          obs.plannedTime.execution
+        )
+      }
+    }
 }

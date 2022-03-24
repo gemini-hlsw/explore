@@ -131,9 +131,50 @@ object ObsQueriesGQL {
       mutation($createObservation: CreateObservationInput!) {
         createObservation(input: $createObservation) {
           id
+          targetEnvironment {
+            asterism {
+              id
+              name
+              sidereal {
+                ra {
+                  microarcseconds
+                }
+                dec {
+                  microarcseconds
+                }
+              }
+            }
+          }
+          constraintSet {
+            imageQuality
+            cloudExtinction
+            skyBackground
+            waterVapor
+          }
+          status
+          activeStatus
+          plannedTime {
+            execution {
+              microseconds
+            }
+          }
         }
       }
     """
+
+    object Data {
+      object CreateObservation {
+        object TargetEnvironment {
+          object Asterism {
+            type Sidereal = lucuma.core.math.Coordinates
+          }
+        }
+        trait ConstraintSet extends ConstraintsSummary
+        object PlannedTime       {
+          type Execution = time.Duration
+        }
+      }
+    }
   }
 
   @GraphQL

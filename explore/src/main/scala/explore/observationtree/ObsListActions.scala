@@ -72,10 +72,8 @@ object ObsListActions {
         elemWithIndexOpt.fold {
           ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
-          ProgramCreateObservation
-            .execute[IO](CreateObservationInput(programId = "p-2", observationId = obs.id.assign))
-            .void >>
-            focusedObs.set(obs.id.some).to[IO]
+          // Not much to do here, the observation must be created before we get here
+          focusedObs.set(obs.id.some).to[IO]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
