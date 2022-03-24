@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -16,7 +16,6 @@ import explore.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
-import explore.model.reusability._
 import explore.optics.ModelOptics
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -38,8 +37,8 @@ import scala.concurrent.duration._
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  target:           View[Coordinates],
-  options:          View[TargetVisualOptions]
+  target:           ReuseView[Coordinates],
+  options:          ReuseView[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get
@@ -56,10 +55,10 @@ object AladinCell extends ModelOptics {
       // base coordinates
       .useStateBy(_.aladinCoords)
       // field of view
-      .useStateViewBy((p, _) => Fov(p.options.get.fovAngle, p.options.get.fovAngle))
+      .useStateViewWithReuseBy((p, _) => Fov(p.options.get.fovAngle, p.options.get.fovAngle))
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
-      .useStateView(false)
+      .useStateViewWithReuse(false)
       .renderWithReuse { (props, coords, fov, center) =>
         val coordinatesSetter =
           ((c: Coordinates) => coords.setState(c)).reuseAlways

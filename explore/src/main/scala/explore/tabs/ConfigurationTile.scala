@@ -5,7 +5,7 @@ package explore.tabs
 
 import cats.effect.IO
 import crystal.Pot
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -13,7 +13,6 @@ import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
-import explore.model.reusability._
 import explore.schemas.itc.implicits._
 import explore.undo._
 import explore.utils.potRender
@@ -24,8 +23,8 @@ import react.common._
 object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
-    scienceData:  Pot[View[ScienceData]],
-    undoStacks:   View[UndoStacks[IO, ScienceData]]
+    scienceData:  Pot[ReuseView[ScienceData]],
+    undoStacks:   ReuseView[UndoStacks[IO, ScienceData]]
   )(implicit ctx: AppContextIO) =
     Tile(
       ObsTabTiles.ConfigurationId,
@@ -33,10 +32,10 @@ object ConfigurationTile {
       canMinimize = true
     )(
       (scienceData, undoStacks).curryReusing.in((potView, undoStacks_, renderInTitle) =>
-        potRender[View[ScienceData]](
+        potRender[ReuseView[ScienceData]](
           Reuse.always(scienceData_ =>
             ConfigurationPanel(obsId,
-                               UndoContext(undoStacks_, scienceData_),
+                               scienceData_.map(UndoContext(undoStacks_, _)),
                                scienceData_.get.constraints,
                                scienceData_.get.itcTargets,
                                renderInTitle

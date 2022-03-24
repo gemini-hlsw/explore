@@ -4,7 +4,7 @@
 package explore
 
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
 import explore.model.Page
@@ -38,7 +38,7 @@ object Routing {
       )
     }
 
-  private def targetTab(model: View[RootModel]): VdomElement =
+  private def targetTab(model: ReuseView[RootModel]): VdomElement =
     AppCtx.using(implicit ctx =>
       TargetTabContents(
         model.zoom(RootModel.userId).get,
@@ -52,7 +52,7 @@ object Routing {
       )
     )
 
-  private def obsTab(model: View[RootModel]): VdomElement =
+  private def obsTab(model: ReuseView[RootModel]): VdomElement =
     AppCtx.using(implicit ctx =>
       ObsTabContents(
         model.zoom(RootModel.userId),
@@ -64,7 +64,7 @@ object Routing {
       )
     )
 
-  private def constraintSetTab(model: View[RootModel]): VdomElement =
+  private def constraintSetTab(model: ReuseView[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
@@ -82,8 +82,8 @@ object Routing {
       )
     )
 
-  def config: RouterWithPropsConfig[Page, View[RootModel]] =
-    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
+  def config: RouterWithPropsConfig[Page, ReuseView[RootModel]] =
+    RouterWithPropsConfigDsl[Page, ReuseView[RootModel]].buildConfig { dsl =>
       import dsl._
 
       def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
@@ -165,7 +165,7 @@ object Routing {
 
   private def layout(
     c: RouterCtl[Page],
-    r: ResolutionWithProps[Page, View[RootModel]]
-  ): View[RootModel] => VdomElement =
+    r: ResolutionWithProps[Page, ReuseView[RootModel]]
+  ): ReuseView[RootModel] => VdomElement =
     ExploreLayout(c, r)
 }

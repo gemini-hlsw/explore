@@ -108,7 +108,7 @@ object SkyPlotSemester {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(none[IO[Unit]])
+      .useStateViewWithReuse(none[IO[Unit]])
       .useResizeDetector()
       // This component can't be updated, it must be rerendered. Don't add reuse
       .renderWithReuse { (props, cancel, resize) =>

@@ -5,7 +5,7 @@ package explore.components
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -36,7 +36,7 @@ final case class TileController(
   userId:           Option[User.Id],
   gridWidth:        Int,
   defaultLayout:    LayoutsMap,
-  layoutMap:        View[LayoutsMap],
+  layoutMap:        ReuseView[LayoutsMap],
   tiles:            List[Tile],
   section:          GridLayoutSection,
   clazz:            Option[Css] = None

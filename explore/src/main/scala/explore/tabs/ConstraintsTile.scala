@@ -5,13 +5,12 @@ package explore.tabs
 
 import cats.effect.IO
 import crystal.Pot
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.components.Tile
 import explore.constraints.ConstraintsPanel
-import explore.model.reusability._
 import explore.undo._
 import explore.utils._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,8 +24,8 @@ object ConstraintsTile {
 
   def constraintsTile(
     obsId:      Observation.Id,
-    csPot:      Pot[View[ConstraintSet]],
-    undoStacks: View[UndoStacks[IO, ConstraintSet]],
+    csPot:      Pot[ReuseView[ConstraintSet]],
+    undoStacks: ReuseView[UndoStacks[IO, ConstraintSet]],
     control:    Option[Reuse[VdomNode]] = None,
     clazz:      Option[Css] = None
   ): Tile =
@@ -38,7 +37,7 @@ object ConstraintsTile {
       controllerClass = clazz
     )(
       (csPot, undoStacks).curryReusing.in((csPotView_, undoStacks_, renderInTitle) =>
-        potRender[View[ConstraintSet]](
+        potRender[ReuseView[ConstraintSet]](
           Reuse.always(cs =>
             <.div(
               ConstraintsPanel(List(obsId), cs, undoStacks_, renderInTitle)

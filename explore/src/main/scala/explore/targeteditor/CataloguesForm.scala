@@ -5,13 +5,11 @@ package explore.targeteditor
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
-import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.ReuseView
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
@@ -25,7 +23,7 @@ import react.semanticui.sizes._
 import scala.collection.SortedMap
 
 final case class CataloguesForm(
-  options:          View[TargetVisualOptions]
+  options:          ReuseView[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[CataloguesForm](CataloguesForm.component)
 

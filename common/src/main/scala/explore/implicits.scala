@@ -7,8 +7,9 @@ import cats._
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
-import crystal.ViewF
-import crystal.ViewOptF
+import crystal.react.ReuseViewF
+import crystal.react.ReuseViewOptF
+import crystal.react.reuse._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._
@@ -51,8 +52,8 @@ trait ListImplicits {
     ): Out = hlists.map(_.map(singleton)).combineAll
   }
 
-  implicit class ViewListOps[F[_], A](val viewList: ViewF[F, List[A]]) {
-    def toListOfViews: List[ViewF[F, A]] =
+  implicit class ViewListOps[F[_]: Monad, A](val viewList: ReuseViewF[F, List[A]]) {
+    def toListOfViews: List[ReuseViewF[F, A]] =
       // It's safe to "get" since we are only invoking for existing indices.
       viewList.get.indices.toList.map { i =>
         val atIndex = index[List[A], Int, A](i)
@@ -61,8 +62,8 @@ trait ListImplicits {
       }
   }
 
-  implicit class ViewMapOps[F[_], K, V](val viewMap: ViewF[F, Map[K, V]]) {
-    def toListOfViews: List[(K, ViewF[F, V])] =
+  implicit class ViewMapOps[F[_]: Monad, K, V](val viewMap: ReuseViewF[F, Map[K, V]]) {
+    def toListOfViews: List[(K, ReuseViewF[F, V])] =
       // It's safe to "get" since we are only invoking for existing keys.
       viewMap.get.keys.toList.map(k =>
         k -> viewMap.zoom(at[Map[K, V], K, Option[V]](k)).zoom(_.get)(f => _.map(f))
@@ -103,33 +104,34 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
   }
 
   // View Optics implicits
-  implicit class ViewOpticsOps[F[_], A](val view: ViewF[F, A]) extends AnyVal {
-    def zoomGetAdjust[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
+  implicit class ViewOpticsOps[F[_], A](val view: ReuseViewF[F, A]) extends AnyVal {
+    def zoomGetAdjust[B](getAdjust: GetAdjust[A, B])(implicit F: Monad[F]): ReuseViewF[F, B] =
       view.zoom(getAdjust.get)(getAdjust.mod)
 
     // Helps type inference by sidestepping overloaded "zoom".
-    def zoomPrism[B](prism: monocle.Prism[A, B]): ViewOptF[F, B] =
+    def zoomPrism[B](prism: monocle.Prism[A, B])(implicit F: Monad[F]): ReuseViewOptF[F, B] =
       view.zoom(prism)
 
     // Helps type inference by sidestepping overloaded "zoom".
-    def zoomLens[B](lens: monocle.Lens[A, B]): ViewF[F, B] =
+    def zoomLens[B](lens: monocle.Lens[A, B])(implicit F: Monad[F]): ReuseViewF[F, B] =
       view.zoom(lens)
   }
 
-  implicit class ViewOptOpticsOps[F[_], A](val viewOpt: ViewOptF[F, A]) extends AnyVal {
+  implicit class ViewOptOpticsOps[F[_], A](val viewOpt: ReuseViewOptF[F, A]) extends AnyVal {
     // Helps type inference by sidestepping overloaded "zoom".
-    def zoomLens[B](lens: monocle.Lens[A, B]): ViewOptF[F, B] =
+    def zoomLens[B](lens: monocle.Lens[A, B])(implicit F: Monad[F]): ReuseViewOptF[F, B] =
       viewOpt.zoom(lens)
   }
 
   // Coulomb implicits
-  implicit class CoulombViewOps[F[_], N, U](val self: ViewF[F, Quantity[N, U]]) extends AnyVal {
-    def stripQuantity: ViewF[F, N] = self.as(quantityIso[N, U])
+  implicit class CoulombReuseViewOps[F[_], N, U](val self: ReuseViewF[F, Quantity[N, U]])
+      extends AnyVal {
+    def stripQuantity(implicit F: Monad[F]): ReuseViewF[F, N] = self.as(quantityIso[N, U])
   }
 
-  implicit class CoulombViewOptOps[F[_], N, U](val self: ViewOptF[F, Quantity[N, U]])
+  implicit class CoulombReuseViewOptOps[F[_], N, U](val self: ReuseViewOptF[F, Quantity[N, U]])
       extends AnyVal {
-    def stripQuantity: ViewOptF[F, N] = self.as(quantityIso[N, U])
+    def stripQuantity(implicit F: Monad[F]): ReuseViewOptF[F, N] = self.as(quantityIso[N, U])
   }
 
   // Model implicits

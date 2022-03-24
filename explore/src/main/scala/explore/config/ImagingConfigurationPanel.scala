@@ -5,8 +5,7 @@ package explore.config
 
 import cats.implicits._
 import coulomb.Quantity
-import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.ReuseView
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import explore.components.HelpIcon
@@ -36,20 +35,21 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import lucuma.core.math.Angle
+import eu.timepit.refined.types.numeric.PosBigDecimal
 
 final case class ImagingConfigurationPanel(
-  options: View[ImagingConfigurationOptions]
+  options: ReuseView[ImagingConfigurationOptions]
 ) extends ReactFnProps[ImagingConfigurationPanel](ImagingConfigurationPanel.component)
 
 object ImagingConfigurationPanel {
   type Props         = ImagingConfigurationPanel
   type SectionHeader = String
 
-  implicit val capabDisplay: Display[ImagingCapabilities]               = Display.by(_.label, _.label)
-  implicit val optionsReuse: Reusability[ImagingConfigurationOptions]   = Reusability.derive
-  implicit val avalableFiltersReuse: Reusability[AvailableFilter]       = Reusability.by(_.tag)
-  implicit val filtersSetReuse: Reusability[SortedSet[AvailableFilter]] = Reusability.by(_.toList)
-  implicit val propsReuse: Reusability[Props]                           = Reusability.derive
+  implicit val capabDisplay: Display[ImagingCapabilities]             = Display.by(_.label, _.label)
+  implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.derive
+  implicit val avalableFiltersReuse: Reusability[AvailableFilter]     = Reusability.by(_.tag)
+  implicit val propsReuse: Reusability[Props]                         = Reusability.derive
 
   val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
   val broadBand    = byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
@@ -130,7 +130,7 @@ object ImagingConfigurationPanel {
                 .getOrEmpty
           ),
           <.label("Field of View", HelpIcon("configuration/fov.md"), ExploreStyles.SkipToNext),
-          InputWithUnits(
+          InputWithUnits[ReuseView, Option[Angle]](
             id = "configuration-fov",
             clazz = Css.Empty,
             inline = true,
@@ -141,7 +141,7 @@ object ImagingConfigurationPanel {
             disabled = false
           ),
           <.label("S / N", HelpIcon("configuration/signal_to_noise.md"), ExploreStyles.SkipToNext),
-          FormInputEV(
+          FormInputEV[ReuseView, Option[PosBigDecimal]](
             id = "signal-to-noise",
             value = signalToNoise,
             validFormat = ValidFormatInput.forPosBigDecimal().optional,
@@ -157,7 +157,7 @@ object ImagingConfigurationPanel {
             clearable = true,
             upward = true,
             placeholder = "Extra capablities",
-            value = capabilities
+            value = capabilities.value
           )
         )
       }

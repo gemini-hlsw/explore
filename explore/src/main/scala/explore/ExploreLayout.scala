@@ -5,13 +5,12 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.state.IfLogged
 import explore.components.ui.ExploreStyles
 import explore.model._
-import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -26,14 +25,18 @@ import react.semanticui.modules.sidebar.SidebarWidth
 
 import scala.scalajs.js
 
-final case class ExploreLayout(c: RouterCtl[Page], r: ResolutionWithProps[Page, View[RootModel]])(
-  val view:                       View[RootModel]
+final case class ExploreLayout(
+  c:        RouterCtl[Page],
+  r:        ResolutionWithProps[Page, ReuseView[RootModel]]
+)(
+  val view: ReuseView[RootModel]
 ) extends ReactProps[ExploreLayout](ExploreLayout.component)
 
 object ExploreLayout {
   type Props = ExploreLayout
 
-  implicit val resolutionWithPropsReuse: Reusability[ResolutionWithProps[Page, View[RootModel]]] =
+  implicit val resolutionWithPropsReuse
+    : Reusability[ResolutionWithProps[Page, ReuseView[RootModel]]] =
     Reusability.byRefOr_==
 
   implicit val propsReuse: Reusability[Props] =

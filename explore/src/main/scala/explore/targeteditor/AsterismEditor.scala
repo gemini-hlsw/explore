@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
@@ -41,13 +41,13 @@ import scala.util.Random
 final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
-  asterism:         View[List[TargetWithId]],
-  selectedTargetId: View[Option[Target.Id]],
+  asterism:         ReuseView[List[TargetWithId]],
+  selectedTargetId: ReuseView[Option[Target.Id]],
   otherObsCount:    Target.Id ==> Int,
-  undoStacks:       View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:        View[Set[Target.Id]],
-  options:          View[TargetVisualOptions],
-  hiddenColumns:    View[Set[String]],
+  undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:        ReuseView[Set[Target.Id]],
+  options:          ReuseView[TargetVisualOptions],
+  hiddenColumns:    ReuseView[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AsterismEditor](AsterismEditor.component) {}
@@ -59,10 +59,10 @@ object AsterismEditor {
 
   private def insertSiderealTarget(
     obsIds:         ObsIdSet,
-    asterism:       View[List[TargetWithId]],
+    asterism:       ReuseView[List[TargetWithId]],
     oTargetId:      Option[Target.Id],
     target:         Target.Sidereal,
-    selectedTarget: View[Option[Target.Id]]
+    selectedTarget: ReuseView[Option[Target.Id]]
   )(implicit ctx:   AppContextIO): Callback = {
     val (targetId, createTarget) = oTargetId.fold(
       (newId,
@@ -84,8 +84,8 @@ object AsterismEditor {
 
   private def onCloneTarget(
     id:       Target.Id,
-    asterism: View[List[TargetWithId]],
-    selected: View[Option[Target.Id]],
+    asterism: ReuseView[List[TargetWithId]],
+    selected: ReuseView[Option[Target.Id]],
     newTwid:  TargetWithId
   ): Callback =
     asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >> selected
@@ -102,15 +102,17 @@ object AsterismEditor {
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
       // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _, _) => props.asterism.get)((_, adding, _) =>
+      .useEffectWithDepsBy((props, _, _) => props.asterism)((_, adding, _) =>
         _ => adding.setState(false)
       )
-      .useEffectWithDepsBy((props, _, _) => (props.asterism.get, props.selectedTargetId.get))(
+      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.selectedTargetId))(
         (props, _, _) => { case (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
-          oTargetId
-            .flatMap(id => if (asterism.exists(_.id === id)) id.some else none)
-            .fold(props.selectedTargetId.set(asterism.headOption.map(_.id)))(_ => Callback.empty)
+          oTargetId.get
+            .flatMap(id => if (asterism.get.exists(_.id === id)) id.some else none)
+            .fold(props.selectedTargetId.set(asterism.get.headOption.map(_.id)))(_ =>
+              Callback.empty
+            )
         }
       )
       .renderWithReuse { (props, adding, editScope) =>
@@ -189,8 +191,7 @@ object AsterismEditor {
                       SiderealTargetEditor(
                         props.userId,
                         targetId,
-                        targetView
-                          .unsafeNarrow[Target.Sidereal],
+                        targetView.unsafeNarrow[Target.Sidereal],
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
                         props.options,

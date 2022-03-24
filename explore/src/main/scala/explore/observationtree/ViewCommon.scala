@@ -4,7 +4,7 @@
 package explore.observationtree
 
 import cats.syntax.all._
-import crystal.react.View
+import crystal.react.ReuseView
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
@@ -17,7 +17,7 @@ import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
-  def focusedObs: View[Option[Observation.Id]]
+  def focusedObs: ReuseView[Option[Observation.Id]]
 
   def renderObsBadge(
     obs:               ObsSummary,

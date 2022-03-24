@@ -7,7 +7,6 @@ import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
-import crystal.react.View
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -59,13 +58,13 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        View[Option[Observation.Id]],
-  focusedTarget:     View[Option[Target.Id]],
-  listUndoStacks:    View[UndoStacks[IO, AsterismGroupsWithObs]],
-  targetsUndoStacks: View[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-  searching:         View[Set[Target.Id]],
-  expandedIds:       View[SortedSet[ObsIdSet]],
-  hiddenColumns:     View[Set[String]]
+  focusedObs:        ReuseView[Option[Observation.Id]],
+  focusedTarget:     ReuseView[Option[Target.Id]],
+  listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
+  targetsUndoStacks: ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+  searching:         ReuseView[Set[Target.Id]],
+  expandedIds:       ReuseView[SortedSet[ObsIdSet]],
+  hiddenColumns:     ReuseView[Set[String]]
 )(implicit val ctx:  AppContextIO)
     extends ReactFnProps[TargetTabContents](TargetTabContents.component)
 
@@ -138,18 +137,22 @@ object TargetTabContents {
   val treeWidthLens = TwoPanelState.treeWidth[TargetOrObsSet]
   val selectedLens  = TwoPanelState.selected[TargetOrObsSet]
 
-  def otherObsCount(targetGroupMap: TargetGroupList, obsIds: ObsIdSet, targetId: Target.Id): Int =
+  def otherObsCount(
+    targetGroupMap: Reuse[TargetGroupList],
+    obsIds:         ObsIdSet,
+    targetId:       Target.Id
+  ): Int =
     targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   protected def renderFn(
     props:                Props,
-    panels:               View[TwoPanelState[TargetOrObsSet]],
-    options:              View[TargetVisualOptions],
+    panels:               ReuseView[TwoPanelState[TargetOrObsSet]],
+    options:              ReuseView[TargetVisualOptions],
     defaultLayouts:       LayoutsMap,
-    layouts:              View[LayoutsMap],
+    layouts:              ReuseView[LayoutsMap],
     resize:               UseResizeDetectorReturn,
     debouncer:            Reusable[UseSingleEffect[IO]],
-    asterismGroupWithObs: View[AsterismGroupsWithObs]
+    asterismGroupWithObs: ReuseView[AsterismGroupsWithObs]
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
@@ -164,15 +167,15 @@ object TargetTabContents {
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(selectedLens)
 
-    val targetMap = asterismGroupWithObs.get.targetGroups
+    val targetMap = asterismGroupWithObs.map(_.get.targetGroups)
 
     // Tree area
-    def tree(objectsWithObs: View[AsterismGroupsWithObs]) =
+    def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
       <.div(^.width := treeWidth.px, ExploreStyles.Tree |+| ExploreStyles.ResizableSinglePanel)(
         treeInner(objectsWithObs)
       )
 
-    def treeInner(objectsWithObs: View[AsterismGroupsWithObs]) =
+    def treeInner(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
       <.div(ExploreStyles.TreeBody)(
         AsterismGroupObsList(
           objectsWithObs,
@@ -190,10 +193,10 @@ object TargetTabContents {
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
     def selectObservationAndTarget(
-      focusedObs:    View[Option[Observation.Id]],
-      focusedTarget: View[Option[Target.Id]],
-      expandedIds:   View[SortedSet[ObsIdSet]],
-      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
+      focusedObs:    ReuseView[Option[Observation.Id]],
+      focusedTarget: ReuseView[Option[Target.Id]],
+      expandedIds:   ReuseView[SortedSet[ObsIdSet]],
+      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       obsId:         Observation.Id,
       targetId:      Target.Id
     ): Callback = {
@@ -207,8 +210,8 @@ object TargetTabContents {
     }
 
     def selectTarget(
-      focusedObs:    View[Option[Observation.Id]],
-      selectedPanel: View[SelectedPanel[TargetOrObsSet]],
+      focusedObs:    ReuseView[Option[Observation.Id]],
+      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       targetId:      Target.Id
     ): Callback =
       focusedObs.set(none) >> selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
@@ -252,26 +255,28 @@ object TargetTabContents {
      */
     def renderSummary: VdomNode =
       Tile("targetSummary", "Target Summary", backButton.some)(
-        Reuse.by( // TODO Add reuseCurrying for higher arities in crystal
-          (asterismGroupWithObs.get,
-           props.hiddenColumns,
-           props.focusedObs,
-           props.focusedTarget,
-           props.expandedIds
-          )
-        )((renderInTitle: Tile.RenderInTitle) =>
-          TargetSummaryTable(
+        Reuse
+          .currying(
             targetMap,
             props.hiddenColumns,
-            Reuse(selectObservationAndTarget _)(props.focusedObs,
-                                                props.focusedTarget,
-                                                props.expandedIds,
-                                                selectedView
-            ),
-            Reuse.currying(props.focusedObs, selectedView).in(selectTarget _),
-            renderInTitle
-          ): VdomNode
-        )
+            props.focusedObs,
+            props.focusedTarget,
+            props.expandedIds
+          )
+          .in((targets, hiddenColumns, focusedObs, focusedTarget, expandedIds) =>
+            (renderInTitle: Tile.RenderInTitle) =>
+              TargetSummaryTable(
+                targets,
+                hiddenColumns,
+                Reuse(selectObservationAndTarget _)(focusedObs,
+                                                    focusedTarget,
+                                                    expandedIds,
+                                                    selectedView
+                ),
+                Reuse.currying(focusedObs, selectedView).in(selectTarget _),
+                renderInTitle
+              ): VdomNode
+          )
       )
 
     val coreWidth  = resize.width.getOrElse(0) - treeWidth
@@ -351,9 +356,10 @@ object TargetTabContents {
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
       }
 
-      val asterismView: View[List[TargetWithId]] = asterismGroupWithObs
-        .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-        .zoom(getAsterism)(modAsterism)
+      val asterismView: ReuseView[List[TargetWithId]] = asterismGroupWithObs.map(
+        _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+          .zoom(getAsterism)(modAsterism)
+      )
 
       val title = focusedObs match {
         case Some(id) => s"Observation $id"
@@ -361,14 +367,14 @@ object TargetTabContents {
           s"Editing ${idsToEdit.size} Asterisms"
       }
 
-      val selectedTarget: Option[ViewOpt[Target]] =
+      val selectedTarget: Option[ReuseViewOpt[Target]] =
         props.focusedTarget.get.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
             )
 
-          asterismView.zoom(optional)
+          asterismView.map(_.zoom(optional))
         }
 
       val asterismEditorTile =
@@ -420,8 +426,10 @@ object TargetTabContents {
           _.map(TargetGroup.targetWithId.replace(TargetWithId(targetId, mod(target))))
         )
 
-      val targetView: View[Target.Sidereal] =
-        asterismGroupWithObs.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+      val targetView: ReuseView[Target.Sidereal] =
+        asterismGroupWithObs.map(
+          _.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
+        )
 
       val title = s"Editing Target ${target.name.value} [$targetId]"
 
@@ -514,10 +522,10 @@ object TargetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
-      .useStateView(TargetVisualOptions.Default)
+      .useStateViewWithReuse(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
+      .useStateViewWithReuse(TargetVisualOptions.Default)
       .useResizeDetector()
-      .useStateView(proportionalLayouts)
+      .useStateViewWithReuse(proportionalLayouts)
       .useMemoBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
         // Memoize the initial result
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)

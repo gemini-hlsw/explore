@@ -10,7 +10,7 @@ import coulomb._
 import coulomb.accepted._
 import coulomb.refined._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
@@ -23,8 +23,8 @@ import explore.components.ui._
 import explore.implicits._
 import explore.model._
 import explore.model.display._
+import explore.model.enum._
 import explore.model.enum.ProposalClass._
-import explore.model.enum.TacCategory
 import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
@@ -50,7 +50,7 @@ import scala.annotation.unused
 
 import scalajs.js.JSConverters._
 
-final case class ProposalDetailsEditor(proposalDetails: View[ProposalDetails])
+final case class ProposalDetailsEditor(proposalDetails: ReuseView[ProposalDetails])
     extends ReactProps[ProposalDetailsEditor](ProposalDetailsEditor.component)
 
 object ProposalDetailsEditor {
@@ -141,7 +141,7 @@ object ProposalDetailsEditor {
   class Backend($ : BackendScope[Props, State]) {
 
     def renderDetails(
-      details:               View[ProposalDetails],
+      details:               ReuseView[ProposalDetails],
       @unused renderInTitle: Tile.RenderInTitle
     ): VdomNode = {
       val requestTime1 = details.zoom(ProposalDetails.requestTime1).get
@@ -182,7 +182,7 @@ object ProposalDetailsEditor {
         <.div(
           ExploreStyles.TwoColumnGrid,
           ExploreStyles.ProposalDetailsGrid,
-          FormInputEV(
+          FormInputEV[ReuseView, String](
             id = "title",
             className = "inverse",
             value = details.zoom(ProposalDetails.title),
@@ -227,9 +227,10 @@ object ProposalDetailsEditor {
             makeMinimumPctInput(ProposalDetails.minimumPct2).when(has2Minimums)
           ).when(hasSecondTime),
           <.span().unless(hasSecondTime),
-          EnumViewSelect(id = "proposal-class",
-                         value = details.zoom(ProposalDetails.proposalClass),
-                         label = Label("Class", HelpIcon("proposal/main/class.md"))
+          EnumViewSelect[ReuseView, ProposalClass](
+            id = "proposal-class",
+            value = details.zoom(ProposalDetails.proposalClass),
+            label = Label("Class", HelpIcon("proposal/main/class.md"))
           ),
           FormSelect(
             label = Label("Category", HelpIcon("proposal/main/category.md")),
@@ -245,10 +246,10 @@ object ProposalDetailsEditor {
                 .orEmpty,
             modifiers = List(^.id := "category")
           ),
-          EnumViewSelect(id = "too-activation",
-                         value = details.zoom(ProposalDetails.toOActivation),
-                         label =
-                           Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
+          EnumViewSelect[ReuseView, ToOActivation](
+            id = "too-activation",
+            value = details.zoom(ProposalDetails.toOActivation),
+            label = Label("ToO Activation", HelpIcon("proposal/main/too-activation.md"))
           )
         ),
         <.div(FomanticStyles.Divider),
@@ -265,14 +266,17 @@ object ProposalDetailsEditor {
     }
 
     def render(props: Props, state: State) = {
-      val splitsZoom = ViewF.fromState($).zoom(State.splits)
+      val splitsZoom = ViewF.fromStateWithReuse($).zoom(State.splits)
 
       val details = props.proposalDetails
 
       def closePartnerSplitsEditor: Callback =
         $.modState(State.showPartnerSplitsModal.replace(false))
 
-      def saveStateSplits(details: View[ProposalDetails], splits: List[PartnerSplit]): Callback =
+      def saveStateSplits(
+        details: ReuseView[ProposalDetails],
+        splits:  List[PartnerSplit]
+      ): Callback =
         details
           .zoom(ProposalDetails.partnerSplits)
           .set(splits.filter(_.percent.value.value > 0)) >>
@@ -289,10 +293,11 @@ object ProposalDetailsEditor {
           ExploreStyles.ProposalTile,
           Tile("preview", "Preview")(Reuse.always(_ => <.span("Placeholder for PDF preview.")))
         ),
-        PartnerSplitsEditor(state.showPartnerSplitsModal,
-                            splitsZoom,
-                            closePartnerSplitsEditor,
-                            Reuse(saveStateSplits _)(details)
+        PartnerSplitsEditor(
+          state.showPartnerSplitsModal,
+          splitsZoom,
+          closePartnerSplitsEditor,
+          Reuse(saveStateSplits _)(details)
         )
       )
     }

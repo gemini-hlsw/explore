@@ -5,6 +5,7 @@ package explore.config
 
 import cats.syntax.all._
 import coulomb.Quantity
+import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
@@ -36,10 +37,11 @@ import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
+import crystal.react.reuse.Reuse
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
-  scienceDataUndo:  UndoContext[ScienceData],
+  scienceDataUndo:  Reuse[UndoContext[ScienceData]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
   renderInTitle:    Tile.RenderInTitle
@@ -94,24 +96,27 @@ object ConfigurationPanel {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateView[ScienceMode](ScienceMode.Spectroscopy)
-      .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+      .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
+      .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
       .renderWithReuse { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
-        val requirementsCtx            = props.scienceDataUndo.zoom(ScienceData.requirements)
+        val requirementsCtx            = props.scienceDataUndo.map(_.zoom(ScienceData.requirements))
 
-        val requirementsViewSet = UndoView(props.obsId, requirementsCtx)
+        val requirementsViewSet = requirementsCtx.map(UndoView(props.obsId, _))
 
         val isSpectroscopy = mode.get === ScienceMode.Spectroscopy
 
-        val spectroscopy = requirementsViewSet(
-          ScienceRequirementsData.spectroscopy,
-          UpdateScienceRequirements.spectroscopyRequirements
+        val spectroscopy = requirementsViewSet.map(
+          _(
+            ScienceRequirementsData.spectroscopy,
+            UpdateScienceRequirements.spectroscopyRequirements
+          )
         )
 
-        val configurationView = props.scienceDataUndo
-          .undoableView(ScienceData.configuration)
-          .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+        val configurationView = props.scienceDataUndo.map(
+          _.undoableView(ScienceData.configuration)
+            .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+        )
 
         <.div(
           ExploreStyles.ConfigurationGrid,
@@ -125,7 +130,7 @@ object ConfigurationPanel {
             ExploreStyles.ConfigurationForm
           )(
             <.label("Mode", HelpIcon("configuration/mode.md")),
-            EnumViewSelect(id = "configuration-mode", value = mode),
+            EnumViewSelect[ReuseView, ScienceMode](id = "configuration-mode", value = mode),
             SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
               .when(isSpectroscopy),
             ImagingConfigurationPanel(imaging)
@@ -139,6 +144,5 @@ object ConfigurationPanel {
             ctx.staticData.spectroscopyMatrix
           ).when(isSpectroscopy)
         )
-      // }
       }
 }

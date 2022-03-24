@@ -6,7 +6,7 @@ package explore.common
 import cats.Order
 import cats.effect.IO
 import cats.implicits._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
@@ -80,7 +80,7 @@ object ConstraintGroupQueries {
   }
 
   val ConstraintGroupLiveQuery =
-    ScalaFnComponent[View[ConstraintSummaryWithObervations] ==> VdomNode](render =>
+    ScalaFnComponent[ReuseView[ConstraintSummaryWithObervations] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ConstraintGroupObsQuery.Data,

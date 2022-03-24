@@ -4,8 +4,6 @@
 package explore.components
 
 import cats.syntax.all._
-import crystal.react.hooks._
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -75,8 +73,8 @@ object Tile {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
-      .useStateView(none[html.Element])
+      // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
+      .useStateWithReuse(none[html.Element])
       .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
           Button(
@@ -105,12 +103,18 @@ object Tile {
           )(Icons.Minimize)
 
         def setInfoRef(node: dom.Node | Null): Unit =
-          infoRef.set(Option(node.asInstanceOf[html.Element])).runNow()
+          infoRef
+            .modState(
+              _.fold(Option(node.asInstanceOf[html.Element]))(_.some)
+            )
+            .runNow()
 
-        <.div(ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
-              p.key.whenDefined(^.key := _)
+        <.div(
+          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass.orEmpty,
+          ^.key   := "tile"
         )(
           <.div(
+            ^.key := "tile",
             ExploreStyles.TileTitle,
             p.back.map(b => <.div(ExploreStyles.TileButton, b)),
             Menu(
@@ -122,14 +126,14 @@ object Tile {
               MenuItem(as = <.a)(p.title)
             ),
             p.control.map(b => <.div(ExploreStyles.TileControl, b)),
-            <.span(^.untypedRef(setInfoRef))(
+            <.span(^.key := "tileTitle", ^.untypedRef(setInfoRef))(
               ExploreStyles.TileTitleStrip,
               ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
             ),
             minimizeButton.when(p.showMinimize),
             maximizeButton.when(p.showMaximize)
           ),
-          infoRef.get
+          infoRef.value
             .map(node =>
               ResponsiveComponent(
                 widthBreakpoints,

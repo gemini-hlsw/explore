@@ -6,10 +6,8 @@ package explore.targeteditor
 import cats.Order._
 import cats.syntax.all._
 import coulomb._
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.hooks._
-import crystal.react.implicits._
-import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -43,7 +41,7 @@ import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode
 
 sealed trait EmissionLineEditor[T] {
-  val emissionLines: View[SortedMap[Wavelength, EmissionLine[T]]]
+  val emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[T]]]
   val disabled: Boolean
 }
 
@@ -54,7 +52,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private val defaultLineUnits: Units Of LineFlux[T] = enumUnits.all.head
 
-  private type RowValue = (Wavelength, View[EmissionLine[T]])
+  private type RowValue = (Wavelength, ReuseView[EmissionLine[T]])
 
   private val EmissionLineTable = TableDef[RowValue].withSortBy
 
@@ -87,7 +85,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Width (km/s)")
             .setCell(cell =>
-              FormInputEV[View, PosBigDecimal](
+              FormInputEV[ReuseView, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineWidth_${cell.row.id}"),
                 value = cell.value,
                 validFormat = ValidFormatInput.forPosBigDecimal(),
@@ -104,7 +102,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Brightness")
             .setCell(cell =>
-              FormInputEV[View, PosBigDecimal](
+              FormInputEV[ReuseView, PosBigDecimal](
                 id = NonEmptyString.unsafeFrom(s"lineValue_${cell.row.id}"),
                 value = cell.value,
                 validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
@@ -121,7 +119,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             )
             .setHeader("Units")
             .setCell(cell =>
-              EnumViewSelect[View, Units Of LineFlux[T]](
+              EnumViewSelect[ReuseView, Units Of LineFlux[T]](
                 id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
                 value = cell.value,
                 compact = true,
@@ -165,9 +163,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       )
     )
     // newWavelength
-    .useStateView(none[Wavelength])
+    .useStateViewWithReuse(none[Wavelength])
     // addDisabled
-    .useStateView(true)
+    .useStateViewWithReuse(true)
     .renderWithReuse { (props, _, _, tableInstance, newWavelength, addDisabled) =>
       val addLine =
         newWavelength.get.foldMap(wavelength =>
@@ -184,7 +182,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         <.div(
           ExploreStyles.BrightnessesTableFooter,
           "New line λ: ",
-          FormInputEV(
+          FormInputEV[ReuseView, Option[Wavelength]](
             id = "newWavelength",
             value = newWavelength,
             validFormat = ValidFormatInput.fromFormat(formatWavelengthMicron).optional,
@@ -227,7 +225,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 }
 
 final case class IntegratedEmissionLineEditor(
-  emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
+  emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]],
   disabled:      Boolean
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
     with EmissionLineEditor[Integrated]
@@ -239,7 +237,7 @@ object IntegratedEmissionLineEditor
 }
 
 final case class SurfaceEmissionLineEditor(
-  emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
+  emissionLines: ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]],
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)
     with EmissionLineEditor[Surface]

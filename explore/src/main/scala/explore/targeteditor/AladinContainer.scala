@@ -4,8 +4,7 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.TargetVisualOptions
@@ -19,7 +18,6 @@ import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
 import react.aladin._
-import react.aladin.reusability._
 import react.common._
 import react.resizeDetector.hooks._
 
@@ -27,12 +25,12 @@ import scala.annotation.nowarn
 import scala.concurrent.duration._
 
 final case class AladinContainer(
-  target:                 View[Coordinates],
+  target:                 ReuseView[Coordinates],
   options:                TargetVisualOptions,
-  fov:                    View[Fov],
+  fov:                    ReuseView[Fov],
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
-  centerOnTarget:         View[Boolean]
+  centerOnTarget:         ReuseView[Boolean]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component) {
   val aladinCoords: Coordinates = target.get
   val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)

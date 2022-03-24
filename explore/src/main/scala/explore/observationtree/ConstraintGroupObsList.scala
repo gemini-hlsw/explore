@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
@@ -19,7 +19,6 @@ import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.display._
-import explore.model.reusability._
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
@@ -43,11 +42,11 @@ import react.semanticui.sizes._
 import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
-  constraintsWithObs: View[ConstraintSummaryWithObervations],
-  focusedObs:         View[Option[Observation.Id]],
-  selected:           View[SelectedPanel[ObsIdSet]],
-  expandedIds:        View[SortedSet[ObsIdSet]],
-  undoStacks:         View[UndoStacks[IO, ConstraintGroupList]]
+  constraintsWithObs: ReuseView[ConstraintSummaryWithObervations],
+  focusedObs:         ReuseView[Option[Observation.Id]],
+  selected:           ReuseView[SelectedPanel[ObsIdSet]],
+  expandedIds:        ReuseView[SortedSet[ObsIdSet]],
+  undoStacks:         ReuseView[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
     extends ReactProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
@@ -67,7 +66,7 @@ object ConstraintGroupObsList {
 
     def toggleExpanded(
       obsIds:      ObsIdSet,
-      expandedIds: View[SortedSet[ObsIdSet]]
+      expandedIds: ReuseView[SortedSet[ObsIdSet]]
     ): Callback =
       expandedIds.mod { expanded =>
         expanded.exists(_ === obsIds).fold(expanded - obsIds, expanded + obsIds)
@@ -90,8 +89,8 @@ object ConstraintGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoContext[ConstraintGroupList],
-      expandedIds: View[SortedSet[ObsIdSet]],
-      selected:    View[SelectedPanel[ObsIdSet]]
+      expandedIds: ReuseView[SortedSet[ObsIdSet]],
+      selected:    ReuseView[SelectedPanel[ObsIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>

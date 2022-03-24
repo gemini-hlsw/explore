@@ -4,10 +4,7 @@
 package explore.model
 
 import clue.PersistentClientStatus
-import crystal.react.implicits._
 import explore.data.KeyedIndexedList
-import explore.undo.UndoContext
-import explore.undo.UndoSetter
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
@@ -55,10 +52,6 @@ object reusability {
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =
     Reusability.by(s => (s.undo.length, s.redo.length, s.working))
-  implicit def undoContextReuse[M: Reusability]: Reusability[UndoContext[M]]         =
-    Reusability.by(x => (x.model, x.stacks))
-  implicit def undoSetterReuse[M: Reusability]: Reusability[UndoSetter[M]]           =
-    Reusability.by(_.model)
   implicit def undoStacksMapReuse[F[_], K, M]: Reusability[Map[K, UndoStacks[F, M]]] =
     Reusability.by[Map[K, UndoStacks[F, M]], Int](_.size) && Reusability[Map[K, UndoStacks[F, M]]](
       (a, b) =>

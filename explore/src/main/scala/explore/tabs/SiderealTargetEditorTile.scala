@@ -5,12 +5,10 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.components.Tile
 import explore.model.TargetVisualOptions
-import explore.model.reusability._
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.vdom.html_<^._
@@ -24,10 +22,10 @@ object SiderealTargetEditorTile {
   def sideralTargetEditorTile(
     userId:     Option[User.Id],
     targetId:   Target.Id,
-    target:     View[Target.Sidereal],
-    undoStacks: View[UndoStacks[IO, Target.Sidereal]],
-    searching:  View[Set[Target.Id]],
-    options:    View[TargetVisualOptions],
+    target:     ReuseView[Target.Sidereal],
+    undoStacks: ReuseView[UndoStacks[IO, Target.Sidereal]],
+    searching:  ReuseView[Set[Target.Id]],
+    options:    ReuseView[TargetVisualOptions],
     title:      String,
     backButton: Option[Reuse[VdomNode]] = None,
     width:      Int,

@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import cats.syntax.all._
 import crystal.ViewF
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -28,9 +28,11 @@ import monocle.Focus
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
+import lucuma.core.math.Redshift
+import lucuma.core.math.ApparentRadialVelocity
 
 final case class RVInput(
-  value:    View[Option[RadialVelocity]],
+  rv:       ReuseView[Option[RadialVelocity]],
   disabled: Boolean
 ) extends ReactProps[RVInput](RVInput.component)
 
@@ -84,13 +86,13 @@ object RVInput {
       val rvView   = ViewF.fromState($).zoom(State.rvView)
       val errorCss = ExploreStyles.InputErrorTooltip
       val baseCss  = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(
-        props.value.get.isEmpty
+        props.rv.get.isEmpty
       )
       val input    = state.rvView match {
         case RVView.Z  =>
-          FormInputEV(
+          FormInputEV[ReuseView, Option[Redshift]](
             id = state.rvView.tag,
-            value = props.value.zoom(rvToRedshiftGet)(rvToRedshiftMod),
+            value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormat(formatZ, "Must be a number").optional,
@@ -99,9 +101,9 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.CZ =>
-          FormInputEV(
+          FormInputEV[ReuseView, Option[ApparentRadialVelocity]](
             id = state.rvView.tag,
-            value = props.value.zoom(rvToARVGet)(rvToARVMod),
+            value = props.rv.zoom(rvToARVGet)(rvToARVMod),
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormat(formatCZ, "Must be a number").optional,
@@ -110,9 +112,9 @@ object RVInput {
             disabled = props.disabled
           )
         case RVView.RV =>
-          FormInputEV(
+          FormInputEV[ReuseView, Option[RadialVelocity]](
             id = state.rvView.tag,
-            value = props.value,
+            value = props.rv,
             errorClazz = errorCss,
             errorPointing = LabelPointing.Below,
             validFormat = ValidFormatInput.fromFormat(formatRV, "Must be a number").optional,
@@ -136,7 +138,7 @@ object RVInput {
           EnumViewSelect(id = "view", value = rvView, disabled = props.disabled),
           input
         ),
-        state.units(props.value.get)
+        state.units(props.rv.get)
       )
     }
   }

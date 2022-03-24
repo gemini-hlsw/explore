@@ -6,8 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
-import crystal.react.View
-import crystal.react.implicits._
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.types.numeric.PosLong
 import explore.AppCtx
@@ -19,7 +18,6 @@ import explore.implicits._
 import explore.model.ConstraintsSummary
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
-import explore.model.reusability._
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
 import explore.undo.UndoContext
@@ -45,10 +43,10 @@ import scala.util.Random
 import ObsQueries._
 
 final case class ObsList(
-  observations:     View[ObservationList],
-  focusedObs:       View[Option[Observation.Id]],
-  focusedTarget:    View[Option[Target.Id]],
-  undoStacks:       View[UndoStacks[IO, ObservationList]]
+  observations:     ReuseView[ObservationList],
+  focusedObs:       ReuseView[Option[Observation.Id]],
+  focusedTarget:    ReuseView[Option[Target.Id]],
+  undoStacks:       ReuseView[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactProps[ObsList](ObsList.component)
 
@@ -65,7 +63,7 @@ object ObsList {
   protected class Backend {
     protected def insertObs(
       pos:        Int,
-      focusedObs: View[Option[Observation.Id]],
+      focusedObs: ReuseView[Option[Observation.Id]],
       undoCtx:    UndoContext[ObservationList]
     )(implicit
       c:          TransactionalClient[IO, ObservationDB]

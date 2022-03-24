@@ -18,6 +18,7 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
+import scala.reflect.ClassTag
 
 final case class LiveQueryRender[S, D, A](
   query:               Reuse[IO[D]],
@@ -30,6 +31,7 @@ final case class LiveQueryRender[S, D, A](
   val F:               Async[IO],
   val dispatcher:      Effect.Dispatch[IO],
   val logger:          Logger[IO],
+  val classTag:        ClassTag[A],
   val reuse:           Reusability[A],
   val client:          WebSocketClient[IO, S]
 ) extends ReactProps(LiveQueryRender.component)
@@ -59,12 +61,9 @@ object LiveQueryRender {
           .didMountFn[F, Id, S, D, A][Props[F, S, D, A], State[F, S, D, A]](
             "LiveQueryRender",
             (stream, props) => {
-              implicit val F          = props.F
-              implicit val dispatcher = props.dispatcher
-              implicit val logger     = props.logger
-              implicit val reuse      = props.reuse
+              import props._
 
-              StreamRenderer.build(stream)
+              StreamRenderer.build(stream.map(a => Reuse(a).self))
             },
             State.apply
           )

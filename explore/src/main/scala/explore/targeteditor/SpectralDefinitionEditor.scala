@@ -10,7 +10,7 @@ import clue.data.Input
 import clue.data.syntax._
 import coulomb._
 import coulomb.si.Kelvin
-import crystal.react.View
+import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -55,19 +55,21 @@ import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 sealed trait SpectralDefinitionEditor[T, S] {
-  val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[T], S]
+  val spectralDefinition: Reuse[RemoteSyncUndoable[SpectralDefinition[T], S]]
 
   val toInput: SpectralDefinition[T] => S
 
   implicit val appCtx: AppContextIO
 
-  val sedRSUOpt: Option[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]
+  val sedRSUOpt: Option[Reuse[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]]
 
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[T]]]]
 
-  val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
+  val emissionLinesViewOpt: Option[ReuseView[SortedMap[Wavelength, EmissionLine[T]]]]
 
-  val fluxDensityContinuumOpt: Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]]
+  val fluxDensityContinuumOpt: Option[
+    ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[T]]
+  ]
 }
 
 sealed abstract class SpectralDefinitionEditorBuilder[
@@ -80,8 +82,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   import SpectralDefinition._
   import UnnormalizedSED._
 
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
-  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
+  protected val brightnessEditor: ReuseView[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
+  protected val emissionLineEditor: ReuseView[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
 
   private def toBandNormalized[T](
     sed: UnnormalizedSED
@@ -156,81 +158,122 @@ sealed abstract class SpectralDefinitionEditorBuilder[
     import props._
 
     val stellarLibrarySpectrumRSUOpt
-      : Option[RemoteSyncUndoable[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.stellarLibrary.andThen(UnnormalizedSED.StellarLibrary.librarySpectrum),
-          UnnormalizedSedInput.stellarLibrary.modify
+      : Option[Reuse[RemoteSyncUndoable[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.stellarLibrary.andThen(
+                UnnormalizedSED.StellarLibrary.librarySpectrum
+              ),
+              UnnormalizedSedInput.stellarLibrary.modify
+            )
+          )
         )
       )
 
     val coolStarTemperatureRSUOpt
-      : Option[RemoteSyncUndoable[CoolStarTemperature, Input[CoolStarTemperature]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.coolStarModel.andThen(UnnormalizedSED.CoolStarModel.temperature),
-          UnnormalizedSedInput.coolStar.modify
+      : Option[Reuse[RemoteSyncUndoable[CoolStarTemperature, Input[CoolStarTemperature]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.coolStarModel.andThen(UnnormalizedSED.CoolStarModel.temperature),
+              UnnormalizedSedInput.coolStar.modify
+            )
+          )
         )
       )
 
-    val galaxySpectrumRSUOpt: Option[RemoteSyncUndoable[GalaxySpectrum, Input[GalaxySpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.galaxy.andThen(UnnormalizedSED.Galaxy.galaxySpectrum),
-          UnnormalizedSedInput.galaxy.modify
+    val galaxySpectrumRSUOpt
+      : Option[Reuse[RemoteSyncUndoable[GalaxySpectrum, Input[GalaxySpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.galaxy.andThen(UnnormalizedSED.Galaxy.galaxySpectrum),
+              UnnormalizedSedInput.galaxy.modify
+            )
+          )
         )
       )
 
-    val planetSpectrumRSUOpt: Option[RemoteSyncUndoable[PlanetSpectrum, Input[PlanetSpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.planet.andThen(UnnormalizedSED.Planet.planetSpectrum),
-          UnnormalizedSedInput.planet.modify
+    val planetSpectrumRSUOpt
+      : Option[Reuse[RemoteSyncUndoable[PlanetSpectrum, Input[PlanetSpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.planet.andThen(UnnormalizedSED.Planet.planetSpectrum),
+              UnnormalizedSedInput.planet.modify
+            )
+          )
         )
       )
 
-    val quasarSpectrumRSUOpt: Option[RemoteSyncUndoable[QuasarSpectrum, Input[QuasarSpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.quasar.andThen(UnnormalizedSED.Quasar.quasarSpectrum),
-          UnnormalizedSedInput.quasar.modify
+    val quasarSpectrumRSUOpt
+      : Option[Reuse[RemoteSyncUndoable[QuasarSpectrum, Input[QuasarSpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.quasar.andThen(UnnormalizedSED.Quasar.quasarSpectrum),
+              UnnormalizedSedInput.quasar.modify
+            )
+          )
         )
       )
 
     val hiiRegionSpectrumRSUOpt
-      : Option[RemoteSyncUndoable[HIIRegionSpectrum, Input[HIIRegionSpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.hiiRegion.andThen(UnnormalizedSED.HIIRegion.hiiRegionSpectrum),
-          UnnormalizedSedInput.hiiRegion.modify
+      : Option[Reuse[RemoteSyncUndoable[HIIRegionSpectrum, Input[HIIRegionSpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.hiiRegion.andThen(UnnormalizedSED.HIIRegion.hiiRegionSpectrum),
+              UnnormalizedSedInput.hiiRegion.modify
+            )
+          )
         )
       )
 
     val planetaryNebulaSpectrumRSUOpt
-      : Option[RemoteSyncUndoable[PlanetaryNebulaSpectrum, Input[PlanetaryNebulaSpectrum]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.planetaryNebula.andThen(
-            UnnormalizedSED.PlanetaryNebula.planetaryNebulaSpectrum
-          ),
-          UnnormalizedSedInput.planetaryNebula.modify
+      : Option[Reuse[RemoteSyncUndoable[PlanetaryNebulaSpectrum, Input[PlanetaryNebulaSpectrum]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.planetaryNebula.andThen(
+                UnnormalizedSED.PlanetaryNebula.planetaryNebulaSpectrum
+              ),
+              UnnormalizedSedInput.planetaryNebula.modify
+            )
+          )
         )
       )
 
-    val powerLawIndexRSUOpt: Option[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
-          UnnormalizedSedInput.powerLaw.modify
+    val powerLawIndexRSUOpt: Option[Reuse[RemoteSyncUndoable[BigDecimal, Input[BigDecimal]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
+              UnnormalizedSedInput.powerLaw.modify
+            )
+          )
         )
       )
 
     val blackBodyTemperatureRSUOpt
-      : Option[RemoteSyncUndoable[Quantity[PosInt, Kelvin], Input[BigDecimal]]] =
-      props.sedRSUOpt.flatMap(
-        _.zoomOpt(
-          UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
-          UnnormalizedSedInput.blackBodyTempK.modify
+      : Option[Reuse[RemoteSyncUndoable[Quantity[PosInt, Kelvin], Input[BigDecimal]]]] =
+      props.sedRSUOpt.flatMap(x =>
+        reuseOpt2OptReuse(
+          x.map(
+            _.zoomOpt(
+              UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
+              UnnormalizedSedInput.blackBodyTempK.modify
+            )
+          )
         )
       )
 
@@ -249,10 +292,10 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
       }
 
-    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: View[T]) =
+    def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: ReuseView[T]) =
       React.Fragment(
         <.span,
-        EnumViewSelect(id, view),
+        EnumViewSelect(id, view.value),
         <.span
       )
 
@@ -268,19 +311,19 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       ),
       <.span,
       stellarLibrarySpectrumRSUOpt
-        .map(rsu => spectrumRow("slSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("slSpectrum", rsu.map(_.view(_.assign)))),
       coolStarTemperatureRSUOpt
-        .map(rsu => spectrumRow("csTemp", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("csTemp", rsu.map(_.view(_.assign)))),
       galaxySpectrumRSUOpt
-        .map(rsu => spectrumRow("gSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("gSpectrum", rsu.map(_.view(_.assign)))),
       planetSpectrumRSUOpt
-        .map(rsu => spectrumRow("pSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("pSpectrum", rsu.map(_.view(_.assign)))),
       quasarSpectrumRSUOpt
-        .map(rsu => spectrumRow("qSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("qSpectrum", rsu.map(_.view(_.assign)))),
       hiiRegionSpectrumRSUOpt
-        .map(rsu => spectrumRow("hiirSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("hiirSpectrum", rsu.map(_.view(_.assign)))),
       planetaryNebulaSpectrumRSUOpt
-        .map(rsu => spectrumRow("pnSpectrum", rsu.view(_.assign))),
+        .map(rsu => spectrumRow("pnSpectrum", rsu.map(_.view(_.assign)))),
       powerLawIndexRSUOpt
         .map(rsu =>
           React.Fragment(
@@ -302,7 +345,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Temperature", ExploreStyles.SkipToNext),
             InputWithUnits( // Temperature is in K, a positive integer
-              rsu.view(t => BigDecimal(t.value).assign).stripQuantity,
+              rsu.map(_.view(t => BigDecimal(t.value).assign)).stripQuantity,
               ValidFormatInput.forRefinedInt[Positive](),
               ChangeAuditor
                 .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())
@@ -319,7 +362,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         .map(fluxDensityContinuum =>
           React.Fragment(
             <.label("Continuum", ExploreStyles.SkipToNext),
-            FormInputEV(
+            FormInputEV[ReuseView, PosBigDecimal](
               id = "fluxValue",
               value = fluxDensityContinuum.zoom(
                 Measure.valueTagged[PosBigDecimal, FluxDensityContinuum[T]]
@@ -327,7 +370,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               validFormat = ValidFormatInput.forScientificNotationPosBigDecimal(),
               changeAuditor = ChangeAuditor.posScientificNotation()
             ),
-            EnumViewSelect(
+            EnumViewSelect[ReuseView, Units Of FluxDensityContinuum[T]](
               "Units",
               fluxDensityContinuum
                 .zoom(Measure.unitsTagged[PosBigDecimal, FluxDensityContinuum[T]])
@@ -341,8 +384,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
 }
 
 final case class IntegratedSpectralDefinitionEditor(
-  val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[Integrated],
-                                             SpectralDefinitionIntegratedInput
+  val spectralDefinition: Reuse[
+    RemoteSyncUndoable[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput]
   ]
 )(implicit val appCtx:    AppContextIO)
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
@@ -352,57 +395,81 @@ final case class IntegratedSpectralDefinitionEditor(
   val toInput: SpectralDefinition[Integrated] => SpectralDefinitionIntegratedInput = _.toInput
 
   private val bandNormalizedRSUOpt: Option[
-    RemoteSyncUndoable[SpectralDefinition.BandNormalized[Integrated], BandNormalizedIntegratedInput]
+    Reuse[
+      RemoteSyncUndoable[
+        SpectralDefinition.BandNormalized[Integrated],
+        BandNormalizedIntegratedInput
+      ]
+    ]
   ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.bandNormalized[Integrated],
-      forceAssign(SpectralDefinitionIntegratedInput.bandNormalized.modify)(
-        BandNormalizedIntegratedInput()
+    reuseOpt2OptReuse(
+      spectralDefinition.map(
+        _.zoomOpt(
+          SpectralDefinition.bandNormalized[Integrated],
+          forceAssign(SpectralDefinitionIntegratedInput.bandNormalized.modify)(
+            BandNormalizedIntegratedInput()
+          )
+        )
       )
     )
 
-  val sedRSUOpt: Option[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]] =
+  val sedRSUOpt: Option[Reuse[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]] =
     bandNormalizedRSUOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.sed[Integrated],
-             forceAssign(BandNormalizedIntegratedInput.sed.modify)(
-               UnnormalizedSedInput()
-             )
+      _.map(
+        _.zoom(SpectralDefinition.BandNormalized.sed[Integrated],
+               forceAssign(BandNormalizedIntegratedInput.sed.modify)(
+                 UnnormalizedSedInput()
+               )
+        )
       )
     )
 
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[Integrated]]]] =
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]]] =
     bandNormalizedRSUOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.brightnesses[Integrated],
-             BandNormalizedIntegratedInput.brightnesses.modify
+      _.map(
+        _.zoom(SpectralDefinition.BandNormalized.brightnesses[Integrated],
+               BandNormalizedIntegratedInput.brightnesses.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 
   private val emissionLinesRSUOpt: Option[
-    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Integrated], EmissionLinesIntegratedInput]
+    Reuse[
+      RemoteSyncUndoable[SpectralDefinition.EmissionLines[Integrated], EmissionLinesIntegratedInput]
+    ]
   ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.emissionLines[Integrated],
-      forceAssign(SpectralDefinitionIntegratedInput.emissionLines.modify)(
-        EmissionLinesIntegratedInput()
+    reuseOpt2OptReuse(
+      spectralDefinition.map(
+        _.zoomOpt(
+          SpectralDefinition.emissionLines[Integrated],
+          forceAssign(SpectralDefinitionIntegratedInput.emissionLines.modify)(
+            EmissionLinesIntegratedInput()
+          )
+        )
       )
     )
 
-  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
+  override val emissionLinesViewOpt
+    : Option[ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
     emissionLinesRSUOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
-             EmissionLinesIntegratedInput.lines.modify
+      _.map(
+        _.zoom(SpectralDefinition.EmissionLines.lines[Integrated],
+               EmissionLinesIntegratedInput.lines.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 
   override val fluxDensityContinuumOpt
-    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
+    : Option[ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]]] =
     emissionLinesRSUOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
-             EmissionLinesIntegratedInput.fluxDensityContinuum.modify
+      _.map(
+        _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
+               EmissionLinesIntegratedInput.fluxDensityContinuum.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 }
 
@@ -411,17 +478,18 @@ object IntegratedSpectralDefinitionEditor
                                             SpectralDefinitionIntegratedInput,
                                             IntegratedSpectralDefinitionEditor
     ] {
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
+  protected val brightnessEditor
+    : ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
     brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
 
   protected val emissionLineEditor
-    : View[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
+    : ReuseView[SortedMap[Wavelength, EmissionLine[Integrated]]] => VdomNode =
     emissionLinesView => IntegratedEmissionLineEditor(emissionLinesView, false)
 }
 
 final case class SurfaceSpectralDefinitionEditor(
-  val spectralDefinition: RemoteSyncUndoable[SpectralDefinition[Surface],
-                                             SpectralDefinitionSurfaceInput
+  val spectralDefinition: Reuse[
+    RemoteSyncUndoable[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput]
   ]
 )(implicit val appCtx:    AppContextIO)
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
@@ -432,57 +500,75 @@ final case class SurfaceSpectralDefinitionEditor(
   val toInput: SpectralDefinition[Surface] => SpectralDefinitionSurfaceInput = _.toInput
 
   private val bandNormalizedRSUOpt: Option[
-    RemoteSyncUndoable[SpectralDefinition.BandNormalized[Surface], BandNormalizedSurfaceInput]
+    Reuse[
+      RemoteSyncUndoable[SpectralDefinition.BandNormalized[Surface], BandNormalizedSurfaceInput]
+    ]
   ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.bandNormalized[Surface],
-      forceAssign(SpectralDefinitionSurfaceInput.bandNormalized.modify)(
-        BandNormalizedSurfaceInput()
+    reuseOpt2OptReuse(
+      spectralDefinition.map(
+        _.zoomOpt(
+          SpectralDefinition.bandNormalized[Surface],
+          forceAssign(SpectralDefinitionSurfaceInput.bandNormalized.modify)(
+            BandNormalizedSurfaceInput()
+          )
+        )
       )
     )
 
-  val sedRSUOpt: Option[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]] =
+  val sedRSUOpt: Option[Reuse[RemoteSyncUndoable[UnnormalizedSED, UnnormalizedSedInput]]] =
     bandNormalizedRSUOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.sed[Surface],
-             forceAssign(BandNormalizedSurfaceInput.sed.modify)(
-               UnnormalizedSedInput()
-             )
+      _.map(
+        _.zoom(SpectralDefinition.BandNormalized.sed[Surface],
+               forceAssign(BandNormalizedSurfaceInput.sed.modify)(
+                 UnnormalizedSedInput()
+               )
+        )
       )
     )
 
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[Surface]]]] =
+  val bandBrightnessesViewOpt: Option[ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]]] =
     bandNormalizedRSUOpt.map(
-      _.zoom(SpectralDefinition.BandNormalized.brightnesses[Surface],
-             BandNormalizedSurfaceInput.brightnesses.modify
+      _.map(
+        _.zoom(SpectralDefinition.BandNormalized.brightnesses[Surface],
+               BandNormalizedSurfaceInput.brightnesses.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 
   private val emissionLinesRSUOpt: Option[
-    RemoteSyncUndoable[SpectralDefinition.EmissionLines[Surface], EmissionLinesSurfaceInput]
+    Reuse[RemoteSyncUndoable[SpectralDefinition.EmissionLines[Surface], EmissionLinesSurfaceInput]]
   ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.emissionLines[Surface],
-      forceAssign(SpectralDefinitionSurfaceInput.emissionLines.modify)(
-        EmissionLinesSurfaceInput()
+    reuseOpt2OptReuse(
+      spectralDefinition.map(
+        _.zoomOpt(SpectralDefinition.emissionLines[Surface],
+                  forceAssign(SpectralDefinitionSurfaceInput.emissionLines.modify)(
+                    EmissionLinesSurfaceInput()
+                  )
+        )
       )
     )
 
-  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Surface]]]] =
+  override val emissionLinesViewOpt
+    : Option[ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]]] =
     emissionLinesRSUOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.lines[Surface],
-             EmissionLinesSurfaceInput.lines.modify
+      _.map(
+        _.zoom(SpectralDefinition.EmissionLines.lines[Surface],
+               EmissionLinesSurfaceInput.lines.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 
   override val fluxDensityContinuumOpt
-    : Option[View[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
+    : Option[ReuseView[Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]]] =
     emissionLinesRSUOpt.map(
-      _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
-             EmissionLinesSurfaceInput.fluxDensityContinuum.modify
+      _.map(
+        _.zoom(SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
+               EmissionLinesSurfaceInput.fluxDensityContinuum.modify
+        )
+          .view(_.toInput.assign)
       )
-        .view(_.toInput.assign)
     )
 }
 
@@ -491,10 +577,12 @@ object SurfaceSpectralDefinitionEditor
                                             SpectralDefinitionSurfaceInput,
                                             SurfaceSpectralDefinitionEditor
     ] {
-  protected val brightnessEditor: View[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
+  protected val brightnessEditor
+    : ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
     brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
 
-  protected val emissionLineEditor: View[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
+  protected val emissionLineEditor
+    : ReuseView[SortedMap[Wavelength, EmissionLine[Surface]]] => VdomNode =
     emissionLinesView => SurfaceEmissionLineEditor(emissionLinesView, false)
 
 }

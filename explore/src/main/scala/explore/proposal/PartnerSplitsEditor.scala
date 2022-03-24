@@ -4,8 +4,8 @@
 package explore.proposal
 
 import cats.syntax.all._
-import crystal.react.View
-import crystal.react.ViewOpt
+import crystal.react.ReuseView
+import crystal.react.ReuseViewOpt
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -31,7 +31,7 @@ import react.semanticui.modules.modal._
 
 final case class PartnerSplitsEditor(
   show:    Boolean,
-  splits:  View[List[PartnerSplit]],
+  splits:  ReuseView[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] ==> Callback
 ) extends ReactProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
@@ -57,7 +57,7 @@ object PartnerSplitsEditor {
 
   private def makeTableRows(p: Props): TagMod =
     p.splits.get.zipWithIndex.toTagMod { case (ps, idx) =>
-      val splitView: ViewOpt[PartnerSplit] =
+      val splitView: ReuseViewOpt[PartnerSplit] =
         p.splits.zoom[PartnerSplit](Index.index[List[PartnerSplit], Int, PartnerSplit](idx))
 
       val id = s"${ps.partner.tag}-percent"

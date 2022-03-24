@@ -138,13 +138,12 @@ object ExploreMain extends IOApp.Simple {
         val (router, routerCtl) =
           RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-        def routingView(view: View[RootModel]): View[RootModel] =
+        def routingView(view: ReuseView[RootModel]): ReuseView[RootModel] =
           view.withOnMod { model =>
-            routerCtl
-              .set(RootModelRouting.lens.get(model))
+            routerCtl.set(RootModelRouting.lens.get(model))
           }
 
-        def rootComponent(view: View[RootModel]): VdomElement =
+        def rootComponent(view: ReuseView[RootModel]): VdomElement =
           <.div(
             router(routingView(view))
           )
