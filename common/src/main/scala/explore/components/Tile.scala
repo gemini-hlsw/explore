@@ -56,11 +56,9 @@ object Tile {
 
   type RenderInTitle = VdomNode ==> VdomNode
 
-  implicit val propsReuse: Reusability[Tile] = // Reusability.always
-    Reusability.derive && Reusability.by(_.render)
+  implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
-  implicit val htmlElementReuse: Reusability[html.Element] = // Reusability.always
-    Reusability.byRefOr_==
+  implicit val htmlElementReuse: Reusability[html.Element] = Reusability.byRefOr_==
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -75,7 +73,7 @@ object Tile {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // infoRef - We use this mechanism instead of a regular Ref in order to force a rerender when it's set.
+      // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
       .useStateWithReuse(none[html.Element])
       .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
