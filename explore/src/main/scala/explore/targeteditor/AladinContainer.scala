@@ -172,12 +172,11 @@ object AladinContainer {
 
         <.div(
           ExploreStyles.AladinContainerBody,
-          // This is a bit tricky. Sometimes the height can be 0, this happens if
-          // during a second render. If we let the height to be zero, aladin will
-          // take it as 1 and miss calculate the amount of tiles needed.
-          // This can endup requesting a large amount of tiles and would
-          // freeze explore
-          if (resize.height.exists(_ > 0))
+          // This is a bit tricky. Sometimes the height can be 0 or a very low number.
+          // This happens during a second render. If we let the height to be zero, aladin
+          // will take it as 1. This height ends up being a denominator, which, if low,
+          // will make aladin request a large amount of tiles and end up freeze explore.
+          if (resize.height.exists(_ >= 100))
             AladinComp.withRef(aladinRef) {
               Aladin(
                 ExploreStyles.TargetAladin,
