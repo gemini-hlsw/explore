@@ -32,13 +32,13 @@
     "react-resizable": "3.0.4",
     "react-resize-detector": "7.0.0",
     "react-table": "7.7.0",
-    "react-virtuoso": "2.8.3",
+    "react-virtuoso": "2.8.4",
     "rehype-katex": "^6.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
     "remark-parse": "^10.0.1",
     "semantic-ui-react": "2.1.2",
-    "styled-components": "5.3.3",
+    "styled-components": "5.3.5",
     "ua-parser-js": "1.0.2"
   },
   "devDependencies": {
