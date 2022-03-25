@@ -63,76 +63,17 @@ object ObsList {
   )(implicit
     ctx:        AppContextIO
   ): IO[Unit] =
-    adding.set(true).to[IO] >>
-      createObservation[IO]().flatMap {
-        _.fold(IO.unit) { obs =>
-          ObsListActions
-            .obsExistence(obs.id, focusedObs)
-            .mod(undoCtx)(obsListMod.upsert(obs, pos))
-            .to[IO]
+    adding.async.set(true) >>
+      createObservation[IO]()
+        .flatMap {
+          _.foldMap { obs =>
+            ObsListActions
+              .obsExistence(obs.id, focusedObs)
+              .mod(undoCtx)(obsListMod.upsert(obs, pos))
+              .to[IO]
+          }
         }
-      } >> adding.set(false).to[IO]
-
-  def render(props: Props, adding: ReuseView[Boolean]): VdomNode =
-    AppCtx.using { implicit ctx =>
-      val undoCtx      = UndoContext(props.undoStacks, props.observations)
-      val observations = props.observations.get.toList
-
-      <.div(ExploreStyles.ObsTreeWrapper)(
-        <.div(ExploreStyles.TreeToolbar)(
-          Button(
-            size = Mini,
-            compact = true,
-            icon = Icons.New,
-            content = "Obs",
-            disabled = adding.get,
-            loading = adding.get,
-            onClick = insertObs(observations.length, props.focusedObs, undoCtx, adding).runAsync
-          ),
-          UndoButtons(undoCtx, size = Mini, disabled = adding.get)
-        ),
-        <.div(ExploreStyles.ObsTree)(
-          <.div(ExploreStyles.ObsScrollTree)(
-            <.div(
-              Button(onClick = props.focusedObs.set(none), clazz = ExploreStyles.ButtonSummary)(
-                Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
-                "Observations Summary"
-              )
-            ),
-            observations.toTagMod { obs =>
-              val focusedObs = obs.id
-              val selected   = props.focusedObs.get.exists(_ === focusedObs)
-              <.a(
-                ^.href := ctx.pageUrl(AppTab.Observations,
-                                      focusedObs.some,
-                                      props.focusedTarget.get
-                ),
-                ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                ^.onClick ==> linkOverride(
-                  props.focusedObs.set(focusedObs.some)
-                )
-              )(
-                ObsBadge(
-                  obs,
-                  selected = selected,
-                  setStatusCB = (ObsListActions
-                    .obsStatus(obs.id)
-                    .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
-                  setActiveStatusCB = (ObsListActions
-                    .obsActiveStatus(obs.id)
-                    .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
-                  deleteCB = ObsListActions
-                    .obsExistence(obs.id, props.focusedObs)
-                    .mod(undoCtx)(obsListMod.delete)
-                    .reuseAlways
-                    .some
-                )
-              )
-            }
-          )
-        )
-      )
-    }
+        .guarantee(adding.async.set(false))
 
   protected val component =
     ScalaFnComponent
@@ -162,5 +103,65 @@ object ObsList {
       }
       // adding new observation
       .useStateViewWithReuse(false)
-      .renderWithReuse((props, _, adding) => render(props, adding))
+      .renderWithReuse { (props, _, adding) =>
+        AppCtx.using { implicit ctx =>
+          val undoCtx      = UndoContext(props.undoStacks, props.observations)
+          val observations = props.observations.get.toList
+
+          <.div(ExploreStyles.ObsTreeWrapper)(
+            <.div(ExploreStyles.TreeToolbar)(
+              Button(
+                size = Mini,
+                compact = true,
+                icon = Icons.New,
+                content = "Obs",
+                disabled = adding.get,
+                loading = adding.get,
+                onClick = insertObs(observations.length, props.focusedObs, undoCtx, adding).runAsync
+              ),
+              UndoButtons(undoCtx, size = Mini, disabled = adding.get)
+            ),
+            <.div(ExploreStyles.ObsTree)(
+              <.div(ExploreStyles.ObsScrollTree)(
+                <.div(
+                  Button(onClick = props.focusedObs.set(none), clazz = ExploreStyles.ButtonSummary)(
+                    Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
+                    "Observations Summary"
+                  )
+                ),
+                observations.toTagMod { obs =>
+                  val focusedObs = obs.id
+                  val selected   = props.focusedObs.get.exists(_ === focusedObs)
+                  <.a(
+                    ^.href := ctx.pageUrl(AppTab.Observations,
+                                          focusedObs.some,
+                                          props.focusedTarget.get
+                    ),
+                    ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
+                    ^.onClick ==> linkOverride(
+                      props.focusedObs.set(focusedObs.some)
+                    )
+                  )(
+                    ObsBadge(
+                      obs,
+                      selected = selected,
+                      setStatusCB = (ObsListActions
+                        .obsStatus(obs.id)
+                        .set(undoCtx) _).compose((_: ObsStatus).some).reuseAlways.some,
+                      setActiveStatusCB = (ObsListActions
+                        .obsActiveStatus(obs.id)
+                        .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
+                      deleteCB = ObsListActions
+                        .obsExistence(obs.id, props.focusedObs)
+                        .mod(undoCtx)(obsListMod.delete)
+                        .reuseAlways
+                        .some
+                    )
+                  )
+                }
+              )
+            )
+          )
+        }
+      }
 }

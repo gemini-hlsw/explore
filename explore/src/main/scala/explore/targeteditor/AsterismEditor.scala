@@ -68,13 +68,14 @@ object AsterismEditor {
     val targetId: IO[Target.Id] = oTargetId.fold(
       CreateTargetMutation.execute("p-2", target.toCreateTargetInput()).map(_.createTarget.id)
     )(IO(_))
-    adding.set(true).to[IO] >>
+    adding.async.set(true) >>
       targetId
         .flatMap(tid =>
-          asterism.mod(_ :+ TargetWithId(tid, target)).to[IO]
-            >> selectedTarget.set(tid.some).to[IO] >>
+          asterism.async.mod(_ :+ TargetWithId(tid, target))
+            >> selectedTarget.async.set(tid.some) >>
             AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
-        ) >> adding.set(false).to[IO]
+        )
+        .guarantee(adding.async.set(false))
   }
 
   private def onCloneTarget(
@@ -111,14 +112,14 @@ object AsterismEditor {
         React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
-              trigger = Reuse.by(adding.get)(
+              trigger = adding.map(a =>
                 Button(
                   size = Tiny,
                   compact = true,
                   clazz = ExploreStyles.VeryCompact,
-                  disabled = adding.get,
+                  disabled = a.get,
                   icon = Icons.New,
-                  loading = adding.get,
+                  loading = a.get,
                   content = "Add",
                   labelPosition = LabelPosition.Left
                 )
