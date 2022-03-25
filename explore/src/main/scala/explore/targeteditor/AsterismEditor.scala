@@ -6,9 +6,10 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
+import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import eu.timepit.refined.types.numeric.PosLong
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.TargetQueriesGQL._
@@ -25,6 +26,7 @@ import explore.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -35,8 +37,6 @@ import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-
-import scala.util.Random
 
 final case class AsterismEditor(
   userId:           User.Id,
@@ -62,24 +62,20 @@ object AsterismEditor {
     asterism:       ReuseView[List[TargetWithId]],
     oTargetId:      Option[Target.Id],
     target:         Target.Sidereal,
-    selectedTarget: ReuseView[Option[Target.Id]]
-  )(implicit ctx:   AppContextIO): Callback = {
-    val (targetId, createTarget) = oTargetId.fold(
-      (newId,
-       (tid: Target.Id) =>
-         CreateTargetMutation
-           .execute("p-2", target.toCreateTargetInput(tid.some))
-           .void
-      )
-    )(tid => (CallbackTo(tid), (_: Target.Id) => IO.unit))
-    targetId.flatMap(tid =>
-      asterism.mod(_ :+ TargetWithId(tid, target)) >> selectedTarget.set(tid.some) >>
-        (createTarget(tid) >>
-          AsterismQueries.addTargetToAsterisms[IO](
-            obsIds.toList,
-            tid
-          )).runAsync
-    )
+    selectedTarget: ReuseView[Option[Target.Id]],
+    adding:         View[Boolean]
+  )(implicit ctx:   AppContextIO): IO[Unit] = {
+    val targetId: IO[Target.Id] = oTargetId.fold(
+      CreateTargetMutation.execute("p-2", target.toCreateTargetInput()).map(_.createTarget.id)
+    )(IO(_))
+    adding.async.set(true) >>
+      targetId
+        .flatMap(tid =>
+          asterism.async.mod(_ :+ TargetWithId(tid, target))
+            >> selectedTarget.async.set(tid.some) >>
+            AsterismQueries.addTargetToAsterisms[IO](obsIds.toList, tid)
+        )
+        .guarantee(adding.async.set(false))
   }
 
   private def onCloneTarget(
@@ -91,20 +87,13 @@ object AsterismEditor {
     asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >> selected
       .set(newTwid.id.some)
 
-  val newId =
-    CallbackTo(Random.nextInt(0xfff)).map(int => Target.Id(PosLong.unsafeFrom(int.abs.toLong + 1)))
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       // adding
-      .useState(false)
+      .useStateViewWithReuse(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      // reset "loading" for add button when science targets change, which indicates server roundtrip is over
-      .useEffectWithDepsBy((props, _, _) => props.asterism)((_, adding, _) =>
-        _ => adding.setState(false)
-      )
       .useEffectWithDepsBy((props, _, _) => (props.asterism, props.selectedTargetId))(
         (props, _, _) => { case (asterism, oTargetId) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
@@ -123,14 +112,14 @@ object AsterismEditor {
         React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
-              trigger = Reuse.by(adding.value)(
+              trigger = adding.map(a =>
                 Button(
                   size = Tiny,
                   compact = true,
                   clazz = ExploreStyles.VeryCompact,
-                  disabled = adding.value,
+                  disabled = a.get,
                   icon = Icons.New,
-                  loading = adding.value,
+                  loading = a.get,
                   content = "Add",
                   labelPosition = LabelPosition.Left
                 )
@@ -138,7 +127,13 @@ object AsterismEditor {
               onSelected = Reuse
                 .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
                   case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
-                    insertSiderealTarget(props.obsIds, props.asterism, oid, t, selectedTargetId)
+                    insertSiderealTarget(props.obsIds,
+                                         props.asterism,
+                                         oid,
+                                         t,
+                                         selectedTargetId,
+                                         adding
+                    ).runAsync
                   case _                                                     => Callback.empty
                 })
             )
