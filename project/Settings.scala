@@ -41,7 +41,7 @@ object Settings {
     val reactHighcharts   = "0.4.4"
     val reactHotkeys      = "0.4.0"
     val reactResizable    = "0.7.3"
-    val reactSemanticUI   = "0.13.1"
+    val reactSemanticUI   = "0.14.0"
     val reactTable        = "0.7.4"
     val reactVirtuoso     = "0.2.2"
     val scalaJsReact      = "2.0.1"
