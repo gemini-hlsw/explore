@@ -7,7 +7,6 @@ import cats.Eq
 import cats.syntax.all._
 import japgolly.scalajs.react.ReactCats._
 import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.facade.JsNumber
 import lucuma.ui.reusability._
 import monocle.Focus
 import org.scalajs.dom.window
@@ -51,7 +50,7 @@ object SelectedPanel {
   implicit def reuseSelectedPanel[A: Eq]: Reusability[SelectedPanel[A]] = Reusability.byEq
 }
 
-final case class TwoPanelState[A](treeWidth: JsNumber, selected: SelectedPanel[A])
+final case class TwoPanelState[A](treeWidth: Double, selected: SelectedPanel[A])
 
 object TwoPanelState {
   def selected[A]  = Focus[TwoPanelState[A]](_.selected)
@@ -67,6 +66,8 @@ object TwoPanelState {
 
   def initial[A](sp: SelectedPanel[A]): TwoPanelState[A] =
     TwoPanelState(initialPanelWidth(sp), sp)
+
+  private implicit def doubleReuse = Reusability.double(1.0)
 
   implicit def stateReuse[A](implicit ev: Eq[A]): Reusability[TwoPanelState[A]] =
     Reusability.by(tps => (tps.treeWidth, tps.selected))

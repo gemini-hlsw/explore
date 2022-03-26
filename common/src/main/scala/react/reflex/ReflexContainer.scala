@@ -4,7 +4,6 @@
 package react.reflex
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.facade.JsNumber
 import japgolly.scalajs.react.vdom.TagMod
 import react.common._
 
@@ -14,7 +13,7 @@ import scalajs.js
 
 final case class ReflexContainer(
   orientation:            js.UndefOr[Orientation] = js.undefined,
-  maxRecDepth:            js.UndefOr[JsNumber] = js.undefined,
+  maxRecDepth:            js.UndefOr[Double] = js.undefined,
   windowResizeAware:      js.UndefOr[Boolean] = js.undefined,
   clazz:                  js.UndefOr[Css] = js.undefined,
   override val modifiers: Seq[TagMod] = Seq.empty
@@ -33,7 +32,7 @@ object ReflexContainer {
   @js.native
   trait Props extends js.Object {
     var orientation: js.UndefOr[String]
-    var maxRecDepth: js.UndefOr[JsNumber]
+    var maxRecDepth: js.UndefOr[Double]
     var windowResizeAware: js.UndefOr[Boolean]
     var className: js.UndefOr[String]
     var style: js.UndefOr[js.Object]
@@ -44,7 +43,7 @@ object ReflexContainer {
 
   protected def rawprops(
     orientation:       js.UndefOr[Orientation] = js.undefined,
-    maxRecDepth:       js.UndefOr[JsNumber] = js.undefined,
+    maxRecDepth:       js.UndefOr[Double] = js.undefined,
     windowResizeAware: js.UndefOr[Boolean] = js.undefined,
     clazz:             js.UndefOr[Css] = js.undefined
   ): Props = {

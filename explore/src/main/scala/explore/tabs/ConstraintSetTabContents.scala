@@ -76,7 +76,7 @@ object ConstraintSetTabContents {
       props.userId,
       ResizableSection.ConstraintSetsTree,
       Constants.InitialTreeWidth.toInt
-    ) >>= (w => state.zoom(treeWidthLens).async.set(w))).runAsync
+    ) >>= (w => state.zoom(treeWidthLens).async.set(w.toDouble))).runAsync
   }
 
   protected def renderFn(
@@ -86,7 +86,7 @@ object ConstraintSetTabContents {
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(treeWidthLens).set(d.size.width).to[IO] *>
+        (state.zoom(treeWidthLens).set(d.size.width.toDouble).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
@@ -263,8 +263,8 @@ object ConstraintSetTabContents {
         ExploreStyles.TreeRGL,
         Resizable(
           axis = Axis.X,
-          width = treeWidth,
-          height = coreHeight,
+          width = treeWidth.toDouble,
+          height = coreHeight.toDouble,
           minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
           maxConstraints = (props.size.width.getOrElse(0) / 2, 0),
           onResize = treeResize,

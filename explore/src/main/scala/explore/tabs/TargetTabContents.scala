@@ -156,7 +156,7 @@ object TargetTabContents {
   )(implicit ctx:         AppContextIO): VdomNode = {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(treeWidthLens).set(d.size.width) *>
+        panels.zoom(treeWidthLens).set(d.size.width.toDouble) *>
           debouncer
             .submit(
               UserWidthsCreation
@@ -498,8 +498,8 @@ object TargetTabContents {
         ExploreStyles.TreeRGL,
         Resizable(
           axis = Axis.X,
-          width = treeWidth,
-          height = coreHeight,
+          width = treeWidth.toDouble,
+          height = coreHeight.toDouble,
           minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
           maxConstraints = (coreWidth / 2, 0),
           onResize = panelsResize,
@@ -546,7 +546,7 @@ object TargetTabContents {
                 case Right((w, l)) =>
                   (panels
                     .mod(
-                      TwoPanelState.treeWidth[TargetOrObsSet].replace(w)
+                      TwoPanelState.treeWidth[TargetOrObsSet].replace(w.toDouble)
                     ) *> layout.mod(o => mergeMap(o, l)))
                     .to[IO]
                 case Left(_)       =>

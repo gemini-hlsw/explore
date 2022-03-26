@@ -286,7 +286,7 @@ object ObsTabContents {
 
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(TwoPanelState.treeWidth[Observation.Id]).set(d.size.width) *>
+        panels.zoom(TwoPanelState.treeWidth[Observation.Id]).set(d.size.width.toDouble) *>
           debouncer
             .submit(
               UserWidthsCreation
@@ -486,8 +486,8 @@ object ObsTabContents {
         ExploreStyles.TreeRGL,
         Resizable(
           axis = Axis.X,
-          width = treeWidth,
-          height = resize.height.getOrElse[Int](0),
+          width = treeWidth.toDouble,
+          height = resize.height.getOrElse[Int](0).toDouble,
           minConstraints = (Constants.MinLeftPanelWidth.toInt, 0),
           maxConstraints = (resize.width.getOrElse(0) / 2, 0),
           onResize = panelsResize,
@@ -531,7 +531,7 @@ object ObsTabContents {
               case Right((w, l)) =>
                 (panels
                   .mod(
-                    TwoPanelState.treeWidth[Observation.Id].replace(w)
+                    TwoPanelState.treeWidth[Observation.Id].replace(w.toDouble)
                   ) *> layout.mod(o => mergeMap(o, l)))
                   .to[IO]
               case Left(_)       => IO.unit

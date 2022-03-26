@@ -4,7 +4,6 @@
 package react.resizeDetector
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.{ facade => Raw }
 import org.scalajs.dom.html
 import react.common._
 import react.resizeDetector.ResizeDetector._
@@ -16,13 +15,13 @@ import scala.scalajs.js.|
 
 @js.native
 protected trait ReactResizeDetectorDimensions extends js.Object {
-  val height: js.UndefOr[Raw.JsNumber]
-  val width: js.UndefOr[Raw.JsNumber]
+  val height: js.UndefOr[Double]
+  val width: js.UndefOr[Double]
 }
 
 @js.native
 trait UseResizeDetectorReturnJS extends ReactResizeDetectorDimensions {
-  val ref: Raw.React.RefFn[html.Element]
+  val ref: facade.React.RefFn[html.Element]
 }
 
 sealed trait UseResizeDetectorReturn {
@@ -45,7 +44,7 @@ object UseResizeDetectorReturn {
 
 @js.native
 protected trait UseResizeDetectorProps extends Props {
-  var targetRef: Raw.React.RefFn[html.Element]
+  var targetRef: facade.React.RefFn[html.Element]
 }
 
 object UseResizeDetectorProps {
@@ -62,13 +61,9 @@ object UseResizeDetectorProps {
   ): UseResizeDetectorProps = {
     val p = (new js.Object).asInstanceOf[UseResizeDetectorProps]
     onResize.foreach(v =>
-      p.onResize = { case (x: Raw.JsNumber, y: Raw.JsNumber) =>
+      p.onResize = { case (x: Double, y: Double) =>
         v(x.toInt, y.toInt).runNow()
-      }: js.Function2[
-        Raw.JsNumber,
-        Raw.JsNumber,
-        Unit
-      ]
+      }: js.Function2[Double, Double, Unit]
     )
     handleHeight.foreach(v => p.handleHeight = v)
     handleWidth.foreach(v => p.handleWidth = v)

@@ -127,7 +127,7 @@ object TileController {
             }
 
         ResponsiveReactGridLayout(
-          width = p.gridWidth,
+          width = p.gridWidth.toDouble,
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,

@@ -4,7 +4,6 @@
 package react.reflex
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.facade.JsNumber
 import japgolly.scalajs.react.vdom.TagMod
 import react.common._
 
@@ -14,13 +13,13 @@ import scalajs.js
 
 final case class ReflexElement(
   propagateDimensions:     js.UndefOr[Boolean] = js.undefined,
-  propagateDimensionsRate: js.UndefOr[JsNumber] = js.undefined,
+  propagateDimensionsRate: js.UndefOr[Double] = js.undefined,
   resizeHeight:            js.UndefOr[Boolean] = js.undefined,
   resizeWidth:             js.UndefOr[Boolean] = js.undefined,
-  size:                    js.UndefOr[JsNumber] = js.undefined,
-  minSize:                 js.UndefOr[JsNumber] = js.undefined,
-  maxSize:                 js.UndefOr[JsNumber] = js.undefined,
-  flex:                    js.UndefOr[JsNumber] = js.undefined,
+  size:                    js.UndefOr[Double] = js.undefined,
+  minSize:                 js.UndefOr[Double] = js.undefined,
+  maxSize:                 js.UndefOr[Double] = js.undefined,
+  flex:                    js.UndefOr[Double] = js.undefined,
   direction:               js.UndefOr[Direction] = js.undefined,
   onStartResize:           js.UndefOr[ResizeEvent => Callback] = js.undefined,
   onStopResize:            js.UndefOr[ResizeEvent => Callback] = js.undefined,
@@ -43,13 +42,13 @@ object ReflexElement {
   @js.native
   trait Props extends js.Object {
     var propagateDimensions: js.UndefOr[Boolean]
-    var propagateDimensionsRate: js.UndefOr[JsNumber]
+    var propagateDimensionsRate: js.UndefOr[Double]
     var resizeHeight: js.UndefOr[Boolean]
     var resizeWidth: js.UndefOr[Boolean]
-    var size: js.UndefOr[JsNumber]
-    var minSize: js.UndefOr[JsNumber]
-    var maxSize: js.UndefOr[JsNumber]
-    var flex: js.UndefOr[JsNumber]
+    var size: js.UndefOr[Double]
+    var minSize: js.UndefOr[Double]
+    var maxSize: js.UndefOr[Double]
+    var flex: js.UndefOr[Double]
     var direction: js.UndefOr[Direction.JsType]
     var onStartResize: js.UndefOr[js.Function1[ResizeEvent, Unit]]
     var onStopResize: js.UndefOr[js.Function1[ResizeEvent, Unit]]
@@ -79,13 +78,13 @@ object ReflexElement {
 
   protected def rawprops(
     propagateDimensions:     js.UndefOr[Boolean] = js.undefined,
-    propagateDimensionsRate: js.UndefOr[JsNumber] = js.undefined,
+    propagateDimensionsRate: js.UndefOr[Double] = js.undefined,
     resizeHeight:            js.UndefOr[Boolean] = js.undefined,
     resizeWidth:             js.UndefOr[Boolean] = js.undefined,
-    size:                    js.UndefOr[JsNumber] = js.undefined,
-    minSize:                 js.UndefOr[JsNumber] = js.undefined,
-    maxSize:                 js.UndefOr[JsNumber] = js.undefined,
-    flex:                    js.UndefOr[JsNumber] = js.undefined,
+    size:                    js.UndefOr[Double] = js.undefined,
+    minSize:                 js.UndefOr[Double] = js.undefined,
+    maxSize:                 js.UndefOr[Double] = js.undefined,
+    flex:                    js.UndefOr[Double] = js.undefined,
     direction:               js.UndefOr[Direction] = js.undefined,
     onStartResize:           js.UndefOr[ResizeEvent => Callback] = js.undefined,
     onStopResize:            js.UndefOr[ResizeEvent => Callback] = js.undefined,

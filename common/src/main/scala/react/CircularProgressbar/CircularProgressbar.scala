@@ -4,23 +4,22 @@
 package react.CircularProgressbar
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.facade.JsNumber
 import react.common._
 
 import scalajs.js
 import scalajs.js.annotation.JSImport
 
 case class CircularProgressbar(
-  value:             JsNumber,
-  minValue:          js.UndefOr[JsNumber] = js.undefined,
-  maxValue:          js.UndefOr[JsNumber] = js.undefined,
+  value:             Double,
+  minValue:          js.UndefOr[Double] = js.undefined,
+  maxValue:          js.UndefOr[Double] = js.undefined,
   className:         js.UndefOr[String] = js.undefined,
   text:              js.UndefOr[String] = js.undefined,
-  strokeWidth:       js.UndefOr[JsNumber] = js.undefined,
+  strokeWidth:       js.UndefOr[Double] = js.undefined,
   background:        js.UndefOr[Boolean] = js.undefined,
-  backgroundPadding: js.UndefOr[JsNumber] = js.undefined,
+  backgroundPadding: js.UndefOr[Double] = js.undefined,
   counterClockwise:  js.UndefOr[Boolean] = js.undefined,
-  circleRatio:       js.UndefOr[JsNumber] = js.undefined,
+  circleRatio:       js.UndefOr[Double] = js.undefined,
   classes:           js.UndefOr[js.Object] = js.undefined,
   styles:            js.UndefOr[js.Object] = js.undefined
 ) extends GenericComponentP[CircularProgressbar.Props] {
@@ -35,16 +34,16 @@ object CircularProgressbar {
 
   @js.native
   trait Props extends js.Object {
-    var value: JsNumber
-    var minValue: js.UndefOr[JsNumber]
-    var maxValue: js.UndefOr[JsNumber]
+    var value: Double
+    var minValue: js.UndefOr[Double]
+    var maxValue: js.UndefOr[Double]
     var className: js.UndefOr[String]
     var text: js.UndefOr[String]
-    var strokeWidth: js.UndefOr[JsNumber]
+    var strokeWidth: js.UndefOr[Double]
     var background: js.UndefOr[Boolean]
-    var backgroundPadding: js.UndefOr[JsNumber]
+    var backgroundPadding: js.UndefOr[Double]
     var counterClockwise: js.UndefOr[Boolean]
-    var circleRatio: js.UndefOr[JsNumber]
+    var circleRatio: js.UndefOr[Double]
     var classes: js.UndefOr[js.Object]
     var styles: js.UndefOr[js.Object]
   }
@@ -65,16 +64,16 @@ object CircularProgressbar {
     )
 
   protected def rawprops(
-    value:             JsNumber,
-    minValue:          js.UndefOr[JsNumber] = js.undefined,
-    maxValue:          js.UndefOr[JsNumber] = js.undefined,
+    value:             Double,
+    minValue:          js.UndefOr[Double] = js.undefined,
+    maxValue:          js.UndefOr[Double] = js.undefined,
     className:         js.UndefOr[String] = js.undefined,
     text:              js.UndefOr[String] = js.undefined,
-    strokeWidth:       js.UndefOr[JsNumber] = js.undefined,
+    strokeWidth:       js.UndefOr[Double] = js.undefined,
     background:        js.UndefOr[Boolean] = js.undefined,
-    backgroundPadding: js.UndefOr[JsNumber] = js.undefined,
+    backgroundPadding: js.UndefOr[Double] = js.undefined,
     counterClockwise:  js.UndefOr[Boolean] = js.undefined,
-    circleRatio:       js.UndefOr[JsNumber] = js.undefined,
+    circleRatio:       js.UndefOr[Double] = js.undefined,
     classes:           js.UndefOr[js.Object] = js.undefined,
     styles:            js.UndefOr[js.Object] = js.undefined
   ): Props = {

@@ -145,7 +145,8 @@ object AladinContainer {
             }
 
         def updateVisualization(v: JsAladin): Callback = {
-          val size = Size(v.getParentDiv().clientHeight, v.getParentDiv().clientWidth)
+          val size =
+            Size(v.getParentDiv().clientHeight.toDouble, v.getParentDiv().clientWidth.toDouble)
           val div  = v.getParentDiv()
           renderVisualization(div, size, v.pixelScale)
         }
