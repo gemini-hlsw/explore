@@ -201,8 +201,11 @@ jobs:
           stylelint: true
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
+<<<<<<< HEAD
           git_no_verify: true
 >>>>>>> 1b8c3519c (Switch to esbuild)
+=======
+>>>>>>> e68f67a3e (Rebased onto master)
           github_token: ${{ secrets.GITHUB_TOKEN }}
 >>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
@@ -228,8 +231,11 @@ jobs:
           stylelint: true
           stylelint_extensions: css,less
           stylelint_args: common/src/main/webapp/less
+<<<<<<< HEAD
           git_no_verify: true
 >>>>>>> 1b8c3519c (Switch to esbuild)
+=======
+>>>>>>> e68f67a3e (Rebased onto master)
           github_token: ${{ secrets.GITHUB_TOKEN }}
 >>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
