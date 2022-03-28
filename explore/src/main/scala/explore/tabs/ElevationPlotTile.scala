@@ -31,6 +31,7 @@ object ElevationPlotTile {
         .by(
           (coreWidth, coreHeight, coordinates)
         ) { (_: Tile.RenderInTitle) =>
+          println("ABC")
           coordinates.fold(EmptyVdom)(c => SkyPlotSection(c): VdomNode)
         }
         .reuseAlways
