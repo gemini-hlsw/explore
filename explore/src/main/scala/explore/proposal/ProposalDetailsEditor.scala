@@ -23,8 +23,8 @@ import explore.components.ui._
 import explore.implicits._
 import explore.model._
 import explore.model.display._
-import explore.model.enum._
 import explore.model.enum.ProposalClass._
+import explore.model.enum._
 import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._

@@ -11,12 +11,9 @@ import clue.data.syntax._
 import crystal.Pot
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.RemoteSyncUndoableF
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
 import explore.model.enum.Theme
-import explore.undo.UndoContext
-import japgolly.scalajs.react.util.DefaultEffects.{ Async => DefaultA }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -80,25 +77,12 @@ package object utils {
       uri.withPath(uri.path.concat(p))
   }
 
-  type RemoteSyncUndoable[A, T] = RemoteSyncUndoableF[DefaultA, A, T]
-  object RemoteSyncUndoable {
-    def apply[A, T](
-      undoCtx:         UndoContext[A],
-      remoteBaseInput: T,
-      onMod:           T => DefaultA[Unit]
-    ): RemoteSyncUndoable[A, T] =
-      RemoteSyncUndoableF(undoCtx, remoteBaseInput, onMod)
-  }
-
   def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[T] =
     modS =>
       mod {
         case Assign(edit) => modS(edit).assign
         case _            => modS(base).assign
       }
-
-  def reuseOpt2OptReuse[A](reuseOpt: Reuse[Option[A]]): Option[Reuse[A]] =
-    reuseOpt.value.map(a => reuseOpt.map(_ => a))
 }
 
 package utils {

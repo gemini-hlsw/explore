@@ -8,6 +8,7 @@ import coulomb.Quantity
 import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
+import crystal.react.reuse.Reuse
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
@@ -37,7 +38,6 @@ import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.sizes._
-import crystal.react.reuse.Reuse
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,

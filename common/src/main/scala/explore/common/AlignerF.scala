@@ -27,9 +27,9 @@ import org.typelevel.log4cats.Logger
  * fashion, but are not executed until the model is modified.
  *
  * The idea is to keep code to edit the model as simple as possible, while providing a way to
- * compose components that edit different parts of the same model object in an undo context.
+ * compose components that edit different parts of the model in the same undo context.
  */
-trait RemoteSyncUndoableF[F[_], B, S] { self =>
+trait AlignerF[F[_], B, S] { self =>
   protected type _A // Base model type
   protected type _T // Base delta structure type
 
@@ -82,20 +82,20 @@ trait RemoteSyncUndoableF[F[_], B, S] { self =>
     modelGet:  B => C,
     modelMod:  (C => C) => B => B,
     remoteMod: (U => U) => S => S
-  ): RemoteSyncUndoableF[F, C, U] =
-    RemoteSyncUndoableF(_undoCtx,
-                        _remoteBaseInput,
-                        _onMod,
-                        _modelGet.andThen(modelGet),
-                        _modelMod.compose(modelMod),
-                        _remoteMod.compose(remoteMod)
+  ): AlignerF[F, C, U] =
+    AlignerF(_undoCtx,
+             _remoteBaseInput,
+             _onMod,
+             _modelGet.andThen(modelGet),
+             _modelMod.compose(modelMod),
+             _remoteMod.compose(remoteMod)
     )
 
   /** Drill-down specifying model `Lens` and delta structure modification function. */
   def zoom[C, U](
     lens:      Lens[B, C],
     remoteMod: (U => U) => S => S
-  ): RemoteSyncUndoableF[F, C, U] =
+  ): AlignerF[F, C, U] =
     zoom(lens.get, lens.modify, remoteMod)
 
   /**
@@ -106,7 +106,7 @@ trait RemoteSyncUndoableF[F[_], B, S] { self =>
     modelGetOpt: B => Option[C],
     modelMod:    (C => C) => B => B,
     remoteMod:   (U => U) => S => S
-  ): Option[RemoteSyncUndoableF[F, C, U]] =
+  ): Option[AlignerF[F, C, U]] =
     modelGetOpt(get).map(_ => zoom(modelGetOpt.andThen(_.get), modelMod, remoteMod))
 
   /**
@@ -115,7 +115,7 @@ trait RemoteSyncUndoableF[F[_], B, S] { self =>
   def zoomOpt[C, U](
     prism:     Prism[B, C],
     remoteMod: (U => U) => S => S
-  ): Option[RemoteSyncUndoableF[F, C, U]] =
+  ): Option[AlignerF[F, C, U]] =
     zoomOpt(prism.getOption _, prism.modify _, remoteMod)
 
   /**
@@ -125,15 +125,14 @@ trait RemoteSyncUndoableF[F[_], B, S] { self =>
   def zoomOpt[C, U](
     optional:  Optional[B, C],
     remoteMod: (U => U) => S => S
-  ): Option[RemoteSyncUndoableF[F, C, U]] =
+  ): Option[AlignerF[F, C, U]] =
     zoomOpt(optional.getOption _, optional.modify _, remoteMod)
 }
 
-object RemoteSyncUndoableF {
+object AlignerF {
 
   /**
-   * Build a `RemoteSyncUndoableF` for property `B` of base model `A` and property `S` of delta
-   * structure `T`
+   * Build a `AlignerF` for property `B` of base model `A` and property `S` of delta structure `T`
    */
   def apply[F[_], A, B, S, T](
     undoCtx:         UndoContext[A],
@@ -142,8 +141,8 @@ object RemoteSyncUndoableF {
     modelGet:        A => B,
     modelMod:        (B => B) => A => A,
     remoteMod:       (S => S) => T => T
-  ): RemoteSyncUndoableF[F, B, S] =
-    new RemoteSyncUndoableF[F, B, S] {
+  ): AlignerF[F, B, S] =
+    new AlignerF[F, B, S] {
       protected type _A = A
       protected type _T = T
 
@@ -156,20 +155,14 @@ object RemoteSyncUndoableF {
       protected val _remoteMod: (S => S) => T => T = remoteMod
     }
 
-  /** Build a base `RemoteSyncUndoableF` for model `A` and delta structure `T` */
+  /** Build a base `AlignerF` for model `A` and delta structure `T` */
   def apply[F[_], A, T](
     undoCtx:         UndoContext[A],
     remoteBaseInput: T,
     onMod:           T => F[Unit]
-  ): RemoteSyncUndoableF[F, A, T] =
-    RemoteSyncUndoableF[F, A, A, T, T](undoCtx,
-                                       remoteBaseInput,
-                                       onMod,
-                                       identity,
-                                       identity,
-                                       identity
-    )
+  ): AlignerF[F, A, T] =
+    AlignerF[F, A, A, T, T](undoCtx, remoteBaseInput, onMod, identity, identity, identity)
 
-  implicit def reuseRemoteSyncUndoable[F[_], B: Reusability, S]
-    : Reusability[RemoteSyncUndoableF[F, B, S]] = Reusability.by(_.get)
+  implicit def reuseAligner[F[_], B: Reusability, S]: Reusability[AlignerF[F, B, S]] =
+    Reusability.by(_.get)
 }

@@ -9,6 +9,7 @@ import cats.syntax.all._
 import clue.data.syntax._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.schemas.implicits._
@@ -28,7 +29,7 @@ import lucuma.ui.reusability._
 import react.common._
 
 case class SourceProfileEditor(
-  sourceProfile:       Reuse[RemoteSyncUndoable[SourceProfile, SourceProfileInput]],
+  sourceProfile:       ReuseAligner[SourceProfile, SourceProfileInput],
   disabled:            Boolean
 )(implicit val appCtx: AppContextIO)
     extends ReactFnProps[SourceProfileEditor](SourceProfileEditor.component)
@@ -74,14 +75,10 @@ object SourceProfileEditor {
       case Gaussian(_, _) => SourceProfileType.GaussianType
     }
 
-    val gaussianRSUOpt: Option[Reuse[RemoteSyncUndoable[Gaussian, GaussianInput]]] =
-      reuseOpt2OptReuse(
-        props.sourceProfile.map(
-          _.zoomOpt(
-            SourceProfile.gaussian,
-            forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
-          )
-        )
+    val gaussianAlignerOpt: Option[ReuseAligner[Gaussian, GaussianInput]] =
+      props.sourceProfile.zoomOpt(
+        SourceProfile.gaussian,
+        forceAssign(SourceProfileInput.gaussian.modify)(GaussianInput())
       )
 
     React.Fragment(
@@ -93,42 +90,35 @@ object SourceProfileEditor {
         )
       ),
       <.span,
-      reuseOpt2OptReuse(
-        props.sourceProfile.map(
-          _.zoomOpt(
-            SourceProfile.point.andThen(Point.spectralDefinition),
-            forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
-          )
+      props.sourceProfile
+        .zoomOpt(
+          SourceProfile.point.andThen(Point.spectralDefinition),
+          forceAssign(SourceProfileInput.point.modify)(SpectralDefinitionIntegratedInput())
         )
-      )
         .map(pointSpectralDefinitionAccess =>
           IntegratedSpectralDefinitionEditor(pointSpectralDefinitionAccess)
         ),
-      reuseOpt2OptReuse(
-        props.sourceProfile
-          .map(
-            _.zoomOpt(
-              SourceProfile.uniform.andThen(Uniform.spectralDefinition),
-              forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
-            )
-          )
-      )
+      props.sourceProfile
+        .zoomOpt(
+          SourceProfile.uniform.andThen(Uniform.spectralDefinition),
+          forceAssign(SourceProfileInput.uniform.modify)(SpectralDefinitionSurfaceInput())
+        )
         .map(uniformSpectralDefinitionAccess =>
           SurfaceSpectralDefinitionEditor(uniformSpectralDefinitionAccess)
         ),
-      gaussianRSUOpt
-        .map(gaussianRSU =>
+      gaussianAlignerOpt
+        .map(gaussianAligner =>
           React.Fragment(
             <.label("FWHM", ExploreStyles.SkipToNext),
             InputWithUnits( // FWHM is positive arcsec accepting decimals
-              gaussianRSU.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
+              gaussianAligner.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
               angleValidFormatInput,
               ChangeAuditor.fromValidFormatInput(angleValidFormatInput).denyNeg,
               id = "fwhm",
               units = "arcsec"
             ),
             IntegratedSpectralDefinitionEditor(
-              gaussianRSU.map(
+              gaussianAligner.map(
                 _.zoom(
                   Gaussian.spectralDefinition,
                   forceAssign(GaussianInput.spectralDefinition.modify)(
