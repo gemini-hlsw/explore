@@ -13,8 +13,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
-import explore.common.SimbadSearch
-import explore.common.TargetQueriesGQL
+import explore.common._
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -35,6 +34,7 @@ import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math._
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB.Types._
@@ -49,7 +49,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
-import lucuma.core.model.SourceProfile
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -128,9 +127,9 @@ object SiderealTargetEditor {
           val reuseRemoteOnMod =
             Reuse(getRemoteOnMod _)(props.id, props.obsIdSubset, cloning, props.onClone)
 
-          val siderealTargetRSU: Reuse[RemoteSyncUndoable[Target.Sidereal, EditTargetInput]] =
+          val siderealTargetAligner: ReuseAligner[Target.Sidereal, EditTargetInput] =
             undoCtx.zipMap(reuseRemoteOnMod)((ctx, remoteOnMod) =>
-              RemoteSyncUndoable(
+              Aligner(
                 ctx,
                 EditTargetInput(targetId = props.id),
                 remoteOnMod
@@ -138,7 +137,7 @@ object SiderealTargetEditor {
             )
 
           val allView: ReuseView[Target.Sidereal] =
-            siderealTargetRSU.map(
+            siderealTargetAligner.map(
               _.viewMod(t =>
                 EditTargetInput.name.replace(t.name.assign) >>>
                   EditTargetInput.sidereal.replace(t.toInput.assign) >>>
@@ -150,85 +149,73 @@ object SiderealTargetEditor {
             forceAssign(EditTargetInput.sidereal.modify)(SiderealInput())
 
           val coordsRAView: ReuseView[RightAscension] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
-                .view(_.toInput.assign)
-            )
+            siderealTargetAligner
+              .zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
+              .view(_.toInput.assign)
 
           val coordsDecView: ReuseView[Declination] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.baseDec,
-                     siderealToTargetEndo.compose(SiderealInput.dec.modify)
-              )
-                .view(_.toInput.assign)
-            )
+            siderealTargetAligner
+              .zoom(Target.Sidereal.baseDec, siderealToTargetEndo.compose(SiderealInput.dec.modify))
+              .view(_.toInput.assign)
 
           val epochView: ReuseView[Epoch] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.epoch,
-                     siderealToTargetEndo.compose(SiderealInput.epoch.modify)
-              )
-                .view((Epoch.fromString.reverseGet _).andThen(_.assign))
-            )
+            siderealTargetAligner
+              .zoom(Target.Sidereal.epoch, siderealToTargetEndo.compose(SiderealInput.epoch.modify))
+              .view((Epoch.fromString.reverseGet _).andThen(_.assign))
 
           val nameView: ReuseView[NonEmptyString] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.name, EditTargetInput.name.modify)
-                .view(_.assign)
-            )
+            siderealTargetAligner
+              .zoom(Target.Sidereal.name, EditTargetInput.name.modify)
+              .view(_.assign)
 
           val properMotionRAView: ReuseView[Option[ProperMotion.RA]] =
-            siderealTargetRSU.map(
-              _.zoom(
+            siderealTargetAligner
+              .zoom(
                 Target.Sidereal.properMotionRA.getOption,
                 (f: Endo[Option[ProperMotion.RA]]) =>
                   Target.Sidereal.properMotionRA.modify(unsafeOptionFnUnlift(f)),
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
-                .view((pmRA: Option[ProperMotion.RA]) =>
-                  buildProperMotion(pmRA, Target.Sidereal.properMotionDec.getOption(target))
-                    .map(_.toInput)
-                    .orUnassign
-                )
-            )
+              .view((pmRA: Option[ProperMotion.RA]) =>
+                buildProperMotion(pmRA, Target.Sidereal.properMotionDec.getOption(target))
+                  .map(_.toInput)
+                  .orUnassign
+              )
 
           val properMotionDecView: ReuseView[Option[ProperMotion.Dec]] =
-            siderealTargetRSU.map(
-              _.zoom(
+            siderealTargetAligner
+              .zoom(
                 Target.Sidereal.properMotionDec.getOption,
                 (f: Endo[Option[ProperMotion.Dec]]) =>
                   Target.Sidereal.properMotionDec.modify(unsafeOptionFnUnlift(f)),
                 siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
               )
-                .view((pmDec: Option[ProperMotion.Dec]) =>
-                  buildProperMotion(Target.Sidereal.properMotionRA.getOption(target), pmDec)
-                    .map(_.toInput)
-                    .orUnassign
-                )
-            )
+              .view((pmDec: Option[ProperMotion.Dec]) =>
+                buildProperMotion(Target.Sidereal.properMotionRA.getOption(target), pmDec)
+                  .map(_.toInput)
+                  .orUnassign
+              )
 
           val parallaxView: ReuseView[Option[Parallax]] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.parallax,
-                     siderealToTargetEndo.compose(SiderealInput.parallax.modify)
+            siderealTargetAligner
+              .zoom(
+                Target.Sidereal.parallax,
+                siderealToTargetEndo.compose(SiderealInput.parallax.modify)
               )
-                .view(_.map(_.toInput).orUnassign)
-            )
+              .view(_.map(_.toInput).orUnassign)
 
           val radialVelocityView: ReuseView[Option[RadialVelocity]] =
-            siderealTargetRSU.map(
-              _.zoom(Target.Sidereal.radialVelocity,
-                     siderealToTargetEndo.compose(SiderealInput.radialVelocity.modify)
+            siderealTargetAligner
+              .zoom(
+                Target.Sidereal.radialVelocity,
+                siderealToTargetEndo.compose(SiderealInput.radialVelocity.modify)
               )
-                .view(_.map(_.toInput).orUnassign)
-            )
+              .view(_.map(_.toInput).orUnassign)
 
-          val sourceProfileRSU: Reuse[RemoteSyncUndoable[SourceProfile, SourceProfileInput]] =
-            siderealTargetRSU.map(
-              _.zoom(
-                Target.Sidereal.sourceProfile,
-                forceAssign(EditTargetInput.sourceProfile.modify)(SourceProfileInput())
-              )
+          val sourceProfileAligner: ReuseAligner[SourceProfile, SourceProfileInput] =
+            siderealTargetAligner.zoom(
+              Target.Sidereal.sourceProfile,
+              forceAssign(EditTargetInput.sourceProfile.modify)(SourceProfileInput())
             )
 
           def searchAndSet(
@@ -347,7 +334,7 @@ object SiderealTargetEditor {
                 ExploreStyles.Grid,
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
-                SourceProfileEditor(sourceProfileRSU, disabled = disabled)
+                SourceProfileEditor(sourceProfileAligner, disabled = disabled)
               )
             )
           )

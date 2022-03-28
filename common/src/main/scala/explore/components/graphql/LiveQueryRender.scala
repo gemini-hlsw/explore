@@ -18,6 +18,7 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^._
 import org.typelevel.log4cats.Logger
 import react.common._
+
 import scala.reflect.ClassTag
 
 final case class LiveQueryRender[S, D, A](

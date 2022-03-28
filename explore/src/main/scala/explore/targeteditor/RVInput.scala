@@ -16,7 +16,9 @@ import explore.model.conversions._
 import explore.model.formats._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
@@ -28,8 +30,6 @@ import monocle.Focus
 import react.common._
 import react.common.implicits._
 import react.semanticui.elements.label.LabelPointing
-import lucuma.core.math.Redshift
-import lucuma.core.math.ApparentRadialVelocity
 
 final case class RVInput(
   rv:       ReuseView[Option[RadialVelocity]],

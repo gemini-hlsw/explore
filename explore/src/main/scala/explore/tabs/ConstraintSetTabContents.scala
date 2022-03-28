@@ -6,9 +6,10 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
+import crystal.react.View
+import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
-import crystal.react.hooks._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
@@ -44,7 +45,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import crystal.react.View
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],

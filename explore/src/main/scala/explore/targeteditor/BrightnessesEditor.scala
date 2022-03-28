@@ -9,6 +9,7 @@ import crystal.react._
 import crystal.react.hooks._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -22,6 +23,7 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional._
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.forms.FormInputEV
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
@@ -35,8 +37,6 @@ import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
-import lucuma.ui.forms.FormInputEV
-import eu.timepit.refined.types.string.NonEmptyString
 
 sealed trait BrightnessesEditor[T] {
   val brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[T]]]

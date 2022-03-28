@@ -8,6 +8,7 @@ import coulomb.Quantity
 import crystal.react.ReuseView
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -20,6 +21,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.FilterType
+import lucuma.core.math.Angle
 import lucuma.core.math.units._
 import lucuma.core.util.Display
 import lucuma.ui.forms.EnumViewOptionalSelect
@@ -35,8 +37,6 @@ import spire.math.Rational
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import lucuma.core.math.Angle
-import eu.timepit.refined.types.numeric.PosBigDecimal
 
 final case class ImagingConfigurationPanel(
   options: ReuseView[ImagingConfigurationOptions]

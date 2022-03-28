@@ -3,10 +3,13 @@
 
 package explore.config
 
+import coulomb.Quantity
 import coulomb.cats.implicits._
 import crystal.react.ReuseView
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.numeric.PosBigDecimal
+import eu.timepit.refined.types.numeric.PosInt
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -18,6 +21,9 @@ import explore.targeteditor.InputWithUnits
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.FocalPlane
+import lucuma.core.enum.SpectroscopyCapabilities
+import lucuma.core.math.Angle
 import lucuma.core.math.units._
 import lucuma.ui.forms.EnumViewOptionalSelect
 import lucuma.ui.forms.FormInputEV
@@ -25,12 +31,6 @@ import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import react.common._
-import coulomb.Quantity
-import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import lucuma.core.math.Angle
-import lucuma.core.enum.FocalPlane
-import lucuma.core.enum.SpectroscopyCapabilities
 
 final case class SpectroscopyConfigurationPanel(
   options: ReuseView[SpectroscopyConfigurationOptions]
