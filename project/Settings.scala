@@ -15,7 +15,7 @@ object Settings {
     val crystal           = "0.23.0"
     val discipline        = "1.4.0"
     val disciplineMUnit   = "1.0.9"
-    val fs2               = "3.2.5"
+    val fs2               = "3.2.6"
     val fs2Data           = "1.3.1"
     val geminiLocales     = "0.7.0"
     val http4s            = "0.23.11"
