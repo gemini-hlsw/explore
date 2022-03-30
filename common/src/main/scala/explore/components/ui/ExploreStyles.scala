@@ -263,6 +263,7 @@ object ExploreStyles {
   val ConfigurationFilter: Css       = Css("explore-configuration-filter")
   val ConfigurationFilterItem: Css   = Css("explore-configuration-filter-item")
   val ExploreTable: Css              = Css("explore-table")
+  val Virtualized: Css               = Css("virtualized")
   val TableRowSelected: Css          = Css("explore-table-row-selected")
   val ModesTableTitle: Css           = Css("explore-modes-table-title")
   val ModesHeader: Css               = Css("explore-modes-header")
