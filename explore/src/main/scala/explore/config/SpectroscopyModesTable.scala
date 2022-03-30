@@ -524,8 +524,9 @@ object SpectroscopyModesTable {
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(
-              <.label(s"${rows.length} matching configurations",
-                      HelpIcon("configuration/table.md")
+              <.label(
+                s"${rows.length} matching configurations",
+                HelpIcon("configuration/table.md")
               ),
               <.div(
                 errLabel.toTagMod
@@ -535,10 +536,12 @@ object SpectroscopyModesTable {
               ExploreStyles.ExploreTable,
               ModesTable
                 .Component(
-                  table = Table(celled = true,
-                                selectable = true,
-                                striped = true,
-                                compact = TableCompact.Very
+                  table = Table(
+                    celled = true,
+                    selectable = true,
+                    striped = true,
+                    compact = TableCompact.Very,
+                    clazz = ExploreStyles.Virtualized
                   )(),
                   header = true,
                   headerCell = (c: ModesTableDef.ColumnType) =>

@@ -61,20 +61,16 @@ object ITCRequests {
     cache:         ViewF[F, ItcResultsCache],
     progress:      ViewF[F, Option[Progress]]
   ): F[Unit] = {
-    def itcResults(
-      r: List[ItcResults]
-    ): List[(Long, Int, EitherNec[ItcQueryProblems, ItcResult])] =
+    def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
-      r.toList
-        .flatMap(x =>
-          x.spectroscopy.flatMap(_.results).map { r =>
-            r.itc match {
-              case ItcError(m)      => (Long.MinValue, 0, ItcQueryProblems.GenericError(m).leftNec)
-              case ItcSuccess(e, t) =>
-                (t.microseconds, e, ItcResult.Result(t.microseconds.microseconds, e).rightNec)
-            }
+      r.flatMap(x =>
+        x.spectroscopy.flatMap(_.results).map { r =>
+          r.itc match {
+            case ItcError(m)      => ItcQueryProblems.GenericError(m).leftNec
+            case ItcSuccess(e, t) => ItcResult.Result(t.microseconds.microseconds, e).rightNec
           }
-        )
+        }
+      )
 
     // Find the magnitude closest to the requested wavelength
     def selectedBrightness(
@@ -125,12 +121,17 @@ object ITCRequests {
               )
           }
           .parSequence
-          .flatTap(r =>
-            Logger[F].debug(
-              s"ITC: Result for mode ${request.mode}: ${itcResults(r)
-                .map(r => s"${r._2} x ${r._1.microseconds.toSeconds} s")}"
-            )
-          )
+          .flatTap { r =>
+            val prefix = s"ITC: Result for mode ${request.mode}:"
+            itcResults(r).traverse(_ match {
+              case Left(errors)                                     =>
+                Logger[F].error(s"$prefix ERRORS: $errors")
+              case Right(ItcResult.Result(exposureTime, exposures)) =>
+                Logger[F].debug(s"$prefix $exposures x ${exposureTime.toSeconds}")
+              case Right(other)                                     =>
+                Logger[F].debug(s"$prefix $other")
+            })
+          }
           .flatMap(callback)
     val itcRowsParams = modes
       .map(_.instrument)
@@ -157,10 +158,12 @@ object ITCRequests {
           params,
           { r =>
             // Convert to usable types and update the cache
-            val update: EitherNec[ItcQueryProblems, ItcResult] = itcResults(r)
+            val update: EitherNec[ItcQueryProblems, ItcResult] =
               // There maybe multiple targets, take the one with the max time
-              .maxBy(_._1)
-              ._3
+              itcResults(r).maxBy {
+                case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
+                case _                                        => Long.MinValue
+              }
             // Put the results in the cache
             cache.mod(ItcResultsCache.cache.modify(_ + (params -> update)))
           }
