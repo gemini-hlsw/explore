@@ -121,17 +121,17 @@ object ITCRequests {
               )
           }
           .parSequence
-          .flatTap(r =>
-            Logger[F].debug(
-              s"ITC: Result for mode ${request.mode}: ${itcResults(r)
-                .map {
-                  case Left(error)                                      => s"ERRORS: $error"
-                  case Right(ItcResult.Result(exposureTime, exposures)) =>
-                    s"$exposures x ${exposureTime.toSeconds}"
-                  case Right(other)                                     => other.toString
-                }}"
-            )
-          )
+          .flatTap { r =>
+            val prefix = s"ITC: Result for mode ${request.mode}:"
+            itcResults(r).traverse(_ match {
+              case Left(errors)                                     =>
+                Logger[F].error(s"$prefix ERRORS: $errors")
+              case Right(ItcResult.Result(exposureTime, exposures)) =>
+                Logger[F].debug(s"$prefix $exposures x ${exposureTime.toSeconds}")
+              case Right(other)                                     =>
+                Logger[F].debug(s"$prefix $other")
+            })
+          }
           .flatMap(callback)
     val itcRowsParams = modes
       .map(_.instrument)
