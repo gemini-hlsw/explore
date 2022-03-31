@@ -121,14 +121,14 @@ object ObsList {
               ),
               UndoButtons(undoCtx, size = Mini, disabled = adding.get)
             ),
+            <.div(
+              Button(onClick = props.focusedObs.set(none), clazz = ExploreStyles.ButtonSummary)(
+                Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
+                "Observations Summary"
+              )
+            ),
             <.div(ExploreStyles.ObsTree)(
               <.div(ExploreStyles.ObsScrollTree)(
-                <.div(
-                  Button(onClick = props.focusedObs.set(none), clazz = ExploreStyles.ButtonSummary)(
-                    Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
-                    "Observations Summary"
-                  )
-                ),
                 observations.toTagMod { obs =>
                   val focusedObs = obs.id
                   val selected   = props.focusedObs.get.exists(_ === focusedObs)
