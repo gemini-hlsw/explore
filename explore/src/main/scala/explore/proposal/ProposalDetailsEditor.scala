@@ -9,9 +9,7 @@ import cats.syntax.all._
 import coulomb._
 import coulomb.accepted._
 import coulomb.refined._
-import crystal.ViewF
 import crystal.react.ReuseView
-import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -266,7 +264,7 @@ object ProposalDetailsEditor {
     }
 
     def render(props: Props, state: State) = {
-      val splitsZoom = ViewF.fromStateWithReuse($).zoom(State.splits)
+      val splitsZoom = ReuseView.fromState($).zoom(State.splits)
 
       val details = props.proposalDetails
 

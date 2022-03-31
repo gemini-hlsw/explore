@@ -380,7 +380,7 @@ object TargetTabContents {
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
             )
 
-          asterismView.map(_.zoom(optional))
+          asterismView.zoom(optional)
         }
 
       val asterismEditorTile =

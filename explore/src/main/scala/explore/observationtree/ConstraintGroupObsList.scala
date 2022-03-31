@@ -6,9 +6,8 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
-import crystal.ViewF
 import crystal.react.ReuseView
-import crystal.react.implicits._
+import crystal.react.View
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.components.ui.ExploreStyles
@@ -117,7 +116,7 @@ object ConstraintGroupObsList {
 
       val constraintGroups = props.constraintsWithObs.get.constraintGroups.map(_._2)
 
-      val state   = ViewF.fromState($)
+      val state   = View.fromState($)
       val undoCtx = UndoContext(
         props.undoStacks,
         props.constraintsWithObs.zoom(ConstraintSummaryWithObervations.constraintGroups)

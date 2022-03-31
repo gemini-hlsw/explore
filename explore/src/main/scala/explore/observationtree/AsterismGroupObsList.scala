@@ -6,9 +6,8 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all._
 import clue.TransactionalClient
-import crystal.ViewF
 import crystal.react.ReuseView
-import crystal.react.implicits._
+import crystal.react.View
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.components.ui.ExploreStyles
@@ -148,7 +147,7 @@ object AsterismGroupObsList {
       val asterismGroups = props.asterismsWithObs.get.asterismGroups.map(_._2)
       val targetGroupMap = props.asterismsWithObs.get.targetGroups
 
-      val state   = ViewF.fromState($)
+      val state   = View.fromState($)
       val undoCtx = UndoContext(
         props.undoStacks,
         props.asterismsWithObs
