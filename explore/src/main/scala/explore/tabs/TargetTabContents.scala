@@ -145,15 +145,15 @@ object TargetTabContents {
     targetGroupMap.get(targetId).fold(0)(tg => (tg.obsIds -- obsIds.toSortedSet).size)
 
   protected def renderFn(
-    props:                Props,
-    panels:               ReuseView[TwoPanelState[TargetOrObsSet]],
-    options:              ReuseView[TargetVisualOptions],
-    defaultLayouts:       LayoutsMap,
-    layouts:              ReuseView[LayoutsMap],
-    resize:               UseResizeDetectorReturn,
-    debouncer:            Reusable[UseSingleEffect[IO]],
-    asterismGroupWithObs: ReuseView[AsterismGroupsWithObs]
-  )(implicit ctx:         AppContextIO): VdomNode = {
+    props:                 Props,
+    panels:                ReuseView[TwoPanelState[TargetOrObsSet]],
+    options:               ReuseView[TargetVisualOptions],
+    defaultLayouts:        LayoutsMap,
+    layouts:               ReuseView[LayoutsMap],
+    resize:                UseResizeDetectorReturn,
+    debouncer:             Reusable[UseSingleEffect[IO]],
+    asterismGroupsWithObs: ReuseView[AsterismGroupsWithObs]
+  )(implicit ctx:          AppContextIO): VdomNode = {
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         panels.zoom(treeWidthLens).set(d.size.width.toDouble) *>
@@ -164,10 +164,10 @@ object TargetTabContents {
             )
             .runAsyncAndForget
 
-    val treeWidth    = panels.get.treeWidth.toInt
-    val selectedView = panels.zoom(selectedLens)
+    val treeWidth: Int                                         = panels.get.treeWidth.toInt
+    val selectedView: ReuseView[SelectedPanel[TargetOrObsSet]] = panels.zoom(selectedLens)
 
-    val targetMap = asterismGroupWithObs.map(_.get.targetGroups)
+    val targetMap: Reuse[TargetGroupList] = asterismGroupsWithObs.map(_.get.targetGroups)
 
     // Tree area
     def tree(objectsWithObs: ReuseView[AsterismGroupsWithObs]) =
@@ -201,7 +201,7 @@ object TargetTabContents {
       targetId:      Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
-      findAsterismGroup(obsIdSet, asterismGroupWithObs.get.asterismGroups)
+      findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         focusedObs.set(obsId.some) >>
@@ -268,10 +268,11 @@ object TargetTabContents {
               TargetSummaryTable(
                 targets,
                 hiddenColumns,
-                Reuse(selectObservationAndTarget _)(focusedObs,
-                                                    focusedTarget,
-                                                    expandedIds,
-                                                    selectedView
+                Reuse(selectObservationAndTarget _)(
+                  focusedObs,
+                  focusedTarget,
+                  expandedIds,
+                  selectedView
                 ),
                 Reuse.currying(focusedObs, selectedView).in(selectTarget _),
                 renderInTitle
@@ -297,9 +298,11 @@ object TargetTabContents {
       val groupIds   = asterismGroup.obsIds
       val targetIds  = asterismGroup.targetIds
 
-      val asterism = targetIds.toList.map(id => targetMap.get(id).map(_.targetWithId)).flatten
+      val asterism: List[TargetWithId] =
+        targetIds.toList.map(id => targetMap.get(id).map(_.targetWithId)).flatten
 
       val getAsterism: AsterismGroupsWithObs => List[TargetWithId] = _ => asterism
+
       def modAsterism(
         mod: List[TargetWithId] => List[TargetWithId]
       ): AsterismGroupsWithObs => AsterismGroupsWithObs = agwo => {
@@ -356,10 +359,13 @@ object TargetTabContents {
         agwo.copy(asterismGroups = updatedAsterismGroups, targetGroups = updatedTargetGroups)
       }
 
-      val asterismView: ReuseView[List[TargetWithId]] = asterismGroupWithObs.map(
-        _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-          .zoom(getAsterism)(modAsterism)
-      )
+      val asterismView: ReuseView[List[TargetWithId]] =
+        asterismGroupsWithObs
+          .map(
+            _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+              .zoom(getAsterism)(modAsterism)
+          )
+          .addReuseByFrom(panels)
 
       val title = focusedObs match {
         case Some(id) => s"Observation $id"
@@ -427,7 +433,7 @@ object TargetTabContents {
         )
 
       val targetView: ReuseView[Target.Sidereal] =
-        asterismGroupWithObs.map(
+        asterismGroupsWithObs.map(
           _.zoom(AsterismGroupsWithObs.targetGroups).zoom(getTarget)(modTarget)
         )
 
@@ -463,23 +469,25 @@ object TargetTabContents {
     }
 
     val selectedPanel = panels.get.selected
-    val rightSide     = selectedPanel.optValue
-      .fold(renderSummary) {
-        _ match {
-          case Left(targetId) =>
-            targetMap
-              .get(targetId)
-              .fold(renderSummary)(_.targetWithId.target match {
-                case Nonsidereal(_, _, _)     => <.div("Editing of Non-Sidereal targets not supported")
-                case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
-              })
-          case Right(obsIds)  =>
-            findAsterismGroup(obsIds, asterismGroupWithObs.get.asterismGroups)
-              .fold(renderSummary) { asterismGroup =>
-                renderAsterismEditor(obsIds, asterismGroup)
-              }
+    val rightSide     =
+      selectedPanel.optValue
+        .fold(renderSummary) {
+          _ match {
+            case Left(targetId) =>
+              targetMap
+                .get(targetId)
+                .fold(renderSummary)(_.targetWithId.target match {
+                  case Nonsidereal(_, _, _)     =>
+                    <.div("Editing of Non-Sidereal targets not supported")
+                  case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
+                })
+            case Right(obsIds)  =>
+              findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
+                .fold(renderSummary) { asterismGroup =>
+                  renderAsterismEditor(obsIds, asterismGroup)
+                }
+          }
         }
-      }
 
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable
@@ -487,7 +495,7 @@ object TargetTabContents {
     val body = if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
-        <.div(ExploreStyles.Tree, treeInner(asterismGroupWithObs))
+        <.div(ExploreStyles.Tree, treeInner(asterismGroupsWithObs))
           .when(selectedPanel.leftPanelVisible),
         <.div(^.key := "target-right-side", ExploreStyles.SinglePanelTile)(
           rightSide
@@ -504,7 +512,7 @@ object TargetTabContents {
           maxConstraints = (coreWidth / 2, 0),
           onResize = panelsResize,
           resizeHandles = List(ResizeHandleAxis.East),
-          content = tree(asterismGroupWithObs),
+          content = tree(asterismGroupsWithObs),
           clazz = ExploreStyles.ResizableSeparator
         ),
         <.div(^.key   := "target-right-side",
