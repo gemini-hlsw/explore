@@ -18,9 +18,11 @@ import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.display._
+import explore.model.enum.AppTab
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
@@ -42,7 +44,7 @@ import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: ReuseView[ConstraintSummaryWithObervations],
-  focusedObs:         ReuseView[Option[Observation.Id]],
+  focusedObs:         Option[Observation.Id],
   selected:           ReuseView[SelectedPanel[ObsIdSet]],
   expandedIds:        ReuseView[SortedSet[ObsIdSet]],
   undoStacks:         ReuseView[UndoStacks[IO, ConstraintGroupList]]
@@ -149,6 +151,9 @@ object ConstraintGroupObsList {
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.selected.get.optValue.exists(_.contains(obsId))
 
+      def setObs(obsId: Option[Observation.Id]): Callback =
+        ctx.setPage(AppTab.Constraints, obsId, none)
+
       def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
         props.selected.set(SelectedPanel.editor(obsIdSet))
 
@@ -156,15 +161,15 @@ object ConstraintGroupObsList {
         setSelectedPanelToSet(ObsIdSet.one(obsId))
 
       def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        props.focusedObs.set(obsId.some) >> setSelectedPanelToSingle(obsId)
+        setObs(obsId.some) >> setSelectedPanelToSingle(obsId)
 
       def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
         val focused = obsIdSet.single
-        props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
+        setObs(focused) >> setSelectedPanelToSet(obsIdSet)
       }
 
       def clearSelectedPanelAndObs: Callback =
-        props.focusedObs.set(none) >> props.selected.set(SelectedPanel.tree)
+        setObs(none) >> props.selected.set(SelectedPanel.tree)
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
         props.selected.get.optValue.fold(setSelectedPanelAndObs(obsId)) { selectedIds =>
@@ -223,10 +228,7 @@ object ConstraintGroupObsList {
                   )
                   .orEmpty
               )(^.cursor.pointer,
-                ^.onClick --> {
-                  props.focusedObs.set(none) >>
-                    props.selected.set(SelectedPanel.editor(constraintGroup.obsIds))
-                }
+                ^.onClick --> setSelectedPanelAndObsToSet(constraintGroup.obsIds)
               )(
                 csHeader,
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
@@ -236,7 +238,7 @@ object ConstraintGroupObsList {
                       highlightSelected = true,
                       forceHighlight = isObsSelected(obs.id),
                       linkToObsTab = false,
-                      onSelect = setSelectedPanelToSingle,
+                      onSelect = setSelectedPanelAndObs,
                       onCtrlClick = id => handleCtrlClick(id, obsIds)
                     )(obs, idx)
                   }
@@ -255,8 +257,7 @@ object ConstraintGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick =
-                     props.focusedObs.set(none) >> props.selected.set(SelectedPanel.summary),
+            Button(onClick = setObs(none) >> props.selected.set(SelectedPanel.summary),
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -284,16 +285,16 @@ object ConstraintGroupObsList {
       val expandedIds        = $.props.expandedIds
       val selected           = $.props.selected
 
-      // Unfocus if focused element is not there
-      val unfocus = $.props.focusedObs.mod(_.flatMap {
-        case obsId if !observations.contains(obsId) => none
-        case other                                  => other.some
-      })
+      // Unfocus the observation if it doesn't exist
+      val unfocus = $.props.focusedObs.foldMap(obsId =>
+        if (observations.contains(obsId)) Callback.empty
+        else $.props.ctx.setPageVia(AppTab.Constraints, none, none, SetRouteVia.HistoryReplace)
+      )
 
       val setAndGetSelected = selected.get match {
         case Uninitialized =>
           val infoFromFocused: Option[(Observation.Id, ConstraintGroup)] =
-            $.props.focusedObs.get.flatMap(obsId =>
+            $.props.focusedObs.flatMap(obsId =>
               constraintGroups.find(_._1.contains(obsId)).map { case (_, cg) => (obsId, cg) }
             )
 

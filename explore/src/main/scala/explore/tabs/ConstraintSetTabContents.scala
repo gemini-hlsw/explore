@@ -48,7 +48,7 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
-  focusedObs:       ReuseView[Option[Observation.Id]],
+  focusedObs:       Option[Observation.Id],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   listUndoStacks:   ReuseView[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
@@ -125,7 +125,7 @@ object ConstraintSetTabContents {
 
       // If we're editing at the group level (even a group of 1) and it no longer exists
       // (probably due to a merger), just go to the summary.
-      val updateSelection = props.focusedObs.get match {
+      val updateSelection = props.focusedObs match {
         case Some(_) => Callback.empty
         case None    =>
           groupList
@@ -235,7 +235,7 @@ object ConstraintSetTabContents {
         val csUndo: ReuseView[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-        val title = props.focusedObs.get match {
+        val title = props.focusedObs match {
           case Some(id) => s"Observation $id"
           case None     =>
             val titleSfx = if (idsToEdit.size == 1) "" else "s"

@@ -13,7 +13,6 @@ import explore.model._
 import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
-import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
@@ -38,38 +37,40 @@ object Routing {
       )
     }
 
-  private def targetTab(model: ReuseView[RootModel]): VdomElement =
-    AppCtx.using(implicit ctx =>
+  private def targetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
+    AppCtx.using { implicit ctx =>
+      val routingInfo = RoutingInfo.from(page)
       TargetTabContents(
         model.zoom(RootModel.userId).get,
-        model.zoom(RootModel.focusedObs),
-        model.zoom(RootModel.focusedTarget),
+        routingInfo.focusedObs,
+        routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
         model.zoom(RootModel.targetSummaryHiddenColumns)
       )
-    )
+    }
 
-  private def obsTab(model: ReuseView[RootModel]): VdomElement =
-    AppCtx.using(implicit ctx =>
+  private def obsTab(page: Page, model: ReuseView[RootModel]): VdomElement =
+    AppCtx.using { implicit ctx =>
+      val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
         model.zoom(RootModel.userId),
-        model.zoom(RootModel.focusedObs),
-        model.zoom(RootModel.focusedTarget),
+        routingInfo.focusedObs,
+        routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
         model.zoom(RootModel.targetSummaryHiddenColumns)
       )
-    )
+    }
 
-  private def constraintSetTab(model: ReuseView[RootModel]): VdomElement =
+  private def constraintSetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
     withSize(size =>
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
-          model.zoom(RootModel.focusedObs),
+          RoutingInfo.from(page).focusedObs,
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
@@ -96,47 +97,38 @@ object Routing {
           | staticRoute("/proposal", ProposalPage) ~> render(
             AppCtx.using(implicit ctx => ProposalTabContents())
           )
-          | staticRoute("/observations", ObservationsBasePage) ~> renderP(obsTab)
+          | staticRoute("/observations", ObservationsBasePage) ~> renderP(
+            obsTab(ObservationsBasePage, _)
+          )
           | dynamicRouteCT(
             ("/observation" / id[Observation.Id] / "target" / id[Target.Id])
               .xmapL(ObsTargetPage.iso)
-          ) ~> renderP(
-            obsTab
-          )
-          | dynamicRouteCT(("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)) ~> renderP(
-            obsTab
-          )
-          | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab)
+          ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+          | dynamicRouteCT(
+            ("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)
+          ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+          | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab(TargetsBasePage, _))
           | dynamicRouteCT(
             ("/target" / id[Target.Id]).xmapL(TargetPage.targetId)
-          ) ~> renderP(
-            targetTab
-          )
+          ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
+          | dynamicRouteCT(
+            ("/targets/obs" / id[Observation.Id] / "target" / id[Target.Id])
+              .xmapL(TargetWithObsPage.iso)
+          ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
           | dynamicRouteCT(
             ("/targets/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
-          ) ~> renderP(
-            targetTab
-          )
+          ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
-          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP(constraintSetTab)
+          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP {
+            constraintSetTab(ConstraintsBasePage, _)
+          }
           | dynamicRouteCT(
             ("/constraints/obs" / id[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
-          ) ~> renderP(constraintSetTab))
+          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) })
 
       val configuration =
         rules
           .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
-          .onPostRenderP {
-            case (prev, next, view)
-                if prev.exists(_ =!= next) &&
-                  // Short circuit if we get here because of a change in the model.
-                  next =!= view.zoom(RootModelRouting.lens).get =>
-              view.zoom(RootModelRouting.lens).set(next)
-            case (None, next, view) =>
-              // Set the model if none was previously set
-              view.zoom(RootModelRouting.lens).set(next)
-            case _                  => Callback.empty
-          }
           .renderWithP(layout)
       // .logToConsole
 
@@ -153,6 +145,7 @@ object Routing {
             ObsPage(randomId(Observation.Id.fromLong)),
             ObsTargetPage(randomId(Observation.Id.fromLong), randomId(Target.Id.fromLong)),
             TargetsBasePage,
+            TargetWithObsPage(randomId(Observation.Id.fromLong), randomId(Target.Id.fromLong)),
             TargetsObsPage(randomId(Observation.Id.fromLong)),
             TargetPage(randomId(Target.Id.fromLong)),
             ConfigurationsPage,

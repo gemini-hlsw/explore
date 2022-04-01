@@ -19,6 +19,7 @@ import explore.model.SelectedPanel
 import explore.model.SelectedPanel.Editor
 import explore.model.TargetGroup
 import explore.undo._
+import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -169,7 +170,7 @@ object AsterismGroupObsListActions {
 
   private def updateSelected(
     selected:   View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
-    focusedObs: View[Option[Observation.Id]],
+    setObs:     Option[Observation.Id] => Callback,
     draggedIds: ObsIdSet,
     optDestIds: Option[ObsIdSet]
   ) = {
@@ -181,14 +182,14 @@ object AsterismGroupObsListActions {
         case Editor(_) => Editor(ids.asRight)
         case _         => panel
       }
-    ) >> focusedObs.set(focused)
+    ) >> setObs(focused)
   }
 
   def dropObservations(
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
     selected:    View[SelectedPanel[Either[Target.Id, ObsIdSet]]],
-    focusedObs:  View[Option[Observation.Id]]
+    setObs:      Option[Observation.Id] => Callback
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
     Action(getter = obsDropGetter(draggedIds), setter = obsDropSetter(draggedIds))(
       onSet = (agwo, oAsterismGroup) =>
@@ -198,7 +199,7 @@ object AsterismGroupObsListActions {
             agwo.asterismGroups.findWithTargetIds(asterismGroup.targetIds).map(_.obsIds)
           AsterismQueries.replaceAsterism[IO](draggedIds.toList, asterismGroup.targetIds.toList) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
-            updateSelected(selected, focusedObs, draggedIds, optDestIds).to[IO]
+            updateSelected(selected, setObs, draggedIds, optDestIds).to[IO]
         }
     )
 

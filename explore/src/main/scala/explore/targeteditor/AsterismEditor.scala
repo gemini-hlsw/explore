@@ -26,6 +26,7 @@ import queries.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
@@ -42,7 +43,8 @@ final case class AsterismEditor(
   userId:           User.Id,
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
-  selectedTargetId: ReuseView[Option[Target.Id]],
+  currentTarget:    Option[Target.Id],
+  setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
   otherObsCount:    Target.Id ==> Int,
   undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:        ReuseView[Set[Target.Id]],
@@ -79,13 +81,13 @@ object AsterismEditor {
   }
 
   private def onCloneTarget(
-    id:       Target.Id,
-    asterism: ReuseView[List[TargetWithId]],
-    selected: ReuseView[Option[Target.Id]],
-    newTwid:  TargetWithId
+    id:        Target.Id,
+    asterism:  ReuseView[List[TargetWithId]],
+    setTarget: (Option[Target.Id], SetRouteVia) ==> Callback,
+    newTwid:   TargetWithId
   ): Callback =
-    asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >> selected
-      .set(newTwid.id.some)
+    asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
+      setTarget(newTwid.id.some, SetRouteVia.HistoryReplace)
 
   protected val component =
     ScalaFnComponent
@@ -94,12 +96,13 @@ object AsterismEditor {
       .useStateViewWithReuse(false)
       // edit target in current obs only (0), or all "instances" of the target (1)
       .useState(0)
-      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.selectedTargetId))(
-        (props, _, _) => { case (asterism, oTargetId) =>
+      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.currentTarget, props.setTarget))(
+        (_, _, _) => { case (asterism, oTargetId, setTarget) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
-          oTargetId.get
+          // Need to replace history here.
+          oTargetId
             .flatMap(id => if (asterism.get.exists(_.id === id)) id.some else none)
-            .fold(props.selectedTargetId.set(asterism.get.headOption.map(_.id)))(_ =>
+            .fold(setTarget(asterism.get.headOption.map(_.id), SetRouteVia.HistoryReplace))(_ =>
               Callback.empty
             )
         }
@@ -107,7 +110,16 @@ object AsterismEditor {
       .renderWithReuse { (props, adding, editScope) =>
         implicit val ctx = props.ctx
 
-        val selectedTargetId = props.selectedTargetId
+        val targetView: ReuseView[Option[Target.Id]] =
+          Reuse.by(props.currentTarget, props.setTarget)(
+            View[Option[Target.Id]](
+              props.currentTarget,
+              { (f, cb) =>
+                val newValue = f(props.currentTarget)
+                props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
+              }
+            )
+          )
 
         React.Fragment(
           props.renderInTitle(
@@ -125,13 +137,13 @@ object AsterismEditor {
                 )
               ),
               onSelected = Reuse
-                .by((props.obsIds, props.asterism, selectedTargetId))(_ match {
+                .by((props.obsIds, props.asterism, targetView))(_ match {
                   case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
                     insertSiderealTarget(props.obsIds,
                                          props.asterism,
                                          oid,
                                          t,
-                                         selectedTargetId,
+                                         targetView,
                                          adding
                     ).runAsync
                   case _                                                     => Callback.empty
@@ -142,10 +154,10 @@ object AsterismEditor {
             props.obsIds,
             props.asterism,
             props.hiddenColumns,
-            selectedTargetId,
+            targetView,
             props.renderInTitle
           ),
-          selectedTargetId.get
+          props.currentTarget
             .flatMap[VdomElement] { targetId =>
               val optional =
                 Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(
@@ -191,7 +203,7 @@ object AsterismEditor {
                         props.searching,
                         props.options,
                         onClone = Reuse
-                          .currying(targetId, props.asterism, props.selectedTargetId)
+                          .currying(targetId, props.asterism, props.setTarget)
                           .in(onCloneTarget _),
                         obsIdSubset =
                           if (otherObsCount > 0 && editScope.value === 0) props.obsIds.some

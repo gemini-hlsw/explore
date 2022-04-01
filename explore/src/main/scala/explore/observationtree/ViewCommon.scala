@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.syntax.all._
-import crystal.react.ReuseView
 import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
@@ -17,7 +16,7 @@ import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
-  def focusedObs: ReuseView[Option[Observation.Id]]
+  def focusedObs: Option[Observation.Id]
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -26,15 +25,15 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      selected = forceHighlight || (highlightSelected && focusedObs.get.exists(_ === obs.id))
+      selected = forceHighlight || (highlightSelected && focusedObs.exists(_ === obs.id))
     )
 
   def renderObsBadgeItem(
     selectable:        Boolean,
+    onSelect:          Observation.Id => Callback,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
-    onSelect:          Observation.Id => Callback = _ => Callback.empty,
     onCtrlClick:       Observation.Id => Callback = _ => Callback.empty
   )(
     obs:               ObsSummary,
@@ -50,8 +49,7 @@ trait ViewCommon {
             e.stopPropagationCB >>
               (if (e.ctrlKey || e.metaKey)
                  onCtrlClick(obs.id)
-               else
-                 (focusedObs.set(obs.id.some) >> onSelect(obs.id)))
+               else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>

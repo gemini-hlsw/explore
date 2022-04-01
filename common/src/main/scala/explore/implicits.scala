@@ -11,7 +11,6 @@ import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
 import explore.model.AppContext
-import explore.model.RootModel
 import explore.optics._
 import queries.schemas._
 import japgolly.scalajs.react._
@@ -132,12 +131,6 @@ object implicits extends ShorthandTypes with ListImplicits with ContextImplicits
   implicit class CoulombReuseViewOptOps[F[_], N, U](val self: ReuseViewOptF[F, Quantity[N, U]])
       extends AnyVal {
     def stripQuantity(implicit F: Monad[F]): ReuseViewOptF[F, N] = self.as(quantityIso[N, U])
-  }
-
-  // Model implicits
-  implicit class RootModelOps(val rootModel: RootModel) extends AnyVal {
-    def url[F[_]](implicit ctx: AppContext[F]): String =
-      ctx.pageUrl(rootModel.tabs.focus, rootModel.focusedObs, rootModel.focusedTarget)
   }
 
   // React implicits

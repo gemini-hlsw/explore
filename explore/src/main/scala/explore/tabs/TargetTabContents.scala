@@ -32,6 +32,7 @@ import explore.syntax.ui._
 import explore.targets.TargetSummaryTable
 import explore.undo._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -58,8 +59,8 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        ReuseView[Option[Observation.Id]],
-  focusedTarget:     ReuseView[Option[Target.Id]],
+  focusedObs:        Option[Observation.Id],
+  focusedTarget:     Option[Target.Id],
   listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:         ReuseView[Set[Target.Id]],
@@ -154,6 +155,7 @@ object TargetTabContents {
     debouncer:             Reusable[UseSingleEffect[IO]],
     asterismGroupsWithObs: ReuseView[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
+
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
         panels.zoom(treeWidthLens).set(d.size.width.toDouble) *>
@@ -192,9 +194,10 @@ object TargetTabContents {
       agl:    AsterismGroupList
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
+    def setPage(obsId: Option[Observation.Id], targetId: Option[Target.Id]): Callback =
+      props.ctx.setPage(AppTab.Targets, obsId, targetId)
+
     def selectObservationAndTarget(
-      focusedObs:    ReuseView[Option[Observation.Id]],
-      focusedTarget: ReuseView[Option[Target.Id]],
       expandedIds:   ReuseView[SortedSet[ObsIdSet]],
       selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       obsId:         Observation.Id,
@@ -204,17 +207,16 @@ object TargetTabContents {
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
-        focusedObs.set(obsId.some) >>
-        focusedTarget.set(targetId.some) >>
-        selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
+        setPage(obsId.some, targetId.some)
+      selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
     def selectTarget(
-      focusedObs:    ReuseView[Option[Observation.Id]],
       selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
       targetId:      Target.Id
     ): Callback =
-      focusedObs.set(none) >> selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
+      setPage(none, targetId.some) >>
+        selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -259,22 +261,18 @@ object TargetTabContents {
           .currying(
             targetMap,
             props.hiddenColumns,
-            props.focusedObs,
-            props.focusedTarget,
             props.expandedIds
           )
-          .in((targets, hiddenColumns, focusedObs, focusedTarget, expandedIds) =>
+          .in((targets, hiddenColumns, expandedIds) =>
             (renderInTitle: Tile.RenderInTitle) =>
               TargetSummaryTable(
                 targets,
                 hiddenColumns,
                 Reuse(selectObservationAndTarget _)(
-                  focusedObs,
-                  focusedTarget,
                   expandedIds,
                   selectedView
                 ),
-                Reuse.currying(focusedObs, selectedView).in(selectTarget _),
+                Reuse.currying(selectedView).in(selectTarget _),
                 renderInTitle
               ): VdomNode
           )
@@ -294,7 +292,7 @@ object TargetTabContents {
      *   edit.
      */
     def renderAsterismEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
-      val focusedObs = props.focusedObs.get
+      val focusedObs = props.focusedObs
       val groupIds   = asterismGroup.obsIds
       val targetIds  = asterismGroup.targetIds
 
@@ -374,7 +372,7 @@ object TargetTabContents {
       }
 
       val selectedTarget: Option[ReuseViewOpt[Target]] =
-        props.focusedTarget.get.map { targetId =>
+        props.focusedTarget.map { targetId =>
           val optional =
             Optional[List[TargetWithId], Target](_.find(_.id === targetId).map(_.target))(target =>
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
@@ -383,12 +381,23 @@ object TargetTabContents {
           asterismView.zoom(optional)
         }
 
+      def setCurrentTarget(
+        oids: ObsIdSet,
+        tid:  Option[Target.Id],
+        via:  SetRouteVia
+      ): Callback = {
+        val oid = oids.single
+        // it doesn't make sense here to have the target id in the url if there isn't an obsid.
+        ctx.setPageVia(AppTab.Targets, oid, oid.flatMap(_ => tid), via)
+      }
+
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
           props.userId,
           idsToEdit,
           Pot(asterismView),
           props.focusedTarget,
+          Reuse(setCurrentTarget _)(idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
           props.targetsUndoStacks,
           props.searching,
@@ -539,10 +548,10 @@ object TargetTabContents {
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
       }
       .useEffectWithDepsBy((p, _, _, r, _, _) => (p.userId, r.height)) {
-        (props, panels, _, _, layout, defaultLayout) =>
-          implicit val ctx = props.ctx
-          (params: (Option[User.Id], Option[Int])) => {
-            val (u, h) = params
+        (props, panels, _, _, layout, defaultLayout) => (params: (Option[User.Id], Option[Int])) =>
+          {
+            implicit val ctx = props.ctx
+            val (u, h)       = params
             TabGridPreferencesQuery
               .queryWithDefault[IO](u,
                                     GridLayoutSection.TargetLayout,

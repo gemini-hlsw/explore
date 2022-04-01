@@ -20,6 +20,7 @@ import queries.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.Effect
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -107,6 +108,7 @@ case class AppContext[F[_]](
   sso:         SSOClient[F],
   pageUrl:     (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
   setPage:     (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback,
+  setPageVia:  (AppTab, Option[Observation.Id], Option[Target.Id], SetRouteVia) => Callback,
   environment: ExecutionEnvironment
 )(implicit
   val F:       Applicative[F],
@@ -119,7 +121,8 @@ object AppContext {
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
-    setPage:              (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback
+    setPage:              (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback,
+    setPageVia:           (AppTab, Option[Observation.Id], Option[Target.Id], SetRouteVia) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -135,6 +138,7 @@ object AppContext {
                           SSOClient(config.sso),
                           pageUrl,
                           setPage,
+                          setPageVia,
                           config.environment
     )
 }

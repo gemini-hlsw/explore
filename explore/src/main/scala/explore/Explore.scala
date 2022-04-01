@@ -20,7 +20,7 @@ import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.RootModel
-import explore.model.RootModelRouting
+import explore.model.RoutingInfo
 import explore.model.UserVault
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
@@ -32,7 +32,6 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
-import lucuma.core.data.EnumZipper
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import org.http4s.circe._
@@ -68,7 +67,6 @@ object ExploreMain extends IOApp.Simple {
 
     def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) = RootModel(
       vault = vault,
-      tabs = EnumZipper.of[AppTab],
       localPreferences = pref
     )
 
@@ -139,14 +137,9 @@ object ExploreMain extends IOApp.Simple {
         val (router, routerCtl) =
           RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-        def routingView(view: ReuseView[RootModel]): ReuseView[RootModel] =
-          view.withOnMod { model =>
-            routerCtl.set(RootModelRouting.lens.get(model))
-          }
-
         def rootComponent(view: ReuseView[RootModel]): VdomElement =
           <.div(
-            router(routingView(view))
+            router(view)
           )
 
         def pageUrl(
@@ -154,14 +147,22 @@ object ExploreMain extends IOApp.Simple {
           focusedObs:    Option[Observation.Id],
           focusedTarget: Option[Target.Id]
         ): String =
-          routerCtl.urlFor(RootModelRouting.getPage(tab, focusedObs, focusedTarget)).value
+          routerCtl.urlFor(RoutingInfo.getPage(tab, focusedObs, focusedTarget)).value
 
         def setPage(
           tab:           AppTab,
           focusedObs:    Option[Observation.Id],
           focusedTarget: Option[Target.Id]
         ) =
-          routerCtl.set(RootModelRouting.getPage(tab, focusedObs, focusedTarget))
+          routerCtl.set(RoutingInfo.getPage(tab, focusedObs, focusedTarget))
+
+        def setPageVia(
+          tab:           AppTab,
+          focusedObs:    Option[Observation.Id],
+          focusedTarget: Option[Target.Id],
+          via:           SetRouteVia
+        ) =
+          routerCtl.set(RoutingInfo.getPage(tab, focusedObs, focusedTarget), via)
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)
@@ -169,7 +170,7 @@ object ExploreMain extends IOApp.Simple {
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
           ctx                  <-
-            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage)
+            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, setPageVia)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {

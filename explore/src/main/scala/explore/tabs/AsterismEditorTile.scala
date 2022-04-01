@@ -17,6 +17,8 @@ import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
 import explore.undo.UndoStacks
 import explore.utils._
+import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -26,26 +28,28 @@ import react.common._
 object AsterismEditorTile {
 
   def asterismEditorTile(
-    userId:           Option[User.Id],
-    obsId:            ObsIdSet,
-    asterismPot:      Pot[ReuseView[List[TargetWithId]]],
-    selectedTargetId: ReuseView[Option[Target.Id]],
-    otherObsCount:    Target.Id ==> Int,
-    undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:        ReuseView[Set[Target.Id]],
-    options:          ReuseView[TargetVisualOptions],
-    title:            String,
-    backButton:       Option[Reuse[VdomNode]] = None,
-    hiddenColumns:    ReuseView[Set[String]],
-    width:            Int,
-    height:           Int
-  )(implicit ctx:     AppContextIO) =
+    userId:        Option[User.Id],
+    obsId:         ObsIdSet,
+    asterismPot:   Pot[ReuseView[List[TargetWithId]]],
+    currentTarget: Option[Target.Id],
+    setTarget:     (Option[Target.Id], SetRouteVia) ==> Callback,
+    otherObsCount: Target.Id ==> Int,
+    undoStacks:    ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:     ReuseView[Set[Target.Id]],
+    options:       ReuseView[TargetVisualOptions],
+    title:         String,
+    backButton:    Option[Reuse[VdomNode]] = None,
+    hiddenColumns: ReuseView[Set[String]],
+    width:         Int,
+    height:        Int
+  )(implicit ctx:  AppContextIO) =
     Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
       Reuse.by(
         (userId,
          obsId,
          asterismPot,
-         selectedTargetId,
+         currentTarget,
+         setTarget,
          otherObsCount,
          undoStacks,
          searching,
@@ -62,7 +66,8 @@ object AsterismEditorTile {
                 AsterismEditor(uid,
                                obsId,
                                asterism,
-                               selectedTargetId,
+                               currentTarget,
+                               setTarget,
                                otherObsCount,
                                undoStacks,
                                searching,

@@ -4,10 +4,8 @@
 package explore.observationtree
 
 import cats.effect.IO
-import cats.syntax.all._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.View
 import crystal.react.implicits._
 import queries.common.ObsQueriesGQL._
 import explore.data.KeyedIndexedList
@@ -16,6 +14,7 @@ import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.optics.GetAdjust
 import explore.undo.Action
 import explore.undo.KIListMod
+import japgolly.scalajs.react.Callback
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
@@ -62,7 +61,7 @@ object ObsListActions {
         .void
   )
 
-  def obsExistence(obsId: Observation.Id, focusedObs: View[Option[Observation.Id]])(implicit
+  def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(implicit
     c:                    TransactionalClient[IO, ObservationDB]
   ) =
     Action(
@@ -73,14 +72,14 @@ object ObsListActions {
           ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
           // Not much to do here, the observation must be created before we get here
-          focusedObs.set(obs.id.some).to[IO]
+          setObs(obs.id).to[IO]
         },
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.fold {
           ProgramDeleteObservation.execute[IO](obsId).void
         } { case (obs, _) =>
           ProgramUndeleteObservation.execute[IO](obs.id).void >>
-            focusedObs.set(obs.id.some).to[IO]
+            setObs(obs.id).to[IO]
         }
     )
 }
