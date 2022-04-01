@@ -1057,7 +1057,7 @@ tfoot {
 .edit-warning {
   padding: 5px !important; // important to override SUI's style.
   position: absolute !important; // important to override SUI's style.
-  z-index: 99999;
+  z-index: 2000;
   width: 100%;
 }
 
@@ -1287,7 +1287,7 @@ img.partner-split-flag {
   th,
   .th {
     border: 0 !important;
-    text-transform: none;
+    text-transform: none !important;
     white-space: nowrap;
   }
 
@@ -1893,6 +1893,7 @@ html {
 .explore-select-columns {
   .menu {
     max-height: 30em !important;
+    z-index: 3000;
 
     .item {
       font-size: small !important;
@@ -2103,14 +2104,14 @@ th.sticky-column, .th.sticky-column {
   position: sticky;
 
   &.sticky-header {
-    z-index: 10000;
+    z-index: 1000;
   }
 }
 
 th.sticky-header, .th.sticky-header {
   position: sticky;
   top: 0;
-  z-index: 9999;
+  z-index: 900;
 }
 
 
