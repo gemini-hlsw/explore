@@ -246,7 +246,7 @@ jobs:
           cat common/src/main/webapp/less/vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v1.12.0
         with:
           stylelint: true
           stylelint_extensions: css,less
@@ -260,7 +260,7 @@ jobs:
           cat common/src/main/webapp/less/vars.css
 
       - name: Run linters in light mode
-        uses: wearerequired/lint-action@v1.11.1
+        uses: wearerequired/lint-action@v1.12.0
         with:
           stylelint: true
           stylelint_extensions: css,less
