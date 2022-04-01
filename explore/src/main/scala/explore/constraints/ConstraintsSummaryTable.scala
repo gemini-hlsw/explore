@@ -69,7 +69,7 @@ object ConstraintsSummaryTable {
   )
 
   private val columnClasses: Map[String, Css] = Map(
-    "edit" -> (ExploreStyles.Sticky |+| ExploreStyles.ConstraintsSummaryEdit)
+    "edit" -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
   )
 
   private def toSortingRules(tuples: List[(String, Boolean)]) = tuples.map { case (id, b) =>
@@ -230,12 +230,14 @@ object ConstraintsSummaryTable {
             )(),
             header = true,
             headerCell = (col: ConstraintsTable.ColumnType) =>
-              TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
+              TableHeaderCell(clazz =
+                columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
+              )(
                 ^.textTransform.none,
                 ^.whiteSpace.nowrap
               ),
             cell = (cell: ConstraintsTable.CellType[_]) =>
-              TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+              TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
                 ^.whiteSpace.nowrap
               )
           )(tableInstance)

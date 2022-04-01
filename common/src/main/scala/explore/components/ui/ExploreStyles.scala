@@ -284,7 +284,8 @@ object ExploreStyles {
 
   val SharedEditWarning: Css = Css("explore-shared-edit-warning")
 
-  val Sticky: Css                  = Css("sticky")
+  val StickyColumn: Css            = Css("sticky-column")
+  val StickyHeader: Css            = Css("sticky-header")
   val TargetSummaryDelete: Css     = Css("explore-target-summary-delete")
   val TargetSummarySelect: Css     = Css("explore-target-summary-select")
   val TargetSummaryId: Css         = Css("explore-target-summary-id")

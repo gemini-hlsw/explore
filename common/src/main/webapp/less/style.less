@@ -1287,11 +1287,14 @@ img.partner-split-flag {
   th,
   .th {
     border: 0 !important;
+    text-transform: none;
+    white-space: nowrap;
   }
 
   td,
   .td {
     border: 0 !important;
+    white-space: nowrap;
   }
 
   .scroll-button {
@@ -2091,16 +2094,27 @@ svg[focusable="false"]:focus {
   overflow-y: auto;
 }
 
-td.sticky,
-th.sticky {
+td.sticky-column, .td.sticky-column {
   position: sticky;
-}
-
-td.sticky {
   clip-path: inset(2px 0); // Avoids overwriting the box-shadow.
 }
 
-.ui.table tr.explore-table-row-selected td.sticky {
+th.sticky-column, .th.sticky-column {
+  position: sticky;
+
+  &.sticky-header {
+    z-index: 10000;
+  }
+}
+
+th.sticky-header, .th.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+
+.ui.table tr.explore-table-row-selected td.sticky-column, .ui.table tr.explore-table-row-selected .td.sticky-column {
   background-color: var(
     --table-selected-background
   ) !important; // Important overrides regular row background color.
@@ -2125,15 +2139,15 @@ td.sticky {
   }
 }
 
-.ui.striped.table tr:nth-child(2n + 1) td.sticky {
+.ui.striped.table tr:nth-child(2n + 1) td.sticky-column, .ui.striped.table tr:nth-child(2n + 1) .td.sticky-column {
   background-color: var(--table-background);
 }
 
-.ui.striped.table tr:nth-child(2n) td.sticky {
+.ui.striped.table tr:nth-child(2n) td.sticky-column, .ui.striped.table tr:nth-child(2n) .td.sticky-column {
   background-color: var(--table-striped-background);
 }
 
-.ui.striped.table tr:hover td.sticky {
+.ui.striped.table tr:hover td.sticky-column, .ui.striped.table tr:hover .td.sticky-column {
   background: var(--table-selectable-background);
   color: var(--table-selectable-color);
 }

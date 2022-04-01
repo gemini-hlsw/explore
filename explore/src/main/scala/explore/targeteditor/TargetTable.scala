@@ -61,9 +61,9 @@ object TargetTable {
   ) ++ TargetColumns.allColNames
 
   private val columnClasses: Map[String, Css] = Map(
-    "delete" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryDelete),
-    "type"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithDelete),
-    "name"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithDelete)
+    "delete" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryDelete),
+    "type"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithDelete),
+    "name"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithDelete)
   )
 
   private def deleteSiderealTarget(
@@ -169,9 +169,11 @@ object TargetTable {
               )(),
               header = true,
               headerRow = (headerRow: TargetTable.HeaderGroupType) =>
-                TableRow(clazz = columnClasses.get(headerRow.id.toString).orUndefined),
+                TableRow(clazz = columnClasses.get(headerRow.id.toString).orEmpty),
               headerCell = (col: TargetTable.ColumnType) =>
-                TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
+                TableHeaderCell(clazz =
+                  columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
+                )(
                   ^.textTransform.none,
                   ^.whiteSpace.nowrap
                 ),
