@@ -21,8 +21,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.sizes
 import reactST.reactTable._
 
-import scalajs.js.JSConverters._
-
 final case class TargetSelectionTable(
   targets:       List[TargetSearchResult],
   onSelected:    TargetSearchResult ==> Callback,
