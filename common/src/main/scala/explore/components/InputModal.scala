@@ -3,8 +3,7 @@
 
 package explore.components
 
-import crystal.ViewF
-import crystal.react.implicits._
+import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
@@ -49,7 +48,7 @@ object InputModal {
 
   protected class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val valueView = ViewF.fromState($).zoom(State.inputValue)
+      val valueView = View.fromState($).zoom(State.inputValue)
 
       val cleanInput = $.setStateL(State.inputValue)("")
 

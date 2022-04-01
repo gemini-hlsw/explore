@@ -4,9 +4,8 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.ReuseView
-import crystal.react.implicits._
+import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
@@ -83,7 +82,7 @@ object RVInput {
 
   class Backend($ : BackendScope[Props, State]) {
     def render(props: Props, state: State) = {
-      val rvView   = ViewF.fromState($).zoom(State.rvView)
+      val rvView   = View.fromState($).zoom(State.rvView)
       val errorCss = ExploreStyles.InputErrorTooltip
       val baseCss  = ExploreStyles.Grow(1) |+| ExploreStyles.WarningInput.when_(
         props.rv.get.isEmpty

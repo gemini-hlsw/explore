@@ -4,9 +4,8 @@
 package explore.targeteditor
 
 import cats.syntax.all._
-import crystal.ViewF
 import crystal.react.ReuseView
-import crystal.react.implicits._
+import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.cats._
@@ -119,7 +118,7 @@ object SearchForm {
         <.label("Name", HelpIcon("target/main/search-target.md"), ExploreStyles.SkipToNext),
         FormInputEV(
           id = "search",
-          value = ViewF.fromState($).zoom(State.searchTerm),
+          value = View.fromState($).zoom(State.searchTerm),
           validFormat = ValidFormatInput.nonEmptyValidFormat,
           error = state.searchError.orUndefined,
           loading = disabled,

@@ -82,7 +82,8 @@ object SiderealTargetEditor {
   def readonlyView[A](view: ReuseView[A]): ReuseView[A] = {
     val getA: A => A               = identity
     val noModA: (A => A) => A => A = _ => identity
-    view.map(_.zoom(getA)(noModA))
+
+    view.zoom(getA)(noModA)
   }
 
   def getRemoteOnMod(
@@ -267,7 +268,7 @@ object SiderealTargetEditor {
                 <.label("RA", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
                 FormInputEV[ReuseView, TruncatedRA](
                   id = "ra",
-                  value = coordsRAView.map(_.zoomSplitEpi(TruncatedRA.rightAscension)),
+                  value = coordsRAView.zoomSplitEpi(TruncatedRA.rightAscension),
                   validFormat = ValidFormatInput.truncatedRA,
                   changeAuditor = ChangeAuditor.truncatedRA,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
@@ -278,7 +279,7 @@ object SiderealTargetEditor {
                 <.label("Dec", HelpIcon("target/main/coordinates.md"), ExploreStyles.SkipToNext),
                 FormInputEV[ReuseView, TruncatedDec](
                   id = "dec",
-                  value = coordsDecView.map(_.zoomSplitEpi(TruncatedDec.declination)),
+                  value = coordsDecView.zoomSplitEpi(TruncatedDec.declination),
                   validFormat = ValidFormatInput.truncatedDec,
                   changeAuditor = ChangeAuditor.truncatedDec,
                   clazz = ExploreStyles.TargetRaDecMinWidth,
