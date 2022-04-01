@@ -40,9 +40,9 @@ object TargetSelectionTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
-    "select" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummarySelect),
-    "type"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
-    "name"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
+    "select" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummarySelect),
+    "type"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithSelect),
+    "name"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithSelect)
   )
 
   protected val component = ScalaFnComponent
@@ -92,7 +92,7 @@ object TargetSelectionTable {
         )(),
         header = true,
         headerCell = (col: TargetTable.ColumnType) =>
-          TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
+          TableHeaderCell(clazz = columnClasses.get(col.id.toString).orEmpty)(
             ^.textTransform.none,
             ^.whiteSpace.nowrap
           ),
@@ -106,7 +106,7 @@ object TargetSelectionTable {
             props2Attrs(rowData.getRowProps())
           ),
         cell = (cell: TargetTable.CellType[_]) =>
-          TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
+          TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)(
             ^.whiteSpace.nowrap
           )
       )(tableInstance)

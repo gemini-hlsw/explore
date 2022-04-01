@@ -47,9 +47,9 @@ object TargetSummaryTable {
   protected val TargetTableComponent = new SUITable(TargetTable)
 
   private val columnClasses: Map[String, Css] = Map(
-    "id"   -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryId),
-    "type" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
-    "name" -> (ExploreStyles.Sticky |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
+    "id"   -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
+    "type" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType |+| ExploreStyles.WithId),
+    "name" -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName |+| ExploreStyles.WithId)
   )
 
   protected val component =
@@ -161,14 +161,11 @@ object TargetSummaryTable {
             )(),
             header = true,
             headerCell = (col: TargetTable.ColumnType) =>
-              TableHeaderCell(clazz = columnClasses.get(col.id.toString).orUndefined)(
-                ^.textTransform.none,
-                ^.whiteSpace.nowrap
+              TableHeaderCell(clazz =
+                columnClasses.get(col.id.toString).orEmpty |+| ExploreStyles.StickyHeader
               ),
             cell = (cell: TargetTable.CellType[_]) =>
-              TableCell(clazz = columnClasses.get(cell.column.id.toString).orUndefined)(
-                ^.whiteSpace.nowrap
-              )
+              TableCell(clazz = columnClasses.get(cell.column.id.toString).orEmpty)
           )(tableInstance)
         )
       )

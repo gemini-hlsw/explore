@@ -545,7 +545,9 @@ object SpectroscopyModesTable {
                   )(),
                   header = true,
                   headerCell = (c: ModesTableDef.ColumnType) =>
-                    TableHeaderCell(clazz = ExploreStyles.Sticky |+| ExploreStyles.ModesHeader)(
+                    TableHeaderCell(clazz =
+                      ExploreStyles.StickyColumn |+| ExploreStyles.ModesHeader
+                    )(
                       ^.textTransform.capitalize.when(c.id.toString =!= ResolutionColumnId.value),
                       ^.textTransform.none.when(c.id.toString === ResolutionColumnId.value)
                     ),
