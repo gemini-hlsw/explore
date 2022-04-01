@@ -107,3 +107,11 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 .plot-sky-brightness-percentile {
   stroke-dasharray: 3, 5;
 }
+
+.plot-sky-brightness-band {
+  stroke-width: 0;
+}
+
+.plot-sky-brightness-band-label {
+  fill: #7cb5ec;
+}
