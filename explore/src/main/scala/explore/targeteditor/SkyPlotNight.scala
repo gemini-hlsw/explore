@@ -122,38 +122,44 @@ object SkyPlotNight {
     s"$degrees°$minutes′$seconds″"
   }
 
-  private val skyBrightnessPercentiles =
-    List(
+  private val skyBrightnessPercentileLines = {
+    def plotLine(id: String, value: Double) =
       YAxisPlotLinesOptions()
-        .setId("sky-brightness-20")
-        .setLabel(
-          YAxisPlotLinesLabelOptions().setText("20%").setAlign(AlignValue.right)
-        )
-        .setValue(21.37)
-        .setClassName("plot-sky-brightness-percentile")
-        .setDashStyle(DashStyleValue.Dot)
-        .setZIndex(1),
-      YAxisPlotLinesOptions()
-        .setId("sky-brightness-50")
-        .setLabel(
-          YAxisPlotLinesLabelOptions().setText("50%").setAlign(AlignValue.right)
-        )
-        .setValue(20.78)
-        .setClassName("plot-sky-brightness-percentile")
-        .setDashStyle(DashStyleValue.Dot)
-        .setZIndex(1),
-      YAxisPlotLinesOptions()
-        .setId("sky-brightness-80")
-        .setLabel(
-          YAxisPlotLinesLabelOptions()
-            .setText("80%")
-            .setAlign(AlignValue.right)
-        )
-        .setValue(19.61)
+        .setId(s"sky-brightness-$id")
+        .setValue(value)
         .setClassName("plot-sky-brightness-percentile")
         .setDashStyle(DashStyleValue.Dot)
         .setZIndex(1)
+
+    List(
+      plotLine("20", 21.37),
+      plotLine("50", 20.78),
+      plotLine("80", 19.61)
     )
+  }
+
+  private val skyBrightnessPercentileBands = {
+    def plotBand(id: String, label: String, from: Double, to: Double) =
+      YAxisPlotBandsOptions()
+        .setId(s"sky-brightness-$id")
+        .setLabel(
+          YAxisPlotBandsLabelOptions()
+            .setText(s"<span class='plot-sky-brightness-band-label'>$label</span>")
+            .setVerticalAlign(VerticalAlignValue.middle)
+            .setAlign(AlignValue.right)
+        )
+        .setFrom(from)
+        .setTo(to)
+        .setClassName("plot-sky-brightness-band")
+        .setZIndex(1)
+
+    List(
+      plotBand("darketst", "Darkest", 21.37, 22),
+      plotBand("dark", "Dark", 20.78, 21.37),
+      plotBand("gray", "Gray", 19.61, 20.78),
+      plotBand("bright", "Bright", 17, 19.61)
+    )
+  }
 
   implicit val reusabilityUseResizeDetectorReturn: Reusability[UseResizeDetectorReturn] =
     Reusability.never
@@ -166,20 +172,23 @@ object SkyPlotNight {
       .renderWithReuse { (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ + series) >>
-            Callback(
-              skyBrightnessPercentiles
-                .foreach(line => chart.yAxis(2).addPlotLine(line))
-            )
+            Callback {
+              skyBrightnessPercentileLines.foreach(line => chart.yAxis(2).addPlotLine(line))
+              skyBrightnessPercentileBands.foreach(band => chart.yAxis(2).addPlotBand(band))
+            }
               .when(series === ElevationSeries.SkyBrightness)
               .void
 
         def hideSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ - series) >>
-            Callback(
-              skyBrightnessPercentiles
+            Callback {
+              skyBrightnessPercentileLines
                 .flatMap(_.id.toList)
                 .foreach(id => chart.yAxis(2).removePlotLine(id))
-            )
+              skyBrightnessPercentileBands
+                .flatMap(_.id.toList)
+                .foreach(id => chart.yAxis(2).removePlotBand(id))
+            }
               .when(series === ElevationSeries.SkyBrightness)
               .void
 
@@ -352,7 +361,13 @@ object SkyPlotNight {
                 .setLabels(YAxisLabelsOptions().setFormat("{value}"))
                 .setPlotLines(
                   if (shownSeries.value.contains(ElevationSeries.SkyBrightness))
-                    skyBrightnessPercentiles.toJSArray
+                    skyBrightnessPercentileLines.toJSArray
+                  else
+                    js.Array()
+                )
+                .setPlotBands(
+                  if (shownSeries.value.contains(ElevationSeries.SkyBrightness))
+                    skyBrightnessPercentileBands.toJSArray
                   else
                     js.Array()
                 )
