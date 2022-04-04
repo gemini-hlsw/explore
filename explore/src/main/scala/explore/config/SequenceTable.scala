@@ -77,7 +77,7 @@ object SequenceTable {
     lazy val disperserName: Option[String]    =
       step.instrumentConfig.grating.map(grating => resolver.disperserName(grating.disperser))
     lazy val fpuName: Option[String]          =
-      step.instrumentConfig.fpu.map(fpu => resolver.fpuName(fpu.builtin))
+      step.instrumentConfig.fpu.flatMap(_.builtin).map(resolver.fpuName)
     lazy val filterName: Option[String]       =
       step.instrumentConfig.filter.map(resolver.filterName)
   }

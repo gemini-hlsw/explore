@@ -63,11 +63,11 @@ object ObsQueriesGQL {
               skyBackground
               waterVapor
               elevationRange {
-                airmassRange {
+                airMass {
                   min
                   max
                 }
-                hourAngleRange {
+                hourAngle {
                   minHours
                   maxHours
                 }
@@ -379,11 +379,11 @@ object ObsQueriesGQL {
             skyBackground
             waterVapor
             elevationRange {
-              airmassRange {
+              airMass {
                 min
                 max
               }
-              hourAngleRange {
+              hourAngle {
                 minHours
                 maxHours
               }

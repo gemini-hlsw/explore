@@ -29,11 +29,11 @@ object ConstraintGroupQueriesGQL {
               skyBackground
               waterVapor
               elevationRange {
-                airmassRange {
+                airMass {
                   min
                   max
                 }
-                hourAngleRange {
+                hourAngle {
                   minHours
                   maxHours
                 }

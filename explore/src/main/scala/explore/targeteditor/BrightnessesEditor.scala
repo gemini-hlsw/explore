@@ -19,7 +19,6 @@ import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
-import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional._
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewSelect
@@ -37,6 +36,7 @@ import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
 import scala.collection.immutable.SortedMap
+import scala.util.Try
 
 sealed trait BrightnessesEditor[T] {
   val brightnesses: ReuseView[SortedMap[Band, BrightnessMeasure[T]]]
@@ -73,6 +73,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private val tableState = BrightnessTable.State().setSortBy(SortingRule("band"))
 
+  private val validBrightnessValue: ValidFormatInput[BigDecimal] =
+    ValidFormatInput(
+      ValidFormatInput.bigDecimalValidFormat("Invalid brightness value").getValidated,
+      n => Try(displayBrightness.shortName(n)).toOption.orEmpty
+    )
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -92,25 +98,19 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .setMaxWidth(66)
               .setSortByAuto,
             BrightnessTable
-              .Column("value", _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]))
+              .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
               .setHeader("Value")
               .setCell(cell =>
-                FormInputEV[ReuseView, BrightnessValue](
+                FormInputEV[ReuseView, BigDecimal](
                   id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
                   value = cell.value,
-                  validFormat = ValidFormatInput.fromFormat(
-                    BrightnessValue.fromString,
-                    "Invalid brightness value"
-                  ),
-                  changeAuditor = ChangeAuditor
-                    .fromFormat(BrightnessValue.fromString)
-                    .decimal(3)
-                    .allowEmpty,
+                  validFormat = validBrightnessValue,
+                  changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
                   disabled = disabled
                 )
               ),
             BrightnessTable
-              .Column("units", _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]))
+              .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
               .setHeader("Units")
               .setCell(cell =>
                 EnumViewSelect[ReuseView, Units Of Brightness[T]](
@@ -165,7 +165,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   props.brightnesses.mod(brightnesses =>
                     (brightnesses +
                       (bandView.get ->
-                        defaultBandUnits(bandView.get).withValueTagged(BrightnessValue(0))))
+                        defaultBandUnits(bandView.get).withValueTagged(BigDecimal(0))))
                   )
 
                 React.Fragment(

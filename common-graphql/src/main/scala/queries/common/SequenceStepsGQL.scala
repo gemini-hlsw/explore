@@ -28,7 +28,8 @@ object SequenceStepsGQL {
         observations(programId: "p-2", first: 1) {
           nodes {
             id
-            name
+            title
+            subtitle
             config:manualConfig {
               instrument
               plannedTime {
@@ -74,9 +75,7 @@ object SequenceStepsGQL {
                 }
               }
               fpu {
-                ... on GmosNorthBuiltinFpu {
-                  builtin
-                }
+                builtin
               }
               filter
               readout {
@@ -121,9 +120,7 @@ object SequenceStepsGQL {
                 }
               }
               fpu {
-                ... on GmosSouthBuiltinFpu {
-                  builtin
-                }
+                builtin
               }
               filter
               readout {
@@ -188,7 +185,7 @@ object SequenceStepsGQL {
       val wavelength: math.Wavelength
     }
     trait SeqFpu[Site <: SeqSite]              {
-      val builtin: Site#Fpu
+      val builtin: Option[Site#Fpu]
     }
     trait SeqReadout                           {
       val xBin: enum.GmosXBinning

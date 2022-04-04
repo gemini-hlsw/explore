@@ -60,8 +60,8 @@ object implicits {
   }
 
   implicit class ParallaxOps(val p: Parallax) extends AnyVal {
-    def toInput: ParallaxModelInput =
-      ParallaxModelInput(microarcseconds = p.μas.value.value.assign)
+    def toInput: ParallaxInput =
+      ParallaxInput(microarcseconds = p.μas.value.value.assign)
   }
 
   implicit class UnnormalizedSedOps(val u: UnnormalizedSED) extends AnyVal {
@@ -84,10 +84,10 @@ object implicits {
         case UnnormalizedSED.PowerLaw(index)                          =>
           UnnormalizedSedInput(powerLaw = index.assign)
         case UnnormalizedSED.BlackBody(temperature)                   =>
-          UnnormalizedSedInput(blackBodyTempK = BigDecimal(temperature.value.value).assign)
+          UnnormalizedSedInput(blackBodyTempK = temperature.value.assign)
         case UnnormalizedSED.UserDefined(fluxDensities)               =>
           UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
-            case (wavelength, value) => FluxDensity(wavelength.toInput, value.value)
+            case (wavelength, value) => FluxDensity(wavelength.toInput, value)
           }.assign)
       }
   }
@@ -99,9 +99,9 @@ object implicits {
       bs.toList.map { case (band, measure) =>
         BandBrightnessIntegratedInput(
           band = band,
-          value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+          value = measure.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+          error = measure.error.orIgnore
         )
       }
   }
@@ -113,9 +113,9 @@ object implicits {
       bs.toList.map { case (band, measure) =>
         BandBrightnessSurfaceInput(
           band = band,
-          value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+          value = measure.value.assign,
           units = Measure.unitsTagged.get(measure).assign,
-          error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+          error = measure.error.orIgnore
         )
       }
   }
@@ -145,9 +145,9 @@ object implicits {
       lines.toList.map { case (wavelength, line) =>
         EmissionLineIntegratedInput(
           wavelength = wavelength.toInput,
-          lineWidth = line.lineWidth.value.value.assign,
+          lineWidth = line.lineWidth.value.assign,
           lineFlux = LineFluxIntegratedInput(
-            line.lineFlux.value.value,
+            line.lineFlux.value,
             Measure.unitsTagged.get(line.lineFlux)
           ).assign
         )
@@ -161,9 +161,9 @@ object implicits {
       lines.toList.map { case (wavelength, line) =>
         EmissionLineSurfaceInput(
           wavelength = wavelength.toInput,
-          lineWidth = line.lineWidth.value.value.assign,
+          lineWidth = line.lineWidth.value.assign,
           lineFlux = LineFluxSurfaceInput(
-            line.lineFlux.value.value,
+            line.lineFlux.value,
             Measure.unitsTagged.get(line.lineFlux)
           ).assign
         )
@@ -174,7 +174,7 @@ object implicits {
     val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Integrated]
   ) extends AnyVal {
     def toInput: FluxDensityContinuumIntegratedInput = FluxDensityContinuumIntegratedInput(
-      value = fdc.value.value,
+      value = fdc.value,
       units = Measure.unitsTagged.get(fdc)
     )
   }
@@ -183,7 +183,7 @@ object implicits {
     val fdc: Measure[PosBigDecimal] Of FluxDensityContinuum[Surface]
   ) extends AnyVal {
     def toInput: FluxDensityContinuumSurfaceInput = FluxDensityContinuumSurfaceInput(
-      value = fdc.value.value,
+      value = fdc.value,
       units = Measure.unitsTagged.get(fdc)
     )
   }

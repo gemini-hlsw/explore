@@ -231,7 +231,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
       )
 
     val blackBodyTemperatureAlignerOpt
-      : Option[ReuseAligner[Quantity[PosInt, Kelvin], Input[BigDecimal]]] =
+      : Option[ReuseAligner[Quantity[PosInt, Kelvin], Input[PosInt]]] =
       props.sedAlignerOpt.flatMap(
         _.zoomOpt(
           UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
@@ -307,7 +307,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             <.label("Temperature", ExploreStyles.SkipToNext),
             InputWithUnits( // Temperature is in K, a positive integer
-              rsu.map(_.view(t => BigDecimal(t.value).assign)).stripQuantity,
+              rsu.map(_.view(_.value.assign)).stripQuantity,
               ValidFormatInput.forRefinedInt[Positive](),
               ChangeAuditor
                 .fromValidFormatInput(ValidFormatInput.forRefinedInt[Positive]())

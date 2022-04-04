@@ -7,6 +7,7 @@ import cats.Order._
 import cats.syntax.all._
 import explore.Icons
 import explore.model.conversions._
+import explore.model.display._
 import explore.model.formats._
 import explore.optics.ModelOptics._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -105,7 +106,7 @@ object TargetColumns {
             band.tag + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           )
-            .setCell(_.value.map(_.displayWithoutError).orEmpty)
+            .setCell(_.value.map(_.displayWithoutError(displayBrightness)).orEmpty)
             .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(

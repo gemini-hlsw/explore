@@ -83,9 +83,9 @@ package itc {
           brightnesses = b.brightnesses.toList.map { case (band, measure) =>
             BandBrightnessIntegratedInput(
               band = band,
-              value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+              value = measure.value.assign,
               units = Measure.unitsTagged.get(measure).assign,
-              error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+              error = measure.error.orIgnore
             )
           }.assign
         )
@@ -98,9 +98,9 @@ package itc {
           brightnesses = b.brightnesses.toList.map { case (band, measure) =>
             BandBrightnessSurfaceInput(
               band = band,
-              value = BrightnessValue.fromBigDecimal.reverseGet(measure.value).assign,
+              value = measure.value.assign,
               units = Measure.unitsTagged.get(measure).assign,
-              error = measure.error.map(BrightnessValue.fromBigDecimal.reverseGet).orIgnore
+              error = measure.error.orIgnore
             )
           }.assign
         )
