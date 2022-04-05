@@ -33,12 +33,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download Java (temurin@17)
+        id: download-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: typelevel/download-java@v1
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
         uses: actions/setup-java@v2
         with:
-          distribution: temurin
+          distribution: jdkfile
           java-version: 17
+          jdkFile: ${{ steps.download-java-temurin-17.outputs.jdkFile }}
 
       - name: Cache sbt
         uses: actions/cache@v2
@@ -68,9 +77,9 @@ jobs:
         if: matrix.java == 'temurin@17'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck
 
-      - name: fastLinkJS
+      - name: scalaJSLink
         if: matrix.project == 'rootJS'
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' Test/fastLinkJS
+        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' Test/scalaJSLinkerResult
 
       - name: Test
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++${{ matrix.scala }}' test
@@ -94,12 +103,21 @@ jobs:
       - name: Checkout current branch (fast)
         uses: actions/checkout@v2
 
+      - name: Download Java (temurin@17)
+        id: download-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: typelevel/download-java@v1
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
         uses: actions/setup-java@v2
         with:
-          distribution: temurin
+          distribution: jdkfile
           java-version: 17
+          jdkFile: ${{ steps.download-java-temurin-17.outputs.jdkFile }}
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -175,12 +193,21 @@ jobs:
       - name: Heroku - Provision static plugin
         run: 'heroku plugins:install heroku-cli-static'
 
+      - name: Download Java (temurin@17)
+        id: download-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: typelevel/download-java@v1
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
         uses: actions/setup-java@v2
         with:
-          distribution: temurin
+          distribution: jdkfile
           java-version: 17
+          jdkFile: ${{ steps.download-java-temurin-17.outputs.jdkFile }}
 
       - name: Use Node.js
         uses: actions/setup-node@v3

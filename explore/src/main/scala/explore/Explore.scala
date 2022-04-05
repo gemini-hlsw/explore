@@ -14,6 +14,7 @@ import clue.js.WebSocketJSBackend
 import crystal.react._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import explore._
 import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext

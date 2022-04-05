@@ -5,7 +5,7 @@ package explore.config
 
 import crystal.react.reuse._
 import explore.AppCtx
-import explore.common.SequenceStepsGQL._
+import queries.common.SequenceStepsGQL._
 import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.utils._

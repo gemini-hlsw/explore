@@ -14,6 +14,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string._
 import explore.AppCtx
 import explore.common._
+import queries.common.TargetQueriesGQL
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -25,7 +26,7 @@ import explore.model.TargetWithId
 import explore.model.formats._
 import explore.model.reusability._
 import explore.model.util._
-import explore.schemas.implicits._
+import queries.schemas.implicits._
 import explore.undo.UndoContext
 import explore.undo.UndoStacks
 import explore.utils._

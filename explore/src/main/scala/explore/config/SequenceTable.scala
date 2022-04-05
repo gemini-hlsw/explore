@@ -6,8 +6,8 @@ package explore.config
 import cats.syntax.all._
 import crystal.react.reuse._
 import explore.Icons
-import explore.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
-import explore.common.SequenceStepsGQL.SequenceSteps._
+import queries.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
+import queries.common.SequenceStepsGQL.SequenceSteps._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.svg._

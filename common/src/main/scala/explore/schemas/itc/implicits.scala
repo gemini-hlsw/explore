@@ -1,12 +1,12 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.schemas
+package queries.schemas
 
 import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
-import explore.common.ITCQueriesGQL
+import queries.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
 import explore.model.TargetWithId
@@ -14,7 +14,8 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.ModelOptics._
-import explore.schemas.ITC.Types._
+import queries.schemas.ITC
+import queries.schemas.ITC.Types._
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure

@@ -26,7 +26,8 @@ import monocle.Getter
 
 import scala.collection.immutable.SortedMap
 
-import ConstraintGroupQueriesGQL._
+import queries.common.ConstraintGroupQueriesGQL._
+import queries.common.ObsQueriesGQL
 
 object ConstraintGroupQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.

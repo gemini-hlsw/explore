@@ -13,7 +13,7 @@ import clue.data.syntax._
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.common.ITCQueriesGQL._
+import queries.common.ITCQueriesGQL._
 import explore.model.Constants
 import explore.model.ITCTarget
 import explore.model.Progress
@@ -21,8 +21,8 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
-import explore.schemas.ITC
-import explore.schemas.itc.implicits._
+import queries.schemas.ITC
+import queries.schemas.itc.implicits._
 import japgolly.scalajs.react._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._

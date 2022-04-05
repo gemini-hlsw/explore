@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.schemas
+package queries.schemas
 
 import cats.syntax.all._
 import clue.data.syntax._
@@ -17,7 +17,7 @@ import lucuma.schemas.ObservationDB.Types._
 
 import scala.collection.immutable.SortedMap
 
-import UserPreferencesDB.Types.ExploreResizableWidthInsertInput
+import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 // TODO Move to lucuma-schemas
 object implicits {

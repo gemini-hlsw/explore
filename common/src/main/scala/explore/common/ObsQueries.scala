@@ -38,7 +38,7 @@ import monocle.macros.GenIso
 
 import scala.collection.immutable.SortedMap
 
-import ObsQueriesGQL._
+import queries.common.ObsQueriesGQL._
 
 object ObsQueries {
 

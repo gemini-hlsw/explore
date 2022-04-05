@@ -9,7 +9,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
-import explore.common.TargetQueriesGQL
+import queries.common.TargetQueriesGQL
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enum.CatalogName

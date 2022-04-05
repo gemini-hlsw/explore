@@ -12,10 +12,10 @@ import clue.data.syntax._
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
 import explore.model.layout._
-import explore.schemas.UserPreferencesDB
-import explore.schemas.UserPreferencesDB.Types._
-import explore.schemas.WidthUpsertInput
-import explore.schemas.implicits._
+import queries.schemas.UserPreferencesDB
+import queries.schemas.UserPreferencesDB.Types._
+import queries.schemas.WidthUpsertInput
+import queries.schemas.implicits._
 import lucuma.core.math.Angle
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -23,7 +23,7 @@ import react.gridlayout.{ BreakpointName => _, _ }
 
 import scala.collection.immutable.SortedMap
 
-import UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 
 object UserPreferencesQueries {
 

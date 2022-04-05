@@ -11,7 +11,7 @@ import crystal.react.View
 import crystal.react.implicits._
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries._
-import explore.common.TargetQueriesGQL
+import queries.common.TargetQueriesGQL
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet

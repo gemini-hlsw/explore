@@ -32,7 +32,9 @@ import monocle.Getter
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
-import AsterismQueriesGQL._
+import queries.common.AsterismQueriesGQL._
+import queries.common.ObsQueriesGQL
+import queries.common.TargetQueriesGQL
 
 object AsterismQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.

@@ -16,7 +16,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
-import explore.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
