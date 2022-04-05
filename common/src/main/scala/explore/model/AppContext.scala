@@ -108,7 +108,6 @@ case class AppContext[F[_]](
   actions:     Actions[F],
   sso:         SSOClient[F],
   pageUrl:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
-  setPage:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => Callback,
   setPageVia:  (
     AppTab,
     Option[ObsIdSet],
@@ -121,6 +120,12 @@ case class AppContext[F[_]](
   val logger:  Logger[F],
   val P:       Parallel[F]
 ) {
+  def setPage(
+    appTab:   AppTab,
+    obsIdSet: Option[ObsIdSet],
+    targetId: Option[Target.Id]
+  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryPush)
+
   def setPageSingleObs(
     appTab:   AppTab,
     obsId:    Option[Observation.Id],
@@ -140,7 +145,6 @@ object AppContext {
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
     pageUrl:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
-    setPage:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => Callback,
     setPageVia:           (
       AppTab,
       Option[ObsIdSet],
@@ -161,7 +165,6 @@ object AppContext {
                           actions,
                           SSOClient(config.sso),
                           pageUrl,
-                          setPage,
                           setPageVia,
                           config.environment
     )

@@ -149,13 +149,6 @@ object ExploreMain extends IOApp.Simple {
         ): String =
           routerCtl.urlFor(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget)).value
 
-        def setPage(
-          tab:           AppTab,
-          focusedObsSet: Option[ObsIdSet],
-          focusedTarget: Option[Target.Id]
-        ) =
-          routerCtl.set(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget))
-
         def setPageVia(
           tab:           AppTab,
           focusedObsSet: Option[ObsIdSet],
@@ -170,7 +163,7 @@ object ExploreMain extends IOApp.Simple {
           _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
           _                    <- logger.info(s"Config: ${appConfig.show}")
           ctx                  <-
-            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPage, setPageVia)
+            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia)
           r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
           (vault, container, _) = r
         } yield {
