@@ -9,7 +9,6 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
-import queries.common.TargetQueriesGQL
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enum.CatalogName
@@ -17,6 +16,7 @@ import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
+import queries.common.TargetQueriesGQL
 
 protected sealed trait TargetSource[F[_]] {
   def name: String

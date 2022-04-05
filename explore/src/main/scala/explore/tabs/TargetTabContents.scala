@@ -16,7 +16,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.common.UserPreferencesQueries._
-import queries.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -43,6 +42,7 @@ import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.Optional
 import org.scalajs.dom.window
+import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis

@@ -12,7 +12,6 @@ import eu.timepit.refined.auto._
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import queries.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -26,6 +25,7 @@ import lucuma.ui.forms.EnumSelect
 import lucuma.ui.optics.ChangeAuditor
 import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
+import queries.schemas.implicits._
 import react.common._
 
 case class SourceProfileEditor(

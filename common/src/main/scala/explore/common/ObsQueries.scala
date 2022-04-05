@@ -35,10 +35,9 @@ import monocle.Focus
 import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenIso
+import queries.common.ObsQueriesGQL._
 
 import scala.collection.immutable.SortedMap
-
-import queries.common.ObsQueriesGQL._
 
 object ObsQueries {
 

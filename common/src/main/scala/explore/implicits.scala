@@ -12,7 +12,6 @@ import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
 import explore.model.AppContext
 import explore.optics._
-import queries.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.core.optics._
@@ -21,6 +20,7 @@ import monocle.function.At.at
 import monocle.function.Index.index
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
+import queries.schemas._
 import shapeless._
 
 import scala.annotation.unused

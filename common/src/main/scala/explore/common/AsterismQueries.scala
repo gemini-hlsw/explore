@@ -28,13 +28,12 @@ import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
-
-import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
-
 import queries.common.AsterismQueriesGQL._
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
+
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 object AsterismQueries {
   // The default cats ordering for sorted set sorts by size first, then contents. That's not what we want.

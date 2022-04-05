@@ -11,7 +11,6 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.UserPreferencesQueries._
-import queries.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
@@ -23,6 +22,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import monocle.Traversal
+import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
 import react.common.style.Css

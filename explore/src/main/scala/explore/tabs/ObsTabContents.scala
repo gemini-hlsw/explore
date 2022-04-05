@@ -18,9 +18,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ObsQueries
 import explore.common.ObsQueries._
-import queries.common.ObsQueriesGQL._
 import explore.common.UserPreferencesQueries._
-import queries.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod
@@ -48,6 +46,8 @@ import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
+import queries.common.ObsQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis

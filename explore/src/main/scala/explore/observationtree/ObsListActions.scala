@@ -7,7 +7,6 @@ import cats.effect.IO
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.implicits._
-import queries.common.ObsQueriesGQL._
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ObsSummaryWithTargetsAndConstraints
@@ -19,6 +18,7 @@ import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Focus
+import queries.common.ObsQueriesGQL._
 
 object ObsListActions {
   protected val obsListMod =
