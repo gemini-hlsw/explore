@@ -13,11 +13,11 @@ import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
 import explore.implicits._
-import queries.schemas.itc.implicits._
 import explore.undo._
 import explore.utils.potRender
 import lucuma.core.model.Observation
 import lucuma.ui.reusability._
+import queries.schemas.itc.implicits._
 import react.common._
 
 object ConfigurationTile {

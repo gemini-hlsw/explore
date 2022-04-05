@@ -6,8 +6,6 @@ package explore.config
 import cats.syntax.all._
 import crystal.react.reuse._
 import explore.Icons
-import queries.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
-import queries.common.SequenceStepsGQL.SequenceSteps._
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.svg._
@@ -23,6 +21,8 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Atom
+import queries.common.SequenceStepsGQL.SequenceSteps.Data.Observations.Nodes.Config
+import queries.common.SequenceStepsGQL.SequenceSteps._
 import react.common._
 import react.semanticui.collections.table._
 import react.semanticui.elements.header.Header

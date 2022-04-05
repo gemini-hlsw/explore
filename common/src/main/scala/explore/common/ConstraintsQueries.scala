@@ -7,7 +7,6 @@ import cats.Endo
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
-import queries.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.undo.UndoContext
 import lucuma.core.enum._
@@ -16,6 +15,7 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
+import queries.common.ObsQueriesGQL._
 
 object ConstraintsQueries {
   case class UndoView(

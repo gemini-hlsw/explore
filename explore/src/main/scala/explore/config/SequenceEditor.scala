@@ -5,13 +5,13 @@ package explore.config
 
 import crystal.react.reuse._
 import explore.AppCtx
-import queries.common.SequenceStepsGQL._
 import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.schemas.ObservationDB
+import queries.common.SequenceStepsGQL._
 import react.common._
 
 final case class SequenceEditor() extends ReactProps[SequenceEditor](SequenceEditor.component)

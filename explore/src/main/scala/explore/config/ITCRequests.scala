@@ -13,7 +13,6 @@ import clue.data.syntax._
 import crystal.ViewF
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import queries.common.ITCQueriesGQL._
 import explore.model.Constants
 import explore.model.ITCTarget
 import explore.model.Progress
@@ -21,8 +20,6 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
-import queries.schemas.ITC
-import queries.schemas.itc.implicits._
 import japgolly.scalajs.react._
 import lucuma.core.enum.Band
 import lucuma.core.math.BrightnessUnits._
@@ -31,6 +28,9 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import org.typelevel.log4cats.Logger
+import queries.common.ITCQueriesGQL._
+import queries.schemas.ITC
+import queries.schemas.itc.implicits._
 
 import scala.concurrent.duration._
 

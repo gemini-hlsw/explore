@@ -6,7 +6,6 @@ package queries.schemas
 import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
-import queries.common.ITCQueriesGQL
 import explore.common.ObsQueries
 import explore.model.ITCTarget
 import explore.model.TargetWithId
@@ -14,13 +13,14 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.ModelOptics._
-import queries.schemas.ITC
-import queries.schemas.ITC.Types._
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math._
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.model._
 import lucuma.core.optics.syntax.lens._
+import queries.common.ITCQueriesGQL
+import queries.schemas.ITC
+import queries.schemas.ITC.Types._
 
 // There is a lot of duplication here with the odb.implicits package
 package itc {

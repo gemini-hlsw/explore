@@ -11,7 +11,6 @@ import crystal.react.View
 import crystal.react.implicits._
 import explore.common.AsterismQueries
 import explore.common.AsterismQueries._
-import queries.common.TargetQueriesGQL
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
@@ -22,6 +21,7 @@ import explore.undo._
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedSet

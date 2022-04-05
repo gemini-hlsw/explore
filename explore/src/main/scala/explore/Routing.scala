@@ -3,9 +3,9 @@
 
 package explore
 
-import cats.syntax.all._
 import cats.Order._
 import cats.data.NonEmptySet
+import cats.syntax.all._
 import crystal.react.ReuseView
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor

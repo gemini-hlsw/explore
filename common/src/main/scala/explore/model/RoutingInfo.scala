@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.syntax.all._
-import explore.model.reusability._
 import explore.model.Page
 import explore.model.Page._
 import explore.model.enum.AppTab
+import explore.model.reusability._
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Target
 import lucuma.ui.reusability._

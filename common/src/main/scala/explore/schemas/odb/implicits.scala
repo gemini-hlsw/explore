@@ -14,10 +14,9 @@ import lucuma.core.math._
 import lucuma.core.math.dimensional._
 import lucuma.core.model._
 import lucuma.schemas.ObservationDB.Types._
+import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 import scala.collection.immutable.SortedMap
-
-import queries.schemas.UserPreferencesDB.Types.ExploreResizableWidthInsertInput
 
 // TODO Move to lucuma-schemas
 object implicits {

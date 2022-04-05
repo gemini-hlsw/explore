@@ -10,7 +10,6 @@ import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import queries.common.UserPreferencesQueriesGQL._
 import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel
@@ -18,6 +17,7 @@ import explore.model.UserVault
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import queries.common.UserPreferencesQueriesGQL._
 import react.common.ReactProps
 
 final case class IfLogged(view: ReuseView[RootModel])(

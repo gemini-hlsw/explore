@@ -14,7 +14,6 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.common.UserPreferencesQueries._
-import queries.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
@@ -34,6 +33,7 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
+import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
 import react.draggable.Axis

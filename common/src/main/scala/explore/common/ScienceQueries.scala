@@ -10,7 +10,6 @@ import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
 import explore.common.ObsQueries._
-import queries.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.model.GmosNorthLongSlit
 import explore.model.GmosSouthLongSlit
@@ -24,6 +23,7 @@ import lucuma.core.optics.syntax.lens._
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
+import queries.common.ObsQueriesGQL._
 
 object ScienceQueries {
   case class UndoView(
