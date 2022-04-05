@@ -38,6 +38,7 @@ import explore.syntax.ui._
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -66,15 +67,15 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
-  focusedObs:       ReuseView[Option[Observation.Id]],
-  focusedTarget:    ReuseView[Option[Target.Id]],
+  focusedObs:       Option[Observation.Id],
+  focusedTarget:    Option[Target.Id],
   undoStacks:       ReuseView[ModelUndoStacks[IO]],
   searching:        ReuseView[Set[Target.Id]],
   hiddenColumns:    ReuseView[Set[String]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
   def selectedPanel: SelectedPanel[Observation.Id] =
-    focusedObs.get.fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
+    focusedObs.fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
 }
 
 object ObsTabTiles {
@@ -297,8 +298,8 @@ object ObsTabContents {
             )
             .runAsyncAndForget
 
-    val treeWidth =
-      panels.get.treeWidth.toInt
+    val treeWidth    = panels.get.treeWidth.toInt
+    val selectedView = panels.zoom(TwoPanelState.selected[Observation.Id])
 
     // Tree area
     def tree(observations: ReuseView[ObservationList]) =
@@ -321,7 +322,7 @@ object ObsTabContents {
     val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
       obsIdOpt.flatMap(observations.get.getElement)
 
-    val targetCoords = (obsSummaryOpt, props.focusedTarget.get)
+    val targetCoords = (obsSummaryOpt, props.focusedTarget)
       .mapN((summ, id) => summ.targets.find(_.id === id).flatMap(_.coords))
       .flatten
 
@@ -332,7 +333,7 @@ object ObsTabContents {
         size = Mini,
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](props.focusedObs.set(none))
+        onClickE = linkOverride[ButtonProps](selectedView.set(SelectedPanel.tree))
       )(^.href := ctx.pageUrl(AppTab.Observations, none, none), Icons.ChevronLeft)
     )
 
@@ -400,6 +401,13 @@ object ObsTabContents {
           val skyPlotTile =
             ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, targetCoords)
 
+          def setCurrentTarget(
+            oid: Option[Observation.Id],
+            tid: Option[Target.Id],
+            via: SetRouteVia
+          ): Callback =
+            ctx.setPageVia(AppTab.Observations, oid.map(ObsIdSet.one(_)), tid, via)
+
           val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,
             ObsIdSet.one(obsId),
@@ -413,6 +421,7 @@ object ObsTabContents {
               )
             ),
             props.focusedTarget,
+            Reuse(setCurrentTarget _)(props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,

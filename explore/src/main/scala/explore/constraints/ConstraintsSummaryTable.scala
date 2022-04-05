@@ -11,14 +11,15 @@ import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.SelectedPanel
+import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -36,14 +37,14 @@ import scala.collection.immutable.SortedSet
 import scalajs.js.JSConverters._
 
 final case class ConstraintsSummaryTable(
-  constraintList: ConstraintGroupList,
-  hiddenColumns:  ReuseView[Set[String]],
-  summarySorting: ReuseView[List[(String, Boolean)]],
-  selectedPanel:  ReuseView[SelectedPanel[ObsIdSet]],
-  focusedObs:     ReuseView[Option[Observation.Id]],
-  expandedIds:    ReuseView[SortedSet[ObsIdSet]],
-  renderInTitle:  Tile.RenderInTitle
-) extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
+  constraintList:   ConstraintGroupList,
+  hiddenColumns:    ReuseView[Set[String]],
+  summarySorting:   ReuseView[List[(String, Boolean)]],
+  selectedPanel:    ReuseView[SelectedPanel[ObsIdSet]],
+  expandedIds:      ReuseView[SortedSet[ObsIdSet]],
+  renderInTitle:    Tile.RenderInTitle
+)(implicit val ctx: AppContextIO)
+    extends ReactFnProps[ConstraintsSummaryTable](ConstraintsSummaryTable.component)
 
 object ConstraintsSummaryTable {
   type Props = ConstraintsSummaryTable
@@ -154,7 +155,7 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.focusedObs.set(obsId.some)
+                        (props.ctx.pushPageSingleObs(AppTab.Constraints, obsId.some, none)
                           >> props.expandedIds.mod(_ + cell.value)
                           >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
                       ),

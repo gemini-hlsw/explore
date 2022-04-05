@@ -4,12 +4,11 @@
 package explore
 
 import cats.syntax.all._
-import crystal.react.ReuseView
 import explore.components.ui.ExploreStyles
+import explore.model.RoutingInfo
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.data.EnumZipper
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import react.common._
@@ -22,7 +21,7 @@ import react.semanticui.elements.label.Label.LabelProps
 import react.semanticui.sizes._
 
 final case class SideTabs(
-  tabs: ReuseView[EnumZipper[AppTab]]
+  routingInfo: RoutingInfo
 ) extends ReactFnProps[SideTabs](SideTabs.component)
 
 object SideTabs {
@@ -34,11 +33,12 @@ object SideTabs {
     ScalaFnComponent
       .withReuse[Props] { p =>
         AppCtx.using { implicit ctx =>
-          val tabsL = p.tabs.get.toNel
-          val focus = p.tabs.get.focus
+          val focus = p.routingInfo.appTab
 
           def onClickE[A](tab: AppTab) =
-            linkOverride[A](p.tabs.mod(z => z.findFocus(_ === tab).getOrElse(z)))
+            linkOverride[A](
+              ctx.pushPage(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget)
+            )
 
           def tabButton(tab: AppTab): Button =
             Button(
@@ -46,7 +46,9 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
               onClickE = onClickE[ButtonProps](tab)
-            )(^.href := ctx.pageUrl(tab, none, none), tab.title)
+            )(^.href := ctx.pageUrl(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget),
+              tab.title
+            )
 
           def tab(tab: AppTab): Label =
             Label(
@@ -66,14 +68,14 @@ object SideTabs {
           }
 
           val verticalButtonsSections: List[TagMod] =
-            tabsL.toList
+            AppTab.all.toList
               .groupBy(_.buttonGroup)
               .toList
               .sortBy(_._1)
               .map(tup => makeButtonSection(tup._2))
 
           val horizontalButtonsSections: List[TagMod] =
-            tabsL.toList.toList
+            AppTab.all.toList
               .map(tup => tab(tup))
 
           React.Fragment(

@@ -12,6 +12,7 @@ import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
 import explore.common.SSOClient
+import explore.model.ObsIdSet
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
@@ -20,6 +21,7 @@ import queries.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.Effect
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -105,21 +107,55 @@ case class AppContext[F[_]](
   staticData:  StaticData,
   actions:     Actions[F],
   sso:         SSOClient[F],
-  pageUrl:     (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
-  setPage:     (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback,
+  pageUrl:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+  setPageVia:  (
+    AppTab,
+    Option[ObsIdSet],
+    Option[Target.Id],
+    SetRouteVia
+  ) => Callback,
   environment: ExecutionEnvironment
 )(implicit
   val F:       Applicative[F],
   val logger:  Logger[F],
   val P:       Parallel[F]
-)
+) {
+  def pushPage(
+    appTab:   AppTab,
+    obsIdSet: Option[ObsIdSet],
+    targetId: Option[Target.Id]
+  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryPush)
+
+  def replacePage(
+    appTab:   AppTab,
+    obsIdSet: Option[ObsIdSet],
+    targetId: Option[Target.Id]
+  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryReplace)
+
+  def pushPageSingleObs(
+    appTab:   AppTab,
+    obsId:    Option[Observation.Id],
+    targetId: Option[Target.Id]
+  ): Callback = pushPage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+
+  def replacePageSingleObs(
+    appTab:   AppTab,
+    obsId:    Option[Observation.Id],
+    targetId: Option[Target.Id]
+  ): Callback = replacePage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+}
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
-    setPage:              (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback
+    pageUrl:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+    setPageVia:           (
+      AppTab,
+      Option[ObsIdSet],
+      Option[Target.Id],
+      SetRouteVia
+    ) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -134,7 +170,7 @@ object AppContext {
                           actions,
                           SSOClient(config.sso),
                           pageUrl,
-                          setPage,
+                          setPageVia,
                           config.environment
     )
 }

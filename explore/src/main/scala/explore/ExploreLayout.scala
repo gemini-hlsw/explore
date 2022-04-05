@@ -87,7 +87,7 @@ object ExploreLayout {
                             ),
                             <.div(
                               ExploreStyles.SideTabs,
-                              SideTabs(props.view.zoom(RootModel.tabs))
+                              SideTabs(RoutingInfo.from(props.r.page))
                             ),
                             <.div(
                               ExploreStyles.MainBody,

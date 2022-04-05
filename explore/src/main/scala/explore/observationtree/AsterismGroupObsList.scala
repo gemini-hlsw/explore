@@ -18,6 +18,8 @@ import explore.model.ObsIdSet
 import explore.model.SelectedPanel
 import explore.model.SelectedPanel._
 import explore.model.TargetGroup
+import explore.model.reusability._
+import explore.model.enum.AppTab
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
@@ -46,8 +48,8 @@ import scala.collection.immutable.SortedSet
 
 final case class AsterismGroupObsList(
   asterismsWithObs: ReuseView[AsterismGroupsWithObs],
-  focusedObs:       ReuseView[Option[Observation.Id]],
-  focusedTarget:    ReuseView[Option[Target.Id]],
+  focusedObsSet:    Option[ObsIdSet],
+  focusedTarget:    Option[Target.Id],
   selected:         ReuseView[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   undoStacks:       ReuseView[UndoStacks[IO, AsterismGroupsWithObs]]
@@ -110,7 +112,6 @@ object AsterismGroupObsList {
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupsWithObs],
       expandedIds: ReuseView[SortedSet[ObsIdSet]],
-      focusedObs:  ReuseView[Option[Observation.Id]],
       selected:    ReuseView[SelectedPanel[TargetOrObsSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
@@ -125,6 +126,8 @@ object AsterismGroupObsList {
               .find(_.obsIds === destIds)
         } yield (destAg, draggedIds)
 
+        def setObsSet(obsIds: ObsIdSet) = props.ctx.pushPage(AppTab.Targets, obsIds.some, none)
+
         oData.foldMap { case (destAg, draggedIds) =>
           draggedIds match {
             case Left(targetId) if !destAg.targetIds.contains(targetId) =>
@@ -133,7 +136,7 @@ object AsterismGroupObsList {
                 .set(undoCtx)(destAg.some)
             case Right(obsIds) if !destAg.obsIds.intersects(obsIds)     =>
               AsterismGroupObsListActions
-                .dropObservations(obsIds, expandedIds, selected, focusedObs)
+                .dropObservations(obsIds, expandedIds, selected, setObsSet)
                 .set(undoCtx)(destAg.some)
             case _                                                      => Callback.empty
           }
@@ -180,13 +183,16 @@ object AsterismGroupObsList {
             .getOrElse(<.span("ERROR"))
         )
 
-      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.focusedObs, props.selected)
+      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
 
       def isTargetSelected(targetId: Target.Id): Boolean =
         props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
 
+      def setObsAndTarget(obsId: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
+        props.ctx.pushPage(AppTab.Targets, obsId, targetId)
+
       def setSelectedPanelToTarget(targetId: Target.Id): Callback =
-        props.focusedObs.set(none) >> props.focusedTarget.set(targetId.some) >>
+        setObsAndTarget(none, targetId.some) >>
           props.selected.set(SelectedPanel.editor(targetId.asLeft))
 
       def isObsSelected(obsId: Observation.Id): Boolean =
@@ -199,16 +205,16 @@ object AsterismGroupObsList {
         setSelectedPanelToSet(ObsIdSet.one(obsId))
 
       def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        props.focusedObs.set(obsId.some) >>
+        setObsAndTarget(ObsIdSet.one(obsId).some, props.focusedTarget) >>
           setSelectedPanelToSingle(obsId)
 
-      def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback = {
-        val focused = obsIdSet.single
-        props.focusedObs.set(focused) >> setSelectedPanelToSet(obsIdSet)
-      }
+      def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback =
+        setObsAndTarget(obsIdSet.some, props.focusedTarget) >>
+          setSelectedPanelToSet(obsIdSet)
 
       def clearSelectedPanelAndObs: Callback =
-        props.focusedObs.set(None) >> props.selected.set(SelectedPanel.tree)
+        setObsAndTarget(none, none) >>
+          props.selected.set(SelectedPanel.tree)
 
       def handleCtrlClick(obsIds: Observation.Id, groupIds: ObsIdSet) =
         props.selected.get.optValue.flatMap(_.toOption).fold(setSelectedPanelAndObs(obsIds)) {
@@ -292,7 +298,7 @@ object AsterismGroupObsList {
                         highlightSelected = true,
                         forceHighlight = isObsSelected(obs.id),
                         linkToObsTab = false,
-                        onSelect = _ => setSelectedPanelToSingle(obs.id),
+                        onSelect = _ => setSelectedPanelAndObs(obs.id),
                         onCtrlClick = _ => handleCtrlClick(obs.id, obsIds)
                       )(obs, idx)
                     }
@@ -353,9 +359,10 @@ object AsterismGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick =
-                     props.focusedObs.set(none) >> props.selected.set(SelectedPanel.summary),
-                   clazz = ExploreStyles.ButtonSummary
+            Button(
+              onClick = props.ctx.pushPage(AppTab.Targets, none, none) >>
+                props.selected.set(SelectedPanel.summary),
+              clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
               "Target Summary"
@@ -405,26 +412,34 @@ object AsterismGroupObsList {
     .componentDidMount { $ =>
       val asterismsWithObs = $.props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
-      val observations     = asterismsWithObs.observations
       val expandedIds      = $.props.expandedIds
       val selected         = $.props.selected
 
-      // Unfocus if focused element is not there
-      val unfocus = $.props.focusedObs.mod(_.flatMap {
-        case obsId if !observations.contains(obsId) => none
-        case other                                  => other.some
-      })
+      val selectedAG = $.props.focusedObsSet
+        .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
+        .map(_._2)
+
+      def replacePage(oid: Option[ObsIdSet], tid: Option[Target.Id]): Callback =
+        $.props.ctx.replacePage(AppTab.Targets, oid, tid)
+
+      val obsMissing    = $.props.focusedObsSet.nonEmpty && selectedAG.isEmpty
+      val targetMissing =
+        $.props.focusedTarget.fold(false)(tid => !asterismsWithObs.targetGroups.contains(tid))
+
+      val (newFocusObs, newFocusTarget, needNewPage) = (obsMissing, targetMissing) match {
+        case (true, _) => (none, none, true)
+        case (_, true) => ($.props.focusedObsSet, none, true)
+        case _         => ($.props.focusedObsSet, $.props.focusedTarget, false)
+      }
+
+      val unfocus = if (needNewPage) replacePage(newFocusObs, newFocusTarget) else Callback.empty
 
       val setAndGetSelected: CallbackTo[Option[AsterismGroup]] = selected.get match {
         case Uninitialized =>
           val (optTorObs, optAG) =
-            ($.props.focusedObs.get, $.props.focusedTarget.get) match {
-              case (Some(obsId), _)    =>
-                (ObsIdSet.one(obsId).asRight.some,
-                 asterismGroups.find(_._1.exists(_ === obsId)).map(_._2)
-                )
-              case (_, Some(targetId)) =>
-                (targetId.asLeft.some, none)
+            (newFocusObs, newFocusTarget) match {
+              case (Some(obsId), _)    => (obsId.asRight.some, selectedAG)
+              case (_, Some(targetId)) => (targetId.asLeft.some, none)
               case _                   => (none, none)
             }
           selected

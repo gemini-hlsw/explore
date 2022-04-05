@@ -8,11 +8,8 @@ import cats.effect.IO
 import cats.syntax.all._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.enum.AppTab
-import lucuma.core.data.EnumZipper
 import lucuma.core.enum.Band
 import lucuma.core.model.GuestUser
-import lucuma.core.model.Observation
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
@@ -24,10 +21,7 @@ import scala.collection.immutable.HashSet
 
 case class RootModel(
   vault:                          Option[UserVault],
-  tabs:                           EnumZipper[AppTab],
   localPreferences:               ExploreLocalPreferences,
-  focusedObs:                     Option[Observation.Id] = none,
-  focusedTarget:                  Option[Target.Id] = none,
   expandedIds:                    ExpandedIds = ExpandedIds(),
   searchingTarget:                Set[Target.Id] = HashSet.empty,
   userSelectionMessage:           Option[NonEmptyString] = none,
@@ -43,10 +37,7 @@ case class RootModel(
 
 object RootModel {
   val vault                          = Focus[RootModel](_.vault)
-  val focusedObs                     = Focus[RootModel](_.focusedObs)
-  val focusedTarget                  = Focus[RootModel](_.focusedTarget)
   val userSelectionMessage           = Focus[RootModel](_.userSelectionMessage)
-  val tabs                           = Focus[RootModel](_.tabs)
   val searchingTarget                = Focus[RootModel](_.searchingTarget)
   val undoStacks                     = Focus[RootModel](_.undoStacks)
   val expandedIds                    = Focus[RootModel](_.expandedIds)
@@ -72,10 +63,7 @@ object RootModel {
   implicit val eqRootModel: Eq[RootModel] =
     Eq.by(m =>
       (m.vault,
-       m.tabs,
        m.localPreferences,
-       m.focusedObs,
-       m.focusedTarget,
        m.expandedIds,
        m.searchingTarget,
        m.userSelectionMessage,
