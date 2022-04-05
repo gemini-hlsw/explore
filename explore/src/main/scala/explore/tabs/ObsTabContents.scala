@@ -18,9 +18,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ObsQueries
 import explore.common.ObsQueries._
-import explore.common.ObsQueriesGQL._
+import queries.common.ObsQueriesGQL._
 import explore.common.UserPreferencesQueries._
-import explore.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.graphql.LiveQueryRenderMod

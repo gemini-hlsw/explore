@@ -13,7 +13,7 @@ import crystal.react.reuse._
 import explore.model.AppContext
 import explore.model.RootModel
 import explore.optics._
-import explore.schemas._
+import queries.schemas._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.core.optics._

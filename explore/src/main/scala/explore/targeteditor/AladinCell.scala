@@ -12,7 +12,7 @@ import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
-import explore.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions

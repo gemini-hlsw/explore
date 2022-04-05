@@ -16,7 +16,7 @@ import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
 import explore.modes.SpectroscopyModesMatrix
-import explore.schemas._
+import queries.schemas._
 import explore.utils
 import io.circe.Json
 import japgolly.scalajs.react.Callback

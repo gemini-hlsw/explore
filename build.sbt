@@ -100,7 +100,8 @@ lazy val common = project
         ReactClipboard.value ++
         ReactCommon.value ++
         ReactTable.value ++
-        ReactVirtuoso.value,
+        ReactVirtuoso.value ++
+        SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
       sbtVersion,
@@ -214,7 +215,8 @@ lazy val esModule = Seq(
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
-    ModuleSplitStyle.FewestModules
+    // If the browser is too slow for the SmallModulesFor switch to ModuleSplitStyle.FewestModules
+    ModuleSplitStyle.SmallModulesFor(List("explore"))
   )),
   Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     ModuleSplitStyle.FewestModules

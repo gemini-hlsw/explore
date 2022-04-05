@@ -12,7 +12,7 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
 import explore.common.AsterismQueries
-import explore.common.TargetQueriesGQL._
+import queries.common.TargetQueriesGQL._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -22,7 +22,7 @@ import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
 import explore.optics._
-import explore.schemas.implicits._
+import queries.schemas.implicits._
 import explore.targets.TargetSelectionPopup
 import explore.undo.UndoStacks
 import japgolly.scalajs.react._

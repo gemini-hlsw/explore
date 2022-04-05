@@ -7,7 +7,7 @@ import cats.Endo
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
-import explore.common.ObsQueriesGQL._
+import queries.common.ObsQueriesGQL._
 import explore.implicits._
 import explore.undo.UndoContext
 import lucuma.core.enum._

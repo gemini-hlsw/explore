@@ -21,7 +21,7 @@ import eu.timepit.refined.types.string
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.schemas.implicits._
+import queries.schemas.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._

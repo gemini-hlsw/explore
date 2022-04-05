@@ -10,7 +10,7 @@ import crystal.react.ReuseView
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.AppCtx
-import explore.common.UserPreferencesQueriesGQL._
+import queries.common.UserPreferencesQueriesGQL._
 import explore.components.UserSelectionForm
 import explore.implicits._
 import explore.model.RootModel
