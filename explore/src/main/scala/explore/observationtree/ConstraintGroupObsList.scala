@@ -23,7 +23,6 @@ import explore.model.enum.AppTab
 import explore.undo.UndoContext
 import explore.undo._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.syntax.all._
@@ -153,7 +152,7 @@ object ConstraintGroupObsList {
         props.selected.get.optValue.exists(_.contains(obsId))
 
       def setObsSet(obsId: Option[ObsIdSet]): Callback =
-        ctx.setPage(AppTab.Constraints, obsId, none)
+        ctx.pushPage(AppTab.Constraints, obsId, none)
 
       def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
         props.selected.set(SelectedPanel.editor(obsIdSet))
@@ -291,7 +290,7 @@ object ConstraintGroupObsList {
       // Unfocus the group with observations doesn't exist
       val unfocus =
         if ($.props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
-          $.props.ctx.setPageVia(AppTab.Constraints, none, none, SetRouteVia.HistoryReplace)
+          $.props.ctx.replacePage(AppTab.Constraints, none, none)
         else Callback.empty
 
       val setAndGetSelected = selected.get match {

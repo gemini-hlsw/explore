@@ -37,7 +37,7 @@ object SideTabs {
 
           def onClickE[A](tab: AppTab) =
             linkOverride[A](
-              ctx.setPage(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget)
+              ctx.pushPage(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget)
             )
 
           def tabButton(tab: AppTab): Button =

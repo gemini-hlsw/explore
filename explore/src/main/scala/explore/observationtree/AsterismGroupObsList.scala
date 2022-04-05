@@ -23,7 +23,6 @@ import explore.model.enum.AppTab
 import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
-import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -127,7 +126,7 @@ object AsterismGroupObsList {
               .find(_.obsIds === destIds)
         } yield (destAg, draggedIds)
 
-        def setObsSet(obsIds: ObsIdSet) = props.ctx.setPage(AppTab.Targets, obsIds.some, none)
+        def setObsSet(obsIds: ObsIdSet) = props.ctx.pushPage(AppTab.Targets, obsIds.some, none)
 
         oData.foldMap { case (destAg, draggedIds) =>
           draggedIds match {
@@ -190,7 +189,7 @@ object AsterismGroupObsList {
         props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
 
       def setObsAndTarget(obsId: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-        props.ctx.setPage(AppTab.Targets, obsId, targetId)
+        props.ctx.pushPage(AppTab.Targets, obsId, targetId)
 
       def setSelectedPanelToTarget(targetId: Target.Id): Callback =
         setObsAndTarget(none, targetId.some) >>
@@ -361,7 +360,7 @@ object AsterismGroupObsList {
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
             Button(
-              onClick = props.ctx.setPage(AppTab.Targets, none, none) >>
+              onClick = props.ctx.pushPage(AppTab.Targets, none, none) >>
                 props.selected.set(SelectedPanel.summary),
               clazz = ExploreStyles.ButtonSummary
             )(
@@ -421,7 +420,7 @@ object AsterismGroupObsList {
         .map(_._2)
 
       def replacePage(oid: Option[ObsIdSet], tid: Option[Target.Id]): Callback =
-        $.props.ctx.setPageVia(AppTab.Targets, oid, tid, SetRouteVia.HistoryReplace)
+        $.props.ctx.replacePage(AppTab.Targets, oid, tid)
 
       val obsMissing    = $.props.focusedObsSet.nonEmpty && selectedAG.isEmpty
       val targetMissing =

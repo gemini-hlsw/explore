@@ -195,7 +195,7 @@ object TargetTabContents {
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
     def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-      props.ctx.setPage(AppTab.Targets, obsIds, targetId)
+      props.ctx.pushPage(AppTab.Targets, obsIds, targetId)
 
     def selectObservationAndTarget(
       expandedIds:   ReuseView[SortedSet[ObsIdSet]],

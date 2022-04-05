@@ -54,7 +54,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.setPageSingleObs(explore.model.enum.AppTab.Observations, obs.id.some, None)
+              ctx.pushPageSingleObs(explore.model.enum.AppTab.Observations, obs.id.some, None)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

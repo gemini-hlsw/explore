@@ -120,24 +120,29 @@ case class AppContext[F[_]](
   val logger:  Logger[F],
   val P:       Parallel[F]
 ) {
-  def setPage(
+  def pushPage(
     appTab:   AppTab,
     obsIdSet: Option[ObsIdSet],
     targetId: Option[Target.Id]
   ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryPush)
 
-  def setPageSingleObs(
+  def replacePage(
+    appTab:   AppTab,
+    obsIdSet: Option[ObsIdSet],
+    targetId: Option[Target.Id]
+  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryReplace)
+
+  def pushPageSingleObs(
     appTab:   AppTab,
     obsId:    Option[Observation.Id],
     targetId: Option[Target.Id]
-  ): Callback = setPage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+  ): Callback = pushPage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
 
-  def setPageSingleObsVia(
+  def replacePageSingleObs(
     appTab:   AppTab,
     obsId:    Option[Observation.Id],
-    targetId: Option[Target.Id],
-    via:      SetRouteVia
-  ): Callback = setPageVia(appTab, obsId.map(o => ObsIdSet.one(o)), targetId, via)
+    targetId: Option[Target.Id]
+  ): Callback = replacePage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
 }
 
 object AppContext {

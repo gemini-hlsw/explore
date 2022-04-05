@@ -155,7 +155,7 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.ctx.setPageSingleObs(AppTab.Constraints, obsId.some, none)
+                        (props.ctx.pushPageSingleObs(AppTab.Constraints, obsId.some, none)
                           >> props.expandedIds.mod(_ + cell.value)
                           >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
                       ),

@@ -56,7 +56,7 @@ object ObsList {
     )
 
   protected def setObs(obsId: Option[Observation.Id])(implicit ctx: AppContextIO): Callback =
-    ctx.setPageSingleObs(AppTab.Observations, obsId, none)
+    ctx.pushPageSingleObs(AppTab.Observations, obsId, none)
 
   protected def insertObs(
     pos:     Int,
