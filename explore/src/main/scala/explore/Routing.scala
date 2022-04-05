@@ -4,6 +4,8 @@
 package explore
 
 import cats.syntax.all._
+import cats.Order._
+import cats.data.NonEmptySet
 import crystal.react.ReuseView
 import explore.components.ui.ExploreStyles
 import explore.config.SequenceEditor
@@ -21,6 +23,7 @@ import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
 
+import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
 
@@ -42,7 +45,7 @@ object Routing {
       val routingInfo = RoutingInfo.from(page)
       TargetTabContents(
         model.zoom(RootModel.userId).get,
-        routingInfo.focusedObs,
+        routingInfo.focusedObsSet,
         routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forSiderealTarget),
@@ -57,7 +60,7 @@ object Routing {
       val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
         model.zoom(RootModel.userId),
-        routingInfo.focusedObs,
+        routingInfo.focusedObsSet.map(_.head),
         routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks),
         model.zoom(RootModel.searchingTarget),
@@ -70,7 +73,7 @@ object Routing {
       AppCtx.using(implicit ctx =>
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
-          RoutingInfo.from(page).focusedObs,
+          RoutingInfo.from(page).focusedObsSet,
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
@@ -87,9 +90,23 @@ object Routing {
     RouterWithPropsConfigDsl[Page, ReuseView[RootModel]].buildConfig { dsl =>
       import dsl._
 
+      // We can't use gid.regexPattern because capture groups don't work here.
+      def gidRegEx[Id](implicit gid: Gid[Id]): String =
+        s"${gid.tag.value.toString}-[1-9a-f][0-9a-f]*"
+
       def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
-        // We can't use gid.regexPattern because capture groups don't work here.
-        string(s"${gid.tag.value.toString}-[1-9a-f][0-9a-f]*").pmapL(gid.fromString)
+        string(gidRegEx).pmapL(gid.fromString)
+
+      def idList[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[NonEmptySet[Id]] = {
+        val separator = ":"
+        val regex     = s"${gidRegEx[Id]}(?:\\$separator${gidRegEx[Id]})*"
+        string(regex).pmap(
+          _.split(s"\\$separator").toList
+            .map(s => gid.fromString.getOption(s))
+            .sequence
+            .map(l => NonEmptySet.fromSetUnsafe(SortedSet.from(l)))
+        )(_.toList.map(_.toString).mkString(separator))
+      }
 
       val rules =
         (emptyRule
@@ -112,44 +129,57 @@ object Routing {
             ("/target" / id[Target.Id]).xmapL(TargetPage.targetId)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
           | dynamicRouteCT(
-            ("/targets/obs" / id[Observation.Id] / "target" / id[Target.Id])
+            ("/targets/obs" / idList[Observation.Id] / "target" / id[Target.Id])
               .xmapL(TargetWithObsPage.iso)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
           | dynamicRouteCT(
-            ("/targets/obs" / id[Observation.Id]).xmapL(TargetsObsPage.obsId)
+            ("/targets/obs" / idList[Observation.Id]).xmapL(TargetsObsPage.obsId)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
           | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
           | staticRoute("/constraints", ConstraintsBasePage) ~> renderP {
             constraintSetTab(ConstraintsBasePage, _)
           }
           | dynamicRouteCT(
-            ("/constraints/obs" / id[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
+            ("/constraints/obs" / idList[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
           ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) })
 
       val configuration =
         rules
           .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
           .renderWithP(layout)
-      // .logToConsole
+          .logToConsole
 
       // Only link and run this in dev mode. Works since calling `verify` trigger verification immediately.
       if (LinkingInfo.developmentMode) {
         def randomId[Id](fromLong: Long => Option[Id]): Id =
           fromLong(Random.nextLong().abs).get
 
+        def oid      = randomId(Observation.Id.fromLong)
+        def tid      = randomId(Target.Id.fromLong)
+        def oneObs   = ObsIdSet.one(oid)
+        def twoObs   = oneObs.add(oid)
+        def threeObs = oneObs.add(oid)
+
         configuration
           .verify(
             HomePage,
             ProposalPage,
             ObservationsBasePage,
-            ObsPage(randomId(Observation.Id.fromLong)),
-            ObsTargetPage(randomId(Observation.Id.fromLong), randomId(Target.Id.fromLong)),
+            ObsPage(oid),
+            ObsTargetPage(oid, tid),
             TargetsBasePage,
-            TargetWithObsPage(randomId(Observation.Id.fromLong), randomId(Target.Id.fromLong)),
-            TargetsObsPage(randomId(Observation.Id.fromLong)),
-            TargetPage(randomId(Target.Id.fromLong)),
+            TargetWithObsPage(oneObs, tid),
+            TargetWithObsPage(twoObs, tid),
+            TargetWithObsPage(threeObs, tid),
+            TargetsObsPage(oneObs),
+            TargetsObsPage(twoObs),
+            TargetsObsPage(threeObs),
+            TargetPage(tid),
             ConfigurationsPage,
-            ConstraintsBasePage
+            ConstraintsBasePage,
+            ConstraintsObsPage(oneObs),
+            ConstraintsObsPage(twoObs),
+            ConstraintsObsPage(threeObs)
           )
       }
 

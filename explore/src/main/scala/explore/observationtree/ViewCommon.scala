@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.syntax.all._
 import explore._
 import explore.components.ui.ExploreStyles
+import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactEvent
@@ -16,7 +17,7 @@ import lucuma.core.model.Observation
 import react.beautifuldnd._
 
 trait ViewCommon {
-  def focusedObs: Option[Observation.Id]
+  def focusedObsSet: Option[ObsIdSet]
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -25,7 +26,7 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      selected = forceHighlight || (highlightSelected && focusedObs.exists(_ === obs.id))
+      selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id)))
     )
 
   def renderObsBadgeItem(
@@ -53,7 +54,7 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.setPage(explore.model.enum.AppTab.Observations, obs.id.some, None)
+              ctx.setPageSingleObs(explore.model.enum.AppTab.Observations, obs.id.some, None)
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

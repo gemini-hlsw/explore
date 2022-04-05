@@ -12,6 +12,7 @@ import crystal.react.StreamRenderer
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.RetryHelpers._
 import explore.common.SSOClient
+import explore.model.ObsIdSet
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.reusability._
@@ -106,23 +107,46 @@ case class AppContext[F[_]](
   staticData:  StaticData,
   actions:     Actions[F],
   sso:         SSOClient[F],
-  pageUrl:     (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
-  setPage:     (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback,
-  setPageVia:  (AppTab, Option[Observation.Id], Option[Target.Id], SetRouteVia) => Callback,
+  pageUrl:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+  setPage:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => Callback,
+  setPageVia:  (
+    AppTab,
+    Option[ObsIdSet],
+    Option[Target.Id],
+    SetRouteVia
+  ) => Callback,
   environment: ExecutionEnvironment
 )(implicit
   val F:       Applicative[F],
   val logger:  Logger[F],
   val P:       Parallel[F]
-)
+) {
+  def setPageSingleObs(
+    appTab:   AppTab,
+    obsId:    Option[Observation.Id],
+    targetId: Option[Target.Id]
+  ): Callback = setPage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+
+  def setPageSingleObsVia(
+    appTab:   AppTab,
+    obsId:    Option[Observation.Id],
+    targetId: Option[Target.Id],
+    via:      SetRouteVia
+  ): Callback = setPageVia(appTab, obsId.map(o => ObsIdSet.one(o)), targetId, via)
+}
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[Observation.Id], Option[Target.Id]) => String,
-    setPage:              (AppTab, Option[Observation.Id], Option[Target.Id]) => Callback,
-    setPageVia:           (AppTab, Option[Observation.Id], Option[Target.Id], SetRouteVia) => Callback
+    pageUrl:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+    setPage:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => Callback,
+    setPageVia:           (
+      AppTab,
+      Option[ObsIdSet],
+      Option[Target.Id],
+      SetRouteVia
+    ) => Callback
   ): F[AppContext[F]] =
     for {
       clients    <-

@@ -59,7 +59,7 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
-  focusedObs:        Option[Observation.Id],
+  focusedObsSet:     Option[ObsIdSet],
   focusedTarget:     Option[Target.Id],
   listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
   targetsUndoStacks: ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
@@ -181,7 +181,7 @@ object TargetTabContents {
       <.div(ExploreStyles.TreeBody)(
         AsterismGroupObsList(
           objectsWithObs,
-          props.focusedObs,
+          props.focusedObsSet,
           props.focusedTarget,
           selectedView,
           props.expandedIds,
@@ -194,8 +194,8 @@ object TargetTabContents {
       agl:    AsterismGroupList
     ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
 
-    def setPage(obsId: Option[Observation.Id], targetId: Option[Target.Id]): Callback =
-      props.ctx.setPage(AppTab.Targets, obsId, targetId)
+    def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
+      props.ctx.setPage(AppTab.Targets, obsIds, targetId)
 
     def selectObservationAndTarget(
       expandedIds:   ReuseView[SortedSet[ObsIdSet]],
@@ -207,7 +207,7 @@ object TargetTabContents {
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
-        setPage(obsId.some, targetId.some)
+        setPage(obsIdSet.some, targetId.some)
       selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
@@ -292,9 +292,8 @@ object TargetTabContents {
      *   edit.
      */
     def renderAsterismEditor(idsToEdit: ObsIdSet, asterismGroup: AsterismGroup): VdomNode = {
-      val focusedObs = props.focusedObs
-      val groupIds   = asterismGroup.obsIds
-      val targetIds  = asterismGroup.targetIds
+      val groupIds  = asterismGroup.obsIds
+      val targetIds = asterismGroup.targetIds
 
       val asterism: List[TargetWithId] =
         targetIds.toList.map(id => targetMap.get(id).map(_.targetWithId)).flatten
@@ -365,10 +364,9 @@ object TargetTabContents {
           )
           .addReuseByFrom(panels)
 
-      val title = focusedObs match {
+      val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
-        case None     =>
-          s"Editing ${idsToEdit.size} Asterisms"
+        case None     => s"Editing ${idsToEdit.size} Asterisms"
       }
 
       val selectedTarget: Option[ReuseViewOpt[Target]] =
@@ -385,11 +383,8 @@ object TargetTabContents {
         oids: ObsIdSet,
         tid:  Option[Target.Id],
         via:  SetRouteVia
-      ): Callback = {
-        val oid = oids.single
-        // it doesn't make sense here to have the target id in the url if there isn't an obsid.
-        ctx.setPageVia(AppTab.Targets, oid, oid.flatMap(_ => tid), via)
-      }
+      ): Callback =
+        ctx.setPageVia(AppTab.Targets, oids.some, tid, via)
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(

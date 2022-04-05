@@ -20,7 +20,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -42,7 +41,6 @@ final case class ConstraintsSummaryTable(
   hiddenColumns:    ReuseView[Set[String]],
   summarySorting:   ReuseView[List[(String, Boolean)]],
   selectedPanel:    ReuseView[SelectedPanel[ObsIdSet]],
-  focusedObs:       Option[Observation.Id],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
@@ -157,7 +155,7 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.ctx.setPage(AppTab.Constraints, obsId.some, none)
+                        (props.ctx.setPageSingleObs(AppTab.Constraints, obsId.some, none)
                           >> props.expandedIds.mod(_ + cell.value)
                           >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
                       ),

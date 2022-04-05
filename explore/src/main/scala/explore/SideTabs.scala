@@ -36,7 +36,9 @@ object SideTabs {
           val focus = p.routingInfo.appTab
 
           def onClickE[A](tab: AppTab) =
-            linkOverride[A](ctx.setPage(tab, p.routingInfo.focusedObs, p.routingInfo.focusedTarget))
+            linkOverride[A](
+              ctx.setPage(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget)
+            )
 
           def tabButton(tab: AppTab): Button =
             Button(
@@ -44,7 +46,7 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
               onClickE = onClickE[ButtonProps](tab)
-            )(^.href := ctx.pageUrl(tab, p.routingInfo.focusedObs, p.routingInfo.focusedTarget),
+            )(^.href := ctx.pageUrl(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget),
               tab.title
             )
 

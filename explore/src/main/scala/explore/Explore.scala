@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
+import explore.model.ObsIdSet
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
@@ -32,7 +33,6 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
@@ -144,25 +144,25 @@ object ExploreMain extends IOApp.Simple {
 
         def pageUrl(
           tab:           AppTab,
-          focusedObs:    Option[Observation.Id],
+          focusedObsSet: Option[ObsIdSet],
           focusedTarget: Option[Target.Id]
         ): String =
-          routerCtl.urlFor(RoutingInfo.getPage(tab, focusedObs, focusedTarget)).value
+          routerCtl.urlFor(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget)).value
 
         def setPage(
           tab:           AppTab,
-          focusedObs:    Option[Observation.Id],
+          focusedObsSet: Option[ObsIdSet],
           focusedTarget: Option[Target.Id]
         ) =
-          routerCtl.set(RoutingInfo.getPage(tab, focusedObs, focusedTarget))
+          routerCtl.set(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget))
 
         def setPageVia(
           tab:           AppTab,
-          focusedObs:    Option[Observation.Id],
+          focusedObsSet: Option[ObsIdSet],
           focusedTarget: Option[Target.Id],
           via:           SetRouteVia
         ) =
-          routerCtl.set(RoutingInfo.getPage(tab, focusedObs, focusedTarget), via)
+          routerCtl.set(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget), via)
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)

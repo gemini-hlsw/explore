@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.data.NonEmptySet
 import cats.syntax.all._
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -12,18 +13,18 @@ import monocle.Iso
 sealed trait Page extends Product with Serializable
 
 object Page {
-  case object HomePage                                                           extends Page
-  final case object ProposalPage                                                 extends Page
-  final case object ObservationsBasePage                                         extends Page
-  final case class ObsPage(obsId: Observation.Id)                                extends Page
-  final case class ObsTargetPage(obsId: Observation.Id, targetId: Target.Id)     extends Page
-  final case object TargetsBasePage                                              extends Page
-  final case class TargetsObsPage(obsId: Observation.Id)                         extends Page
-  final case class TargetPage(targetId: Target.Id)                               extends Page
-  final case class TargetWithObsPage(obsId: Observation.Id, targetId: Target.Id) extends Page
-  case object ConfigurationsPage                                                 extends Page
-  final case object ConstraintsBasePage                                          extends Page
-  final case class ConstraintsObsPage(obsId: Observation.Id)                     extends Page
+  case object HomePage                                                       extends Page
+  final case object ProposalPage                                             extends Page
+  final case object ObservationsBasePage                                     extends Page
+  final case class ObsPage(obsId: Observation.Id)                            extends Page
+  final case class ObsTargetPage(obsId: Observation.Id, targetId: Target.Id) extends Page
+  final case object TargetsBasePage                                          extends Page
+  final case class TargetsObsPage(obsId: ObsIdSet)                           extends Page
+  final case class TargetPage(targetId: Target.Id)                           extends Page
+  final case class TargetWithObsPage(obsId: ObsIdSet, targetId: Target.Id)   extends Page
+  case object ConfigurationsPage                                             extends Page
+  final case object ConstraintsBasePage                                      extends Page
+  final case class ConstraintsObsPage(obsId: ObsIdSet)                       extends Page
 
   implicit val eqPage: Eq[Page] = Eq.instance {
     case (HomePage, HomePage)                                   => true
@@ -54,8 +55,10 @@ object Page {
   }
 
   object TargetsObsPage {
-    final val obsId: Iso[Observation.Id, TargetsObsPage] =
-      Iso[Observation.Id, TargetsObsPage](TargetsObsPage.apply)(_.obsId)
+    final val obsId: Iso[NonEmptySet[Observation.Id], TargetsObsPage] =
+      Iso[NonEmptySet[Observation.Id], TargetsObsPage](ids => TargetsObsPage(ObsIdSet(ids)))(
+        _.obsId.idSet
+      )
   }
 
   object TargetPage {
@@ -64,14 +67,16 @@ object Page {
   }
 
   object TargetWithObsPage {
-    final val iso: Iso[(Observation.Id, Target.Id), TargetWithObsPage] =
-      Iso[(Observation.Id, Target.Id), TargetWithObsPage](t => TargetWithObsPage(t._1, t._2))(p =>
-        (p.obsId, p.targetId)
-      )
+    final val iso: Iso[(NonEmptySet[Observation.Id], Target.Id), TargetWithObsPage] =
+      Iso[(NonEmptySet[Observation.Id], Target.Id), TargetWithObsPage](t =>
+        TargetWithObsPage(ObsIdSet(t._1), t._2)
+      )(p => (p.obsId.idSet, p.targetId))
   }
 
   object ConstraintsObsPage {
-    final val obsId: Iso[Observation.Id, ConstraintsObsPage] =
-      Iso[Observation.Id, ConstraintsObsPage](ConstraintsObsPage.apply)(_.obsId)
+    final val obsId: Iso[NonEmptySet[Observation.Id], ConstraintsObsPage] =
+      Iso[NonEmptySet[Observation.Id], ConstraintsObsPage](ids =>
+        ConstraintsObsPage(ObsIdSet(ids))
+      )(_.obsId.idSet)
   }
 }

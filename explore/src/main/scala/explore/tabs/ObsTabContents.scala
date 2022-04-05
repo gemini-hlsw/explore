@@ -406,7 +406,7 @@ object ObsTabContents {
             tid: Option[Target.Id],
             via: SetRouteVia
           ): Callback =
-            ctx.setPageVia(AppTab.Observations, oid, tid, via)
+            ctx.setPageSingleObsVia(AppTab.Observations, oid, tid, via)
 
           val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,

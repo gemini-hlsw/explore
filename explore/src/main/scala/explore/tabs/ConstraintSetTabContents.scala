@@ -22,6 +22,7 @@ import explore.constraints.ConstraintsSummaryTable
 import explore.implicits._
 import explore.model._
 import explore.model.enum.AppTab
+import explore.model.reusability._
 import explore.observationtree.ConstraintGroupObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -29,7 +30,6 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -48,7 +48,7 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
-  focusedObs:       Option[Observation.Id],
+  focusedObsSet:    Option[ObsIdSet],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   listUndoStacks:   ReuseView[UndoStacks[IO, ConstraintGroupList]],
   // TODO: Clean up the groupUndoStack somewhere, somehow?
@@ -104,7 +104,7 @@ object ConstraintSetTabContents {
     def treeInner(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(constraintWithObs,
-                               props.focusedObs,
+                               props.focusedObsSet,
                                state.zoom(selectedLens),
                                props.expandedIds,
                                props.listUndoStacks
@@ -125,7 +125,7 @@ object ConstraintSetTabContents {
 
       // If we're editing at the group level (even a group of 1) and it no longer exists
       // (probably due to a merger), just go to the summary.
-      val updateSelection = props.focusedObs match {
+      val updateSelection = props.focusedObsSet match {
         case Some(_) => Callback.empty
         case None    =>
           groupList
@@ -179,7 +179,6 @@ object ConstraintSetTabContents {
               props.hiddenColumns,
               props.summarySorting,
               state.zoom(TwoPanelState.selected),
-              props.focusedObs,
               props.expandedIds,
               renderInTitle
             )
@@ -235,11 +234,9 @@ object ConstraintSetTabContents {
         val csUndo: ReuseView[UndoStacks[IO, ConstraintSet]] =
           props.groupUndoStack.zoom(atMapWithDefault(idsToEdit, UndoStacks.empty))
 
-        val title = props.focusedObs match {
+        val title = idsToEdit.single match {
           case Some(id) => s"Observation $id"
-          case None     =>
-            val titleSfx = if (idsToEdit.size == 1) "" else "s"
-            s"Editing Constraints for ${idsToEdit.size} Observation$titleSfx"
+          case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
         }
 
         Tile("constraints", title, backButton.some)(

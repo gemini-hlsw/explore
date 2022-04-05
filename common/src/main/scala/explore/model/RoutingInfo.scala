@@ -4,17 +4,17 @@
 package explore.model
 
 import cats.syntax.all._
+import explore.model.reusability._
 import explore.model.Page
 import explore.model.Page._
 import explore.model.enum.AppTab
 import japgolly.scalajs.react.Reusability
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 
 final case class RoutingInfo(
   appTab:        AppTab,
-  focusedObs:    Option[Observation.Id],
+  focusedObsSet: Option[ObsIdSet],
   focusedTarget: Option[Target.Id]
 )
 
@@ -25,9 +25,9 @@ object RoutingInfo {
     case HomePage                           => RoutingInfo(AppTab.Overview, none, none)
     case ProposalPage                       => RoutingInfo(AppTab.Proposal, none, none)
     case ObservationsBasePage               => RoutingInfo(AppTab.Observations, none, none)
-    case ObsPage(obsId)                     => RoutingInfo(AppTab.Observations, obsId.some, none)
+    case ObsPage(obsId)                     => RoutingInfo(AppTab.Observations, ObsIdSet.one(obsId).some, none)
     case ObsTargetPage(obsId, targetId)     =>
-      RoutingInfo(AppTab.Observations, obsId.some, targetId.some)
+      RoutingInfo(AppTab.Observations, ObsIdSet.one(obsId).some, targetId.some)
     case TargetsBasePage                    => RoutingInfo(AppTab.Targets, none, none)
     case TargetsObsPage(obsId)              => RoutingInfo(AppTab.Targets, obsId.some, none)
     case TargetPage(targetId)               => RoutingInfo(AppTab.Targets, none, targetId.some)
@@ -40,27 +40,28 @@ object RoutingInfo {
 
   def getPage(
     tab:           AppTab,
-    focusedObs:    Option[Observation.Id],
+    focusedObsSet: Option[ObsIdSet],
     focusedTarget: Option[Target.Id]
   ): Page =
     tab match {
       case AppTab.Proposal       => ProposalPage
       case AppTab.Overview       => HomePage
       case AppTab.Observations   =>
-        (focusedObs, focusedTarget) match {
-          case (Some(obsId), Some(targetId)) => ObsTargetPage(obsId, targetId)
-          case (Some(obsId), _)              => ObsPage(obsId)
-          case _                             => ObservationsBasePage
+        (focusedObsSet, focusedTarget) match {
+          case (Some(obsIds), Some(targetId)) if obsIds.length === 1 =>
+            ObsTargetPage(obsIds.head, targetId)
+          case (Some(obsIds), _) if obsIds.length === 1              => ObsPage(obsIds.head)
+          case _                                                     => ObservationsBasePage
         }
       case AppTab.Targets        =>
-        (focusedObs, focusedTarget) match {
-          case (Some(obsId), Some(targetId)) => TargetWithObsPage(obsId, targetId)
-          case (Some(obsId), _)              => TargetsObsPage(obsId)
-          case (_, Some(targetId))           => TargetPage(targetId)
-          case _                             => TargetsBasePage
+        (focusedObsSet, focusedTarget) match {
+          case (Some(obsIds), Some(targetId)) => TargetWithObsPage(obsIds, targetId)
+          case (Some(obsIds), _)              => TargetsObsPage(obsIds)
+          case (_, Some(targetId))            => TargetPage(targetId)
+          case _                              => TargetsBasePage
         }
       case AppTab.Configurations => ConfigurationsPage
       case AppTab.Constraints    =>
-        focusedObs.map(ConstraintsObsPage(_)).getOrElse(ConstraintsBasePage)
+        focusedObsSet.map(ConstraintsObsPage(_)).getOrElse(ConstraintsBasePage)
     }
 }

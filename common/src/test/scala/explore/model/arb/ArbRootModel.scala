@@ -7,11 +7,6 @@ import explore.model.ExploreLocalPreferences
 import explore.model.RootModel
 import explore.model.UserVault
 import explore.model.arb.all._
-import explore.model.enum.AppTab
-import lucuma.core.data.EnumZipper
-import lucuma.core.data.arb.ArbEnumZipper._
-import lucuma.core.model.Observation
-import lucuma.core.model.Target
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary
@@ -25,24 +20,16 @@ trait ArbRootModel {
 
   implicit val rootModelArb = Arbitrary[RootModel] {
     for {
-      vault         <- Gen.option(arbitrary[UserVault])
-      lp            <- arbitrary[ExploreLocalPreferences]
-      tabs          <- arbitrary[EnumZipper[AppTab]]
-      focusedObs    <- arbitrary[Option[Observation.Id]]
-      focusedTarget <- arbitrary[Option[Target.Id]]
-    } yield RootModel(vault, tabs, lp, focusedObs, focusedTarget)
+      vault <- Gen.option(arbitrary[UserVault])
+      lp    <- arbitrary[ExploreLocalPreferences]
+    } yield RootModel(vault, lp)
   }
 
   implicit def rootModelCogen: Cogen[RootModel] =
     Cogen[
-      (Option[UserVault],
-       EnumZipper[AppTab],
-       ExploreLocalPreferences,
-       Option[Observation.Id],
-       Option[Target.Id]
-      )
+      (Option[UserVault], ExploreLocalPreferences)
     ]
-      .contramap(m => (m.vault, m.tabs, m.localPreferences, m.focusedObs, m.focusedTarget))
+      .contramap(m => (m.vault, m.localPreferences))
 }
 
 object ArbRootModel extends ArbRootModel

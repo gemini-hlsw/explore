@@ -14,6 +14,7 @@ import explore.common.ObsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTargetsAndConstraints
 import explore.model.enum.AppTab
 import explore.observationtree.ObsBadge
@@ -55,7 +56,7 @@ object ObsList {
     )
 
   protected def setObs(obsId: Option[Observation.Id])(implicit ctx: AppContextIO): Callback =
-    ctx.setPage(AppTab.Observations, obsId, none)
+    ctx.setPageSingleObs(AppTab.Observations, obsId, none)
 
   protected def insertObs(
     pos:     Int,
@@ -136,7 +137,10 @@ object ObsList {
                 val focusedObs = obs.id
                 val selected   = props.focusedObs.exists(_ === focusedObs)
                 <.a(
-                  ^.href := ctx.pageUrl(AppTab.Observations, focusedObs.some, props.focusedTarget),
+                  ^.href := ctx.pageUrl(AppTab.Observations,
+                                        ObsIdSet.one(focusedObs).some,
+                                        props.focusedTarget
+                  ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                   ^.onClick ==> linkOverride(setObs(focusedObs.some))
                 )(
