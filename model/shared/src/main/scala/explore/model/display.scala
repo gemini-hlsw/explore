@@ -11,6 +11,9 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.util.Display
 
+import java.math.RoundingMode
+import java.text.DecimalFormat
+
 object display {
   implicit val displayProposalClass: Display[ProposalClass] =
     Display.byShortName(_.label)
@@ -76,4 +79,18 @@ object display {
     s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label}$wv$er"
   }
 
+  // Not implicit. When we have opaque types we may define a BrightnessValue.
+  // Scientific notation only kicks in when more than 3 decimal digits would be needed.
+  val displayBrightness: Display[BigDecimal] = Display.byShortName { x =>
+    if (x.scale <= 3 && x.precision <= 5)
+      x.toString
+    else {
+      // TODO The same scientific notation formatting is also defined in lucuma-ui.
+      // Should we move it to a Format[String, BigDecimal] in lucuma-core?
+      val formatter = new DecimalFormat("0.0E0")
+      formatter.setRoundingMode(RoundingMode.HALF_UP)
+      formatter.setMinimumFractionDigits(if (x.scale > 0) x.precision - 1 else x.scale)
+      formatter.format(x.bigDecimal).stripSuffix("E0").toLowerCase
+    }
+  }
 }

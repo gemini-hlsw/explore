@@ -6,7 +6,6 @@ package explore.optics
 import coulomb._
 import lucuma.core.enum.Band
 import lucuma.core.math.ApparentRadialVelocity
-import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Constants._
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
@@ -47,7 +46,7 @@ trait ModelOptics {
    * Getter for any kind of brightness measures of a `Target`, as long as it has a
    * `SpectralDefinition.BandNormalized`
    */
-  val targetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
+  val targetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BigDecimal]]]] =
     Getter { target =>
       val sourceProfile = Target.sourceProfile.get(target)
       SourceProfile.integratedBrightnesses

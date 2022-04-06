@@ -145,11 +145,11 @@ object ObsQueries {
   ): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match {
       case ElevationRange.AirMass(min, max)   =>
-        ElevationRangeInput(airmassRange =
-          AirmassRangeInput(min = min.value.assign, max = max.value.assign).assign
+        ElevationRangeInput(airMass =
+          AirMassRangeInput(min = min.value.assign, max = max.value.assign).assign
         )
       case ElevationRange.HourAngle(min, max) =>
-        ElevationRangeInput(hourAngleRange =
+        ElevationRangeInput(hourAngle =
           HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
         )
     }
