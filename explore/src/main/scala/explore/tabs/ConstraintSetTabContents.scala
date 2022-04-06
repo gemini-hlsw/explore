@@ -103,11 +103,12 @@ object ConstraintSetTabContents {
 
     def treeInner(constraintWithObs: ReuseView[ConstraintSummaryWithObervations]) =
       <.div(ExploreStyles.TreeBody)(
-        ConstraintGroupObsList(constraintWithObs,
-                               props.focusedObsSet,
-                               state.zoom(selectedLens),
-                               props.expandedIds,
-                               props.listUndoStacks
+        ConstraintGroupObsList(
+          constraintWithObs,
+          props.focusedObsSet,
+          state.zoom(selectedLens).set(SelectedPanel.summary).reuseAlways,
+          props.expandedIds,
+          props.listUndoStacks
         )
       )
 
@@ -122,16 +123,6 @@ object ConstraintSetTabContents {
       editedObsIds: ObsIdSet
     )(cswo:         ConstraintSummaryWithObervations): Callback = {
       val groupList = cswo.constraintGroups
-
-      // If we're editing at the group level (even a group of 1) and it no longer exists
-      // (probably due to a merger), just go to the summary.
-      val updateSelection = props.focusedObsSet match {
-        case Some(_) => Callback.empty
-        case None    =>
-          groupList
-            .get(editedObsIds)
-            .fold(state.zoom(selectedLens).set(SelectedPanel.summary))(_ => Callback.empty)
-      }
 
       val updateExpanded = findConstraintGroup(editedObsIds, groupList).fold(Callback.empty) { cg =>
         // We should always find the constraint group.
@@ -150,7 +141,7 @@ object ConstraintSetTabContents {
           }
       }
 
-      updateSelection >> updateExpanded
+      updateExpanded
     }
 
     val backButton = Reuse.always[VdomNode](
@@ -160,7 +151,10 @@ object ConstraintSetTabContents {
         compact = true,
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](state.zoom(selectedLens).set(SelectedPanel.tree))
+        onClickE = linkOverride[ButtonProps](
+          ctx.pushPage(AppTab.Constraints, none, none) >>
+            state.zoom(selectedLens).set(SelectedPanel.tree)
+        )
       )(^.href := ctx.pageUrl(AppTab.Constraints, none, none), Icons.ChevronLeft)
     )
 
@@ -178,7 +172,6 @@ object ConstraintSetTabContents {
               constraintsWithObs.get.constraintGroups,
               props.hiddenColumns,
               props.summarySorting,
-              state.zoom(TwoPanelState.selected),
               props.expandedIds,
               renderInTitle
             )
@@ -287,6 +280,16 @@ object ConstraintSetTabContents {
       .withHooks[Props]
       .useStateViewWithReuse(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
       .useEffectOnMountBy((props, state) => readWidthPreference(props, state))
+      .useEffectWithDepsBy((props, state) =>
+        (props.focusedObsSet, state.zoom(selectedLens).value.reuseByValue)
+      ) { (_, _) => params =>
+        val (focusedObsSet, selected) = params
+        (focusedObsSet, selected.get) match {
+          case (Some(obsIdSet), _)             => selected.set(SelectedPanel.editor(obsIdSet))
+          case (None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
+          case _                               => Callback.empty
+        }
+      }
       .renderWithReuse { (props, state) =>
         implicit val ctx = props.ctx
 

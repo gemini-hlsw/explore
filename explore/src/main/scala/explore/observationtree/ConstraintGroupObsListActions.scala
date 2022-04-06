@@ -13,16 +13,15 @@ import explore.common.ObsQueries
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.SelectedPanel
-import explore.model.SelectedPanel.Editor
 import explore.undo._
+import japgolly.scalajs.react.callback.Callback
 import lucuma.schemas.ObservationDB
 
 import scala.collection.immutable.SortedSet
 
 object ConstraintGroupObsListActions {
   private def getter(draggedIds: ObsIdSet): ConstraintGroupList => Option[ConstraintGroup] =
-    _.values.find(_.obsIds.intersects(draggedIds))
+    _.values.find(cg => draggedIds.subsetOf(cg.obsIds))
 
   private def setter(
     draggedIds: ObsIdSet
@@ -31,7 +30,7 @@ object ConstraintGroupObsListActions {
       val constraintGroups = originalGroupList.values
 
       // should always have a constraint group and be able to find the dragged ids in the list
-      (ocg, constraintGroups.find(_.obsIds.intersects(draggedIds)))
+      (ocg, constraintGroups.find(cg => draggedIds.subsetOf(cg.obsIds)))
         .mapN { case (destCg, srcCg) =>
           val tempList    = originalGroupList - srcCg.obsIds
           val updatedList =
@@ -63,19 +62,10 @@ object ConstraintGroupObsListActions {
       ) + (destIds ++ draggedIds)
     }
 
-  private def updateSelected(draggedIds: ObsIdSet, optDestIds: Option[ObsIdSet])(
-    selected:                            SelectedPanel[ObsIdSet]
-  ) =
-    selected match {
-      // If in edit mode, always edit the destination.
-      case Editor(_) => Editor(optDestIds.fold(draggedIds)(_ ++ draggedIds))
-      case _         => selected
-    }
-
   def obsConstraintGroup(
     draggedIds:  ObsIdSet,
     expandedIds: View[SortedSet[ObsIdSet]],
-    selected:    View[SelectedPanel[ObsIdSet]]
+    setObsSet:   Option[ObsIdSet] => Callback
   )(implicit c:  TransactionalClient[IO, ObservationDB]) =
     Action(getter = getter(draggedIds), setter = setter(draggedIds))(
       onSet = (cgl, ocg) =>
@@ -86,7 +76,7 @@ object ConstraintGroupObsListActions {
             .map(_.obsIds)
           ObsQueries.updateObservationConstraintSet[IO](draggedIds.toList, cg.constraintSet) >>
             expandedIds.mod(updateExpandedIds(draggedIds, optDestIds) _).to[IO] >>
-            selected.mod(updateSelected(draggedIds, optDestIds) _).to[IO]
+            setObsSet(optDestIds.fold(draggedIds)(_ ++ draggedIds).some).to[IO]
         }
     )
 }

@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.ReuseView
 import crystal.react.View
+import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.common.ConstraintGroupQueries._
 import explore.components.ui.ExploreStyles
@@ -15,8 +16,6 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.SelectedPanel
-import explore.model.SelectedPanel._
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.reusability._
@@ -45,7 +44,7 @@ import scala.collection.immutable.SortedSet
 final case class ConstraintGroupObsList(
   constraintsWithObs: ReuseView[ConstraintSummaryWithObervations],
   focusedObsSet:      Option[ObsIdSet],
-  selected:           ReuseView[SelectedPanel[ObsIdSet]],
+  setSummaryPanel:    Reuse[Callback],
   expandedIds:        ReuseView[SortedSet[ObsIdSet]],
   undoStacks:         ReuseView[UndoStacks[IO, ConstraintGroupList]]
 )(implicit val ctx:   AppContextIO)
@@ -79,10 +78,10 @@ object ConstraintGroupObsList {
      * However, the user may have something selected, but be dragging something that is NOT in the
      * selection - in which case we just drag the individual item.
      */
-    def getDraggedIds(dragId: String, selected: SelectedPanel[ObsIdSet]): Option[ObsIdSet] =
+    def getDraggedIds(dragId: String, selected: Option[ObsIdSet]): Option[ObsIdSet] =
       Observation.Id.parse(dragId).map { dId =>
         val dIdSet = ObsIdSet.one(dId)
-        selected.optValue.fold(dIdSet) { selectedIds =>
+        selected.fold(dIdSet) { selectedIds =>
           if (selectedIds.contains(dId)) selectedIds
           else dIdSet
         }
@@ -91,7 +90,7 @@ object ConstraintGroupObsList {
     def onDragEnd(
       undoCtx:     UndoContext[ConstraintGroupList],
       expandedIds: ReuseView[SortedSet[ObsIdSet]],
-      selected:    ReuseView[SelectedPanel[ObsIdSet]]
+      setObsSet:   Option[ObsIdSet] => Callback
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>
@@ -99,14 +98,14 @@ object ConstraintGroupObsList {
         val oData = for {
           destination <- result.destination.toOption
           destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
-          draggedIds  <- getDraggedIds(result.draggableId, props.selected.get)
+          draggedIds  <- getDraggedIds(result.draggableId, props.focusedObsSet)
           if !destIds.intersects(draggedIds)
           destCg      <- props.constraintsWithObs.get.constraintGroups.get(destIds)
         } yield (destCg, draggedIds)
 
         oData.foldMap { case (destCg, draggedIds) =>
           ConstraintGroupObsListActions
-            .obsConstraintGroup(draggedIds, expandedIds, selected)
+            .obsConstraintGroup(draggedIds, expandedIds, setObsSet)
             .set(undoCtx)(destCg.some)
         }
       }
@@ -130,7 +129,7 @@ object ConstraintGroupObsList {
               provided.dragHandleProps,
               props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
-          getDraggedIds(rubric.draggableId, props.selected.get)
+          getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
               if (obsIds.size === 1)
                 observations.get(obsIds.head).map(obs => props.renderObsBadge(obs))
@@ -146,37 +145,23 @@ object ConstraintGroupObsList {
             .getOrElse(<.span("ERROR"))
         )
 
-      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
-
       def isObsSelected(obsId: Observation.Id): Boolean =
-        props.selected.get.optValue.exists(_.contains(obsId))
+        props.focusedObsSet.exists(_.contains(obsId))
 
-      def setObsSet(obsId: Option[ObsIdSet]): Callback =
-        ctx.pushPage(AppTab.Constraints, obsId, none)
+      def setObsSet(obsIdSet: Option[ObsIdSet]): Callback =
+        ctx.pushPage(AppTab.Constraints, obsIdSet, none)
 
-      def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
-        props.selected.set(SelectedPanel.editor(obsIdSet))
+      def setObs(obsId: Observation.Id): Callback =
+        setObsSet(ObsIdSet.one(obsId).some)
 
-      def setSelectedPanelToSingle(obsId: Observation.Id): Callback =
-        setSelectedPanelToSet(ObsIdSet.one(obsId))
-
-      def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        setObsSet(ObsIdSet.one(obsId).some) >> setSelectedPanelToSingle(obsId)
-
-      def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback =
-        setObsSet(obsIdSet.some) >> setSelectedPanelToSet(obsIdSet)
-
-      def clearSelectedPanelAndObs: Callback =
-        setObsSet(none) >> props.selected.set(SelectedPanel.tree)
+      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, setObsSet)
 
       def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
-        props.selected.get.optValue.fold(setSelectedPanelAndObs(obsId)) { selectedIds =>
+        props.focusedObsSet.fold(setObs(obsId)) { selectedIds =>
           if (selectedIds.forall(groupIds.contains)) {
             if (selectedIds.contains(obsId)) {
-              selectedIds.removeOne(obsId).fold(clearSelectedPanelAndObs) {
-                setSelectedPanelAndObsToSet
-              }
-            } else setSelectedPanelAndObsToSet(selectedIds.add(obsId))
+              setObsSet(selectedIds.removeOne(obsId))
+            } else setObsSet(selectedIds.add(obsId).some)
           } else Callback.empty // Not in the same group
         }
 
@@ -184,7 +169,7 @@ object ConstraintGroupObsList {
         val obsIds        = constraintGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
-        val groupSelected = props.selected.get.optValue.exists(_.intersects(obsIds))
+        val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
           .exists((ids: ObsIdSet) => ids === obsIds)
@@ -225,9 +210,7 @@ object ConstraintGroupObsList {
                     Option.when(!state.get.dragging)(ExploreStyles.UnselectedObsTreeGroup)
                   )
                   .orEmpty
-              )(^.cursor.pointer,
-                ^.onClick --> setSelectedPanelAndObsToSet(constraintGroup.obsIds)
-              )(
+              )(^.cursor.pointer, ^.onClick --> setObsSet(constraintGroup.obsIds.some))(
                 csHeader,
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
@@ -236,7 +219,7 @@ object ConstraintGroupObsList {
                       highlightSelected = true,
                       forceHighlight = isObsSelected(obs.id),
                       linkToObsTab = false,
-                      onSelect = setSelectedPanelAndObs,
+                      onSelect = setObs,
                       onCtrlClick = id => handleCtrlClick(id, obsIds)
                     )(obs, idx)
                   }
@@ -255,7 +238,7 @@ object ConstraintGroupObsList {
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
-            Button(onClick = setObsSet(none) >> props.selected.set(SelectedPanel.summary),
+            Button(onClick = setObsSet(none) >> props.setSummaryPanel.value,
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -280,7 +263,6 @@ object ConstraintGroupObsList {
       val constraintsWithObs = $.props.constraintsWithObs.get
       val constraintGroups   = constraintsWithObs.constraintGroups
       val expandedIds        = $.props.expandedIds
-      val selected           = $.props.selected
 
       val selectedGroup =
         $.props.focusedObsSet
@@ -293,36 +275,15 @@ object ConstraintGroupObsList {
           $.props.ctx.replacePage(AppTab.Constraints, none, none)
         else Callback.empty
 
-      val setAndGetSelected = selected.get match {
-        case Uninitialized =>
-          selected
-            .set(
-              selectedGroup.fold(SelectedPanel.tree[ObsIdSet]) { _ =>
-                SelectedPanel.editor(
-                  $.props.focusedObsSet.get
-                ) // selectedGroup can't have a value without focusedobs having a value
-              }
-            )
-            .as(selectedGroup)
-        // .map(_ => infoFromFocused.map(_._2))
-        case Editor(ids)   =>
-          CallbackTo(constraintGroups.find(_._1.intersect(ids).nonEmpty).map(_._2))
-        case _             => CallbackTo(none)
-      }
-
-      def expandSelected(cgOpt: Option[ConstraintGroup]) =
-        cgOpt
-          .map(cg => expandedIds.mod(_ + cg.obsIds))
-          .orEmpty
+      val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))
 
       val cleanupExpandedIds =
         expandedIds.mod(_.filter(ids => constraintGroups.contains(ids)))
 
       for {
-        _     <- unfocus
-        cgOpt <- setAndGetSelected
-        _     <- expandSelected(cgOpt)
-        _     <- cleanupExpandedIds
+        _ <- unfocus
+        _ <- expandSelected
+        _ <- cleanupExpandedIds
       } yield ()
     }
     .configure(Reusability.shouldComponentUpdate)

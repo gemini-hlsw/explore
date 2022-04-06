@@ -14,7 +14,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.SelectedPanel
 import explore.model.enum.AppTab
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -40,7 +39,6 @@ final case class ConstraintsSummaryTable(
   constraintList:   ConstraintGroupList,
   hiddenColumns:    ReuseView[Set[String]],
   summarySorting:   ReuseView[List[(String, Boolean)]],
-  selectedPanel:    ReuseView[SelectedPanel[ObsIdSet]],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
@@ -90,13 +88,12 @@ object ConstraintsSummaryTable {
             .Column(id, accessor)
             .setHeader(columnNames(id))
 
+        def setObsSet(obsIdSet: ObsIdSet): Callback =
+          props.ctx.pushPage(AppTab.Constraints, obsIdSet.some, none)
+
         List(
           column("edit", ConstraintGroup.obsIds.get)
-            .setCell(cell =>
-              <.a(^.onClick ==> (_ => props.selectedPanel.set(SelectedPanel.editor(cell.value))),
-                  Icons.Edit
-              )
-            )
+            .setCell(cell => <.a(^.onClick ==> (_ => setObsSet(cell.value)), Icons.Edit))
             .setDisableSortBy(true),
           column("iq", ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get)
             .setCell(_.value.label)
@@ -157,7 +154,7 @@ object ConstraintsSummaryTable {
                       ^.onClick ==> (_ =>
                         (props.ctx.pushPageSingleObs(AppTab.Constraints, obsId.some, none)
                           >> props.expandedIds.mod(_ + cell.value)
-                          >> props.selectedPanel.set(SelectedPanel.editor(ObsIdSet.one(obsId))))
+                          >> setObsSet(ObsIdSet.one(obsId)))
                       ),
                       obsId.toString
                     )

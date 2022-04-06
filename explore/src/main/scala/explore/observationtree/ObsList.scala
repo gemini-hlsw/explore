@@ -41,6 +41,7 @@ final case class ObsList(
   observations:     ReuseView[ObservationList],
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
+  setSummaryPanel:  Reuse[Callback],
   undoStacks:       ReuseView[UndoStacks[IO, ObservationList]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ObsList](ObsList.component) {}
@@ -126,7 +127,9 @@ object ObsList {
             UndoButtons(undoCtx, size = Mini, disabled = adding.get)
           ),
           <.div(
-            Button(onClick = setObs(none), clazz = ExploreStyles.ButtonSummary)(
+            Button(onClick = setObs(none) >> props.setSummaryPanel.value,
+                   clazz = ExploreStyles.ButtonSummary
+            )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
               "Observations Summary"
             )

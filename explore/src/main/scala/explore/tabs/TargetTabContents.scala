@@ -183,7 +183,7 @@ object TargetTabContents {
           objectsWithObs,
           props.focusedObsSet,
           props.focusedTarget,
-          selectedView,
+          selectedView.set(SelectedPanel.summary).reuseAlways,
           props.expandedIds,
           props.listUndoStacks
         )
@@ -192,31 +192,27 @@ object TargetTabContents {
     def findAsterismGroup(
       obsIds: ObsIdSet,
       agl:    AsterismGroupList
-    ): Option[AsterismGroup] = agl.values.find(_.obsIds.intersects(obsIds))
+    ): Option[AsterismGroup] = agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
     def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
       props.ctx.pushPage(AppTab.Targets, obsIds, targetId)
 
     def selectObservationAndTarget(
-      expandedIds:   ReuseView[SortedSet[ObsIdSet]],
-      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
-      obsId:         Observation.Id,
-      targetId:      Target.Id
+      expandedIds: ReuseView[SortedSet[ObsIdSet]],
+      obsId:       Observation.Id,
+      targetId:    Target.Id
     ): Callback = {
       val obsIdSet = ObsIdSet.one(obsId)
       findAsterismGroup(obsIdSet, asterismGroupsWithObs.get.asterismGroups)
         .map(ag => expandedIds.mod(_ + ag.obsIds))
         .orEmpty >>
         setPage(obsIdSet.some, targetId.some)
-      selectedPanel.set(SelectedPanel.editor(obsIdSet.asRight))
     }
 
     def selectTarget(
-      selectedPanel: ReuseView[SelectedPanel[TargetOrObsSet]],
-      targetId:      Target.Id
+      targetId: Target.Id
     ): Callback =
-      setPage(none, targetId.some) >>
-        selectedPanel.set(SelectedPanel.editor(targetId.asLeft))
+      setPage(none, targetId.some)
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,
@@ -269,10 +265,9 @@ object TargetTabContents {
                 targets,
                 hiddenColumns,
                 Reuse(selectObservationAndTarget _)(
-                  expandedIds,
-                  selectedView
+                  expandedIds
                 ),
-                Reuse.currying(selectedView).in(selectTarget _),
+                (selectTarget _).reuseAlways,
                 renderInTitle
               ): VdomNode
           )
@@ -376,7 +371,7 @@ object TargetTabContents {
               _.map(twid => if (twid.id === targetId) TargetWithId(targetId, target) else twid)
             )
 
-          asterismView.zoom(optional)
+          asterismView.zoom(optional).addReuseBy(targetId)
         }
 
       def setCurrentTarget(
@@ -535,6 +530,18 @@ object TargetTabContents {
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewWithReuse(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
+      .useEffectWithDepsBy((props, state) =>
+        (props.focusedObsSet, props.focusedTarget, state.zoom(selectedLens).value.reuseByValue)
+      ) { (_, _) => params =>
+        val (focusedObsSet, focusedTarget, selected) = params
+        Callback.log(s"Tab contents $focusedObsSet, $focusedTarget, ${selected.get}") >>
+          ((focusedObsSet, focusedTarget, selected.get) match {
+            case (Some(obsIdSet), _, _)                => selected.set(SelectedPanel.editor(obsIdSet.asRight))
+            case (None, Some(targetId), _)             => selected.set(SelectedPanel.editor(targetId.asLeft))
+            case (None, None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
+            case _                                     => Callback.empty
+          })
+      }
       .useStateViewWithReuse(TargetVisualOptions.Default)
       .useResizeDetector()
       .useStateViewWithReuse(proportionalLayouts)
