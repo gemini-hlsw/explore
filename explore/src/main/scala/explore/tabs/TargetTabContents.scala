@@ -534,13 +534,12 @@ object TargetTabContents {
         (props.focusedObsSet, props.focusedTarget, state.zoom(selectedLens).value.reuseByValue)
       ) { (_, _) => params =>
         val (focusedObsSet, focusedTarget, selected) = params
-        Callback.log(s"Tab contents $focusedObsSet, $focusedTarget, ${selected.get}") >>
-          ((focusedObsSet, focusedTarget, selected.get) match {
-            case (Some(obsIdSet), _, _)                => selected.set(SelectedPanel.editor(obsIdSet.asRight))
-            case (None, Some(targetId), _)             => selected.set(SelectedPanel.editor(targetId.asLeft))
-            case (None, None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
-            case _                                     => Callback.empty
-          })
+        (focusedObsSet, focusedTarget, selected.get) match {
+          case (Some(obsIdSet), _, _)                => selected.set(SelectedPanel.editor(obsIdSet.asRight))
+          case (None, Some(targetId), _)             => selected.set(SelectedPanel.editor(targetId.asLeft))
+          case (None, None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
+          case _                                     => Callback.empty
+        }
       }
       .useStateViewWithReuse(TargetVisualOptions.Default)
       .useResizeDetector()
