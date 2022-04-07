@@ -73,10 +73,7 @@ final case class ObsTabContents(
   searching:        ReuseView[Set[Target.Id]],
   hiddenColumns:    ReuseView[Set[String]]
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[ObsTabContents](ObsTabContents.component) {
-  def selectedPanel: SelectedPanel[Observation.Id] =
-    focusedObs.fold(SelectedPanel.tree[Observation.Id])(SelectedPanel.editor)
-}
+    extends ReactFnProps[ObsTabContents](ObsTabContents.component)
 
 object ObsTabTiles {
   val NotesId: NonEmptyString         = "notes"
@@ -223,6 +220,8 @@ object ObsTabContents {
   type Props = ObsTabContents
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
+  val selectedLens = TwoPanelState.selected[Observation.Id]
+
   def makeConstraintsSelector(
     constraintGroups: ReuseView[ConstraintsList],
     obsView:          Pot[ReuseView[ObservationData]]
@@ -299,7 +298,7 @@ object ObsTabContents {
             .runAsyncAndForget
 
     val treeWidth    = panels.get.treeWidth.toInt
-    val selectedView = panels.zoom(TwoPanelState.selected[Observation.Id])
+    val selectedView = panels.zoom(selectedLens)
 
     // Tree area
     def tree(observations: ReuseView[ObservationList]) =
@@ -313,6 +312,7 @@ object ObsTabContents {
           observations,
           props.focusedObs,
           props.focusedTarget,
+          selectedView.set(SelectedPanel.summary).reuseAlways,
           props.undoStacks.zoom(ModelUndoStacks.forObsList)
         )
       )
@@ -333,7 +333,9 @@ object ObsTabContents {
         size = Mini,
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
-        onClickE = linkOverride[ButtonProps](selectedView.set(SelectedPanel.tree))
+        onClickE = linkOverride[ButtonProps](
+          ctx.pushPage(AppTab.Observations, none, none) >> selectedView.set(SelectedPanel.tree)
+        )
       )(^.href := ctx.pageUrl(AppTab.Observations, none, none), Icons.ChevronLeft)
     )
 
@@ -475,9 +477,13 @@ object ObsTabContents {
       ).withKey(obsId.toString)
 
     val rightSide =
-      obsIdOpt.fold(
-        <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-              <.div("Select or add an observation")
+      obsIdOpt.fold[VdomNode](
+        Tile("observations", "Observations Summary", backButton.some, key = "observationsSummary")(
+          Reuse.by(obsWithConstraints)((_: Tile.RenderInTitle) =>
+            <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+                  <.div("Select or add an observation")
+            )
+          )
         )
       )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
 
@@ -518,12 +524,17 @@ object ObsTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuseBy(p => TwoPanelState.initial(p.selectedPanel))
-      .useEffectBy((p, panels) =>
-        if (panels.get.selected =!= p.selectedPanel)
-          panels.mod(TwoPanelState.selected.replace(p.selectedPanel))
-        else Callback(panels.get)
-      )
+      .useStateViewWithReuse(TwoPanelState.initial[Observation.Id](SelectedPanel.Uninitialized))
+      .useEffectWithDepsBy((props, panels) =>
+        (props.focusedObs, panels.zoom(selectedLens).value.reuseByValue)
+      ) { (_, _) => params =>
+        val (focusedObs, selected) = params
+        (focusedObs, selected.get) match {
+          case (Some(obsId), _)                => selected.set(SelectedPanel.editor(obsId))
+          case (None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
+          case _                               => Callback.empty
+        }
+      }
       .useStateViewWithReuse(TargetVisualOptions.Default)
       .useStateViewWithReuse(defaultLayout)
       .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>

@@ -8,6 +8,7 @@ import cats.syntax.all._
 import clue.TransactionalClient
 import crystal.react.ReuseView
 import crystal.react.View
+import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.common.AsterismQueries._
 import explore.components.ui.ExploreStyles
@@ -15,8 +16,6 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.SelectedPanel
-import explore.model.SelectedPanel._
 import explore.model.TargetGroup
 import explore.model.enum.AppTab
 import explore.model.reusability._
@@ -50,7 +49,7 @@ final case class AsterismGroupObsList(
   asterismsWithObs: ReuseView[AsterismGroupsWithObs],
   focusedObsSet:    Option[ObsIdSet],
   focusedTarget:    Option[Target.Id],
-  selected:         ReuseView[SelectedPanel[AsterismGroupObsList.TargetOrObsSet]],
+  setSummaryPanel:  Reuse[Callback],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   undoStacks:       ReuseView[UndoStacks[IO, AsterismGroupsWithObs]]
 )(implicit val ctx: AppContextIO)
@@ -100,8 +99,7 @@ object AsterismGroupObsList {
       parseDragId(dragId).map {
         case Left(targetId) => targetId.asLeft
         case Right(obsId)   =>
-          props.selected.get.optValue
-            .flatMap(_.toOption)
+          props.focusedObsSet
             .fold(ObsIdSet.one(obsId)) { selectedIds =>
               if (selectedIds.contains(obsId)) selectedIds
               else ObsIdSet.one(obsId)
@@ -111,8 +109,7 @@ object AsterismGroupObsList {
 
     def onDragEnd(
       undoCtx:     UndoContext[AsterismGroupsWithObs],
-      expandedIds: ReuseView[SortedSet[ObsIdSet]],
-      selected:    ReuseView[SelectedPanel[TargetOrObsSet]]
+      expandedIds: ReuseView[SortedSet[ObsIdSet]]
     )(implicit
       c:           TransactionalClient[IO, ObservationDB]
     ): (DropResult, ResponderProvided) => Callback = (result, _) =>
@@ -136,7 +133,7 @@ object AsterismGroupObsList {
                 .set(undoCtx)(destAg.some)
             case Right(obsIds) if !destAg.obsIds.intersects(obsIds)     =>
               AsterismGroupObsListActions
-                .dropObservations(obsIds, expandedIds, selected, setObsSet)
+                .dropObservations(obsIds, expandedIds, setObsSet)
                 .set(undoCtx)(destAg.some)
             case _                                                      => Callback.empty
           }
@@ -183,50 +180,39 @@ object AsterismGroupObsList {
             .getOrElse(<.span("ERROR"))
         )
 
-      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds, props.selected)
-
-      def isTargetSelected(targetId: Target.Id): Boolean =
-        props.selected.get.optValue.flatMap(_.left.toOption).exists(_ === targetId)
-
-      def setObsAndTarget(obsId: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-        props.ctx.pushPage(AppTab.Targets, obsId, targetId)
-
-      def setSelectedPanelToTarget(targetId: Target.Id): Callback =
-        setObsAndTarget(none, targetId.some) >>
-          props.selected.set(SelectedPanel.editor(targetId.asLeft))
+      val handleDragEnd = onDragEnd(undoCtx, props.expandedIds)
 
       def isObsSelected(obsId: Observation.Id): Boolean =
-        props.selected.get.optValue.flatMap(_.toOption).exists(_.exists(_ === obsId))
+        props.focusedObsSet.exists(_.contains(obsId))
 
-      def setSelectedPanelToSet(obsIdSet: ObsIdSet): Callback =
-        props.selected.set(SelectedPanel.editor(obsIdSet.asRight))
+      def isTargetSelected(targetId: Target.Id): Boolean =
+        props.focusedObsSet.isEmpty && props.focusedTarget.exists(_ === targetId)
 
-      def setSelectedPanelToSingle(obsId: Observation.Id): Callback =
-        setSelectedPanelToSet(ObsIdSet.one(obsId))
+      def setObsAndTarget(obsIdSet: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
+        props.ctx.pushPage(AppTab.Targets, obsIdSet, targetId)
 
-      def setSelectedPanelAndObs(obsId: Observation.Id): Callback =
-        setObsAndTarget(ObsIdSet.one(obsId).some, props.focusedTarget) >>
-          setSelectedPanelToSingle(obsId)
+      def setToTarget(targetId: Target.Id): Callback =
+        setObsAndTarget(none, targetId.some)
 
-      def setSelectedPanelAndObsToSet(obsIdSet: ObsIdSet): Callback =
-        setObsAndTarget(obsIdSet.some, props.focusedTarget) >>
-          setSelectedPanelToSet(obsIdSet)
+      def setObsSetKeepTarget(obsIdSet: ObsIdSet): Callback =
+        setObsAndTarget(obsIdSet.some, props.focusedTarget)
 
-      def clearSelectedPanelAndObs: Callback =
-        setObsAndTarget(none, none) >>
-          props.selected.set(SelectedPanel.tree)
+      def setObsKeepTarget(obsId: Observation.Id): Callback =
+        setObsSetKeepTarget(ObsIdSet.one(obsId))
 
-      def handleCtrlClick(obsIds: Observation.Id, groupIds: ObsIdSet) =
-        props.selected.get.optValue.flatMap(_.toOption).fold(setSelectedPanelAndObs(obsIds)) {
-          selectedIds =>
-            if (selectedIds.subsetOf(groupIds)) {
-              if (selectedIds.contains(obsIds)) {
-                selectedIds.removeOne(obsIds).fold(clearSelectedPanelAndObs) {
-                  setSelectedPanelAndObsToSet
-                }
-              } else
-                setSelectedPanelAndObsToSet(selectedIds.add(obsIds))
-            } else Callback.empty // Not in the same group
+      val clearFocused: Callback =
+        setObsAndTarget(none, none)
+
+      def handleCtrlClick(obsId: Observation.Id, groupIds: ObsIdSet) =
+        props.focusedObsSet.fold(setObsKeepTarget(obsId)) { selectedIds =>
+          if (selectedIds.subsetOf(groupIds)) {
+            if (selectedIds.contains(obsId)) {
+              selectedIds.removeOne(obsId).fold(clearFocused) {
+                setObsSetKeepTarget
+              }
+            } else
+              setObsSetKeepTarget(selectedIds.add(obsId))
+          } else Callback.empty // Not in the same group
         }
 
       def getAsterismGroupName(asterismGroup: AsterismGroup): String = {
@@ -239,8 +225,7 @@ object AsterismGroupObsList {
         val obsIds        = asterismGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
-        val groupSelected =
-          props.selected.get.optValue.flatMap(_.toOption).exists(_.intersects(obsIds))
+        val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
           .exists(_ === obsIds)
@@ -286,7 +271,7 @@ object AsterismGroupObsList {
               )(
                 ^.cursor.pointer,
                 ^.onClick --> {
-                  setSelectedPanelAndObsToSet(obsIds)
+                  setObsSetKeepTarget(obsIds)
                 }
               )(
                 csHeader,
@@ -298,7 +283,7 @@ object AsterismGroupObsList {
                         highlightSelected = true,
                         forceHighlight = isObsSelected(obs.id),
                         linkToObsTab = false,
-                        onSelect = _ => setSelectedPanelAndObs(obs.id),
+                        onSelect = setObsKeepTarget,
                         onCtrlClick = _ => handleCtrlClick(obs.id, obsIds)
                       )(obs, idx)
                     }
@@ -328,7 +313,7 @@ object AsterismGroupObsList {
             provided.innerRef,
             provided.draggableProps,
             props.getDraggedStyle(provided.draggableStyle, snapshot),
-            ^.onClick ==> { _ => setSelectedPanelToTarget(targetId) }
+            ^.onClick ==> { _ => setToTarget(targetId) }
           )(
             <.span(provided.dragHandleProps)(
               Card(raised = isTargetSelected(targetId))(ExploreStyles.ObsBadge)(
@@ -360,8 +345,7 @@ object AsterismGroupObsList {
           <.div(ExploreStyles.TreeToolbar)(UndoButtons(undoCtx, size = Mini)),
           <.div(
             Button(
-              onClick = props.ctx.pushPage(AppTab.Targets, none, none) >>
-                props.selected.set(SelectedPanel.summary),
+              onClick = clearFocused >> props.setSummaryPanel.value,
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -413,7 +397,6 @@ object AsterismGroupObsList {
       val asterismsWithObs = $.props.asterismsWithObs.get
       val asterismGroups   = asterismsWithObs.asterismGroups
       val expandedIds      = $.props.expandedIds
-      val selected         = $.props.selected
 
       val selectedAG = $.props.focusedObsSet
         .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
@@ -434,36 +417,15 @@ object AsterismGroupObsList {
 
       val unfocus = if (needNewPage) replacePage(newFocusObs, newFocusTarget) else Callback.empty
 
-      val setAndGetSelected: CallbackTo[Option[AsterismGroup]] = selected.get match {
-        case Uninitialized =>
-          val (optTorObs, optAG) =
-            (newFocusObs, newFocusTarget) match {
-              case (Some(obsId), _)    => (obsId.asRight.some, selectedAG)
-              case (_, Some(targetId)) => (targetId.asLeft.some, none)
-              case _                   => (none, none)
-            }
-          selected
-            .set(optTorObs.fold(SelectedPanel.tree[TargetOrObsSet])(SelectedPanel.editor))
-            .as(optAG)
-        case Editor(tOrOs) =>
-          tOrOs match {
-            case Left(_)       => CallbackTo(none)
-            case Right(obsIds) => CallbackTo(asterismGroups.find(_._1.intersects(obsIds)).map(_._2))
-          }
-        case _             => CallbackTo(none)
-      }
-
-      def expandSelected(agOpt: Option[AsterismGroup]) =
-        agOpt.map(ag => expandedIds.mod(_ + ag.obsIds)).orEmpty
+      val expandSelected = selectedAG.foldMap(ag => expandedIds.mod(_ + ag.obsIds))
 
       def cleanupExpandedIds =
         expandedIds.mod(_.filter(asterismGroups.contains))
 
       for {
-        _     <- unfocus
-        agOpt <- setAndGetSelected
-        _     <- expandSelected(agOpt)
-        _     <- cleanupExpandedIds
+        _ <- unfocus
+        _ <- expandSelected
+        _ <- cleanupExpandedIds
       } yield ()
     }
     .configure(Reusability.shouldComponentUpdate)

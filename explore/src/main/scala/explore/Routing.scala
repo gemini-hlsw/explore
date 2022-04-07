@@ -147,7 +147,7 @@ object Routing {
         rules
           .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
           .renderWithP(layout)
-          .logToConsole
+      // .logToConsole
 
       // Only link and run this in dev mode. Works since calling `verify` trigger verification immediately.
       if (LinkingInfo.developmentMode) {
