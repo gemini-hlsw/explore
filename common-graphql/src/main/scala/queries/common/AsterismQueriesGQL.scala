@@ -20,8 +20,8 @@ object AsterismQueriesGQL {
   @GraphQL
   trait AsterismGroupObsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = """
-      query {
-        asterismGroup(programId: "p-2") {
+      query($programId: ProgramId!) {
+        asterismGroup(programId: $programId) {
           nodes {
             observationIds
             asterism {
@@ -30,7 +30,7 @@ object AsterismQueriesGQL {
           }
         }
 
-        targetGroup(programId: "p-2") {
+        targetGroup(programId: $programId) {
           nodes {
             observationIds
             target {
@@ -202,7 +202,7 @@ object AsterismQueriesGQL {
           }
         }
 
-        observations(programId: "p-2") {
+        observations(programId: $programId) {
           nodes {
             id
             constraintSet {

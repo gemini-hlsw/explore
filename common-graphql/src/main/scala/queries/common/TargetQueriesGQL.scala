@@ -18,8 +18,8 @@ object TargetQueriesGQL {
   trait TargetNameQuery extends GraphQLOperation[ObservationDB] {
     // FIXME Change this to an actual name pattern query when it's available in the API
     val document = """
-      query {
-        targetGroup(programId: "p-2") {
+      query($programId: ProgramId!) {
+        targetGroup(programId: $programId) {
           nodes {
             target {
               id
@@ -437,8 +437,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait ProgramTargetEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
-      subscription {
-        targetEdit(programId:"p-2") {
+      subscription($programId: ProgramId!) {
+        targetEdit(programId: $programId) {
           id
         }
       }

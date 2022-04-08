@@ -20,8 +20,8 @@ object ConstraintGroupQueriesGQL {
   @GraphQL
   trait ConstraintGroupObsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        constraintSetGroup(programId: "p-2") {
+      query($programId: ProgramId!) {
+        constraintSetGroup(programId: $programId) {
           nodes {
             constraintSet {
               cloudExtinction
@@ -47,7 +47,7 @@ object ConstraintGroupQueriesGQL {
           }
         }
 
-        observations(programId: "p-2") {
+        observations(programId: $programId) {
           nodes {
             id
             targetEnvironment {

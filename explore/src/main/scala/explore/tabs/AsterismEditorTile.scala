@@ -20,6 +20,7 @@ import explore.utils._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -29,6 +30,7 @@ object AsterismEditorTile {
 
   def asterismEditorTile(
     userId:        Option[User.Id],
+    programId:     Program.Id,
     obsId:         ObsIdSet,
     asterismPot:   Pot[ReuseView[List[TargetWithId]]],
     currentTarget: Option[Target.Id],
@@ -46,6 +48,7 @@ object AsterismEditorTile {
     Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
       Reuse.by(
         (userId,
+         programId,
          obsId,
          asterismPot,
          currentTarget,
@@ -64,6 +67,7 @@ object AsterismEditorTile {
             (asterism: ReuseView[List[TargetWithId]]) =>
               userId.map(uid =>
                 AsterismEditor(uid,
+                               programId,
                                obsId,
                                asterism,
                                currentTarget,

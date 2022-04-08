@@ -33,6 +33,7 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import org.http4s.circe._
 import org.http4s.dom.FetchClientBuilder
@@ -144,18 +145,20 @@ object ExploreMain extends IOApp.Simple {
 
         def pageUrl(
           tab:           AppTab,
+          programId:     Program.Id,
           focusedObsSet: Option[ObsIdSet],
           focusedTarget: Option[Target.Id]
         ): String =
-          routerCtl.urlFor(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget)).value
+          routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget)).value
 
         def setPageVia(
           tab:           AppTab,
+          programId:     Program.Id,
           focusedObsSet: Option[ObsIdSet],
           focusedTarget: Option[Target.Id],
           via:           SetRouteVia
         ) =
-          routerCtl.set(RoutingInfo.getPage(tab, focusedObsSet, focusedTarget), via)
+          routerCtl.set(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget), via)
 
         for {
           _                    <- utils.setupScheme[IO](Theme.Dark)

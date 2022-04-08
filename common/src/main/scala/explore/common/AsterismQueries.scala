@@ -22,6 +22,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
@@ -104,14 +105,14 @@ object AsterismQueries {
     def asAsterismGroupWithObs = queryToAsterismGroupWithObsGetter
   }
 
-  val AsterismGroupLiveQuery =
+  def AsterismGroupLiveQuery(programId: Program.Id) =
     ScalaFnComponent[ReuseView[AsterismGroupsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
-          AsterismGroupObsQuery.query().reuseAlways,
+          AsterismGroupObsQuery.query(programId).reuseAlways,
           (AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get _).reuseAlways,
-          List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](),
-               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO]()
+          List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId),
+               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](programId)
           ).reuseAlways
         )(potRender(render))
       }

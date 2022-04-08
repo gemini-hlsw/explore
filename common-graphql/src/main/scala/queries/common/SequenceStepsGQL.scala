@@ -24,8 +24,8 @@ object SequenceStepsGQL {
   @GraphQL
   trait SequenceSteps extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        observations(programId: "p-2", first: 1) {
+      query($programId: ProgramId!) {
+        observations(programId: $programId, first: 1) {
           nodes {
             id
             title

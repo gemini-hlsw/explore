@@ -23,6 +23,7 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.Effect
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas._
 import org.http4s._
@@ -107,9 +108,10 @@ case class AppContext[F[_]](
   staticData:  StaticData,
   actions:     Actions[F],
   sso:         SSOClient[F],
-  pageUrl:     (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+  pageUrl:     (AppTab, Program.Id, Option[ObsIdSet], Option[Target.Id]) => String,
   setPageVia:  (
     AppTab,
+    Program.Id,
     Option[ObsIdSet],
     Option[Target.Id],
     SetRouteVia
@@ -121,37 +123,42 @@ case class AppContext[F[_]](
   val P:       Parallel[F]
 ) {
   def pushPage(
-    appTab:   AppTab,
-    obsIdSet: Option[ObsIdSet],
-    targetId: Option[Target.Id]
-  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryPush)
+    appTab:    AppTab,
+    programId: Program.Id,
+    obsIdSet:  Option[ObsIdSet],
+    targetId:  Option[Target.Id]
+  ): Callback = setPageVia(appTab, programId, obsIdSet, targetId, SetRouteVia.HistoryPush)
 
   def replacePage(
-    appTab:   AppTab,
-    obsIdSet: Option[ObsIdSet],
-    targetId: Option[Target.Id]
-  ): Callback = setPageVia(appTab, obsIdSet, targetId, SetRouteVia.HistoryReplace)
+    appTab:    AppTab,
+    programId: Program.Id,
+    obsIdSet:  Option[ObsIdSet],
+    targetId:  Option[Target.Id]
+  ): Callback = setPageVia(appTab, programId, obsIdSet, targetId, SetRouteVia.HistoryReplace)
 
   def pushPageSingleObs(
-    appTab:   AppTab,
-    obsId:    Option[Observation.Id],
-    targetId: Option[Target.Id]
-  ): Callback = pushPage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+    appTab:    AppTab,
+    programId: Program.Id,
+    obsId:     Option[Observation.Id],
+    targetId:  Option[Target.Id]
+  ): Callback = pushPage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
 
   def replacePageSingleObs(
-    appTab:   AppTab,
-    obsId:    Option[Observation.Id],
-    targetId: Option[Target.Id]
-  ): Callback = replacePage(appTab, obsId.map(o => ObsIdSet.one(o)), targetId)
+    appTab:    AppTab,
+    programId: Program.Id,
+    obsId:     Option[Observation.Id],
+    targetId:  Option[Target.Id]
+  ): Callback = replacePage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
 }
 
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
     reconnectionStrategy: WebSocketReconnectionStrategy,
-    pageUrl:              (AppTab, Option[ObsIdSet], Option[Target.Id]) => String,
+    pageUrl:              (AppTab, Program.Id, Option[ObsIdSet], Option[Target.Id]) => String,
     setPageVia:           (
       AppTab,
+      Program.Id,
       Option[ObsIdSet],
       Option[Target.Id],
       SetRouteVia

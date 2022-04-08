@@ -34,6 +34,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
@@ -59,6 +60,7 @@ import scala.concurrent.duration._
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
+  programId:         Program.Id,
   focusedObsSet:     Option[ObsIdSet],
   focusedTarget:     Option[Target.Id],
   listUndoStacks:    ReuseView[UndoStacks[IO, AsterismGroupsWithObs]],
@@ -181,6 +183,7 @@ object TargetTabContents {
       <.div(ExploreStyles.TreeBody)(
         AsterismGroupObsList(
           objectsWithObs,
+          props.programId,
           props.focusedObsSet,
           props.focusedTarget,
           selectedView.set(SelectedPanel.summary).reuseAlways,
@@ -195,7 +198,7 @@ object TargetTabContents {
     ): Option[AsterismGroup] = agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
     def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-      props.ctx.pushPage(AppTab.Targets, obsIds, targetId)
+      props.ctx.pushPage(AppTab.Targets, props.programId, obsIds, targetId)
 
     def selectObservationAndTarget(
       expandedIds: ReuseView[SortedSet[ObsIdSet]],
@@ -243,9 +246,10 @@ object TargetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          selectedView.set(SelectedPanel.tree)
+          ctx.pushPage(AppTab.Targets, props.programId, none, none) >>
+            selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Targets, none, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Targets, props.programId, none, none), Icons.ChevronLeft)
     )
 
     /**
@@ -375,19 +379,21 @@ object TargetTabContents {
         }
 
       def setCurrentTarget(
-        oids: ObsIdSet,
-        tid:  Option[Target.Id],
-        via:  SetRouteVia
+        programId: Program.Id,
+        oids:      ObsIdSet,
+        tid:       Option[Target.Id],
+        via:       SetRouteVia
       ): Callback =
-        ctx.setPageVia(AppTab.Targets, oids.some, tid, via)
+        ctx.setPageVia(AppTab.Targets, programId, oids.some, tid, via)
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
           props.userId,
+          props.programId,
           idsToEdit,
           Pot(asterismView),
           props.focusedTarget,
-          Reuse(setCurrentTarget _)(idsToEdit),
+          Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
           props.targetsUndoStacks,
           props.searching,
@@ -575,7 +581,7 @@ object TargetTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
-        AsterismGroupLiveQuery(
+        AsterismGroupLiveQuery(props.programId)(
           Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
         )
       }

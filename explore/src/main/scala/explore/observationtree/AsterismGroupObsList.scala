@@ -24,6 +24,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCats._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
@@ -47,6 +48,7 @@ import scala.collection.immutable.SortedSet
 
 final case class AsterismGroupObsList(
   asterismsWithObs: ReuseView[AsterismGroupsWithObs],
+  programId:        Program.Id,
   focusedObsSet:    Option[ObsIdSet],
   focusedTarget:    Option[Target.Id],
   setSummaryPanel:  Reuse[Callback],
@@ -123,7 +125,8 @@ object AsterismGroupObsList {
               .find(_.obsIds === destIds)
         } yield (destAg, draggedIds)
 
-        def setObsSet(obsIds: ObsIdSet) = props.ctx.pushPage(AppTab.Targets, obsIds.some, none)
+        def setObsSet(obsIds: ObsIdSet) =
+          props.ctx.pushPage(AppTab.Targets, props.programId, obsIds.some, none)
 
         oData.foldMap { case (destAg, draggedIds) =>
           draggedIds match {
@@ -189,7 +192,7 @@ object AsterismGroupObsList {
         props.focusedObsSet.isEmpty && props.focusedTarget.exists(_ === targetId)
 
       def setObsAndTarget(obsIdSet: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
-        props.ctx.pushPage(AppTab.Targets, obsIdSet, targetId)
+        props.ctx.pushPage(AppTab.Targets, props.programId, obsIdSet, targetId)
 
       def setToTarget(targetId: Target.Id): Callback =
         setObsAndTarget(none, targetId.some)
@@ -403,7 +406,7 @@ object AsterismGroupObsList {
         .map(_._2)
 
       def replacePage(oid: Option[ObsIdSet], tid: Option[Target.Id]): Callback =
-        $.props.ctx.replacePage(AppTab.Targets, oid, tid)
+        $.props.ctx.replacePage(AppTab.Targets, $.props.programId, oid, tid)
 
       val obsMissing    = $.props.focusedObsSet.nonEmpty && selectedAG.isEmpty
       val targetMissing =

@@ -27,6 +27,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.util.DefaultEffects.{ Sync => DefaultS }
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -41,6 +42,7 @@ import react.semanticui.sizes._
 
 final case class AsterismEditor(
   userId:           User.Id,
+  programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
   currentTarget:    Option[Target.Id],
@@ -60,6 +62,7 @@ object AsterismEditor {
   protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   private def insertSiderealTarget(
+    programId:      Program.Id,
     obsIds:         ObsIdSet,
     asterism:       ReuseView[List[TargetWithId]],
     oTargetId:      Option[Target.Id],
@@ -68,7 +71,7 @@ object AsterismEditor {
     adding:         View[Boolean]
   )(implicit ctx:   AppContextIO): IO[Unit] = {
     val targetId: IO[Target.Id] = oTargetId.fold(
-      CreateTargetMutation.execute("p-2", target.toCreateTargetInput()).map(_.createTarget.id)
+      CreateTargetMutation.execute(programId, target.toCreateTargetInput()).map(_.createTarget.id)
     )(IO(_))
     adding.async.set(true) >>
       targetId
@@ -87,7 +90,7 @@ object AsterismEditor {
     newTwid:   TargetWithId
   ): Callback =
     asterism.mod(_.map(twid => if (twid.id === id) newTwid else twid)) >>
-      setTarget(newTwid.id.some, SetRouteVia.HistoryReplace)
+      setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
 
   protected val component =
     ScalaFnComponent
@@ -100,11 +103,15 @@ object AsterismEditor {
         (_, _, _) => { case (asterism, oTargetId, setTarget) =>
           // if the selected targetId is None, or not in the asterism, select the first target (if any)
           // Need to replace history here.
-          oTargetId
-            .flatMap(id => if (asterism.get.exists(_.id === id)) id.some else none)
-            .fold(setTarget(asterism.get.headOption.map(_.id), SetRouteVia.HistoryReplace))(_ =>
-              Callback.empty
-            )
+          oTargetId match {
+            case None                                                   =>
+              asterism.get.headOption.foldMap(twid =>
+                setTarget(twid.id.some, SetRouteVia.HistoryReplace)
+              )
+            case Some(current) if asterism.get.exists(_.id === current) => Callback.empty
+            case _                                                      =>
+              setTarget(asterism.get.headOption.map(_.id), SetRouteVia.HistoryReplace)
+          }
         }
       )
       .renderWithReuse { (props, adding, editScope) =>
@@ -124,6 +131,7 @@ object AsterismEditor {
         React.Fragment(
           props.renderInTitle(
             TargetSelectionPopup(
+              props.programId,
               trigger = adding.map(a =>
                 Button(
                   size = Tiny,
@@ -139,7 +147,8 @@ object AsterismEditor {
               onSelected = Reuse
                 .by((props.obsIds, props.asterism, targetView))(_ match {
                   case TargetWithOptId(oid, t @ Target.Sidereal(_, _, _, _)) =>
-                    insertSiderealTarget(props.obsIds,
+                    insertSiderealTarget(props.programId,
+                                         props.obsIds,
                                          props.asterism,
                                          oid,
                                          t,

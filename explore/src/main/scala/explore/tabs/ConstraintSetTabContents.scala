@@ -29,6 +29,7 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -48,6 +49,7 @@ import scala.concurrent.duration._
 
 final case class ConstraintSetTabContents(
   userId:           Option[User.Id],
+  programId:        Program.Id,
   focusedObsSet:    Option[ObsIdSet],
   expandedIds:      ReuseView[SortedSet[ObsIdSet]],
   listUndoStacks:   ReuseView[UndoStacks[IO, ConstraintGroupList]],
@@ -105,6 +107,7 @@ object ConstraintSetTabContents {
       <.div(ExploreStyles.TreeBody)(
         ConstraintGroupObsList(
           constraintWithObs,
+          props.programId,
           props.focusedObsSet,
           state.zoom(selectedLens).set(SelectedPanel.summary).reuseAlways,
           props.expandedIds,
@@ -152,10 +155,10 @@ object ConstraintSetTabContents {
         basic = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Constraints, none, none) >>
+          ctx.pushPage(AppTab.Constraints, props.programId, none, none) >>
             state.zoom(selectedLens).set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Constraints, none, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
@@ -167,14 +170,16 @@ object ConstraintSetTabContents {
       )
       .fold[VdomNode] {
         Tile("constraints", "Constraints Summary", backButton.some, key = "constraintsSummary")(
-          Reuse.by((constraintsWithObs, props.hiddenColumns))((renderInTitle: Tile.RenderInTitle) =>
-            ConstraintsSummaryTable(
-              constraintsWithObs.get.constraintGroups,
-              props.hiddenColumns,
-              props.summarySorting,
-              props.expandedIds,
-              renderInTitle
-            )
+          Reuse.by((props.programId, constraintsWithObs, props.hiddenColumns))(
+            (renderInTitle: Tile.RenderInTitle) =>
+              ConstraintsSummaryTable(
+                props.programId,
+                constraintsWithObs.get.constraintGroups,
+                props.hiddenColumns,
+                props.summarySorting,
+                props.expandedIds,
+                renderInTitle
+              )
           )
         )
       } { case (idsToEdit, constraintGroup) =>
@@ -293,7 +298,7 @@ object ConstraintSetTabContents {
       .renderWithReuse { (props, state) =>
         implicit val ctx = props.ctx
 
-        ConstraintGroupLiveQuery(
+        ConstraintGroupLiveQuery(props.programId)(
           Reuse(renderFn _)(props, state)
         )
       }

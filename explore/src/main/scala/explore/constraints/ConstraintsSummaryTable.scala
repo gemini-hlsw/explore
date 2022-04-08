@@ -19,6 +19,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.Program
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
@@ -36,6 +37,7 @@ import scala.collection.immutable.SortedSet
 import scalajs.js.JSConverters._
 
 final case class ConstraintsSummaryTable(
+  programId:        Program.Id,
   constraintList:   ConstraintGroupList,
   hiddenColumns:    ReuseView[Set[String]],
   summarySorting:   ReuseView[List[(String, Boolean)]],
@@ -89,7 +91,7 @@ object ConstraintsSummaryTable {
             .setHeader(columnNames(id))
 
         def setObsSet(obsIdSet: ObsIdSet): Callback =
-          props.ctx.pushPage(AppTab.Constraints, obsIdSet.some, none)
+          props.ctx.pushPage(AppTab.Constraints, props.programId, obsIdSet.some, none)
 
         List(
           column("edit", ConstraintGroup.obsIds.get)
@@ -152,7 +154,11 @@ object ConstraintsSummaryTable {
                   .map(obsId =>
                     <.a(
                       ^.onClick ==> (_ =>
-                        (props.ctx.pushPageSingleObs(AppTab.Constraints, obsId.some, none)
+                        (props.ctx.pushPageSingleObs(AppTab.Constraints,
+                                                     props.programId,
+                                                     obsId.some,
+                                                     none
+                        )
                           >> props.expandedIds.mod(_ + cell.value)
                           >> setObsSet(ObsIdSet.one(obsId)))
                       ),
