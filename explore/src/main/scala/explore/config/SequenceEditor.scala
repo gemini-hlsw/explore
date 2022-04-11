@@ -29,8 +29,7 @@ object SequenceEditor {
 
   val component =
     ScalaFnComponent
-      .withHooks[Props]
-      .renderWithReuse(props =>
+      .withReuse[Props](props =>
         AppCtx.using { implicit ctx =>
           LiveQueryRender[ObservationDB,
                           SequenceSteps.Data,
