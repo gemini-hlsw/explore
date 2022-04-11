@@ -46,6 +46,7 @@ import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
 final case class TargetSelectionPopup(
+  programId:        Program.Id,
   trigger:          Reuse[Button],
   onSelected:       TargetWithOptId ==> Callback
 )(implicit val ctx: AppContextIO)
@@ -89,10 +90,9 @@ object TargetSelectionPopup {
     // selectedTarget
     .useStateWithReuse(none[SelectedTarget])
     // targetSources
-    .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (_, _, _, _, _, _, _) => propsCtx =>
+    .useMemoBy((props, _, _, _, _, _, _) => props.ctx) { (props, _, _, _, _, _, _) => propsCtx =>
       implicit val ctx = propsCtx
-      Program.Id.parse("p-2").map(p => TargetSource.FromProgram[IO](p)).toList ++
-        TargetSource.forAllCatalogs[IO]
+      TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO]
     }
     // aladinRef
     .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))

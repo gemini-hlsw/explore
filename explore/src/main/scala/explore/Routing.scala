@@ -19,6 +19,7 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
 import react.resizeDetector.ResizeDetector
@@ -40,11 +41,14 @@ object Routing {
       )
     }
 
+  private def homeTab(): VdomElement = UnderConstruction()
+
   private def targetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
     AppCtx.using { implicit ctx =>
       val routingInfo = RoutingInfo.from(page)
       TargetTabContents(
         model.zoom(RootModel.userId).get,
+        routingInfo.programId,
         routingInfo.focusedObsSet,
         routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks).zoom(ModelUndoStacks.forAsterismGroupList),
@@ -60,6 +64,7 @@ object Routing {
       val routingInfo = RoutingInfo.from(page)
       ObsTabContents(
         model.zoom(RootModel.userId),
+        routingInfo.programId,
         routingInfo.focusedObsSet.map(_.head),
         routingInfo.focusedTarget,
         model.zoom(RootModel.undoStacks),
@@ -70,10 +75,12 @@ object Routing {
 
   private def constraintSetTab(page: Page, model: ReuseView[RootModel]): VdomElement =
     withSize(size =>
-      AppCtx.using(implicit ctx =>
+      AppCtx.using { implicit ctx =>
+        val routingInfo = RoutingInfo.from(page)
         ConstraintSetTabContents(
           model.zoom(RootModel.userId).get,
-          RoutingInfo.from(page).focusedObsSet,
+          routingInfo.programId,
+          routingInfo.focusedObsSet,
           model.zoom(
             RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)
           ),
@@ -83,8 +90,16 @@ object Routing {
           model.zoom(RootModel.constraintSummarySorting),
           size
         )
-      )
+      }
     )
+
+  private def proposalTab(): VdomElement =
+    AppCtx.using { implicit ctx =>
+      ProposalTabContents()
+    }
+
+  private def configurationsTab(page: Page): VdomElement =
+    SequenceEditor(RoutingInfo.from(page).programId)
 
   def config: RouterWithPropsConfig[Page, ReuseView[RootModel]] =
     RouterWithPropsConfigDsl[Page, ReuseView[RootModel]].buildConfig { dsl =>
@@ -110,42 +125,63 @@ object Routing {
 
       val rules =
         (emptyRule
-          | staticRoute(root, HomePage) ~> render(UnderConstruction())
-          | staticRoute("/proposal", ProposalPage) ~> render(
-            AppCtx.using(implicit ctx => ProposalTabContents())
-          )
-          | staticRoute("/observations", ObservationsBasePage) ~> renderP(
-            obsTab(ObservationsBasePage, _)
-          )
+        // temporarily redirect to p-2 until we have program selection available.
+          | staticRoute(root, NoProgramPage) ~> redirectToPath("/p-2")(SetRouteVia.HistoryReplace)
+          | dynamicRouteCT((root / id[Program.Id]).xmapL(HomePage.iso)) ~> dynRenderP {
+            case (_, _) => homeTab()
+          }
+
           | dynamicRouteCT(
-            ("/observation" / id[Observation.Id] / "target" / id[Target.Id])
+            (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)
+          ) ~> dynRenderP { case (_, _) => proposalTab() }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "observations").xmapL(ObservationsBasePage.iso)
+          ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "observation" / id[Observation.Id] / "target" / id[Target.Id])
               .xmapL(ObsTargetPage.iso)
           ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+
           | dynamicRouteCT(
-            ("/observation" / id[Observation.Id]).xmapL(ObsPage.obsId)
+            (root / id[Program.Id] / "observation" / id[Observation.Id]).xmapL(ObsPage.iso)
           ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
-          | staticRoute("/targets", TargetsBasePage) ~> renderP(targetTab(TargetsBasePage, _))
+
+          | dynamicRouteCT((root / id[Program.Id] / "targets").xmapL(TargetsBasePage.iso)) ~>
+          dynRenderP { case (p, m) => targetTab(p, m) }
+
+          | dynamicRouteCT((root / id[Program.Id] / "target" / id[Target.Id]).xmapL(TargetPage.iso))
+          ~> dynRenderP { case (p, m) => targetTab(p, m) }
+
           | dynamicRouteCT(
-            ("/target" / id[Target.Id]).xmapL(TargetPage.targetId)
-          ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
-          | dynamicRouteCT(
-            ("/targets/obs" / idList[Observation.Id] / "target" / id[Target.Id])
+            (root / id[Program.Id] / "targets/obs" / idList[Observation.Id] / "target" / id[
+              Target.Id
+            ])
               .xmapL(TargetWithObsPage.iso)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
+
           | dynamicRouteCT(
-            ("/targets/obs" / idList[Observation.Id]).xmapL(TargetsObsPage.obsId)
+            (root / id[Program.Id] / "targets/obs" / idList[Observation.Id])
+              .xmapL(TargetsObsPage.iso)
           ) ~> dynRenderP { case (p, m) => targetTab(p, m) }
-          | staticRoute("/configurations", ConfigurationsPage) ~> render(SequenceEditor())
-          | staticRoute("/constraints", ConstraintsBasePage) ~> renderP {
-            constraintSetTab(ConstraintsBasePage, _)
-          }
+
           | dynamicRouteCT(
-            ("/constraints/obs" / idList[Observation.Id]).xmapL(ConstraintsObsPage.obsId)
+            (root / id[Program.Id] / "configurations").xmapL(ConfigurationsPage.iso)
+          ) ~> dynRenderP { case (p, _) => configurationsTab(p) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "constraints").xmapL(ConstraintsBasePage.iso)
+          ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "constraints/obs" / idList[Observation.Id])
+              .xmapL(ConstraintsObsPage.iso)
           ) ~> dynRenderP { case (p, m) => constraintSetTab(p, m) })
 
       val configuration =
         rules
-          .notFound(redirectToPage(HomePage)(SetRouteVia.HistoryPush))
+          .notFound(redirectToPage(NoProgramPage)(SetRouteVia.HistoryPush))
           .renderWithP(layout)
       // .logToConsole
 
@@ -154,6 +190,7 @@ object Routing {
         def randomId[Id](fromLong: Long => Option[Id]): Id =
           fromLong(Random.nextLong().abs).get
 
+        def pid      = randomId(Program.Id.fromLong)
         def oid      = randomId(Observation.Id.fromLong)
         def tid      = randomId(Target.Id.fromLong)
         def oneObs   = ObsIdSet.one(oid)
@@ -162,24 +199,25 @@ object Routing {
 
         configuration
           .verify(
-            HomePage,
-            ProposalPage,
-            ObservationsBasePage,
-            ObsPage(oid),
-            ObsTargetPage(oid, tid),
-            TargetsBasePage,
-            TargetWithObsPage(oneObs, tid),
-            TargetWithObsPage(twoObs, tid),
-            TargetWithObsPage(threeObs, tid),
-            TargetsObsPage(oneObs),
-            TargetsObsPage(twoObs),
-            TargetsObsPage(threeObs),
-            TargetPage(tid),
-            ConfigurationsPage,
-            ConstraintsBasePage,
-            ConstraintsObsPage(oneObs),
-            ConstraintsObsPage(twoObs),
-            ConstraintsObsPage(threeObs)
+            NoProgramPage,
+            HomePage(pid),
+            ProposalPage(pid),
+            ObservationsBasePage(pid),
+            ObsPage(pid, oid),
+            ObsTargetPage(pid, oid, tid),
+            TargetsBasePage(pid),
+            TargetWithObsPage(pid, oneObs, tid),
+            TargetWithObsPage(pid, twoObs, tid),
+            TargetWithObsPage(pid, threeObs, tid),
+            TargetsObsPage(pid, oneObs),
+            TargetsObsPage(pid, twoObs),
+            TargetsObsPage(pid, threeObs),
+            TargetPage(pid, tid),
+            ConfigurationsPage(pid),
+            ConstraintsBasePage(pid),
+            ConstraintsObsPage(pid, oneObs),
+            ConstraintsObsPage(pid, twoObs),
+            ConstraintsObsPage(pid, threeObs)
           )
       }
 

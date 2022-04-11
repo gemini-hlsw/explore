@@ -39,6 +39,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all._
@@ -67,6 +68,7 @@ import scala.concurrent.duration._
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
+  programId:        Program.Id,
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   undoStacks:       ReuseView[ModelUndoStacks[IO]],
@@ -310,6 +312,7 @@ object ObsTabContents {
       <.div(ExploreStyles.TreeBody)(
         ObsList(
           observations,
+          props.programId,
           props.focusedObs,
           props.focusedTarget,
           selectedView.set(SelectedPanel.summary).reuseAlways,
@@ -334,9 +337,10 @@ object ObsTabContents {
         compact = true,
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
-          ctx.pushPage(AppTab.Observations, none, none) >> selectedView.set(SelectedPanel.tree)
+          ctx.pushPage(AppTab.Observations, props.programId, none, none) >>
+            selectedView.set(SelectedPanel.tree)
         )
-      )(^.href := ctx.pageUrl(AppTab.Observations, none, none), Icons.ChevronLeft)
+      )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, none, none), Icons.ChevronLeft)
     )
 
     val coreWidth  =
@@ -404,14 +408,16 @@ object ObsTabContents {
             ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, targetCoords)
 
           def setCurrentTarget(
-            oid: Option[Observation.Id],
-            tid: Option[Target.Id],
-            via: SetRouteVia
+            programId: Program.Id,
+            oid:       Option[Observation.Id],
+            tid:       Option[Target.Id],
+            via:       SetRouteVia
           ): Callback =
-            ctx.setPageVia(AppTab.Observations, oid.map(ObsIdSet.one(_)), tid, via)
+            ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
 
           val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,
+            props.programId,
             ObsIdSet.one(obsId),
             obsView.map(
               _.map(
@@ -423,7 +429,7 @@ object ObsTabContents {
               )
             ),
             props.focusedTarget,
-            Reuse(setCurrentTarget _)(props.focusedObs),
+            Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
@@ -562,7 +568,7 @@ object ObsTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
-        ObsLiveQuery(
+        ObsLiveQuery(props.programId)(
           Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
         )
       }

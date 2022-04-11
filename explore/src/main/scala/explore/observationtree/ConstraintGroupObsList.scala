@@ -24,6 +24,7 @@ import explore.undo._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.syntax.all._
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
@@ -43,6 +44,7 @@ import scala.collection.immutable.SortedSet
 
 final case class ConstraintGroupObsList(
   constraintsWithObs: ReuseView[ConstraintSummaryWithObervations],
+  programId:          Program.Id,
   focusedObsSet:      Option[ObsIdSet],
   setSummaryPanel:    Reuse[Callback],
   expandedIds:        ReuseView[SortedSet[ObsIdSet]],
@@ -149,7 +151,7 @@ object ConstraintGroupObsList {
         props.focusedObsSet.exists(_.contains(obsId))
 
       def setObsSet(obsIdSet: Option[ObsIdSet]): Callback =
-        ctx.pushPage(AppTab.Constraints, obsIdSet, none)
+        ctx.pushPage(AppTab.Constraints, props.programId, obsIdSet, none)
 
       def setObs(obsId: Observation.Id): Callback =
         setObsSet(ObsIdSet.one(obsId).some)
@@ -272,7 +274,7 @@ object ConstraintGroupObsList {
       // Unfocus the group with observations doesn't exist
       val unfocus =
         if ($.props.focusedObsSet.nonEmpty && selectedGroup.isEmpty)
-          $.props.ctx.replacePage(AppTab.Constraints, none, none)
+          $.props.ctx.replacePage(AppTab.Constraints, $.props.programId, none, none)
         else Callback.empty
 
       val expandSelected = selectedGroup.foldMap(cg => expandedIds.mod(_ + cg.obsIds))

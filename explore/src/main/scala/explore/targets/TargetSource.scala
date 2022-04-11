@@ -32,7 +32,7 @@ protected object TargetSource {
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       List(
         TargetQueriesGQL.TargetNameQuery
-          .query()
+          .query(programId)
           .map { data =>
             data.targetGroup.nodes
               .map(node => TargetSearchResult(node.target.toOptId, none))

@@ -19,6 +19,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
@@ -79,16 +80,18 @@ object ConstraintGroupQueries {
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
   }
 
-  val ConstraintGroupLiveQuery =
+  def ConstraintGroupLiveQuery(programId: Program.Id) =
     ScalaFnComponent[ReuseView[ConstraintSummaryWithObervations] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ConstraintGroupObsQuery.Data,
                            ConstraintSummaryWithObervations
         ](
-          ConstraintGroupObsQuery.query().reuseAlways,
+          ConstraintGroupObsQuery.query(programId).reuseAlways,
           (ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get _).reuseAlways,
-          List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO]()).reuseAlways
+          List(
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId)
+          ).reuseAlways
         )(potRender(render))
       }
     )

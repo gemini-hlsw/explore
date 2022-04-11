@@ -34,10 +34,11 @@ object SideTabs {
       .withReuse[Props] { p =>
         AppCtx.using { implicit ctx =>
           val focus = p.routingInfo.appTab
+          val ri    = p.routingInfo
 
           def onClickE[A](tab: AppTab) =
             linkOverride[A](
-              ctx.pushPage(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget)
+              ctx.pushPage(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget)
             )
 
           def tabButton(tab: AppTab): Button =
@@ -46,7 +47,7 @@ object SideTabs {
               active = tab === focus,
               clazz = ExploreStyles.SideButton,
               onClickE = onClickE[ButtonProps](tab)
-            )(^.href := ctx.pageUrl(tab, p.routingInfo.focusedObsSet, p.routingInfo.focusedTarget),
+            )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget),
               tab.title
             )
 
@@ -57,7 +58,9 @@ object SideTabs {
               clazz = ExploreStyles.TabSelector,
               size = Tiny,
               onClickE = onClickE[LabelProps](tab)
-            )(^.href := ctx.pageUrl(tab, none, none), tab.title)
+            )(^.href := ctx.pageUrl(tab, ri.programId, ri.focusedObsSet, ri.focusedTarget),
+              tab.title
+            )
 
           def makeButtonSection(tabs: List[AppTab]): TagMod = tabs match {
             case justOne :: Nil => VerticalSection()(tabButton(justOne))

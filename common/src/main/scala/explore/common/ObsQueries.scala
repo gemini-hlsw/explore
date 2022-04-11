@@ -27,6 +27,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
@@ -121,17 +122,17 @@ object ObsQueries {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
   }
 
-  val ObsLiveQuery =
+  def ObsLiveQuery(programId: Program.Id) =
     ScalaFnComponent[ReuseView[ObsSummariesWithConstraints] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB,
                            ProgramObservationsQuery.Data,
                            ObsSummariesWithConstraints
         ](
-          ProgramObservationsQuery.query().reuseAlways,
+          ProgramObservationsQuery.query(programId).reuseAlways,
           (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
           List(
-            ProgramObservationsEditSubscription.subscribe[IO]()
+            ProgramObservationsEditSubscription.subscribe[IO](programId)
           ).reuseAlways
         )(potRender(render))
       }
@@ -163,10 +164,10 @@ object ObsQueries {
     UpdateConstraintSetMutation.execute[F](obsIds, editInput).void
   }
 
-  def createObservation[F[_]: Async]()(implicit
-    c: TransactionalClient[F, ObservationDB]
+  def createObservation[F[_]: Async](programId: Program.Id)(implicit
+    c:                                          TransactionalClient[F, ObservationDB]
   ): F[Option[ObsSummaryWithTargetsAndConstraints]] =
-    ProgramCreateObservation.execute[F](CreateObservationInput(programId = "p-2")).map { data =>
+    ProgramCreateObservation.execute[F](CreateObservationInput(programId = programId)).map { data =>
       data.createObservation.map { obs =>
         ObsSummaryWithTargetsAndConstraints(
           obs.id,

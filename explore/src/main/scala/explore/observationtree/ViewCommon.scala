@@ -14,9 +14,11 @@ import japgolly.scalajs.react.ReactMouseEvent
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import react.beautifuldnd._
 
 trait ViewCommon {
+  def programId: Program.Id
   def focusedObsSet: Option[ObsIdSet]
 
   def renderObsBadge(
@@ -54,7 +56,11 @@ trait ViewCommon {
           }).when(selectable),
           (^.onDoubleClick ==> { e: ReactEvent =>
             e.stopPropagationCB >>
-              ctx.pushPageSingleObs(explore.model.enum.AppTab.Observations, obs.id.some, None)
+              ctx.pushPageSingleObs(explore.model.enum.AppTab.Observations,
+                                    programId,
+                                    obs.id.some,
+                                    None
+              )
           }).when(linkToObsTab)
         )(<.span(provided.dragHandleProps)(renderObsBadge(obs, highlightSelected, forceHighlight)))
       }

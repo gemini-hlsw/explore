@@ -21,8 +21,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
     val document = """
-      query {
-        observations(programId: "p-2") {
+      query($programId: ProgramId!) {
+        observations(programId: $programId) {
           nodes {
             id
             targetEnvironment {
@@ -55,7 +55,7 @@ object ObsQueriesGQL {
           }
         }
 
-        constraintSetGroup(programId: "p-2") {
+        constraintSetGroup(programId: $programId) {
           nodes {
             constraintSet {
               cloudExtinction
@@ -81,7 +81,7 @@ object ObsQueriesGQL {
           }
         }
 
-        targetGroup(programId: "p-2") {
+        targetGroup(programId: $programId) {
           nodes {
             observationIds
             target {
@@ -117,8 +117,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsEditSubscription extends GraphQLOperation[ObservationDB] {
     val document = """
-      subscription {
-        observationEdit(programId:"p-2") {
+      subscription($programId: ProgramId!) {
+        observationEdit(programId: $programId) {
           id
         }
       }

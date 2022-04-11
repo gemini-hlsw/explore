@@ -26,6 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
@@ -39,6 +40,7 @@ import ObsQueries._
 
 final case class ObsList(
   observations:     ReuseView[ObservationList],
+  programId:        Program.Id,
   focusedObs:       Option[Observation.Id],
   focusedTarget:    Option[Target.Id],
   setSummaryPanel:  Reuse[Callback],
@@ -56,22 +58,25 @@ object ObsList {
       ObsSummaryWithTargetsAndConstraints.id
     )
 
-  protected def setObs(obsId: Option[Observation.Id])(implicit ctx: AppContextIO): Callback =
-    ctx.pushPageSingleObs(AppTab.Observations, obsId, none)
+  protected def setObs(programId: Program.Id, obsId: Option[Observation.Id])(implicit
+    ctx:                          AppContextIO
+  ): Callback =
+    ctx.pushPageSingleObs(AppTab.Observations, programId, obsId, none)
 
   protected def insertObs(
-    pos:     Int,
-    undoCtx: UndoContext[ObservationList],
-    adding:  ReuseView[Boolean]
+    programId: Program.Id,
+    pos:       Int,
+    undoCtx:   UndoContext[ObservationList],
+    adding:    ReuseView[Boolean]
   )(implicit
-    ctx:     AppContextIO
+    ctx:       AppContextIO
   ): IO[Unit] =
     adding.async.set(true) >>
-      createObservation[IO]()
+      createObservation[IO](programId)
         .flatMap {
           _.foldMap { obs =>
             ObsListActions
-              .obsExistence(obs.id, o => setObs(o.some))
+              .obsExistence(obs.id, o => setObs(programId, o.some))
               .mod(undoCtx)(obsListMod.upsert(obs, pos))
               .to[IO]
           }
@@ -93,14 +98,14 @@ object ObsList {
             val foundIdx = obsList.getIndex(obsId)
             (optIndex.value, foundIdx) match {
               case (_, Some(fidx))    => optIndex.setState(fidx.some) // focused obs is in list
-              case (None, None)       => setObs(none) >> optIndex.setState(none)
+              case (None, None)       => setObs(props.programId, none) >> optIndex.setState(none)
               case (Some(oidx), None) =>
                 // focused obs no longer exists, but we have a previous index.
                 val newIdx = math.min(oidx, obsList.length - 1)
                 obsList.toList
                   .get(newIdx.toLong)
-                  .fold(optIndex.setState(none) >> setObs(none))(obsSumm =>
-                    optIndex.setState(newIdx.some) >> setObs(obsSumm.id.some)
+                  .fold(optIndex.setState(none) >> setObs(props.programId, none))(obsSumm =>
+                    optIndex.setState(newIdx.some) >> setObs(props.programId, obsSumm.id.some)
                   )
             }
           }
@@ -122,12 +127,12 @@ object ObsList {
               content = "Obs",
               disabled = adding.get,
               loading = adding.get,
-              onClick = insertObs(observations.length, undoCtx, adding).runAsync
+              onClick = insertObs(props.programId, observations.length, undoCtx, adding).runAsync
             ),
             UndoButtons(undoCtx, size = Mini, disabled = adding.get)
           ),
           <.div(
-            Button(onClick = setObs(none) >> props.setSummaryPanel.value,
+            Button(onClick = setObs(props.programId, none) >> props.setSummaryPanel.value,
                    clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.clazz(ExploreStyles.PaddedRightIcon),
@@ -141,11 +146,12 @@ object ObsList {
                 val selected   = props.focusedObs.exists(_ === focusedObs)
                 <.a(
                   ^.href := ctx.pageUrl(AppTab.Observations,
+                                        props.programId,
                                         ObsIdSet.one(focusedObs).some,
                                         props.focusedTarget
                   ),
                   ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
-                  ^.onClick ==> linkOverride(setObs(focusedObs.some))
+                  ^.onClick ==> linkOverride(setObs(props.programId, focusedObs.some))
                 )(
                   ObsBadge(
                     obs,
@@ -157,7 +163,7 @@ object ObsList {
                       .obsActiveStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
                     deleteCB = ObsListActions
-                      .obsExistence(obs.id, o => setObs(o.some))
+                      .obsExistence(obs.id, o => setObs(props.programId, o.some))
                       .mod(undoCtx)(obsListMod.delete)
                       .reuseAlways
                       .some
