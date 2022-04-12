@@ -40,7 +40,7 @@ object Settings {
     val reactGridLayout     = "0.15.0"
     val reactHighcharts     = "0.4.4"
     val reactHotkeys        = "0.4.0"
-    val reactResizable      = "0.8.0"
+    val reactResizable      = "0.9.0"
     val reactSemanticUI     = "0.14.0"
     val reactTable          = "0.7.4"
     val reactVirtuoso       = "0.2.2"
