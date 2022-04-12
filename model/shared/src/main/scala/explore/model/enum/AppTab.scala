@@ -31,7 +31,8 @@ object AppTab {
   case object Configurations extends AppTab("Configurations", 3)
   case object Constraints    extends AppTab("Constraints", 3)
 
-  val all = NonEmptyList.of(Proposal, Overview, Observations, Targets, Configurations, Constraints)
+  val all =
+    NonEmptyList.of(Proposal, Overview, Observations, Targets, /*Configurations,*/ Constraints)
 
   /** @group Typeclass Instances */
   implicit val AppTabEnumerated: Enumerated[AppTab] =

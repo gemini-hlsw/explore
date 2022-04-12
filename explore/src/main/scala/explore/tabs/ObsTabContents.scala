@@ -65,6 +65,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import lucuma.core.math.Coordinates
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
@@ -259,11 +260,11 @@ object ObsTabContents {
     }(obsView)
 
   def otherObsCount(
-    targetObsMap: SortedMap[Target.Id, Set[Observation.Id]],
+    targetObsMap: SortedMap[Target.Id, TargetSummary],
     obsId:        Observation.Id,
     targetId:     Target.Id
   ): Int =
-    targetObsMap.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
+    targetObsMap.get(targetId).fold(0)(summary => (summary.obsIds - obsId).size)
 
   // TODO Use this method
   // def readTargetPreferences(p: Props, targetId: Target.Id, state: View[State])(implicit ctx: AppContextIO): Callback =
@@ -322,12 +323,8 @@ object ObsTabContents {
 
     val obsIdOpt: Option[Observation.Id] = panels.get.selected.optValue
 
-    val obsSummaryOpt: Option[ObsSummaryWithTargetsAndConstraints] =
-      obsIdOpt.flatMap(observations.get.getElement)
-
-    val targetCoords = (obsSummaryOpt, props.focusedTarget)
-      .mapN((summ, id) => summ.targets.find(_.id === id).flatMap(_.coords))
-      .flatten
+    val targetCoords: Option[Coordinates] =
+      props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
     val backButton = Reuse.always[VdomNode](
       Button(

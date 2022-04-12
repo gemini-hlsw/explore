@@ -13,8 +13,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTargetsAndConf
-import explore.model.TargetSummary
+import explore.model.ObsSummaryWithTitleAndConf
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -36,12 +35,8 @@ object ConstraintGroupQueries {
   type ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
   val ObservationResult = ConstraintGroupObsQuery.Data.Observations.Nodes
 
-  private def convertTarget(
-    target: ConstraintGroupObsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
-  ): TargetSummary = TargetSummary(target.id, target.name, none)
-
   type ConstraintGroupList = SortedMap[ObsIdSet, ConstraintGroup]
-  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTargetsAndConf]
+  type ObsList             = SortedMap[Observation.Id, ObsSummaryWithTitleAndConf]
 
   case class ConstraintSummaryWithObervations(
     constraintGroups: ConstraintGroupList,
@@ -56,12 +51,14 @@ object ConstraintGroupQueries {
   implicit val constraintsSummWithObsReuse: Reusability[ConstraintSummaryWithObervations] =
     Reusability.derive
 
-  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTargetsAndConf =
-    ObsSummaryWithTargetsAndConf(obsR.id,
-                                 obsR.targetEnvironment.asterism.map(convertTarget),
-                                 obsR.status,
-                                 obsR.activeStatus,
-                                 obsR.plannedTime.execution
+  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithTitleAndConf =
+    ObsSummaryWithTitleAndConf(
+      obsR.id,
+      obsR.title,
+      obsR.subtitle,
+      obsR.status,
+      obsR.activeStatus,
+      obsR.plannedTime.execution
     )
 
   private val queryToConstraintsWithObsGetter
@@ -72,7 +69,7 @@ object ConstraintGroupQueries {
           .toSortedMap(ConstraintGroup.obsIds.get),
         data.observations.nodes
           .map(obsResultToSummary)
-          .toSortedMap(ObsSummaryWithTargetsAndConf.id.get)
+          .toSortedMap(ObsSummaryWithTitleAndConf.id.get)
       )
 
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)

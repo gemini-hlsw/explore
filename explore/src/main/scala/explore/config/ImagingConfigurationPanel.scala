@@ -11,7 +11,6 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.enum.ImagingCapabilities
@@ -151,13 +150,13 @@ object ImagingConfigurationPanel {
                   HelpIcon("configuration/capabilities.md"),
                   ExploreStyles.SkipToNext
           ),
-          EnumViewOptionalSelect(
+          EnumViewOptionalSelect[ReuseView, ImagingCapabilities](
             id = "imaging-capabilities",
             clazz = ExploreStyles.ConfigurationCapabilities,
             clearable = true,
             upward = true,
             placeholder = "Extra capablities",
-            value = capabilities.value
+            value = capabilities
           )
         )
       }

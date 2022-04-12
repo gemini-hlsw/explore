@@ -6,13 +6,15 @@ package explore.observationtree
 import cats.syntax.all._
 import crystal.react.View
 import crystal.react.reuse._
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.EditInPlace
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
-import explore.model.ObsWithTargets
+import explore.model.ObsWithTitle
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.feature.ReactFragment
@@ -38,9 +40,10 @@ import react.semanticui.views.card._
 final case class ObsBadge(
   obs:               ObsSummary, // The layout will depend on the mixins of the ObsSummary.
   selected:          Boolean = false,
-  setStatusCB:       Option[ObsStatus ==> Callback] = None,
-  setActiveStatusCB: Option[ObsActiveStatus ==> Callback] = None,
-  deleteCB:          Option[Reuse[Callback]] = None
+  setStatusCB:       Option[ObsStatus ==> Callback] = none,
+  setActiveStatusCB: Option[ObsActiveStatus ==> Callback] = none,
+  setSubtitleCB:     Option[Option[NonEmptyString] ==> Callback] = none,
+  deleteCB:          Option[Reuse[Callback]] = none
 ) extends ReactProps[ObsBadge](ObsBadge.component)
 
 object ObsBadge {
@@ -83,10 +86,10 @@ object ObsBadge {
                 props.deleteCB.map(_.value: Callback).getOrEmpty
           )
 
-        def nameAndId(name: String) =
+        def titleAndId(title: Option[NonEmptyString]) =
           <.div(
             ExploreStyles.ObsBadgeTargetAndId,
-            <.div(name),
+            title.map(<.div(_)).whenDefined,
             <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
           )
 
@@ -97,20 +100,35 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObsBadgeHeader,
                   obs match {
-                    case withTargets: ObsWithTargets =>
-                      nameAndId(withTargets.targetNames.toString)
-                    case withConf: ObsWithConf       => withConf.conf
-                    case _                           => nameAndId("")
+                    case withTitle: ObsWithTitle => titleAndId(withTitle.title.some)
+                    case withConf: ObsWithConf   => withConf.conf
+                    case _                       => titleAndId(none)
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )
               ),
               CardMeta(
+                obs match {
+                  case withTitle: ObsWithTitle =>
+                    props.setSubtitleCB
+                      .map(setCB =>
+                        EditInPlace(
+                          withTitle.subtitle,
+                          setCB,
+                          ExploreStyles.ObsBadgeSubtitle,
+                          ("Add description": VdomNode).reuseAlways,
+                          ExploreStyles.ObsBadgeSubtitleAdd,
+                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,
+                          ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleDelete
+                        )
+                      )
+                      .whenDefined
+                },
                 renderEnumProgress(obs.status)
               ),
               CardDescription()(ExploreStyles.ObsBadgeDescription)(
                 obs match {
-                  case _: ObsWithTargets                   =>
+                  case _: ObsWithTitle                     =>
                     ReactFragment(List(conf, constraints).flatten: _*)
                   case withConstraints: ObsWithConstraints =>
                     ReactFragment(withConstraints.constraintsSummary)
@@ -140,11 +158,12 @@ object ObsBadge {
                 props.setStatusCB.map(setStatus =>
                   EnumViewSelect(
                     id = s"obs-status-${obs.id}-2",
-                    value = View[ObsStatus](obs.status,
-                                            { (f, cb) =>
-                                              val newValue = f(obs.status)
-                                              setStatus(newValue) >> cb(newValue)
-                                            }
+                    value = View[ObsStatus](
+                      obs.status,
+                      { (f, cb) =>
+                        val newValue = f(obs.status)
+                        setStatus(newValue) >> cb(newValue)
+                      }
                     ),
                     compact = true,
                     onClickE = (e: ReactEvent, _: Dropdown.DropdownProps) =>

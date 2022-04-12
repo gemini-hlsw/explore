@@ -50,12 +50,8 @@ object ConstraintGroupQueriesGQL {
         observations(programId: $programId) {
           nodes {
             id
-            targetEnvironment {
-              asterism {
-                id
-                name
-              }
-            }
+            title
+            subtitle
           	status
           	activeStatus
           	plannedTime {

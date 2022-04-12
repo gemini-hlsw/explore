@@ -6,6 +6,8 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
@@ -24,11 +26,11 @@ trait ObsSummary {
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
-    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                     =>
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                 =>
       a === b
-    case (a: ObsSummaryWithTargetsAndConstraints, b: ObsSummaryWithTargetsAndConstraints) =>
+    case (a: ObsSummaryWithTitleAndConstraints, b: ObsSummaryWithTitleAndConstraints) =>
       a === b
-    case _                                                                                =>
+    case _                                                                            =>
       false
   })
 }
@@ -43,11 +45,9 @@ trait ObsWithConf extends ObsSummary {
   val conf: String = "GMOS-N R831 1x300"
 }
 
-trait ObsWithTargets extends ObsSummary {
-  val targets: List[TargetSummary]
-
-  lazy val targetNames: String =
-    targets.map(_.name).mkString(";")
+trait ObsWithTitle extends ObsSummary {
+  val title: NonEmptyString
+  val subtitle: Option[NonEmptyString]
 }
 
 case class ObsSummaryWithConstraints(
@@ -67,39 +67,42 @@ object ObsSummaryWithConstraints {
     Eq.by(o => (o.id, o.constraints, o.status, o.activeStatus, o.duration, o.scienceTargetIds))
 }
 
-case class ObsSummaryWithTargetsAndConstraints(
+case class ObsSummaryWithTitleAndConstraints(
   override val id:           Observation.Id,
-  override val targets:      List[TargetSummary],
+  override val title:        NonEmptyString,
+  override val subtitle:     Option[NonEmptyString],
   override val constraints:  ConstraintsSummary,
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithTargets
+    with ObsWithTitle
     with ObsWithConstraints
 
-object ObsSummaryWithTargetsAndConstraints {
-  val id           = Focus[ObsSummaryWithTargetsAndConstraints](_.id)
-  val status       = Focus[ObsSummaryWithTargetsAndConstraints](_.status)
-  val activeStatus = Focus[ObsSummaryWithTargetsAndConstraints](_.activeStatus)
+object ObsSummaryWithTitleAndConstraints {
+  val id           = Focus[ObsSummaryWithTitleAndConstraints](_.id)
+  val subtitle     = Focus[ObsSummaryWithTitleAndConstraints](_.subtitle)
+  val status       = Focus[ObsSummaryWithTitleAndConstraints](_.status)
+  val activeStatus = Focus[ObsSummaryWithTitleAndConstraints](_.activeStatus)
 
-  implicit val eqObsSummaryWithTargetsAndConstraints: Eq[ObsSummaryWithTargetsAndConstraints] =
-    Eq.by(o => (o.id, o.targets, o.constraints, o.status, o.activeStatus, o.duration))
+  implicit val eqObsSummaryWithTitleAndConstraints: Eq[ObsSummaryWithTitleAndConstraints] =
+    Eq.by(o => (o.id, o.title, o.subtitle, o.constraints, o.status, o.activeStatus, o.duration))
 }
 
-case class ObsSummaryWithTargetsAndConf(
+case class ObsSummaryWithTitleAndConf(
   override val id:           Observation.Id,
-  override val targets:      List[TargetSummary],
+  override val title:        NonEmptyString,
+  override val subtitle:     Option[NonEmptyString],
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration
 ) extends ObsSummary
-    with ObsWithTargets
+    with ObsWithTitle
     with ObsWithConf
 
-object ObsSummaryWithTargetsAndConf {
-  val id = Focus[ObsSummaryWithTargetsAndConf](_.id)
+object ObsSummaryWithTitleAndConf {
+  val id = Focus[ObsSummaryWithTitleAndConf](_.id)
 
-  implicit val eqObsSummaryWithTargetsAndConf: Eq[ObsSummaryWithTargetsAndConf] =
-    Eq.by(o => (o.id, o.targets, o.status, o.activeStatus, o.duration, o.conf))
+  implicit val eqObsSummaryWithTargetsAndConf: Eq[ObsSummaryWithTitleAndConf] =
+    Eq.by(o => (o.id, o.title, o.subtitle, o.status, o.activeStatus, o.duration, o.conf))
 }

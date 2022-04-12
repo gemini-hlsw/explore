@@ -9,13 +9,14 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ObsQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.enum.AppTab
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
@@ -54,8 +55,8 @@ object ObsList {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
-    KIListMod[ObsSummaryWithTargetsAndConstraints, Observation.Id](
-      ObsSummaryWithTargetsAndConstraints.id
+    KIListMod[ObsSummaryWithTitleAndConstraints, Observation.Id](
+      ObsSummaryWithTitleAndConstraints.id
     )
 
   protected def setObs(programId: Program.Id, obsId: Option[Observation.Id])(implicit
@@ -162,6 +163,9 @@ object ObsList {
                     setActiveStatusCB = (ObsListActions
                       .obsActiveStatus(obs.id)
                       .set(undoCtx) _).compose((_: ObsActiveStatus).some).reuseAlways.some,
+                    setSubtitleCB = (ObsListActions
+                      .obsSubtitle(obs.id)
+                      .set(undoCtx) _).compose((_: Option[NonEmptyString]).some).reuseAlways.some,
                     deleteCB = ObsListActions
                       .obsExistence(obs.id, o => setObs(props.programId, o.some))
                       .mod(undoCtx)(obsListMod.delete)

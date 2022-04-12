@@ -14,14 +14,14 @@ import lucuma.core.util.arb.ArbGid._
 import lucuma.core.enum.ObsStatus
 import java.time.Duration
 import explore.model.ObsSummaryWithConstraints
-import explore.model.ObsSummaryWithTargetsAndConstraints
-import explore.model.TargetSummary
+import explore.model.ObsSummaryWithTitleAndConstraints
 import lucuma.core.arb.ArbTime
 import lucuma.core.enum.ObsActiveStatus
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.scalacheck.string._
 
 trait ArbObsSummary {
   import ArbConstraintsSummary._
-  import ArbTargetSummary._
   import ArbTime._
 
   implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
@@ -36,20 +36,23 @@ trait ArbObsSummary {
   }
 
   implicit val arbObsSummaryWithTargetsAndConstraints =
-    Arbitrary[ObsSummaryWithTargetsAndConstraints] {
+    Arbitrary[ObsSummaryWithTitleAndConstraints] {
       for {
         id           <- arbitrary[Observation.Id]
-        targets      <- arbitrary[List[TargetSummary]]
+        title        <- arbitrary[NonEmptyString]
+        subtitle     <- arbitrary[Option[NonEmptyString]]
         constraints  <- arbitrary[ConstraintsSummary]
         status       <- arbitrary[ObsStatus]
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
-      } yield ObsSummaryWithTargetsAndConstraints(id,
-                                                  targets,
-                                                  constraints,
-                                                  status,
-                                                  activeStatus,
-                                                  duration
+      } yield ObsSummaryWithTitleAndConstraints(
+        id,
+        title,
+        subtitle,
+        constraints,
+        status,
+        activeStatus,
+        duration
       )
     }
 
@@ -57,10 +60,13 @@ trait ArbObsSummary {
     Cogen[(Observation.Id, ConstraintsSummary, ObsStatus, Duration)]
       .contramap(o => (o.id, o.constraints, o.status, o.duration))
 
-  implicit val cogenObsSummaryWithTargetsAndConstraints
-    : Cogen[ObsSummaryWithTargetsAndConstraints] =
-    Cogen[(Observation.Id, List[TargetSummary], ConstraintsSummary, ObsStatus, Duration)]
-      .contramap(o => (o.id, o.targets, o.constraints, o.status, o.duration))
+  implicit val cogenObsSummaryWithTargetsAndConstraints: Cogen[ObsSummaryWithTitleAndConstraints] =
+    Cogen[
+      (Observation.Id, String, Option[String], ConstraintsSummary, ObsStatus, Duration)
+    ]
+      .contramap(o =>
+        (o.id, o.title.value, o.subtitle.map(_.value), o.constraints, o.status, o.duration)
+      )
 }
 
 object ArbObsSummary extends ArbObsSummary

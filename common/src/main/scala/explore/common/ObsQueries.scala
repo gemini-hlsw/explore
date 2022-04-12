@@ -16,9 +16,8 @@ import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ScienceConfiguration
-import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
 import explore.utils._
@@ -39,10 +38,11 @@ import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
 
 import scala.collection.immutable.SortedMap
+import explore.model.TargetSummary
 
 object ObsQueries {
 
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints]
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleAndConstraints]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   type ObservationData = ObsEditQuery.Data.Observation
@@ -81,7 +81,7 @@ object ObsQueries {
   case class ObsSummariesWithConstraints(
     observations:     ObservationList,
     constraintGroups: ConstraintsList,
-    targetMap:        SortedMap[Target.Id, Set[Observation.Id]]
+    targetMap:        SortedMap[Target.Id, TargetSummary]
   )
 
   object ObsSummariesWithConstraints {
@@ -92,29 +92,28 @@ object ObsQueries {
       Reusability.derive
   }
 
-  private def convertTarget(
-    target: ProgramObservationsQuery.Data.Observations.Nodes.TargetEnvironment.Asterism
-  ): TargetSummary =
-    TargetSummary(target.id, target.name, target.sidereal)
-
   private val queryToObsSummariesWithConstraintsGetter
     : Getter[ProgramObservationsQuery.Data, ObsSummariesWithConstraints] = data =>
     ObsSummariesWithConstraints(
       KeyedIndexedList.fromList(
         data.observations.nodes.map(node =>
-          ObsSummaryWithTargetsAndConstraints(
+          ObsSummaryWithTitleAndConstraints(
             node.id,
-            node.targetEnvironment.asterism.map(convertTarget),
+            node.title,
+            node.subtitle,
             node.constraintSet,
             node.status,
             node.activeStatus,
             node.plannedTime.execution
           )
         ),
-        ObsSummaryWithTargetsAndConstraints.id.get
+        ObsSummaryWithTitleAndConstraints.id.get
       ),
       data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get),
-      data.targetGroup.nodes.toSortedMap(_.target.id, _.observationIds.toSet)
+      data.targetGroup.nodes
+        .toSortedMap(_.target.id,
+                     group => TargetSummary(group.observationIds.toSet, group.target.sidereal)
+        )
     )
 
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
@@ -125,9 +124,10 @@ object ObsQueries {
   def ObsLiveQuery(programId: Program.Id) =
     ScalaFnComponent[ReuseView[ObsSummariesWithConstraints] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[ObservationDB,
-                           ProgramObservationsQuery.Data,
-                           ObsSummariesWithConstraints
+        LiveQueryRenderMod[
+          ObservationDB,
+          ProgramObservationsQuery.Data,
+          ObsSummariesWithConstraints
         ](
           ProgramObservationsQuery.query(programId).reuseAlways,
           (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
@@ -166,12 +166,13 @@ object ObsQueries {
 
   def createObservation[F[_]: Async](programId: Program.Id)(implicit
     c:                                          TransactionalClient[F, ObservationDB]
-  ): F[Option[ObsSummaryWithTargetsAndConstraints]] =
+  ): F[Option[ObsSummaryWithTitleAndConstraints]] =
     ProgramCreateObservation.execute[F](CreateObservationInput(programId = programId)).map { data =>
       data.createObservation.map { obs =>
-        ObsSummaryWithTargetsAndConstraints(
+        ObsSummaryWithTitleAndConstraints(
           obs.id,
-          obs.targetEnvironment.asterism.map(t => TargetSummary(t.id, t.name, t.sidereal)),
+          obs.title,
+          obs.subtitle,
           obs.constraintSet,
           obs.status,
           obs.activeStatus,
