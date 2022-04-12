@@ -563,9 +563,12 @@ object ObsTabContents {
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
+      .useMemoBy((props, _, _, _, _, _) => props.programId)((_, _, _, _, _, _) =>
+        pid => ObsLiveQuery(pid)
+      )
+      .renderWithReuse { (props, panels, options, layouts, resize, debouncer, liveQuery) =>
         implicit val ctx = props.ctx
-        ObsLiveQueryStable(
+        liveQuery.value(
           Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
         )
       }

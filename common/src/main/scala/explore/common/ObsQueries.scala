@@ -129,11 +129,13 @@ object ObsQueries {
           ProgramObservationsQuery.Data,
           ObsSummariesWithConstraints
         ](
-          ProgramObservationsQuery.query(programId).reuseAlways,
+          Reuse.currying(programId).in(pid => ProgramObservationsQuery.query(pid)),
           (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
-          List(
-            ProgramObservationsEditSubscription.subscribe[IO](programId)
-          ).reuseAlways
+          Reuse.by(programId)(
+            List(
+              ProgramObservationsEditSubscription.subscribe[IO](programId)
+            )
+          )
         )(potRender(render))
       }
     )

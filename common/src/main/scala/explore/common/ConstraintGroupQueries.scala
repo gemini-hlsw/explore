@@ -84,11 +84,13 @@ object ConstraintGroupQueries {
                            ConstraintGroupObsQuery.Data,
                            ConstraintSummaryWithObervations
         ](
-          ConstraintGroupObsQuery.query(programId).reuseAlways,
+          Reuse.currying(programId).in(pid => ConstraintGroupObsQuery.query(pid)),
           (ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get _).reuseAlways,
-          List(
-            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId)
-          ).reuseAlways
+          Reuse.by(programId)(
+            List(
+              ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId)
+            )
+          )
         )(potRender(render))
       }
     )

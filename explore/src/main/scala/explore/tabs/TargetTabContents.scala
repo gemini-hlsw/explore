@@ -579,9 +579,12 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
+      .useMemoBy((props, _, _, _, _, _, _) => props.programId)((_, _, _, _, _, _, _) =>
+        pid => AsterismGroupLiveQuery(pid)
+      )
+      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer, liveQuery) =>
         implicit val ctx = props.ctx
-        AsterismGroupLiveQueryStable(
+        liveQuery.value(
           Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
         )
       }

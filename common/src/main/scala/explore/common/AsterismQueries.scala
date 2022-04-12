@@ -109,11 +109,13 @@ object AsterismQueries {
     ScalaFnComponent[ReuseView[AsterismGroupsWithObs] ==> VdomNode](render =>
       AppCtx.using { implicit appCtx =>
         LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
-          AsterismGroupObsQuery.query(programId).reuseAlways,
+          Reuse.currying(programId).in(pid => AsterismGroupObsQuery.query(pid)),
           (AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get _).reuseAlways,
-          List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId),
-               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](programId)
-          ).reuseAlways
+          Reuse.by(programId)(
+            List(ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId),
+                 TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](programId)
+            )
+          )
         )(potRender(render))
       }
     )
