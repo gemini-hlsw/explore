@@ -10,7 +10,7 @@
     "@fortawesome/pro-solid-svg-icons": "^6.0.0",
     "@fortawesome/react-fontawesome": "^0.1.17",
     "@svgdotjs/svg.js": "3.0.16",
-    "broadcast-channel": "4.10.0",
+    "broadcast-channel": "4.11.0",
     "copy-to-clipboard": "3.3.1",
     "fomantic-ui-less": "2.8.8",
     "github-markdown-css": "^5.1.0",
