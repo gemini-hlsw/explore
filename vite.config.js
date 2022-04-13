@@ -5,6 +5,7 @@ const path = require('path')
 const fs = require('fs')
 const ViteFonts = require('vite-plugin-fonts')
 const mkcert = require('vite-plugin-mkcert')
+const { VitePWA } = require('vite-plugin-pwa')
 
 const fontImport = ViteFonts.Plugin({
   google: {
@@ -136,18 +137,25 @@ module.exports = ({ command, mode }) => {
         compress: {
           passes: 2,
           toplevel: true,
-          ecma: 2015
-        }
+          ecma: 2015,
+        },
       },
       rollupOptions: {
-        plugins: rollupPlugins
+        plugins: rollupPlugins,
       },
       outDir: path.resolve(__dirname, 'heroku/static'),
     },
     plugins: [
-      isProduction ? null : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
+      isProduction
+        ? null
+        : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
-      fontImport
-    ]
+      fontImport,
+      VitePWA({
+        workbox: {
+          maximumFileSizeToCacheInBytes: 30000000 // sjs produce large ffiles
+        }
+      }),
+    ],
   };
 };

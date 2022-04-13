@@ -7,8 +7,9 @@ import "/common/sass/datepicker.scss";
 import "/common/less/vendor/react-reflex.less";
 import "github-markdown-css/github-markdown-light.css";
 import "react-circular-progressbar/dist/styles.css";
+import 'react-toastify/dist/ReactToastify.css';
 
-import { Explore } from "@sjs/main.js";
+import { Explore, ExplorePWA } from "@sjs/main.js";
 
 // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 // but for now we can survive setting this only on dev
@@ -16,6 +17,14 @@ if (!process) {
   process = {
     env: {},
   };
+}
+import { registerSW } from "virtual:pwa-register";
+
+if ("serviceWorker" in navigator
+  // && !/localhost/.test(window.location) && !/lvh.me/.test(window.location)) {
+    // Let's not do this in production yet
+  && !/explore.gemini.edu/.test(window.location) && !/gemini.edu/.test(window.location)) {
+    ExplorePWA.runServiceWorker();
 }
 
 if (import.meta.env.DEV) {
