@@ -292,11 +292,11 @@ object ConstraintSetTabContents {
           case _                            => Callback.empty
         }
       }
-      .useMemoBy((props, _) => props.programId)((_, _) => pid => ConstraintGroupLiveQuery(pid))
-      .renderWithReuse { (props, state, liveQuery) =>
+      .renderWithReuse { (props, state) =>
         implicit val ctx = props.ctx
 
-        liveQuery.value(
+        ConstraintGroupLiveQuery(
+          props.programId,
           Reuse(renderFn _)(props, state)
         )
       }

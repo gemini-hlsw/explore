@@ -10,7 +10,6 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
 import crystal.react.reuse._
-import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
@@ -37,6 +36,7 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
+import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 
@@ -121,24 +121,35 @@ object ObsQueries {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
   }
 
-  def ObsLiveQuery(programId: Program.Id) =
-    ScalaFnComponent[ReuseView[ObsSummariesWithConstraints] ==> VdomNode](render =>
-      AppCtx.using { implicit appCtx =>
-        LiveQueryRenderMod[
-          ObservationDB,
-          ProgramObservationsQuery.Data,
-          ObsSummariesWithConstraints
-        ](
-          Reuse.currying(programId).in(pid => ProgramObservationsQuery.query(pid)),
-          (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
-          Reuse.by(programId)(
-            List(
-              ProgramObservationsEditSubscription.subscribe[IO](programId)
-            )
+  case class ObsLiveQuery(
+    programId:        Program.Id,
+    render:           ReuseView[ObsSummariesWithConstraints] ==> VdomNode
+  )(implicit val ctx: AppContextIO)
+      extends ReactFnProps[ObsLiveQuery](ObsLiveQuery.component)
+
+  object ObsLiveQuery {
+    type Props = ObsLiveQuery
+
+    implicit val reuseProps: Reusability[Props] = Reusability.derive
+
+    protected val component = ScalaFnComponent.withReuse[Props] { props =>
+      implicit val ctx = props.ctx
+
+      LiveQueryRenderMod[
+        ObservationDB,
+        ProgramObservationsQuery.Data,
+        ObsSummariesWithConstraints
+      ](
+        Reuse.currying(props.programId).in(pid => ProgramObservationsQuery.query(pid)),
+        (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
+        Reuse.by(props.programId)(
+          List(
+            ProgramObservationsEditSubscription.subscribe[IO](props.programId)
           )
-        )(potRender(render))
-      }
-    )
+        )
+      )(potRender(props.render))
+    }
+  }
 
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],

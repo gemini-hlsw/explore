@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.implicits._
 import crystal.react.ReuseView
 import crystal.react.reuse._
-import explore.AppCtx
 import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -25,6 +24,7 @@ import monocle.Focus
 import monocle.Getter
 import queries.common.ConstraintGroupQueriesGQL._
 import queries.common.ObsQueriesGQL
+import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 
@@ -77,21 +77,32 @@ object ConstraintGroupQueries {
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
   }
 
-  def ConstraintGroupLiveQuery(programId: Program.Id) =
-    ScalaFnComponent[ReuseView[ConstraintSummaryWithObervations] ==> VdomNode](render =>
-      AppCtx.using { implicit appCtx =>
+  final case class ConstraintGroupLiveQuery(
+    programId:        Program.Id,
+    render:           ReuseView[ConstraintSummaryWithObervations] ==> VdomNode
+  )(implicit val ctx: AppContextIO)
+      extends ReactFnProps[ConstraintGroupLiveQuery](ConstraintGroupLiveQuery.component)
+
+  object ConstraintGroupLiveQuery {
+    type Props = ConstraintGroupLiveQuery
+
+    implicit val reuseProps: Reusability[Props] = Reusability.derive
+
+    protected val component =
+      ScalaFnComponent.withReuse[Props] { props =>
+        implicit val ctx = props.ctx
         LiveQueryRenderMod[ObservationDB,
                            ConstraintGroupObsQuery.Data,
                            ConstraintSummaryWithObervations
         ](
-          Reuse.currying(programId).in(pid => ConstraintGroupObsQuery.query(pid)),
+          Reuse.currying(props.programId).in(pid => ConstraintGroupObsQuery.query(pid)),
           (ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get _).reuseAlways,
-          Reuse.by(programId)(
+          Reuse.by(props.programId)(
             List(
-              ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](programId)
+              ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
             )
           )
-        )(potRender(render))
+        )(potRender(props.render))
       }
-    )
+  }
 }
