@@ -140,9 +140,6 @@ object ObsQueries {
       }
     )
 
-  import eu.timepit.refined.auto._
-  val ObsLiveQueryStable = ObsLiveQuery(Program.Id(2L))
-
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
