@@ -9,7 +9,6 @@ import crystal.react.View
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.itc.requiredForITC
 import explore.model.conversions._
 import explore.model.formats._

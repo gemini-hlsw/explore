@@ -22,7 +22,6 @@ object reusability {
   // Model
   implicit val itcTargetProps: Reusability[ITCTarget]                                = Reusability.byEq
   implicit def appContextReuse[F[_]]: Reusability[AppContext[F]]                     = Reusability.always
-  implicit val targetSummaryReuse: Reusability[TargetSummary]                        = Reusability.derive
   implicit val statusReuse: Reusability[PersistentClientStatus]                      = Reusability.derive
   implicit val targetOptionsReuse: Reusability[TargetVisualOptions]                  = Reusability.derive
   implicit val userVaultReuse: Reusability[UserVault]                                = Reusability.derive
@@ -47,7 +46,7 @@ object reusability {
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
     Reusability.derive
   implicit val obsSummaryWithTargetsAndConstraintsReuse
-    : Reusability[ObsSummaryWithTargetsAndConstraints] = Reusability.derive
+    : Reusability[ObsSummaryWithTitleAndConstraints] = Reusability.derive
 
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =

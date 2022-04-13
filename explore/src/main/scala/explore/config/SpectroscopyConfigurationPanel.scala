@@ -12,7 +12,6 @@ import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.itc.requiredForITC
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.display._

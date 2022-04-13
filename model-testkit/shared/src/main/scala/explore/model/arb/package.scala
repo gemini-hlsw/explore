@@ -12,5 +12,4 @@ object all
     with ArbUserVault
     with ArbObsSummary
     with ArbConstraintsSummary
-    with ArbTargetSummary
     with ArbSpectroscopyConfigurationOptions

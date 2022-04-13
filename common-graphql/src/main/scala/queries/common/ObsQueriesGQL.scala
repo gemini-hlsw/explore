@@ -20,25 +20,14 @@ import java.time
 object ObsQueriesGQL {
   @GraphQL
   trait ProgramObservationsQuery extends GraphQLOperation[ObservationDB] {
+    // TODO We should do a single observations query and extract the constraint sets and targets from it.
     val document = """
       query($programId: ProgramId!) {
         observations(programId: $programId) {
           nodes {
             id
-            targetEnvironment {
-              asterism {
-                id
-                name
-                sidereal {
-                  ra {
-                    microarcseconds
-                  }
-                  dec {
-                    microarcseconds
-                  }
-                }
-              }
-            }
+            title
+            subtitle
             constraintSet {
               imageQuality
               cloudExtinction
@@ -86,6 +75,14 @@ object ObsQueriesGQL {
             observationIds
             target {
               id
+              sidereal {
+                ra {
+                  microarcseconds
+                }
+                dec {
+                  microarcseconds
+                }
+              }              
             }
           }
         }
@@ -95,13 +92,8 @@ object ObsQueriesGQL {
     object Data {
       object Observations {
         object Nodes {
-          object TargetEnvironment {
-            object Asterism {
-              type Sidereal = lucuma.core.math.Coordinates
-            }
-          }
           trait ConstraintSet extends ConstraintsSummary
-          object PlannedTime       {
+          object PlannedTime {
             type Execution = time.Duration
           }
         }
@@ -109,6 +101,14 @@ object ObsQueriesGQL {
 
       object ConstraintSetGroup {
         type Nodes = model.ConstraintGroup
+      }
+
+      object TargetGroup {
+        object Nodes {
+          object Target {
+            type Sidereal = lucuma.core.math.Coordinates
+          }
+        }
       }
     }
 
@@ -131,20 +131,8 @@ object ObsQueriesGQL {
       mutation($createObservation: CreateObservationInput!) {
         createObservation(input: $createObservation) {
           id
-          targetEnvironment {
-            asterism {
-              id
-              name
-              sidereal {
-                ra {
-                  microarcseconds
-                }
-                dec {
-                  microarcseconds
-                }
-              }
-            }
-          }
+          title
+          subtitle
           constraintSet {
             imageQuality
             cloudExtinction

@@ -9,7 +9,7 @@ import clue.data.syntax._
 import crystal.react.implicits._
 import explore.data.KeyedIndexedList
 import explore.implicits._
-import explore.model.ObsSummaryWithTargetsAndConstraints
+import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.optics.GetAdjust
 import explore.undo.Action
 import explore.undo.KIListMod
@@ -22,23 +22,23 @@ import queries.common.ObsQueriesGQL._
 
 object ObsListActions {
   protected val obsListMod =
-    KIListMod[ObsSummaryWithTargetsAndConstraints, Observation.Id](
-      ObsSummaryWithTargetsAndConstraints.id
+    KIListMod[ObsSummaryWithTitleAndConstraints, Observation.Id](
+      ObsSummaryWithTitleAndConstraints.id
     )
 
   private def obsWithId(
     obsId: Observation.Id
-  ): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummaryWithTargetsAndConstraints], Option[
-    ObsSummaryWithTargetsAndConstraints
+  ): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummaryWithTitleAndConstraints], Option[
+    ObsSummaryWithTitleAndConstraints
   ]] =
     obsListMod
       .withKey(obsId)
-      .composeOptionLens(Focus[(ObsSummaryWithTargetsAndConstraints, Int)](_._1))
+      .composeOptionLens(Focus[(ObsSummaryWithTitleAndConstraints, Int)](_._1))
 
   def obsStatus(obsId: Observation.Id)(implicit
     c:                 TransactionalClient[IO, ObservationDB]
   ) = Action(
-    access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTargetsAndConstraints.status)
+    access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleAndConstraints.status)
   )(onSet =
     (_, status) =>
       UpdateObservationMutation
@@ -48,10 +48,23 @@ object ObsListActions {
         .void
   )
 
+  def obsSubtitle(obsId: Observation.Id)(implicit
+    c:                   TransactionalClient[IO, ObservationDB]
+  ) = Action(
+    access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleAndConstraints.subtitle)
+  )(onSet =
+    (_, subtitleOpt) =>
+      UpdateObservationMutation
+        .execute[IO](
+          EditObservationInput(observationId = obsId, subtitle = subtitleOpt.flatten.orUnassign)
+        )
+        .void
+  )
+
   def obsActiveStatus(obsId: Observation.Id)(implicit
     c:                       TransactionalClient[IO, ObservationDB]
   ) = Action(
-    access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTargetsAndConstraints.activeStatus)
+    access = obsWithId(obsId).composeOptionLens(ObsSummaryWithTitleAndConstraints.activeStatus)
   )(onSet =
     (_, activeStatus) =>
       UpdateObservationMutation

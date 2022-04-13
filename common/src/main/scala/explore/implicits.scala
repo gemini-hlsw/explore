@@ -10,6 +10,7 @@ import coulomb.Quantity
 import crystal.react.ReuseViewF
 import crystal.react.ReuseViewOptF
 import crystal.react.reuse._
+import eu.timepit.refined.api.Refined
 import explore.model.AppContext
 import explore.optics._
 import japgolly.scalajs.react._
@@ -94,14 +95,19 @@ trait ContextImplicits {
     ctx.clients.itc
 }
 
-object implicits extends ShorthandTypes with ListImplicits with ContextImplicits {
-  // TODO Remove this when it's included in scalajs-react
-  // https://github.com/japgolly/scalajs-react/pull/1004
-  implicit object CallbackMonoid extends Monoid[Callback] {
-    val empty: Callback                             = Callback.empty
-    def combine(x: Callback, y: Callback): Callback = x >> y
-  }
+trait RefinedImplicits {
+  @inline
+  implicit def vdomNodeFromRefined[T, P](v: T Refined P)(implicit
+    f:                                      T => VdomNode
+  ): VdomNode =
+    f(v.value)
+}
 
+object implicits
+    extends ShorthandTypes
+    with ListImplicits
+    with ContextImplicits
+    with RefinedImplicits {
   // View Optics implicits
   implicit class ViewOpticsOps[F[_], A](val view: ReuseViewF[F, A]) extends AnyVal {
     def zoomGetAdjust[B](getAdjust: GetAdjust[A, B])(implicit F: Monad[F]): ReuseViewF[F, B] =
