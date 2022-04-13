@@ -223,8 +223,6 @@ object ObsTabContents {
   type Props = ObsTabContents
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val selectedLens = TwoPanelState.selected[Observation.Id]
-
   def makeConstraintsSelector(
     constraintGroups: ReuseView[ConstraintsList],
     obsView:          Pot[ReuseView[ObservationData]]
@@ -277,7 +275,7 @@ object ObsTabContents {
 
   protected def renderFn(
     props:              Props,
-    panels:             ReuseView[TwoPanelState[Observation.Id]],
+    panels:             ReuseView[TwoPanelState],
     options:            ReuseView[TargetVisualOptions],
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
@@ -289,7 +287,7 @@ object ObsTabContents {
 
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(TwoPanelState.treeWidth[Observation.Id]).set(d.size.width.toDouble) *>
+        panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
           debouncer
             .submit(
               UserWidthsCreation
@@ -301,7 +299,7 @@ object ObsTabContents {
             .runAsyncAndForget
 
     val treeWidth    = panels.get.treeWidth.toInt
-    val selectedView = panels.zoom(selectedLens)
+    val selectedView = panels.zoom(TwoPanelState.selected)
 
     // Tree area
     def tree(observations: ReuseView[ObservationList]) =
@@ -525,15 +523,15 @@ object ObsTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(TwoPanelState.initial[Observation.Id](SelectedPanel.Uninitialized))
+      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, panels) =>
-        (props.focusedObs, panels.zoom(selectedLens).value.reuseByValue)
+        (props.focusedObs, panels.zoom(TwoPanelState.selected).value.reuseByValue)
       ) { (_, _) => params =>
         val (focusedObs, selected) = params
         (focusedObs, selected.get) match {
-          case (Some(obsId), _)                => selected.set(SelectedPanel.editor(obsId))
-          case (None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
-          case _                               => Callback.empty
+          case (Some(_), _)                 => selected.set(SelectedPanel.editor)
+          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+          case _                            => Callback.empty
         }
       }
       .useStateViewWithReuse(TargetVisualOptions.Default)
@@ -552,7 +550,7 @@ object ObsTabContents {
               case Right((w, l)) =>
                 (panels
                   .mod(
-                    TwoPanelState.treeWidth[Observation.Id].replace(w.toDouble)
+                    TwoPanelState.treeWidth.replace(w.toDouble)
                   ) *> layout.mod(o => mergeMap(o, l)))
                   .to[IO]
               case Left(_)       => IO.unit
