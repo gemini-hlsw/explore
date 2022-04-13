@@ -65,17 +65,6 @@ a {
   }
 }
 
-// Override SUI's default, which prevented shrinking on small screens.
-.ui.form .field .ui.input input,
-.ui.form .fields .field .ui.input input {
-  width: 100%;
-}
-
-.ui.form .field .ui.icon.input input,
-.ui.form .fields .field .ui.icon.input input {
-  width: auto;
-}
-
 // Mixins
 //
 .full-height-width {
@@ -753,6 +742,20 @@ tfoot {
 
 .obs-badge-subtitle {
   font-size: x-small;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-bottom: -1px;
+}
+
+.obs-badge-subtitle-input {
+  flex-grow: 2;
+
+  & input {
+    font-size: x-small !important;
+    padding: 1px !important;
+  }
 }
 
 .obs-badge-subtitle-add {
@@ -2171,4 +2174,15 @@ th.sticky-header, .th.sticky-header {
 .ui.striped.table tr:hover td.sticky-column, .ui.striped.table tr:hover .td.sticky-column {
   background: var(--table-selectable-background);
   color: var(--table-selectable-color);
+}
+
+// Override SUI's default, which prevented shrinking on small screens.
+.ui.form .field .ui.input input,
+.ui.form .fields .field .ui.input input {
+  width: 100%;
+}
+
+.ui.form .field .ui.icon.input input,
+.ui.form .fields .field .ui.icon.input input {
+  width: auto;
 }

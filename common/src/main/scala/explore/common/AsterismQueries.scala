@@ -118,6 +118,9 @@ object AsterismQueries {
       }
     )
 
+  import eu.timepit.refined.auto._
+  val AsterismGroupLiveQueryStable = AsterismGroupLiveQuery(Program.Id(2L))
+
   def replaceAsterism[F[_]: Async](
     obsIds:     List[Observation.Id],
     targetIds:  List[Target.Id]

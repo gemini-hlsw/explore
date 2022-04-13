@@ -15,7 +15,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
 import org.scalajs.dom
-import org.scalajs.dom.html
 import react.common._
 import react.common.implicits._
 import react.common.style._
@@ -58,7 +57,7 @@ object Tile {
 
   implicit val propsReuse: Reusability[Tile] = Reusability.derive && Reusability.by(_.render)
 
-  implicit val htmlElementReuse: Reusability[html.Element] = Reusability.byRefOr_==
+  implicit val htmlElementReuse: Reusability[dom.html.Element] = Reusability.byRefOr_==
 
   val heightBreakpoints =
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
@@ -74,7 +73,7 @@ object Tile {
     ScalaFnComponent
       .withHooks[Props]
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
-      .useStateWithReuse(none[html.Element])
+      .useStateWithReuse(none[dom.html.Element])
       .renderWithReuse { (p, infoRef) =>
         val maximizeButton =
           Button(
@@ -105,7 +104,7 @@ object Tile {
         def setInfoRef(node: dom.Node | Null): Unit =
           infoRef
             .modState(
-              _.fold(Option(node.asInstanceOf[html.Element]))(_.some)
+              _.fold(Option(node.asInstanceOf[dom.html.Element]))(_.some)
             )
             .runNow()
 
