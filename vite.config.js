@@ -5,6 +5,7 @@ const path = require('path')
 const fs = require('fs')
 const ViteFonts = require('vite-plugin-fonts')
 const mkcert = require('vite-plugin-mkcert')
+const { VitePWA } = require('vite-plugin-pwa')
 
 const fontImport = ViteFonts.Plugin({
   google: {
@@ -138,7 +139,8 @@ module.exports = ({ command, mode }) => {
     plugins: [
       isProduction ? null : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
-      fontImport
+      fontImport,
+      VitePWA({})
     ]
   };
 };

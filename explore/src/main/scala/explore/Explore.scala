@@ -50,6 +50,19 @@ import scala.scalajs.js
 
 import js.annotation._
 
+object ExplorePWA {
+
+  @js.native
+  @JSImport("virtual:pwa-register", "registerSW")
+  object registerSW extends js.Object {
+    def apply(): Unit = js.native
+  }
+
+  def setupSW: IO[Unit] =
+    IO.println("Setup") *> IO(registerSW())
+
+}
+
 @JSExportTopLevel("Explore")
 object ExploreMain extends IOApp.Simple {
 
@@ -63,7 +76,7 @@ object ExploreMain extends IOApp.Simple {
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
 
-  override final def run: IO[Unit] = {
+  override final def run: IO[Unit] = ExplorePWA.setupSW *> {
     japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) = RootModel(
