@@ -18,6 +18,7 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ScienceConfiguration
+import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
 import explore.utils._
@@ -38,7 +39,6 @@ import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
 
 import scala.collection.immutable.SortedMap
-import explore.model.TargetSummary
 
 object ObsQueries {
 
@@ -137,6 +137,9 @@ object ObsQueries {
         )(potRender(render))
       }
     )
+
+  import eu.timepit.refined.auto._
+  val ObsLiveQueryStable = ObsLiveQuery(Program.Id(2L))
 
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],

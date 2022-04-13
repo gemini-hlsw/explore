@@ -109,6 +109,7 @@ object ExploreStyles {
   val TreeToolbar: Css            = Css("tree-toolbar")
   val ObsBadge: Css               = Css("obs-badge")
   val ObsBadgeSubtitle: Css       = Css("obs-badge-subtitle")
+  val ObsBadgeSubtitleInput: Css  = Css("obs-badge-subtitle-input")
   val ObsBadgeSubtitleAdd: Css    = Css("obs-badge-subtitle-add")
   val ObsBadgeSubtitleEdit: Css   = Css("obs-badge-subtitle-edit")
   val ObsBadgeSubtitleDelete: Css = Css("obs-badge-subtitle-delete")

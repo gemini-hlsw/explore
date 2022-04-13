@@ -753,6 +753,20 @@ tfoot {
 
 .obs-badge-subtitle {
   font-size: x-small;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-bottom: -1px;
+}
+
+.obs-badge-subtitle-input {
+  flex-grow: 2;
+
+  & input {
+    font-size: x-small !important;
+    padding: 1px !important;
+  }
 }
 
 .obs-badge-subtitle-add {

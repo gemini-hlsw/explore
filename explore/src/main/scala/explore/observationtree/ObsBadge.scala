@@ -7,7 +7,7 @@ import cats.syntax.all._
 import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.EditInPlace
+import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -112,10 +112,11 @@ object ObsBadge {
                   case withTitle: ObsWithTitle =>
                     props.setSubtitleCB
                       .map(setCB =>
-                        EditInPlace(
+                        EditableLabel(
                           withTitle.subtitle,
                           setCB,
                           ExploreStyles.ObsBadgeSubtitle,
+                          ExploreStyles.ObsBadgeSubtitleInput,
                           ("Add description": VdomNode).reuseAlways,
                           ExploreStyles.ObsBadgeSubtitleAdd,
                           ExploreStyles.BlendedButton |+| ExploreStyles.ObsBadgeSubtitleEdit,

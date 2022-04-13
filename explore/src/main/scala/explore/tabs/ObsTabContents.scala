@@ -38,6 +38,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Coordinates
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -65,7 +66,6 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import lucuma.core.math.Coordinates
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
@@ -565,7 +565,7 @@ object ObsTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
-        ObsLiveQuery(props.programId)(
+        ObsLiveQueryStable(
           Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
         )
       }

@@ -1,0 +1,137 @@
+// Copyright (c) 2016-2022 Association of Universities for Research in Astronomy, Inc. (AURA)
+// For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
+
+package explore
+
+import cats.syntax.all._
+import crystal.react.ReuseView
+import crystal.react.reuse._
+import eu.timepit.refined.types.string.NonEmptyString
+import explore.implicits._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.ui.reusability._
+import react.common.ReactFnProps
+import react.common.style.Css
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes._
+import org.scalajs.dom
+import scalajs.js.|
+import react.semanticui.elements.input.Input
+
+final case class EditableLabel(
+  value:            Option[NonEmptyString],
+  mod:              Option[NonEmptyString] ==> Callback,
+  textClass:        Css = Css.Empty,
+  inputClass:       Css = Css.Empty,
+  addButtonLabel:   Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
+  addButtonClass:   Css = Css.Empty,
+  leftButtonClass:  Css = Css.Empty,
+  rightButtonClass: Css = Css.Empty
+) extends ReactFnProps[EditableLabel](EditableLabel.component)
+
+object EditableLabel {
+  type Props = EditableLabel
+
+  def fromView(
+    value:             ReuseView[Option[NonEmptyString]],
+    textClass:         Css = Css.Empty,
+    inputClass:        Css = Css.Empty,
+    addButtonLabel:    Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
+    addButtonClass:    Css = Css.Empty,
+    editButtonClass:   Css = Css.Empty,
+    deleteButtonClass: Css = Css.Empty
+  ): EditableLabel =
+    EditableLabel(
+      value.get,
+      value.map(_.set),
+      textClass,
+      inputClass,
+      addButtonLabel,
+      addButtonClass,
+      editButtonClass,
+      deleteButtonClass
+    )
+
+  private implicit val reuseProps: Reusability[Props] = Reusability.derive
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useState(false) // editing
+      .useState("")    // displayValue
+      .renderWithReuse { (props, editing, displayValue) =>
+        def editCB(e: ReactMouseEvent): Callback =
+          e.stopPropagationCB >> e.preventDefaultCB >>
+            displayValue.setState(props.value.map(_.value).orEmpty) >>
+            editing.setState(true)
+
+        val submitCB: Callback =
+          props.mod(NonEmptyString.from(displayValue.value).toOption) >>
+            editing.setState(false)
+
+        def focus(node: dom.Node | Null): Unit =
+          Option(node.asInstanceOf[dom.html.Element]).foreach(_.focus())
+
+        if (editing.value)
+          <.div(^.width := "100%", ^.display.flex)(
+            Input(
+              value = displayValue.value,
+              onChangeE = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
+              size = Mini,
+              focus = true,
+              clazz = props.inputClass
+            )(
+              // ^.onBlur --> submitCB,
+              ^.onKeyUp ==> (e =>
+                if (e.key === "Enter") submitCB
+                else if (e.key === "Escape") editing.setState(false)
+                else Callback.empty
+              ),
+              ^.onClick ==> (e => e.stopPropagationCB >> e.preventDefaultCB),
+              ^.untypedRef(focus)
+            ),
+            Button(
+              size = Mini,
+              compact = true,
+              clazz = props.leftButtonClass,
+              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                e.stopPropagationCB >> e.preventDefaultCB >> submitCB
+            )(Icons.Checkmark),
+            Button(
+              size = Mini,
+              compact = true,
+              clazz = props.rightButtonClass,
+              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                e.stopPropagationCB >> e.preventDefaultCB >> editing.setState(false)
+            )(Icons.Close)
+          )
+        else
+          props.value.fold[VdomNode](
+            Button(
+              size = Mini,
+              compact = true,
+              clazz = props.addButtonClass,
+              onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) => editCB(e)
+            )(props.addButtonLabel)
+          )(text =>
+            <.div(^.width := "100%", ^.display.flex)(
+              <.span(props.textClass, ^.onClick ==> editCB, text),
+              Button(
+                size = Mini,
+                compact = true,
+                clazz = props.leftButtonClass,
+                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) => editCB(e)
+              )(Icons.Edit),
+              Button(
+                size = Mini,
+                compact = true,
+                clazz = props.rightButtonClass,
+                onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
+                  e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none)
+              )(Icons.Trash)
+            )
+          )
+      }
+
+}
