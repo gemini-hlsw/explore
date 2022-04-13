@@ -321,8 +321,6 @@ object ObsTabContents {
         )
       )
 
-    val obsIdOpt: Option[Observation.Id] = panels.get.selected.optValue
-
     val targetCoords: Option[Coordinates] =
       props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
@@ -480,7 +478,7 @@ object ObsTabContents {
       ).withKey(obsId.toString)
 
     val rightSide =
-      obsIdOpt.fold[VdomNode](
+      props.focusedObs.fold[VdomNode](
         Tile("observations", "Observations Summary", backButton.some, key = "observationsSummary")(
           Reuse.by(obsWithConstraints)((_: Tile.RenderInTitle) =>
             <.div(ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,

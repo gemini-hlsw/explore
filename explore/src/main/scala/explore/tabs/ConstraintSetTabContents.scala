@@ -164,7 +164,7 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = state.get.selected.optValue
+    val rightSide = props.focusedObsSet
       .flatMap(ids =>
         findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
       )

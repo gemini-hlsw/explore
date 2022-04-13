@@ -474,8 +474,14 @@ object TargetTabContents {
     }
 
     val selectedPanel = panels.get.selected
-    val rightSide     =
-      selectedPanel.optValue
+    val optSelected   = (props.focusedObsSet, props.focusedTarget) match {
+      case (Some(obsIdSet), _)    => obsIdSet.asRight.some
+      case (None, Some(targetId)) => targetId.asLeft.some
+      case _                      => none
+    }
+
+    val rightSide =
+      optSelected
         .fold(renderSummary) {
           _ match {
             case Left(targetId) =>
