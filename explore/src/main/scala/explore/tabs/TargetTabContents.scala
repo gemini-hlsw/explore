@@ -74,8 +74,6 @@ final case class TargetTabContents(
 object TargetTabContents {
   type Props = TargetTabContents
 
-  import AsterismGroupObsList.TargetOrObsSet
-
   private val TargetIntialHeightFraction   = 6
   private val SkyPlotInitialHeightFraction = 4
   private val TotalHeightFractions         = TargetIntialHeightFraction + SkyPlotInitialHeightFraction
@@ -137,9 +135,6 @@ object TargetTabContents {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  val treeWidthLens = TwoPanelState.treeWidth[TargetOrObsSet]
-  val selectedLens  = TwoPanelState.selected[TargetOrObsSet]
-
   def otherObsCount(
     targetGroupMap: Reuse[TargetGroupList],
     obsIds:         ObsIdSet,
@@ -149,7 +144,7 @@ object TargetTabContents {
 
   protected def renderFn(
     props:                 Props,
-    panels:                ReuseView[TwoPanelState[TargetOrObsSet]],
+    panels:                ReuseView[TwoPanelState],
     options:               ReuseView[TargetVisualOptions],
     defaultLayouts:        LayoutsMap,
     layouts:               ReuseView[LayoutsMap],
@@ -160,7 +155,7 @@ object TargetTabContents {
 
     val panelsResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        panels.zoom(treeWidthLens).set(d.size.width.toDouble) *>
+        panels.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble) *>
           debouncer
             .submit(
               UserWidthsCreation
@@ -168,8 +163,8 @@ object TargetTabContents {
             )
             .runAsyncAndForget
 
-    val treeWidth: Int                                         = panels.get.treeWidth.toInt
-    val selectedView: ReuseView[SelectedPanel[TargetOrObsSet]] = panels.zoom(selectedLens)
+    val treeWidth: Int                         = panels.get.treeWidth.toInt
+    val selectedView: ReuseView[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 
     val targetMap: Reuse[TargetGroupList] = asterismGroupsWithObs.map(_.get.targetGroups)
 
@@ -474,8 +469,14 @@ object TargetTabContents {
     }
 
     val selectedPanel = panels.get.selected
-    val rightSide     =
-      selectedPanel.optValue
+    val optSelected   = (props.focusedObsSet, props.focusedTarget) match {
+      case (Some(obsIdSet), _)    => obsIdSet.asRight.some
+      case (None, Some(targetId)) => targetId.asLeft.some
+      case _                      => none
+    }
+
+    val rightSide =
+      optSelected
         .fold(renderSummary) {
           _ match {
             case Left(targetId) =>
@@ -535,16 +536,19 @@ object TargetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(TwoPanelState.initial[TargetOrObsSet](SelectedPanel.Uninitialized))
+      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, state) =>
-        (props.focusedObsSet, props.focusedTarget, state.zoom(selectedLens).value.reuseByValue)
+        (props.focusedObsSet,
+         props.focusedTarget,
+         state.zoom(TwoPanelState.selected).value.reuseByValue
+        )
       ) { (_, _) => params =>
         val (focusedObsSet, focusedTarget, selected) = params
         (focusedObsSet, focusedTarget, selected.get) match {
-          case (Some(obsIdSet), _, _)                => selected.set(SelectedPanel.editor(obsIdSet.asRight))
-          case (None, Some(targetId), _)             => selected.set(SelectedPanel.editor(targetId.asLeft))
-          case (None, None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
-          case _                                     => Callback.empty
+          case (Some(_), _, _)                    => selected.set(SelectedPanel.editor)
+          case (None, Some(_), _)                 => selected.set(SelectedPanel.editor)
+          case (None, None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+          case _                                  => Callback.empty
         }
       }
       .useStateViewWithReuse(TargetVisualOptions.Default)
@@ -570,7 +574,7 @@ object TargetTabContents {
                 case Right((w, l)) =>
                   (panels
                     .mod(
-                      TwoPanelState.treeWidth[TargetOrObsSet].replace(w.toDouble)
+                      TwoPanelState.treeWidth.replace(w.toDouble)
                     ) *> layout.mod(o => mergeMap(o, l)))
                     .to[IO]
                 case Left(_)       =>
@@ -581,7 +585,8 @@ object TargetTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
-        AsterismGroupLiveQueryStable(
+        AsterismGroupLiveQuery(
+          props.programId,
           Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
         )
       }

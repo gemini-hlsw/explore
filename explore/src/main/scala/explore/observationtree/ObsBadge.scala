@@ -124,6 +124,7 @@ object ObsBadge {
                         )
                       )
                       .whenDefined
+                  case _                       => TagMod.empty
                 },
                 renderEnumProgress(obs.status)
               ),

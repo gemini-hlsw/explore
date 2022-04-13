@@ -63,13 +63,10 @@ final case class ConstraintSetTabContents(
 
 object ConstraintSetTabContents {
   type Props = ConstraintSetTabContents
-  type State = TwoPanelState[ObsIdSet]
+  type State = TwoPanelState
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
   implicit val stateReuse: Reusability[State] = Reusability.derive
-
-  val treeWidthLens = TwoPanelState.treeWidth[ObsIdSet]
-  val selectedLens  = TwoPanelState.selected[ObsIdSet]
 
   def readWidthPreference(props: Props, state: View[State]): Callback = {
     implicit val ctx = props.ctx
@@ -78,7 +75,7 @@ object ConstraintSetTabContents {
       props.userId,
       ResizableSection.ConstraintSetsTree,
       Constants.InitialTreeWidth.toInt
-    ) >>= (w => state.zoom(treeWidthLens).async.set(w.toDouble))).runAsync
+    ) >>= (w => state.zoom(TwoPanelState.treeWidth).async.set(w.toDouble))).runAsync
   }
 
   protected def renderFn(
@@ -88,7 +85,7 @@ object ConstraintSetTabContents {
   )(implicit ctx:       AppContextIO): VdomNode = {
     val treeResize =
       (_: ReactEvent, d: ResizeCallbackData) =>
-        (state.zoom(treeWidthLens).set(d.size.width.toDouble).to[IO] *>
+        (state.zoom(TwoPanelState.treeWidth).set(d.size.width.toDouble).to[IO] *>
           UserWidthsCreation
             .storeWidthPreference[IO](props.userId,
                                       ResizableSection.ConstraintSetsTree,
@@ -109,7 +106,7 @@ object ConstraintSetTabContents {
           constraintWithObs,
           props.programId,
           props.focusedObsSet,
-          state.zoom(selectedLens).set(SelectedPanel.summary).reuseAlways,
+          state.zoom(TwoPanelState.selected).set(SelectedPanel.summary).reuseAlways,
           props.expandedIds,
           props.listUndoStacks
         )
@@ -156,7 +153,7 @@ object ConstraintSetTabContents {
         clazz = ExploreStyles.TileBackButton |+| ExploreStyles.BlendedButton,
         onClickE = linkOverride[ButtonProps](
           ctx.pushPage(AppTab.Constraints, props.programId, none, none) >>
-            state.zoom(selectedLens).set(SelectedPanel.tree)
+            state.zoom(TwoPanelState.selected).set(SelectedPanel.tree)
         )
       )(^.href := ctx.pageUrl(AppTab.Constraints, props.programId, none, none), Icons.ChevronLeft)
     )
@@ -164,7 +161,7 @@ object ConstraintSetTabContents {
     val coreWidth  = props.size.width.getOrElse(0) - treeWidth
     val coreHeight = props.size.height.getOrElse(0)
 
-    val rightSide = state.get.selected.optValue
+    val rightSide = props.focusedObsSet
       .flatMap(ids =>
         findConstraintGroup(ids, constraintsWithObs.get.constraintGroups).map(cg => (ids, cg))
       )
@@ -283,22 +280,23 @@ object ConstraintSetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateViewWithReuse(TwoPanelState.initial[ObsIdSet](SelectedPanel.Uninitialized))
+      .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectOnMountBy((props, state) => readWidthPreference(props, state))
       .useEffectWithDepsBy((props, state) =>
-        (props.focusedObsSet, state.zoom(selectedLens).value.reuseByValue)
+        (props.focusedObsSet, state.zoom(TwoPanelState.selected).value.reuseByValue)
       ) { (_, _) => params =>
         val (focusedObsSet, selected) = params
         (focusedObsSet, selected.get) match {
-          case (Some(obsIdSet), _)             => selected.set(SelectedPanel.editor(obsIdSet))
-          case (None, SelectedPanel.Editor(_)) => selected.set(SelectedPanel.Summary)
-          case _                               => Callback.empty
+          case (Some(_), _)                 => selected.set(SelectedPanel.editor)
+          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.summary)
+          case _                            => Callback.empty
         }
       }
       .renderWithReuse { (props, state) =>
         implicit val ctx = props.ctx
 
-        ConstraintGroupLiveQuery(props.programId)(
+        ConstraintGroupLiveQuery(
+          props.programId,
           Reuse(renderFn _)(props, state)
         )
       }
