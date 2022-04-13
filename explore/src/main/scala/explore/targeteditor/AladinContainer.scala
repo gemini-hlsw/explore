@@ -67,7 +67,7 @@ object AladinContainer {
         }
       )
       .useResizeDetector()
-      .render { (props, svg, aladinRef, resize) =>
+      .renderWithReuse { (props, svg, aladinRef, resize) =>
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
