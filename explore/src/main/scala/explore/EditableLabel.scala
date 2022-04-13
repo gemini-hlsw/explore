@@ -11,13 +11,14 @@ import explore.implicits._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
+import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.Css
 import react.semanticui.elements.button.Button
-import react.semanticui.sizes._
-import org.scalajs.dom
-import scalajs.js.|
 import react.semanticui.elements.input.Input
+import react.semanticui.sizes._
+
+import scalajs.js.|
 
 final case class EditableLabel(
   value:            Option[NonEmptyString],
