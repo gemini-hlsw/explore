@@ -28,6 +28,8 @@ sealed trait UseResizeDetectorReturn {
   val height: Option[Int]
   val width: Option[Int]
   val ref: Ref.Simple[html.Element]
+
+  override def toString(): String = s"Resize($width, $height)"
 }
 
 object UseResizeDetectorReturn {

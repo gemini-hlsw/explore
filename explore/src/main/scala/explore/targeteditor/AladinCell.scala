@@ -52,16 +52,16 @@ object AladinCell extends ModelOptics {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // base coordinates
+      // mouse coordinates, starts on the base
       .useStateBy(_.aladinCoords)
       // field of view
       .useStateViewWithReuseBy((p, _) => Fov(p.options.get.fovAngle, p.options.get.fovAngle))
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
-      .renderWithReuse { (props, coords, fov, center) =>
+      .renderWithReuse { (props, mouseCoords, fov, center) =>
         val coordinatesSetter =
-          ((c: Coordinates) => coords.setState(c)).reuseAlways
+          ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
         def fovSetter(props: Props, newFov: Fov): Callback =
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
@@ -73,30 +73,28 @@ object AladinCell extends ModelOptics {
               .debounce(1.seconds)
           }
 
-        React.Fragment(
+        <.div(
+          ExploreStyles.TargetAladinCell,
           <.div(
-            ExploreStyles.TargetAladinCell,
+            ExploreStyles.AladinContainerColumn,
+            AladinContainer(
+              props.target,
+              props.options.get,
+              fov,
+              coordinatesSetter,
+              Reuse.currying(props).in(fovSetter _),
+              center
+            ).withKey(props.aladinCoords.toString),
+            AladinToolbar(fov.get, mouseCoords.value),
             <.div(
-              ExploreStyles.AladinContainerColumn,
-              AladinContainer(
-                props.target,
-                props.options.get,
-                fov,
-                coordinatesSetter,
-                Reuse.currying(props).in(fovSetter _),
-                center
-              ).withKey(props.target.get.toString),
-              AladinToolbar(fov.get, coords.value),
-              <.div(
-                ExploreStyles.AladinCenterButton,
-                Popup(
-                  content = "Center on target",
-                  position = PopupPosition.BottomLeft,
-                  trigger = Button(size = Mini, icon = true, onClick = center.set(true))(
-                    Icons.Bullseye
-                      .transform(Transform(size = 24))
-                      .clazz(ExploreStyles.Accented)
-                  )
+              ExploreStyles.AladinCenterButton,
+              Popup(
+                content = "Center on target",
+                position = PopupPosition.BottomLeft,
+                trigger = Button(size = Mini, icon = true, onClick = center.set(true))(
+                  Icons.Bullseye
+                    .transform(Transform(size = 24))
+                    .clazz(ExploreStyles.Accented)
                 )
               )
             )
