@@ -58,7 +58,8 @@ object ConstraintGroupQueries {
       obsR.subtitle,
       obsR.status,
       obsR.activeStatus,
-      obsR.plannedTime.execution
+      obsR.plannedTime.execution,
+      obsR.scienceConfiguration
     )
 
   private val queryToConstraintsWithObsGetter

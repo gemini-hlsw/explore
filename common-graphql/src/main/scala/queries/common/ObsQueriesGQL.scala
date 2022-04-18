@@ -82,7 +82,7 @@ object ObsQueriesGQL {
                 dec {
                   microarcseconds
                 }
-              }              
+              }
             }
           }
         }

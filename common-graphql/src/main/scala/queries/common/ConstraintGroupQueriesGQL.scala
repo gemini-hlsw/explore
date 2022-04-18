@@ -59,6 +59,24 @@ object ConstraintGroupQueriesGQL {
           	    microseconds
           	  }
           	}
+            scienceConfiguration {
+              gmosNorthLongSlit {
+                filter
+                disperser
+                fpu
+                slitWidth {
+                  microarcseconds
+                }
+              }
+              gmosSouthLongSlit {
+                filter
+                disperser
+                fpu
+                slitWidth {
+                  microarcseconds
+                }
+              }
+            }
           }
         }
       }
@@ -68,12 +86,15 @@ object ConstraintGroupQueriesGQL {
       object ConstraintSetGroup {
         type Nodes = model.ConstraintGroup
       }
-      object Observations       {
+
+      object Observations {
         object Nodes {
           object PlannedTime {
             type Execution = time.Duration
           }
+          type ScienceConfiguration = model.ScienceConfiguration
         }
+
       }
     }
   }

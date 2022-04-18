@@ -207,10 +207,7 @@ object TargetTabContents {
         setPage(obsIdSet.some, targetId.some)
     }
 
-    def selectTarget(
-      targetId: Target.Id
-    ): Callback =
-      setPage(none, targetId.some)
+    def selectTarget(targetId: Target.Id): Callback = setPage(none, targetId.some)
 
     def onModAsterismsWithObs(
       groupIds:  ObsIdSet,

@@ -42,7 +42,12 @@ trait ObsWithConstraints extends ObsSummary {
 }
 
 trait ObsWithConf extends ObsSummary {
-  val conf: String = "GMOS-N R831 1x300"
+  def scienceConfiguration: Option[ScienceConfiguration]
+  val conf: String = scienceConfiguration match {
+    case Some(GmosNorthLongSlit(_, d, _, _)) => s"GMOS-N ${d.shortName}"
+    case Some(GmosSouthLongSlit(_, d, _, _)) => s"GMOS-S ${d.shortName}"
+    case _                                   => s"-"
+  }
 }
 
 trait ObsWithTitle extends ObsSummary {
@@ -90,12 +95,13 @@ object ObsSummaryWithTitleAndConstraints {
 }
 
 case class ObsSummaryWithTitleAndConf(
-  override val id:           Observation.Id,
-  override val title:        NonEmptyString,
-  override val subtitle:     Option[NonEmptyString],
-  override val status:       ObsStatus,
-  override val activeStatus: ObsActiveStatus,
-  override val duration:     Duration
+  override val id:                   Observation.Id,
+  override val title:                NonEmptyString,
+  override val subtitle:             Option[NonEmptyString],
+  override val status:               ObsStatus,
+  override val activeStatus:         ObsActiveStatus,
+  override val duration:             Duration,
+  override val scienceConfiguration: Option[ScienceConfiguration]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConf
