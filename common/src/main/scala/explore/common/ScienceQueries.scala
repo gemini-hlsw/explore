@@ -13,7 +13,7 @@ import explore.common.ObsQueries._
 import explore.implicits._
 import explore.model.GmosNorthLongSlit
 import explore.model.GmosSouthLongSlit
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.undo.UndoSetter
 import lucuma.core.enum.ScienceMode
 import lucuma.core.math.Angle
@@ -100,40 +100,28 @@ object ScienceQueries {
     }
   }
 
-  implicit class SlitWidthOps(val b: Angle) extends AnyVal {
-    def toSlitWidthInput: SlitWidthInput =
-      SlitWidthInput(b.toMicroarcseconds.assign)
-  }
-
-  implicit class ScienceConfigurationOps(val b: ScienceConfiguration) extends AnyVal {
-    def toScienceInput: ScienceConfigurationInput =
+  implicit class ScienceModeOps(val b: ScienceModeBasic) extends AnyVal {
+    def toScienceInput: ScienceModeInput =
       b match {
-        case GmosNorthLongSlit(f, d, u, s) =>
-          ScienceConfigurationInput(gmosNorthLongSlit =
-            GmosNorthLongSlitInput(f.orUnassign,
-                                   d.assign,
-                                   u.assign,
-                                   s.toSlitWidthInput.assign
+        case GmosNorthLongSlit(g, f, u) =>
+          ScienceModeInput(
+            gmosNorthLongSlit = GmosNorthLongSlitInput(
+              basic = GmosNorthLongSlitBasicConfigInput(g.assign, f.orUnassign, u.assign).assign
             ).assign
           )
-        case GmosSouthLongSlit(f, d, u, s) =>
-          ScienceConfigurationInput(gmosSouthLongSlit =
-            GmosSouthLongSlitInput(f.orUnassign,
-                                   d.assign,
-                                   u.assign,
-                                   s.toSlitWidthInput.assign
+        case GmosSouthLongSlit(g, f, u) =>
+          ScienceModeInput(
+            gmosSouthLongSlit = GmosSouthLongSlitInput(
+              basic = GmosSouthLongSlitBasicConfigInput(g.assign, f.orUnassign, u.assign).assign
             ).assign
           )
       }
   }
 
-  def setScienceConfiguration(obsId: Observation.Id, conf: Option[ScienceConfiguration])(implicit
-    client:                          TransactionalClient[IO, ObservationDB]
+  def setScienceMode(obsId: Observation.Id, conf: Option[ScienceModeBasic])(implicit
+    client:                 TransactionalClient[IO, ObservationDB]
   ): IO[Unit] =
-    UpdateScienceConfigurationMutation
-      .execute[IO](
-        obsId,
-        conf.map(_.toScienceInput).orUnassign
-      )
+    UpdateScienceModeMutation
+      .execute[IO](obsId, conf.map(_.toScienceInput).orUnassign)
       .void
 }

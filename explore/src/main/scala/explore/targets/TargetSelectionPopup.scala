@@ -37,7 +37,6 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.header.Header
 import react.semanticui.elements.segment.Segment
 import react.semanticui.elements.segment.SegmentGroup
-import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._

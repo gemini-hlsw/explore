@@ -25,7 +25,7 @@ import explore.model.GmosNorthLongSlit
 import explore.model.GmosSouthLongSlit
 import explore.model.ITCTarget
 import explore.model.Progress
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.model.reusability._
 import explore.modes._
 import japgolly.scalajs.react._
@@ -59,7 +59,7 @@ import java.text.DecimalFormat
 import scalajs.js.|
 
 final case class SpectroscopyModesTable(
-  scienceConfiguration:     ReuseView[Option[ScienceConfiguration]],
+  scienceMode:              ReuseView[Option[ScienceModeBasic]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
@@ -310,21 +310,18 @@ object SpectroscopyModesTable {
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
+  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceModeBasic] =
     row.instrument match {
       case GmosNorthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosNorthLongSlit(filter, grating, fpu, row.slitWidth.size).some
+        GmosNorthLongSlit(grating, filter, fpu).some
       case GmosSouthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosSouthLongSlit(filter, grating, fpu, row.slitWidth.size).some
+        GmosSouthLongSlit(grating, filter, fpu).some
       case _ => none
     }
 
-  protected def equalsConf(
-    row:  SpectroscopyModeRow,
-    conf: ScienceConfiguration
-  ): Boolean =
+  protected def equalsConf(row: SpectroscopyModeRow, conf: ScienceModeBasic): Boolean =
     rowToConf(row).exists(_ === conf)
 
   protected def enabledRow(row: SpectroscopyModeRow): Boolean =
@@ -332,10 +329,10 @@ object SpectroscopyModesTable {
       row.focalPlane === FocalPlane.SingleSlit
 
   protected def selectedRowIndex(
-    scienceConfiguration: Option[ScienceConfiguration],
-    rows:                 List[SpectroscopyModeRow]
+    scienceMode: Option[ScienceModeBasic],
+    rows:        List[SpectroscopyModeRow]
   ): Option[Int] =
-    scienceConfiguration
+    scienceMode
       .map(selected => rows.indexWhere(row => equalsConf(row, selected)))
       .filterNot(_ == -1)
 
@@ -413,14 +410,12 @@ object SpectroscopyModesTable {
           columns(wavelength, focalPlane, sn, constraints, targets, itc.get, itcProgress.get)
       })
       // selectedIndex
-      .useStateBy((props, rows, _, _, _, _) =>
-        selectedRowIndex(props.scienceConfiguration.get, rows)
-      )
+      .useStateBy((props, rows, _, _, _, _) => selectedRowIndex(props.scienceMode.get, rows))
       // Recompute state if conf or requirements change.
       .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
-        (props.scienceConfiguration, props.spectroscopyRequirements)
-      )((_, rows, _, _, _, _, selectedIndex) => { case (scienceConfiguration, _) =>
-        selectedIndex.setState(selectedRowIndex(scienceConfiguration.get, rows))
+        (props.scienceMode, props.spectroscopyRequirements)
+      )((_, rows, _, _, _, _, selectedIndex) => { case (scienceMode, _) =>
+        selectedIndex.setState(selectedRowIndex(scienceMode.get, rows))
       })
       // tableInstance
       .useTableBy((_, rows, _, _, _, cols, _) => ModesTableDef(cols, rows))
@@ -484,8 +479,8 @@ object SpectroscopyModesTable {
           atTop,
           _
         ) =>
-          def toggleRow(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
-            rowToConf(row).filterNot(conf => props.scienceConfiguration.get.contains_(conf))
+          def toggleRow(row: SpectroscopyModeRow): Option[ScienceModeBasic] =
+            rowToConf(row).filterNot(conf => props.scienceMode.get.contains_(conf))
 
           def scrollButton(
             content:        VdomNode,
@@ -559,7 +554,7 @@ object SpectroscopyModesTable {
                       )
                     )(
                       ^.onClick --> (
-                        props.scienceConfiguration.set(toggleRow(rowData.original)) >>
+                        props.scienceMode.set(toggleRow(rowData.original)) >>
                           selectedIndex.setState(rowData.index.toInt.some)
                       ),
                       props2Attrs(rowData.getRowProps())

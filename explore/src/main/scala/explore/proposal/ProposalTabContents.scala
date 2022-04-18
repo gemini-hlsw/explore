@@ -17,13 +17,13 @@ import eu.timepit.refined.numeric._
 import explore.components.WIP
 import explore.implicits._
 import explore.model._
-import lucuma.core.enum._
 import explore.model.refined._
 import explore.model.reusability._
 import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum._
 import lucuma.core.model._
 import react.common.ReactProps
 

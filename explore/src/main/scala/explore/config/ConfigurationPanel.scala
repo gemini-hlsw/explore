@@ -8,7 +8,7 @@ import coulomb.Quantity
 import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
-import crystal.react.reuse.Reuse
+import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
@@ -37,7 +37,9 @@ import lucuma.ui.reusability._
 import monocle.Iso
 import react.common._
 import react.semanticui.collections.form.Form
+import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+// import react.semanticui.elements.button.LabelPosition
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -113,9 +115,9 @@ object ConfigurationPanel {
           )
         )
 
-        val configurationView = props.scienceDataUndo.map(
-          _.undoableView(ScienceData.configuration)
-            .withOnMod(conf => setScienceConfiguration(props.obsId, conf).runAsync)
+        val modeView = props.scienceDataUndo.map(
+          _.undoableView(ScienceData.mode)
+            .withOnMod(conf => setScienceMode(props.obsId, conf).runAsync)
         )
 
         <.div(
@@ -134,10 +136,23 @@ object ConfigurationPanel {
             SpectroscopyConfigurationPanel(spectroscopy.as(dataIso))
               .when(isSpectroscopy),
             ImagingConfigurationPanel(imaging)
-              .unless(isSpectroscopy)
+              .unless(isSpectroscopy),
+            SequenceEditorPopup(
+              props.obsId,
+              trigger = Reuse.by(props.obsId)(
+                Button(
+                  size = Small,
+                  compact = true,
+                  // clazz = ExploreStyles.VeryCompact,
+                  // icon = Icons.New,
+                  content = "View Sequence"
+                  // labelPosition = LabelPosition.Left
+                )
+              )
+            )
           ),
           SpectroscopyModesTable(
-            configurationView,
+            modeView,
             spectroscopy.get,
             props.constraints,
             if (props.itcTargets.isEmpty) none else props.itcTargets.some,

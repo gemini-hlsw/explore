@@ -17,7 +17,7 @@ import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
@@ -56,24 +56,25 @@ object ObsQueries {
 
   case class ScienceData(
     requirements:  ScienceRequirementsData,
-    configuration: Option[ScienceConfiguration],
+    configuration: Option[ScienceModeBasic],
     constraints:   ConstraintSet,
     targets:       Targets
   )
 
   object ScienceData {
-    val requirements: Lens[ScienceData, ScienceRequirementsData]       =
+    val requirements: Lens[ScienceData, ScienceRequirementsData] =
       Focus[ScienceData](_.requirements)
-    val configuration: Lens[ScienceData, Option[ScienceConfiguration]] =
+    val mode: Lens[ScienceData, Option[ScienceModeBasic]]        =
       Focus[ScienceData](_.configuration)
-    val constraints: Lens[ScienceData, ConstraintSet]                  =
+    val constraints: Lens[ScienceData, ConstraintSet]            =
       Focus[ScienceData](_.constraints)
-    implicit val reusabilityScienceData: Reusability[ScienceData]      = Reusability.derive
+
+    implicit val reusabilityScienceMode: Reusability[ScienceModeBasic] = Reusability.derive
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
     disjointZip(ObservationData.scienceRequirements,
-                ObservationData.scienceConfiguration,
+                ObservationData.scienceMode,
                 ObservationData.constraintSet,
                 ObservationData.targetEnvironment
     )
@@ -106,7 +107,7 @@ object ObsQueries {
             node.status,
             node.activeStatus,
             node.plannedTime.execution,
-            node.scienceConfiguration
+            node.scienceMode
           )
         ),
         ObsSummaryWithTitleConstraintsAndConf.id.get

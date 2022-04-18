@@ -129,9 +129,10 @@ object AladinContainer {
       .useMemoBy((p, _) => (p.configuration, p.options)) { case (p, _) =>
         _ =>
           visualization
-            .shapesToSvg(GmosGeometry.shapes(GmosGeometry.posAngle, p.configuration),
-                         GmosGeometry.pp,
-                         GmosGeometry.ScaleFactor
+            .shapesToSvg(
+              GmosGeometry.shapes(GmosGeometry.posAngle, p.mode),
+              GmosGeometry.pp,
+              GmosGeometry.ScaleFactor
             )
       }
       // Ref to the aladin component

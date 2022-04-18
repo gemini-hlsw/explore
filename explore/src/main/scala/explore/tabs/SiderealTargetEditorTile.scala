@@ -35,13 +35,14 @@ object SiderealTargetEditorTile {
           (userId, targetId, target, undoStacks, searching, width, height)
         ) { (renderInTitle: Tile.RenderInTitle) =>
           userId.map(uid =>
-            SiderealTargetEditor(uid,
-                                 targetId,
-                                 target,
-                                 none,
-                                 undoStacks,
-                                 searching,
-                                 renderInTitle = renderInTitle.some
+            SiderealTargetEditor(
+              uid,
+              targetId,
+              target,
+              none,
+              undoStacks,
+              searching,
+              renderInTitle = renderInTitle.some
             )
           ): VdomNode
         }

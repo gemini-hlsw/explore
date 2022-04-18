@@ -8,18 +8,18 @@ import cats.data.NonEmptyMap
 import cats.syntax.all._
 import explore.model.GmosNorthLongSlit
 import explore.model.GmosSouthLongSlit
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
-import lucuma.core.geom.gmos
 import lucuma.core.geom.ShapeExpression
-import react.aladin.visualization.svg._
+import lucuma.core.geom.gmos
 import lucuma.core.geom.syntax.shapeexpression._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
 import lucuma.svgdotjs._
+import react.aladin.visualization.svg._
 import react.common.style.Css
 
 /**
@@ -46,22 +46,19 @@ object GmosGeometry {
   private implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
 
   // Shape to display
-  def shapes(
-    posAngle:      Angle,
-    configuration: Option[ScienceConfiguration]
-  ): NonEmptyMap[Css, ShapeExpression] =
-    configuration match {
-      case Some(GmosNorthLongSlit(_, _, fpu, _)) =>
+  def shapes(posAngle: Angle, mode: Option[ScienceModeBasic]): NonEmptyMap[Css, ShapeExpression] =
+    mode match {
+      case Some(GmosNorthLongSlit(_, _, fpu)) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
           (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
         )
-      case Some(GmosSouthLongSlit(_, _, fpu, _)) =>
+      case Some(GmosSouthLongSlit(_, _, fpu)) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
           (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asRight.some))
         )
-      case _                                     =>
+      case _                                  =>
         NonEmptyMap.of(
           (Css("gmos-probe"),
            gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)

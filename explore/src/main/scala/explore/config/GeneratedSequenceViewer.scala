@@ -10,22 +10,23 @@ import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.model.Program
+import lucuma.core.model.Observation
+import lucuma.core.model.sequence._
 import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
-import queries.common.ManualSequenceGQL._
+import queries.common.GeneratedSequenceSQL._
 import react.common._
 
-final case class SequenceEditor(programId: Program.Id)
-    extends ReactFnProps[SequenceEditor](SequenceEditor.component)
+final case class GeneratedSequenceViewer(obsId: Observation.Id)
+    extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
 
-object SequenceEditor {
-  type Props = SequenceEditor
+object GeneratedSequenceViewer {
+  type Props = GeneratedSequenceViewer
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  private def renderFn(config: Option[SequenceSteps.Data.Observations.Nodes.Config]): VdomNode =
-    config.fold[VdomNode](<.div("Default observation not found"))(ManualSequenceTables.apply)
+  private def renderFn(config: Option[FutureExecutionConfig]): VdomNode =
+    config.fold[VdomNode](<.div("Default observation not found"))(GeneratedSequenceTables.apply)
 
   val component =
     ScalaFnComponent
@@ -34,10 +35,10 @@ object SequenceEditor {
           LiveQueryRender[
             ObservationDB,
             SequenceSteps.Data,
-            Option[SequenceSteps.Data.Observations.Nodes.Config]
+            Option[FutureExecutionConfig]
           ](
-            SequenceSteps.query(props.programId).reuseAlways,
-            ((_: SequenceSteps.Data).observations.nodes.headOption.flatMap(_.config)).reuseAlways,
+            SequenceSteps.query(props.obsId).reuseAlways,
+            ((_: SequenceSteps.Data).observation.flatMap(_.execution.config)).reuseAlways,
             List.empty.reuseAlways
           )(
             potRender((renderFn _).reuseAlways)

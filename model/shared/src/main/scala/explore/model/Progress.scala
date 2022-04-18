@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.Eq
 import coulomb._
 import coulomb.accepted._
 import eu.timepit.refined.api._
@@ -29,4 +30,6 @@ object Progress {
 
   def initial(total: NonNegInt): Progress =
     Progress(NonNegInt(0), total)
+
+  implicit val eqProgress: Eq[Progress] = Eq.fromUniversalEquals
 }

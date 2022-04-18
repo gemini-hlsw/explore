@@ -12,7 +12,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
@@ -34,7 +34,7 @@ object AsterismEditorTile {
     programId:     Program.Id,
     obsId:         ObsIdSet,
     asterismPot:   Pot[ReuseView[List[TargetWithId]]],
-    configuration: Option[ScienceConfiguration],
+    mode:          Option[ScienceModeBasic],
     currentTarget: Option[Target.Id],
     setTarget:     (Option[Target.Id], SetRouteVia) ==> Callback,
     otherObsCount: Target.Id ==> Int,
@@ -57,7 +57,7 @@ object AsterismEditorTile {
          programId,
          obsId,
          asterismPot,
-         configuration,
+         mode,
          currentTarget,
          setTarget,
          otherObsCount,
@@ -72,18 +72,19 @@ object AsterismEditorTile {
           (
             (asterism: ReuseView[List[TargetWithId]]) =>
               userId.map(uid =>
-                AsterismEditor(uid,
-                               programId,
-                               obsId,
-                               asterism,
-                               configuration,
-                               currentTarget,
-                               setTarget,
-                               otherObsCount,
-                               undoStacks,
-                               searching,
-                               hiddenColumns,
-                               renderInTitle
+                AsterismEditor(
+                  uid,
+                  programId,
+                  obsId,
+                  asterism,
+                  mode,
+                  currentTarget,
+                  setTarget,
+                  otherObsCount,
+                  undoStacks,
+                  searching,
+                  hiddenColumns,
+                  renderInTitle
                 )
               ): VdomNode
           ).reuseAlways

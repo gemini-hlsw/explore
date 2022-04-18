@@ -7,9 +7,9 @@ import cats.effect._
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constants
-import lucuma.catalog.CatalogTargetResult
-import lucuma.catalog.CatalogSearch
 import lucuma.catalog.CatalogAdapter
+import lucuma.catalog.CatalogSearch
+import lucuma.catalog.CatalogTargetResult
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._

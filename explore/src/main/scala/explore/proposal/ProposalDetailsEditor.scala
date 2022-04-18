@@ -21,13 +21,13 @@ import explore.components.ui._
 import explore.implicits._
 import explore.model._
 import explore.model.display._
-import lucuma.core.enum.ProposalClass._
-import lucuma.core.enum._
 import explore.model.refined._
 import explore.model.reusability._
 import japgolly.scalajs.react.Reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.enum.ProposalClass._
+import lucuma.core.enum._
 import lucuma.core.model.Partner
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms._
