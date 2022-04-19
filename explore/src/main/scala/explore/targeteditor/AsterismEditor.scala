@@ -17,7 +17,6 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ScienceConfiguration
-import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
@@ -52,7 +51,6 @@ final case class AsterismEditor(
   otherObsCount:    Target.Id ==> Int,
   undoStacks:       ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
   searching:        ReuseView[Set[Target.Id]],
-  options:          ReuseView[TargetVisualOptions],
   hiddenColumns:    ReuseView[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
@@ -213,7 +211,6 @@ object AsterismEditor {
                         props.configuration,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
-                        props.options,
                         onClone = Reuse
                           .currying(targetId, props.asterism, props.setTarget)
                           .in(onCloneTarget _),

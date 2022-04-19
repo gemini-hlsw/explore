@@ -8,7 +8,6 @@ import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.ScienceConfiguration
-import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react._
@@ -24,14 +23,12 @@ import react.aladin.reusability._
 import react.common._
 import react.resizeDetector.hooks._
 
-import scala.annotation.nowarn
 import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
-  options:                TargetVisualOptions,
   configuration:          Option[ScienceConfiguration],
-  fov:                    ReuseView[Fov],
+  fov:                    Fov,
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   centerOnTarget:         ReuseView[Boolean]
@@ -46,7 +43,7 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by(x => (x.target, x.configuration, x.options, x.fov))
+    Reusability.by((x: Props) => (x.target, x.configuration, x.fov))
 
   val AladinComp = Aladin.component
 
@@ -98,14 +95,13 @@ object AladinContainer {
       // View coordinates (in case the user pans)
       .useStateBy(_.aladinCoords)
       // Memoized svg
-      .useMemoBy((p, _) => (p.options.posAngle, p.fov, p.configuration)) {
-        case (_, _) => { case (posAngle, _, config) =>
+      .useMemoBy((p, _) => (p.configuration, p.fov)) { case (p, _) =>
+        _ =>
           visualization
-            .shapesToSvg(GmosGeometry.shapes(posAngle, config),
+            .shapesToSvg(GmosGeometry.shapes(GmosGeometry.posAngle, p.configuration),
                          GmosGeometry.pp,
                          GmosGeometry.ScaleFactor
             )
-        }
       }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
@@ -127,7 +123,7 @@ object AladinContainer {
       .useResizeDetector()
       // Update the world2pix function
       .useEffectWithDepsBy { (p, currentPos, _, aladinRef, _, resize) =>
-        (resize, p.fov.value.get, currentPos, aladinRef)
+        (resize, p.fov, currentPos, aladinRef)
       } { (_, _, _, aladinRef, w, _) => _ =>
         aladinRef.get.asCBO.flatMapCB(_.backend.world2pixFn.flatMap(w.setState))
       }
@@ -149,17 +145,14 @@ object AladinContainer {
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
          */
-        @nowarn
-        def onPositionChanged(v: JsAladin)(u: PositionChanged): Callback =
+        def onPositionChanged(u: PositionChanged): Callback =
           currentPos.setState(Coordinates(u.ra, u.dec)) *> props.centerOnTarget.set(false)
 
-        def onZoom = (v: Fov) =>
-          props.fov.set(v) *>
-            props.updateFov(v)
+        def onZoom = (v: Fov) => props.updateFov(v)
 
         def includeSvg(v: JsAladin): Callback =
           v.onZoom(onZoom) *> // re render on zoom
-            v.onPositionChanged(onPositionChanged(v)) *>
+            v.onPositionChanged(onPositionChanged) *>
             v.onMouseMove(s =>
               props
                 .updateMouseCoordinates(Coordinates(s.ra, s.dec))
@@ -180,7 +173,7 @@ object AladinContainer {
                 showReticle = false,
                 showLayersControl = false,
                 target = props.aladinCoordsStr,
-                fov = props.fov.get.x,
+                fov = props.fov.x,
                 showGotoControl = false,
                 customize = includeSvg _
               )

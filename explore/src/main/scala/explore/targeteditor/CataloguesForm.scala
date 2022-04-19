@@ -46,7 +46,7 @@ object CataloguesForm {
 
   val angleItems = angleItemsMap.values
 
-  val fovL     = TargetVisualOptions.fov.andThen(Visible.boolReverseIso)
+  val ccdL     = TargetVisualOptions.ccd.andThen(Visible.boolReverseIso)
   val guidingL = TargetVisualOptions.guiding.andThen(Visible.boolReverseIso)
   val probeL   = TargetVisualOptions.probe.andThen(Visible.boolReverseIso)
   val offsetsL = TargetVisualOptions.offsets.andThen(Visible.boolReverseIso)
@@ -71,8 +71,8 @@ object CataloguesForm {
           ),
           FormCheckbox(
             label = "CCD",
-            checked = options.fov.visible,
-            onChange = (b: Boolean) => optionsV.zoom(fovL).set(b)
+            checked = options.ccd.visible,
+            onChange = (b: Boolean) => optionsV.zoom(ccdL).set(b)
           ),
           FormCheckbox(
             label = "Patrol field",

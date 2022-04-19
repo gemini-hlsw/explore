@@ -21,7 +21,6 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ScienceConfiguration
-import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.formats._
 import explore.model.reusability._
@@ -67,7 +66,6 @@ final case class SiderealTargetEditor(
   configuration: Option[ScienceConfiguration],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
-  options:       ReuseView[TargetVisualOptions],
   obsIdSubset:   Option[ObsIdSet] = None,
   onClone:       TargetWithId ==> Callback = ((_: TargetWithId) => Callback.empty).reuseAlways,
   renderInTitle: Option[Tile.RenderInTitle] = none
@@ -255,8 +253,7 @@ object SiderealTargetEditor {
                 props.uid,
                 props.id,
                 props.configuration,
-                targetView.zoom(Target.Sidereal.baseCoordinates),
-                props.options
+                targetView.zoom(Target.Sidereal.baseCoordinates)
               ),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together
@@ -292,7 +289,6 @@ object SiderealTargetEditor {
                   disabled = disabled
                 )
               ),
-              CataloguesForm(props.options).when(false),
               Form(as = <.div, size = Small)(
                 ExploreStyles.Grid,
                 ExploreStyles.Compact,
