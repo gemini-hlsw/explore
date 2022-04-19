@@ -382,7 +382,6 @@ object TargetTabContents {
             .headOption
         case _        => None
       }
-      // )
 
       def setCurrentTarget(
         programId: Program.Id,
@@ -499,7 +498,6 @@ object TargetTabContents {
                     case Nonsidereal(_, _, _)     =>
                       <.div("Editing of Non-Sidereal targets not supported")
                     case s @ Sidereal(_, _, _, _) =>
-                      println(u)
                       renderSiderealTargetEditor(targetId, s)
                   }
                 )
