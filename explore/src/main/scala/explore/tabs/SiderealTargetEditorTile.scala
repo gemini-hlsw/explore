@@ -40,6 +40,7 @@ object SiderealTargetEditorTile {
             SiderealTargetEditor(uid,
                                  targetId,
                                  target,
+                                 none,
                                  undoStacks,
                                  searching,
                                  options,

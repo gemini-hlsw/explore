@@ -4,18 +4,19 @@
 package explore.targeteditor
 
 import crystal.react.ReuseView
-import crystal.react.reuse._
 import crystal.react.hooks._
+import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates
-import lucuma.ui.reusability._
 import lucuma.svgdotjs.Svg
-import explore.model.reusability._
+import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
 import react.aladin._
@@ -29,6 +30,7 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
   options:                TargetVisualOptions,
+  configuration:          Option[ScienceConfiguration],
   fov:                    ReuseView[Fov],
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
@@ -44,7 +46,7 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by((x: Props) => (x.target, x.options, x.fov))
+    Reusability.by(x => (x.target, x.configuration, x.options, x.fov))
 
   val AladinComp = Aladin.component
 
@@ -96,10 +98,13 @@ object AladinContainer {
       // View coordinates (in case the user pans)
       .useStateBy(_.aladinCoords)
       // Memoized svg
-      .useMemoBy((p, _) => (p.options.posAngle, p.fov)) {
-        case (_, _) => { case (posAngle, _) =>
+      .useMemoBy((p, _) => (p.options.posAngle, p.fov, p.configuration)) {
+        case (_, _) => { case (posAngle, _, config) =>
           visualization
-            .shapesToSvg(GmosGeometry.shapes(posAngle), GmosGeometry.pp, GmosGeometry.ScaleFactor)
+            .shapesToSvg(GmosGeometry.shapes(posAngle, config),
+                         GmosGeometry.pp,
+                         GmosGeometry.ScaleFactor
+            )
         }
       }
       // Ref to the aladin component
@@ -128,7 +133,7 @@ object AladinContainer {
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.fov, currentPos, world2pix, resize)
+        (p.fov, p.configuration, currentPos, world2pix, resize)
       ) { (p, _, svg, aladinRef, world2pix, _) => _ =>
         world2pix
           .value(p.aladinCoords)

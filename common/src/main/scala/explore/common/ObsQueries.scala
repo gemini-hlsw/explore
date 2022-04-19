@@ -16,6 +16,7 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
+import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceConfiguration
 import explore.model.TargetSummary
 import explore.model.reusability._
@@ -42,7 +43,7 @@ import scala.collection.immutable.SortedMap
 
 object ObsQueries {
 
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleAndConstraints]
+  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummaryWithTitleConstraintsAndConf]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   type ObservationData = ObsEditQuery.Data.Observation
@@ -97,17 +98,18 @@ object ObsQueries {
     ObsSummariesWithConstraints(
       KeyedIndexedList.fromList(
         data.observations.nodes.map(node =>
-          ObsSummaryWithTitleAndConstraints(
+          ObsSummaryWithTitleConstraintsAndConf(
             node.id,
             node.title,
             node.subtitle,
             node.constraintSet,
             node.status,
             node.activeStatus,
-            node.plannedTime.execution
+            node.plannedTime.execution,
+            node.scienceConfiguration
           )
         ),
-        ObsSummaryWithTitleAndConstraints.id.get
+        ObsSummaryWithTitleConstraintsAndConf.id.get
       ),
       data.constraintSetGroup.nodes.toSortedMap(ConstraintGroup.obsIds.get),
       data.targetGroup.nodes

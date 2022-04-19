@@ -20,6 +20,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.formats._
@@ -63,6 +64,7 @@ final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
   target:        ReuseView[Target.Sidereal],
+  configuration: Option[ScienceConfiguration],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
   options:       ReuseView[TargetVisualOptions],
@@ -252,6 +254,7 @@ object SiderealTargetEditor {
               AladinCell(
                 props.uid,
                 props.id,
+                props.configuration,
                 targetView.zoom(Target.Sidereal.baseCoordinates),
                 props.options
               ),

@@ -15,7 +15,7 @@ import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithConstraints
+import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.TargetGroup
 import explore.utils._
 import japgolly.scalajs.react._
@@ -47,7 +47,7 @@ object AsterismQueries {
 
   type AsterismGroupList = SortedMap[ObsIdSet, AsterismGroup]
   type TargetGroupList   = SortedMap[Target.Id, TargetGroup]
-  type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraints]
+  type ObsList           = SortedMap[Observation.Id, ObsSummaryWithConstraintsAndConf]
 
   case class AsterismGroupsWithObs(
     asterismGroups: AsterismGroupList,
@@ -73,13 +73,15 @@ object AsterismQueries {
   implicit val asterismGroupWithObsReuse: Reusability[AsterismGroupsWithObs] =
     Reusability.derive
 
-  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraints =
-    ObsSummaryWithConstraints(obsR.id,
-                              obsR.constraintSet,
-                              obsR.status,
-                              obsR.activeStatus,
-                              obsR.plannedTime.execution,
-                              obsR.targetEnvironment.asterism.map(_.id).toSet
+  private def obsResultToSummary(obsR: ObservationResult): ObsSummaryWithConstraintsAndConf =
+    ObsSummaryWithConstraintsAndConf(
+      obsR.id,
+      obsR.constraintSet,
+      obsR.status,
+      obsR.activeStatus,
+      obsR.plannedTime.execution,
+      obsR.targetEnvironment.asterism.map(_.id).toSet,
+      obsR.scienceConfiguration
     )
 
   private val queryToAsterismGroupWithObsGetter
@@ -96,7 +98,9 @@ object AsterismQueries {
     AsterismGroupsWithObs(
       asterismGroups,
       targetGroups,
-      data.observations.nodes.map(obsResultToSummary).toSortedMap(ObsSummaryWithConstraints.id.get)
+      data.observations.nodes
+        .map(obsResultToSummary)
+        .toSortedMap(ObsSummaryWithConstraintsAndConf.id.get)
     )
   }
 

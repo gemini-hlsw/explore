@@ -16,7 +16,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
-import explore.model.ObsSummaryWithTitleAndConstraints
+import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.enum.AppTab
 import explore.observationtree.ObsBadge
 import explore.undo.KIListMod
@@ -55,8 +55,8 @@ object ObsList {
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
   protected val obsListMod =
-    KIListMod[ObsSummaryWithTitleAndConstraints, Observation.Id](
-      ObsSummaryWithTitleAndConstraints.id
+    KIListMod[ObsSummaryWithTitleConstraintsAndConf, Observation.Id](
+      ObsSummaryWithTitleConstraintsAndConf.id
     )
 
   protected def setObs(programId: Program.Id, obsId: Option[Observation.Id])(implicit
@@ -78,7 +78,7 @@ object ObsList {
           _.foldMap { obs =>
             ObsListActions
               .obsExistence(obs.id, o => setObs(programId, o.some))
-              .mod(undoCtx)(obsListMod.upsert(obs, pos))
+              .mod(undoCtx)(obsListMod.upsert(obs.toTitleAndConstraints, pos))
               .to[IO]
           }
         }
