@@ -24,7 +24,7 @@ object TargetGroup {
 
   val obsIds: Lens[TargetGroup, SortedSet[Observation.Id]] = Focus[TargetGroup](_.obsIds)
 
-  val targetWithId: Lens[TargetGroup, TargetWithId]        = Focus[TargetGroup](_.targetWithId)
+  val targetWithId: Lens[TargetGroup, TargetWithId] = Focus[TargetGroup](_.targetWithId)
 
   implicit val targetGroupDecode: Decoder[TargetGroup] = Decoder.instance(c =>
     for {

@@ -190,7 +190,8 @@ object TargetTabContents {
     def findAsterismGroup(
       obsIds: ObsIdSet,
       agl:    AsterismGroupList
-    ): Option[AsterismGroup] = agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
+    ): Option[AsterismGroup] =
+      agl.values.find(ag => obsIds.subsetOf(ag.obsIds))
 
     def setPage(obsIds: Option[ObsIdSet], targetId: Option[Target.Id]): Callback =
       props.ctx.pushPage(AppTab.Targets, props.programId, obsIds, targetId)
@@ -370,6 +371,19 @@ object TargetTabContents {
           asterismView.zoom(optional).addReuseBy(targetId)
         }
 
+      val obsConfiguration = idsToEdit.single match {
+        case Some(id) =>
+          asterismGroupsWithObs
+            .zoom(AsterismGroupsWithObs.observations)
+            .get
+            .collect {
+              case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v))) if k === id => v
+            }
+            .headOption
+        case _        => None
+      }
+      // )
+
       def setCurrentTarget(
         programId: Program.Id,
         oids:      ObsIdSet,
@@ -384,6 +398,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView),
+          obsConfiguration,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
@@ -479,11 +494,15 @@ object TargetTabContents {
             case Left(targetId) =>
               targetMap
                 .get(targetId)
-                .fold(renderSummary)(_.targetWithId.target match {
-                  case Nonsidereal(_, _, _)     =>
-                    <.div("Editing of Non-Sidereal targets not supported")
-                  case s @ Sidereal(_, _, _, _) => renderSiderealTargetEditor(targetId, s)
-                })
+                .fold(renderSummary)(u =>
+                  u.targetWithId.target match {
+                    case Nonsidereal(_, _, _)     =>
+                      <.div("Editing of Non-Sidereal targets not supported")
+                    case s @ Sidereal(_, _, _, _) =>
+                      println(u)
+                      renderSiderealTargetEditor(targetId, s)
+                  }
+                )
             case Right(obsIds)  =>
               findAsterismGroup(obsIds, asterismGroupsWithObs.get.asterismGroups)
                 .fold(renderSummary) { asterismGroup =>

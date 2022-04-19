@@ -47,6 +47,8 @@ object reusability {
     Reusability.derive
   implicit val obsSummaryWithTargetsAndConstraintsReuse
     : Reusability[ObsSummaryWithTitleAndConstraints] = Reusability.derive
+  implicit val obsSummaryWithTargetsConstraintsAndConfReuse
+    : Reusability[ObsSummaryWithTitleConstraintsAndConf] = Reusability.derive
 
   // Undo
   implicit def undoStacksReuse[F[_], M]: Reusability[UndoStacks[F, M]]               =

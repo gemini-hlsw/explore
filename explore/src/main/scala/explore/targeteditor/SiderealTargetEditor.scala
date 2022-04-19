@@ -50,6 +50,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import explore.model.ScienceConfiguration
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -63,6 +64,7 @@ final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
   target:        ReuseView[Target.Sidereal],
+  configuration: Option[ScienceConfiguration],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
   options:       ReuseView[TargetVisualOptions],
@@ -252,6 +254,7 @@ object SiderealTargetEditor {
               AladinCell(
                 props.uid,
                 props.id,
+                props.configuration,
                 targetView.zoom(Target.Sidereal.baseCoordinates),
                 props.options
               ),

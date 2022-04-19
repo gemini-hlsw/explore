@@ -15,6 +15,7 @@ import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.TargetVisualOptions
+import explore.model.reusability._
 import explore.optics.ModelOptics
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -33,10 +34,12 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import explore.model.ScienceConfiguration
 
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
+  configuration:    Option[ScienceConfiguration],
   target:           ReuseView[Coordinates],
   options:          ReuseView[TargetVisualOptions]
 )(implicit val ctx: AppContextIO)
@@ -80,6 +83,7 @@ object AladinCell extends ModelOptics {
             AladinContainer(
               props.target,
               props.options.get,
+              props.configuration,
               fov,
               coordinatesSetter,
               Reuse.currying(props).in(fovSetter _),

@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.syntax.all._
 import cats.data.NonEmptyMap
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
@@ -16,6 +17,9 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
 import lucuma.svgdotjs._
+import explore.model.ScienceConfiguration
+import explore.model.GmosNorthLongSlit
+import explore.model.GmosSouthLongSlit
 
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only
@@ -38,13 +42,28 @@ object GmosGeometry {
     PortDisposition.Side
 
   // Shape to display
-  def shapes(posAngle: Angle): NonEmptyMap[String, ShapeExpression] =
-    NonEmptyMap.of(
-      ("probe", GmosOiwfsProbeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)),
-      ("patrol-field", GmosOiwfsProbeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)),
-      ("science-ccd", GmosScienceAreaGeometry.imaging ⟲ posAngle),
-      ("science-ccd-offset", GmosScienceAreaGeometry.imaging ↗ offsetPos ⟲ posAngle)
-    )
+  def shapes(
+    posAngle:      Angle,
+    configuration: Option[ScienceConfiguration]
+  ): NonEmptyMap[String, ShapeExpression] =
+    configuration match {
+      case Some(GmosNorthLongSlit(_, _, fpu, _)) =>
+        NonEmptyMap.of(
+          ("science-ccd", GmosScienceAreaGeometry.imaging ⟲ posAngle),
+          ("gmos-fpu", GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
+        )
+      case Some(GmosSouthLongSlit(_, _, fpu, _)) =>
+        NonEmptyMap.of(
+          ("science-ccd", GmosScienceAreaGeometry.imaging ⟲ posAngle),
+          ("gmos-fpu", GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asRight.some))
+        )
+      case _                                     =>
+        NonEmptyMap.of(
+          ("probe", GmosOiwfsProbeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)),
+          ("patrol-field", GmosOiwfsProbeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)),
+          ("science-ccd-offset", GmosScienceAreaGeometry.imaging ↗ offsetPos ⟲ posAngle)
+        )
+    }
 
   // Firefox doesn't properly handle very large coordinates, scale by 1000 at least
   val ScaleFactor = 1000

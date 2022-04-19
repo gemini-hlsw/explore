@@ -25,10 +25,12 @@ import react.resizeDetector.hooks._
 
 import scala.annotation.nowarn
 import scala.concurrent.duration._
+import explore.model.ScienceConfiguration
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
   options:                TargetVisualOptions,
+  configuration:          Option[ScienceConfiguration],
   fov:                    ReuseView[Fov],
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
@@ -44,7 +46,7 @@ object AladinContainer {
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by((x: Props) => (x.target, x.options, x.fov))
+    Reusability.by(x => (x.target, x.configuration, x.options, x.fov))
 
   val AladinComp = Aladin.component
 
@@ -96,10 +98,13 @@ object AladinContainer {
       // View coordinates (in case the user pans)
       .useStateBy(_.aladinCoords)
       // Memoized svg
-      .useMemoBy((p, _) => (p.options.posAngle, p.fov)) {
-        case (_, _) => { case (posAngle, _) =>
+      .useMemoBy((p, _) => (p.options.posAngle, p.fov, p.configuration)) {
+        case (_, _) => { case (posAngle, _, config) =>
           visualization
-            .shapesToSvg(GmosGeometry.shapes(posAngle), GmosGeometry.pp, GmosGeometry.ScaleFactor)
+            .shapesToSvg(GmosGeometry.shapes(posAngle, config),
+                         GmosGeometry.pp,
+                         GmosGeometry.ScaleFactor
+            )
         }
       }
       // Ref to the aladin component

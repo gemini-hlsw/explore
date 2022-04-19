@@ -41,6 +41,24 @@ object ObsQueriesGQL {
                 microseconds
               }
             }
+            scienceConfiguration {
+              gmosNorthLongSlit {
+                filter
+                disperser
+                fpu
+                slitWidth {
+                  microarcseconds
+                }
+              }
+              gmosSouthLongSlit {
+                filter
+                disperser
+                fpu
+                slitWidth {
+                  microarcseconds
+                }
+              }
+            }
           }
         }
 
@@ -96,6 +114,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
+          type ScienceConfiguration = model.ScienceConfiguration
         }
       }
 

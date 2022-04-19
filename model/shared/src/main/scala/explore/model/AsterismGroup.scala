@@ -32,6 +32,7 @@ case class AsterismGroup(
 object AsterismGroup {
   implicit val eqAsterismGroup: Eq[AsterismGroup] = Eq.by(x => (x.obsIds, x.targetIds))
 
-  val obsIds: Lens[AsterismGroup, ObsIdSet]                = Focus[AsterismGroup](_.obsIds)
+  val obsIds: Lens[AsterismGroup, ObsIdSet] = Focus[AsterismGroup](_.obsIds)
+
   val targetIds: Lens[AsterismGroup, SortedSet[Target.Id]] = Focus[AsterismGroup](_.targetIds)
 }
