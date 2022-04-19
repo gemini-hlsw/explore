@@ -14,6 +14,7 @@ import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -34,7 +35,6 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import explore.model.ScienceConfiguration
 
 final case class AladinCell(
   uid:              User.Id,

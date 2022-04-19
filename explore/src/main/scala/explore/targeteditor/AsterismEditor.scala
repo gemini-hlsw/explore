@@ -16,10 +16,10 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
-import explore.model.ScienceConfiguration
 import explore.model.reusability._
 import explore.optics._
 import explore.targets.TargetSelectionPopup

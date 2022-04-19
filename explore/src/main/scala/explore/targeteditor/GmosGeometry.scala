@@ -3,8 +3,11 @@
 
 package explore.targeteditor
 
-import cats.syntax.all._
 import cats.data.NonEmptyMap
+import cats.syntax.all._
+import explore.model.GmosNorthLongSlit
+import explore.model.GmosSouthLongSlit
+import explore.model.ScienceConfiguration
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
@@ -17,9 +20,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
 import lucuma.svgdotjs._
-import explore.model.ScienceConfiguration
-import explore.model.GmosNorthLongSlit
-import explore.model.GmosSouthLongSlit
 
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only

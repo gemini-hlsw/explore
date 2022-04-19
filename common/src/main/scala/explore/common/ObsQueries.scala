@@ -16,6 +16,7 @@ import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConstraints
+import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ScienceConfiguration
 import explore.model.TargetSummary
 import explore.model.reusability._
@@ -39,7 +40,6 @@ import queries.common.ObsQueriesGQL._
 import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
-import explore.model.ObsSummaryWithTitleConstraintsAndConf
 
 object ObsQueries {
 

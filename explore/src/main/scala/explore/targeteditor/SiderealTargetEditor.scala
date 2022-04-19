@@ -20,6 +20,7 @@ import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsIdSet
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.formats._
@@ -50,7 +51,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
-import explore.model.ScienceConfiguration
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,

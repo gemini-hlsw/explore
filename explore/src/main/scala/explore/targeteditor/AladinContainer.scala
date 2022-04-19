@@ -4,18 +4,19 @@
 package explore.targeteditor
 
 import crystal.react.ReuseView
-import crystal.react.reuse._
 import crystal.react.hooks._
+import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
+import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
+import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates
-import lucuma.ui.reusability._
 import lucuma.svgdotjs.Svg
-import explore.model.reusability._
+import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
 import react.aladin._
@@ -25,7 +26,6 @@ import react.resizeDetector.hooks._
 
 import scala.annotation.nowarn
 import scala.concurrent.duration._
-import explore.model.ScienceConfiguration
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
@@ -133,7 +133,7 @@ object AladinContainer {
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.fov, currentPos, world2pix, resize)
+        (p.fov, p.configuration, currentPos, world2pix, resize)
       ) { (p, _, svg, aladinRef, world2pix, _) => _ =>
         world2pix
           .value(p.aladinCoords)

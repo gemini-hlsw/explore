@@ -26,11 +26,15 @@ trait ObsSummary {
 
 object ObsSummary {
   implicit val eqObsSummary: Eq[ObsSummary] = Eq.instance((_: ObsSummary, _: ObsSummary) match {
-    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                 =>
+    case (a: ObsSummaryWithConstraints, b: ObsSummaryWithConstraints)                         =>
       a === b
-    case (a: ObsSummaryWithTitleAndConstraints, b: ObsSummaryWithTitleAndConstraints) =>
+    case (a: ObsSummaryWithConstraintsAndConf, b: ObsSummaryWithConstraintsAndConf)           =>
       a === b
-    case _                                                                            =>
+    case (a: ObsSummaryWithTitleAndConstraints, b: ObsSummaryWithTitleAndConstraints)         =>
+      a === b
+    case (a: ObsSummaryWithTitleConstraintsAndConf, b: ObsSummaryWithTitleConstraintsAndConf) =>
+      a === b
+    case _                                                                                    =>
       false
   })
 }
