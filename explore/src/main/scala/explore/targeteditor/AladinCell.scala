@@ -14,19 +14,21 @@ import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.Constants
 import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
-import react.aladin.reusability._
 import react.common._
 import react.fa.Transform
 import react.semanticui.elements.button.Button
@@ -40,8 +42,7 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   configuration:    Option[ScienceConfiguration],
-  target:           ReuseView[Coordinates],
-  options:          ReuseView[TargetVisualOptions]
+  target:           ReuseView[Coordinates]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {
   val aladinCoords: Coordinates = target.get
@@ -52,44 +53,59 @@ object AladinCell extends ModelOptics {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
+  val angleFovLens: Lens[Angle, Fov] = Lens[Angle, Fov](a => Fov(a, a))(f => (_ => f.x))
+
+  val fovL = TargetVisualOptions.fov.some.andThen(angleFovLens)
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
       .useStateBy(_.aladinCoords)
-      // field of view
-      .useStateViewWithReuseBy((p, _) => Fov(p.options.get.fovAngle, p.options.get.fovAngle))
+      // target options, will be read from the user preferences
+      .useStateViewWithReuse(TargetVisualOptions.Default)
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
-      .renderWithReuse { (props, mouseCoords, fov, center) =>
+      .useEffectWithDepsBy((p, _, _, _) => (p.uid, p.tid)) { (props, _, options, _) => _ =>
+        implicit val ctx = props.ctx
+        UserTargetPreferencesQuery
+          .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
+          .flatMap(fov => options.mod(_.copy(fov = fov.some)).to[IO])
+          .runAsyncAndForget
+      }
+      .renderWithReuse { (props, mouseCoords, options, center) =>
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
+
+        val fov = options.zoom(fovL)
 
         def fovSetter(props: Props, newFov: Fov): Callback =
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
-            UserTargetPreferencesUpsert
-              .updateFov[IO](props.uid, props.tid, newFov.x)
-              .runAsyncAndForget
-              .debounce(1.seconds)
+            options.mod(_.copy(fov = newFov.x.some)) *>
+              UserTargetPreferencesUpsert
+                .updateFov[IO](props.uid, props.tid, newFov.x)
+                .runAsyncAndForget
+                .debounce(1.seconds)
           }
 
         <.div(
           ExploreStyles.TargetAladinCell,
           <.div(
             ExploreStyles.AladinContainerColumn,
-            AladinContainer(
-              props.target,
-              props.options.get,
-              props.configuration,
-              fov,
-              coordinatesSetter,
-              Reuse.currying(props).in(fovSetter _),
-              center
-            ).withKey(props.aladinCoords.toString),
-            AladinToolbar(fov.get, mouseCoords.value),
+            fov.get.map(fov =>
+              AladinContainer(
+                props.target,
+                props.configuration,
+                fov,
+                coordinatesSetter,
+                Reuse.currying(props).in(fovSetter _),
+                center
+              ).withKey(props.aladinCoords.toString)
+            ),
+            fov.get.map(AladinToolbar(_, mouseCoords.value)),
             <.div(
               ExploreStyles.AladinCenterButton,
               Popup(

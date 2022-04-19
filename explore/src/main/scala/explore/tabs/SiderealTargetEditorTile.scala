@@ -8,7 +8,6 @@ import cats.syntax.all._
 import crystal.react.ReuseView
 import crystal.react.reuse._
 import explore.components.Tile
-import explore.model.TargetVisualOptions
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,7 +24,6 @@ object SiderealTargetEditorTile {
     target:     ReuseView[Target.Sidereal],
     undoStacks: ReuseView[UndoStacks[IO, Target.Sidereal]],
     searching:  ReuseView[Set[Target.Id]],
-    options:    ReuseView[TargetVisualOptions],
     title:      String,
     backButton: Option[Reuse[VdomNode]] = None,
     width:      Int,
@@ -34,7 +32,7 @@ object SiderealTargetEditorTile {
     Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
       Reuse
         .by(
-          (userId, targetId, target, undoStacks, searching, options, width, height)
+          (userId, targetId, target, undoStacks, searching, width, height)
         ) { (renderInTitle: Tile.RenderInTitle) =>
           userId.map(uid =>
             SiderealTargetEditor(uid,
@@ -43,7 +41,6 @@ object SiderealTargetEditorTile {
                                  none,
                                  undoStacks,
                                  searching,
-                                 options,
                                  renderInTitle = renderInTitle.some
             )
           ): VdomNode
