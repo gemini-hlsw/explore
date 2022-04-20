@@ -200,6 +200,6 @@ object ExploreMain extends IOApp.Simple {
         IO.println("Error initializing") >>
           crash(s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
-  }
+  }.whenA(false)
 
 }
