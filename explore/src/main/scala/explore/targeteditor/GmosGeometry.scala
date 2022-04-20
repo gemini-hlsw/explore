@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.Order
 import cats.data.NonEmptyMap
 import cats.syntax.all._
 import explore.model.GmosNorthLongSlit
@@ -20,6 +21,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int._
 import lucuma.svgdotjs._
+import react.common.style.Css
 
 /**
  * Test object to produce a gmos geometry. it is for demo purposes only
@@ -41,27 +43,36 @@ object GmosGeometry {
   val port: PortDisposition =
     PortDisposition.Side
 
+  // Move to react common
+  private implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
+
   // Shape to display
   def shapes(
     posAngle:      Angle,
     configuration: Option[ScienceConfiguration]
-  ): NonEmptyMap[String, ShapeExpression] =
+  ): NonEmptyMap[Css, ShapeExpression] =
     configuration match {
       case Some(GmosNorthLongSlit(_, _, fpu, _)) =>
         NonEmptyMap.of(
-          ("science-ccd", GmosScienceAreaGeometry.imaging ⟲ posAngle),
-          ("gmos-fpu", GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
+          (Css("gmos-science-ccd"), GmosScienceAreaGeometry.imaging ⟲ posAngle),
+          (Css("gmos-fpu"), GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
         )
       case Some(GmosSouthLongSlit(_, _, fpu, _)) =>
         NonEmptyMap.of(
-          ("science-ccd", GmosScienceAreaGeometry.imaging ⟲ posAngle),
-          ("gmos-fpu", GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asRight.some))
+          (Css("gmos-science-ccd"), GmosScienceAreaGeometry.imaging ⟲ posAngle),
+          (Css("gmos-fpu"),
+           GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asRight.some)
+          )
         )
       case _                                     =>
         NonEmptyMap.of(
-          ("probe", GmosOiwfsProbeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)),
-          ("patrol-field", GmosOiwfsProbeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)),
-          ("science-ccd-offset", GmosScienceAreaGeometry.imaging ↗ offsetPos ⟲ posAngle)
+          (Css("gmos-probe"),
+           GmosOiwfsProbeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)
+          ),
+          (Css("gmos-patrol-field"),
+           GmosOiwfsProbeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)
+          ),
+          (Css("gmos-science-ccd-offset"), GmosScienceAreaGeometry.imaging ↗ offsetPos ⟲ posAngle)
         )
     }
 

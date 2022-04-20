@@ -42,6 +42,9 @@ object AladinContainer {
   type World2PixFn = Coordinates => Option[(Double, Double)]
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
+  // This is used for screen coordinates, thus it doesn't need a lot of precission
+  private implicit val doubleReuse                      = Reusability.double(1.0)
+  private implicit val fovReuse                         = exactFovReuse
   protected implicit val propsReuse: Reusability[Props] =
     Reusability.by((x: Props) => (x.target, x.configuration, x.fov))
 
@@ -88,9 +91,6 @@ object AladinContainer {
         )
       case _          => ()
     }
-
-  // This is used for screen coordinates, thus it doesn't need a lot of precission
-  private implicit def doubleReuse = Reusability.double(1.0)
 
   val component =
     ScalaFnComponent
