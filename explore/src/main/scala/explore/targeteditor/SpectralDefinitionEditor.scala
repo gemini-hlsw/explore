@@ -341,7 +341,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           )
         ),
-      props.emissionLinesViewOpt.map(emissionLineEditor)
+      props.emissionLinesViewOpt.map(e =>
+        <.div(ExploreStyles.BrightnessesTableWrapper, emissionLineEditor(e))
+      )
     )
   }
 

@@ -32,7 +32,6 @@ import react.common.implicits._
 import react.semanticui.collections.table._
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import react.virtuoso._
 import reactST.reactTable._
 import reactST.reactTable.mod.SortingRule
 
@@ -69,7 +68,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
   private type RowValue = (Band, ReuseView[BrightnessMeasure[T]])
 
   private val BrightnessTableDef =
-    TableDef[RowValue].withSortBy.withFlexLayout // .withBlockLayout
+    TableDef[RowValue].withSortBy.withFlexLayout
 
   private val BrightnessTable = new SUITableVirtuoso(BrightnessTableDef)
 

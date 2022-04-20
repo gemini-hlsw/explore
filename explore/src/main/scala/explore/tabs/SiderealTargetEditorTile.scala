@@ -34,7 +34,6 @@ object SiderealTargetEditorTile {
         .by(
           (userId, targetId, target, undoStacks, searching, width, height)
         ) { (renderInTitle: Tile.RenderInTitle) =>
-          println(title)
           userId.map(uid =>
             SiderealTargetEditor(uid,
                                  targetId,
