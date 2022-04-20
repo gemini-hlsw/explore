@@ -68,7 +68,7 @@ object AladinCell extends ModelOptics {
         UserTargetPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
           .flatMap(fov =>
-            options.setState(TargetVisualOptions.Default.copy(fov = fov.some).ready).to[IO]
+            options.setState(TargetVisualOptions.Default.copy(fov = fov).ready).to[IO]
           )
           .runAsyncAndForget
       }
@@ -77,16 +77,16 @@ object AladinCell extends ModelOptics {
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
         val fov: Option[Fov] =
-          options.value.fold(_ => none, _ => none, tv => tv.fov.map(a => Fov(a, a)))
+          options.value.fold(_ => none, _ => none, tv => Fov(tv.fov, tv.fov).some)
 
         def fovSetter(props: Props, newFov: Fov): Callback =
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
-            options.modState(_.map(_.copy(fov = newFov.x.some))) *>
+            options.modState(_.map(_.copy(fov = newFov.x))) *>
               UserTargetPreferencesUpsert
                 .updateFov[IO](props.uid, props.tid, newFov.x)
-                .runAsyncAndForget
+                .runAsync
                 .debounce(1.seconds)
           }
 

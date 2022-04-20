@@ -11,7 +11,7 @@ import monocle.Focus
 
 final case class TargetVisualOptions(
   ccd:      Visible,
-  fov:      Option[Angle],
+  fov:      Angle,
   offsets:  Visible,
   guiding:  Visible,
   probe:    Visible,
@@ -28,7 +28,7 @@ object TargetVisualOptions {
 
   val Default =
     TargetVisualOptions(Visible.Hidden,
-                        None,
+                        Constants.InitialFov,
                         Visible.Hidden,
                         Visible.Hidden,
                         Visible.Hidden,
