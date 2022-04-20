@@ -12,7 +12,6 @@ import explore.components.Tile
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ScienceConfiguration
-import explore.model.TargetVisualOptions
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
@@ -40,7 +39,6 @@ object AsterismEditorTile {
     otherObsCount: Target.Id ==> Int,
     undoStacks:    ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
     searching:     ReuseView[Set[Target.Id]],
-    options:       ReuseView[TargetVisualOptions],
     title:         String,
     backButton:    Option[Reuse[VdomNode]] = None,
     hiddenColumns: ReuseView[Set[String]],
@@ -59,7 +57,6 @@ object AsterismEditorTile {
          otherObsCount,
          undoStacks,
          searching,
-         options,
          hiddenColumns,
          width,
          height
@@ -79,7 +76,6 @@ object AsterismEditorTile {
                                otherObsCount,
                                undoStacks,
                                searching,
-                               options,
                                hiddenColumns,
                                renderInTitle
                 )

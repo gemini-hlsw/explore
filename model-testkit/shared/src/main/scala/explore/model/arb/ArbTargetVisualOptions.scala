@@ -27,8 +27,8 @@ trait ArbTargetVisualOptions {
   }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =
-    Cogen[(Visible, Visible, Visible, Visible, Angle)].contramap(c =>
-      (c.fov, c.offsets, c.guiding, c.probe, c.posAngle)
+    Cogen[(Visible, Angle, Visible, Visible, Visible, Angle)].contramap(c =>
+      (c.ccd, c.fov, c.offsets, c.guiding, c.probe, c.posAngle)
     )
 }
 

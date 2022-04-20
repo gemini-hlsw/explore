@@ -29,7 +29,6 @@ import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
-import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -264,19 +263,9 @@ object ObsTabContents {
   ): Int =
     targetObsMap.get(targetId).fold(0)(summary => (summary.obsIds - obsId).size)
 
-  // TODO Use this method
-  // def readTargetPreferences(p: Props, targetId: Target.Id, state: View[State])(implicit ctx: AppContextIO): Callback =
-  //   p.userId.get.map { uid =>
-  //     UserTargetPreferencesQuery
-  //       .queryWithDefault[IO](uid, targetId, Constants.InitialFov)
-  //       .flatMap(v => state.modStateIn[IO](State.fovAngle.replace(v)))
-  //       .runAsyncAndForget
-  //   }.getOrEmpty
-
   protected def renderFn(
     props:              Props,
     panels:             ReuseView[TwoPanelState],
-    options:            ReuseView[TargetVisualOptions],
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
@@ -389,7 +378,6 @@ object ObsTabContents {
            targetCoords,
            props.undoStacks,
            props.searching,
-           options,
            constraintGroups
           )
         ) { (obsViewPot: Pot[ReuseView[Pot[ObservationData]]]) =>
@@ -433,7 +421,6 @@ object ObsTabContents {
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
             props.undoStacks.zoom(ModelUndoStacks.forSiderealTarget),
             props.searching,
-            options,
             "Targets",
             none,
             props.hiddenColumns,
@@ -541,9 +528,8 @@ object ObsTabContents {
           case _                            => Callback.empty
         }
       }
-      .useStateViewWithReuse(TargetVisualOptions.Default)
       .useStateViewWithReuse(defaultLayout)
-      .useEffectWithDepsBy((p, _, _, _) => p.focusedObs) { (props, panels, _, layout) =>
+      .useEffectWithDepsBy((p, _, _) => p.focusedObs) { (props, panels, layout) =>
         implicit val ctx = props.ctx
         _ =>
           TabGridPreferencesQuery
@@ -566,11 +552,9 @@ object ObsTabContents {
       }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, panels, options, layouts, resize, debouncer) =>
+      .renderWithReuse { (props, panels, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
-        ObsLiveQuery(props.programId,
-                     Reuse(renderFn _)(props, panels, options, layouts, resize, debouncer)
-        )
+        ObsLiveQuery(props.programId, Reuse(renderFn _)(props, panels, layouts, resize, debouncer))
       }
 
 }

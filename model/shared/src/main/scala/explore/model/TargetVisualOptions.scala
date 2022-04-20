@@ -10,8 +10,8 @@ import lucuma.core.math.syntax.int._
 import monocle.Focus
 
 final case class TargetVisualOptions(
-  fov:      Visible,
-  fovAngle: Angle,
+  ccd:      Visible,
+  fov:      Angle,
   offsets:  Visible,
   guiding:  Visible,
   probe:    Visible,
@@ -19,8 +19,8 @@ final case class TargetVisualOptions(
 )
 
 object TargetVisualOptions {
+  val ccd      = Focus[TargetVisualOptions](_.ccd)
   val fov      = Focus[TargetVisualOptions](_.fov)
-  val fovAngle = Focus[TargetVisualOptions](_.fovAngle)
   val offsets  = Focus[TargetVisualOptions](_.offsets)
   val guiding  = Focus[TargetVisualOptions](_.guiding)
   val probe    = Focus[TargetVisualOptions](_.probe)
@@ -36,5 +36,5 @@ object TargetVisualOptions {
     )
 
   implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] =
-    Eq.by(x => (x.fov, x.fovAngle, x.offsets, x.guiding, x.probe, x.posAngle))
+    Eq.by(x => (x.ccd, x.fov, x.offsets, x.guiding, x.probe, x.posAngle))
 }

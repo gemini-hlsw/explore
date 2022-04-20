@@ -145,7 +145,6 @@ object TargetTabContents {
   protected def renderFn(
     props:                 Props,
     panels:                ReuseView[TwoPanelState],
-    options:               ReuseView[TargetVisualOptions],
     defaultLayouts:        LayoutsMap,
     layouts:               ReuseView[LayoutsMap],
     resize:                UseResizeDetectorReturn,
@@ -403,7 +402,6 @@ object TargetTabContents {
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
           props.targetsUndoStacks,
           props.searching,
-          options,
           title,
           backButton.some,
           props.hiddenColumns,
@@ -456,7 +454,6 @@ object TargetTabContents {
         targetView,
         props.targetsUndoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
         props.searching,
-        options,
         title,
         backButton.some,
         coreWidth,
@@ -565,15 +562,14 @@ object TargetTabContents {
           case _                                  => Callback.empty
         }
       }
-      .useStateViewWithReuse(TargetVisualOptions.Default)
       .useResizeDetector()
       .useStateViewWithReuse(proportionalLayouts)
-      .useMemoBy((_, _, _, r, _) => r.height) { (_, _, _, _, l) => h =>
+      .useMemoBy((_, _, r, _) => r.height) { (_, _, _, l) => h =>
         // Memoize the initial result
         h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
       }
-      .useEffectWithDepsBy((p, _, _, r, _, _) => (p.userId, r.height)) {
-        (props, panels, _, _, layout, defaultLayout) => (params: (Option[User.Id], Option[Int])) =>
+      .useEffectWithDepsBy((p, _, r, _, _) => (p.userId, r.height)) {
+        (props, panels, _, layout, defaultLayout) => (params: (Option[User.Id], Option[Int])) =>
           {
             implicit val ctx = props.ctx
             val (u, h)       = params
@@ -597,11 +593,11 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, opts, resize, layout, defaultLayout, debouncer) =>
+      .renderWithReuse { (props, tps, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
         AsterismGroupLiveQuery(
           props.programId,
-          Reuse(renderFn _)(props, tps, opts, defaultLayout, layout, resize, debouncer)
+          Reuse(renderFn _)(props, tps, defaultLayout, layout, resize, debouncer)
         )
       }
 
