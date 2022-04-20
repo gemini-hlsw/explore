@@ -1089,18 +1089,23 @@ tfoot {
 @mobile-responsive-cutoff: 670px;
 
 .target-form {
-  grid-template-columns: [label] minmax(100px, 1fr) [field] 6fr;
+  grid-template-columns: [label] minmax(100px, 10%) [field] 1fr;
   justify-items: stretch;
 }
 
 .target-search-form {
   grid-column: 1 / span 2;
   display: grid;
-  grid-template-columns: [label] minmax(100px, 1fr) [field] 6fr;
+  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(calc(100% - 100px - 0.3em), calc(90% - 0.3em));
   grid-gap: 0.3em;
 
   .field {
     margin-bottom: 0 !important;
+  }
+
+  .ui.input {
+    display: grid;
+    grid-template-columns: [input] calc(100% - 20px) [svg] 20px;
   }
 }
 
@@ -1794,7 +1799,7 @@ html {
   justify-items: start;
   align-items: baseline;
   align-self: start;
-  grid-template-columns: [label] 1fr [field] 2fr [units] auto;
+  grid-template-columns: [label] minmax(100px, 10%) [field] 1fr [units] auto;
 
   .field {
     justify-self: stretch;
