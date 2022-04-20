@@ -44,7 +44,7 @@ object ExplorePWA {
   }
 
   def setupSW: IO[Unit] =
-    IO.println("Setup service worker 2") *> IO {
+    IO.println("Setup service worker 4") *> IO {
       lazy val updateSW: js.Function1[Boolean, js.Promise[Unit]] = registerSW(
         RegisterSWOptions(
           onNeedRefresh = Callback.log(s"Need refresh") *> Callback(updateSW(true)),
