@@ -1,16 +1,16 @@
-@import "suithemes/default/globals/site.variables";
-@import "suithemes/default/modules/dropdown.variables";
-@import "theme/site/modules/sidebar.variables";
-@import "theme/site/globals/site.variables";
+@import 'suithemes/default/globals/site.variables';
+@import 'suithemes/default/modules/dropdown.variables';
+@import 'theme/site/modules/sidebar.variables';
+@import 'theme/site/globals/site.variables';
 
 // vertical buttons
-@import "verticalbuttons.less";
-@import "vendor/react-resizable.less";
-@import "vendor/react-grid-layout.less";
+@import 'verticalbuttons.less';
+@import 'vendor/react-resizable.less';
+@import 'vendor/react-grid-layout.less';
 // theming variables
-@import "variables-dark.less";
-@import "variables-light.less";
-@import "explore-grid.less";
+@import 'variables-dark.less';
+@import 'variables-light.less';
+@import 'explore-grid.less';
 
 @gridSpace: 5px;
 @minHeight: 2.85714286em; // TODO: Calculate this on less
@@ -90,17 +90,17 @@ a {
 @media screen and (device-aspect-ratio: 2/3) {
   select,
   textarea,
-  input[type="text"],
-  input[type="password"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
-  input[type="number"],
-  input[type="email"],
-  input[type="url"] {
+  input[type='text'],
+  input[type='password'],
+  input[type='datetime'],
+  input[type='datetime-local'],
+  input[type='date'],
+  input[type='month'],
+  input[type='time'],
+  input[type='week'],
+  input[type='number'],
+  input[type='email'],
+  input[type='url'] {
     font-size: 16px;
   }
 }
@@ -108,17 +108,17 @@ a {
 @media screen and (device-aspect-ratio: 40/71) {
   select,
   textarea,
-  input[type="text"],
-  input[type="password"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
-  input[type="number"],
-  input[type="email"],
-  input[type="url"] {
+  input[type='text'],
+  input[type='password'],
+  input[type='datetime'],
+  input[type='datetime-local'],
+  input[type='date'],
+  input[type='month'],
+  input[type='time'],
+  input[type='week'],
+  input[type='number'],
+  input[type='email'],
+  input[type='url'] {
     font-size: 16px;
   }
 }
@@ -126,18 +126,18 @@ a {
 @media screen and (device-aspect-ratio: 375/667) {
   select,
   textarea,
-  input[type="text"],
-  input[type="password"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
-  input[type="number"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="url"] {
+  input[type='text'],
+  input[type='password'],
+  input[type='datetime'],
+  input[type='datetime-local'],
+  input[type='date'],
+  input[type='month'],
+  input[type='time'],
+  input[type='week'],
+  input[type='number'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'] {
     font-size: 16px;
   }
 }
@@ -145,18 +145,18 @@ a {
 @media screen and (device-aspect-ratio: 9/16) {
   select,
   textarea,
-  input[type="text"],
-  input[type="password"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
-  input[type="number"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="url"] {
+  input[type='text'],
+  input[type='password'],
+  input[type='datetime'],
+  input[type='datetime-local'],
+  input[type='date'],
+  input[type='month'],
+  input[type='time'],
+  input[type='week'],
+  input[type='number'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'] {
     font-size: 16px;
   }
 }
@@ -217,16 +217,16 @@ tfoot {
     @topBottom minmax(calc(100% - @topBottom - @topBottom), 1fr)
     @topBottom;
   grid-template-areas:
-    "header"
-    "body"
-    "sidebar";
+    'header'
+    'body'
+    'sidebar';
 
   @media (min-width: @target-grid-responsive-cutoff) {
     grid-template-columns: 50px auto;
     grid-template-rows: @topBottom minmax(calc(100% - @topBottom), 1fr);
     grid-template-areas:
-      "header header"
-      "sidebar body";
+      'header header'
+      'sidebar body';
   }
 }
 
@@ -515,7 +515,7 @@ tfoot {
 }
 
 .explore-tile-body {
-  height: ~"calc(100% - @{minHeight})";
+  height: ~'calc(100% - @{minHeight})';
   overflow-y: auto;
   background-color: var(--tile-background);
 }
@@ -657,7 +657,7 @@ tfoot {
   .full-height-width();
 
   @media (min-width: @target-grid-responsive-cutoff) {
-    width: ~"calc(100% - @{resizeHandleWidth})";
+    width: ~'calc(100% - @{resizeHandleWidth})';
   }
 }
 
@@ -994,8 +994,8 @@ tfoot {
   grid-template-columns: max-content 4fr min-content;
   align-content: stretch;
   grid-template-areas:
-    "aladin aladin aladin"
-    "fov curr center";
+    'aladin aladin aladin'
+    'fov curr center';
 }
 
 .aladin-container-body {
@@ -1443,7 +1443,7 @@ img.partner-split-flag {
 }
 
 i.icon.user-astronaut::before {
-  content: "\f4fb";
+  content: '\f4fb';
 }
 
 .ui.modal.explore-login-box > .content {
@@ -1624,19 +1624,19 @@ html {
 
   // It is a bit unfortunate that we have to hardcode the column names here
   td:nth-of-type(1)::before {
-    content: "Value";
+    content: 'Value';
   }
 
   td:nth-of-type(2)::before {
-    content: "Band";
+    content: 'Band';
   }
 
   td:nth-of-type(3)::before {
-    content: "System";
+    content: 'System';
   }
 
   td:nth-of-type(4)::before {
-    content: "";
+    content: '';
   }
 
   // Align the trash button
@@ -1769,8 +1769,8 @@ html {
   display: grid;
   grid-gap: 0.5em;
   grid-template-areas:
-    "form table-header"
-    "form table";
+    'form table-header'
+    'form table';
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   height: 100%;
@@ -1781,9 +1781,9 @@ html {
 .tile-xs-width {
   .explore-configuration-grid {
     grid-template-areas:
-      "form"
-      "table-header"
-      "table";
+      'form'
+      'table-header'
+      'table';
     grid-template-columns: 1fr;
     grid-template-rows: auto auto 1fr;
   }
@@ -2025,7 +2025,7 @@ svg.padded-right-icon.svg-inline--fa,
 }
 
 // Remove the focus on icons
-svg[focusable="false"]:focus {
+svg[focusable='false']:focus {
   outline: none;
 }
 
@@ -2123,12 +2123,14 @@ svg[focusable="false"]:focus {
   overflow-y: auto;
 }
 
-td.sticky-column, .td.sticky-column {
+td.sticky-column,
+.td.sticky-column {
   position: sticky;
   clip-path: inset(2px 0); // Avoids overwriting the box-shadow.
 }
 
-th.sticky-column, .th.sticky-column {
+th.sticky-column,
+.th.sticky-column {
   position: sticky;
 
   &.sticky-header {
@@ -2136,14 +2138,15 @@ th.sticky-column, .th.sticky-column {
   }
 }
 
-th.sticky-header, .th.sticky-header {
+th.sticky-header,
+.th.sticky-header {
   position: sticky;
   top: 0;
   z-index: 900;
 }
 
-
-.ui.table tr.explore-table-row-selected td.sticky-column, .ui.table tr.explore-table-row-selected .td.sticky-column {
+.ui.table tr.explore-table-row-selected td.sticky-column,
+.ui.table tr.explore-table-row-selected .td.sticky-column {
   background-color: var(
     --table-selected-background
   ) !important; // Important overrides regular row background color.
@@ -2168,15 +2171,18 @@ th.sticky-header, .th.sticky-header {
   }
 }
 
-.ui.striped.table tr:nth-child(2n + 1) td.sticky-column, .ui.striped.table tr:nth-child(2n + 1) .td.sticky-column {
+.ui.striped.table tr:nth-child(2n + 1) td.sticky-column,
+.ui.striped.table tr:nth-child(2n + 1) .td.sticky-column {
   background-color: var(--table-background);
 }
 
-.ui.striped.table tr:nth-child(2n) td.sticky-column, .ui.striped.table tr:nth-child(2n) .td.sticky-column {
+.ui.striped.table tr:nth-child(2n) td.sticky-column,
+.ui.striped.table tr:nth-child(2n) .td.sticky-column {
   background-color: var(--table-striped-background);
 }
 
-.ui.striped.table tr:hover td.sticky-column, .ui.striped.table tr:hover .td.sticky-column {
+.ui.striped.table tr:hover td.sticky-column,
+.ui.striped.table tr:hover .td.sticky-column {
   background: var(--table-selectable-background);
   color: var(--table-selectable-color);
 }
