@@ -89,6 +89,9 @@ object AladinContainer {
       case _          => ()
     }
 
+  // This is used for screen coordinates, thus it doesn't need a lot of precission
+  private implicit def doubleReuse = Reusability.double(1.0)
+
   val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -129,16 +132,17 @@ object AladinContainer {
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.fov, p.configuration, currentPos, world2pix, resize)
-      ) { (p, _, svg, aladinRef, world2pix, _) => _ =>
-        world2pix
-          .value(p.aladinCoords)
-          .map(off =>
-            aladinRef.get.asCBO
-              .flatMapCB(_.backend.runOnAladinCB(updateVisualization(svg, off)))
-              .toCallback
-          )
-          .getOrEmpty
+        (p.fov, p.configuration, currentPos, world2pix.value(p.aladinCoords), resize)
+      ) { (_, _, svg, aladinRef, _, _) =>
+        { case (_, _, _, off, _) =>
+          off
+            .map(off =>
+              aladinRef.get.asCBO
+                .flatMapCB(_.backend.runOnAladinCB(updateVisualization(svg, off)))
+                .toCallback
+            )
+            .getOrEmpty
+        }
       }
       .renderWithReuse { (props, currentPos, _, aladinRef, _, resize) =>
         /**
