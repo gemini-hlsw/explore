@@ -25,6 +25,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
+import explore.components.ui.ExploreStyles
 
 object AsterismEditorTile {
 
@@ -45,7 +46,12 @@ object AsterismEditorTile {
     width:         Int,
     height:        Int
   )(implicit ctx:  AppContextIO) =
-    Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
+    Tile(ObsTabTiles.TargetId,
+         title,
+         back = backButton,
+         canMinimize = true,
+         bodyClass = Some(ExploreStyles.TargetTileBody)
+    )(
       Reuse.by(
         (userId,
          programId,

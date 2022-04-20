@@ -32,7 +32,7 @@
     "react-resizable": "3.0.4",
     "react-resize-detector": "7.0.0",
     "react-table": "7.7.0",
-    "react-virtuoso": "2.8.4",
+    "react-virtuoso": "2.9.2",
     "rehype-katex": "^6.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
@@ -62,7 +62,8 @@
     "terser": "5.12.1",
     "vite": "2.9.5",
     "vite-plugin-fonts": "^0.2.2",
-    "vite-plugin-mkcert": "^1.6.0"
+    "vite-plugin-mkcert": "^1.6.0",
+    "vite-plugin-pwa": "^0.11.13"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/less",
