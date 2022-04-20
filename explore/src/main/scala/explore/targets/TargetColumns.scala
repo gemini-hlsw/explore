@@ -6,6 +6,7 @@ package explore.targets
 import cats.Order._
 import cats.syntax.all._
 import explore.Icons
+import explore.components.ui.ExploreStyles
 import explore.model.conversions._
 import explore.model.display._
 import explore.model.formats._
@@ -14,7 +15,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.Band
 import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
+import lucuma.core.math.dimensional._
 import lucuma.core.model.Target
+import lucuma.core.syntax.display._
+import lucuma.core.util.Display
 import lucuma.ui.optics._
 import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
@@ -41,7 +45,7 @@ object TargetColumns {
     "parallax"     -> "Parallax",
     "morphology"   -> "Morphology",
     "sed"          -> "SED"
-  ) ++ Band.all.map(m => (m.tag + "mag", m.shortName + "Mag")).toMap
+  ) ++ Band.all.map(m => (m.tag + "mag", m.shortName)).toMap
 
   val allColNames: Map[String, String] = baseColNames ++ siderealColNames
 
@@ -81,6 +85,12 @@ object TargetColumns {
     def siderealColumn[V](id: String, accessor: Target.Sidereal => V) =
       siderealColumnOpt(id, accessor.andThen(_.some))
 
+    /** Display measure without the uncertainty */
+    def displayWithoutError[N](measure: Measure[N])(implicit d: Display[N]): VdomNode =
+      <.div(<.span(measure.value.shortName),
+            <.span(ExploreStyles.UnitsTableLabel, measure.units.shortName.replace(" mag", ""))
+      )
+
     val siderealColumns =
       List(
         siderealColumn("ra", Target.Sidereal.baseRA.get)
@@ -106,7 +116,7 @@ object TargetColumns {
             band.tag + "mag",
             t => targetBrightnesses.get(t).flatMap(_.get(band))
           )
-            .setCell(_.value.map(_.displayWithoutError(displayBrightness)).orEmpty)
+            .setCell(_.value.map(displayWithoutError(_)(displayBrightness)))
             .setDisableSortBy(true) // We cannot sort since there may be different units.
         ) ++
         List(
