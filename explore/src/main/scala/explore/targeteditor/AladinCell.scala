@@ -21,12 +21,10 @@ import explore.model.reusability._
 import explore.optics.ModelOptics
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.Lens
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common._
@@ -37,6 +35,8 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import crystal.Pot
+import crystal.implicits._
 
 final case class AladinCell(
   uid:              User.Id,
@@ -53,17 +53,13 @@ object AladinCell extends ModelOptics {
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
-  val angleFovLens: Lens[Angle, Fov] = Lens[Angle, Fov](a => Fov(a, a))(f => (_ => f.x))
-
-  val fovL = TargetVisualOptions.fov.some.andThen(angleFovLens)
-
   val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
       .useStateBy(_.aladinCoords)
       // target options, will be read from the user preferences
-      .useStateViewWithReuse(TargetVisualOptions.Default)
+      .useState(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
@@ -71,20 +67,23 @@ object AladinCell extends ModelOptics {
         implicit val ctx = props.ctx
         UserTargetPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-          .flatMap(fov => options.mod(_.copy(fov = fov.some)).to[IO])
+          .flatMap(fov =>
+            options.setState(TargetVisualOptions.Default.copy(fov = fov.some).ready).to[IO]
+          )
           .runAsyncAndForget
       }
       .renderWithReuse { (props, mouseCoords, options, center) =>
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
-        val fov = options.zoom(fovL)
+        val fov: Option[Fov] =
+          options.value.fold(_ => none, _ => none, tv => tv.fov.map(a => Fov(a, a)))
 
         def fovSetter(props: Props, newFov: Fov): Callback =
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
-            options.mod(_.copy(fov = newFov.x.some)) *>
+            options.modState(_.map(_.copy(fov = newFov.x.some))) *>
               UserTargetPreferencesUpsert
                 .updateFov[IO](props.uid, props.tid, newFov.x)
                 .runAsyncAndForget
@@ -95,7 +94,7 @@ object AladinCell extends ModelOptics {
           ExploreStyles.TargetAladinCell,
           <.div(
             ExploreStyles.AladinContainerColumn,
-            fov.get.map(fov =>
+            fov.map(fov =>
               AladinContainer(
                 props.target,
                 props.configuration,
@@ -105,7 +104,7 @@ object AladinCell extends ModelOptics {
                 center
               ).withKey(props.aladinCoords.toString)
             ),
-            fov.get.map(AladinToolbar(_, mouseCoords.value)),
+            fov.map(AladinToolbar(_, mouseCoords.value)),
             <.div(
               ExploreStyles.AladinCenterButton,
               Popup(
