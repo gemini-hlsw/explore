@@ -34,18 +34,24 @@ object ExplorePWA {
     }
   }
 
+  def register(cb: Unit): Int = ???
+
+  val a: Int = register(cb = println(a))
+
   @js.native
   @JSImport("virtual:pwa-register", "registerSW")
   object registerSW extends js.Object {
     @nowarn
-    def apply(options: js.UndefOr[RegisterSWOptions] = js.undefined): Unit = js.native
+    def apply(
+      options: js.UndefOr[RegisterSWOptions] = js.undefined
+    ): js.Function1[Boolean, js.Promise[Unit]] = js.native
   }
 
   def setupSW: IO[Unit] =
-    IO.println("Setup service worker") *> IO(
-      registerSW(
+    IO.println("Setup service worker") *> IO {
+      val updateSW: js.Function1[Boolean, js.Promise[Unit]] = registerSW(
         RegisterSWOptions(
-          onNeedRefresh = Callback.log(s"Need refresh"),
+          onNeedRefresh = Callback.log(s"Need refresh") *> Callback.empty..fromJsFn(updateSW),
           onOfflineReady = Callback.log(s"Offline ready"),
           onRegisterError = (x: js.Any) =>
             Callback.log(s"Error on sw $x") *> Callback(
@@ -55,6 +61,7 @@ object ExplorePWA {
             Callback.log(s"Registered sw") *> Callback(org.scalajs.dom.window.console.log(x))
         )
       )
-    )
+      ()
+    }.void
 
 }
