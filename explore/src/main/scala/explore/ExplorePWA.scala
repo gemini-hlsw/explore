@@ -34,10 +34,6 @@ object ExplorePWA {
     }
   }
 
-  def register(cb: Unit): Int = ???
-
-  val a: Int = register(cb = println(a))
-
   @js.native
   @JSImport("virtual:pwa-register", "registerSW")
   object registerSW extends js.Object {
@@ -48,7 +44,7 @@ object ExplorePWA {
   }
 
   def setupSW: IO[Unit] =
-    IO.println("Setup service worker") *> IO {
+    IO.println("Setup service worker 2") *> IO {
       lazy val updateSW: js.Function1[Boolean, js.Promise[Unit]] = registerSW(
         RegisterSWOptions(
           onNeedRefresh = Callback.log(s"Need refresh") *> Callback(updateSW(true)),
