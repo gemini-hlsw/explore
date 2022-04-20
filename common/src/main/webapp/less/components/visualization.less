@@ -15,26 +15,25 @@
 }
 
 .jts-polygon {
-  display: none;
   stroke: gray;
   stroke-width: 2px;
   vector-effect: non-scaling-stroke; // Don't scale the stroke, otherwise it becomes invisible
 }
 
-#probe {
+.gmos-probe {
   display: none;
   stroke: red;
   z-index: 1;
   fill-opacity: 0.1;
 }
 
-#patrol-field {
+.gmos-patrol-field {
   display: none;
   stroke: red;
   stroke-dasharray: 10;
 }
 
-#gmos-fpu polygon {
+.gmos-fpu > polygon {
   display: none;
   stroke: blue;
   stroke-width: 0.8px;
@@ -43,23 +42,25 @@
   vector-effect: non-scaling-stroke;
 }
 
-#science-area polygon {
+.gmos-science-area polygon {
   display: none;
   stroke: purple;
   fill: black;
   fill-opacity: 1;
 }
 
-#science-ccd-offset polygon {
+.gmos-science-ccd-offset polygon {
   display: none;
   stroke: yellow;
   fill-opacity: 0.1;
 }
 
-#science-ccd polygon {
+.gmos-science-ccd > polygon {
   display: none;
   stroke: cyan;
+  stroke-width: 1px;
   fill-opacity: 0.1;
+  vector-effect: non-scaling-stroke;
 }
 
 // Shows a border around the whole SVG

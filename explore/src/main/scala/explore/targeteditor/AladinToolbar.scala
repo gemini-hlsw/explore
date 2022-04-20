@@ -27,6 +27,8 @@ final case class AladinToolbar(
 object AladinToolbar {
   type Props = AladinToolbar
 
+  // This is used for fov thus needs to be fairly smal
+  implicit val fovReuse: Reusability[Fov]     = exactFovReuse
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   // TODO: We may want to move these to gsp-math
