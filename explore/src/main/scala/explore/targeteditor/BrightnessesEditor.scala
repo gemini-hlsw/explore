@@ -67,11 +67,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, ReuseView[BrightnessMeasure[T]])
 
-  private val BrightnessTable = TableDef[RowValue].withSortBy
+  private val BrightnessTableDef =
+    TableDef[RowValue].withSortBy.withFlexLayout
 
-  private val BrightnessTableComponent = new SUITable(BrightnessTable)
+  private val BrightnessTable = new SUITableVirtuoso(BrightnessTableDef)
 
-  private val tableState = BrightnessTable.State().setSortBy(SortingRule("band"))
+  private val tableState = BrightnessTableDef.State().setSortBy(SortingRule("band"))
 
   private val validBrightnessValue: ValidFormatInput[BigDecimal] =
     ValidFormatInput(
@@ -89,7 +90,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       .useMemoBy((props, _) => (props.brightnesses, props.disabled)) { (_, _) => // Memo cols
         { case (brightnesses, disabled) =>
           List(
-            BrightnessTable
+            BrightnessTableDef
               .Column("band", _._1)
               .setHeader("Band")
               .setCell(_.value.shortName)
@@ -97,7 +98,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .setMinWidth(66)
               .setMaxWidth(66)
               .setSortByAuto,
-            BrightnessTable
+            BrightnessTableDef
               .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
               .setHeader("Value")
               .setCell(cell =>
@@ -109,7 +110,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   disabled = disabled
                 )
               ),
-            BrightnessTable
+            BrightnessTableDef
               .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
               .setHeader("Units")
               .setCell(cell =>
@@ -121,7 +122,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                 )
               ),
-            BrightnessTable
+            BrightnessTableDef
               .Column("delete", _._1)
               .setCell(cell =>
                 <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
@@ -146,12 +147,12 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
         _.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
       )
       .useTableBy((_, _, cols, rows) =>
-        BrightnessTable(cols,
-                        rows,
-                        ((_: BrightnessTable.OptionsType)
-                          .setRowIdFn(_._1.tag)
-                          .setInitialState(tableState))
-                          .reuseAlways
+        BrightnessTableDef(cols,
+                           rows,
+                           ((_: BrightnessTableDef.OptionsType)
+                             .setRowIdFn(_._1.tag)
+                             .setInitialState(tableState))
+                             .reuseAlways
         )
       )
       .renderWithReuse { (props, state, _, _, tableInstance) =>
@@ -191,7 +192,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
         <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
           <.label(label),
-          BrightnessTableComponent(
+          BrightnessTable.Component(
             table = Table(celled = true,
                           selectable = true,
                           striped = true,

@@ -54,7 +54,7 @@ final case class AsterismEditor(
   hiddenColumns:    ReuseView[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AsterismEditor](AsterismEditor.component) {}
+    extends ReactFnProps[AsterismEditor](AsterismEditor.component)
 
 object AsterismEditor {
   type Props = AsterismEditor
@@ -185,6 +185,7 @@ object AsterismEditor {
                 targetView.get match {
                   case t @ Target.Sidereal(_, _, _, _) =>
                     <.div(
+                      ExploreStyles.TargetTileEditor,
                       <.div(
                         ExploreStyles.SharedEditWarning,
                         s"${t.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",

@@ -643,6 +643,20 @@ tfoot {
   position: absolute;
 }
 
+.target-tile-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.target-tile-editor {
+  flex-grow: 2;
+}
+
+.explore-form.target-source-profile-editor {
+  align-self: stretch;
+  grid-template-rows: repeat(3, auto) 1fr;
+}
+
 .single-panel-tile {
   .full-height-width();
 
@@ -1096,7 +1110,10 @@ tfoot {
 .target-search-form {
   grid-column: 1 / span 2;
   display: grid;
-  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(calc(100% - 100px - 0.3em), calc(90% - 0.3em));
+  grid-template-columns: [label] minmax(100px, 10%) [field] minmax(
+      calc(100% - 100px - 0.3em),
+      calc(90% - 0.3em)
+    );
   grid-gap: 0.3em;
 
   .field {
@@ -1345,14 +1362,30 @@ img.partner-split-flag {
   }
 }
 
+.explore-brightnesses-wrapper {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
 .explore-brightnesses-container {
-  grid-column: span 3;
+  height: 100%;
   display: flex;
   flex-direction: column;
   border: none;
 
-  .table {
+  > .table {
+    height: 100%;
     margin: 0;
+
+    thead,
+    tr {
+      display: block;
+    }
+
+    tbody {
+      display: block;
+    }
 
     .th {
       white-space: nowrap;

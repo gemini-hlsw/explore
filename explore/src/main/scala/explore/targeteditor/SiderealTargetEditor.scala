@@ -335,6 +335,7 @@ object SiderealTargetEditor {
                 ExploreStyles.Grid,
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
+                ExploreStyles.TargetSourceProfileEditor,
                 SourceProfileEditor(sourceProfileAligner, disabled = disabled)
               )
             )

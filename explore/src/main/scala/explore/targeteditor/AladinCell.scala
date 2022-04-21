@@ -5,6 +5,8 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all._
+import crystal.Pot
+import crystal.implicits._
 import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -19,6 +21,7 @@ import explore.model.ScienceConfiguration
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -35,8 +38,6 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import crystal.Pot
-import crystal.implicits._
 
 final case class AladinCell(
   uid:              User.Id,
@@ -76,9 +77,6 @@ object AladinCell extends ModelOptics {
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
-        val fov: Option[Fov] =
-          options.value.fold(_ => none, _ => none, tv => Fov(tv.fov, tv.fov).some)
-
         def fovSetter(props: Props, newFov: Fov): Callback =
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
@@ -90,21 +88,25 @@ object AladinCell extends ModelOptics {
                 .debounce(1.seconds)
           }
 
+        val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
+          AladinContainer(
+            props.target,
+            props.configuration,
+            Fov.square(t.fov),
+            coordinatesSetter,
+            Reuse.currying(props).in(fovSetter _),
+            center
+          ).withKey(props.aladinCoords.toString)
+
+        val renderToolbar: TargetVisualOptions => VdomNode =
+          (t: TargetVisualOptions) => AladinToolbar(Fov.square(t.fov), mouseCoords.value): VdomNode
+
         <.div(
           ExploreStyles.TargetAladinCell,
           <.div(
             ExploreStyles.AladinContainerColumn,
-            fov.map(fov =>
-              AladinContainer(
-                props.target,
-                props.configuration,
-                fov,
-                coordinatesSetter,
-                Reuse.currying(props).in(fovSetter _),
-                center
-              ).withKey(props.aladinCoords.toString)
-            ),
-            fov.map(AladinToolbar(_, mouseCoords.value)),
+            potRender[TargetVisualOptions](renderCell.reuseAlways)(options.value),
+            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.value),
             <.div(
               ExploreStyles.AladinCenterButton,
               Popup(
@@ -116,7 +118,7 @@ object AladinCell extends ModelOptics {
                     .clazz(ExploreStyles.Accented)
                 )
               )
-            )
+            ).when(options.value.toOption.isDefined)
           )
         )
       }

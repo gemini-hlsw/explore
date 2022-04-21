@@ -9,6 +9,7 @@ import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsIdSet
 import explore.model.ScienceConfiguration
@@ -45,7 +46,12 @@ object AsterismEditorTile {
     width:         Int,
     height:        Int
   )(implicit ctx:  AppContextIO) =
-    Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
+    Tile(ObsTabTiles.TargetId,
+         title,
+         back = backButton,
+         canMinimize = true,
+         bodyClass = Some(ExploreStyles.TargetTileBody)
+    )(
       Reuse.by(
         (userId,
          programId,

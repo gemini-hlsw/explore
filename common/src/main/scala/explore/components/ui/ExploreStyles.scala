@@ -130,6 +130,10 @@ object ExploreStyles {
 
   val DraggingOver: Css = Css("dragging-over")
 
+  val TargetTileBody: Css            = Css("target-tile-body")
+  val TargetTileEditor: Css          = Css("target-tile-editor")
+  val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
+
   val SkyPlotTile: Css               = Css("sky-plot-tile")
   val SkyPlotTileBody: Css           = Css("sky-plot-tile-body")
   val SkyPlot: Css                   = Css("sky-plot")
@@ -237,6 +241,7 @@ object ExploreStyles {
   val Version: Css         = Css("version")
   val VersionUncopied: Css = Css("uncopied")
 
+  val BrightnessesTableWrapper: Css            = Css("explore-brightnesses-wrapper")
   val BrightnessesTableContainer: Css          = Css("explore-brightnesses-container")
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")

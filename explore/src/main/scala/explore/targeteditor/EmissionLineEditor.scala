@@ -54,18 +54,18 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private type RowValue = (Wavelength, ReuseView[EmissionLine[T]])
 
-  private val EmissionLineTable = TableDef[RowValue].withSortBy
+  private val EmissionLineTableRef = TableDef[RowValue].withSortBy.withFlexLayout
 
-  private val EmissionLineTableComponent = new SUITable(EmissionLineTable)
+  private val EmissionLineTable = new SUITableVirtuoso(EmissionLineTableRef)
 
-  private val tableState = EmissionLineTable.State().setSortBy(SortingRule("wavelength"))
+  private val tableState = EmissionLineTableRef.State().setSortBy(SortingRule("wavelength"))
 
   val component = ScalaFnComponent
     .withHooks[Props]
     .useMemoBy(props => (props.emissionLines, props.disabled)) { _ => // Memo cols
       { case (emissionLines, disabled) =>
         List(
-          EmissionLineTable
+          EmissionLineTableRef
             .Column("wavelength", _._1)
             .setHeader(_ => <.span(ExploreStyles.TextPlain, "λ (µm)"))
             .setCell(cell =>
@@ -78,7 +78,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
             .setMinWidth(80)
             .setMaxWidth(80)
             .setSortByAuto,
-          EmissionLineTable
+          EmissionLineTableRef
             .Column(
               "width",
               _._2.zoom(EmissionLine.lineWidth[T]).stripQuantity
@@ -93,7 +93,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 disabled = disabled
               )
             ),
-          EmissionLineTable
+          EmissionLineTableRef
             .Column(
               "lineValue",
               _._2.zoom(
@@ -110,7 +110,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 disabled = disabled
               )
             ),
-          EmissionLineTable
+          EmissionLineTableRef
             .Column(
               "lineUnits",
               _._2.zoom(
@@ -128,7 +128,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               )
             )
             .setMaxWidth(60),
-          EmissionLineTable
+          EmissionLineTableRef
             .Column("delete", _._1)
             .setCell(cell =>
               <.div(
@@ -154,12 +154,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
       _.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
     )
     .useTableBy((_, cols, rows) =>
-      EmissionLineTable(cols,
-                        rows,
-                        ((_: EmissionLineTable.OptionsType)
-                          .setRowIdFn(_._1.toPicometers.value.toString)
-                          .setInitialState(tableState))
-                          .reuseAlways
+      EmissionLineTableRef(cols,
+                           rows,
+                           ((_: EmissionLineTableRef.OptionsType)
+                             .setRowIdFn(_._1.toPicometers.value.toString)
+                             .setInitialState(tableState))
+                             .reuseAlways
       )
     )
     // newWavelength
@@ -208,7 +208,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
       <.div(ExploreStyles.ExploreTable |+| ExploreStyles.BrightnessesTableContainer)(
         <.label("Brightness"),
-        EmissionLineTableComponent(
+        EmissionLineTable.Component(
           table = Table(celled = true,
                         selectable = true,
                         striped = true,

@@ -319,7 +319,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
           )
         ),
       props.bandBrightnessesViewOpt
-        .map(bandBrightnessesView => brightnessEditor(bandBrightnessesView)),
+        .map(bandBrightnessesView =>
+          <.div(ExploreStyles.BrightnessesTableWrapper, brightnessEditor(bandBrightnessesView))
+        ),
       props.fluxDensityContinuumOpt
         .map(fluxDensityContinuum =>
           React.Fragment(
@@ -339,7 +341,9 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           )
         ),
-      props.emissionLinesViewOpt.map(emissionLineEditor)
+      props.emissionLinesViewOpt.map(e =>
+        <.div(ExploreStyles.BrightnessesTableWrapper, emissionLineEditor(e))
+      )
     )
   }
 
