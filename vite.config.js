@@ -140,7 +140,9 @@ module.exports = ({ command, mode }) => {
       isProduction ? null : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       react(),
       fontImport,
-      VitePWA({})
-    ]
+      VitePWA({
+        registerType: 'autoUpdate',
+      }),
+    ],
   };
 };
