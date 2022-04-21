@@ -138,7 +138,10 @@ object AladinContainer {
           off
             .map(off =>
               aladinRef.get.asCBO
-                .flatMapCB(_.backend.runOnAladinCB(updateVisualization(svg, off)))
+                .flatMapCB(r =>
+                  r.backend
+                    .runOnAladinCB(updateVisualization(svg, off)) *> r.backend.recalculateView
+                )
                 .toCallback
             )
             .getOrEmpty

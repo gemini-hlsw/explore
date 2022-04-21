@@ -84,8 +84,10 @@ object AladinCell extends ModelOptics {
             options.modState(_.map(_.copy(fov = newFov.x))) *>
               UserTargetPreferencesUpsert
                 .updateFov[IO](props.uid, props.tid, newFov.x)
+                .whenA(fov.forall(_.x != newFov.x))
                 .runAsync
-                .debounce(1.seconds)
+                .rateLimit(1.seconds, 1)
+                .void
           }
 
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
