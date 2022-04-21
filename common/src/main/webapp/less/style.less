@@ -1146,6 +1146,7 @@ tfoot {
 .target-grid {
   display: grid;
   grid-gap: 0.5em;
+  grid-row-gap: 0.3em;
   padding: 0.5em;
   height: 100%;
 }
@@ -1165,6 +1166,10 @@ tfoot {
 
 .target-rv-controls {
   justify-self: stretch;
+
+  .explore-grow-1 {
+    margin-left: 0.3em !important;
+  }
 }
 
 .catalogue-form {
@@ -1191,6 +1196,10 @@ tfoot {
   .error-label-mixin();
 }
 
+.ui.form .field > label {
+  margin: 0;
+}
+
 .ui.basic.label.explore-section-label {
   background-color: transparent;
   border: none;
@@ -1206,7 +1215,6 @@ tfoot {
 
 .explore-units-label {
   margin-left: 0.25em;
-  margin-bottom: 0.2em;
 }
 
 .proposal-details-grid {
