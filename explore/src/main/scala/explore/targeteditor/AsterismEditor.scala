@@ -54,7 +54,7 @@ final case class AsterismEditor(
   hiddenColumns:    ReuseView[Set[String]],
   renderInTitle:    Tile.RenderInTitle
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AsterismEditor](AsterismEditor.component) {}
+    extends ReactFnProps[AsterismEditor](AsterismEditor.component)
 
 object AsterismEditor {
   type Props = AsterismEditor
