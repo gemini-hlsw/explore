@@ -44,7 +44,7 @@ object ExplorePWA {
   }
 
   def setupSW: IO[Unit] =
-    IO.println("Setup service worker 7") *> IO {
+    IO.println("Setup service worker 8") *> IO {
       // lazy val updateSW: js.Function1[Boolean, js.Promise[Unit]] =
       registerSW(
         RegisterSWOptions(
