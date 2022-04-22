@@ -49,7 +49,7 @@ object ExplorePWA {
         registerSW(
           RegisterSWOptions(
             onNeedRefresh = Callback.log(s"Need refresh") *> Callback(
-              org.scalajs.dom.window.console.log(updateSW)
+              "TEST"
             ), // *> Callback(updateSW(true)),
             onOfflineReady = Callback.log(s"Offline ready"),
             onRegisterError = (x: js.Any) =>
