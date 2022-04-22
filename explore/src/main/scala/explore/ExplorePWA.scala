@@ -44,20 +44,22 @@ object ExplorePWA {
   }
 
   def setupSW: IO[Unit] =
-    IO.println("Setup service worker 8") *> IO {
-      // lazy val updateSW: js.Function1[Boolean, js.Promise[Unit]] =
-      registerSW(
-        RegisterSWOptions(
-          onNeedRefresh = Callback.log(s"Need refresh"), // *> Callback(updateSW(true)),
-          onOfflineReady = Callback.log(s"Offline ready"),
-          onRegisterError = (x: js.Any) =>
-            Callback.log(s"Error on sw $x") *> Callback(
-              org.scalajs.dom.window.console.log(x)
-            ),
-          onRegistered = (x: js.Any) =>
-            Callback.log(s"Registered sw") *> Callback(org.scalajs.dom.window.console.log(x))
+    IO.println("Setup service worker 9") *> IO {
+      lazy val updateSW: js.Function1[Boolean, js.Promise[Unit]] =
+        registerSW(
+          RegisterSWOptions(
+            onNeedRefresh = Callback.log(s"Need refresh") *> Callback(
+              org.scalajs.dom.window.console.log(updateSW)
+            ), // *> Callback(updateSW(true)),
+            onOfflineReady = Callback.log(s"Offline ready"),
+            onRegisterError = (x: js.Any) =>
+              Callback.log(s"Error on sw $x") *> Callback(
+                org.scalajs.dom.window.console.log(x)
+              ),
+            onRegistered = (x: js.Any) =>
+              Callback.log(s"Registered sw") *> Callback(org.scalajs.dom.window.console.log(x))
+          )
         )
-      )
       ()
     }.void
 
