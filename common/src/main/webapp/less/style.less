@@ -1135,6 +1135,7 @@ tfoot {
 .explore-table.target-asterism-table {
   height: auto;
   max-height: 150px;
+  min-height: 63px;
   overflow-y: scroll;
 }
 
@@ -2242,4 +2243,26 @@ th.sticky-header,
 .ui.form .field .ui.icon.input input,
 .ui.form .fields .field .ui.icon.input input {
   width: auto;
+}
+
+.ui.form .field.field input:-webkit-autofill,
+.ui.form .field.field input:-webkit-autofill:hover,
+.ui.form .field.field input:-webkit-autofill:focus,
+.ui.form .field.field input:-webkit-autofill:active,
+.ui.input input:-webkit-autofill,
+.ui.input input:-webkit-autofill:hover,
+.ui.input input:-webkit-autofill:focus,
+.ui.input input:-webkit-autofill:active,
+.ui.form input:-webkit-autofill,
+.ui.form input:-webkit-autofill:hover,
+.ui.form input:-webkit-autofill:focus,
+.ui.form input:-webkit-autofill:active,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active
+{
+  box-shadow: 0 0 0 30px var(--form-input-background) inset !important;
+  -webkit-box-shadow: 0 0 0 30px var(--form-input-background) inset !important;
+  -webkit-text-fill-color: var(--input-color);
 }
