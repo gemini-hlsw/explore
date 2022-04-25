@@ -28,7 +28,6 @@ import explore.model._
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
-import explore.model.layout.unsafe._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._

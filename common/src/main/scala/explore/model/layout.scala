@@ -12,8 +12,8 @@ import japgolly.scalajs.react.Reusability
 import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
-import monocle.function.Each._
 import monocle.function.At._
+import monocle.function.Each._
 import react.gridlayout._
 
 import scala.collection.immutable.SortedMap
@@ -69,14 +69,15 @@ object layout {
 
   val layoutItem: Lens[Layout, List[LayoutItem]] = Focus[Layout](_.l)
   val layoutItems: Traversal[Layout, LayoutItem] = layoutItem.each
-  val layoutItemName                             = Focus[LayoutItem](_.i)
-  val layoutItemHeight                           = Focus[LayoutItem](_.h)
-  val layoutItemMaxHeight                        = Focus[LayoutItem](_.maxH)
-  val layoutItemMinHeight                        = Focus[LayoutItem](_.minH)
-  val layoutItemWidth                            = Focus[LayoutItem](_.w)
-  val layoutItemX                                = Focus[LayoutItem](_.x)
-  val layoutItemY                                = Focus[LayoutItem](_.y)
-  val layoutItemResizable                        = Focus[LayoutItem](_.isResizable)
+
+  val layoutItemName      = Focus[LayoutItem](_.i)
+  val layoutItemHeight    = Focus[LayoutItem](_.h)
+  val layoutItemMaxHeight = Focus[LayoutItem](_.maxH)
+  val layoutItemMinHeight = Focus[LayoutItem](_.minH)
+  val layoutItemWidth     = Focus[LayoutItem](_.w)
+  val layoutItemX         = Focus[LayoutItem](_.x)
+  val layoutItemY         = Focus[LayoutItem](_.y)
+  val layoutItemResizable = Focus[LayoutItem](_.isResizable)
 
   implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
   implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq

@@ -31,7 +31,6 @@ import react.gridlayout._
 import scala.concurrent.duration._
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
-import scala.scalajs.LinkingInfo.developmentMode
 
 final case class TileController(
   userId:           Option[User.Id],
@@ -102,7 +101,7 @@ object TileController {
     ScalaFnComponent
       .withHooks[Props]
       .useSingleEffect(debounce = 1.second)
-      // Store the current breakpoitn
+      // Store the current breakpoint
       .useState(none[BreakpointName])
       // Store the current layout
       .useStateBy((p, _, _) => p.layoutMap.get)
@@ -141,6 +140,7 @@ object TileController {
             bn.value.flatMap { bn =>
               val le = b.layouts.find(_.name.name === bn.name).map(_.layout)
 
+              // Store the current layout in the state for debugging
               le.map { l =>
                 currentLayout.modState(breakpointLayout(bn).replace(l))
               }
@@ -152,19 +152,25 @@ object TileController {
           p.tiles.map { t =>
             <.div(
               ^.key := t.id.value,
+              // Show tile proprties on the title if enabled
               bn.value
                 .flatMap(currentLayout.value.get)
                 .flatMap { case (_, _, l) =>
-                  l.l.find(_.i === t.id.value).map { i =>
-                    <.div(
-                      ^.cls := "rgl-tile-overlay",
-                      s"id: ${i.i} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
-                          .foldMap(m => s" minH: $m")}${i.maxH.toOption.foldMap(m => s" maxH: $m")}${i.minW.toOption
-                          .foldMap(m => s" minW: $m")}${i.maxW.toOption.foldMap(m => s" maxW: $m")}"
-                    )
-                  }
+                  l.l
+                    .find(_.i === t.id.value)
+                    .map { i =>
+                      TagMod.devOnly(
+                        <.div(
+                          ^.cls := "rgl-tile-overlay",
+                          s"id: ${i.i} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
+                              .foldMap(m => s" minH: $m")}${i.maxH.toOption
+                              .foldMap(m => s" maxH: $m")}${i.minW.toOption
+                              .foldMap(m => s" minW: $m")}${i.maxW.toOption.foldMap(m => s" maxW: $m")}"
+                        )
+                      )
+                    }
                 }
-                .when(developmentMode),
+                .getOrElse(EmptyVdom),
               t.controllerClass.orEmpty,
               t.withState(unsafeSizeToState(p.layoutMap.get, t.id), Reuse(sizeState _)(t.id))
             )

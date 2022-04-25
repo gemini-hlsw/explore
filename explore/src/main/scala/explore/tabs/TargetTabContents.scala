@@ -113,32 +113,6 @@ object TargetTabContents {
     )
   )
 
-  // def layoutLens(height: Int) =
-  //   layoutItemHeight
-  //     .replace(height)
-  //     .andThen(layoutItemMaxHeight.replace(2 * height))
-  //     .andThen(layoutItemMinHeight.replace(height / 2))
-  //
-  // private def scaleLayout(l: Layout, h: Int): Layout =
-  //   layoutItems.modify { l =>
-  //     l.i match {
-  //       case r if r === ObsTabTiles.TargetId.value =>
-  //         val height =
-  //           (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
-  //         layoutLens(height)(l)
-  //       case r if r === ObsTabTiles.PlotId.value   =>
-  //         val height =
-  //           (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
-  //         layoutLens(height)(l)
-  //       case _                                     => l
-  //     }
-  //   }(l)
-  //
-  // private def scaledLayout(h: Int, l: LayoutsMap): LayoutsMap =
-  //   l.map { case (k, (a, b, l)) =>
-  //     (k, (a, b, scaleLayout(l, h)))
-  //   }
-
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   def otherObsCount(
