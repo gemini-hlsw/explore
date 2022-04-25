@@ -74,8 +74,8 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 .setScale(3, RoundingMode.HALF_UP)
                 .toString
             )
-            .setWidth(80)
-            .setMinWidth(80)
+            .setWidth(60)
+            .setMinWidth(50)
             .setMaxWidth(80)
             .setSortByAuto,
           EmissionLineTableRef
@@ -92,7 +92,10 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posBigDecimal(3).allowEmpty,
                 disabled = disabled
               )
-            ),
+            )
+            .setWidth(90)
+            .setMinWidth(80)
+            .setMaxWidth(160),
           EmissionLineTableRef
             .Column(
               "lineValue",
@@ -109,7 +112,10 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 changeAuditor = ChangeAuditor.posScientificNotation(),
                 disabled = disabled
               )
-            ),
+            )
+            .setWidth(80)
+            .setMinWidth(70)
+            .setMaxWidth(160),
           EmissionLineTableRef
             .Column(
               "lineUnits",
@@ -127,7 +133,9 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               )
             )
-            .setMaxWidth(60),
+            .setWidth(80)
+            .setMinWidth(40)
+            .setMaxWidth(80),
           EmissionLineTableRef
             .Column("delete", _._1)
             .setCell(cell =>
@@ -135,16 +143,15 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                 ExploreStyles.BrightnessesTableDeletButtonWrapper,
                 Button(
                   size = Small,
-                  compact = true,
                   clazz = ExploreStyles.DeleteButton,
                   disabled = disabled,
                   onClick = emissionLines.mod(_ - cell.value)
                 )(Icons.Trash)
               )
             )
-            .setWidth(46)
-            .setMinWidth(46)
-            .setMaxWidth(46)
+            .setWidth(25)
+            .setMinWidth(25)
+            .setMaxWidth(25)
             .setDisableSortBy(true)
         )
       }
@@ -198,9 +205,8 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           Button(size = Mini,
                  compact = true,
                  onClick = addLine,
+                 clazz = ExploreStyles.BrightnessAddButton,
                  disabled = props.disabled || addDisabled.get
-          )(
-            ^.marginLeft := "5px"
           )(
             Icons.New
           )
