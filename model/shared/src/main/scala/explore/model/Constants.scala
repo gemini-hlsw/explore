@@ -11,6 +11,7 @@ trait Constants {
   val MinLeftPanelWidth                = 270.0
   val GridRowHeight                    = 36
   val GridRowPadding                   = 5
+  val GridColCount                     = 12
   val InitialFov: Angle                = Angle.fromDoubleDegrees(0.25)
   val AngleSizeFovFactor: Long => Long = v => (v * 3) / 2
   val SimbadResultLimit                = 50

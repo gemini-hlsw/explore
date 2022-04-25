@@ -31,6 +31,7 @@ import react.gridlayout._
 import scala.concurrent.duration._
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
+import scala.scalajs.LinkingInfo.developmentMode
 
 final case class TileController(
   userId:           Option[User.Id],
@@ -57,10 +58,7 @@ object TileController {
     ctx:       AppContextIO
   ): Callback =
     debouncer
-      .submit(
-        UserGridLayoutUpsert
-          .storeLayoutsPreference[IO](userId, section, layouts)
-      )
+      .submit(UserGridLayoutUpsert.storeLayoutsPreference[IO](userId, section, layouts))
       .runAsyncAndForget
 
   val itemHeght = layoutItems.andThen(layoutItemHeight)
@@ -104,7 +102,11 @@ object TileController {
     ScalaFnComponent
       .withHooks[Props]
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (p, debouncer) =>
+      // Store the current breakpoitn
+      .useState(none[BreakpointName])
+      // Store the current layout
+      .useStateBy((p, _, _) => p.layoutMap.get)
+      .renderWithReuse { (p, debouncer, bn, currentLayout) =>
         def sizeState(id: Tile.TileId, st: TileSizeState): Callback =
           p.layoutMap
             .zoom(allTiles)
@@ -126,20 +128,43 @@ object TileController {
               case l                               => l
             }
 
+        val layouts = updateResizableState(p.layoutMap.get)
+
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-          onLayoutChange =
-            (_: Layout, b: Layouts) => storeLayouts(p.userId, p.section, b, debouncer)(p.ctx),
-          layouts = updateResizableState(p.layoutMap.get),
+          onBreakpointChange = (bk: BreakpointName, _: Int) => bn.setState(bk.some),
+          onLayoutChange = (_: Layout, b: Layouts) =>
+            bn.value.flatMap { bn =>
+              val le = b.layouts.find(_.name.name === bn.name).map(_.layout)
+
+              le.map { l =>
+                currentLayout.modState(breakpointLayout(bn).replace(l))
+              }
+            }.getOrEmpty *>
+              storeLayouts(p.userId, p.section, b, debouncer)(p.ctx),
+          layouts = layouts,
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
           p.tiles.map { t =>
             <.div(
               ^.key := t.id.value,
+              bn.value
+                .flatMap(currentLayout.value.get)
+                .flatMap { case (_, _, l) =>
+                  l.l.find(_.i === t.id.value).map { i =>
+                    <.div(
+                      ^.cls := "rgl-tile-overlay",
+                      s"id: ${i.i} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
+                          .foldMap(m => s" minH: $m")}${i.maxH.toOption.foldMap(m => s" maxH: $m")}${i.minW.toOption
+                          .foldMap(m => s" minW: $m")}${i.maxW.toOption.foldMap(m => s" maxW: $m")}"
+                    )
+                  }
+                }
+                .when(developmentMode),
               t.controllerClass.orEmpty,
               t.withState(unsafeSizeToState(p.layoutMap.get, t.id), Reuse(sizeState _)(t.id))
             )

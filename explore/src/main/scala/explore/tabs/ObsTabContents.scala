@@ -529,27 +529,28 @@ object ObsTabContents {
         }
       }
       .useStateViewWithReuse(defaultLayout)
-      .useEffectWithDepsBy((p, _, _) => p.focusedObs) { (props, panels, layout) =>
-        implicit val ctx = props.ctx
-        _ =>
-          TabGridPreferencesQuery
-            .queryWithDefault[IO](props.userId.get,
-                                  GridLayoutSection.ObservationsLayout,
-                                  ResizableSection.ObservationsTree,
-                                  (Constants.InitialTreeWidth.toInt, defaultLayout)
-            )
-            .attempt
-            .flatMap {
-              case Right((w, l)) =>
-                (panels
-                  .mod(
-                    TwoPanelState.treeWidth.replace(w.toDouble)
-                  ) *> layout.mod(o => mergeMap(o, l)))
-                  .to[IO]
-              case Left(_)       => IO.unit
-            }
-            .runAsync
-      }
+      // TODO Rework the obs tab layout
+      // .useEffectWithDepsBy((p, _, _) => p.focusedObs) { (props, panels, layout) =>
+      //   implicit val ctx = props.ctx
+      //   _ =>
+      //     TabGridPreferencesQuery
+      //       .queryWithDefault[IO](props.userId.get,
+      //                             GridLayoutSection.ObservationsLayout,
+      //                             ResizableSection.ObservationsTree,
+      //                             (Constants.InitialTreeWidth.toInt, defaultLayout)
+      //       )
+      //       .attempt
+      //       .flatMap {
+      //         case Right((w, l)) =>
+      //           (panels
+      //             .mod(
+      //               TwoPanelState.treeWidth.replace(w.toDouble)
+      //             ) *> layout.mod(o => mergeMap(o, l)))
+      //             .to[IO]
+      //         case Left(_)       => IO.unit
+      //       }
+      //       .runAsync
+      // }
       .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, panels, layouts, resize, debouncer) =>

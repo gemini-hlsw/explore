@@ -13,6 +13,7 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
 import monocle.function.Each._
+import monocle.function.At._
 import react.gridlayout._
 
 import scala.collection.immutable.SortedMap
@@ -21,14 +22,25 @@ import scala.collection.immutable.SortedMap
  * Utilities related to react-grid-layout
  */
 object layout {
-  type LayoutEntry = (Int, Int, Layout)
-  type LayoutsMap  = SortedMap[BreakpointName, (Int, Int, Layout)]
+  type LayoutWidth = Int
+  type LayoutCols  = Int
+  type LayoutEntry = (LayoutWidth, LayoutCols, Layout)
+  type LayoutsMap  = SortedMap[BreakpointName, (LayoutWidth, LayoutCols, Layout)]
 
-  val breakpoints: Map[BreakpointName, (Int, Int)] =
+  val breakpoints: Map[BreakpointName, (LayoutWidth, LayoutCols)] =
     Map(
       (BreakpointName.lg, (1200, 12)),
       (BreakpointName.md, (996, 10)),
       (BreakpointName.sm, (768, 8))
+    )
+
+  val layoutPprint =
+    pprint.copy(
+      additionalHandlers = { case layout: LayoutItem =>
+        pprint.Tree.Literal(
+          s"LayoutItem(id = ${layout.i}, x = ${layout.x}, y = ${layout.y}, w = ${layout.w}, h = ${layout.h}"
+        )
+      }
     )
 
   def defineStdLayouts(l: Map[BreakpointName, Layout]): LayoutsMap =
@@ -48,18 +60,23 @@ object layout {
   implicit val nes: Ordering[NonEmptyString]                    = Order[NonEmptyString].toOrdering
   implicit val breakpointNameOrder: Order[BreakpointName]       = Order.by(_.name)
   implicit val breakpointNameOrdering: Ordering[BreakpointName] = breakpointNameOrder.toOrdering
-  val allLayouts: Traversal[LayoutsMap, Layout]                 =
+
+  val allLayouts: Traversal[LayoutsMap, Layout] =
     each[LayoutsMap, LayoutEntry].andThen(Focus[LayoutEntry](_._3))
-  val layoutItem: Lens[Layout, List[LayoutItem]]                = Focus[Layout](_.l)
-  val layoutItems: Traversal[Layout, LayoutItem]                = layoutItem.each
-  val layoutItemName                                            = Focus[LayoutItem](_.i)
-  val layoutItemHeight                                          = Focus[LayoutItem](_.h)
-  val layoutItemMaxHeight                                       = Focus[LayoutItem](_.maxH)
-  val layoutItemMinHeight                                       = Focus[LayoutItem](_.minH)
-  val layoutItemWidth                                           = Focus[LayoutItem](_.w)
-  val layoutItemX                                               = Focus[LayoutItem](_.x)
-  val layoutItemY                                               = Focus[LayoutItem](_.y)
-  val layoutItemResizable                                       = Focus[LayoutItem](_.isResizable)
+
+  def breakpointLayout(bn: BreakpointName): Traversal[LayoutsMap, Layout] =
+    at[LayoutsMap, BreakpointName, Option[LayoutEntry]](bn).some.andThen(Focus[LayoutEntry](_._3))
+
+  val layoutItem: Lens[Layout, List[LayoutItem]] = Focus[Layout](_.l)
+  val layoutItems: Traversal[Layout, LayoutItem] = layoutItem.each
+  val layoutItemName                             = Focus[LayoutItem](_.i)
+  val layoutItemHeight                           = Focus[LayoutItem](_.h)
+  val layoutItemMaxHeight                        = Focus[LayoutItem](_.maxH)
+  val layoutItemMinHeight                        = Focus[LayoutItem](_.minH)
+  val layoutItemWidth                            = Focus[LayoutItem](_.w)
+  val layoutItemX                                = Focus[LayoutItem](_.x)
+  val layoutItemY                                = Focus[LayoutItem](_.y)
+  val layoutItemResizable                        = Focus[LayoutItem](_.isResizable)
 
   implicit val breakpointNameReuse: Reusability[BreakpointName] = Reusability.byEq
   implicit val layoutItemReuse: Reusability[LayoutItem]         = Reusability.byEq

@@ -74,64 +74,70 @@ final case class TargetTabContents(
 object TargetTabContents {
   type Props = TargetTabContents
 
-  private val TargetIntialHeightFraction   = 6
-  private val SkyPlotInitialHeightFraction = 4
-  private val TotalHeightFractions         = TargetIntialHeightFraction + SkyPlotInitialHeightFraction
-  val TargetMaxHeight: NonNegInt           = 3
-  val TargetMinHeight: NonNegInt           = 3
-  val DefaultWidth: NonNegInt              = 12
+  val TargetHeight: NonNegInt      = 18
+  val TargetMinHeight: NonNegInt   = 15
+  val SkyPlotHeight: NonNegInt     = 9
+  val SkyPlotMinHeight: NonNegInt  = 6
+  val TileMinWidth: NonNegInt      = 5
+  val DefaultWidth: NonNegInt      = 10
+  val DefaultLargeWidth: NonNegInt = 12
 
   val layoutLarge: Layout = Layout(
     List(
-      LayoutItem(x = 0,
+      LayoutItem(i = ObsTabTiles.TargetId.value,
+                 x = 0,
                  y = 0,
                  w = DefaultWidth.value,
-                 h = TargetIntialHeightFraction,
-                 minH = TargetIntialHeightFraction,
-                 i = ObsTabTiles.TargetId.value
+                 h = TargetHeight.value,
+                 minH = TargetMinHeight.value,
+                 minW = TileMinWidth.value
       ),
-      LayoutItem(x = 0,
-                 y = TargetMaxHeight.value,
-                 w = DefaultWidth.value,
-                 h = SkyPlotInitialHeightFraction,
-                 minH = SkyPlotInitialHeightFraction,
-                 i = ObsTabTiles.PlotId.value
+      LayoutItem(
+        i = ObsTabTiles.PlotId.value,
+        x = 0,
+        y = TargetHeight.value,
+        w = DefaultWidth.value,
+        h = SkyPlotHeight.value,
+        minH = SkyPlotMinHeight.value,
+        minW = TileMinWidth.value
       )
     )
   )
 
-  private val proportionalLayouts = defineStdLayouts(
+  private val defaultTargetLayouts = defineStdLayouts(
     Map(
-      (BreakpointName.lg, layoutLarge),
+      (BreakpointName.lg,
+       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutLarge)
+      ),
       (BreakpointName.md, layoutLarge)
     )
   )
 
-  def layoutLens(height: Int) =
-    layoutItemHeight
-      .replace(height)
-      .andThen(layoutItemMaxHeight.replace(2 * height))
-      .andThen(layoutItemMinHeight.replace(height / 2))
-
-  private def scaleLayout(l: Layout, h: Int): Layout =
-    layoutItems.modify { l =>
-      l.i match {
-        case r if r === ObsTabTiles.TargetId.value =>
-          val height =
-            (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
-          layoutLens(height)(l)
-        case r if r === ObsTabTiles.PlotId.value   =>
-          val height =
-            (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
-          layoutLens(height)(l)
-        case _                                     => l
-      }
-    }(l)
-
-  private def scaledLayout(h: Int, l: LayoutsMap): LayoutsMap =
-    l.map { case (k, (a, b, l)) =>
-      (k, (a, b, scaleLayout(l, h)))
-    }
+  // def layoutLens(height: Int) =
+  //   layoutItemHeight
+  //     .replace(height)
+  //     .andThen(layoutItemMaxHeight.replace(2 * height))
+  //     .andThen(layoutItemMinHeight.replace(height / 2))
+  //
+  // private def scaleLayout(l: Layout, h: Int): Layout =
+  //   layoutItems.modify { l =>
+  //     l.i match {
+  //       case r if r === ObsTabTiles.TargetId.value =>
+  //         val height =
+  //           (h * TargetIntialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
+  //         layoutLens(height)(l)
+  //       case r if r === ObsTabTiles.PlotId.value   =>
+  //         val height =
+  //           (h * SkyPlotInitialHeightFraction / TotalHeightFractions) / (Constants.GridRowHeight + Constants.GridRowPadding)
+  //         layoutLens(height)(l)
+  //       case _                                     => l
+  //     }
+  //   }(l)
+  //
+  // private def scaledLayout(h: Int, l: LayoutsMap): LayoutsMap =
+  //   l.map { case (k, (a, b, l)) =>
+  //     (k, (a, b, scaleLayout(l, h)))
+  //   }
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
@@ -162,7 +168,8 @@ object TargetTabContents {
             )
             .runAsyncAndForget
 
-    val treeWidth: Int                         = panels.get.treeWidth.toInt
+    val treeWidth: Int = panels.get.treeWidth.toInt
+
     val selectedView: ReuseView[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 
     val targetMap: Reuse[TargetGroupList] = asterismGroupsWithObs.map(_.get.targetGroups)
@@ -547,6 +554,7 @@ object TargetTabContents {
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
+      // Two panel state
       .useStateViewWithReuse(TwoPanelState.initial(SelectedPanel.Uninitialized))
       .useEffectWithDepsBy((props, state) =>
         (props.focusedObsSet,
@@ -562,19 +570,21 @@ object TargetTabContents {
           case _                                  => Callback.empty
         }
       }
+      // Measure its size
       .useResizeDetector()
-      .useStateViewWithReuse(proportionalLayouts)
-      .useMemoBy((_, _, r, _) => r.height) { (_, _, _, l) => h =>
-        // Memoize the initial result
-        h.map(h => scaledLayout(h, l.get)).getOrElse(l.get)
-      }
-      .useEffectWithDepsBy((p, _, r, _, _) => (p.userId, r.height)) {
-        (props, panels, _, layout, defaultLayout) => (params: (Option[User.Id], Option[Int])) =>
+      // Initial target layout
+      .useStateViewWithReuse(defaultTargetLayouts)
+      // Keep a record of the initial target layouut
+      .useMemo(())(_ => defaultTargetLayouts)
+      // Load the config from user prefrences
+      .useEffectWithDepsBy((p, _, _, _, _) => p.userId) {
+        (props, panels, _, layout, defaultLayout) => _ =>
           {
             implicit val ctx = props.ctx
-            val (u, h)       = params
+
+            // val i: Int = layout
             TabGridPreferencesQuery
-              .queryWithDefault[IO](u,
+              .queryWithDefault[IO](props.userId,
                                     GridLayoutSection.TargetLayout,
                                     ResizableSection.TargetsTree,
                                     (Constants.InitialTreeWidth.toInt, defaultLayout)
@@ -588,7 +598,7 @@ object TargetTabContents {
                     ) *> layout.mod(o => mergeMap(o, l)))
                     .to[IO]
                 case Left(_)       =>
-                  h.map(h => layout.mod(l => scaledLayout(h, l)).to[IO]).getOrElse(IO.unit)
+                  IO.unit
               }
           }
       }
