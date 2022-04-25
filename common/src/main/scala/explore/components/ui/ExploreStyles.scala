@@ -246,6 +246,7 @@ object ExploreStyles {
   val BrightnessesTableFooter: Css             = Css("explore-brightnesses-footer")
   val BrightnessesTableUnitsDropdown: Css      = Css("explore-brightnesses-units-dropdown")
   val BrightnessesTableDeletButtonWrapper: Css = Css("explore-brightnesses-delete-button-wrapper")
+  val BrightnessAddButton: Css                 = Css("explore-brightnesses-add-button")
   val EmptyTreeContent: Css                    = Css("explore-empty-tree-content")
 
   // This is rendered without React, so we include SUI classes.

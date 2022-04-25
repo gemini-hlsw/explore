@@ -94,9 +94,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
               .Column("band", _._1)
               .setHeader("Band")
               .setCell(_.value.shortName)
-              .setWidth(66)
-              .setMinWidth(66)
-              .setMaxWidth(66)
+              .setWidth(60)
+              .setMinWidth(50)
+              .setMaxWidth(60)
               .setSortByAuto,
             BrightnessTableDef
               .Column("value", _._2.zoom(Measure.valueTagged[BigDecimal, Brightness[T]]))
@@ -109,7 +109,10 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   changeAuditor = ChangeAuditor.bigDecimal(2, 3).allowExp(2),
                   disabled = disabled
                 )
-              ),
+              )
+              .setWidth(80)
+              .setMinWidth(60)
+              .setMaxWidth(160),
             BrightnessTableDef
               .Column("units", _._2.zoom(Measure.unitsTagged[BigDecimal, Brightness[T]]))
               .setHeader("Units")
@@ -121,23 +124,25 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   disabled = disabled,
                   clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                 )
-              ),
+              )
+              .setWidth(100)
+              .setMinWidth(100)
+              .setMaxWidth(160),
             BrightnessTableDef
               .Column("delete", _._1)
               .setCell(cell =>
                 <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
                   Button(
                     size = Small,
-                    compact = true,
                     clazz = ExploreStyles.DeleteButton,
                     disabled = disabled,
                     onClick = brightnesses.mod(_ - cell.value)
                   )(Icons.Trash)
                 )
               )
-              .setWidth(46)
-              .setMinWidth(46)
-              .setMaxWidth(46)
+              .setWidth(20)
+              .setMinWidth(20)
+              .setMaxWidth(20)
               .setDisableSortBy(true)
           )
         }
@@ -181,8 +186,9 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                   Button(size = Mini,
                          compact = true,
                          onClick = addBrightness,
+                         clazz = ExploreStyles.BrightnessAddButton,
                          disabled = props.disabled
-                  )(^.marginLeft := "5px")(
+                  )(
                     Icons.New
                   )
                 )
