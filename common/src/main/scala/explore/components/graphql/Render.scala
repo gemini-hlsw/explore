@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
 object Render {
   trait Props[F[_], G[_], A] {
     val render: Pot[G[A]] ==> VdomNode
-    val onNewData: Reuse[F[Unit]]
+    val onNewData: Reuse[A => F[Unit]]
 
     implicit val F: Async[F]
     implicit val dispatcher: Effect.Dispatch[F]
@@ -122,7 +122,7 @@ object Render {
           for {
             result <- $.props.query.value.map($.props.extract)
             _      <- queue.offer(result)
-            _      <- $.props.onNewData.value
+            _      <- $.props.onNewData.value(result)
           } yield ()
 
         // Once run, this effect will end when all subscriptions end.

@@ -43,6 +43,10 @@ object Icons {
   val faTrash: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faTrashCanUndo")
+  val faTrashUndo: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faCrosshairs")
   val faCrosshairs: FAIcon = js.native
 
@@ -57,6 +61,10 @@ object Icons {
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faPenToSquare")
   val faEdit: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faEraser")
+  val faEraser: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faMagnifyingGlass")
@@ -151,6 +159,10 @@ object Icons {
   val faListAlt: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faListCheck")
+  val faListCheck: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faCompress")
   val faCompress: FAIcon = js.native
 
@@ -192,9 +204,11 @@ object Icons {
     faRedo,
     faPlus,
     faTrash,
+    faTrashUndo,
     faBullseye,
     faCrosshairs,
     faEdit,
+    faEraser,
     faSearch,
     faBan,
     faMousePointer,
@@ -218,6 +232,7 @@ object Icons {
     faChevronDoubleUp,
     faChevronDoubleDown,
     faListAlt,
+    faListCheck,
     faCompress,
     faExpand,
     faStar,
@@ -236,9 +251,11 @@ object Icons {
   val Redo                = FontAwesomeIcon(faRedo)
   val New                 = FontAwesomeIcon(faPlus)
   val Trash               = FontAwesomeIcon(faTrash).clazz(ExploreStyles.TrashIcon)
+  val TrashUndo           = FontAwesomeIcon(faTrashUndo)
   val Bullseye            = FontAwesomeIcon(faBullseye)
   val Crosshairs          = FontAwesomeIcon(faCrosshairs)
   val Edit                = FontAwesomeIcon(faEdit)
+  val Eraser              = FontAwesomeIcon(faEraser).clazz(ExploreStyles.EraserIcon)
   val Search              = FontAwesomeIcon(faSearch)
   val ChevronRight        = FontAwesomeIcon(faChevronRight)
   val ChevronRightLight   = FontAwesomeIcon(faChevronRightLight)
@@ -264,6 +281,7 @@ object Icons {
   val Maximize            = FontAwesomeIcon(faExpand)
   val Checkmark           = FontAwesomeIcon(faCheck)
   val ListIcon            = FontAwesomeIcon(faListAlt)
+  val ListCheck           = FontAwesomeIcon(faListCheck)
   val Star                = FontAwesomeIcon(faStar)
   val Stars               = FontAwesomeIcon(faStars)
   val Spinner             = FontAwesomeIcon(faSpinner)

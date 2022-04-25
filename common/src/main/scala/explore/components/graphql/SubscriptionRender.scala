@@ -26,7 +26,7 @@ final case class SubscriptionRender[D, A](
     Reuse.always(identity[fs2.Stream[IO, D]] _)
 )(
   val render:     Pot[A] ==> VdomNode,
-  val onNewData:  Reuse[IO[Unit]] = Reuse.always(IO.unit)
+  val onNewData:  Reuse[A => IO[Unit]] = Reuse.always((_: A) => IO.unit)
 )(implicit
   val F:          Async[IO],
   val dispatcher: Effect.Dispatch[IO],
@@ -69,7 +69,7 @@ object SubscriptionRender {
                   .build(
                     $.props
                       .streamModifier(subscription.stream)
-                      .flatTap(_ => fs2.Stream.eval($.props.onNewData))
+                      .flatTap(a => fs2.Stream.eval($.props.onNewData(a)))
                   )
               ).some
             )

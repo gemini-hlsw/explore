@@ -28,7 +28,7 @@ final case class LiveQueryRenderMod[S, D, A](
   changeSubscriptions: Reuse[List[IO[GraphQLSubscription[IO, _]]]]
 )(
   val render:          Pot[ReuseView[A]] ==> VdomNode,
-  val onNewData:       Reuse[IO[Unit]] = Reuse.always(IO.unit)
+  val onNewData:       Reuse[A => IO[Unit]] = Reuse.always((_: A) => IO.unit)
 )(implicit
   val F:               Async[IO],
   val dispatcher:      Effect.Dispatch[IO],
