@@ -139,7 +139,7 @@ lazy val explore: Project = project
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
-        ReactAtlasKitTree.value ++
+        ReactBeautifulDnD.value ++
         ReactCommon.value ++
         ReactDatepicker.value ++
         ReactGridLayout.value ++
