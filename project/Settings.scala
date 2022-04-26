@@ -44,7 +44,7 @@ object Settings {
     val reactSemanticUI     = "0.15.1"
     val reactTable          = "0.7.4"
     val reactVirtuoso       = "0.2.2"
-    val scalaJsReact        = "2.1.0"
+    val scalaJsReact        = "2.1.1"
     val pprint              = "0.7.3"
     val scalaJSSecureRandom = "1.0.0"
 
