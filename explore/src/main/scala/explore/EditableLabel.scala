@@ -14,6 +14,7 @@ import lucuma.ui.reusability._
 import org.scalajs.dom
 import react.common.ReactFnProps
 import react.common.style.Css
+import react.fa.FontAwesomeIcon
 import react.semanticui.elements.button.Button
 import react.semanticui.elements.input.Input
 import react.semanticui.sizes._
@@ -28,7 +29,8 @@ final case class EditableLabel(
   addButtonLabel:   Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
   addButtonClass:   Css = Css.Empty,
   leftButtonClass:  Css = Css.Empty,
-  rightButtonClass: Css = Css.Empty
+  rightButtonClass: Css = Css.Empty,
+  rightButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
 ) extends ReactFnProps[EditableLabel](EditableLabel.component)
 
 object EditableLabel {
@@ -41,7 +43,8 @@ object EditableLabel {
     addButtonLabel:    Reuse[VdomNode] = ("Add": VdomNode).reuseAlways,
     addButtonClass:    Css = Css.Empty,
     editButtonClass:   Css = Css.Empty,
-    deleteButtonClass: Css = Css.Empty
+    deleteButtonClass: Css = Css.Empty,
+    deleteButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
   ): EditableLabel =
     EditableLabel(
       value.get,
@@ -51,7 +54,8 @@ object EditableLabel {
       addButtonLabel,
       addButtonClass,
       editButtonClass,
-      deleteButtonClass
+      deleteButtonClass,
+      deleteButtonIcon
     )
 
   private implicit val reuseProps: Reusability[Props] = Reusability.derive
@@ -130,7 +134,7 @@ object EditableLabel {
                 clazz = props.rightButtonClass,
                 onClickE = (e: ReactMouseEvent, _: Button.ButtonProps) =>
                   e.stopPropagationCB >> e.preventDefaultCB >> props.mod(none)
-              )(Icons.Trash)
+              )(props.rightButtonIcon.value)
             )
           )
       }

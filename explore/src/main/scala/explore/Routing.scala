@@ -12,6 +12,7 @@ import explore.config.SequenceEditor
 import explore.model.Page
 import explore.model.Page._
 import explore.model._
+import explore.programs.ProgramsPopup
 import explore.proposal._
 import explore.tabs._
 import japgolly.scalajs.react.ReactMonocle._
@@ -101,6 +102,11 @@ object Routing {
   private def configurationsTab(page: Page): VdomElement =
     SequenceEditor(RoutingInfo.from(page).programId)
 
+  private def showProgramSelectionPopup(model: ReuseView[RootModel]): VdomElement =
+    AppCtx.using { implicit ctx =>
+      ProgramsPopup(currentProgramId = none, undoStacks = model.zoom(RootModel.undoStacks))
+    }
+
   def config: RouterWithPropsConfig[Page, ReuseView[RootModel]] =
     RouterWithPropsConfigDsl[Page, ReuseView[RootModel]].buildConfig { dsl =>
       import dsl._
@@ -125,8 +131,8 @@ object Routing {
 
       val rules =
         (emptyRule
-        // temporarily redirect to p-2 until we have program selection available.
-          | staticRoute(root, NoProgramPage) ~> redirectToPath("/p-2")(SetRouteVia.HistoryReplace)
+          | staticRoute(root, NoProgramPage) ~> renderP(showProgramSelectionPopup _)
+
           | dynamicRouteCT((root / id[Program.Id]).xmapL(HomePage.iso)) ~> dynRenderP {
             case (_, _) => homeTab()
           }

@@ -55,6 +55,8 @@ object ExploreLayout {
                 onLogout: IO[Unit]
               ) =>
                 AppCtx.using { implicit ctx =>
+                  val routingInfo = RoutingInfo.from(props.r.page)
+
                   HelpCtx.usingView { helpCtx =>
                     val helpView = helpCtx.zoom(HelpContext.displayedHelp)
                     GlobalHotKeys(
@@ -81,13 +83,16 @@ object ExploreLayout {
                         SidebarPusher(dimmed = helpView.get.isDefined)(
                           <.div(
                             ExploreStyles.MainGrid,
-                            TopBar(vault.user,
-                                   props.view.zoom(RootModel.localPreferences).get,
-                                   onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
+                            TopBar(
+                              vault.user,
+                              routingInfo.optProgramId,
+                              props.view.zoom(RootModel.localPreferences).get,
+                              props.view.zoom(RootModel.undoStacks),
+                              onLogout >> props.view.zoom(RootModel.vault).set(none).to[IO]
                             ),
                             <.div(
                               ExploreStyles.SideTabs,
-                              SideTabs(RoutingInfo.from(props.r.page))
+                              SideTabs(routingInfo)
                             ),
                             <.div(
                               ExploreStyles.MainBody,

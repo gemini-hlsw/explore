@@ -11,6 +11,7 @@ import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.Target
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.ui.reusability._
 
 import scala.collection.immutable.TreeSeqMap
@@ -70,4 +71,6 @@ object reusability {
   implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult]          = Reusability.derive
   implicit val scienceConfigurationnResultReuse: Reusability[ScienceConfiguration] =
     Reusability.byEq
+
+  implicit val existenceReuse: Reusability[Existence] = Reusability.derive
 }

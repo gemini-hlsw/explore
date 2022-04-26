@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.implicits._
+import crystal.react.ReuseView
 import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.Resources
@@ -13,8 +14,10 @@ import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.programs.ProgramsPopup
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
+import explore.model.ModelUndoStacks
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import japgolly.scalajs.react._
@@ -22,6 +25,7 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.GuestRole
+import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import org.scalajs.dom
@@ -41,14 +45,16 @@ import typings.loglevel.mod.LogLevelDesc
 
 final case class TopBar(
   user:        User,
+  programId:   Option[Program.Id],
   preferences: ExploreLocalPreferences,
+  undoStacks:  ReuseView[ModelUndoStacks[IO]],
   onLogout:    IO[Unit]
 ) extends ReactFnProps[TopBar](TopBar.component)
 
 object TopBar {
   type Props = TopBar
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(_.user)
+  implicit val propsReuse: Reusability[Props] = Reusability.by(p => (p.user, p.programId))
 
   def currentTheme: Theme =
     if (dom.document.body.classList.contains(Theme.Light.clazz.htmlClass))
@@ -130,6 +136,19 @@ object TopBar {
                             )
                           )
                         )
+                      ),
+                      ProgramsPopup(
+                        currentProgramId = props.programId,
+                        undoStacks = props.undoStacks,
+                        trigger = Reuse
+                          .always((cb: Callback) =>
+                            DropdownItem(
+                              text = "Manage Programs",
+                              icon = Icons.ListCheck.fixedWidth(),
+                              onClick = cb
+                            ): VdomNode
+                          )
+                          .some
                       ),
                       DropdownDivider(),
                       DropdownItem(

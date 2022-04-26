@@ -124,6 +124,15 @@ object ExploreStyles {
   val SelectedObsItem: Css        = Css("selected-obs-item")
   val ObsItem: Css                = Css("obs-item")
   val TrashIcon: Css              = Css("trash-icon")
+  val EraserIcon: Css             = Css("eraser-icon")
+
+  val ProgramsPopup     = Css("programs-popup")
+  val ProgramTable      = Css("program-table")
+  val ProgramAdd        = Css("program-add")
+  val ProgramName       = Css("program-name")
+  val ProgramNameInput  = Css("program-name-input")
+  val ProgramNameEdit   = Css("program-name-edit")
+  val ProgramNameDelete = Css("program-name-delete")
 
   val ObserverNotes: Css = Css("observer-notes")
   val NotesWrapper: Css  = Css("observer-notes-wrapper")

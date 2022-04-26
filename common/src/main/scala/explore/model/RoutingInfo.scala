@@ -17,10 +17,14 @@ import lucuma.ui.reusability._
 
 final case class RoutingInfo(
   appTab:        AppTab,
-  programId:     Program.Id,
+  optProgramId:  Option[Program.Id],
   focusedObsSet: Option[ObsIdSet],
   focusedTarget: Option[Target.Id]
-)
+) {
+  // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal
+  // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
+  def programId: Program.Id = optProgramId.getOrElse(RoutingInfo.dummyProgramId)
+}
 
 object RoutingInfo {
   implicit val reuseRoutingInfo: Reusability[RoutingInfo] = Reusability.derive
@@ -30,22 +34,22 @@ object RoutingInfo {
   val dummyProgramId = Program.Id(Long.MaxValue: PosLong)
 
   def from(page: Page): RoutingInfo = page match {
-    case NoProgramPage                         => RoutingInfo(AppTab.Overview, dummyProgramId, none, none)
-    case HomePage(p)                           => RoutingInfo(AppTab.Overview, p, none, none)
-    case ProposalPage(p)                       => RoutingInfo(AppTab.Proposal, p, none, none)
-    case ObservationsBasePage(p)               => RoutingInfo(AppTab.Observations, p, none, none)
+    case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, none, none)
+    case HomePage(p)                           => RoutingInfo(AppTab.Overview, p.some, none, none)
+    case ProposalPage(p)                       => RoutingInfo(AppTab.Proposal, p.some, none, none)
+    case ObservationsBasePage(p)               => RoutingInfo(AppTab.Observations, p.some, none, none)
     case ObsPage(p, obsId)                     =>
-      RoutingInfo(AppTab.Observations, p, ObsIdSet.one(obsId).some, none)
+      RoutingInfo(AppTab.Observations, p.some, ObsIdSet.one(obsId).some, none)
     case ObsTargetPage(p, obsId, targetId)     =>
-      RoutingInfo(AppTab.Observations, p, ObsIdSet.one(obsId).some, targetId.some)
-    case TargetsBasePage(p)                    => RoutingInfo(AppTab.Targets, p, none, none)
-    case TargetsObsPage(p, obsId)              => RoutingInfo(AppTab.Targets, p, obsId.some, none)
-    case TargetPage(p, targetId)               => RoutingInfo(AppTab.Targets, p, none, targetId.some)
+      RoutingInfo(AppTab.Observations, p.some, ObsIdSet.one(obsId).some, targetId.some)
+    case TargetsBasePage(p)                    => RoutingInfo(AppTab.Targets, p.some, none, none)
+    case TargetsObsPage(p, obsId)              => RoutingInfo(AppTab.Targets, p.some, obsId.some, none)
+    case TargetPage(p, targetId)               => RoutingInfo(AppTab.Targets, p.some, none, targetId.some)
     case TargetWithObsPage(p, obsId, targetId) =>
-      RoutingInfo(AppTab.Targets, p, obsId.some, targetId.some)
-    case ConfigurationsPage(p)                 => RoutingInfo(AppTab.Configurations, p, none, none)
-    case ConstraintsBasePage(p)                => RoutingInfo(AppTab.Constraints, p, none, none)
-    case ConstraintsObsPage(p, obsId)          => RoutingInfo(AppTab.Constraints, p, obsId.some, none)
+      RoutingInfo(AppTab.Targets, p.some, obsId.some, targetId.some)
+    case ConfigurationsPage(p)                 => RoutingInfo(AppTab.Configurations, p.some, none, none)
+    case ConstraintsBasePage(p)                => RoutingInfo(AppTab.Constraints, p.some, none, none)
+    case ConstraintsObsPage(p, obsId)          => RoutingInfo(AppTab.Constraints, p.some, obsId.some, none)
   }
 
   def getPage(
