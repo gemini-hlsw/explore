@@ -30,7 +30,7 @@ final case class EditableLabel(
   addButtonClass:   Css = Css.Empty,
   leftButtonClass:  Css = Css.Empty,
   rightButtonClass: Css = Css.Empty,
-  rightButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Trash.reuseAlways
+  rightButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
 ) extends ReactFnProps[EditableLabel](EditableLabel.component)
 
 object EditableLabel {
@@ -44,7 +44,7 @@ object EditableLabel {
     addButtonClass:    Css = Css.Empty,
     editButtonClass:   Css = Css.Empty,
     deleteButtonClass: Css = Css.Empty,
-    deleteButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Trash.reuseAlways
+    deleteButtonIcon:  Reuse[FontAwesomeIcon] = Icons.Eraser.reuseAlways
   ): EditableLabel =
     EditableLabel(
       value.get,

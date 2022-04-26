@@ -125,7 +125,6 @@ object ProgramsPopup {
           <.div(
             Button(
               clazz = ExploreStyles.ProgramAdd,
-              // size = Small,
               compact = true,
               icon = Icons.New,
               content = "Program",

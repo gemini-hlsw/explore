@@ -131,8 +131,7 @@ object ProgramTable {
                 textClass = ExploreStyles.ProgramName,
                 inputClass = ExploreStyles.ProgramNameInput,
                 editButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameEdit,
-                deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete,
-                deleteButtonIcon = Icons.Eraser.reuseAlways
+                deleteButtonClass = ExploreStyles.BlendedButton |+| ExploreStyles.ProgramNameDelete
               )
             )
             .setWidth(1)
