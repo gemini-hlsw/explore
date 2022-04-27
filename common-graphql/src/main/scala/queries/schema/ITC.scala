@@ -123,10 +123,10 @@ trait ITC {
     type CloudExtinction                     = enum.CloudExtinction
     type WaterVapor                          = enum.WaterVapor
     type SkyBackground                       = enum.SkyBackground
-    type GmosNorthDisperser                  = enum.GmosNorthDisperser
+    type GmosNorthDisperser                  = enum.GmosNorthGrating
     type GmosNorthFilter                     = enum.GmosNorthFilter
     type GmosNorthFpu                        = enum.GmosNorthFpu
-    type GmosSouthDisperser                  = enum.GmosSouthDisperser
+    type GmosSouthDisperser                  = enum.GmosSouthGrating
     type GmosSouthFilter                     = enum.GmosSouthFilter
     type GmosSouthFpu                        = enum.GmosSouthFpu
     type GmosCustomSlitWidth                 = enum.GmosCustomSlitWidth

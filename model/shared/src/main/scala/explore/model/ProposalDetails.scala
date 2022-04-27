@@ -4,7 +4,7 @@
 package explore.model
 
 import cats._
-import explore.model.enum._
+import lucuma.core.enum._
 import explore.model.refined._
 import lucuma.core.model.Partner
 import lucuma.core.model.StandardUser

@@ -14,10 +14,10 @@ import explore.model.GmosSouthLongSlit
 import lucuma.core.util.arb.ArbGid._
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthGrating
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFilter
-import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GmosSouthGrating
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.math.Angle
 import lucuma.core.math.arb.ArbAngle
@@ -28,19 +28,19 @@ trait ArbScienceConfiguration {
   implicit val arbGmosNorthLongSlit = Arbitrary[GmosNorthLongSlit] {
     for {
       filter    <- arbitrary[Option[GmosNorthFilter]]
-      disperser <- arbitrary[GmosNorthDisperser]
+      grating   <- arbitrary[GmosNorthGrating]
       fpu       <- arbitrary[GmosNorthFpu]
       slitWidth <- arbitrary[Angle]
-    } yield GmosNorthLongSlit(filter, disperser, fpu, slitWidth)
+    } yield GmosNorthLongSlit(filter, grating, fpu, slitWidth)
   }
 
   implicit val arbGmosSouthLongSlit = Arbitrary[GmosSouthLongSlit] {
     for {
       filter    <- arbitrary[Option[GmosSouthFilter]]
-      disperser <- arbitrary[GmosSouthDisperser]
+      grating   <- arbitrary[GmosSouthGrating]
       fpu       <- arbitrary[GmosSouthFpu]
       slitWidth <- arbitrary[Angle]
-    } yield GmosSouthLongSlit(filter, disperser, fpu, slitWidth)
+    } yield GmosSouthLongSlit(filter, grating, fpu, slitWidth)
   }
 
   implicit val arbScienceConfiguration = Arbitrary[ScienceConfiguration] {
@@ -52,11 +52,11 @@ trait ArbScienceConfiguration {
   }
 
   implicit val cogenGmosNorthLongSlit: Cogen[GmosNorthLongSlit] =
-    Cogen[(Option[GmosNorthFilter], GmosNorthDisperser, GmosNorthFpu, Angle)]
+    Cogen[(Option[GmosNorthFilter], GmosNorthGrating, GmosNorthFpu, Angle)]
       .contramap(o => (o.filter, o.disperser, o.fpu, o.slitWidth))
 
   implicit val cogenGmosSouthLongSlit: Cogen[GmosSouthLongSlit] =
-    Cogen[(Option[GmosSouthFilter], GmosSouthDisperser, GmosSouthFpu, Angle)]
+    Cogen[(Option[GmosSouthFilter], GmosSouthGrating, GmosSouthFpu, Angle)]
       .contramap(o => (o.filter, o.disperser, o.fpu, o.slitWidth))
 
   implicit val cogenScienceConfiguration: Cogen[ScienceConfiguration] =

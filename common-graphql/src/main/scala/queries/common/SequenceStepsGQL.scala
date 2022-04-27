@@ -169,12 +169,12 @@ object SequenceStepsGQL {
     }
     object SeqSite       {
       sealed trait North extends SeqSite {
-        type Disperser = enum.GmosNorthDisperser
+        type Disperser = enum.GmosNorthGrating
         type Fpu       = enum.GmosNorthFpu
         type Filter    = enum.GmosNorthFilter
       }
       sealed trait South extends SeqSite {
-        type Disperser = enum.GmosSouthDisperser
+        type Disperser = enum.GmosSouthGrating
         type Fpu       = enum.GmosSouthFpu
         type Filter    = enum.GmosSouthFilter
       }

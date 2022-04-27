@@ -8,10 +8,10 @@ import cats.syntax.all._
 import io.circe.Decoder
 import io.circe._
 import io.circe.generic.semiauto._
-import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthGrating
 import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthFpu
-import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GmosSouthGrating
 import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.math.Angle
@@ -38,7 +38,7 @@ object ScienceConfiguration {
 
 final case class GmosNorthLongSlit(
   filter:    Option[GmosNorthFilter],
-  disperser: GmosNorthDisperser,
+  disperser: GmosNorthGrating,
   fpu:       GmosNorthFpu,
   slitWidth: Angle
 ) extends ScienceConfiguration
@@ -52,7 +52,7 @@ object GmosNorthLongSlit {
 
 final case class GmosSouthLongSlit(
   filter:    Option[GmosSouthFilter],
-  disperser: GmosSouthDisperser,
+  disperser: GmosSouthGrating,
   fpu:       GmosSouthFpu,
   slitWidth: Angle
 ) extends ScienceConfiguration
