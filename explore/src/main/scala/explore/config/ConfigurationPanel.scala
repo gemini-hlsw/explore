@@ -5,7 +5,7 @@ package explore.config
 
 import cats.syntax.all._
 import coulomb.Quantity
-import crystal.react.ReuseView
+import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
 import crystal.react.reuse._
@@ -20,7 +20,9 @@ import explore.implicits._
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
 import explore.model.SpectroscopyConfigurationOptions
+import explore.model.PosAngle
 import explore.model.display._
+import explore.model.syntax.all._
 import explore.model.reusability._
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
@@ -39,6 +41,15 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+import explore.model.enum.PosAngleOptions
+import explore.targeteditor.InputWithUnits
+import lucuma.core.math.Angle
+import monocle.Lens
+import lucuma.ui.optics.ValidFormatInput
+import lucuma.ui.optics.ChangeAuditor
+import explore.model.TruncatedPA
+import cats.data.Validated
+import cats.data.NonEmptyChain
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -94,12 +105,44 @@ object ConfigurationPanel {
       op.runS(SpectroscopyRequirementsData()).value
     }
 
+  private val unsafePosAnglePosOptionsLens: Lens[PosAngle, PosAngleOptions] =
+    Lens[PosAngle, PosAngleOptions](_.toPosAngleOption)((a: PosAngleOptions) =>
+      ((b: PosAngle) => { println(s"opt $a ${a.toPosAngle(b.angle)}"); a.toPosAngle(b.angle) })
+    )
+
+  private val unsafePosAngleAngleLens: Lens[PosAngle, TruncatedPA] =
+    Lens[PosAngle, TruncatedPA] {
+      case PosAngle.Fixed(a)               => TruncatedPA(a)
+      case PosAngle.AllowFlip(a)           => TruncatedPA(a)
+      case PosAngle.AverageParallactic(a)  => TruncatedPA(a)
+      case PosAngle.ParallacticOverride(a) => TruncatedPA(a)
+    } { (a: TruncatedPA) => (b: PosAngle) =>
+      (b, a) match {
+        case (PosAngle.Fixed(_), a)               => PosAngle.Fixed(a.angle)
+        case (PosAngle.AllowFlip(_), a)           => PosAngle.AllowFlip(a.angle)
+        case (PosAngle.ParallacticOverride(_), a) => PosAngle.ParallacticOverride(a.angle)
+        case (PosAngle.AverageParallactic(_), a)  => PosAngle.AverageParallactic(a.angle)
+      }
+    }
+  import lucuma.core.syntax.string._
+
+  val truncatedPAAngle = ValidFormatInput[TruncatedPA](
+    s => {
+      val ota = s.parseDoubleOption
+        .map(Angle.fromDoubleDegrees)
+        .map(TruncatedPA(_))
+      Validated.fromOption(ota, NonEmptyChain("Invalid Angle"))
+    },
+    pa => f"${pa.angle.toDoubleDegrees}%.2f"
+  )
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
+      .useStateViewWithReuse(PosAngle.Default)
       .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, imaging) =>
+      .renderWithReuse { (props, mode, posAngle, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
         val requirementsCtx            = props.scienceDataUndo.map(_.zoom(ScienceData.requirements))
 
@@ -119,13 +162,40 @@ object ConfigurationPanel {
             .withOnMod(conf => setScienceMode(props.obsId, conf).runAsync)
         )
 
+        val posAngleOptionsView = posAngle.zoom(unsafePosAnglePosOptionsLens)
+        val posAngleAngleView   = posAngle.zoom(unsafePosAngleAngleLens)
+
         <.div(
           ExploreStyles.ConfigurationGrid,
           props.renderInTitle(
             <.span(ExploreStyles.TitleUndoButtons)(UndoButtons(props.scienceDataUndo))
           ),
           Form(size = Small)(
-            ExploreStyles.Grid,
+            ExploreStyles.Compact,
+            ExploreStyles.ExploreForm,
+            ExploreStyles.ObsConfigurationForm
+          )(
+            <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
+            EnumViewSelect[ReuseView, PosAngleOptions](id = "pos-angle-alternative",
+                                                       value = posAngleOptionsView
+            ),
+            <.div(
+              ExploreStyles.SignalToNoiseAt,
+              InputWithUnits[ReuseView, TruncatedPA](
+                id = "pos-angle-value",
+                clazz = Css.Empty,
+                value = posAngleAngleView,
+                units = "° E of N",
+                validFormat = truncatedPAAngle,
+                changeAuditor = ChangeAuditor.accept.decimal(2),
+                disabled = posAngle.get match {
+                  case PosAngle.AverageParallactic(_) => true
+                  case _                              => false
+                }
+              )
+            )
+          ),
+          Form(size = Small)(
             ExploreStyles.Compact,
             ExploreStyles.ExploreForm,
             ExploreStyles.ConfigurationForm

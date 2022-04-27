@@ -277,6 +277,7 @@ object ExploreStyles {
   val SkipToNext: Css  = Css("explore-skip-to-next")
 
   // Configuration tile
+  val ObsConfigurationForm: Css      = Css("explore-obs-configuration-form")
   val ConfigurationForm: Css         = Css("explore-configuration-form")
   val ConfigurationGrid: Css         = Css("explore-configuration-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
