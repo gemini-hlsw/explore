@@ -12,10 +12,9 @@ import explore.model.ScienceConfiguration
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.PortDisposition
-import lucuma.core.geom.GmosOiwfsProbeArm
-import lucuma.core.geom.GmosScienceAreaGeometry
+import lucuma.core.geom.gmos
 import lucuma.core.geom.ShapeExpression
-import lucuma.core.geom.svg._
+import react.aladin.visualization.svg._
 import lucuma.core.geom.syntax.shapeexpression._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -54,25 +53,21 @@ object GmosGeometry {
     configuration match {
       case Some(GmosNorthLongSlit(_, _, fpu, _)) =>
         NonEmptyMap.of(
-          (Css("gmos-science-ccd"), GmosScienceAreaGeometry.imaging ⟲ posAngle),
-          (Css("gmos-fpu"), GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
+          (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
         )
       case Some(GmosSouthLongSlit(_, _, fpu, _)) =>
         NonEmptyMap.of(
-          (Css("gmos-science-ccd"), GmosScienceAreaGeometry.imaging ⟲ posAngle),
-          (Css("gmos-fpu"),
-           GmosScienceAreaGeometry.shapeAt(posAngle, Offset.Zero, fpu.asRight.some)
-          )
+          (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
+          (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asRight.some))
         )
       case _                                     =>
         NonEmptyMap.of(
           (Css("gmos-probe"),
-           GmosOiwfsProbeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)
+           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)
           ),
-          (Css("gmos-patrol-field"),
-           GmosOiwfsProbeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)
-          ),
-          (Css("gmos-science-ccd-offset"), GmosScienceAreaGeometry.imaging ↗ offsetPos ⟲ posAngle)
+          (Css("gmos-patrol-field"), gmos.probeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)),
+          (Css("gmos-science-ccd-offset"), gmos.scienceArea.imaging ↗ offsetPos ⟲ posAngle)
         )
     }
 

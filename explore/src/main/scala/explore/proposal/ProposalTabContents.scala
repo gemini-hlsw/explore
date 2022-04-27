@@ -17,7 +17,7 @@ import eu.timepit.refined.numeric._
 import explore.components.WIP
 import explore.implicits._
 import explore.model._
-import explore.model.enum._
+import lucuma.core.enum._
 import explore.model.refined._
 import explore.model.reusability._
 import fs2.concurrent.SignallingRef

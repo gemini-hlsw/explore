@@ -84,9 +84,9 @@ object SpectroscopyModesTable {
 
   val decFormat = new DecimalFormat("0.###")
 
-  val disperserDisplay: Display[ModeDisperser] = Display.byShortName {
-    case ModeDisperser.NoDisperser      => "-"
-    case ModeDisperser.SomeDisperser(t) => t
+  val gratingDisplay: Display[ModeGrating] = Display.byShortName {
+    case ModeGrating.NoGrating      => "-"
+    case ModeGrating.SomeGrating(t) => t
   }
 
   def column[V](id: ColId, accessor: SpectroscopyModeRow => V) =
@@ -98,7 +98,7 @@ object SpectroscopyModesTable {
   val InstrumentColumnId: ColId  = "instrument"
   val SlitWidthColumnId: ColId   = "slit_width"
   val SlitLengthColumnId: ColId  = "slit_length"
-  val DisperserColumnId: ColId   = "disperser"
+  val GratingColumnId: ColId     = "grating"
   val FilterColumnId: ColId      = "filter"
   val CoverageColumnId: ColId    = "coverage"
   val FPUColumnId: ColId         = "fpu"
@@ -111,7 +111,7 @@ object SpectroscopyModesTable {
       InstrumentColumnId  -> "Instrument",
       SlitWidthColumnId   -> "Slit Width",
       SlitLengthColumnId  -> "Slit Length",
-      DisperserColumnId   -> "Disperser",
+      GratingColumnId     -> "Grating",
       FilterColumnId      -> "Filter",
       FPUColumnId         -> "FPU",
       CoverageColumnId    -> "Coverage",
@@ -128,13 +128,13 @@ object SpectroscopyModesTable {
   val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.size).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  def formatDisperser(disperser: InstrumentRow#Disperser): String = disperser match {
-    case f: GmosSouthDisperser => f.shortName
-    case f: GmosNorthDisperser => f.shortName
-    case f: F2Disperser        => f.shortName
-    case f: GpiDisperser       => f.shortName
-    case f: GnirsDisperser     => f.shortName
-    case r                     => r.toString
+  def formatGrating(grating: InstrumentRow#Grating): String = grating match {
+    case f: GmosSouthGrating => f.shortName
+    case f: GmosNorthGrating => f.shortName
+    case f: F2Disperser      => f.shortName
+    case f: GpiDisperser     => f.shortName
+    case f: GnirsDisperser   => f.shortName
+    case r                   => r.toString
   }
 
   def formatFilter(filter: InstrumentRow#Filter): String = filter match {
@@ -275,8 +275,8 @@ object SpectroscopyModesTable {
         .setMinWidth(100)
         .setMaxWidth(100)
         .setSortType(DefaultSortTypes.number),
-      column(DisperserColumnId, SpectroscopyModeRow.disperser.get)
-        .setCell(c => formatDisperser(c.value))
+      column(GratingColumnId, SpectroscopyModeRow.grating.get)
+        .setCell(c => formatGrating(c.value))
         .setWidth(95)
         .setMinWidth(95)
         .setMaxWidth(95),
@@ -312,12 +312,12 @@ object SpectroscopyModesTable {
 
   protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceConfiguration] =
     row.instrument match {
-      case GmosNorthSpectroscopyRow(disperser, fpu, filter)
+      case GmosNorthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosNorthLongSlit(filter, disperser, fpu, row.slitWidth.size).some
-      case GmosSouthSpectroscopyRow(disperser, fpu, filter)
+        GmosNorthLongSlit(filter, grating, fpu, row.slitWidth.size).some
+      case GmosSouthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosSouthLongSlit(filter, disperser, fpu, row.slitWidth.size).some
+        GmosSouthLongSlit(filter, grating, fpu, row.slitWidth.size).some
       case _ => none
     }
 

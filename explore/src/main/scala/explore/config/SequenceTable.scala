@@ -10,10 +10,10 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.all.svg._
 import japgolly.scalajs.react.vdom.html_<^._
-import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthGrating
 import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthFpu
-import lucuma.core.enum.GmosSouthDisperser
+import lucuma.core.enum.GmosSouthGrating
 import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.StepType
@@ -43,14 +43,14 @@ object SequenceTable {
     def filterName(filter:       Site#Filter): String
   }
   implicit object NorthSiteResolver extends SiteResolver[SeqSite.North] {
-    def disperserName(disperser: GmosNorthDisperser): String = disperser.shortName
-    def fpuName(fpu: GmosNorthFpu): String                   = fpu.shortName
-    def filterName(filter: GmosNorthFilter): String          = filter.shortName
+    def disperserName(disperser: GmosNorthGrating): String = disperser.shortName
+    def fpuName(fpu: GmosNorthFpu): String                 = fpu.shortName
+    def filterName(filter: GmosNorthFilter): String        = filter.shortName
   }
   implicit object SouthSiteResolver extends SiteResolver[SeqSite.South] {
-    def disperserName(disperser: GmosSouthDisperser): String = disperser.shortName
-    def fpuName(fpu: GmosSouthFpu): String                   = fpu.shortName
-    def filterName(filter: GmosSouthFilter): String          = filter.shortName
+    def disperserName(disperser: GmosSouthGrating): String = disperser.shortName
+    def fpuName(fpu: GmosSouthFpu): String                 = fpu.shortName
+    def filterName(filter: GmosSouthFilter): String        = filter.shortName
   }
 
   private case class StepLine[Site <: SeqSite](
@@ -134,7 +134,7 @@ object SequenceTable {
       .setCell(_.value.map(rightAligned)),
     StepTable
       .Column("disperser", _.disperserName)
-      .setHeader("Disperser")
+      .setHeader("Grating")
       .setCell(_.value.orEmpty),
     StepTable
       .Column("filter", _.filterName)

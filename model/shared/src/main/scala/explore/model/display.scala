@@ -5,7 +5,6 @@ package explore.model
 
 import cats.syntax.all._
 import eu.timepit.refined.cats._
-import explore.model.enum._
 import lucuma.core.enum._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange

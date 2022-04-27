@@ -182,12 +182,12 @@ package itc {
 
     implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
       def toGmosNITCInput: Input[GmosNITCInput] =
-        GmosNITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
+        GmosNITCInput(r.grating, r.fpu, filter = r.filter.orIgnore).assign
     }
 
     implicit class GmosSouthSpectropyRowOps(val r: GmosSouthSpectroscopyRow) extends AnyVal {
       def toGmosSITCInput: Input[GmosSITCInput] =
-        GmosSITCInput(r.disperser, r.fpu, filter = r.filter.orIgnore).assign
+        GmosSITCInput(r.grating, r.fpu, filter = r.filter.orIgnore).assign
     }
 
     implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
