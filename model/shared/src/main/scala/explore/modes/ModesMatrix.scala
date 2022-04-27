@@ -82,12 +82,12 @@ object ModeFilter {
     Enumerated.of(NoFilter, SomeFilter)
 }
 
-sealed trait ModeDisperser extends Product with Serializable
+sealed trait ModeGrating extends Product with Serializable
 
-object ModeDisperser {
+object ModeGrating {
   // At the moment we only care about the presence of filter
-  case object NoDisperser               extends ModeDisperser
-  case class SomeDisperser(tag: String) extends ModeDisperser
+  case object NoGrating               extends ModeGrating
+  case class SomeGrating(tag: String) extends ModeGrating
 }
 
 sealed trait ModeSpatialDimension extends Product with Serializable
@@ -146,7 +146,7 @@ case class ModeRow(
   gratingMinWavelength: ModeGratingMinWavelength,
   gratingMaxWavelength: ModeGratingMaxWavelength,
   filter:               ModeFilter,
-  disperser:            ModeDisperser,
+  grating:              ModeGrating,
   slitWidth:            ModeSlitSize,
   ao:                   ModeAO,
   spatialDimensions:    ModeSpatialDimension,
@@ -157,8 +157,8 @@ case class ModeRow(
 )
 
 object ModeRow {
-  val instrument: Lens[ModeRow, Instrument]   = GenLens[ModeRow](_.instrument)
-  val disperser: Lens[ModeRow, ModeDisperser] = GenLens[ModeRow](_.disperser)
+  val instrument: Lens[ModeRow, Instrument] = GenLens[ModeRow](_.instrument)
+  val grating: Lens[ModeRow, ModeGrating]   = GenLens[ModeRow](_.grating)
 }
 
 trait ModesMatrixDecoders extends Decoders {
@@ -194,11 +194,11 @@ trait ModesMatrixDecoders extends Decoders {
         case _      => ModeFilter.SomeFilter
       }
 
-  implicit val modeDisperser: CellDecoder[ModeDisperser] =
+  implicit val modeGrating: CellDecoder[ModeGrating] =
     CellDecoder.stringDecoder
       .map {
-        case "none" => ModeDisperser.NoDisperser
-        case x      => ModeDisperser.SomeDisperser(x)
+        case "none" => ModeGrating.NoGrating
+        case x      => ModeGrating.SomeGrating(x)
       }
 
   implicit val modeSpatialDimensionDecoder: CellDecoder[ModeSpatialDimension] =
@@ -251,7 +251,7 @@ trait ModesMatrixDecoders extends Decoders {
         gmin <- row.as[ModeGratingMinWavelength]("grcwlen_min")
         gmax <- row.as[ModeGratingMaxWavelength]("grcwlen_max")
         mf   <- row.as[ModeFilter]("filter")
-        di   <- row.as[ModeDisperser]("disperser")
+        di   <- row.as[ModeGrating]("disperser")
         sw   <- row.as[ModeSlitSize]("slit_width")
         ao   <- row.as[ModeAO]("ao")
         sd   <- row.as[ModeSpatialDimension]("spatial_dims")

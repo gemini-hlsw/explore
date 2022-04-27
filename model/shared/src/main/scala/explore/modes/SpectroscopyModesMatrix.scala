@@ -29,8 +29,8 @@ import spire.std.int._
 sealed trait InstrumentRow {
   def instrument: Instrument
 
-  type Disperser
-  val disperser: Disperser
+  type Grating
+  val grating: Grating
 
   type FPU
   val fpu: FPU
@@ -38,64 +38,64 @@ sealed trait InstrumentRow {
   type Filter
   val filter: Filter
 
-  override def toString(): String = s"Mode: ${instrument.shortName}, $disperser, $filter, $fpu"
+  override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
 final case class GmosNorthSpectroscopyRow(
-  disperser: GmosNorthDisperser,
-  fpu:       GmosNorthFpu,
-  filter:    Option[GmosNorthFilter]
+  grating: GmosNorthGrating,
+  fpu:     GmosNorthFpu,
+  filter:  Option[GmosNorthFilter]
 ) extends InstrumentRow {
-  type Disperser = GmosNorthDisperser
-  type Filter    = Option[GmosNorthFilter]
-  type FPU       = GmosNorthFpu
+  type Grating = GmosNorthGrating
+  type Filter  = Option[GmosNorthFilter]
+  type FPU     = GmosNorthFpu
   val instrument = Instrument.GmosNorth
 }
 
 final case class GmosSouthSpectroscopyRow(
-  disperser: GmosSouthDisperser,
-  fpu:       GmosSouthFpu,
-  filter:    Option[GmosSouthFilter]
+  grating: GmosSouthGrating,
+  fpu:     GmosSouthFpu,
+  filter:  Option[GmosSouthFilter]
 ) extends InstrumentRow {
-  type Disperser = GmosSouthDisperser
-  type Filter    = Option[GmosSouthFilter]
-  type FPU       = GmosSouthFpu
+  type Grating = GmosSouthGrating
+  type Filter  = Option[GmosSouthFilter]
+  type FPU     = GmosSouthFpu
   val instrument = Instrument.GmosSouth
 }
 
-final case class Flamingos2SpectroscopyRow(disperser: F2Disperser, filter: F2Filter)
+final case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter)
     extends InstrumentRow {
-  type Disperser = F2Disperser
-  type Filter    = F2Filter
-  type FPU       = Unit
+  type Grating = F2Disperser
+  type Filter  = F2Filter
+  type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Flamingos2
 }
 
-final case class GpiSpectroscopyRow(disperser: GpiDisperser, filter: GpiFilter)
+final case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter)
     extends InstrumentRow {
-  type Disperser = GpiDisperser
-  type Filter    = GpiFilter
-  type FPU       = Unit
+  type Grating = GpiDisperser
+  type Filter  = GpiFilter
+  type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Gpi
 }
 
-final case class GnirsSpectroscopyRow(disperser: GnirsDisperser, filter: GnirsFilter)
+final case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
     extends InstrumentRow {
-  type Disperser = GnirsDisperser
-  type Filter    = GnirsFilter
-  type FPU       = Unit
+  type Grating = GnirsDisperser
+  type Filter  = GnirsFilter
+  type FPU     = Unit
   val fpu        = ()
   val instrument = Instrument.Gnirs
 }
 
 // Used for Instruments not fully defined
-final case class GenericSpectroscopyRow(i: Instrument, disperser: String, filter: NonEmptyString)
+final case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmptyString)
     extends InstrumentRow {
-  type Disperser = String
-  type Filter    = NonEmptyString
-  type FPU       = Unit
+  type Grating = String
+  type Filter  = NonEmptyString
+  type FPU     = Unit
   val fpu        = ()
   val instrument = i
 }
@@ -121,14 +121,14 @@ object InstrumentRow {
   def decodeGmosSouthFPU(fpu: NonEmptyString): Either[DecoderError, GmosSouthFpu] =
     decodeEnum[GmosSouthFpu, String](fpu.value, (i, f) => i === f.shortName)
 
-  def decodeGmosSouthDisperser(disperser: String): Either[DecoderError, GmosSouthDisperser] =
-    decodeEnum[GmosSouthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
+  def decodeGmosSouthGrating(grating: String): Either[DecoderError, GmosSouthGrating] =
+    decodeEnum[GmosSouthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosNorthFilter]] =
     decodeOptionalEnum[GmosNorthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
-  def decodeGmosNorthDisperser(disperser: String): Either[DecoderError, GmosNorthDisperser] =
-    decodeEnum[GmosNorthDisperser, String](disperser, (i, f) => !f.obsolete && i === f.shortName)
+  def decodeGmosNorthGrating(grating: String): Either[DecoderError, GmosNorthGrating] =
+    decodeEnum[GmosNorthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
 
   def decodeGmosNorthFPU(fpu: NonEmptyString): Either[DecoderError, GmosNorthFpu] =
     decodeEnum[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
@@ -136,60 +136,56 @@ object InstrumentRow {
   def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
     decodeEnum[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
-  def decodeF2Disperser(disperser: String): Either[DecoderError, F2Disperser] =
-    decodeEnum[F2Disperser, String](disperser, _ === _.shortName)
+  def decodeF2Disperser(grating: String): Either[DecoderError, F2Disperser] =
+    decodeEnum[F2Disperser, String](grating, _ === _.shortName)
 
   def decodeGpiFilter(filter: NonEmptyString): Either[DecoderError, GpiFilter] =
     decodeEnum[GpiFilter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
 
-  def decodeGpiDisperser(disperser: String): Either[DecoderError, GpiDisperser] =
-    decodeEnum[GpiDisperser, String](disperser, _ === _.shortName)
+  def decodeGpiDisperser(grating: String): Either[DecoderError, GpiDisperser] =
+    decodeEnum[GpiDisperser, String](grating, _ === _.shortName)
 
   def decodeGnirsFilter(filter: NonEmptyString): Either[DecoderError, GnirsFilter] =
     decodeEnum[GnirsFilter, String](filter.value, _ === _.shortName)
 
-  def decodeGnirsDisperser(disperser: String): Either[DecoderError, GnirsDisperser] =
-    decodeEnum[GnirsDisperser, String](disperser, _ === _.shortName)
+  def decodeGnirsDisperser(grating: String): Either[DecoderError, GnirsDisperser] =
+    decodeEnum[GnirsDisperser, String](grating, _ === _.shortName)
 
   def decode(
     instrument0: Instrument,
-    disperser0:  String,
+    grating0:    String,
     filter0:     NonEmptyString,
     fpu0:        NonEmptyString
   ): Either[DecoderError, InstrumentRow] =
     instrument0 match {
       case Instrument.GmosNorth  =>
-        (decodeGmosNorthDisperser(disperser0),
-         decodeGmosNorthFPU(fpu0),
-         decodeGmosNorthFilter(filter0)
-        ).mapN(
-          GmosNorthSpectroscopyRow.apply
-        )
+        (decodeGmosNorthGrating(grating0), decodeGmosNorthFPU(fpu0), decodeGmosNorthFilter(filter0))
+          .mapN(
+            GmosNorthSpectroscopyRow.apply
+          )
       case Instrument.GmosSouth  =>
-        (decodeGmosSouthDisperser(disperser0),
-         decodeGmosSouthFPU(fpu0),
-         decodeGmosSouthFilter(filter0)
-        ).mapN(
-          GmosSouthSpectroscopyRow.apply
-        )
+        (decodeGmosSouthGrating(grating0), decodeGmosSouthFPU(fpu0), decodeGmosSouthFilter(filter0))
+          .mapN(
+            GmosSouthSpectroscopyRow.apply
+          )
       case Instrument.Flamingos2 =>
-        (decodeF2Disperser(disperser0), decodeF2Filter(filter0)).mapN(
+        (decodeF2Disperser(grating0), decodeF2Filter(filter0)).mapN(
           Flamingos2SpectroscopyRow.apply
         )
       case Instrument.Gpi        =>
-        (decodeGpiDisperser(disperser0), decodeGpiFilter(filter0)).mapN(GpiSpectroscopyRow.apply)
+        (decodeGpiDisperser(grating0), decodeGpiFilter(filter0)).mapN(GpiSpectroscopyRow.apply)
       case Instrument.Gnirs      =>
-        (decodeGnirsDisperser(disperser0), decodeGnirsFilter(filter0)).mapN(
+        (decodeGnirsDisperser(grating0), decodeGnirsFilter(filter0)).mapN(
           GnirsSpectroscopyRow.apply
         )
-      case i                     => GenericSpectroscopyRow(i, disperser0, filter0).asRight
+      case i                     => GenericSpectroscopyRow(i, grating0, filter0).asRight
     }
 
   val instrument: Getter[InstrumentRow, Instrument] =
     Getter[InstrumentRow, Instrument](_.instrument)
 
-  def disperser: Getter[InstrumentRow, InstrumentRow#Disperser] =
-    Getter[InstrumentRow, InstrumentRow#Disperser](_.disperser)
+  def grating: Getter[InstrumentRow, InstrumentRow#Grating] =
+    Getter[InstrumentRow, InstrumentRow#Grating](_.grating)
 
   def filter: Getter[InstrumentRow, InstrumentRow#Filter] =
     Getter[InstrumentRow, InstrumentRow#Filter](_.filter)
@@ -240,8 +236,8 @@ object SpectroscopyModeRow {
   val slitLength: Lens[SpectroscopyModeRow, ModeSlitSize] =
     GenLens[SpectroscopyModeRow](_.slitLength)
 
-  def disperser: Getter[SpectroscopyModeRow, InstrumentRow#Disperser] =
-    instrumentRow.andThen(InstrumentRow.disperser)
+  def grating: Getter[SpectroscopyModeRow, InstrumentRow#Grating] =
+    instrumentRow.andThen(InstrumentRow.grating)
 
   def fpu: Lens[SpectroscopyModeRow, FocalPlane] =
     GenLens[SpectroscopyModeRow](_.focalPlane)

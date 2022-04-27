@@ -3,14 +3,13 @@
 
 package explore.common
 
-import cats.data.Validated
 import cats.effect._
 import cats.syntax.all._
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Constants
 import lucuma.catalog.CatalogTargetResult
-import lucuma.catalog.VoTableParser
-import lucuma.core.enum.CatalogName
+import lucuma.catalog.CatalogSearch
+import lucuma.catalog.CatalogAdapter
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
@@ -57,11 +56,11 @@ object SimbadSearch {
           case Status.Successful(r) =>
             Logger[F].debug("Simbad search succeeded") >>
               r.bodyText
-                .through(VoTableParser.targets(CatalogName.Simbad))
+                .through(CatalogSearch.siderealTargets(CatalogAdapter.Simbad))
                 .compile
                 .toList
                 .map {
-                  _.collect { case Validated.Valid(r) => r }
+                  _.collect { case Right(r) => r }
                 }
           case _                    =>
             Logger[F].error(s"Simbad search failed for term [$term]").as(List.empty)
