@@ -143,6 +143,7 @@ object TargetTabContents {
             .runAsyncAndForget
 
     val treeWidth: Int = panels.get.treeWidth.toInt
+    println(s"target tr $resize $treeWidth")
 
     val selectedView: ReuseView[SelectedPanel] = panels.zoom(TwoPanelState.selected)
 

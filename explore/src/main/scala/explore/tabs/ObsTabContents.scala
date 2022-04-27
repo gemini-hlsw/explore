@@ -287,6 +287,7 @@ object ObsTabContents {
             .runAsyncAndForget
 
     val treeWidth    = panels.get.treeWidth.toInt
+    println(s"obs tr $resize $treeWidth")
     val selectedView = panels.zoom(TwoPanelState.selected)
 
     // Tree area
