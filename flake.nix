@@ -25,6 +25,7 @@
           packages = [
             pkgs.nodePackages.vscode-langservers-extracted
             pkgs.nodePackages.prettier
+            pkgs.nodePackages.graphqurl
           ];
           typelevelShell = {
             nodejs.enable = true;

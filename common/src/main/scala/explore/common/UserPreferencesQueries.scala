@@ -13,6 +13,7 @@ import explore.model.GridLayoutSection
 import explore.model.ResizableSection
 import explore.model.layout._
 import lucuma.core.math.Angle
+import lucuma.core.math.Offset
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import queries.common.UserPreferencesQueriesGQL._
@@ -159,15 +160,23 @@ object UserPreferencesQueries {
       uid:         User.Id,
       tid:         Target.Id,
       defaultFov:  Angle
-    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[Angle] =
-      (for {
+    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[(Angle, Offset)] =
+      for {
         r <-
           query[F](uid.show, tid.show)
             .map { r =>
-              r.lucuma_target_preferences_by_pk.map(_.fov)
+              r.lucuma_target_preferences_by_pk.map(result =>
+                (result.fov, result.viewOffsetP, result.viewOffsetQ)
+              )
             }
             .handleError(_ => none)
-      } yield r.map(Angle.fromMicroarcseconds)).map(_.getOrElse(defaultFov))
+      } yield {
+        val fov    = r.map(u => Angle.fromMicroarcseconds(u._1)).getOrElse(defaultFov)
+        val offset = r
+          .map(u => Offset(Angle.fromMicroarcseconds(u._2).p, Angle.fromMicroarcseconds(u._3).q))
+          .getOrElse(Offset.Zero)
+        (fov, offset)
+      }
   }
 
   implicit class UserTargetPreferencesUpsertOps(val self: UserTargetPreferencesUpsert.type)
@@ -197,6 +206,26 @@ object UserPreferencesQueries {
             ).assign
           ).assign
         )
+      ).attempt.void
+  }
+
+  implicit class UserTargetPreferencesUpdateOps(
+    val self: UserTargetPreferencesFovUpdate.type
+  ) extends AnyVal {
+    import self._
+
+    def updateViewOffset[F[_]: ApplicativeError[*[_], Throwable]](
+      uid:      User.Id,
+      targetId: Target.Id,
+      offset:   Offset
+    )(implicit
+      cl:       TransactionalClient[F, UserPreferencesDB]
+    ): F[Unit] =
+      execute[F](
+        user_id = uid.show,
+        target_id = targetId.show,
+        viewOffsetP = offset.p.toAngle.toMicroarcseconds,
+        viewOffsetQ = offset.q.toAngle.toMicroarcseconds
       ).attempt.void
   }
 }

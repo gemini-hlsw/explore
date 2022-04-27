@@ -3,23 +3,28 @@
 
 package explore.targeteditor
 
+import cats.syntax.all._
 import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.ScienceConfiguration
+import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
+import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Declination
+import lucuma.core.math.RightAscension
+import lucuma.core.math.Offset
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
 import react.aladin._
-import react.aladin.reusability._
 import react.common._
 import react.resizeDetector.hooks._
 
@@ -28,25 +33,46 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
   configuration:          Option[ScienceConfiguration],
-  fov:                    Fov,
+  options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
+  updateViewOffset:       Offset ==> Callback,
   centerOnTarget:         ReuseView[Boolean]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component) {
-  val aladinCoords: Coordinates = target.get
-  val aladinCoordsStr: String   = Coordinates.fromHmsDms.reverseGet(aladinCoords)
+  val baseCoordinates: Coordinates     = target.get
+  val baseCoordinatesForAladin: String = Coordinates.fromHmsDms.reverseGet(baseCoordinates)
 }
 
 object AladinContainer {
+
+  implicit class CoordinatesOps(val c: Coordinates) extends AnyVal {
+    def offsetBy(posAngle: Angle, o: Offset): Option[Coordinates] = {
+      val paCos  = posAngle.cos
+      val paSin  = posAngle.sin
+      val pDeg   = o.p.toAngle.toSignedDoubleDegrees
+      val qDeg   = o.q.toAngle.toSignedDoubleDegrees
+      val dRa    = pDeg * paCos + qDeg * paSin
+      val dDec   = -pDeg * paSin + qDeg * paCos
+      val decCos = c.dec.toAngle.cos
+
+      Declination
+        .fromDoubleDegrees(c.dec.toAngle.toSignedDoubleDegrees + dDec)
+        .filter(_ => decCos != 0)
+        .map { d =>
+          Coordinates(RightAscension.fromDoubleDegrees(c.ra.toAngle.toDoubleDegrees + dRa / decCos),
+                      d
+          )
+        }
+    }
+  }
+
   type Props       = AladinContainer
   type World2PixFn = Coordinates => Option[(Double, Double)]
   val DefaultWorld2PixFn: World2PixFn = (_: Coordinates) => None
 
   // This is used for screen coordinates, thus it doesn't need a lot of precission
   private implicit val doubleReuse                      = Reusability.double(1.0)
-  private implicit val fovReuse                         = exactFovReuse
-  protected implicit val propsReuse: Reusability[Props] =
-    Reusability.by((x: Props) => (x.target, x.configuration, x.fov))
+  protected implicit val propsReuse: Reusability[Props] = Reusability.derive
 
   val AladinComp = Aladin.component
 
@@ -96,9 +122,11 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // View coordinates (in case the user pans)
-      .useStateBy(_.aladinCoords)
+      .useStateBy { p =>
+        p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
+      }
       // Memoized svg
-      .useMemoBy((p, _) => (p.configuration, p.fov)) { case (p, _) =>
+      .useMemoBy((p, _) => (p.configuration, p.options)) { case (p, _) =>
         _ =>
           visualization
             .shapesToSvg(GmosGeometry.shapes(GmosGeometry.posAngle, p.configuration),
@@ -109,7 +137,7 @@ object AladinContainer {
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If needed center on target
-      .useEffectWithDepsBy((p, _, _, _) => (p.aladinCoords, p.centerOnTarget.get))(
+      .useEffectWithDepsBy((p, _, _, _) => (p.baseCoordinates, p.centerOnTarget.get))(
         (_, _, _, aladinRef) => { case (coords, center) =>
           aladinRef.get.asCBO
             .flatMapCB(
@@ -126,13 +154,18 @@ object AladinContainer {
       .useResizeDetector()
       // Update the world2pix function
       .useEffectWithDepsBy { (p, currentPos, _, aladinRef, _, resize) =>
-        (resize, p.fov, currentPos, aladinRef)
+        (resize, p.options, currentPos, aladinRef)
       } { (_, _, _, aladinRef, w, _) => _ =>
         aladinRef.get.asCBO.flatMapCB(_.backend.world2pixFn.flatMap(w.setState))
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.fov, p.configuration, currentPos, world2pix.value(p.aladinCoords), resize)
+        (p.options.fovAngle,
+         p.configuration,
+         currentPos,
+         world2pix.value(p.baseCoordinates),
+         resize
+        )
       ) { (_, _, svg, aladinRef, _, _) =>
         { case (_, _, _, off, _) =>
           off
@@ -152,8 +185,13 @@ object AladinContainer {
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
          */
-        def onPositionChanged(u: PositionChanged): Callback =
-          currentPos.setState(Coordinates(u.ra, u.dec)) *> props.centerOnTarget.set(false)
+        def onPositionChanged(u: PositionChanged): Callback = {
+          val viewCoords = Coordinates(u.ra, u.dec)
+          val viewOffset = props.baseCoordinates.diff(viewCoords).offset
+          currentPos.setState(Some(viewCoords)) *>
+            props.updateViewOffset(viewOffset) *>
+            props.centerOnTarget.set(false)
+        }
 
         def onZoom = (v: Fov) => props.updateFov(v)
 
@@ -167,6 +205,11 @@ object AladinContainer {
                 .void
             )
 
+        val baseCoordinatesForAladin: String =
+          currentPos.value
+            .map(Coordinates.fromHmsDms.reverseGet)
+            .getOrElse(props.baseCoordinatesForAladin)
+
         <.div(
           ExploreStyles.AladinContainerBody,
           // This is a bit tricky. Sometimes the height can be 0 or a very low number.
@@ -179,8 +222,8 @@ object AladinContainer {
                 ExploreStyles.TargetAladin,
                 showReticle = false,
                 showLayersControl = false,
-                target = props.aladinCoordsStr,
-                fov = props.fov.x,
+                target = baseCoordinatesForAladin,
+                fov = props.options.fovAngle,
                 showGotoControl = false,
                 customize = includeSvg _
               )

@@ -115,6 +115,8 @@ object UserPreferencesQueriesGQL {
       query target_preferences($user_id: String! = "", $targetId: String! = "") {
         lucuma_target_preferences_by_pk(target_id: $targetId, user_id: $user_id) {
           fov
+          viewOffsetP
+          viewOffsetQ
         }
       }
     """
@@ -126,6 +128,25 @@ object UserPreferencesQueriesGQL {
       """mutation target_preferences_upsert($objects: lucuma_target_insert_input! = {}) {
         insert_lucuma_target(objects: [$objects], on_conflict: {constraint: lucuma_target_pkey, update_columns: target_id}) {
           affected_rows
+        }
+      }"""
+  }
+
+  @GraphQL
+  trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
+    val document =
+      """ mutation update_target_fov($user_id: String!, $target_id: String!, $viewOffsetP: bigint!, $viewOffsetQ: bigint!) {
+        update_lucuma_target_preferences_by_pk(
+          pk_columns: {
+            user_id: $user_id,
+            target_id: $target_id
+          }
+          _set: {
+            viewOffsetP: $viewOffsetP,
+            viewOffsetQ: $viewOffsetQ
+          }
+        ) {
+          target_id
         }
       }"""
   }
