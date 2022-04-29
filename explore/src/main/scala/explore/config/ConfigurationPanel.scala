@@ -3,6 +3,8 @@
 
 package explore.config
 
+import cats.data.NonEmptyChain
+import cats.data.Validated
 import cats.syntax.all._
 import coulomb.Quantity
 import crystal.react._
@@ -19,37 +21,36 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
-import explore.model.SpectroscopyConfigurationOptions
 import explore.model.PosAngle
+import explore.model.SpectroscopyConfigurationOptions
+import explore.model.TruncatedPA
 import explore.model.display._
-import explore.model.syntax.all._
+import explore.model.enum.PosAngleOptions
 import explore.model.reusability._
+import explore.optics.ModelOptics._
+import explore.targeteditor.InputWithUnits
 import explore.undo.UndoContext
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.syntax._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum.ScienceMode
+import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.Micrometer
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
+import lucuma.core.syntax.string._
 import lucuma.ui.forms.EnumViewSelect
+import lucuma.ui.optics.ChangeAuditor
+import lucuma.ui.optics.ValidFormatInput
 import lucuma.ui.reusability._
 import monocle.Iso
+import monocle.Lens
 import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import explore.model.enum.PosAngleOptions
-import explore.targeteditor.InputWithUnits
-import lucuma.core.math.Angle
-import monocle.Lens
-import lucuma.ui.optics.ValidFormatInput
-import lucuma.ui.optics.ChangeAuditor
-import explore.model.TruncatedPA
-import cats.data.Validated
-import cats.data.NonEmptyChain
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -105,11 +106,7 @@ object ConfigurationPanel {
       op.runS(SpectroscopyRequirementsData()).value
     }
 
-  private val unsafePosAnglePosOptionsLens: Lens[PosAngle, PosAngleOptions] =
-    Lens[PosAngle, PosAngleOptions](_.toPosAngleOption)((a: PosAngleOptions) =>
-      ((b: PosAngle) => { println(s"opt $a ${a.toPosAngle(b.angle)}"); a.toPosAngle(b.angle) })
-    )
-
+  // Unsafe due to the angle truncation but usabe for the UI
   private val unsafePosAngleAngleLens: Lens[PosAngle, TruncatedPA] =
     Lens[PosAngle, TruncatedPA] {
       case PosAngle.Fixed(a)               => TruncatedPA(a)
@@ -124,9 +121,9 @@ object ConfigurationPanel {
         case (PosAngle.AverageParallactic(_), a)  => PosAngle.AverageParallactic(a.angle)
       }
     }
-  import lucuma.core.syntax.string._
 
-  val truncatedPAAngle = ValidFormatInput[TruncatedPA](
+  // Input for an angle in degrees with up to 2 decimals
+  private val truncatedPAAngle = ValidFormatInput[TruncatedPA](
     s => {
       val ota = s.parseDoubleOption
         .map(Angle.fromDoubleDegrees)
@@ -162,7 +159,7 @@ object ConfigurationPanel {
             .withOnMod(conf => setScienceMode(props.obsId, conf).runAsync)
         )
 
-        val posAngleOptionsView = posAngle.zoom(unsafePosAnglePosOptionsLens)
+        val posAngleOptionsView = posAngle.zoom(posAnglePosOptionsLens)
         val posAngleAngleView   = posAngle.zoom(unsafePosAngleAngleLens)
 
         <.div(

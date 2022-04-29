@@ -5,8 +5,8 @@ package explore.model.enum
 
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.util.Enumerated
 import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 
 sealed trait PosAngleOptions extends Product with Serializable {
   def tag: NonEmptyString
@@ -14,17 +14,20 @@ sealed trait PosAngleOptions extends Product with Serializable {
 }
 
 object PosAngleOptions {
-  case object Fixed               extends PosAngleOptions {
+  case object Fixed extends PosAngleOptions {
     override val tag = "Fixed"
   }
-  case object AllowFlip           extends PosAngleOptions {
+
+  case object AllowFlip extends PosAngleOptions {
     override val tag      = "AllowFlip"
     override val longName = "Allow 180° flip"
   }
-  case object AverageParallactic  extends PosAngleOptions {
+
+  case object AverageParallactic extends PosAngleOptions {
     override val tag      = "AverageParallactic"
     override val longName = "Average Parallactic"
   }
+
   case object ParallacticOverride extends PosAngleOptions {
     override val tag      = "ParallacticOverride"
     override val longName = "Parallactic Override"

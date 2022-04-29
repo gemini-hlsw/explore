@@ -4,6 +4,9 @@
 package explore.optics
 
 import coulomb._
+import explore.model.PosAngle
+import explore.model.enum.PosAngleOptions
+import explore.model.syntax.all._
 import lucuma.core.enum.Band
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.Constants._
@@ -53,6 +56,15 @@ trait ModelOptics {
         .getOption(sourceProfile)
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
     }
+
+  /**
+   * Used to convert pos angle and an enumeration for a UI selector
+   */
+  val posAnglePosOptionsLens: Lens[PosAngle, PosAngleOptions] =
+    Lens[PosAngle, PosAngleOptions](_.toPosAngleOption)((a: PosAngleOptions) =>
+      ((b: PosAngle) => a.toPosAngle(b.angle))
+    )
+
 }
 
 object ModelOptics extends ModelOptics

@@ -3,11 +3,12 @@
 
 package explore.model.syntax
 
-import explore.model.enum.PosAngleOptions
 import explore.model.PosAngle
+import explore.model.enum.PosAngleOptions
 import lucuma.core.math.Angle
 
 object all {
+
   implicit class PosAngleOptionsOps(val pa: PosAngleOptions) extends AnyVal {
     def toPosAngle(a: Angle): PosAngle = pa match {
       case PosAngleOptions.Fixed               => PosAngle.Fixed(a)

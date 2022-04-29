@@ -6,8 +6,6 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import lucuma.core.math.Angle
-import monocle.Focus
-import monocle.Lens
 
 sealed trait PosAngle {
   def angle: Angle
@@ -17,23 +15,14 @@ object PosAngle {
   case class Fixed(angle: Angle)               extends PosAngle {
     override def toString: String = s"Fixed(${angle.toDoubleDegrees})"
   }
-  object Fixed {
-    val angle: Lens[Fixed, Angle] = Focus[Fixed](_.angle)
-  }
   case class AllowFlip(angle: Angle)           extends PosAngle {
     override def toString: String = s"AllowFlip(${angle.toDoubleDegrees})"
-  }
-  object AllowFlip {
-    val angle: Lens[AllowFlip, Angle] = Focus[AllowFlip](_.angle)
   }
   case class AverageParallactic(angle: Angle)  extends PosAngle {
     override def toString: String = s"AverageParallactic(${angle.toDoubleDegrees})"
   }
   case class ParallacticOverride(angle: Angle) extends PosAngle {
     override def toString: String = s"ParallacticOverride(${angle.toDoubleDegrees})"
-  }
-  object ParallacticOverride {
-    val angle: Lens[ParallacticOverride, Angle] = Focus[ParallacticOverride](_.angle)
   }
 
   val Default: PosAngle = Fixed(Angle.Angle0)

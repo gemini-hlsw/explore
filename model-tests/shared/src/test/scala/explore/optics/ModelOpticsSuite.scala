@@ -3,10 +3,13 @@
 
 package explore.optics
 
+import explore.model.arb.ArbPosAngle
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.math.arb.ArbRedshift
 import lucuma.core.model.arb.ArbTarget
+import lucuma.core.util.arb.ArbEnumerated._
 import monocle.law.discipline.IsoTests
+import monocle.law.discipline.LensTests
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary._
@@ -15,7 +18,9 @@ class ModelOpticsSuite extends DisciplineSuite {
   import ArbRadialVelocity._
   import ArbRedshift._
   import ArbTarget._
+  import ArbPosAngle._
 
   checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalIso))
   checkAll("targetRV", OptionalTests(targetRV))
+  checkAll("posAngle", LensTests(posAnglePosOptionsLens))
 }
