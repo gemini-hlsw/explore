@@ -25,6 +25,7 @@ import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Offset
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
@@ -52,6 +53,7 @@ final case class AladinCell(
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
+  implicitly[Reusability[Pot[TargetVisualOptions]]]
   implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
   val component =
@@ -60,7 +62,7 @@ object AladinCell extends ModelOptics {
       // mouse coordinates, starts on the base
       .useStateBy(_.aladinCoords)
       // target options, will be read from the user preferences
-      .useState(Pot.pending[TargetVisualOptions])
+      .useStateViewWithReuse(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
@@ -68,9 +70,13 @@ object AladinCell extends ModelOptics {
         implicit val ctx = props.ctx
         UserTargetPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-          .flatMap(fov =>
-            options.setState(TargetVisualOptions.Default.copy(fov = fov).ready).to[IO]
-          )
+          .flatMap { case (fov, viewOffset) =>
+            options
+              .set(
+                TargetVisualOptions.Default.copy(fovAngle = fov, viewOffset = viewOffset).ready
+              )
+              .to[IO]
+          }
           .runAsyncAndForget
       }
       .renderWithReuse { (props, mouseCoords, options, center) =>
@@ -81,7 +87,7 @@ object AladinCell extends ModelOptics {
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
-            options.modState(_.map(_.copy(fov = newFov.x))) *>
+            options.mod(_.map(_.copy(fovAngle = newFov.x))) *>
               UserTargetPreferencesUpsert
                 .updateFov[IO](props.uid, props.tid, newFov.x)
                 .runAsync
@@ -89,25 +95,37 @@ object AladinCell extends ModelOptics {
                 .void
           }
 
+        def offsetSetter(props: Props, newOffset: Offset): Callback = {
+          implicit val ctx = props.ctx
+          options.mod(_.map(_.copy(viewOffset = newOffset))) *>
+            UserTargetPreferencesFovUpdate
+              .updateViewOffset[IO](props.uid, props.tid, newOffset)
+              .runAsync
+              .rateLimit(1.seconds, 1)
+              .void
+        }
+
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
             props.configuration,
-            Fov.square(t.fov),
+            t,
             coordinatesSetter,
             Reuse.currying(props).in(fovSetter _),
+            Reuse.currying(props).in(offsetSetter _),
             center
           ).withKey(props.aladinCoords.toString)
 
         val renderToolbar: TargetVisualOptions => VdomNode =
-          (t: TargetVisualOptions) => AladinToolbar(Fov.square(t.fov), mouseCoords.value): VdomNode
+          (t: TargetVisualOptions) =>
+            AladinToolbar(Fov.square(t.fovAngle), mouseCoords.value): VdomNode
 
         <.div(
           ExploreStyles.TargetAladinCell,
           <.div(
             ExploreStyles.AladinContainerColumn,
-            potRender[TargetVisualOptions](renderCell.reuseAlways)(options.value),
-            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.value),
+            potRender[TargetVisualOptions](renderCell.reuseAlways)(options.get),
+            potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.get),
             <.div(
               ExploreStyles.AladinCenterButton,
               Popup(
@@ -119,7 +137,7 @@ object AladinCell extends ModelOptics {
                     .clazz(ExploreStyles.Accented)
                 )
               )
-            ).when(options.value.toOption.isDefined)
+            ).when(options.get.toOption.isDefined)
           )
         )
       }
