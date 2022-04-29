@@ -90,7 +90,7 @@ object ObsQueries {
     val constraintGroups = Focus[ObsSummariesWithConstraints](_.constraintGroups)
 
     implicit val reusabilityObsSummaryWithConstraints: Reusability[ObsSummariesWithConstraints] =
-      Reusability.derive
+      Reusability.derive.logNonReusable
   }
 
   private val queryToObsSummariesWithConstraintsGetter
@@ -123,7 +123,7 @@ object ObsQueries {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
   }
 
-  case class ObsLiveQuery(
+  final case class ObsLiveQuery(
     programId:        Program.Id,
     render:           ReuseView[ObsSummariesWithConstraints] ==> VdomNode
   )(implicit val ctx: AppContextIO)
@@ -132,10 +132,11 @@ object ObsQueries {
   object ObsLiveQuery {
     type Props = ObsLiveQuery
 
-    implicit val reuseProps: Reusability[Props] = Reusability.derive
+    implicit val reuseProps: Reusability[Props] = Reusability.derive.logNonReusable
 
     protected val component = ScalaFnComponent.withReuse[Props] { props =>
       implicit val ctx = props.ctx
+      println("Render")
 
       LiveQueryRenderMod[
         ObservationDB,

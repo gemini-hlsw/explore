@@ -28,6 +28,7 @@ import explore.model._
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
+import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -265,11 +266,13 @@ object ObsTabContents {
   protected def renderFn(
     props:              Props,
     panels:             ReuseView[TwoPanelState],
+    defaultLayouts:     LayoutsMap,
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
     obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
+    println(obsWithConstraints)
     val observations     = obsWithConstraints.zoom(ObsSummariesWithConstraints.observations)
     val constraintGroups = obsWithConstraints.zoom(ObsSummariesWithConstraints.constraintGroups)
 
@@ -478,7 +481,8 @@ object ObsTabContents {
             )
           )
         )
-      )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
+        // )(obsId => <.div(ExploreStyles.TreeRGLWrapper, <.div(obsId.toString)))
+      )(obsId => <.div(obsId.toString))
 
     val body = if (window.canFitTwoPanels) {
       <.div(
@@ -509,9 +513,18 @@ object ObsTabContents {
         )(
           rightSide
         )
-      )
+      ).withRef(resize.ref)
     }
     body.withRef(resize.ref)
+    <.div("HHH").withRef(resize.ref)
+  }
+  protected def renderFn2(
+    resize:             UseResizeDetectorReturn,
+    obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
+  )(implicit ctx:       AppContextIO): VdomNode = {
+    // println(obsWithConstraints.value)
+    println(s"obs tr $resize ")
+    <.div("HHH").withRef(resize.ref)
   }
 
   protected val component =
@@ -528,6 +541,7 @@ object ObsTabContents {
           case _                            => Callback.empty
         }
       }
+      .useResizeDetector()
       .useStateViewWithReuse(defaultLayout)
       // TODO Rework the obs tab layout
       // .useEffectWithDepsBy((p, _, _) => p.focusedObs) { (props, panels, layout) =>
@@ -551,11 +565,13 @@ object ObsTabContents {
       //       }
       //       .runAsync
       // }
-      .useResizeDetector()
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, panels, layouts, resize, debouncer) =>
+      .renderWithReuse { (props, panels, resize, layouts, debouncer) =>
         implicit val ctx = props.ctx
-        ObsLiveQuery(props.programId, Reuse(renderFn _)(props, panels, layouts, resize, debouncer))
+        // this updates reszie thus measuring the size
+        // renderFn2(resize, null)
+        // This only calls renderFn once
+        ObsLiveQuery(props.programId, Reuse(renderFn2 _)( resize))
       }
 
 }
