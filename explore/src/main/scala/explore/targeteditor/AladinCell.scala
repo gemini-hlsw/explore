@@ -108,7 +108,7 @@ object AladinCell extends ModelOptics {
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
-            props.configuration,
+            props.mode,
             t,
             coordinatesSetter,
             Reuse.currying(props).in(fovSetter _),
