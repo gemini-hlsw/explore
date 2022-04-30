@@ -39,7 +39,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-// import react.semanticui.elements.button.LabelPosition
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -143,10 +142,8 @@ object ConfigurationPanel {
                 Button(
                   size = Small,
                   compact = true,
-                  // clazz = ExploreStyles.VeryCompact,
-                  // icon = Icons.New,
+                  clazz = ExploreStyles.VeryCompact,
                   content = "View Sequence"
-                  // labelPosition = LabelPosition.Left
                 )
               )
             )
