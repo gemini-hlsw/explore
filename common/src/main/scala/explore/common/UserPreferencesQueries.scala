@@ -21,7 +21,7 @@ import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Types._
 import queries.schemas.WidthUpsertInput
 import queries.schemas.implicits._
-import react.gridlayout.{BreakpointName => _, _}
+import react.gridlayout.{ BreakpointName => _, _ }
 
 import scala.collection.immutable.SortedMap
 
