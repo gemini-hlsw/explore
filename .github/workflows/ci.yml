@@ -36,7 +36,7 @@ jobs:
       - name: Download Java (temurin@17)
         id: download-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: typelevel/download-java@v1
+        uses: typelevel/download-java@v2
         with:
           distribution: temurin
           java-version: 17
@@ -106,7 +106,7 @@ jobs:
       - name: Download Java (temurin@17)
         id: download-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: typelevel/download-java@v1
+        uses: typelevel/download-java@v2
         with:
           distribution: temurin
           java-version: 17
@@ -196,7 +196,7 @@ jobs:
       - name: Download Java (temurin@17)
         id: download-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: typelevel/download-java@v1
+        uses: typelevel/download-java@v2
         with:
           distribution: temurin
           java-version: 17
