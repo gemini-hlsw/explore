@@ -53,6 +53,7 @@ trait ModelOptics {
         .getOption(sourceProfile)
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
     }
+
 }
 
 object ModelOptics extends ModelOptics

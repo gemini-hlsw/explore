@@ -99,6 +99,10 @@ trait formats {
 
   val formatArcsec: Format[String, Angle] =
     Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
+
+  val angleTruncatedPASplitEpi: SplitEpi[Angle, TruncatedPA] =
+    SplitEpi[Angle, TruncatedPA](TruncatedPA(_), _.angle)
+
 }
 
 object formats extends formats

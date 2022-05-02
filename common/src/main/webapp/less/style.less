@@ -1850,10 +1850,11 @@ html {
   display: grid;
   grid-gap: 0.5em;
   grid-template-areas:
+    'obs-props obs-props'
     'form table-header'
     'form table';
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   height: 100%;
 }
 
@@ -1862,11 +1863,12 @@ html {
 .tile-xs-width {
   .explore-configuration-grid {
     grid-template-areas:
+      'obs-props'
       'form'
       'table-header'
       'table';
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
   }
 }
 
@@ -2078,8 +2080,21 @@ html {
   justify-content: space-between;
 }
 
+.explore-obs-configuration-form {
+  grid-area: obs-props;
+  display: flex;
+
+  .field .ui.selection.dropdown[id='pos-angle-alternative'] {
+    min-width: 18ch;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+  }
+}
+
 .explore-configuration-form {
   grid-area: form;
+  grid-row-start: 2;
+  grid-row-end: span 2;
 }
 
 .explore-modes-header {

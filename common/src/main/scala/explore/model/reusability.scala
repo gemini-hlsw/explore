@@ -44,6 +44,7 @@ object reusability {
   implicit val partnerSplitReuse: Reusability[PartnerSplit]                           = Reusability.byEq
   implicit val obsSummaryReuse: Reusability[ObsSummary]                               = Reusability.byEq
   implicit val localPreferencesReuse: Reusability[ExploreLocalPreferences]            = Reusability.byEq
+  implicit val posAngleReuse: Reusability[PosAngle]                                   = Reusability.byEq
   implicit val obsSummaryWithConstraintsReuse: Reusability[ObsSummaryWithConstraints] =
     Reusability.byEq
   implicit val obsSummaryWithTargetsAndConstraintsReuse
