@@ -277,6 +277,8 @@ object ExploreStyles {
 
   // Configuration tile
   val ObsConfigurationForm: Css      = Css("explore-obs-configuration-form")
+  val ObsConfigurationObsPA: Css     = Css("explore-obs-configuration-pa")
+  val ObsConfigurationObsTime: Css   = Css("explore-obs-configuration-time")
   val ConfigurationForm: Css         = Css("explore-configuration-form")
   val ConfigurationGrid: Css         = Css("explore-configuration-grid")
   val ConfigurationCapabilities: Css = Css("explore-configuration-capabilities")
