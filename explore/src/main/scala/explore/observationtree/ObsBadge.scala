@@ -10,7 +10,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.implicits._
 import explore.model.ObsSummary
 import explore.model.ObsWithConf
 import explore.model.ObsWithConstraints
@@ -86,10 +85,10 @@ object ObsBadge {
                 props.deleteCB.map(_.value: Callback).getOrEmpty
           )
 
-        def titleAndId(title: Option[NonEmptyString]) =
+        def titleAndId(title: String) =
           <.div(
             ExploreStyles.ObsBadgeTargetAndId,
-            title.map(<.div(_)).whenDefined,
+            <.div(title),
             <.div(ExploreStyles.ObsBadgeId, s"[${idIso.get(obs.id).value.toHexString}]")
           )
 
@@ -100,9 +99,9 @@ object ObsBadge {
                 <.div(
                   ExploreStyles.ObsBadgeHeader,
                   obs match {
-                    case withTitle: ObsWithTitle => titleAndId(withTitle.title.some)
+                    case withTitle: ObsWithTitle => titleAndId(withTitle.title)
                     case withConf: ObsWithConf   => withConf.conf
-                    case _                       => titleAndId(none)
+                    case _                       => titleAndId("")
                   },
                   props.deleteCB.whenDefined(_ => deleteButton)
                 )

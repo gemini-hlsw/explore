@@ -223,21 +223,19 @@ object AsterismQueriesGQL {
                 id
               }
             }
-            scienceConfiguration {
+            scienceMode {
               gmosNorthLongSlit {
-                filter
-                disperser
-                fpu
-                slitWidth {
-                  microarcseconds
+                basic {
+                  grating
+                  filter
+                  fpu
                 }
               }
               gmosSouthLongSlit {
-                filter
-                disperser
-                fpu
-                slitWidth {
-                  microarcseconds
+                basic {
+                  grating
+                  filter
+                  fpu
                 }
               }
             }
@@ -254,7 +252,7 @@ object AsterismQueriesGQL {
       object Observations {
         object Nodes {
           trait ConstraintSet extends model.ConstraintsSummary
-          type ScienceConfiguration = model.ScienceConfiguration
+          type ScienceMode = model.ScienceModeBasic
           object PlannedTime {
             type Execution = time.Duration
           }

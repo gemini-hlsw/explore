@@ -17,7 +17,7 @@ import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -43,7 +43,7 @@ import scala.concurrent.duration._
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
-  configuration:    Option[ScienceConfiguration],
+  mode:             Option[ScienceModeBasic],
   target:           ReuseView[Coordinates]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {
@@ -108,7 +108,7 @@ object AladinCell extends ModelOptics {
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
-            props.configuration,
+            props.mode,
             t,
             coordinatesSetter,
             Reuse.currying(props).in(fovSetter _),

@@ -8,7 +8,7 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
-import explore.model.ScienceConfiguration
+import explore.model.ScienceModeBasic
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -18,8 +18,8 @@ import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
-import lucuma.core.math.RightAscension
 import lucuma.core.math.Offset
+import lucuma.core.math.RightAscension
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
@@ -32,7 +32,7 @@ import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
-  configuration:          Option[ScienceConfiguration],
+  mode:                   Option[ScienceModeBasic],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
@@ -126,12 +126,13 @@ object AladinContainer {
         p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Memoized svg
-      .useMemoBy((p, _) => (p.configuration, p.options)) { case (p, _) =>
+      .useMemoBy((p, _) => (p.mode, p.options)) { case (p, _) =>
         _ =>
           visualization
-            .shapesToSvg(GmosGeometry.shapes(GmosGeometry.posAngle, p.configuration),
-                         GmosGeometry.pp,
-                         GmosGeometry.ScaleFactor
+            .shapesToSvg(
+              GmosGeometry.shapes(GmosGeometry.posAngle, p.mode),
+              GmosGeometry.pp,
+              GmosGeometry.ScaleFactor
             )
       }
       // Ref to the aladin component
@@ -160,12 +161,7 @@ object AladinContainer {
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.options.fovAngle,
-         p.configuration,
-         currentPos,
-         world2pix.value(p.baseCoordinates),
-         resize
-        )
+        (p.options.fovAngle, p.mode, currentPos, world2pix.value(p.baseCoordinates), resize)
       ) { (_, _, svg, aladinRef, _, _) =>
         { case (_, _, _, off, _) =>
           off

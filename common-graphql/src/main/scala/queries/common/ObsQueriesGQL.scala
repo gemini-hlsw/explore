@@ -41,21 +41,19 @@ object ObsQueriesGQL {
                 microseconds
               }
             }
-            scienceConfiguration {
+            scienceMode {
               gmosNorthLongSlit {
-                filter
-                disperser
-                fpu
-                slitWidth {
-                  microarcseconds
+                basic {
+                  grating
+                  filter
+                  fpu
                 }
               }
               gmosSouthLongSlit {
-                filter
-                disperser
-                fpu
-                slitWidth {
-                  microarcseconds
+                basic {
+                  grating
+                  filter
+                  fpu
                 }
               }
             }
@@ -114,7 +112,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceConfiguration = model.ScienceConfiguration
+          type ScienceMode = model.ScienceModeBasic
         }
       }
 
@@ -417,21 +415,19 @@ object ObsQueriesGQL {
               capabilities
             }
           }
-          scienceConfiguration {
+          scienceMode {
             gmosNorthLongSlit {
-              filter
-              disperser
-              fpu
-              slitWidth {
-                microarcseconds
+              basic {
+                grating
+                filter
+                fpu
               }
             }
             gmosSouthLongSlit {
-              filter
-              disperser
-              fpu
-              slitWidth {
-                microarcseconds
+              basic {
+                grating
+                filter
+                fpu
               }
             }
           }
@@ -455,7 +451,7 @@ object ObsQueriesGQL {
           }
         }
 
-        type ScienceConfiguration = model.ScienceConfiguration
+        type ScienceMode = model.ScienceModeBasic
 
       }
     }
@@ -507,10 +503,10 @@ object ObsQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateScienceConfigurationMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateScienceModeMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: ScienceConfigurationInput){
-        updateObservation(input: {observationId: $obsId, scienceConfiguration: $input}) {
+      mutation ($obsId: ObservationId!, $input: ScienceModeInput){
+        updateObservation(input: {observationId: $obsId, scienceMode: $input}) {
           id
         }
       }

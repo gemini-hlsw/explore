@@ -18,8 +18,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types._
 import lucuma.schemas.ObservationDB.Enums._
+import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Lens

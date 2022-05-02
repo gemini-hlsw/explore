@@ -22,12 +22,12 @@ import lucuma.core.model.Program
 import lucuma.ui.reusability._
 import react.common.ReactFnProps
 import react.common.implicits._
-import react.semanticui.collections.table._
-import reactST.reactTable._
 import react.semanticui.collections.table.TableCompact
+import react.semanticui.collections.table._
 import react.semanticui.elements.button._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import reactST.reactTable._
 
 final case class ProgramTable(
   currentProgramId: Option[Program.Id],

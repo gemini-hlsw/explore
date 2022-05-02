@@ -5,8 +5,8 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all._
-import crystal.react.implicits._
 import crystal.react.ReuseView
+import crystal.react.implicits._
 import crystal.react.reuse.Reuse
 import explore.Icons
 import explore.Resources
@@ -14,12 +14,12 @@ import explore.components.About
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles
 import explore.implicits._
-import explore.programs.ProgramsPopup
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
 import explore.model.ModelUndoStacks
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
+import explore.programs.ProgramsPopup
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._

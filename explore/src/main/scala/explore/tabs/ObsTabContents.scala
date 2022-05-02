@@ -310,7 +310,7 @@ object ObsTabContents {
     val targetCoords: Option[Coordinates] =
       props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
-    val config: Option[ScienceConfiguration] = observations.get.collect {
+    val config: Option[ScienceModeBasic] = observations.get.collect {
       case (i, (ObsSummaryWithTitleConstraintsAndConf(_, _, _, _, _, _, _, Some(c)), _))
           if props.focusedObs.exists(_ === i) =>
         c

@@ -47,9 +47,3 @@ object AppModal {
 
   implicit val AppModalEnumerated: Enumerated[AppModal[_]] = Enumerated.of(all.head, all.tail: _*)
 }
-
-// case class AppSection(val tab: AppTab)(val modal: Option[AppModal[tab.type]])
-
-abstract class AppSection(val tab: AppTab) {
-  val modal: Option[AppModal[tab.type]]
-}

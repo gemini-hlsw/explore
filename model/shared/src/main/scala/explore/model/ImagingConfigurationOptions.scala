@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.Eq
 import cats.Order
 import cats.implicits._
 import coulomb.Quantity
@@ -61,6 +62,7 @@ object ImagingConfigurationOptions {
         val range             = (u, l).mapN(_.nanometer - _.nanometer)
       }
     }
+
   val gmosSouthFilters = GmosSouthFilter.all
     .filterNot(f =>
       f.obsolete || f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
@@ -79,4 +81,7 @@ object ImagingConfigurationOptions {
 
   val availableOptions: List[AvailableFilter] =
     (gmosNorthFilters ++ gmosSouthFilters).distinctBy(_.tag)
+
+  implicit val eqImagingConfigurationOptions: Eq[ImagingConfigurationOptions] =
+    Eq.fromUniversalEquals
 }
