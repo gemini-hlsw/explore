@@ -74,13 +74,13 @@ final case class TargetTabContents(
 object TargetTabContents {
   type Props = TargetTabContents
 
-  val TargetHeight: NonNegInt      = 18
-  val TargetMinHeight: NonNegInt   = 15
-  val SkyPlotHeight: NonNegInt     = 9
-  val SkyPlotMinHeight: NonNegInt  = 6
-  val TileMinWidth: NonNegInt      = 5
-  val DefaultWidth: NonNegInt      = 10
-  val DefaultLargeWidth: NonNegInt = 12
+  private val TargetHeight: NonNegInt      = 18
+  private val TargetMinHeight: NonNegInt   = 15
+  private val SkyPlotHeight: NonNegInt     = 9
+  private val SkyPlotMinHeight: NonNegInt  = 6
+  private val TileMinWidth: NonNegInt      = 5
+  private val DefaultWidth: NonNegInt      = 10
+  private val DefaultLargeWidth: NonNegInt = 12
 
   val layoutLarge: Layout = Layout(
     List(
@@ -464,7 +464,7 @@ object TargetTabContents {
       case _                      => none
     }
 
-    val rightSide =
+    val rightSide: VdomNode =
       optSelected
         .fold(renderSummary) {
           _ match {
@@ -575,12 +575,12 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, tps, resize, layout, defaultLayout, debouncer) =>
+      .renderWithReuse { (props, twoPanelState, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
         <.div(
           AsterismGroupLiveQuery(
             props.programId,
-            Reuse(renderFn _)(props, tps, defaultLayout, layout, resize, debouncer)
+            Reuse(renderFn _)(props, twoPanelState, defaultLayout, layout, resize, debouncer)
           )
         ).withRef(resize.ref)
       }

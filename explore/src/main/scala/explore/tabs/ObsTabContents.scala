@@ -28,6 +28,7 @@ import explore.model._
 import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
+import explore.model.layout.unsafe._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -86,44 +87,47 @@ object ObsTabTiles {
 
 object ObsTabContents {
   private val NotesMaxHeight: NonNegInt         = 3
-  private val TargetMinHeight: NonNegInt        = 12
+  private val TargetHeight: NonNegInt           = 18
+  private val TargetMinHeight: NonNegInt        = 15
   private val ElevationPlotMinHeight: NonNegInt = 8
   private val ConstraintsMaxHeight: NonNegInt   = 6
   private val ConfigurationMaxHeight: NonNegInt = 10
-  private val DefaultWidth: NonNegInt           = 12
+  private val DefaultWidth: NonNegInt           = 10
+  private val DefaultLargeWidth: NonNegInt      = 12
 
   private val layoutLarge: Layout = Layout(
     List(
       LayoutItem(x = 0,
                  y = 0,
-                 w = DefaultWidth.value,
+                 w = DefaultLargeWidth.value,
                  h = NotesMaxHeight.value,
                  i = ObsTabTiles.NotesId.value,
                  isResizable = false
       ),
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
-                 w = DefaultWidth.value,
-                 h = TargetMinHeight.value,
+                 w = DefaultLargeWidth.value,
+                 h = TargetHeight.value,
+                 minH = TargetMinHeight.value,
                  i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
-                 y = (NotesMaxHeight |+| TargetMinHeight).value,
-                 w = DefaultWidth.value,
+                 y = (NotesMaxHeight |+| TargetHeight).value,
+                 w = DefaultLargeWidth.value,
                  h = ElevationPlotMinHeight.value,
                  i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
-        w = DefaultWidth.value,
+        y = (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight).value,
+        w = DefaultLargeWidth.value,
         h = ConstraintsMaxHeight.value,
         i = ObsTabTiles.ConstraintsId.value
       ),
       LayoutItem(
         x = 0,
         y =
-          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
+          (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -143,18 +147,19 @@ object ObsTabContents {
       LayoutItem(x = 0,
                  y = NotesMaxHeight.value,
                  w = DefaultWidth.value,
-                 h = TargetMinHeight.value,
+                 h = TargetHeight.value,
+                 minH = TargetMinHeight.value,
                  i = ObsTabTiles.TargetId.value
       ),
       LayoutItem(x = 0,
-                 y = (NotesMaxHeight |+| TargetMinHeight).value,
+                 y = (NotesMaxHeight |+| TargetHeight).value,
                  w = DefaultWidth.value,
                  h = ElevationPlotMinHeight.value,
                  i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
+        y = (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight).value,
         w = DefaultWidth.value,
         h = ConstraintsMaxHeight.value,
         i = ObsTabTiles.ConstraintsId.value
@@ -162,7 +167,7 @@ object ObsTabContents {
       LayoutItem(
         x = 0,
         y =
-          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
+          (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -170,51 +175,13 @@ object ObsTabContents {
     )
   )
 
-  private val layoutSmall: Layout = Layout(
-    List(
-      LayoutItem(x = 0,
-                 y = 0,
-                 w = DefaultWidth.value,
-                 h = NotesMaxHeight.value,
-                 i = ObsTabTiles.NotesId.value,
-                 isResizable = false
-      ),
-      LayoutItem(x = 0,
-                 y = NotesMaxHeight.value,
-                 w = DefaultWidth.value,
-                 h = TargetMinHeight.value,
-                 i = ObsTabTiles.TargetId.value
-      ),
-      LayoutItem(x = 0,
-                 y = (NotesMaxHeight |+| TargetMinHeight).value,
-                 w = DefaultWidth.value,
-                 h = ElevationPlotMinHeight.value,
-                 i = ObsTabTiles.PlotId.value
-      ),
-      LayoutItem(
-        x = 0,
-        y = (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight).value,
-        w = DefaultWidth.value,
-        h = ConstraintsMaxHeight.value,
-        i = ObsTabTiles.ConstraintsId.value
-      ),
-      LayoutItem(
-        x = 0,
-        y =
-          (NotesMaxHeight |+| TargetMinHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
-        w = DefaultWidth.value,
-        h = ConfigurationMaxHeight.value,
-        i = ObsTabTiles.ConfigurationId.value
-      )
-    )
-  )
-
-  private val defaultLayout: LayoutsMap =
+  private val defaultObsLayouts: LayoutsMap =
     defineStdLayouts(
       Map(
-        (BreakpointName.lg, layoutLarge),
-        (BreakpointName.md, layoutMedium),
-        (BreakpointName.sm, layoutSmall)
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutLarge)
+        ),
+        (BreakpointName.md, layoutMedium)
       )
     )
 
@@ -265,6 +232,7 @@ object ObsTabContents {
   protected def renderFn(
     props:              Props,
     panels:             ReuseView[TwoPanelState],
+    defaultLayouts:     LayoutsMap,
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
     debouncer:          Reusable[UseSingleEffect[IO]],
@@ -370,8 +338,9 @@ object ObsTabContents {
         // (_: Pot[View[Pot[ObservationData]]]).curryReusing.in
         Reuse.by(
           (props.userId.get,
+           resize,
            coreWidth,
-           defaultLayout,
+           defaultObsLayouts,
            layouts,
            notesTile,
            targetCoords,
@@ -453,7 +422,7 @@ object ObsTabContents {
           TileController(
             props.userId.get,
             coreWidth,
-            defaultLayout,
+            defaultLayouts,
             layouts,
             List(
               targetTile,
@@ -464,11 +433,11 @@ object ObsTabContents {
             ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
-          ): VdomNode
+          )
         }
-      ).withKey(obsId.toString)
+      )
 
-    val rightSide =
+    val rightSide: VdomNode =
       props.focusedObs.fold[VdomNode](
         Tile("observations", "Observations Summary", backButton.some, key = "observationsSummary")(
           Reuse.by(obsWithConstraints)((_: Tile.RenderInTitle) =>
@@ -477,7 +446,7 @@ object ObsTabContents {
             )
           )
         )
-      )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
+      )(rightSideRGL)
 
     if (window.canFitTwoPanels) {
       <.div(
@@ -526,36 +495,42 @@ object ObsTabContents {
           case _                            => Callback.empty
         }
       }
-      .useStateViewWithReuse(defaultLayout)
-      // TODO Rework the obs tab layout
-      // .useEffectWithDepsBy((p, _, _) => p.focusedObs) { (props, panels, layout) =>
-      //   implicit val ctx = props.ctx
-      //   _ =>
-      //     TabGridPreferencesQuery
-      //       .queryWithDefault[IO](props.userId.get,
-      //                             GridLayoutSection.ObservationsLayout,
-      //                             ResizableSection.ObservationsTree,
-      //                             (Constants.InitialTreeWidth.toInt, defaultLayout)
-      //       )
-      //       .attempt
-      //       .flatMap {
-      //         case Right((w, l)) =>
-      //           (panels
-      //             .mod(
-      //               TwoPanelState.treeWidth.replace(w.toDouble)
-      //             ) *> layout.mod(o => mergeMap(o, l)))
-      //             .to[IO]
-      //         case Left(_)       => IO.unit
-      //       }
-      //       .runAsync
-      // }
+      // Measure its sive
       .useResizeDetector()
+      // Layout
+      .useStateViewWithReuse(defaultObsLayouts)
+      // Keep a record of the initial target layouut
+      .useMemo(())(_ => defaultObsLayouts)
+      // Restore positions from the db
+      .useEffectWithDepsBy((p, _, _, _, _) => p.focusedObs) {
+        (props, panels, _, layout, defaultLayout) =>
+          implicit val ctx = props.ctx
+          _ =>
+            TabGridPreferencesQuery
+              .queryWithDefault[IO](props.userId.get,
+                                    GridLayoutSection.ObservationsLayout,
+                                    ResizableSection.ObservationsTree,
+                                    (Constants.InitialTreeWidth.toInt, defaultLayout)
+              )
+              .attempt
+              .flatMap {
+                case Right((w, l)) =>
+                  (panels
+                    .mod(
+                      TwoPanelState.treeWidth.replace(w.toDouble)
+                    ) *> layout.mod(o => mergeMap(o, l)))
+                    .to[IO]
+                case Left(_)       => IO.unit
+              }
+              .runAsync
+      }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, panels, layouts, resize, debouncer) =>
+      .render { (props, twoPanelState, resize, layouts, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
         <.div(
-          ObsLiveQuery(props.programId,
-                       Reuse(renderFn _)(props, panels, layouts, resize, debouncer)
+          ObsLiveQuery(
+            props.programId,
+            Reuse(renderFn _)(props, twoPanelState, defaultLayout, layouts, resize, debouncer)
           )
         ).withRef(resize.ref)
       }

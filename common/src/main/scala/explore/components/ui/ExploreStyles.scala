@@ -79,7 +79,6 @@ object ExploreStyles {
   val ResizableMultiPanel: Css  = Css("resizable-multi-panel")
   val TreeBody: Css             = Css("tree-body")
   val TreeRGL: Css              = Css("tree-rgl")
-  val TreeRGLWrapper: Css       = Css("tree-rgl-wrapper")
   val RGLArea: Css              = Css("rgl-area")
   val RGLPlaceholder: Css       = Css("rgl-placeholder")
   val SinglePanelTile: Css      = Css("single-panel-tile")
