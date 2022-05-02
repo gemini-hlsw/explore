@@ -490,7 +490,7 @@ object TargetTabContents {
     // It would be nice to make a single component here but it gets hard when you
     // have the resizable element. Instead we have either two panels with a resizable
     // or only one panel at a time (Mobile)
-    val body = if (window.canFitTwoPanels) {
+    if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(asterismGroupsWithObs))
@@ -522,7 +522,6 @@ object TargetTabContents {
         )
       )
     }
-    body.withRef(resize.ref)
   }
 
   protected val component =
@@ -556,7 +555,6 @@ object TargetTabContents {
           {
             implicit val ctx = props.ctx
 
-            // val i: Int = layout
             TabGridPreferencesQuery
               .queryWithDefault[IO](props.userId,
                                     GridLayoutSection.TargetLayout,
@@ -579,10 +577,12 @@ object TargetTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, tps, resize, layout, defaultLayout, debouncer) =>
         implicit val ctx = props.ctx
-        AsterismGroupLiveQuery(
-          props.programId,
-          Reuse(renderFn _)(props, tps, defaultLayout, layout, resize, debouncer)
-        )
+        <.div(
+          AsterismGroupLiveQuery(
+            props.programId,
+            Reuse(renderFn _)(props, tps, defaultLayout, layout, resize, debouncer)
+          )
+        ).withRef(resize.ref)
       }
 
 }
