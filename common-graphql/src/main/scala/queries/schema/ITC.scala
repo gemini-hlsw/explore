@@ -8,7 +8,6 @@ import eu.timepit.refined.types.numeric
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
-import io.circe.syntax._
 import lucuma.core.`enum`
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
@@ -42,37 +41,6 @@ trait ITC {
        }
       )
     )
-  }
-
-  implicit val bbEncoder: Encoder[model.SpectralDistribution.BlackBody] =
-    new Encoder[model.SpectralDistribution.BlackBody] {
-      final def apply(a: model.SpectralDistribution.BlackBody): Json = Json.obj(
-        ("blackBody", Json.obj(("temperature", Json.fromBigDecimal(a.temperature.value.value))))
-      )
-    }
-
-  implicit val plEncoder: Encoder[model.SpectralDistribution.PowerLaw] =
-    new Encoder[model.SpectralDistribution.PowerLaw] {
-      final def apply(a: model.SpectralDistribution.PowerLaw): Json = Json.obj(
-        ("powerLaw", Json.obj(("index", Json.fromBigDecimal(a.index))))
-      )
-    }
-
-  implicit val lEncoder: Encoder[model.SpectralDistribution.Library] =
-    new Encoder[model.SpectralDistribution.Library] {
-      final def apply(a: model.SpectralDistribution.Library): Json =
-        a.librarySpectrum match {
-          case Left(s: enum.StellarLibrarySpectrum)     =>
-            Json.obj(("stellar", Json.fromString(s.ocs2Tag)))
-          case Right(n: enum.NonStellarLibrarySpectrum) =>
-            Json.obj(("nonStellar", Json.fromString(n.ocs2Tag)))
-        }
-    }
-
-  implicit val sdEncoder: Encoder[model.SpectralDistribution] = Encoder.instance {
-    case bb: model.SpectralDistribution.BlackBody => bb.asJson
-    case pl: model.SpectralDistribution.PowerLaw  => pl.asJson
-    case l: model.SpectralDistribution.Library    => l.asJson
   }
 
   implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance {
@@ -131,11 +99,9 @@ trait ITC {
     type GmosSouthFpu                        = enum.GmosSouthFpu
     type GmosCustomSlitWidth                 = enum.GmosCustomSlitWidth
     type StellarLibrarySpectrum              = enum.StellarLibrarySpectrum
-    type NoneStellarLibrarySpectrum          = enum.NonStellarLibrarySpectrum
   }
 
   object Types {
-    type SpectralDistributionInput      = model.SpectralDistribution
     type ConstraintSetInput             = ConstraintSet
     type BandNormalizedIntegrated       = model.SpectralDefinition.BandNormalized[Integrated]
     type BandNormalizedSurface          = model.SpectralDefinition.BandNormalized[Surface]
