@@ -3,17 +3,21 @@
 
 package explore.model
 
+import explore.model.arb.ArbTruncatedPA
 import explore.model.formats._
 import lucuma.core.arb._
 import lucuma.core.math.Parallax
 import lucuma.core.math.arb._
 import lucuma.core.optics.laws.discipline.FormatTests
+import lucuma.core.optics.laws.discipline.SplitEpiTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
 
 class ModelFormatsSuite extends DisciplineSuite {
   import ArbParallax._
+  import ArbAngle._
+  import ArbTruncatedPA._
 
   private val perturbations: List[String => Gen[String]] =
     List(
@@ -27,4 +31,5 @@ class ModelFormatsSuite extends DisciplineSuite {
       .flatMapOneOf(Gen.const, perturbations: _*)
 
   checkAll("pxFormat", FormatTests(pxFormat).formatWith(parallaxMilliArcSecondsGen))
+  checkAll("truncatedPASplitEpi", SplitEpiTests(angleTruncatedPASplitEpi).splitEpi)
 }

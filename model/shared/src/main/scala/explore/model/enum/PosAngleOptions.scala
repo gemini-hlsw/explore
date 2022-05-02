@@ -33,8 +33,12 @@ object PosAngleOptions {
     override val longName = "Parallactic Override"
   }
 
+  case object Unconstrained extends PosAngleOptions {
+    override val tag = "Unconstrained"
+  }
+
   implicit val posAngleOptionsEnumeration: Enumerated[PosAngleOptions] =
-    Enumerated.of(Fixed, AllowFlip, AverageParallactic, ParallacticOverride)
+    Enumerated.of(Fixed, AllowFlip, AverageParallactic, ParallacticOverride, Unconstrained)
 
   implicit val posAngleOptionsDisplay: Display[PosAngleOptions] =
     Display.by(_.longName.value, _.longName.value)

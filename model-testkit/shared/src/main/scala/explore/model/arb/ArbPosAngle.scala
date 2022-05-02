@@ -31,15 +31,6 @@ trait ArbPosAngle {
   implicit def allowFlipCogen: Cogen[PosAngle.AllowFlip] =
     Cogen[Angle].contramap(_.angle)
 
-  implicit val averageParallacticyAngleArb = Arbitrary[PosAngle.AverageParallactic] {
-    for {
-      a <- arbitrary[Angle]
-    } yield PosAngle.AverageParallactic(a)
-  }
-
-  implicit def averageParallacticCogen: Cogen[PosAngle.AverageParallactic] =
-    Cogen[Angle].contramap(_.angle)
-
   implicit val parallacticOverridePosAngleArb = Arbitrary[PosAngle.ParallacticOverride] {
     for {
       a <- arbitrary[Angle]
@@ -53,14 +44,21 @@ trait ArbPosAngle {
     for {
       f <- arbitrary[PosAngle.Fixed]
       v <- arbitrary[PosAngle.AllowFlip]
-      p <- arbitrary[PosAngle.AverageParallactic]
+      p <- Gen.const(PosAngle.AverageParallactic)
       o <- arbitrary[PosAngle.ParallacticOverride]
-      a <- Gen.oneOf(f, v, p, o)
+      u <- Gen.const(PosAngle.Unconstrained)
+      a <- Gen.oneOf(f, v, p, o, u)
     } yield a
   }
 
   implicit def posAngleCogen: Cogen[PosAngle] =
-    Cogen[Angle].contramap(_.angle)
+    Cogen[Option[Option[Either[Angle, Either[Angle, Either[Angle, Angle]]]]]].contramap {
+      case PosAngle.AverageParallactic     => None
+      case PosAngle.Unconstrained          => Some(None)
+      case PosAngle.Fixed(a)               => Some(Some(Left(a)))
+      case PosAngle.AllowFlip(a)           => Some(Some(Right(Left(a))))
+      case PosAngle.ParallacticOverride(a) => Some(Some(Right(Right(Left(a)))))
+    }
 }
 
 object ArbPosAngle extends ArbPosAngle

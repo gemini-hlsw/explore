@@ -13,8 +13,9 @@ object all {
     def toPosAngle(a: Angle): PosAngle = pa match {
       case PosAngleOptions.Fixed               => PosAngle.Fixed(a)
       case PosAngleOptions.AllowFlip           => PosAngle.AllowFlip(a)
-      case PosAngleOptions.AverageParallactic  => PosAngle.AverageParallactic(a)
+      case PosAngleOptions.AverageParallactic  => PosAngle.AverageParallactic
       case PosAngleOptions.ParallacticOverride => PosAngle.ParallacticOverride(a)
+      case PosAngleOptions.Unconstrained       => PosAngle.Unconstrained
     }
   }
 
@@ -22,8 +23,9 @@ object all {
     def toPosAngleOption: PosAngleOptions = pa match {
       case PosAngle.Fixed(_)               => PosAngleOptions.Fixed
       case PosAngle.AllowFlip(_)           => PosAngleOptions.AllowFlip
-      case PosAngle.AverageParallactic(_)  => PosAngleOptions.AverageParallactic
+      case PosAngle.AverageParallactic     => PosAngleOptions.AverageParallactic
       case PosAngle.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
+      case PosAngle.Unconstrained          => PosAngleOptions.Unconstrained
     }
   }
 }
