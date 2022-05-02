@@ -479,7 +479,7 @@ object ObsTabContents {
         )
       )(obsId => <.div(ExploreStyles.TreeRGLWrapper, rightSideRGL(obsId)))
 
-    val body = if (window.canFitTwoPanels) {
+    if (window.canFitTwoPanels) {
       <.div(
         ExploreStyles.TreeRGL,
         <.div(ExploreStyles.Tree, treeInner(observations))
@@ -510,7 +510,6 @@ object ObsTabContents {
         )
       )
     }
-    body.withRef(resize.ref)
   }
 
   protected val component =
@@ -554,7 +553,11 @@ object ObsTabContents {
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse { (props, panels, layouts, resize, debouncer) =>
         implicit val ctx = props.ctx
-        ObsLiveQuery(props.programId, Reuse(renderFn _)(props, panels, layouts, resize, debouncer))
+        <.div(
+          ObsLiveQuery(props.programId,
+                       Reuse(renderFn _)(props, panels, layouts, resize, debouncer)
+          )
+        ).withRef(resize.ref)
       }
 
 }
