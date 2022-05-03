@@ -277,7 +277,8 @@ object ConfigurationPanel {
               )
                 .showTimeInput(true)
                 .selected(obsTime.value.toJsDate)
-                .dateFormat("yyyy-MM-dd HH:mm")
+                .dateFormat("yyyy-MM-dd HH:mm"),
+              "UTC"
             )
           ),
           Form(size = Small)(

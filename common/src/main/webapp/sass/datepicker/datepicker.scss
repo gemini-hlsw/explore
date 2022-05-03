@@ -251,9 +251,11 @@
 .react-datepicker__input-time-container {
   clear: both;
   width: 100%;
-  float: left;
   margin: 5px 0 10px 15px;
   text-align: left;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
 
   .react-datepicker-time__caption {
     display: inline-block;
