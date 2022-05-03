@@ -11,8 +11,8 @@ import crystal.react.reuse._
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
@@ -34,7 +34,7 @@ object AsterismEditorTile {
     programId:     Program.Id,
     obsId:         ObsIdSet,
     asterismPot:   Pot[ReuseView[List[TargetWithId]]],
-    mode:          Option[ScienceModeBasic],
+    obsConf:       Option[ObsConfiguration],
     currentTarget: Option[Target.Id],
     setTarget:     (Option[Target.Id], SetRouteVia) ==> Callback,
     otherObsCount: Target.Id ==> Int,
@@ -57,7 +57,7 @@ object AsterismEditorTile {
          programId,
          obsId,
          asterismPot,
-         mode,
+         obsConf,
          currentTarget,
          setTarget,
          otherObsCount,
@@ -77,7 +77,7 @@ object AsterismEditorTile {
                   programId,
                   obsId,
                   asterism,
-                  mode,
+                  obsConf,
                   currentTarget,
                   setTarget,
                   otherObsCount,

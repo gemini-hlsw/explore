@@ -8,7 +8,8 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
-import explore.model.ScienceModeBasic
+import explore.model.ObsConfiguration
+import explore.model.PosAngle
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -32,7 +33,7 @@ import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
-  mode:                   Option[ScienceModeBasic],
+  obsConf:                Option[ObsConfiguration],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
@@ -126,14 +127,26 @@ object AladinContainer {
         p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Memoized svg
-      .useMemoBy((p, _) => (p.mode, p.options)) { case (p, _) =>
-        _ =>
-          visualization
-            .shapesToSvg(
-              GmosGeometry.shapes(GmosGeometry.posAngle, p.mode),
-              GmosGeometry.pp,
-              GmosGeometry.ScaleFactor
-            )
+      .useMemoBy((p, _) =>
+        (p.obsConf.flatMap(_.configuration), p.obsConf.map(_.posAngle), p.options)
+      ) {
+        case (_, _) => { case (mode, posAngle, _) =>
+          posAngle
+            .collect {
+              case PosAngle.Fixed(a)               => a
+              case PosAngle.AllowFlip(a)           => a
+              case PosAngle.ParallacticOverride(a) => a
+            }
+            .map { posAngle =>
+              visualization
+                .shapesToSvg(
+                  GmosGeometry.shapes(posAngle, mode),
+                  GmosGeometry.pp,
+                  GmosGeometry.ScaleFactor
+                )
+            }
+            .getOrElse(new Svg())
+        }
       }
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
@@ -161,9 +174,15 @@ object AladinContainer {
       }
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
-        (p.options.fovAngle, p.mode, currentPos, world2pix.value(p.baseCoordinates), resize)
+        (p.options.fovAngle,
+         p.obsConf.flatMap(_.configuration),
+         p.obsConf.map(_.posAngle),
+         currentPos,
+         world2pix.value(p.baseCoordinates),
+         resize
+        )
       ) { (_, _, svg, aladinRef, _, _) =>
-        { case (_, _, _, off, _) =>
+        { case (_, _, _, _, off, _) =>
           off
             .map(off =>
               aladinRef.get.asCBO

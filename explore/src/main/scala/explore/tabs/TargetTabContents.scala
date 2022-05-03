@@ -55,6 +55,7 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
+import java.time.LocalDateTime
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 
@@ -360,6 +361,7 @@ object TargetTabContents {
               case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v))) if k === id => v
             }
             .headOption
+            .map(c => ObsConfiguration(PosAngle.Default, LocalDateTime.now(), c.some))
         case _        => None
       }
 

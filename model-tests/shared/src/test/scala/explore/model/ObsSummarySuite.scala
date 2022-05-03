@@ -10,4 +10,8 @@ import munit.DisciplineSuite
 class ObsSummarySuite extends DisciplineSuite {
   checkAll("Eq[ObsSummaryWithConstraints]", EqTests[ObsSummaryWithConstraints].eqv)
   checkAll("Eq[ObsSummaryWithTitleAndConstraints]", EqTests[ObsSummaryWithTitleAndConstraints].eqv)
+  checkAll("Eq[ObsSummaryWithTitleAndConstraintsAndConf]",
+           EqTests[ObsSummaryWithTitleConstraintsAndConf].eqv
+  )
+  checkAll("Eq[ObsSummaryWithTitleAndConf]", EqTests[ObsSummaryWithTitleAndConf].eqv)
 }

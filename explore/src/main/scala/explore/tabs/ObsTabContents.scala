@@ -29,6 +29,7 @@ import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
+import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -63,6 +64,7 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
+import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
 
@@ -235,6 +237,7 @@ object ObsTabContents {
     defaultLayouts:     LayoutsMap,
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
+    obsConf:            ReuseView[ObsConfiguration],
     debouncer:          Reusable[UseSingleEffect[IO]],
     obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
@@ -252,7 +255,7 @@ object ObsTabContents {
                                           d.size.width
                 )
             )
-            .runAsyncAndForget
+            .runAsync
 
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(TwoPanelState.selected)
@@ -278,10 +281,14 @@ object ObsTabContents {
     val targetCoords: Option[Coordinates] =
       props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
-    val config: Option[ScienceModeBasic] = observations.get.collect {
+    val localConf = obsConf.get.configuration
+
+    // if no config defined use the one from the query, else prefer the local
+    val conf: Option[ObsConfiguration] = observations.get.collect {
       case (i, (ObsSummaryWithTitleConstraintsAndConf(_, _, _, _, _, _, _, Some(c)), _))
-          if props.focusedObs.exists(_ === i) =>
-        c
+          if props.focusedObs.exists(_ === i) && localConf.isEmpty =>
+        obsConf.get.copy(configuration = c.some)
+      case _ => obsConf.get
     }.headOption
 
     val backButton = Reuse.always[VdomNode](
@@ -298,12 +305,13 @@ object ObsTabContents {
       )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, none, none), Icons.ChevronLeft)
     )
 
-    val coreWidth  =
+    val coreWidth =
       if (window.canFitTwoPanels) {
         resize.width.getOrElse(0)
       } else {
         resize.width.getOrElse(0) - treeWidth
       }
+
     val coreHeight = resize.height.getOrElse(0)
 
     val notesTile =
@@ -340,6 +348,7 @@ object ObsTabContents {
           (props.userId.get,
            resize,
            coreWidth,
+           conf,
            defaultObsLayouts,
            layouts,
            notesTile,
@@ -383,7 +392,7 @@ object ObsTabContents {
                 )
               )
             ),
-            config,
+            conf,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
@@ -413,6 +422,7 @@ object ObsTabContents {
 
           val configurationTile = ConfigurationTile.configurationTile(
             obsId,
+            obsConf,
             obsView.map(_.zoom(scienceDataForObs)),
             props.undoStacks
               .zoom(ModelUndoStacks.forScienceData[IO])
@@ -524,15 +534,25 @@ object ObsTabContents {
               }
               .runAsync
       }
+      // Shared obs conf (posAngle/obsTime)
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now(), none))
       .useSingleEffect(debounce = 1.second)
-      .render { (props, twoPanelState, resize, layouts, defaultLayout, debouncer) =>
-        implicit val ctx = props.ctx
-        <.div(
-          ObsLiveQuery(
-            props.programId,
-            Reuse(renderFn _)(props, twoPanelState, defaultLayout, layouts, resize, debouncer)
-          )
-        ).withRef(resize.ref)
+      .renderWithReuse {
+        (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>
+          implicit val ctx = props.ctx
+          <.div(
+            ObsLiveQuery(
+              props.programId,
+              Reuse(renderFn _)(props,
+                                twoPanelState,
+                                defaultLayout,
+                                layouts,
+                                resize,
+                                obsConf,
+                                debouncer
+              )
+            )
+          ).withRef(resize.ref)
       }
 
 }

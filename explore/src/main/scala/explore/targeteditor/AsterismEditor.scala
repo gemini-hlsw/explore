@@ -15,8 +15,8 @@ import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
@@ -45,7 +45,7 @@ final case class AsterismEditor(
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
-  mode:             Option[ScienceModeBasic],
+  obsConf:          Option[ObsConfiguration],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
   otherObsCount:    Target.Id ==> Int,
@@ -209,7 +209,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.unsafeNarrow[Target.Sidereal],
-                        props.mode,
+                        props.obsConf,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
                         onClone = Reuse
