@@ -3,16 +3,17 @@
 
 package explore.config
 
+import cats.effect.IO
+import cats.effect.Resource
+import crystal.react.StreamResourceRenderer
 import crystal.react.reuse._
 import explore.AppCtx
-import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
 import lucuma.core.model.sequence._
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import queries.common.GeneratedSequenceSQL._
 import react.common._
@@ -32,15 +33,16 @@ object GeneratedSequenceViewer {
     ScalaFnComponent
       .withReuse[Props](props =>
         AppCtx.using { implicit ctx =>
-          LiveQueryRender[
-            ObservationDB,
-            SequenceSteps.Data,
-            Option[FutureExecutionConfig]
-          ](
-            SequenceSteps.query(props.obsId).reuseAlways,
-            ((_: SequenceSteps.Data).observation.flatMap(_.execution.config)).reuseAlways,
-            List.empty.reuseAlways
-          )(
+          StreamResourceRenderer[Option[FutureExecutionConfig]](
+            Resource.eval(
+              IO(
+                fs2.Stream.eval(
+                  SequenceSteps
+                    .query(props.obsId)
+                    .map(_.observation.flatMap(_.execution.config))
+                )
+              )
+            ),
             potRender((renderFn _).reuseAlways)
           )
         }

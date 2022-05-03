@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
 import crystal.implicits._
+import crystal.react.StreamResourceRendererMod
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -21,7 +22,6 @@ import explore.common.ObsQueries._
 import explore.common.UserPreferencesQueries._
 import explore.components.Tile
 import explore.components.TileController
-import explore.components.graphql.LiveQueryRenderMod
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model._
@@ -36,6 +36,7 @@ import explore.syntax.ui._
 import explore.undo.UndoStacks
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -44,7 +45,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all._
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import org.scalajs.dom.window
@@ -323,13 +323,16 @@ object ObsTabContents {
       )
 
     def rightSideRGL(obsId: Observation.Id) =
-      LiveQueryRenderMod[ObservationDB, ObsEditQuery.Data, Pot[ObservationData]](
-        ObsEditQuery.query(obsId).reuseAlways,
-        (ObsEditQuery.Data.observation.get _)
-          .andThen(_.toRight(new Exception(s"Observation [$obsId] not found")).toTry.toPot)
-          .reuseAlways,
-        List(ObservationEditSubscription.subscribe[IO](obsId)).reuseAlways
-      )(
+      StreamResourceRendererMod(
+        ObsEditQuery
+          .query(obsId)
+          .map(
+            (ObsEditQuery.Data.observation.get _)
+              .andThen(_.toRight(new Exception(s"Observation [$obsId] not found")).toTry.toPot)
+          )
+          .reRunOnResourceSignals(
+            ObservationEditSubscription.subscribe[IO](obsId)
+          ),
         // TODO Better declare reusability. We might need higher arities than defined now.
         // Something like this is what we strive for:
         // (props.userId.get, coreWidth, defaultLayout, layouts, notesTile, targetId, props.searching, state.zoom(State.options), obsPot).curryReusing.in(
@@ -437,7 +440,7 @@ object ObsTabContents {
             ),
             GridLayoutSection.ObservationsLayout,
             clazz = ExploreStyles.ObservationTiles.some
-          )
+          ): VdomNode
         }
       )
 

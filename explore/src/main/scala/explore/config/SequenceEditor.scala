@@ -3,15 +3,16 @@
 
 package explore.config
 
+import cats.effect.IO
+import cats.effect.Resource
+import crystal.react.StreamResourceRenderer
 import crystal.react.reuse._
 import explore.AppCtx
-import explore.components.graphql.LiveQueryRender
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import queries.common.ManualSequenceGQL._
 import react.common._
@@ -31,15 +32,16 @@ object SequenceEditor {
     ScalaFnComponent
       .withReuse[Props](props =>
         AppCtx.using { implicit ctx =>
-          LiveQueryRender[
-            ObservationDB,
-            SequenceSteps.Data,
-            Option[SequenceSteps.Data.Observations.Nodes.Config]
-          ](
-            SequenceSteps.query(props.programId).reuseAlways,
-            ((_: SequenceSteps.Data).observations.nodes.headOption.flatMap(_.config)).reuseAlways,
-            List.empty.reuseAlways
-          )(
+          StreamResourceRenderer[Option[SequenceSteps.Data.Observations.Nodes.Config]](
+            Resource.eval(
+              IO(
+                fs2.Stream.eval(
+                  SequenceSteps
+                    .query(props.programId)
+                    .map(_.observations.nodes.headOption.flatMap(_.config))
+                )
+              )
+            ),
             potRender((renderFn _).reuseAlways)
           )
         }

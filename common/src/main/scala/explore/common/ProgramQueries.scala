@@ -9,12 +9,13 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
+import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -57,11 +58,17 @@ object ProgramQueries {
     protected val component =
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
-        LiveQueryRenderMod[ObservationDB, ProgramsQuery.Data, List[ProgramInfo]](
-          ProgramsQuery.query(props.includeDeleted).reuseAlways,
-          (ProgramsQuery.Data.asProgramInfoList _).reuseAlways,
-          List(ProgramEditSubscription.subscribe[IO]()).reuseAlways
-        )(potRender(props.render), props.onNewData)
+
+        StreamResourceRendererMod(
+          ProgramsQuery
+            .query(props.includeDeleted)
+            .map(ProgramsQuery.Data.asProgramInfoList)
+            .flatTap(props.onNewData)
+            .reRunOnResourceSignals(
+              ProgramEditSubscription.subscribe[IO]()
+            ),
+          potRender(props.render)
+        )
       }
   }
 
