@@ -49,12 +49,14 @@ import lucuma.ui.reusability._
 import monocle.Iso
 import monocle.Lens
 import react.common._
+import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
-import react.datepicker._
+
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+
 import scalajs.js
 import scalajs.js.|
 
