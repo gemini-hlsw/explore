@@ -49,9 +49,16 @@ import lucuma.ui.reusability._
 import monocle.Iso
 import monocle.Lens
 import react.common._
+import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
+
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+
+import scalajs.js
+import scalajs.js.|
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -66,6 +73,9 @@ object ConfigurationPanel {
   type Props = ConfigurationPanel
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
+
+  implicit val ldtReuse: Reusability[LocalDateTime] =
+    Reusability.by(_.toEpochSecond(ZoneOffset.UTC))
 
   val dataIso: Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] =
     Iso[SpectroscopyRequirementsData, SpectroscopyConfigurationOptions] { s =>
@@ -136,13 +146,66 @@ object ConfigurationPanel {
       )
     )
 
+  // TODO Move these to react-datetime
+  implicit class LocalDateTimeOps(val localDate: LocalDateTime) extends AnyVal {
+    def toJsDate: js.Date =
+      new js.Date(
+        localDate.getYear,
+        localDate.getMonthValue - 1,
+        localDate.getDayOfMonth,
+        localDate.getHour(),
+        localDate.getMinute()
+      )
+  }
+
+  object LocalDateTimeBuilder {
+    def fromJsDate(jsDate: js.Date): LocalDateTime =
+      LocalDateTime.of(
+        jsDate.getFullYear().toInt,
+        jsDate.getMonth().toInt + 1,
+        jsDate.getDate().toInt,
+        jsDate.getHours().toInt,
+        jsDate.getMinutes().toInt
+      )
+  }
+
+  implicit class JSUndefOrNullOrTuple2DateTimeOps[A](
+    val value: js.UndefOr[DateOrRange]
+  ) extends AnyVal {
+    def toEitherOpt2: Option[Either[(A, A), A]] =
+      value.toOption
+        .flatMap(valueOrNull => Option(valueOrNull.asInstanceOf[A | js.Tuple2[A, A]]))
+        .map { valueOrTuple =>
+          if (js.Array.isArray(valueOrTuple))
+            Left(valueOrTuple.asInstanceOf[js.Tuple2[A, A]])
+          else
+            Right(valueOrTuple.asInstanceOf[A])
+        }
+
+    def toLocalDateEitherOpt(implicit
+      ev: A <:< js.Date
+    ): Option[Either[(LocalDateTime, LocalDateTime), LocalDateTime]] =
+      value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
+        e match {
+          case Left((d1, d2)) =>
+            Left((LocalDateTimeBuilder.fromJsDate(d1), LocalDateTimeBuilder.fromJsDate(d2)))
+          case Right(d)       =>
+            Right(LocalDateTimeBuilder.fromJsDate(d))
+        }
+      }.widen
+
+    def toLocalDateTimeOpt(implicit ev: A <:< js.Date): Option[LocalDateTime] =
+      toLocalDateEitherOpt.flatMap(_.toOption)
+  }
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
       .useStateViewWithReuse(PosAngle.Default)
+      .useState(LocalDateTime.now())
       .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, posAngle, imaging) =>
+      .renderWithReuse { (props, mode, posAngle, obsTime, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
         val requirementsCtx            = props.scienceDataUndo.map(_.zoom(ScienceData.requirements))
 
@@ -196,16 +259,29 @@ object ConfigurationPanel {
           ),
           Form(size = Small)(
             ExploreStyles.Compact,
-            ExploreStyles.ExploreForm,
             ExploreStyles.ObsConfigurationForm
           )(
-            <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
-            EnumViewSelect[ReuseView, PosAngleOptions](id = "pos-angle-alternative",
-                                                       value = posAngleOptionsView
+            <.div(
+              ExploreStyles.ObsConfigurationObsPA,
+              <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
+              EnumViewSelect[ReuseView, PosAngleOptions](id = "pos-angle-alternative",
+                                                         value = posAngleOptionsView
+              ),
+              fixedView.mapValue(posAngleEditor),
+              allowedFlipView.mapValue(posAngleEditor),
+              parallacticOverrideView.mapValue(posAngleEditor)
             ),
-            fixedView.mapValue(posAngleEditor),
-            allowedFlipView.mapValue(posAngleEditor),
-            parallacticOverrideView.mapValue(posAngleEditor)
+            <.div(
+              ExploreStyles.ObsConfigurationObsTime,
+              <.label("Observation time", HelpIcon("configuration/obstime.md")),
+              Datepicker(onChange =
+                (newValue, _) => obsTime.setState(newValue.toLocalDateTimeOpt.get)
+              )
+                .showTimeInput(true)
+                .selected(obsTime.value.toJsDate)
+                .dateFormat("yyyy-MM-dd HH:mm"),
+              "UTC"
+            )
           ),
           Form(size = Small)(
             ExploreStyles.Compact,

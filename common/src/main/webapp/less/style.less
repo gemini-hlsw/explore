@@ -2083,12 +2083,31 @@ html {
 .explore-obs-configuration-form {
   grid-area: obs-props;
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--site-border-color);
+
+  .react-datepicker-wrapper {
+    width: unset;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+  }
 
   .field .ui.selection.dropdown[id='pos-angle-alternative'] {
     min-width: 18ch;
     padding-left: 0.3em;
     padding-right: 0.3em;
   }
+}
+
+.explore-obs-configuration-pa {
+  display: flex;
+  align-items: baseline;
+}
+
+.explore-obs-configuration-time {
+  display: flex;
+  align-items: baseline;
 }
 
 .explore-configuration-form {

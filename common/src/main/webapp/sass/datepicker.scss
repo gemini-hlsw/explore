@@ -1,4 +1,4 @@
-@use "react-datepicker/src/stylesheets/datepicker.scss";
+@use 'datepicker/datepicker.scss';
 
 .react-datepicker {
   font-family: inherit;
@@ -15,8 +15,3 @@
   font-weight: bold;
 }
 
-// https://stackoverflow.com/questions/63284785/react-datepicker-remove-coloring-of-same-day-in-other-months
-.react-datepicker__day.react-datepicker__day--keyboard-selected {
-  background: none;
-  color: black;
-}
