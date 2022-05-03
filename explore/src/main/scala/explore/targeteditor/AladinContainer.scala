@@ -8,7 +8,8 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
-import explore.model.ScienceModeBasic
+import explore.model.ObsConfiguration
+import explore.model.PosAngle
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -20,6 +21,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Offset
 import lucuma.core.math.RightAscension
+import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
 import org.scalajs.dom.document
@@ -28,13 +30,9 @@ import react.common._
 import react.resizeDetector.hooks._
 
 import scala.concurrent.duration._
-import explore.model.ObsConfiguration
-import explore.model.PosAngle
-import lucuma.svgdotjs.Svg
 
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
-  mode:                   Option[ScienceModeBasic],
   obsConf:                Option[ObsConfiguration],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,
@@ -129,8 +127,10 @@ object AladinContainer {
         p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Memoized svg
-      .useMemoBy((p, _) => (p.mode, p.obsConf.map(_.posAngle), p.options)) {
-        case (p, _) => { case (_, posAngle, _) =>
+      .useMemoBy((p, _) =>
+        (p.obsConf.flatMap(_.configuration), p.obsConf.map(_.posAngle), p.options)
+      ) {
+        case (_, _) => { case (mode, posAngle, _) =>
           posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
@@ -140,7 +140,7 @@ object AladinContainer {
             .map { posAngle =>
               visualization
                 .shapesToSvg(
-                  GmosGeometry.shapes(posAngle, p.mode),
+                  GmosGeometry.shapes(posAngle, mode),
                   GmosGeometry.pp,
                   GmosGeometry.ScaleFactor
                 )
@@ -175,7 +175,7 @@ object AladinContainer {
       // Render the visualization, only if current pos, fov or size changes
       .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
-         p.mode,
+         p.obsConf.flatMap(_.configuration),
          p.obsConf.map(_.posAngle),
          currentPos,
          world2pix.value(p.baseCoordinates),

@@ -15,8 +15,8 @@ import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
@@ -39,14 +39,12 @@ import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
-import explore.model.ObsConfiguration
 
 final case class AsterismEditor(
   userId:           User.Id,
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
-  mode:             Option[ScienceModeBasic],
   obsConf:          Option[ObsConfiguration],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
@@ -211,7 +209,6 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.unsafeNarrow[Target.Sidereal],
-                        props.mode,
                         props.obsConf,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,

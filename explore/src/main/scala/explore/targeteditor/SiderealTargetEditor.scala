@@ -19,8 +19,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.implicits._
+import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.formats._
 import explore.model.reusability._
@@ -50,7 +50,6 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
-import explore.model.ObsConfiguration
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -64,7 +63,6 @@ final case class SiderealTargetEditor(
   uid:           User.Id,
   id:            Target.Id,
   target:        ReuseView[Target.Sidereal],
-  mode:          Option[ScienceModeBasic],
   obsConf:       Option[ObsConfiguration],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
@@ -254,7 +252,6 @@ object SiderealTargetEditor {
               AladinCell(
                 props.uid,
                 props.id,
-                props.mode,
                 props.obsConf,
                 targetView.zoom(Target.Sidereal.baseCoordinates)
               ),

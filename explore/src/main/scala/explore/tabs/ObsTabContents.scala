@@ -64,9 +64,9 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
+import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import java.time.LocalDateTime
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
@@ -255,7 +255,7 @@ object ObsTabContents {
                                           d.size.width
                 )
             )
-            .runAsyncAndForget
+            .runAsync
 
     val treeWidth    = panels.get.treeWidth.toInt
     val selectedView = panels.zoom(TwoPanelState.selected)
@@ -281,10 +281,14 @@ object ObsTabContents {
     val targetCoords: Option[Coordinates] =
       props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
-    val config: Option[ScienceModeBasic] = observations.get.collect {
+    val localConf = obsConf.get.configuration
+
+    // if no config defined use the one from the query, else prefer the local
+    val conf: Option[ObsConfiguration] = observations.get.collect {
       case (i, (ObsSummaryWithTitleConstraintsAndConf(_, _, _, _, _, _, _, Some(c)), _))
-          if props.focusedObs.exists(_ === i) =>
-        c
+          if props.focusedObs.exists(_ === i) && localConf.isEmpty =>
+        obsConf.get.copy(configuration = c.some)
+      case _ => obsConf.get
     }.headOption
 
     val backButton = Reuse.always[VdomNode](
@@ -344,8 +348,7 @@ object ObsTabContents {
           (props.userId.get,
            resize,
            coreWidth,
-           config,
-           obsConf,
+           conf,
            defaultObsLayouts,
            layouts,
            notesTile,
@@ -389,8 +392,7 @@ object ObsTabContents {
                 )
               )
             ),
-            config,
-            obsConf.get.some,
+            conf,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
@@ -533,7 +535,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now()))
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now(), none))
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse {
         (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>

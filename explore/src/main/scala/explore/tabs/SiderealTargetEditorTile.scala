@@ -40,7 +40,6 @@ object SiderealTargetEditorTile {
               targetId,
               target,
               none,
-              none,
               undoStacks,
               searching,
               renderInTitle = renderInTitle.some
