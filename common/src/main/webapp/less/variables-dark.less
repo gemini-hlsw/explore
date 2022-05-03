@@ -159,6 +159,8 @@
   --warning-text-color: hsl(0, 0%, 100%);
   --warning-background-color: hsl(35, 75.3%, 49.8%);
   --explore-accent-color: hsla(120, 73.4%, 74.9%, 80%);
+  --explore-accent-color-darken-5: hsla(120, 73.4%, 69.9%, 80%);
+  --explore-accent-color-lighten-5: hsla(120, 73.4%, 79.9%, 80%);
   --explore-selected-box-color: yellow;
   --under-tab-background-color: var(--color-background-light-10);
   --under-tab-background-focus-color: var(--color-background-light-6);
@@ -194,19 +196,24 @@
 }
 
 .datepicker-dark() {
-  --date-picker-background-color: hsl(0, 0%, 94.1%);
+  --date-picker-background-color: var(--color-background-light-10);
+  --date-picker-header-background-color: var(--color-background-light-20);
   --date-picker-border-color: hsl(0, 0%, 68.2%);
-  --date-picker-highlighted-color: hsl(125, 58.4%, 52%);
+  --date-picker-highlighted-color: hsl(125, 58.4%, 99%);
   --date-picker-highlighted-color-darken-5: hsl(125, 58.4%, 47%);
   --date-picker-muted-color: hsl(0, 0%, 80%);
   --date-picker-muted-color-lighten-10: hsl(0, 0%, 90%);
   --date-picker-muted-color-darken-10: hsl(0, 0%, 70%);
   --date-picker-muted-color-darken-15: hsl(0, 0%, 65%);
-  --date-picker-text-color: hsl(0, 0%, 0%);
-  --date-picker-header-color: hsl(0, 0%, 0%);
-  --date-picker-selected-color: hsl(206, 66.7%, 38.8%);
-  --date-picker-selected-color-darken-5: hsl(206, 66.7%, 33.8%);
-  --date-picker-selected-color-lighten-5: hsl(206, 66.7%, 43.8%);
+  --date-picker-text-color: var(--dark-text-color);
+  --date-picker-header-color: var(--text-color);
+  --date-picker-selected-color: var(--color-background);
+  --date-picker-selected-color-darken-5: var(--color-background-dark-5);
+  --date-picker-selected-color-lighten-5: var(--color-background-light-5);
+  --date-picker-keyboard-selected-background-color: var(
+    --color-background-light-6
+  );
+  --date-picker-keyboard-selected-color: var(--text-color);
 }
 
 .form-dark() {

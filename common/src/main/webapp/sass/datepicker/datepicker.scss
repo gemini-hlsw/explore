@@ -11,7 +11,7 @@
 .react-datepicker {
   font-family: $datepicker__font-family;
   font-size: $datepicker__font-size;
-  background-color: #fff;
+  background-color: var(--date-picker-background-color);
   color: $datepicker__text-color;
   border: 1px solid $datepicker__border-color;
   border-radius: $datepicker__border-radius;
@@ -468,8 +468,8 @@
 
   &--keyboard-selected {
     border-radius: $datepicker__border-radius;
-    background-color: var(--date-picker-selected-color-lighten-5);
-    color: #fff;
+    background-color: var(--date-picker-keyboard-selected-background-color);
+    color: var(--date-picker-keyboard-selected-color);
 
     &:hover {
       background-color: var(--date-picker-selected-color-darken-5);
