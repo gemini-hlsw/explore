@@ -39,11 +39,13 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import explore.model.ObsConfiguration
 
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   mode:             Option[ScienceModeBasic],
+  obsConf:          Option[ObsConfiguration],
   target:           ReuseView[Coordinates]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {
@@ -104,11 +106,11 @@ object AladinCell extends ModelOptics {
               .rateLimit(1.seconds, 1)
               .void
         }
-
         val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
             props.mode,
+            props.obsConf,
             t,
             coordinatesSetter,
             Reuse.currying(props).in(fovSetter _),

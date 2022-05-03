@@ -26,6 +26,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
 import react.common._
+import explore.model.ObsConfiguration
 
 object AsterismEditorTile {
 
@@ -35,6 +36,7 @@ object AsterismEditorTile {
     obsId:         ObsIdSet,
     asterismPot:   Pot[ReuseView[List[TargetWithId]]],
     mode:          Option[ScienceModeBasic],
+    obsConf:       Option[ObsConfiguration],
     currentTarget: Option[Target.Id],
     setTarget:     (Option[Target.Id], SetRouteVia) ==> Callback,
     otherObsCount: Target.Id ==> Int,
@@ -58,6 +60,7 @@ object AsterismEditorTile {
          obsId,
          asterismPot,
          mode,
+         obsConf,
          currentTarget,
          setTarget,
          otherObsCount,
@@ -78,6 +81,7 @@ object AsterismEditorTile {
                   obsId,
                   asterism,
                   mode,
+                  obsConf,
                   currentTarget,
                   setTarget,
                   otherObsCount,

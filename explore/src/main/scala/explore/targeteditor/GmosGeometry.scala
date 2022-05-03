@@ -43,7 +43,7 @@ object GmosGeometry {
     PortDisposition.Side
 
   // Move to react common
-  private implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
+  implicit val cssOrder: Order[Css] = Order.by(_.htmlClass)
 
   // Shape to display
   def shapes(posAngle: Angle, mode: Option[ScienceModeBasic]): NonEmptyMap[Css, ShapeExpression] =

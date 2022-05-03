@@ -29,6 +29,7 @@ import explore.model.display._
 import explore.model.enum.AppTab
 import explore.model.layout._
 import explore.model.layout.unsafe._
+import explore.model.reusability._
 import explore.observationtree.ObsList
 import explore.optics._
 import explore.syntax.ui._
@@ -65,6 +66,7 @@ import react.semanticui.sizes._
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import java.time.LocalDateTime
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
@@ -235,6 +237,7 @@ object ObsTabContents {
     defaultLayouts:     LayoutsMap,
     layouts:            ReuseView[LayoutsMap],
     resize:             UseResizeDetectorReturn,
+    obsConf:            ReuseView[ObsConfiguration],
     debouncer:          Reusable[UseSingleEffect[IO]],
     obsWithConstraints: ReuseView[ObsSummariesWithConstraints]
   )(implicit ctx:       AppContextIO): VdomNode = {
@@ -298,12 +301,13 @@ object ObsTabContents {
       )(^.href := ctx.pageUrl(AppTab.Observations, props.programId, none, none), Icons.ChevronLeft)
     )
 
-    val coreWidth  =
+    val coreWidth =
       if (window.canFitTwoPanels) {
         resize.width.getOrElse(0)
       } else {
         resize.width.getOrElse(0) - treeWidth
       }
+
     val coreHeight = resize.height.getOrElse(0)
 
     val notesTile =
@@ -340,6 +344,8 @@ object ObsTabContents {
           (props.userId.get,
            resize,
            coreWidth,
+           config,
+           obsConf,
            defaultObsLayouts,
            layouts,
            notesTile,
@@ -384,6 +390,7 @@ object ObsTabContents {
               )
             ),
             config,
+            obsConf.get.some,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
@@ -413,6 +420,7 @@ object ObsTabContents {
 
           val configurationTile = ConfigurationTile.configurationTile(
             obsId,
+            obsConf,
             obsView.map(_.zoom(scienceDataForObs)),
             props.undoStacks
               .zoom(ModelUndoStacks.forScienceData[IO])
@@ -524,15 +532,25 @@ object ObsTabContents {
               }
               .runAsync
       }
+      // Shared obs conf (posAngle/obsTime)
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now()))
       .useSingleEffect(debounce = 1.second)
-      .render { (props, twoPanelState, resize, layouts, defaultLayout, debouncer) =>
-        implicit val ctx = props.ctx
-        <.div(
-          ObsLiveQuery(
-            props.programId,
-            Reuse(renderFn _)(props, twoPanelState, defaultLayout, layouts, resize, debouncer)
-          )
-        ).withRef(resize.ref)
+      .renderWithReuse {
+        (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>
+          implicit val ctx = props.ctx
+          <.div(
+            ObsLiveQuery(
+              props.programId,
+              Reuse(renderFn _)(props,
+                                twoPanelState,
+                                defaultLayout,
+                                layouts,
+                                resize,
+                                obsConf,
+                                debouncer
+              )
+            )
+          ).withRef(resize.ref)
       }
 
 }

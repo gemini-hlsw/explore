@@ -50,6 +50,7 @@ import react.common._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.label.LabelPointing
 import react.semanticui.sizes.Small
+import explore.model.ObsConfiguration
 
 final case class SearchCallback(
   searchTerm: NonEmptyString,
@@ -64,6 +65,7 @@ final case class SiderealTargetEditor(
   id:            Target.Id,
   target:        ReuseView[Target.Sidereal],
   mode:          Option[ScienceModeBasic],
+  obsConf:       Option[ObsConfiguration],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,
@@ -253,6 +255,7 @@ object SiderealTargetEditor {
                 props.uid,
                 props.id,
                 props.mode,
+                props.obsConf,
                 targetView.zoom(Target.Sidereal.baseCoordinates)
               ),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(

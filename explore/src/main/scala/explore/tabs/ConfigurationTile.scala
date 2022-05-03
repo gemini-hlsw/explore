@@ -19,10 +19,12 @@ import lucuma.core.model.Observation
 import lucuma.ui.reusability._
 import queries.schemas.itc.implicits._
 import react.common._
+import explore.model.ObsConfiguration
 
 object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
+    obsConf:      ReuseView[ObsConfiguration],
     scienceData:  Pot[ReuseView[ScienceData]],
     undoStacks:   ReuseView[UndoStacks[IO, ScienceData]]
   )(implicit ctx: AppContextIO) =
@@ -31,10 +33,11 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(
-      (scienceData, undoStacks).curryReusing.in((potView, undoStacks_, renderInTitle) =>
+      (scienceData, obsConf, undoStacks).curryReusing.in((potView, _, undoStacks_, renderInTitle) =>
         potRender[ReuseView[ScienceData]](
           Reuse.always(scienceData_ =>
             ConfigurationPanel(obsId,
+                               obsConf,
                                scienceData_.map(UndoContext(undoStacks_, _)),
                                scienceData_.get.constraints,
                                scienceData_.get.itcTargets,

@@ -39,6 +39,7 @@ import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
+import explore.model.ObsConfiguration
 
 final case class AsterismEditor(
   userId:           User.Id,
@@ -46,6 +47,7 @@ final case class AsterismEditor(
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
   mode:             Option[ScienceModeBasic],
+  obsConf:          Option[ObsConfiguration],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
   otherObsCount:    Target.Id ==> Int,
@@ -210,6 +212,7 @@ object AsterismEditor {
                         targetId,
                         targetView.unsafeNarrow[Target.Sidereal],
                         props.mode,
+                        props.obsConf,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,
                         onClone = Reuse

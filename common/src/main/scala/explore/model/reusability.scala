@@ -71,6 +71,7 @@ object reusability {
   implicit val angularSizeReuse: Reusability[AngularSize]                 = Reusability.byEq
   implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult] = Reusability.byEq
   implicit val scienceModenResultReuse: Reusability[ScienceModeBasic]     = Reusability.byEq
+  implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]       = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }

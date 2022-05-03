@@ -378,6 +378,7 @@ object TargetTabContents {
           idsToEdit,
           Pot(asterismView),
           obsConfiguration,
+          none,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),

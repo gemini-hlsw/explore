@@ -21,6 +21,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ITCTarget
 import explore.model.ImagingConfigurationOptions
+import explore.model.ObsConfiguration
 import explore.model.PosAngle
 import explore.model.SpectroscopyConfigurationOptions
 import explore.model.TruncatedPA
@@ -62,6 +63,7 @@ import scalajs.js.|
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
+  obsConf:          ReuseView[ObsConfiguration],
   scienceDataUndo:  Reuse[UndoContext[ScienceData]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
@@ -202,10 +204,8 @@ object ConfigurationPanel {
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewWithReuse[ScienceMode](ScienceMode.Spectroscopy)
-      .useStateViewWithReuse(PosAngle.Default)
-      .useState(LocalDateTime.now())
       .useStateViewWithReuse[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .renderWithReuse { (props, mode, posAngle, obsTime, imaging) =>
+      .renderWithReuse { (props, mode, imaging) =>
         implicit val ctx: AppContextIO = props.ctx
         val requirementsCtx            = props.scienceDataUndo.map(_.zoom(ScienceData.requirements))
 
@@ -225,19 +225,25 @@ object ConfigurationPanel {
             .withOnMod(conf => setScienceMode(props.obsId, conf).runAsync)
         )
 
-        val posAngleOptionsView = posAngle.zoom(unsafePosOptionsLens)
+        val posAngleOptionsView =
+          props.obsConf.zoom(ObsConfiguration.posAngle.andThen(unsafePosOptionsLens))
 
-        val fixedView = posAngle
+        val fixedView = props.obsConf
+          .zoom(ObsConfiguration.posAngle)
           .zoom(PosAngle.fixedAnglePrism)
           .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val allowedFlipView = posAngle
+        val allowedFlipView = props.obsConf
+          .zoom(ObsConfiguration.posAngle)
           .zoom(PosAngle.allowFlipAnglePrism)
           .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val parallacticOverrideView = posAngle
+        val parallacticOverrideView = props.obsConf
+          .zoom(ObsConfiguration.posAngle)
           .zoom(PosAngle.parallacticOverrideAnglePrism)
           .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
+
+        val obsTime = props.obsConf.zoom(ObsConfiguration.obsTime)
 
         def posAngleEditor(pa: ReuseView[TruncatedPA]) =
           <.div(
@@ -274,11 +280,9 @@ object ConfigurationPanel {
             <.div(
               ExploreStyles.ObsConfigurationObsTime,
               <.label("Observation time", HelpIcon("configuration/obstime.md")),
-              Datepicker(onChange =
-                (newValue, _) => obsTime.setState(newValue.toLocalDateTimeOpt.get)
-              )
+              Datepicker(onChange = (newValue, _) => obsTime.set(newValue.toLocalDateTimeOpt.get))
                 .showTimeInput(true)
-                .selected(obsTime.value.toJsDate)
+                .selected(obsTime.get.toJsDate)
                 .dateFormat("yyyy-MM-dd HH:mm"),
               "UTC"
             )
