@@ -193,6 +193,22 @@
   --site-highlight-background: hsl(211, 31%, 48%);
 }
 
+.datepicker-dark() {
+  --date-picker-background-color: hsl(0, 0%, 94.1%);
+  --date-picker-border-color: hsl(0, 0%, 68.2%);
+  --date-picker-highlighted-color: hsl(125, 58.4%, 52%);
+  --date-picker-highlighted-color-darken-5: hsl(125, 58.4%, 47%);
+  --date-picker-muted-color: hsl(0, 0%, 80%);
+  --date-picker-muted-color-lighten-10: hsl(0, 0%, 90%);
+  --date-picker-muted-color-darken-10: hsl(0, 0%, 70%);
+  --date-picker-muted-color-darken-15: hsl(0, 0%, 65%);
+  --date-picker-text-color: hsl(0, 0%, 0%);
+  --date-picker-header-color: hsl(0, 0%, 0%);
+  --date-picker-selected-color: hsl(206, 66.7%, 38.8%);
+  --date-picker-selected-color-darken-5: hsl(206, 66.7%, 33.8%);
+  --date-picker-selected-color-lighten-5: hsl(206, 66.7%, 43.8%);
+}
+
 .form-dark() {
   --input-color: var(--color-text-full);
   --form-input-color: var(--site-input-color);
@@ -206,7 +222,7 @@
 }
 
 .button-dark() {
-  @activeColor: #216ba5;
+  @activeColor: hsl(206, 66.7%, 38.8%);
   @tertiaryTextColor: rgba(0, 0, 0, 0.6);
   @tertiaryHoverColor: lighten(fadein(@tertiaryTextColor, 100%), 20%);
   @tertiaryActiveColor: lighten(@tertiaryHoverColor, 20%);
@@ -351,4 +367,5 @@
   .reflex-dark();
   .header-dark();
   .plot-dark();
+  .datepicker-dark();
 }
