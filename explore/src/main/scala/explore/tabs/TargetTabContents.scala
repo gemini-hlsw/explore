@@ -352,7 +352,7 @@ object TargetTabContents {
           asterismView.zoom(optional).addReuseBy(targetId)
         }
 
-      val obsConfiguration = idsToEdit.single match {
+      val scienceMode = idsToEdit.single match {
         case Some(id) =>
           asterismGroupsWithObs
             .zoom(AsterismGroupsWithObs.observations)
@@ -361,9 +361,12 @@ object TargetTabContents {
               case (k, ObsSummaryWithConstraintsAndConf(_, _, _, _, _, _, Some(v))) if k === id => v
             }
             .headOption
-            .map(c => ObsConfiguration(PosAngle.Default, LocalDateTime.now(), c.some))
         case _        => None
       }
+
+      // Until these are in the API
+      val obsConfiguration =
+        scienceMode.map(_ => ObsConfiguration(PosAngle.Default, LocalDateTime.now()))
 
       def setCurrentTarget(
         programId: Program.Id,
@@ -378,7 +381,7 @@ object TargetTabContents {
           props.userId,
           props.programId,
           idsToEdit,
-          Pot(asterismView),
+          Pot(asterismView, scienceMode),
           obsConfiguration,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),

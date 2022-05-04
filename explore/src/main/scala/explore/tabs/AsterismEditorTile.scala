@@ -13,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ScienceModeBasic
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
@@ -30,22 +31,22 @@ import react.common._
 object AsterismEditorTile {
 
   def asterismEditorTile(
-    userId:        Option[User.Id],
-    programId:     Program.Id,
-    obsId:         ObsIdSet,
-    asterismPot:   Pot[ReuseView[List[TargetWithId]]],
-    obsConf:       Option[ObsConfiguration],
-    currentTarget: Option[Target.Id],
-    setTarget:     (Option[Target.Id], SetRouteVia) ==> Callback,
-    otherObsCount: Target.Id ==> Int,
-    undoStacks:    ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
-    searching:     ReuseView[Set[Target.Id]],
-    title:         String,
-    backButton:    Option[Reuse[VdomNode]] = None,
-    hiddenColumns: ReuseView[Set[String]],
-    width:         Int,
-    height:        Int
-  )(implicit ctx:  AppContextIO) =
+    userId:          Option[User.Id],
+    programId:       Program.Id,
+    obsId:           ObsIdSet,
+    potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])],
+    obsConf:         Option[ObsConfiguration],
+    currentTarget:   Option[Target.Id],
+    setTarget:       (Option[Target.Id], SetRouteVia) ==> Callback,
+    otherObsCount:   Target.Id ==> Int,
+    undoStacks:      ReuseView[Map[Target.Id, UndoStacks[IO, Target.Sidereal]]],
+    searching:       ReuseView[Set[Target.Id]],
+    title:           String,
+    backButton:      Option[Reuse[VdomNode]] = None,
+    hiddenColumns:   ReuseView[Set[String]],
+    width:           Int,
+    height:          Int
+  )(implicit ctx:    AppContextIO) =
     Tile(ObsTabTiles.TargetId,
          title,
          back = backButton,
@@ -56,7 +57,7 @@ object AsterismEditorTile {
         (userId,
          programId,
          obsId,
-         asterismPot,
+         potAsterismMode,
          obsConf,
          currentTarget,
          setTarget,
@@ -68,28 +69,29 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRender[ReuseView[List[TargetWithId]]](
-          (
-            (asterism: ReuseView[List[TargetWithId]]) =>
-              userId.map(uid =>
-                AsterismEditor(
-                  uid,
-                  programId,
-                  obsId,
-                  asterism,
-                  obsConf,
-                  currentTarget,
-                  setTarget,
-                  otherObsCount,
-                  undoStacks,
-                  searching,
-                  hiddenColumns,
-                  renderInTitle
-                )
-              ): VdomNode
-          ).reuseAlways
+        potRender[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])](
+          { (asterismMode: (ReuseView[List[TargetWithId]], Option[ScienceModeBasic])) =>
+            val (asterism, scienceMode) = asterismMode
+            userId.map(uid =>
+              AsterismEditor(
+                uid,
+                programId,
+                obsId,
+                asterism,
+                scienceMode,
+                obsConf,
+                currentTarget,
+                setTarget,
+                otherObsCount,
+                undoStacks,
+                searching,
+                hiddenColumns,
+                renderInTitle
+              )
+            ): VdomNode
+          }.reuseAlways
         )(
-          asterismPot
+          potAsterismMode
         )
       }
     )

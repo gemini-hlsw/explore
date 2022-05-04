@@ -15,21 +15,17 @@ import java.time.LocalDateTime
  * the db subscriptions to arrive
  */
 final case class ObsConfiguration(
-  posAngle:      PosAngle,
-  obsTime:       LocalDateTime,
-  configuration: Option[ScienceModeBasic]
+  posAngle: PosAngle,
+  obsTime:  LocalDateTime
 )
 
 object ObsConfiguration {
   implicit val eqObsConfiguration: Eq[ObsConfiguration] =
-    Eq.by(x => (x.posAngle, x.obsTime, x.configuration))
+    Eq.by(x => (x.posAngle, x.obsTime))
 
   val posAngle: Lens[ObsConfiguration, PosAngle] =
     Focus[ObsConfiguration](_.posAngle)
 
   val obsTime: Lens[ObsConfiguration, LocalDateTime] =
     Focus[ObsConfiguration](_.obsTime)
-
-  val configuration: Lens[ObsConfiguration, Option[ScienceModeBasic]] =
-    Focus[ObsConfiguration](_.configuration)
 }
