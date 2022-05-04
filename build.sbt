@@ -11,6 +11,8 @@ ThisBuild / scalafixDependencies += "com.github.liancheng"           %% "organiz
 
 ThisBuild / evictionErrorLevel := Level.Info
 
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
@@ -75,6 +77,20 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
+lazy val workers = project
+  .in(file("workers"))
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(esModule: _*)
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    libraryDependencies ++=
+      Log4Cats.value ++
+        ScalaJSDOM.value ++
+        ScalaWebAppUtil.value
+  )
+  .enablePlugins(ScalaJSPlugin)
+
 lazy val graphql = project
   .in(file("common-graphql"))
   .dependsOn(model.jvm)
@@ -101,6 +117,7 @@ lazy val common = project
         ReactCommon.value ++
         ReactTable.value ++
         ReactVirtuoso.value ++
+        ScalaJSDOM.value ++
         SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
@@ -134,8 +151,8 @@ lazy val explore: Project = project
   .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    Test / test     := {},
-    coverageEnabled := false,
+    Test / test          := {},
+    coverageEnabled      := false,
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
@@ -145,11 +162,21 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactHotkeys.value ++
-        ReactResizable.value
+        ReactResizable.value ++
+        ScalaJSDOM.value,
+    // Build workers when you build explore
+    Compile / fastLinkJS := (Compile / fastLinkJS)
+      .dependsOn((workers / Compile / fastLinkJS))
+      .value,
+    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn((workers / Compile / fullLinkJS)).value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   scalacOptions ~= (_.filterNot(Set("-Vtype-diffs")))
+)
+
+lazy val common3Settings = commonSettings ++ Seq(
+  scalacOptions ~= (_.filterNot(Set("-Ymacro-annotations")))
 )
 
 lazy val commonLibSettings = Seq(
@@ -216,7 +243,7 @@ lazy val esModule = Seq(
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     // If the browser is too slow for the SmallModulesFor switch to ModuleSplitStyle.FewestModules
-    ModuleSplitStyle.SmallModulesFor(List("explore"))
+    ModuleSplitStyle.SmallModulesFor(List("worker", "explore"))
   )),
   Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     ModuleSplitStyle.FewestModules

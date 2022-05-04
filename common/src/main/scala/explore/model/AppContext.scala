@@ -29,9 +29,11 @@ import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
+import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas._
 import retry._
+import workers.WebWorkerF
 
 import scala.concurrent.duration._
 
@@ -116,7 +118,8 @@ case class AppContext[F[_]](
     Option[Target.Id],
     SetRouteVia
   ) => Callback,
-  environment: ExecutionEnvironment
+  environment: ExecutionEnvironment,
+  worker:      WebWorkerF[F] // There will be a few workers in the future
 )(implicit
   val F:       Applicative[F],
   val logger:  Logger[F],
@@ -151,6 +154,17 @@ case class AppContext[F[_]](
   ): Callback = replacePage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
 }
 
+object WebWorkers {
+  def createIOWorker[F[_]: Async](file: String): F[WebWorkerF[F]] = Sync[F].delay {
+    val worker = new dom.Worker(file,
+                                new dom.WorkerOptions {
+                                  `type` = dom.WorkerType.module
+                                }
+    )
+    WebWorkerF[F](worker)
+  }
+}
+
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
@@ -168,6 +182,7 @@ object AppContext {
       clients    <-
         Clients
           .build[F](config.odbURI, config.preferencesDBURI, config.itcURI, reconnectionStrategy)
+      worker     <- WebWorkers.createIOWorker[F]("/workers.js")
       staticData <- StaticData.build[F](uri"/instrument_spectroscopy_matrix.csv")
       version     = utils.version(config.environment)
       actions     = Actions[F]()
@@ -178,6 +193,7 @@ object AppContext {
                           SSOClient(config.sso),
                           pageUrl,
                           setPageVia,
-                          config.environment
+                          config.environment,
+                          worker
     )
 }

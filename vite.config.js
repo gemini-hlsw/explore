@@ -25,6 +25,11 @@ module.exports = ({ command, mode }) => {
     isProduction
       ? path.resolve(scalaClassesDir, 'explore-opt')
       : path.resolve(scalaClassesDir, 'explore-fastopt');
+  const workersScalaClassesDir = path.resolve(__dirname, 'workers/target/scala-2.13');
+  const workersSjs =
+    isProduction
+      ? path.resolve(workersScalaClassesDir, 'workers-opt')
+      : path.resolve(workersScalaClassesDir, 'workers-fastopt');
   const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(__dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
@@ -61,6 +66,10 @@ module.exports = ({ command, mode }) => {
         {
           find: '@sjs',
           replacement: sjs,
+        },
+        {
+          find: '@workers',
+          replacement: workersSjs,
         },
         {
           find: '/common',
@@ -134,6 +143,9 @@ module.exports = ({ command, mode }) => {
         plugins: rollupPlugins
       },
       outDir: path.resolve(__dirname, 'heroku/static'),
+    },
+    worker: {
+      format: 'es'
     },
     plugins: [
       isProduction ? null : mkcert.default({ hosts: ['localhost', 'local.lucuma.xyz'] }),
