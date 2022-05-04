@@ -330,12 +330,10 @@ object TargetTabContents {
       }
 
       val asterismView: ReuseView[List[TargetWithId]] =
-        asterismGroupsWithObs
-          .map(
-            _.withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-              .zoom(getAsterism)(modAsterism)
-          )
-          .addReuseByFrom(panels)
+        asterismGroupsWithObs.value
+          .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
+          .zoom(getAsterism)(modAsterism)
+          .reuseByValue
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
