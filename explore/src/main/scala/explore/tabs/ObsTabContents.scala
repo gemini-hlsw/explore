@@ -281,16 +281,6 @@ object ObsTabContents {
     val targetCoords: Option[Coordinates] =
       props.focusedTarget.flatMap(obsWithConstraints.get.targetMap.get).flatMap(_.coords)
 
-    val localConf = obsConf.get.configuration
-
-    // if no config defined use the one from the query, else prefer the local
-    val conf: Option[ObsConfiguration] = observations.get.collect {
-      case (i, (ObsSummaryWithTitleConstraintsAndConf(_, _, _, _, _, _, _, Some(c)), _))
-          if props.focusedObs.exists(_ === i) && localConf.isEmpty =>
-        obsConf.get.copy(configuration = c.some)
-      case _ => obsConf.get
-    }.headOption
-
     val backButton = Reuse.always[VdomNode](
       Button(
         as = <.a,
@@ -348,7 +338,7 @@ object ObsTabContents {
           (props.userId.get,
            resize,
            coreWidth,
-           conf,
+           obsConf,
            defaultObsLayouts,
            layouts,
            notesTile,
@@ -379,20 +369,24 @@ object ObsTabContents {
           ): Callback =
             ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
 
+          val potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])] =
+            obsView.map(rv =>
+              (rv.value
+                 .zoom(
+                   ObservationData.targetEnvironment
+                     .andThen(ObservationData.TargetEnvironment.asterism)
+                 )
+                 .reuseByValue,
+               rv.get.scienceMode
+              )
+            )
+
           val targetTile = AsterismEditorTile.asterismEditorTile(
             props.userId.get,
             props.programId,
             ObsIdSet.one(obsId),
-            obsView.map(
-              _.map(
-                _.zoom(
-                  ObservationData.targetEnvironment.andThen(
-                    ObservationData.TargetEnvironment.asterism
-                  )
-                )
-              )
-            ),
-            conf,
+            potAsterismMode,
+            obsConf.get.some,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),
@@ -535,7 +529,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now(), none))
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now()))
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse {
         (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>
