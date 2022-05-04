@@ -4,6 +4,9 @@
 package explore
 
 import cats._
+import cats.data.NonEmptyList
+import cats.effect.Concurrent
+import cats.effect.kernel.Resource
 import cats.syntax.all._
 import clue._
 import coulomb.Quantity
@@ -151,6 +154,43 @@ object implicits
           .setTimeout(duration.Duration.Zero)
           .void
       }
+  }
+
+  implicit class EffectOps[F[_], A](val f: F[A]) extends AnyVal {
+
+    /**
+     * Given an effect producing an A and a signal stream, runs the effect and then re-runs it
+     * whenver a signal is received, producing a Stream[A].
+     */
+    def reRunOnSignal(signal: fs2.Stream[F, Unit]): fs2.Stream[F, A] =
+      fs2.Stream.eval(f) ++ signal.evalMap(_ => f)
+
+    /**
+     * Given an effect producing an A and a bunch of signal streams, runs the effect and then
+     * re-runs it whenver a signal is received, producing a Stream[A].
+     */
+    def reRunOnSignals(
+      signals: NonEmptyList[fs2.Stream[F, Unit]]
+    )(implicit
+      F:       Concurrent[F]
+    ): fs2.Stream[F, A] =
+      reRunOnSignal(signals.reduceLeft(_ merge _))
+
+    def reRunOnResourceSignals(
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]]
+    )(implicit
+      F:             Concurrent[F]
+    ): Resource[F, fs2.Stream[F, A]] =
+      subscriptions.sequence
+        .map(ss => reRunOnSignals(ss.map(_.void)))
+
+    def reRunOnResourceSignals(
+      head: Resource[F, fs2.Stream[F, _]],
+      tail: Resource[F, fs2.Stream[F, _]]*
+    )(implicit
+      F:    Concurrent[F]
+    ): Resource[F, fs2.Stream[F, A]] =
+      reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
   }
 
 }

@@ -7,18 +7,18 @@ import cats.Order
 import cats.effect.IO
 import cats.implicits._
 import crystal.react.ReuseView
+import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
-import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConf
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
@@ -92,18 +92,16 @@ object ConstraintGroupQueries {
     protected val component =
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
-        LiveQueryRenderMod[ObservationDB,
-                           ConstraintGroupObsQuery.Data,
-                           ConstraintSummaryWithObervations
-        ](
-          Reuse.currying(props.programId).in(pid => ConstraintGroupObsQuery.query(pid)),
-          (ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get _).reuseAlways,
-          Reuse.by(props.programId)(
-            List(
+
+        StreamResourceRendererMod(
+          ConstraintGroupObsQuery
+            .query(props.programId)
+            .map(ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get)
+            .reRunOnResourceSignals(
               ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-            )
-          )
-        )(potRender(props.render))
+            ),
+          potRender(props.render)
+        )
       }
   }
 }

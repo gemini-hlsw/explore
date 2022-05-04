@@ -9,8 +9,8 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
+import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
-import explore.components.graphql.LiveQueryRenderMod
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -23,6 +23,7 @@ import explore.model.reusability._
 import explore.optics._
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -138,19 +139,15 @@ object ObsQueries {
     protected val component = ScalaFnComponent.withReuse[Props] { props =>
       implicit val ctx = props.ctx
 
-      LiveQueryRenderMod[
-        ObservationDB,
-        ProgramObservationsQuery.Data,
-        ObsSummariesWithConstraints
-      ](
-        Reuse.currying(props.programId).in(pid => ProgramObservationsQuery.query(pid)),
-        (ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get _).reuseAlways,
-        Reuse.by(props.programId)(
-          List(
+      StreamResourceRendererMod(
+        ProgramObservationsQuery
+          .query(props.programId)
+          .map(ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get)
+          .reRunOnResourceSignals(
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-          )
-        )
-      )(potRender(props.render))
+          ),
+        potRender(props.render)
+      )
     }
   }
 

@@ -10,8 +10,8 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
+import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
-import explore.components.graphql.LiveQueryRenderMod
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
@@ -19,6 +19,7 @@ import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.TargetGroup
 import explore.utils._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -124,16 +125,16 @@ object AsterismQueries {
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
 
-        LiveQueryRenderMod[ObservationDB, AsterismGroupObsQuery.Data, AsterismGroupsWithObs](
-          Reuse.currying(props.programId).in(pid => AsterismGroupObsQuery.query(pid)),
-          (AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get _).reuseAlways,
-          Reuse.by(props.programId)(
-            List(
+        StreamResourceRendererMod(
+          AsterismGroupObsQuery
+            .query(props.programId)
+            .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
+            .reRunOnResourceSignals(
               ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
-            )
-          )
-        )(potRender(props.render))
+            ),
+          potRender(props.render)
+        )
       }
   }
 
