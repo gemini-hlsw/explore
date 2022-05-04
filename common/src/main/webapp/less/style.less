@@ -1174,96 +1174,6 @@ tfoot {
   outline: 3px solid pink !important;
 }
 
-.target-grid {
-  display: grid;
-  grid-gap: 0.5em;
-  grid-row-gap: 0.3em;
-  padding: 0.5em;
-  height: 100%;
-
-  .explore-title-undo-buttons {
-    grid-area: undo;
-  }
-
-  .target-aladin-cell {
-    grid-area: aladin;
-  }
-
-  .target-form {
-    grid-area: coordinates;
-  }
-
-  .target-proper-motion-form {
-    grid-area: proper-motion;
-  }
-
-  .target-source-profile-editor {
-    grid-area: source-profile;
-  }
-}
-
-.tile-xl-width,
-.tile-lg-width,
-.tile-md-width,
-.tile-sm-width {
-  .target-grid {
-    grid-template-columns: 1fr 2fr;
-    grid-template-rows: min-content min-content min-content 1fr;
-    grid-template-areas:
-      'undo           aladin'
-      'coordinates    aladin'
-      'proper-motion  aladin'
-      'source-profile aladin';
-  }
-
-  .target-aladin-cell {
-    grid-row: span 4;
-  }
-}
-
-// For very small tables hide the headers and add fake "header" to the left of the row
-.tile-xs-width {
-  .target-grid {
-    grid-template-areas: 'aladin';
-    grid-template-columns: 1fr;
-
-    .explore-title-undo-buttons {
-      display: none;
-    }
-
-    .target-form {
-      display: none;
-    }
-
-    .target-proper-motion-form {
-      display: none;
-    }
-
-    .target-source-profile-editor {
-      display: none;
-    }
-  }
-
-  .explore-brightnesses-container {
-    .ui.table,
-    thead,
-    tbody,
-    th,
-    td,
-    tr {
-      // SUI already has an !important
-      display: block !important;
-    }
-
-    // Hide table headers (but not display: none;, for accessibility)
-    thead tr {
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-    }
-  }
-}
-
 .target-rv-controls {
   justify-self: stretch;
 
@@ -1497,6 +1407,96 @@ img.partner-split-flag {
 
     .th {
       white-space: nowrap;
+    }
+  }
+}
+
+.target-grid {
+  display: grid;
+  grid-gap: 0.5em;
+  grid-row-gap: 0.3em;
+  padding: 0.5em;
+  height: 100%;
+
+  .explore-title-undo-buttons {
+    grid-area: undo;
+  }
+
+  .target-aladin-cell {
+    grid-area: aladin;
+  }
+
+  .target-form {
+    grid-area: coordinates;
+  }
+
+  .target-proper-motion-form {
+    grid-area: proper-motion;
+  }
+
+  .target-source-profile-editor {
+    grid-area: source-profile;
+  }
+}
+
+.tile-xl-width,
+.tile-lg-width,
+.tile-md-width,
+.tile-sm-width {
+  .target-grid {
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: min-content min-content min-content 1fr;
+    grid-template-areas:
+      'undo           aladin'
+      'coordinates    aladin'
+      'proper-motion  aladin'
+      'source-profile aladin';
+  }
+
+  .target-aladin-cell {
+    grid-row: span 4;
+  }
+}
+
+// For very small tables hide the headers and add fake "header" to the left of the row
+.tile-xs-width {
+  .target-grid {
+    grid-template-areas: 'aladin';
+    grid-template-columns: 1fr;
+
+    .explore-title-undo-buttons {
+      display: none;
+    }
+
+    .target-form {
+      display: none;
+    }
+
+    .target-proper-motion-form {
+      display: none;
+    }
+
+    .target-source-profile-editor {
+      display: none;
+    }
+  }
+
+  .explore-brightnesses-container {
+    .ui.table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      // SUI already has an !important
+      display: block !important;
+    }
+
+    // Hide table headers (but not display: none;, for accessibility)
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
     }
   }
 }
