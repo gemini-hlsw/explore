@@ -91,51 +91,13 @@ object ObsTabContents {
   private val NotesMaxHeight: NonNegInt         = 3
   private val TargetHeight: NonNegInt           = 18
   private val TargetMinHeight: NonNegInt        = 15
-  private val ElevationPlotMinHeight: NonNegInt = 8
+  private val SkyPlotHeight: NonNegInt          = 9
+  private val SkyPlotMinHeight: NonNegInt       = 6
   private val ConstraintsMaxHeight: NonNegInt   = 6
   private val ConfigurationMaxHeight: NonNegInt = 10
   private val DefaultWidth: NonNegInt           = 10
+  private val TileMinWidth: NonNegInt           = 5
   private val DefaultLargeWidth: NonNegInt      = 12
-
-  private val layoutLarge: Layout = Layout(
-    List(
-      LayoutItem(x = 0,
-                 y = 0,
-                 w = DefaultLargeWidth.value,
-                 h = NotesMaxHeight.value,
-                 i = ObsTabTiles.NotesId.value,
-                 isResizable = false
-      ),
-      LayoutItem(x = 0,
-                 y = NotesMaxHeight.value,
-                 w = DefaultLargeWidth.value,
-                 h = TargetHeight.value,
-                 minH = TargetMinHeight.value,
-                 i = ObsTabTiles.TargetId.value
-      ),
-      LayoutItem(x = 0,
-                 y = (NotesMaxHeight |+| TargetHeight).value,
-                 w = DefaultLargeWidth.value,
-                 h = ElevationPlotMinHeight.value,
-                 i = ObsTabTiles.PlotId.value
-      ),
-      LayoutItem(
-        x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight).value,
-        w = DefaultLargeWidth.value,
-        h = ConstraintsMaxHeight.value,
-        i = ObsTabTiles.ConstraintsId.value
-      ),
-      LayoutItem(
-        x = 0,
-        y =
-          (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
-        w = DefaultWidth.value,
-        h = ConfigurationMaxHeight.value,
-        i = ObsTabTiles.ConfigurationId.value
-      )
-    )
-  )
 
   private val layoutMedium: Layout = Layout(
     List(
@@ -151,25 +113,28 @@ object ObsTabContents {
                  w = DefaultWidth.value,
                  h = TargetHeight.value,
                  minH = TargetMinHeight.value,
+                 minW = TileMinWidth.value,
                  i = ObsTabTiles.TargetId.value
-      ),
-      LayoutItem(x = 0,
-                 y = (NotesMaxHeight |+| TargetHeight).value,
-                 w = DefaultWidth.value,
-                 h = ElevationPlotMinHeight.value,
-                 i = ObsTabTiles.PlotId.value
       ),
       LayoutItem(
         x = 0,
-        y = (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight).value,
+        y = (NotesMaxHeight |+| TargetHeight).value,
+        w = DefaultWidth.value,
+        h = SkyPlotHeight.value,
+        minH = SkyPlotMinHeight.value,
+        minW = TileMinWidth.value,
+        i = ObsTabTiles.PlotId.value
+      ),
+      LayoutItem(
+        x = 0,
+        y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight).value,
         w = DefaultWidth.value,
         h = ConstraintsMaxHeight.value,
         i = ObsTabTiles.ConstraintsId.value
       ),
       LayoutItem(
         x = 0,
-        y =
-          (NotesMaxHeight |+| TargetHeight |+| ElevationPlotMinHeight |+| ConstraintsMaxHeight).value,
+        y = (NotesMaxHeight |+| TargetHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
         w = DefaultWidth.value,
         h = ConfigurationMaxHeight.value,
         i = ObsTabTiles.ConfigurationId.value
@@ -181,7 +146,7 @@ object ObsTabContents {
     defineStdLayouts(
       Map(
         (BreakpointName.lg,
-         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutLarge)
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
         ),
         (BreakpointName.md, layoutMedium)
       )
@@ -521,13 +486,13 @@ object ObsTabContents {
               )
               .attempt
               .flatMap {
-                case Right((w, l)) =>
+                case Right((w, dbLayout)) =>
                   (panels
                     .mod(
                       TwoPanelState.treeWidth.replace(w.toDouble)
-                    ) *> layout.mod(o => mergeMap(o, l)))
+                    ) *> layout.mod(currentLayout => mergeMap(currentLayout, dbLayout)))
                     .to[IO]
-                case Left(_)       => IO.unit
+                case Left(_)              => IO.unit
               }
               .runAsync
       }

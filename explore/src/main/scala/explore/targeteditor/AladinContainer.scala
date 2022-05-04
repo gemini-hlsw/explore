@@ -9,8 +9,8 @@ import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsConfiguration
-import explore.model.ScienceModeBasic
 import explore.model.PosAngle
+import explore.model.ScienceModeBasic
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._

@@ -9,8 +9,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
-import explore.model.Constants
 import explore.model.enum.TileSizeState
+import explore.model.layout
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.ui.reusability._
@@ -63,10 +63,10 @@ object Tile {
     List((200, TileXSH), (700 -> TileSMH), (1024 -> TileMDH))
 
   val widthBreakpoints =
-    List((300                            -> TileXSW),
-         (Constants.TwoPanelCutoff.toInt -> TileSMW),
-         (768                            -> TileMDW),
-         (1024                           -> TileLGW)
+    List((layout.XtraSmallCutoff -> TileXSW),
+         (layout.SmallCutoff     -> TileSMW),
+         (layout.MediumCutoff    -> TileMDW),
+         (layout.LargeCutoff     -> TileLGW)
     )
 
   val component =

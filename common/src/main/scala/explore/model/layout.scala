@@ -27,11 +27,16 @@ object layout {
   type LayoutEntry = (LayoutWidth, LayoutCols, Layout)
   type LayoutsMap  = SortedMap[BreakpointName, (LayoutWidth, LayoutCols, Layout)]
 
+  val LargeCutoff     = 1200
+  val MediumCutoff    = 996
+  val SmallCutoff     = Constants.TwoPanelCutoff.toInt
+  val XtraSmallCutoff = 300
+
   val breakpoints: Map[BreakpointName, (LayoutWidth, LayoutCols)] =
     Map(
-      (BreakpointName.lg, (1200, 12)),
-      (BreakpointName.md, (996, 10)),
-      (BreakpointName.sm, (768, 8))
+      (BreakpointName.lg, (LargeCutoff, 12)),
+      (BreakpointName.md, (MediumCutoff, 10)),
+      (BreakpointName.sm, (SmallCutoff, 8))
     )
 
   val layoutPprint =
@@ -98,7 +103,7 @@ object layout {
     }
 
     implicit val layoutItemSemigroup: Semigroup[LayoutItem] = Semigroup.instance { case (a, b) =>
-      a.copy(w = b.w, h = b.h, x = b.x, y = b.y)
+      a.copy(w = b.w, h = b.h, x = b.x, y = b.y, minW = b.minW, minH = b.minH)
     }
 
     implicit val layoutGroupSemigroup: Semigroup[(Int, Int, Layout)] =
@@ -111,8 +116,8 @@ object layout {
     opt.map(a |+| _).getOrElse(a)
 
   def mergeMap[K, V: Semigroup](lhs: SortedMap[K, V], rhs: SortedMap[K, V]): SortedMap[K, V] =
-    lhs.foldLeft(rhs) { case (acc, (k, v)) =>
-      acc.updated(k, optionCombine(v, acc.get(k)))
+    rhs.foldLeft(lhs) { case (acc, (k, v)) =>
+      acc.get(k).fold(acc)(_ => acc.updated(k, optionCombine(v, acc.get(k))))
     }
 
 }

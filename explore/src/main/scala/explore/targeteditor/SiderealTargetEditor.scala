@@ -296,6 +296,7 @@ object SiderealTargetEditor {
                 ExploreStyles.Grid,
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
+                ExploreStyles.TargetProperMotionForm,
                 <.label("Epoch", HelpIcon("target/main/epoch.md"), ExploreStyles.SkipToNext),
                 InputWithUnits[ReuseView, Epoch](
                   epochView,
