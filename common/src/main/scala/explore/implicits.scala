@@ -192,5 +192,4 @@ object implicits
     ): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
   }
-
 }

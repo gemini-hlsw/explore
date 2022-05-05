@@ -55,6 +55,7 @@ import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -149,26 +150,16 @@ object ConfigurationPanel {
     )
 
   // TODO Move these to react-datetime
-  implicit class LocalDateTimeOps(val localDate: LocalDateTime) extends AnyVal {
-    def toJsDate: js.Date =
-      new js.Date(
-        localDate.getYear,
-        localDate.getMonthValue - 1,
-        localDate.getDayOfMonth,
-        localDate.getHour(),
-        localDate.getMinute()
-      )
+  implicit class InstantOps(val instant: Instant) extends AnyVal {
+    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+    def toDatePickerJsDate: js.Date =
+      new js.Date(instant.toEpochMilli.toDouble + (new js.Date()).getTimezoneOffset() * 60000)
   }
 
-  object LocalDateTimeBuilder {
-    def fromJsDate(jsDate: js.Date): LocalDateTime =
-      LocalDateTime.of(
-        jsDate.getFullYear().toInt,
-        jsDate.getMonth().toInt + 1,
-        jsDate.getDate().toInt,
-        jsDate.getHours().toInt,
-        jsDate.getMinutes().toInt
-      )
+  object InstantBuilder {
+    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+    def fromDatePickerJsDate(jsDate: js.Date): Instant =
+      Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
   }
 
   implicit class JSUndefOrNullOrTuple2DateTimeOps[A](
@@ -184,20 +175,20 @@ object ConfigurationPanel {
             Right(valueOrTuple.asInstanceOf[A])
         }
 
-    def toLocalDateEitherOpt(implicit
+    def fromDatePickerToInstantEitherOpt(implicit
       ev: A <:< js.Date
-    ): Option[Either[(LocalDateTime, LocalDateTime), LocalDateTime]] =
+    ): Option[Either[(Instant, Instant), Instant]] =
       value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
         e match {
           case Left((d1, d2)) =>
-            Left((LocalDateTimeBuilder.fromJsDate(d1), LocalDateTimeBuilder.fromJsDate(d2)))
+            Left((InstantBuilder.fromDatePickerJsDate(d1), InstantBuilder.fromDatePickerJsDate(d2)))
           case Right(d)       =>
-            Right(LocalDateTimeBuilder.fromJsDate(d))
+            Right(InstantBuilder.fromDatePickerJsDate(d))
         }
       }.widen
 
-    def toLocalDateTimeOpt(implicit ev: A <:< js.Date): Option[LocalDateTime] =
-      toLocalDateEitherOpt.flatMap(_.toOption)
+    def fromDatePickerToInstantOpt(implicit ev: A <:< js.Date): Option[Instant] =
+      fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
   }
 
   protected val component =
@@ -243,7 +234,7 @@ object ConfigurationPanel {
           .zoom(PosAngle.parallacticOverrideAnglePrism)
           .zoom(angleTruncatedPASplitEpi.get)(angleTruncatedPASplitEpi.modify _)
 
-        val obsTime = props.obsConf.zoom(ObsConfiguration.obsTime)
+        val obsInstant = props.obsConf.zoom(ObsConfiguration.obsInstant)
 
         def posAngleEditor(pa: ReuseView[TruncatedPA]) =
           <.div(
@@ -270,8 +261,9 @@ object ConfigurationPanel {
             <.div(
               ExploreStyles.ObsConfigurationObsPA,
               <.label("Position Angle", HelpIcon("configuration/positionangle.md")),
-              EnumViewSelect[ReuseView, PosAngleOptions](id = "pos-angle-alternative",
-                                                         value = posAngleOptionsView
+              EnumViewSelect[ReuseView, PosAngleOptions](
+                id = "pos-angle-alternative",
+                value = posAngleOptionsView
               ),
               fixedView.mapValue(posAngleEditor),
               allowedFlipView.mapValue(posAngleEditor),
@@ -280,9 +272,11 @@ object ConfigurationPanel {
             <.div(
               ExploreStyles.ObsConfigurationObsTime,
               <.label("Observation time", HelpIcon("configuration/obstime.md")),
-              Datepicker(onChange = (newValue, _) => obsTime.set(newValue.toLocalDateTimeOpt.get))
+              Datepicker(onChange =
+                (newValue, _) => newValue.fromDatePickerToInstantOpt.foldMap(obsInstant.set)
+              )
                 .showTimeInput(true)
-                .selected(obsTime.get.toJsDate)
+                .selected(obsInstant.get.toDatePickerJsDate)
                 .dateFormat("yyyy-MM-dd HH:mm"),
               "UTC"
             )
