@@ -27,11 +27,9 @@ import org.typelevel.log4cats.Logger
 import queries.schemas._
 import shapeless._
 
-import java.time.LocalDateTime
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration
-import scala.scalajs.js
 
 trait ListImplicits {
 
@@ -194,18 +192,4 @@ object implicits
     ): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
   }
-
-  implicit class JsDateOps(val date: js.Date) extends AnyVal {
-    def toLocalDateTime: LocalDateTime =
-      LocalDateTime.of(
-        date.getFullYear().toInt,
-        date.getMonth().toInt + 1,
-        date.getDate().toInt,
-        date.getHours().toInt,
-        date.getMinutes().toInt,
-        date.getSeconds().toInt,
-        date.getMilliseconds().toInt * 1000
-      )
-  }
-
 }

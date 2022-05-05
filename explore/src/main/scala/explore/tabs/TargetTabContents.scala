@@ -55,9 +55,9 @@ import react.semanticui.elements.button.Button
 import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.sizes._
 
+import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
-import scala.scalajs.js
 
 final case class TargetTabContents(
   userId:            Option[User.Id],
@@ -364,7 +364,7 @@ object TargetTabContents {
 
       // Until these are in the API
       val obsConfiguration =
-        scienceMode.map(_ => ObsConfiguration(PosAngle.Default, new js.Date().toLocalDateTime))
+        scienceMode.map(_ => ObsConfiguration(PosAngle.Default, Instant.now))
 
       def setCurrentTarget(
         programId: Program.Id,
