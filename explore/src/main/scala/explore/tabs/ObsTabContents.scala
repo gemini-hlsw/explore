@@ -64,9 +64,9 @@ import react.semanticui.elements.button.Button.ButtonProps
 import react.semanticui.modules.dropdown.Dropdown
 import react.semanticui.sizes._
 
-import java.time.LocalDateTime
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
+import scala.scalajs.js
 
 final case class ObsTabContents(
   userId:           ReuseViewOpt[User.Id],
@@ -497,7 +497,7 @@ object ObsTabContents {
               .runAsync
       }
       // Shared obs conf (posAngle/obsTime)
-      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, LocalDateTime.now()))
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, new js.Date().toLocalDateTime))
       .useSingleEffect(debounce = 1.second)
       .renderWithReuse {
         (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>
