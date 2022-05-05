@@ -83,7 +83,7 @@ object TargetTabContents {
   private val DefaultWidth: NonNegInt      = 10
   private val DefaultLargeWidth: NonNegInt = 12
 
-  val layoutLarge: Layout = Layout(
+  val layoutMedium: Layout = Layout(
     List(
       LayoutItem(i = ObsTabTiles.TargetId.value,
                  x = 0,
@@ -108,9 +108,9 @@ object TargetTabContents {
   private val defaultTargetLayouts = defineStdLayouts(
     Map(
       (BreakpointName.lg,
-       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutLarge)
+       layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
       ),
-      (BreakpointName.md, layoutLarge)
+      (BreakpointName.md, layoutMedium)
     )
   )
 

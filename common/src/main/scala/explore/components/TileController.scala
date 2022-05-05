@@ -102,7 +102,9 @@ object TileController {
       .withHooks[Props]
       .useSingleEffect(debounce = 1.second)
       // Store the current breakpoint
-      .useState(none[BreakpointName])
+      .useStateBy { (p, _) =>
+        getBreakpointFromWidth(p.layoutMap.get.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
+      }
       // Store the current layout
       .useStateBy((p, _, _) => p.layoutMap.get)
       .renderWithReuse { (p, debouncer, bn, currentLayout) =>
@@ -131,18 +133,19 @@ object TileController {
 
         ResponsiveReactGridLayout(
           width = p.gridWidth.toDouble,
+          autoSize = true,
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleMenu.htmlClass}",
-          onBreakpointChange = (bk: BreakpointName, _: Int) => bn.setState(bk.some),
+          onBreakpointChange = (bk: BreakpointName, _: Int) => bn.setState(bk),
           onLayoutChange = (_: Layout, b: Layouts) =>
-            bn.value.flatMap { bn =>
-              val le = b.layouts.find(_.name.name === bn.name).map(_.layout)
+            {
+              val le = b.layouts.find(_.name.name === bn.value.name).map(_.layout)
 
               // Store the current layout in the state for debugging
               le.map { l =>
-                currentLayout.modState(breakpointLayout(bn).replace(l))
+                currentLayout.modState(breakpointLayout(bn.value).replace(l))
               }
             }.getOrEmpty *>
               storeLayouts(p.userId, p.section, b, debouncer)(p.ctx),
@@ -153,21 +156,24 @@ object TileController {
             <.div(
               ^.key := t.id.value,
               // Show tile proprties on the title if enabled
-              bn.value
-                .flatMap(currentLayout.value.get)
+              currentLayout.value
+                .get(bn.value)
                 .flatMap { case (_, _, l) =>
                   l.l
                     .find(_.i === t.id.value)
-                    .map { i =>
-                      TagMod.devOnly(
-                        <.div(
-                          ^.cls := "rgl-tile-overlay",
-                          s"id: ${i.i} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
-                              .foldMap(m => s" minH: $m")}${i.maxH.toOption
-                              .foldMap(m => s" maxH: $m")}${i.minW.toOption
-                              .foldMap(m => s" minW: $m")}${i.maxW.toOption.foldMap(m => s" maxW: $m")}"
+                    .flatMap { i =>
+                      TagMod
+                        .devOnly(
+                          <.div(
+                            ^.cls := "rgl-tile-overlay",
+                            s"id: ${i.i} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
+                                .foldMap(m => s" minH: $m")}${i.maxH.toOption
+                                .foldMap(m => s" maxH: $m")}${i.minW.toOption
+                                .foldMap(m => s" minW: $m")}${i.maxW.toOption
+                                .foldMap(m => s" maxW: $m")}"
+                          )
                         )
-                      )
+                        .some
                     }
                 }
                 .getOrElse(EmptyVdom),
