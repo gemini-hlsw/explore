@@ -407,7 +407,7 @@ object ObsTabContents {
             clazz = ExploreStyles.ObservationTiles.some
           ): VdomNode
         }
-      )
+      ).withKey(obsId.toString)
 
     val rightSide: VdomNode =
       props.focusedObs.fold[VdomNode](

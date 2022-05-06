@@ -152,12 +152,14 @@ object ConfigurationPanel {
   // TODO Move these to react-datetime
   implicit class InstantOps(val instant: Instant) extends AnyVal {
     // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
     def toDatePickerJsDate: js.Date =
       new js.Date(instant.toEpochMilli.toDouble + (new js.Date()).getTimezoneOffset() * 60000)
   }
 
   object InstantBuilder {
     // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
+    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
     def fromDatePickerJsDate(jsDate: js.Date): Instant =
       Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
   }

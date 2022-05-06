@@ -47,11 +47,12 @@ object AsterismEditorTile {
     width:           Int,
     height:          Int
   )(implicit ctx:    AppContextIO) =
-    Tile(ObsTabTiles.TargetId,
-         title,
-         back = backButton,
-         canMinimize = true,
-         bodyClass = Some(ExploreStyles.TargetTileBody)
+    Tile(
+      ObsTabTiles.TargetId,
+      title,
+      back = backButton,
+      canMinimize = true,
+      bodyClass = Some(ExploreStyles.TargetTileBody)
     )(
       Reuse.by(
         (userId,
