@@ -60,7 +60,7 @@
     "stylelint-config-standard": "^22.0.0",
     "terser": "5.13.1",
     "vite": "2.9.7",
-    "vite-plugin-fonts": "^0.2.2",
+    "vite-plugin-fonts": "^0.4.0",
     "vite-plugin-mkcert": "^1.6.0"
   },
   "scripts": {
