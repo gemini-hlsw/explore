@@ -47,7 +47,6 @@ object Settings {
     val scalaJsReact        = "2.1.1"
     val pprint              = "0.7.3"
     val scalaJSSecureRandom = "1.0.0"
-    val scalaJSDom          = "2.1.0+92-8d9ae46a-SNAPSHOT"
     var webAppUtil          = "2.0.0-RC1"
 
   }
@@ -356,10 +355,5 @@ object Settings {
       )(webAppUtil)
     )
 
-    val ScalaJSDOM = Def.setting(
-      deps(
-        "org.scala-js" %%% "scalajs-dom"
-      )(scalaJSDom)
-    )
   }
 }

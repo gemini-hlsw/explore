@@ -499,10 +499,15 @@ object ObsTabContents {
       // Shared obs conf (posAngle/obsTime)
       .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, Instant.now))
       .useSingleEffect(debounce = 1.second)
+      // worker usage demo Delete soon
+      .useEffectOnMountBy((props, _, _, _, _, _, _) =>
+        props.ctx.worker.stream.evalMap(msg => IO.println(msg.data.toString)).compile.drain
+      )
       .renderWithReuse {
         (props, twoPanelState, resize, layouts, defaultLayout, obsConf, debouncer) =>
           implicit val ctx = props.ctx
           <.div(
+            <.button("test", ^.onClick --> ctx.worker.postMessage(1000)).when(true), // TODO delete
             ObsLiveQuery(
               props.programId,
               Reuse(renderFn _)(props,

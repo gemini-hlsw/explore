@@ -11,8 +11,6 @@ ThisBuild / scalafixDependencies += "com.github.liancheng"           %% "organiz
 
 ThisBuild / evictionErrorLevel := Level.Info
 
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
-
 addCommandAlias(
   "quickTest",
   "modelTestsJVM/test"
@@ -83,13 +81,6 @@ lazy val workers = project
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
-  .settings(
-    libraryDependencies ++=
-      Log4Cats.value ++
-        ScalaJSDOM.value ++
-        ScalaWebAppUtil.value
-  )
-  .enablePlugins(ScalaJSPlugin)
 
 lazy val graphql = project
   .in(file("common-graphql"))
@@ -117,7 +108,6 @@ lazy val common = project
         ReactCommon.value ++
         ReactTable.value ++
         ReactVirtuoso.value ++
-        ScalaJSDOM.value ++
         SecureRandom.value,
     buildInfoKeys    := Seq[BuildInfoKey](
       scalaVersion,
@@ -162,8 +152,7 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactHotkeys.value ++
-        ReactResizable.value ++
-        ScalaJSDOM.value,
+        ReactResizable.value,
     // Build workers when you build explore
     Compile / fastLinkJS := (Compile / fastLinkJS)
       .dependsOn((workers / Compile / fastLinkJS))
@@ -173,10 +162,6 @@ lazy val explore: Project = project
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   scalacOptions ~= (_.filterNot(Set("-Vtype-diffs")))
-)
-
-lazy val common3Settings = commonSettings ++ Seq(
-  scalacOptions ~= (_.filterNot(Set("-Ymacro-annotations")))
 )
 
 lazy val commonLibSettings = Seq(
@@ -243,7 +228,7 @@ lazy val esModule = Seq(
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     // If the browser is too slow for the SmallModulesFor switch to ModuleSplitStyle.FewestModules
-    ModuleSplitStyle.SmallModulesFor(List("worker", "explore"))
+    ModuleSplitStyle.SmallModulesFor(List("explore"))
   )),
   Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     ModuleSplitStyle.FewestModules

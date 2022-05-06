@@ -6,10 +6,11 @@ package workers
 import cats.effect.Async
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
-import scala.scalajs.js
-import org.scalajs.dom
 import fs2.Stream
 import fs2.concurrent.Channel
+import org.scalajs.dom
+
+import scala.scalajs.js
 
 /**
  * WebWorker abstraction running on F. it is possible to post messages and get a stream of events

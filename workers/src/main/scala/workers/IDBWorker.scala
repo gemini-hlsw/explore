@@ -12,6 +12,10 @@ import js.annotation._
 
 import cats.effect.unsafe.implicits._
 
+/**
+  * Sample web worker, extremely simple just accept messages, prints them
+  * and answers a number
+  */
 @JSExportTopLevel("IDBWorker", moduleID = "worker")
 object IDBWorker {
 
