@@ -21,8 +21,6 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.itc._
-import explore.model.GmosNorthLongSlit
-import explore.model.GmosSouthLongSlit
 import explore.model.ITCTarget
 import explore.model.Progress
 import explore.model.ScienceModeBasic
@@ -314,10 +312,10 @@ object SpectroscopyModesTable {
     row.instrument match {
       case GmosNorthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosNorthLongSlit(grating, filter, fpu).some
+        ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu).some
       case GmosSouthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        GmosSouthLongSlit(grating, filter, fpu).some
+        ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu).some
       case _ => none
     }
 

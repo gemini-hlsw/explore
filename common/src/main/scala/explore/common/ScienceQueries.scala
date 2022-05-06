@@ -11,8 +11,6 @@ import crystal.react.View
 import crystal.react.implicits._
 import explore.common.ObsQueries._
 import explore.implicits._
-import explore.model.GmosNorthLongSlit
-import explore.model.GmosSouthLongSlit
 import explore.model.ScienceModeBasic
 import explore.undo.UndoSetter
 import lucuma.core.enum.ScienceMode
@@ -103,13 +101,13 @@ object ScienceQueries {
   implicit class ScienceModeOps(val b: ScienceModeBasic) extends AnyVal {
     def toScienceInput: ScienceModeInput =
       b match {
-        case GmosNorthLongSlit(g, f, u) =>
+        case ScienceModeBasic.GmosNorthLongSlit(g, f, u) =>
           ScienceModeInput(
             gmosNorthLongSlit = GmosNorthLongSlitInput(
               basic = GmosNorthLongSlitBasicConfigInput(g.assign, f.orUnassign, u.assign).assign
             ).assign
           )
-        case GmosSouthLongSlit(g, f, u) =>
+        case ScienceModeBasic.GmosSouthLongSlit(g, f, u) =>
           ScienceModeInput(
             gmosSouthLongSlit = GmosSouthLongSlitInput(
               basic = GmosSouthLongSlitBasicConfigInput(g.assign, f.orUnassign, u.assign).assign

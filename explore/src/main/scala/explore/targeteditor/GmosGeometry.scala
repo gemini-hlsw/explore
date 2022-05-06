@@ -6,8 +6,6 @@ package explore.targeteditor
 import cats.Order
 import cats.data.NonEmptyMap
 import cats.syntax.all._
-import explore.model.GmosNorthLongSlit
-import explore.model.GmosSouthLongSlit
 import explore.model.ScienceModeBasic
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosSouthFpu
@@ -48,17 +46,17 @@ object GmosGeometry {
   // Shape to display
   def shapes(posAngle: Angle, mode: Option[ScienceModeBasic]): NonEmptyMap[Css, ShapeExpression] =
     mode match {
-      case Some(GmosNorthLongSlit(_, _, fpu)) =>
+      case Some(ScienceModeBasic.GmosNorthLongSlit(_, _, fpu)) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
           (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asLeft.some))
         )
-      case Some(GmosSouthLongSlit(_, _, fpu)) =>
+      case Some(ScienceModeBasic.GmosSouthLongSlit(_, _, fpu)) =>
         NonEmptyMap.of(
           (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle),
           (Css("gmos-fpu"), gmos.scienceArea.shapeAt(posAngle, Offset.Zero, fpu.asRight.some))
         )
-      case _                                  =>
+      case _                                                   =>
         NonEmptyMap.of(
           (Css("gmos-probe"),
            gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)
