@@ -27,7 +27,7 @@ import java.time.Duration
 trait ArbObsSummary {
   import ArbConstraintsSummary._
   import ArbTime._
-  import ArbScienceMode._
+  import ArbScienceModeBasic._
 
   implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
     for {

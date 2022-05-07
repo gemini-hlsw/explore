@@ -18,23 +18,23 @@ import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GmosSouthGrating
 import lucuma.core.enum.GmosSouthFpu
 
-trait ArbScienceMode {
+trait ArbScienceModeBasic {
 
-  implicit val arbGmosNorthLongSlitBasic = Arbitrary[ScienceModeBasic.GmosNorthLongSlit] {
+  implicit val arbGmosNorthLongSlitBasic = Arbitrary[ScienceModeBasic.GmosNorthLongSlit](
     for {
       grating <- arbitrary[GmosNorthGrating]
       filter  <- arbitrary[Option[GmosNorthFilter]]
       fpu     <- arbitrary[GmosNorthFpu]
     } yield ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu)
-  }
+  )
 
-  implicit val arbGmosSouthLongSlitBasic = Arbitrary[ScienceModeBasic.GmosSouthLongSlit] {
+  implicit val arbGmosSouthLongSlitBasic = Arbitrary[ScienceModeBasic.GmosSouthLongSlit](
     for {
       grating <- arbitrary[GmosSouthGrating]
       filter  <- arbitrary[Option[GmosSouthFilter]]
       fpu     <- arbitrary[GmosSouthFpu]
     } yield ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu)
-  }
+  )
 
   implicit val arbScienceModeBasic = Arbitrary[ScienceModeBasic](
     Gen.oneOf(
@@ -60,4 +60,4 @@ trait ArbScienceMode {
 
 }
 
-object ArbScienceMode extends ArbScienceMode
+object ArbScienceModeBasic extends ArbScienceModeBasic

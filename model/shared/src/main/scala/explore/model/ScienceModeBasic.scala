@@ -42,7 +42,7 @@ object ScienceModeBasic {
 
   object GmosNorthLongSlit {
     implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
-      Eq.by(x => (x.filter, x.grating, x.fpu))
+      Eq.by(x => (x.grating, x.filter, x.fpu))
 
     implicit val gmosNDecoder: Decoder[GmosNorthLongSlit] = deriveDecoder
   }
@@ -55,7 +55,7 @@ object ScienceModeBasic {
 
   object GmosSouthLongSlit {
     implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
-      Eq.by(x => (x.filter, x.grating, x.fpu))
+      Eq.by(x => (x.grating, x.filter, x.fpu))
 
     implicit val gmosSDecoder: Decoder[GmosSouthLongSlit] = deriveDecoder
   }
