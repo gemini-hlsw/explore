@@ -10,7 +10,7 @@ import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
 import explore.model.ObsConfiguration
 import explore.model.PosAngle
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
@@ -35,7 +35,7 @@ import scala.concurrent.duration._
 final case class AladinContainer(
   target:                 ReuseView[Coordinates],
   obsConf:                Option[ObsConfiguration],
-  scienceMode:            Option[ScienceModeBasic],
+  scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here

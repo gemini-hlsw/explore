@@ -252,7 +252,7 @@ object AsterismQueriesGQL {
       object Observations {
         object Nodes {
           trait ConstraintSet extends model.ConstraintsSummary
-          type ScienceMode = model.ScienceModeBasic
+          type ScienceMode = model.ScienceMode
           object PlannedTime {
             type Execution = time.Duration
           }

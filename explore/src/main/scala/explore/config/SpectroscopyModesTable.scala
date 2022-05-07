@@ -23,6 +23,7 @@ import explore.implicits._
 import explore.itc._
 import explore.model.ITCTarget
 import explore.model.Progress
+import explore.model.ScienceMode
 import explore.model.ScienceModeBasic
 import explore.model.reusability._
 import explore.modes._
@@ -57,7 +58,7 @@ import java.text.DecimalFormat
 import scalajs.js.|
 
 final case class SpectroscopyModesTable(
-  scienceMode:              ReuseView[Option[ScienceModeBasic]],
+  scienceMode:              ReuseView[Option[ScienceMode]],
   spectroscopyRequirements: SpectroscopyRequirementsData,
   constraints:              ConstraintSet,
   targets:                  Option[List[ITCTarget]],
@@ -308,18 +309,28 @@ object SpectroscopyModesTable {
         .setSortType(DefaultSortTypes.number)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
-  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceModeBasic] =
+  protected def rowToConf(row: SpectroscopyModeRow): Option[ScienceMode] =
     row.instrument match {
       case GmosNorthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu).some
+        ScienceMode
+          .GmosNorthLongSlit(
+            basic = ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu),
+            advanced = none
+          )
+          .some
       case GmosSouthSpectroscopyRow(grating, fpu, filter)
           if row.focalPlane === FocalPlane.SingleSlit =>
-        ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu).some
+        ScienceMode
+          .GmosSouthLongSlit(
+            basic = ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu),
+            advanced = none
+          )
+          .some
       case _ => none
     }
 
-  protected def equalsConf(row: SpectroscopyModeRow, conf: ScienceModeBasic): Boolean =
+  protected def equalsConf(row: SpectroscopyModeRow, conf: ScienceMode): Boolean =
     rowToConf(row).exists(_ === conf)
 
   protected def enabledRow(row: SpectroscopyModeRow): Boolean =
@@ -327,7 +338,7 @@ object SpectroscopyModesTable {
       row.focalPlane === FocalPlane.SingleSlit
 
   protected def selectedRowIndex(
-    scienceMode: Option[ScienceModeBasic],
+    scienceMode: Option[ScienceMode],
     rows:        List[SpectroscopyModeRow]
   ): Option[Int] =
     scienceMode
@@ -477,7 +488,7 @@ object SpectroscopyModesTable {
           atTop,
           _
         ) =>
-          def toggleRow(row: SpectroscopyModeRow): Option[ScienceModeBasic] =
+          def toggleRow(row: SpectroscopyModeRow): Option[ScienceMode] =
             rowToConf(row).filterNot(conf => props.scienceMode.get.contains_(conf))
 
           def scrollButton(

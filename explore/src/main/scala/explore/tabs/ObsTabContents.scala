@@ -337,7 +337,7 @@ object ObsTabContents {
           ): Callback =
             ctx.setPageVia(AppTab.Observations, programId, oid.map(ObsIdSet.one(_)), tid, via)
 
-          val potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])] =
+          val potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceMode])] =
             obsView.map(rv =>
               (rv.value
                  .zoom(

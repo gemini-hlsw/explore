@@ -18,7 +18,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.Constants
 import explore.model.ObsConfiguration
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -45,7 +45,7 @@ final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          Option[ObsConfiguration],
-  scienceMode:      Option[ScienceModeBasic],
+  scienceMode:      Option[ScienceMode],
   target:           ReuseView[Coordinates]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component) {

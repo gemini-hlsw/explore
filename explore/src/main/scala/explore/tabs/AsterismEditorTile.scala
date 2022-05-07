@@ -13,7 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.reusability._
 import explore.targeteditor.AsterismEditor
@@ -34,7 +34,7 @@ object AsterismEditorTile {
     userId:          Option[User.Id],
     programId:       Program.Id,
     obsId:           ObsIdSet,
-    potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])],
+    potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceMode])],
     obsConf:         Option[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) ==> Callback,
@@ -70,8 +70,8 @@ object AsterismEditorTile {
          height
         )
       ) { (renderInTitle: Tile.RenderInTitle) =>
-        potRender[(ReuseView[List[TargetWithId]], Option[ScienceModeBasic])](
-          { (asterismMode: (ReuseView[List[TargetWithId]], Option[ScienceModeBasic])) =>
+        potRender[(ReuseView[List[TargetWithId]], Option[ScienceMode])](
+          { (asterismMode: (ReuseView[List[TargetWithId]], Option[ScienceMode])) =>
             val (asterism, scienceMode) = asterismMode
             userId.map(uid =>
               AsterismEditor(

@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import cats.syntax.all._
 import io.circe.Decoder
-import io.circe._
 import io.circe.generic.semiauto._
 import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthFpu
@@ -20,18 +19,9 @@ sealed trait ScienceModeBasic extends Product with Serializable
 object ScienceModeBasic {
   implicit val scienceModeBasicEq: Eq[ScienceModeBasic] =
     Eq.instance {
-      case (a: GmosSouthLongSlit, b: GmosSouthLongSlit) => a === b
       case (a: GmosNorthLongSlit, b: GmosNorthLongSlit) => a === b
+      case (a: GmosSouthLongSlit, b: GmosSouthLongSlit) => a === b
       case _                                            => false
-    }
-
-  implicit val scienceModeBasicDecoder: Decoder[ScienceModeBasic] =
-    new Decoder[ScienceModeBasic] {
-      final def apply(c: HCursor): Decoder.Result[ScienceModeBasic] =
-        c.downField("gmosNorthLongSlit")
-          .downField("basic")
-          .as[GmosNorthLongSlit]
-          .orElse(c.downField("gmosSouthLongSlit").downField("basic").as[GmosSouthLongSlit])
     }
 
   final case class GmosNorthLongSlit(
@@ -44,7 +34,7 @@ object ScienceModeBasic {
     implicit val gmosNLongSlitEq: Eq[GmosNorthLongSlit] =
       Eq.by(x => (x.grating, x.filter, x.fpu))
 
-    implicit val gmosNDecoder: Decoder[GmosNorthLongSlit] = deriveDecoder
+    implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] = deriveDecoder
   }
 
   final case class GmosSouthLongSlit(
@@ -57,6 +47,6 @@ object ScienceModeBasic {
     implicit val gmosSLongSlitEq: Eq[GmosSouthLongSlit] =
       Eq.by(x => (x.grating, x.filter, x.fpu))
 
-    implicit val gmosSDecoder: Decoder[GmosSouthLongSlit] = deriveDecoder
+    implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] = deriveDecoder
   }
 }

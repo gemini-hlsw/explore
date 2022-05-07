@@ -14,7 +14,7 @@ import explore.model.ObsSummaryWithTitleAndConstraints
 import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.ObsSummaryWithTitleConstraintsAndConf
 import explore.model.ObsSummaryWithTitleAndConf
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import lucuma.core.enum.ObsActiveStatus
 import lucuma.core.enum.ObsStatus
 import lucuma.core.model.Observation
@@ -27,7 +27,7 @@ import java.time.Duration
 trait ArbObsSummary {
   import ArbConstraintsSummary._
   import ArbTime._
-  import ArbScienceModeBasic._
+  import ArbScienceMode._
 
   implicit val arbObsSummaryWithConstraints = Arbitrary[ObsSummaryWithConstraints] {
     for {
@@ -101,7 +101,7 @@ trait ArbObsSummary {
         status       <- arbitrary[ObsStatus]
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
-        mode         <- arbitrary[Option[ScienceModeBasic]]
+        mode         <- arbitrary[Option[ScienceMode]]
       } yield ObsSummaryWithTitleConstraintsAndConf(
         id,
         title,
@@ -124,7 +124,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceModeBasic]
+       Option[ScienceMode]
       )
     ]
       .contramap(o =>
@@ -148,7 +148,7 @@ trait ArbObsSummary {
         status       <- arbitrary[ObsStatus]
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
-        mode         <- arbitrary[Option[ScienceModeBasic]]
+        mode         <- arbitrary[Option[ScienceMode]]
       } yield ObsSummaryWithTitleAndConf(
         id,
         title,
@@ -168,7 +168,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceModeBasic]
+       Option[ScienceMode]
       )
     ]
       .contramap(o =>
@@ -191,7 +191,7 @@ trait ArbObsSummary {
         activeStatus <- arbitrary[ObsActiveStatus]
         duration     <- arbitrary[Duration]
         targets      <- arbitrary[Set[Target.Id]]
-        mode         <- arbitrary[Option[ScienceModeBasic]]
+        mode         <- arbitrary[Option[ScienceMode]]
       } yield ObsSummaryWithConstraintsAndConf(
         id,
         constraints,
@@ -210,7 +210,7 @@ trait ArbObsSummary {
        ObsStatus,
        ObsActiveStatus,
        Duration,
-       Option[ScienceModeBasic],
+       Option[ScienceMode],
        List[Target.Id]
       )
     ]

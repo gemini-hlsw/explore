@@ -68,10 +68,12 @@ object reusability {
   implicit val optionsReuse: Reusability[ImagingConfigurationOptions] = Reusability.byEq
   implicit val percentageReuse: Reusability[Progress]                 = Reusability.byEq
 
-  implicit val angularSizeReuse: Reusability[AngularSize]                 = Reusability.byEq
-  implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult] = Reusability.byEq
-  implicit val scienceModenResultReuse: Reusability[ScienceModeBasic]     = Reusability.byEq
-  implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]       = Reusability.byEq
+  implicit val angularSizeReuse: Reusability[AngularSize]                       = Reusability.byEq
+  implicit val catalogTargetResultReuse: Reusability[CatalogTargetResult]       = Reusability.byEq
+  implicit val scienceModeBasicResultReuse: Reusability[ScienceModeBasic]       = Reusability.byEq
+  implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced] = Reusability.byEq
+  implicit val scienceModeResultReuse: Reusability[ScienceMode]                 = Reusability.byEq
+  implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]             = Reusability.byEq
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }
