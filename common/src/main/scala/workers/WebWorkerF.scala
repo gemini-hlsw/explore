@@ -4,6 +4,7 @@
 package workers
 
 import cats.effect.Async
+import cats.effect.Resource
 import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import fs2.Stream
@@ -36,25 +37,30 @@ trait WebWorkerF[F[_]] {
 
 object WebWorkerF {
 
-  def apply[F[_]: Async](worker: dom.Worker) = new WebWorkerF[F] {
-    def postMessage(message: js.Any): F[Unit] = Sync[F].delay(worker.postMessage(message))
+  def apply[F[_]: Async](
+    worker:     dom.Worker,
+    dispatcher: Dispatcher[F]
+  ): Resource[F, WebWorkerF[F]] =
+    Resource.make(Sync[F].delay(new WebWorkerF[F] {
+      def postMessage(message: js.Any): F[Unit] =
+        Sync[F].delay(worker.postMessage(message))
 
-    def terminate: F[Unit] = Sync[F].delay(worker.terminate())
+      def terminate: F[Unit] =
+        Sync[F].delay(worker.terminate())
 
-    def stream: Stream[F, dom.MessageEvent] =
-      for {
-        dispatcher <- Stream.resource(Dispatcher[F])
-        channel    <- Stream.eval(Channel.unbounded[F, dom.MessageEvent])
-        _          <- Stream.eval(
-                        Sync[F].delay(worker.onmessage =
-                          (e: dom.MessageEvent) =>
-                            dispatcher.unsafeRunAndForget(
-                              channel
-                                .send(e)
-                            )
-                        )
-                      )
-        stream     <- channel.stream
-      } yield stream
-  }
+      def stream: Stream[F, dom.MessageEvent] =
+        for {
+          channel <- Stream.eval(Channel.unbounded[F, dom.MessageEvent])
+          _       <- Stream.eval(
+                       Sync[F].delay(worker.onmessage =
+                         (e: dom.MessageEvent) =>
+                           dispatcher.unsafeRunAndForget(
+                             channel
+                               .send(e)
+                           )
+                       )
+                     )
+          stream  <- channel.stream
+        } yield stream
+    }))(w => w.terminate)
 }

@@ -29,7 +29,6 @@ import lucuma.schemas._
 import org.http4s._
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits._
-import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.schemas._
 import retry._
@@ -154,31 +153,6 @@ case class AppContext[F[_]](
   ): Callback = replacePage(appTab, programId, obsId.map(o => ObsIdSet.one(o)), targetId)
 }
 
-object WebWorkers {
-  import scala.scalajs.js
-  import scala.scalajs.js.annotation.JSImport
-
-  /**
-   * This deserves an explanation:
-   *
-   * To make the webworker act correctly in both dev and production we shoud import it as a module
-   * rather than just doing a direct consructor call.
-   *
-   * Doing the import with the "worker" param gives a constructor for the worker which we can wrap
-   * inline lets us save some space keeping a single chunk More info see:
-   * https://vitejs.dev/guide/features.html#import-with-query-suffixes=
-   */
-  @js.native
-  @JSImport("/workers.js?worker&inline", JSImport.Default)
-  object TestWorker extends js.Object {
-    def apply(): dom.Worker = js.native
-  }
-
-  def createIOWorker[F[_]: Async]: F[WebWorkerF[F]] = Sync[F].delay {
-    WebWorkerF[F](TestWorker())
-  }
-}
-
 object AppContext {
   def from[F[_]: Async: FetchJSBackend: WebSocketBackend: Parallel: Effect.Dispatch: Logger](
     config:               AppConfig,
@@ -190,13 +164,13 @@ object AppContext {
       Option[ObsIdSet],
       Option[Target.Id],
       SetRouteVia
-    ) => Callback
+    ) => Callback,
+    worker:               WebWorkerF[F]
   ): F[AppContext[F]] =
     for {
       clients    <-
         Clients
           .build[F](config.odbURI, config.preferencesDBURI, config.itcURI, reconnectionStrategy)
-      worker     <- WebWorkers.createIOWorker[F]
       staticData <- StaticData.build[F](uri"/instrument_spectroscopy_matrix.csv")
       version     = utils.version(config.environment)
       actions     = Actions[F]()
