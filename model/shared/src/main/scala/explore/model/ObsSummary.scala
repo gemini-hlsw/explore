@@ -46,11 +46,12 @@ trait ObsWithConstraints extends ObsSummary {
 }
 
 trait ObsWithConf extends ObsSummary {
-  def scienceMode: Option[ScienceModeBasic]
+  def scienceMode: Option[ScienceMode]
+
   val conf: String = scienceMode match {
-    case Some(GmosNorthLongSlit(g, _, _)) => s"GMOS-N ${g.shortName}"
-    case Some(GmosSouthLongSlit(g, _, _)) => s"GMOS-S ${g.shortName}"
-    case _                                => s"-"
+    case Some(n @ ScienceMode.GmosNorthLongSlit(_, _)) => s"GMOS-N ${n.grating.shortName}"
+    case Some(s @ ScienceMode.GmosSouthLongSlit(_, _)) => s"GMOS-S ${s.grating.shortName}"
+    case _                                             => s"-"
   }
 }
 
@@ -118,7 +119,7 @@ case class ObsSummaryWithTitleConstraintsAndConf(
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration,
-  override val scienceMode:  Option[ScienceModeBasic]
+  override val scienceMode:  Option[ScienceMode]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConstraints
@@ -151,7 +152,7 @@ case class ObsSummaryWithTitleAndConf(
   override val status:       ObsStatus,
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration,
-  override val scienceMode:  Option[ScienceModeBasic]
+  override val scienceMode:  Option[ScienceMode]
 ) extends ObsSummary
     with ObsWithTitle
     with ObsWithConf
@@ -170,7 +171,7 @@ case class ObsSummaryWithConstraintsAndConf(
   override val activeStatus: ObsActiveStatus,
   override val duration:     Duration,
   scienceTargetIds:          Set[Target.Id],
-  override val scienceMode:  Option[ScienceModeBasic]
+  override val scienceMode:  Option[ScienceMode]
 ) extends ObsSummary
     with ObsWithConstraints
     with ObsWithConf

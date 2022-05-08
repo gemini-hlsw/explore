@@ -21,7 +21,7 @@ import explore.components.undo.UndoButtons
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.formats._
 import explore.model.reusability._
@@ -65,7 +65,7 @@ final case class SiderealTargetEditor(
   id:            Target.Id,
   target:        ReuseView[Target.Sidereal],
   obsConf:       Option[ObsConfiguration],
-  scienceMode:   Option[ScienceModeBasic],
+  scienceMode:   Option[ScienceMode],
   undoStacks:    ReuseView[UndoStacks[IO, Target.Sidereal]],
   searching:     ReuseView[Set[Target.Id]],
   obsIdSubset:   Option[ObsIdSet] = None,

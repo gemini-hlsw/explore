@@ -17,7 +17,7 @@ import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ScienceModeBasic
+import explore.model.ScienceMode
 import explore.model.TargetWithId
 import explore.model.TargetWithOptId
 import explore.model.reusability._
@@ -46,7 +46,7 @@ final case class AsterismEditor(
   programId:        Program.Id,
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
-  scienceMode:      Option[ScienceModeBasic],
+  scienceMode:      Option[ScienceMode],
   obsConf:          Option[ObsConfiguration],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,

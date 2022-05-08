@@ -90,7 +90,7 @@ object ConstraintGroupQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceModeBasic
+          type ScienceMode = model.ScienceMode
         }
 
       }

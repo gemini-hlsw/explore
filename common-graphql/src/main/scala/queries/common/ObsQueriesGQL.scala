@@ -48,6 +48,20 @@ object ObsQueriesGQL {
                   filter
                   fpu
                 }
+                advanced {
+                  overrideGrating
+                  overrideFilter
+                  overrideFpu
+                  explicitXBin
+                  explicitYBin
+                  explicitAmpReadMode
+                  explicitAmpGain
+                  explicitRoi
+                  explicitWavelengthDithers
+                  explicitSpatialOffsets {
+                    microarcseconds
+                  }
+                }
               }
               gmosSouthLongSlit {
                 basic {
@@ -55,6 +69,20 @@ object ObsQueriesGQL {
                   filter
                   fpu
                 }
+                advanced {
+                  overrideGrating
+                  overrideFilter
+                  overrideFpu
+                  explicitXBin
+                  explicitYBin
+                  explicitAmpReadMode
+                  explicitAmpGain
+                  explicitRoi
+                  explicitWavelengthDithers
+                  explicitSpatialOffsets {
+                    microarcseconds
+                  }
+                }                
               }
             }
           }
@@ -112,7 +140,7 @@ object ObsQueriesGQL {
           object PlannedTime {
             type Execution = time.Duration
           }
-          type ScienceMode = model.ScienceModeBasic
+          type ScienceMode = model.ScienceMode
         }
       }
 
@@ -422,6 +450,20 @@ object ObsQueriesGQL {
                 filter
                 fpu
               }
+              advanced {
+                overrideGrating
+                overrideFilter
+                overrideFpu
+                explicitXBin
+                explicitYBin
+                explicitAmpReadMode
+                explicitAmpGain
+                explicitRoi
+                explicitWavelengthDithers
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }              
             }
             gmosSouthLongSlit {
               basic {
@@ -429,6 +471,20 @@ object ObsQueriesGQL {
                 filter
                 fpu
               }
+              advanced {
+                overrideGrating
+                overrideFilter
+                overrideFpu
+                explicitXBin
+                explicitYBin
+                explicitAmpReadMode
+                explicitAmpGain
+                explicitRoi
+                explicitWavelengthDithers
+                explicitSpatialOffsets {
+                  microarcseconds
+                }
+              }              
             }
           }
         }
@@ -451,8 +507,7 @@ object ObsQueriesGQL {
           }
         }
 
-        type ScienceMode = model.ScienceModeBasic
-
+        type ScienceMode = model.ScienceMode
       }
     }
 
