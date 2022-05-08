@@ -40,29 +40,27 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import lucuma.core.model.SiderealTracking
 
 final case class AladinCell(
   uid:              User.Id,
   tid:              Target.Id,
   obsConf:          Option[ObsConfiguration],
   scienceMode:      Option[ScienceMode],
-  target:           ReuseView[Coordinates]
+  target:           ReuseView[SiderealTracking]
 )(implicit val ctx: AppContextIO)
-    extends ReactFnProps[AladinCell](AladinCell.component) {
-  val aladinCoords: Coordinates = target.get
-}
+    extends ReactFnProps[AladinCell](AladinCell.component)
 
 object AladinCell extends ModelOptics {
   type Props = AladinCell
 
-  implicitly[Reusability[Pot[TargetVisualOptions]]]
   implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
   val component =
     ScalaFnComponent
       .withHooks[Props]
       // mouse coordinates, starts on the base
-      .useStateBy(_.aladinCoords)
+      .useStateBy(_.target.get.baseCoordinates)
       // target options, will be read from the user preferences
       .useStateViewWithReuse(Pot.pending[TargetVisualOptions])
       // flag to trigger centering. This is a bit brute force but
@@ -114,7 +112,10 @@ object AladinCell extends ModelOptics {
               .rateLimit(1.seconds, 1)
               .void
         }
-        val renderCell: TargetVisualOptions => VdomNode             = (t: TargetVisualOptions) =>
+
+        val aladinKey = s"${props.target.get}"
+
+        val renderCell: TargetVisualOptions => VdomNode = (t: TargetVisualOptions) =>
           AladinContainer(
             props.target,
             props.obsConf,
@@ -124,7 +125,7 @@ object AladinCell extends ModelOptics {
             Reuse.currying(props).in(fovSetter _),
             Reuse.currying(props).in(offsetSetter _),
             center
-          ).withKey(props.aladinCoords.toString)
+          ).withKey(aladinKey)
 
         val renderToolbar: TargetVisualOptions => VdomNode =
           (t: TargetVisualOptions) =>

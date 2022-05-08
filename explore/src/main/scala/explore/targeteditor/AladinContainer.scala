@@ -31,9 +31,10 @@ import react.common._
 import react.resizeDetector.hooks._
 
 import scala.concurrent.duration._
+import lucuma.core.model.SiderealTracking
 
 final case class AladinContainer(
-  target:                 ReuseView[Coordinates],
+  target:                 ReuseView[SiderealTracking],
   obsConf:                Option[ObsConfiguration],
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
@@ -41,10 +42,7 @@ final case class AladinContainer(
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset ==> Callback,
   centerOnTarget:         ReuseView[Boolean]
-) extends ReactFnProps[AladinContainer](AladinContainer.component) {
-  val baseCoordinates: Coordinates     = target.get
-  val baseCoordinatesForAladin: String = Coordinates.fromHmsDms.reverseGet(baseCoordinates)
-}
+) extends ReactFnProps[AladinContainer](AladinContainer.component) 
 
 object AladinContainer {
 
@@ -124,13 +122,17 @@ object AladinContainer {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // View coordinates (in case the user pans)
+      // Base coordinates with pm correction if possible
       .useStateBy { p =>
-        p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
+        p.obsConf.map(o => p.target.get.at(o.obsInstant)).getOrElse(p.target.get.baseCoordinates)
+      }
+      // View coordinates base corrdinates with pm correction if possible + user panning
+      .useStateBy { (p, baseCoordinates) =>
+        baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Memoized svg
-      .useMemoBy((p, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
-        case (_, _) => { case (mode, posAngle, _) =>
+      .useMemoBy((p, _, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
+        case (_, _, _) => { case (mode, posAngle, _) =>
           posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
@@ -151,37 +153,38 @@ object AladinContainer {
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If needed center on target
-      .useEffectWithDepsBy((p, _, _, _) => (p.baseCoordinates, p.centerOnTarget.get))(
-        (_, _, _, aladinRef) => { case (coords, center) =>
-          aladinRef.get.asCBO
-            .flatMapCB(
-              _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
-                                  coords.dec.toAngle.toSignedDoubleDegrees
-              )
+      .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
+        (baseCoordinates.value, p.centerOnTarget.get)
+      )((_, _, _, _, aladinRef) => { case (coords, center) =>
+        aladinRef.get.asCBO
+          .flatMapCB(
+            _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
+                                coords.dec.toAngle.toSignedDoubleDegrees
             )
-            .when(center)
-        }
-      )
+          )
+          .when(center)
+      })
       // Function to calculate coordinates
       .useSerialState(DefaultWorld2PixFn)
       // resize detector
       .useResizeDetector()
       // Update the world2pix function
-      .useEffectWithDepsBy { (p, currentPos, _, aladinRef, _, resize) =>
+      .useEffectWithDepsBy { (p, _, currentPos, _, aladinRef, _, resize) =>
         (resize, p.options, currentPos, aladinRef)
-      } { (_, _, _, aladinRef, w, _) => _ =>
+      } { (_, _, _, _, aladinRef, w, _) => _ =>
         aladinRef.get.asCBO.flatMapCB(_.backend.world2pixFn.flatMap(w.setState))
       }
       // Render the visualization, only if current pos, fov or size changes
-      .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
+      .useEffectWithDepsBy((p, baseCoordinates, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
          p.scienceMode,
          p.obsConf.map(_.posAngle),
          currentPos,
-         world2pix.value(p.baseCoordinates),
+         world2pix.value(baseCoordinates.value),
+         // currentPos.value.flatMap(world2pix.value),
          resize
         )
-      ) { (_, _, svg, aladinRef, _, _) =>
+      ) { (_, _, _, svg, aladinRef, _, _) =>
         { case (_, _, _, _, off, _) =>
           off
             .map(off =>
@@ -195,14 +198,14 @@ object AladinContainer {
             .getOrEmpty
         }
       }
-      .renderWithReuse { (props, currentPos, _, aladinRef, _, resize) =>
+      .renderWithReuse { (props, baseCoordinates, currentPos, _, aladinRef, _, resize) =>
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
          */
         def onPositionChanged(u: PositionChanged): Callback = {
           val viewCoords = Coordinates(u.ra, u.dec)
-          val viewOffset = props.baseCoordinates.diff(viewCoords).offset
+          val viewOffset = baseCoordinates.value.diff(viewCoords).offset
           currentPos.setState(Some(viewCoords)) *>
             props.updateViewOffset(viewOffset) *>
             props.centerOnTarget.set(false)
@@ -223,7 +226,7 @@ object AladinContainer {
         val baseCoordinatesForAladin: String =
           currentPos.value
             .map(Coordinates.fromHmsDms.reverseGet)
-            .getOrElse(props.baseCoordinatesForAladin)
+            .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
         <.div(
           ExploreStyles.AladinContainerBody,
