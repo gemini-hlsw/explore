@@ -32,6 +32,7 @@ import react.resizeDetector.hooks._
 
 import scala.concurrent.duration._
 import lucuma.core.model.SiderealTracking
+import japgolly.scalajs.react.feature.ReactFragment
 
 final case class AladinContainer(
   target:                 ReuseView[SiderealTracking],
@@ -42,7 +43,7 @@ final case class AladinContainer(
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset ==> Callback,
   centerOnTarget:         ReuseView[Boolean]
-) extends ReactFnProps[AladinContainer](AladinContainer.component) 
+) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
 
@@ -126,7 +127,7 @@ object AladinContainer {
       .useStateBy { p =>
         p.obsConf.map(o => p.target.get.at(o.obsInstant)).getOrElse(p.target.get.baseCoordinates)
       }
-      // View coordinates base corrdinates with pm correction if possible + user panning
+      // View coordinates base coordinates with pm correction if possible + user panning
       .useStateBy { (p, baseCoordinates) =>
         baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
@@ -181,7 +182,6 @@ object AladinContainer {
          p.obsConf.map(_.posAngle),
          currentPos,
          world2pix.value(baseCoordinates.value),
-         // currentPos.value.flatMap(world2pix.value),
          resize
         )
       ) { (_, _, _, svg, aladinRef, _, _) =>
@@ -198,7 +198,7 @@ object AladinContainer {
             .getOrEmpty
         }
       }
-      .renderWithReuse { (props, baseCoordinates, currentPos, _, aladinRef, _, resize) =>
+      .renderWithReuse { (props, baseCoordinates, currentPos, _, aladinRef, world2pix, resize) =>
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
@@ -228,24 +228,48 @@ object AladinContainer {
             .map(Coordinates.fromHmsDms.reverseGet)
             .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
+        val showBase = props.obsConf.isDefined
+
+        def pmDistance = {
+          implicit val angleOrder = Angle.AngleOrder
+          baseCoordinates.value.angularDistance(props.target.get.baseCoordinates) >= Angle
+            .fromDoubleArcseconds(1)
+        }
+
+        val overlayTargets = if (showBase && pmDistance) {
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10),
+            SVGTarget.CircleTarget(props.target.get.baseCoordinates, Css("base-target"), 3)
+          )
+        } else {
+          List(SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10))
+        }
+
         <.div(
           ExploreStyles.AladinContainerBody,
           // This is a bit tricky. Sometimes the height can be 0 or a very low number.
           // This happens during a second render. If we let the height to be zero, aladin
           // will take it as 1. This height ends up being a denominator, which, if low,
           // will make aladin request a large amount of tiles and end up freeze explore.
-          if (resize.height.exists(_ >= 100))
-            AladinComp.withRef(aladinRef) {
-              Aladin(
-                ExploreStyles.TargetAladin,
-                showReticle = false,
-                showLayersControl = false,
-                target = baseCoordinatesForAladin,
-                fov = props.options.fovAngle,
-                showGotoControl = false,
-                customize = includeSvg _
-              )
-            }
+          if (resize.height.exists(_ >= 100)) {
+            ReactFragment(
+              (resize.width, resize.height)
+                .mapN(SVGTargetsOverlay(_, _, world2pix.value.reuseNever, overlayTargets)),
+              AladinComp.withRef(aladinRef) {
+                Aladin(
+                  ExploreStyles.TargetAladin,
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = props.options.fovAngle,
+                  showGotoControl = false,
+                  customize = includeSvg _
+                )
+              }
+            )
+          }
+
+          // )
           else EmptyVdom
         )
           .withRef(resize.ref)

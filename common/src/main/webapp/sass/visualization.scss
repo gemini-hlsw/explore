@@ -72,6 +72,10 @@
 }
 
 // Drawn X to indicate the target, or coordinates 0,0
+.jts-svg-reticle {
+  display: none;
+}
+
 .jts-svg-center {
   stroke: green;
   stroke-width: 2px;
@@ -80,4 +84,22 @@
 
 .visualization-display {
   display: inline !important; // we use this as a toggle thus we need important set
+}
+
+.targets-overlay-svg {
+  // display: none;
+  pointer-events: none; // let aladin get pointer events
+  position: absolute;
+  z-index: 999;
+  vector-effect: non-scaling-stroke;
+
+  .crosshair-target {
+    stroke: green;
+    stroke-width: 1px;
+  }
+
+  .circle-target {
+    fill: red;
+    fill-opacity: 70%;
+  }
 }
