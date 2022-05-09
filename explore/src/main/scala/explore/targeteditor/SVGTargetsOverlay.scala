@@ -5,13 +5,13 @@ package explore.targeteditor
 
 import cats.Eq
 import cats.syntax.all._
+import crystal.react.reuse._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
-import react.common._
-import react.common.implicits._
 import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
-import crystal.react.reuse._
+import react.common._
+import react.common.implicits._
 
 sealed trait SVGTarget {
   def coordinates: Coordinates
@@ -33,6 +33,13 @@ object SVGTarget {
     title:       Option[String] = None
   ) extends SVGTarget
 
+  final case class ArrowTarget(
+    coordinates: Coordinates,
+    destination: Coordinates,
+    css:         Css,
+    title:       Option[String] = None
+  ) extends SVGTarget
+
   implicit val eqSVGTarget: Eq[SVGTarget] = Eq.instance {
     case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))       =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
@@ -49,7 +56,7 @@ final case class SVGTargetsOverlay(
   height:    Int,
   world2pix: Coordinates ==> Option[(Double, Double)],
   targets:   List[SVGTarget]
-) extends ReactFnProps[SVGTargetsOverlay](SVGTargetsOverlay.component)
+) extends ReactFnPropsWithChildren[SVGTargetsOverlay](SVGTargetsOverlay.component)
 
 object SVGTargetsOverlay {
   type Props = SVGTargetsOverlay
@@ -60,7 +67,7 @@ object SVGTargetsOverlay {
   val canvasHeight = VdomAttr("height")
   val component    =
     ScalaFnComponent
-      .withReuse[Props] { p =>
+      .withChildren[Props] { (p, c) =>
         println("REND")
         val svg = <.svg(
           Css("targets-overlay-svg"),
@@ -79,9 +86,22 @@ object SVGTargetsOverlay {
                   <.line(^.x1 := x, ^.x2        := x, ^.y1        := y - side, ^.y2 := y + side, pointCss),
                   title.map(<.title(_))
                 )
+              case (SVGTarget.ArrowTarget(_, d, css, title), Some((x, y)))        =>
+                val pointCss = Css("arrow-between-target") |+| css
+                p.world2pix(d)
+                  .map { case (x1, y1) =>
+                    <.line(^.x1 := x,
+                           ^.x2 := x1,
+                           ^.y1 := y,
+                           ^.y2 := y1,
+                           pointCss,
+                           title.map(<.title(_))
+                    )
+                  }
+                  .getOrElse(EmptyVdom)
             }
             .toTagMod
         )
-        svg
+        svg(c)
       }
 }

@@ -15,6 +15,7 @@ import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
@@ -22,6 +23,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Offset
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
@@ -31,8 +33,6 @@ import react.common._
 import react.resizeDetector.hooks._
 
 import scala.concurrent.duration._
-import lucuma.core.model.SiderealTracking
-import japgolly.scalajs.react.feature.ReactFragment
 
 final case class AladinContainer(
   target:                 ReuseView[SiderealTracking],
@@ -239,7 +239,11 @@ object AladinContainer {
         val overlayTargets = if (showBase && pmDistance) {
           List(
             SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10),
-            SVGTarget.CircleTarget(props.target.get.baseCoordinates, Css("base-target"), 3)
+            SVGTarget.CircleTarget(props.target.get.baseCoordinates, Css("base-target"), 3),
+            SVGTarget.ArrowTarget(baseCoordinates.value,
+                                  props.target.get.baseCoordinates,
+                                  Css("proper-motion-correction")
+            )
           )
         } else {
           List(SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10))
