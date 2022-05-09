@@ -3,8 +3,11 @@
 
 package explore
 
+import cats.effect.Async
 import cats.effect.IO
 import cats.effect.IOApp
+import cats.effect.Resource
+import cats.effect.Sync
 import cats.effect.std.Dispatcher
 import cats.syntax.all._
 import clue.WebSocketReconnectionStrategy
@@ -23,6 +26,7 @@ import explore.model.ObsIdSet
 import explore.model.RootModel
 import explore.model.RoutingInfo
 import explore.model.UserVault
+import explore.model.WebWorkers
 import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
@@ -43,6 +47,7 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 import react.common.implicits._
+import workers.WebWorkerF
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
@@ -63,29 +68,52 @@ object ExploreMain extends IOApp.Simple {
   @JSExport
   def runIOApp(): Unit = main(Array.empty)
 
-  override final def run: IO[Unit] = {
-    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+  def setupLogger[F[_]: Sync](p: ExploreLocalPreferences): F[Logger[F]] = Sync[F].delay {
+    LogLevelLogger.setLevel(p.level)
+    LogLevelLogger.createForRoot[F]
+  }
 
-    def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) = RootModel(
-      vault = vault,
-      localPreferences = pref
-    )
+  def fetchConfig[F[_]: Async]: F[AppConfig] =
+    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
+    FetchClientBuilder[F]
+      .withRequestTimeout(5.seconds)
+      .withCache(RequestCache.`no-store`)
+      .create
+      .get(uri"/conf.json")(_.decodeJson[AppConfig])
+      .adaptError { case t =>
+        new Exception("Could not retrieve configuration.", t)
+      }
 
-    def setupLogger(p: ExploreLocalPreferences): IO[Logger[IO]] = IO {
-      LogLevelLogger.setLevel(p.level)
-      LogLevelLogger.createForRoot[IO]
+  def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) =
+    RootModel(vault = vault, localPreferences = pref)
+
+  def setupDOM[F[_]: Sync]: F[Element] = Sync[F].delay(
+    Option(dom.document.getElementById("root")).getOrElse {
+      val elem = dom.document.createElement("div")
+      elem.id = "root"
+      dom.document.body.appendChild(elem)
+      elem
+    }
+  )
+
+  def showEnvironment[F[_]: Sync](env: ExecutionEnvironment): F[Unit] = Sync[F]
+    .delay {
+      val stagingBanner = dom.document.createElement("div")
+      stagingBanner.id = "staging-banner"
+      stagingBanner.textContent = "Staging"
+      dom.document.body.appendChild(stagingBanner)
+    }
+    .whenA(env === ExecutionEnvironment.Staging)
+
+  def crash[F[_]: Sync](msg: String): F[Unit] =
+    setupDOM[F].map { element =>
+      (ExploreStyles.CrashMessage |+| ExploreStyles.ErrorLabel).htmlClasses
+        .foreach(element.classList.add)
+      element.innerHTML = msg
     }
 
-    val fetchConfig: IO[AppConfig] =
-      // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-      FetchClientBuilder[IO]
-        .withRequestTimeout(5.seconds)
-        .withCache(RequestCache.`no-store`)
-        .create
-        .get(uri"/conf.json")(_.decodeJson[AppConfig])
-        .adaptError { case t =>
-          new Exception("Could not retrieve configuration.", t)
-        }
+  override final def run: IO[Unit] = {
+    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, reason) =>
@@ -98,108 +126,87 @@ object ExploreMain extends IOApp.Simple {
             TimeUnit.SECONDS
           ).some
 
-    def setupDOM(): IO[Element] = IO(
-      Option(dom.document.getElementById("root")).getOrElse {
-        val elem = dom.document.createElement("div")
-        elem.id = "root"
-        dom.document.body.appendChild(elem)
-        elem
-      }
-    )
+    def buildPage(
+      dispatcher:       Dispatcher[IO],
+      worker:           WebWorkerF[IO],
+      localPreferences: ExploreLocalPreferences
+    )(implicit logger:  Logger[IO]): IO[Unit] = {
+      implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
+      implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
+        WebSocketJSBackend[IO](dispatcher)
 
-    def showEnvironment(env: ExecutionEnvironment): IO[Unit] = IO {
-      val stagingBanner = dom.document.createElement("div")
-      stagingBanner.id = "staging-banner"
-      stagingBanner.textContent = "Staging"
-      dom.document.body.appendChild(stagingBanner)
-    }.whenA(env === ExecutionEnvironment.Staging)
+      val (router, routerCtl) =
+        RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-    def crash(msg: String): IO[Unit] =
-      setupDOM().map { element =>
-        (ExploreStyles.CrashMessage |+| ExploreStyles.ErrorLabel).htmlClasses
-          .foreach(element.classList.add)
-        element.innerHTML = msg
-      }
+      def rootComponent(view: ReuseView[RootModel]): VdomElement =
+        <.div(
+          router(view)
+        )
 
-    Dispatcher[IO].allocated
-      .map(_._1)
-      .flatMap { d =>
-        for {
-          p <- ExploreLocalPreferences.loadPreferences[IO]
-          l <- setupLogger(p)
-        } yield (d, l, p)
-      }
-      .flatMap { param =>
-        implicit val (dispatcher, logger, localPreferences)      = param
-        implicit val FetchBackend: FetchJSBackend[IO]            = FetchJSBackend[IO](FetchMethod.GET)
-        implicit val gqlStreamingBackend: WebSocketJSBackend[IO] =
-          WebSocketJSBackend[IO](dispatcher)
+      def pageUrl(
+        tab:           AppTab,
+        programId:     Program.Id,
+        focusedObsSet: Option[ObsIdSet],
+        focusedTarget: Option[Target.Id]
+      ): String =
+        routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget)).value
 
-        val (router, routerCtl) =
-          RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
+      def setPageVia(
+        tab:           AppTab,
+        programId:     Program.Id,
+        focusedObsSet: Option[ObsIdSet],
+        focusedTarget: Option[Target.Id],
+        via:           SetRouteVia
+      ) =
+        routerCtl.set(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget), via)
 
-        def rootComponent(view: ReuseView[RootModel]): VdomElement =
-          <.div(
-            router(view)
+      for {
+        _                    <- utils.setupScheme[IO](Theme.Dark)
+        appConfig            <- fetchConfig[IO]
+        _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
+        _                    <- logger.info(s"Config: ${appConfig.show}")
+        ctx                  <-
+          AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia, worker)
+        r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
+        (vault, container, _) = r
+      } yield {
+        val RootComponent =
+          ContextProvider(AppCtx, ctx)
+
+        val HelpContextComponent =
+          ContextProvider(
+            HelpCtx,
+            HelpContext(
+              rawUrl = uri"https://raw.githubusercontent.com",
+              editUrl = uri"https://github.com",
+              user = "gemini-hlsw",
+              project = "explore-help-docs",
+              displayedHelp = none
+            )
           )
 
-        def pageUrl(
-          tab:           AppTab,
-          programId:     Program.Id,
-          focusedObsSet: Option[ObsIdSet],
-          focusedTarget: Option[Target.Id]
-        ): String =
-          routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget)).value
+        val StateProviderComponent =
+          StateProvider(initialModel(vault, localPreferences))
 
-        def setPageVia(
-          tab:           AppTab,
-          programId:     Program.Id,
-          focusedObsSet: Option[ObsIdSet],
-          focusedTarget: Option[Target.Id],
-          via:           SetRouteVia
-        ) =
-          routerCtl.set(RoutingInfo.getPage(tab, programId, focusedObsSet, focusedTarget), via)
-
-        for {
-          _                    <- utils.setupScheme[IO](Theme.Dark)
-          appConfig            <- fetchConfig
-          _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
-          _                    <- logger.info(s"Config: ${appConfig.show}")
-          ctx                  <-
-            AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia)
-          r                    <- (ctx.sso.whoami, setupDOM(), showEnvironment(appConfig.environment)).parTupled
-          (vault, container, _) = r
-        } yield {
-          val RootComponent =
-            ContextProvider(AppCtx, ctx)
-
-          val HelpContextComponent =
-            ContextProvider(
-              HelpCtx,
-              HelpContext(
-                rawUrl = uri"https://raw.githubusercontent.com",
-                editUrl = uri"https://github.com",
-                user = "gemini-hlsw",
-                project = "explore-help-docs",
-                displayedHelp = none
-              )
-            )
-
-          val StateProviderComponent =
-            StateProvider(initialModel(vault, localPreferences))
-
-          RootComponent(
-            (HelpContextComponent(
-              (StateProviderComponent((rootComponent _).reuseAlways): VdomNode).reuseAlways
-            ): VdomNode).reuseAlways
-          ).renderIntoDOM(container)
-        }
+        RootComponent(
+          (HelpContextComponent(
+            (StateProviderComponent((rootComponent _).reuseAlways): VdomNode).reuseAlways
+          ): VdomNode).reuseAlways
+        ).renderIntoDOM(container)
       }
-      .void
+    }.void
       .handleErrorWith { t =>
         IO.println("Error initializing") >>
-          crash(s"There was an error initializing Explore:<br/>${t.getMessage}")
+          crash[IO](s"There was an error initializing Explore:<br/>${t.getMessage}")
       }
+
+    (for {
+      dispatcher <- Dispatcher[IO]
+      worker     <- WebWorkerF[IO](WebWorkers.TestWorker(), dispatcher)
+      prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
+      l          <- Resource.eval(setupLogger[IO](prefs))
+      _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(l))
+    } yield ()).useForever
   }
 
 }

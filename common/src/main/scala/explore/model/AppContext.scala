@@ -32,6 +32,7 @@ import org.http4s.implicits._
 import org.typelevel.log4cats.Logger
 import queries.schemas._
 import retry._
+import workers.WebWorkerF
 
 import scala.concurrent.duration._
 
@@ -116,7 +117,8 @@ case class AppContext[F[_]](
     Option[Target.Id],
     SetRouteVia
   ) => Callback,
-  environment: ExecutionEnvironment
+  environment: ExecutionEnvironment,
+  worker:      WebWorkerF[F] // There will be a few workers in the future
 )(implicit
   val F:       Applicative[F],
   val logger:  Logger[F],
@@ -162,7 +164,8 @@ object AppContext {
       Option[ObsIdSet],
       Option[Target.Id],
       SetRouteVia
-    ) => Callback
+    ) => Callback,
+    worker:               WebWorkerF[F]
   ): F[AppContext[F]] =
     for {
       clients    <-
@@ -178,6 +181,7 @@ object AppContext {
                           SSOClient(config.sso),
                           pageUrl,
                           setPageVia,
-                          config.environment
+                          config.environment,
+                          worker
     )
 }

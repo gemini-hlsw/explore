@@ -64,3 +64,11 @@ pull_request_rules:
       add:
       - model-tests
       remove: []
+- name: Label workers PRs
+  conditions:
+  - files~=^workers/
+  actions:
+    label:
+      add:
+      - workers
+      remove: []

@@ -75,6 +75,13 @@ lazy val modelTests = crossProject(JVMPlatform, JSPlatform)
   .jsSettings(commonModuleTest: _*)
   .jvmSettings(commonJVMSettings)
 
+lazy val workers = project
+  .in(file("workers"))
+  .settings(commonSettings: _*)
+  .settings(commonJsLibSettings: _*)
+  .settings(esModule: _*)
+  .enablePlugins(ScalaJSPlugin)
+
 lazy val graphql = project
   .in(file("common-graphql"))
   .dependsOn(model.jvm)
@@ -134,8 +141,8 @@ lazy val explore: Project = project
   .settings(esModule: _*)
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    Test / test     := {},
-    coverageEnabled := false,
+    Test / test          := {},
+    coverageEnabled      := false,
     libraryDependencies ++=
       GeminiLocales.value ++
         ReactAladin.value ++
@@ -145,7 +152,12 @@ lazy val explore: Project = project
         ReactGridLayout.value ++
         ReactHighcharts.value ++
         ReactHotkeys.value ++
-        ReactResizable.value
+        ReactResizable.value,
+    // Build workers when you build explore
+    Compile / fastLinkJS := (Compile / fastLinkJS)
+      .dependsOn((workers / Compile / fastLinkJS))
+      .value,
+    Compile / fullLinkJS := (Compile / fullLinkJS).dependsOn((workers / Compile / fullLinkJS)).value
   )
 
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
