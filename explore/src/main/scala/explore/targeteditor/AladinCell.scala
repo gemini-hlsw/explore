@@ -85,8 +85,15 @@ object AladinCell extends ModelOptics {
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
-        def fovSetter(props: Props, newFov: Fov): Callback =
-          if (newFov.x.toMicroarcseconds === 0L) Callback.empty
+        def fovSetter(props: Props, newFov: Fov): Callback = {
+          val ignore = options.get.fold(
+            _ => true,
+            _ => true,
+            o =>
+              // Don't save if the change is less than 1 arcse
+              (o.fovAngle.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6
+          )
+          if (ignore || newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
             options.mod(_.map(_.copy(fovAngle = newFov.x))) *>
@@ -96,6 +103,7 @@ object AladinCell extends ModelOptics {
                 .rateLimit(1.seconds, 1)
                 .void
           }
+        }
 
         def offsetSetter(props: Props, newOffset: Offset): Callback = {
           implicit val ctx = props.ctx
