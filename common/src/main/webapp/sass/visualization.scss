@@ -90,7 +90,7 @@
   position: absolute;
   z-index: 20;
   vector-effect: non-scaling-stroke;
-  mix-blend-mode: difference;
+  mix-blend-mode: exclusion;
 
   .crosshair-target {
     stroke: hsl(84, 100%, 29.2%);
@@ -105,5 +105,14 @@
     stroke: orange;
     stroke-width: 2px;
     stroke-dasharray: 2;
+  }
+
+  .guide-star-candidate-target {
+    display: inline;
+    stroke: red;
+    stroke-width: 1px;
+    fill: red;
+    fill-opacity: 0.4;
+    isolation: initial;
   }
 }

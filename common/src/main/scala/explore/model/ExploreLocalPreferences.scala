@@ -146,7 +146,13 @@ object ExploreLocalPreferences {
       Decoder[PosAngle.Unconstrained.type].widen
     ).reduceLeft(_ or _)
 
-  implicit val encodePosAngle: Encoder[PosAngle] = deriveEncoder[PosAngle]
+  implicit val encodePosAngle: Encoder[PosAngle] = Encoder.instance {
+    case a @ PosAngle.Fixed(_)               => a.asJson
+    case a @ PosAngle.AllowFlip(_)           => a.asJson
+    case a @ PosAngle.AverageParallactic     => a.asJson
+    case a @ PosAngle.ParallacticOverride(_) => a.asJson
+    case a @ PosAngle.Unconstrained          => a.asJson
+  }
 
   implicit val deConf: Decoder[ObsConfiguration] =
     Decoder.forProduct2("posAngle", "obsTime")(ObsConfiguration.apply)

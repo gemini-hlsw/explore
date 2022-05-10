@@ -26,4 +26,9 @@ object WebWorkers {
     def apply(): dom.Worker = js.native
   }
 
+  @js.native
+  @JSImport("/catalogworker.js?worker&inline", JSImport.Default)
+  object CatalogWorker extends js.Object {
+    def apply(): dom.Worker = js.native
+  }
 }

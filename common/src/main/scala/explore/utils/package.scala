@@ -24,7 +24,6 @@ import react.semanticui.collections.message.Message
 import react.semanticui.elements.loader.Loader
 
 import java.time.Instant
-import scala.scalajs.js
 
 package object utils {
   def setupScheme[F[_]: Sync](theme: Theme): F[Unit] =
@@ -91,27 +90,4 @@ package object utils {
         case Assign(edit) => modS(edit).assign
         case _            => modS(base).assign
       }
-}
-
-package utils {
-
-  // These are messages sent across tabs thus they need to be JS compatible
-  // We don't need yet more than just an index to  differentiate
-  sealed trait ExploreEvent extends js.Object {
-    def event: Int
-    def value: String // encode whatever value as a String. it can be e.g. json
-  }
-
-  object ExploreEvent {
-    class Logout(val nonce: Long) extends ExploreEvent {
-      val event = 1
-      val value = nonce.toString
-    }
-
-    object Logout {
-      val event                          = 1
-      def apply(nonce: Long)             = new Logout(nonce)
-      def unapply(l: Logout): Some[Long] = Some(l.nonce)
-    }
-  }
 }

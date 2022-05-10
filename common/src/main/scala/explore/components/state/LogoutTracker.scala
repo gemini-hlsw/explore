@@ -9,9 +9,9 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.events._
 import explore.implicits._
 import explore.model.UserVault
-import explore.utils.ExploreEvent
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.broadcastchannel._
@@ -46,7 +46,7 @@ object LogoutTracker {
           case ExploreEvent.Logout.event =>
             (props.setVault(none) >> props.setMessage(
               "You logged out in another instance"
-            )).to[IO].whenA(x.value =!= nonce.value.toString)
+            )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
           case _                         => IO.unit
         })
 

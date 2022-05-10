@@ -8,6 +8,7 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
+import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.PosAngle
 import explore.model.ScienceMode
@@ -40,7 +41,8 @@ final case class AladinContainer(
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset ==> Callback,
-  centerOnTarget:         ReuseView[Boolean]
+  centerOnTarget:         ReuseView[Boolean],
+  guideStarCandidates:    List[GuideStarCandidate]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
@@ -216,9 +218,20 @@ object AladinContainer {
                              ExploreStyles.PMCorrectionLine
             )
           )
-        } else {
-          List(SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10))
-        }
+        } else
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10)
+          )
+
+        val guideStarCandidatesTargets = props.guideStarCandidates
+          .map(g =>
+            SVGTarget
+              .GuideStarCandidateTarget(g.tracking.baseCoordinates,
+                                        ExploreStyles.GuideStarCandidateTarget,
+                                        4
+              )
+          )
+        println(props.guideStarCandidates.length)
 
         <.div(
           ExploreStyles.AladinContainerBody,
@@ -229,7 +242,13 @@ object AladinContainer {
           if (resize.height.exists(_ >= 100)) {
             ReactFragment(
               (resize.width, resize.height)
-                .mapN(SVGTargetsOverlay(_, _, world2pix.value.reuseNever, overlayTargets)),
+                .mapN(
+                  SVGTargetsOverlay(_,
+                                    _,
+                                    world2pix.value.reuseNever,
+                                    overlayTargets ++ guideStarCandidatesTargets
+                  )
+                ),
               AladinComp.withRef(aladinRef) {
                 Aladin(
                   ExploreStyles.TargetAladin,
