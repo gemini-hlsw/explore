@@ -5,6 +5,7 @@ package queries.schemas
 
 import clue.annotation.GraphQLSchema
 import eu.timepit.refined.types.numeric
+import eu.timepit.refined.types.string
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.generic.semiauto._
@@ -12,8 +13,8 @@ import lucuma.core.`enum`
 import lucuma.core.math.BrightnessUnits._
 import lucuma.core.math.dimensional._
 import lucuma.core.model
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ElevationRange
+import lucuma.core.model._
+import lucuma.core.model.sequence._
 // gql: import lucuma.ui.reusability._
 
 @GraphQLSchema
@@ -46,13 +47,13 @@ trait ITC {
   implicit val erEncoder: Encoder[ElevationRange] = Encoder.instance {
     case ElevationRange.AirMass(mi, ma)   =>
       Json.obj(
-        ("airmassRange",
+        ("airMass",
          Json.obj(("min", Json.fromBigDecimal(mi.value)), ("max", Json.fromBigDecimal(ma.value)))
         )
       )
     case ElevationRange.HourAngle(mi, ma) =>
       Json.obj(
-        ("hourAngleRange",
+        ("hourAngle",
          Json.obj(("minHours", Json.fromBigDecimal(mi.value)),
                   ("maxHours", Json.fromBigDecimal(ma.value))
          )
@@ -63,14 +64,28 @@ trait ITC {
   implicit val csEncoder: Encoder[ConstraintSet] = deriveEncoder
 
   object Scalars {
+    // Ids
+    type AtomId           = Atom.Id
+    type ExecutionEventId = ExecutionEvent.Id
+    type ObservationId    = Observation.Id
+    type ProgramId        = Program.Id
+    type StepId           = Step.Id
+    type TargetId         = Target.Id
+    type VisitId          = Visit.Id
     // Basic types
-    type BigDecimal    = scala.BigDecimal
-    type Long          = scala.Long
+    type BigDecimal       = scala.BigDecimal
+    type Long             = scala.Long
+    // Formatted strings
+    type DatasetFilename  = String
+    type DmsString        = String
+    type EpochString      = String
+    type HmsString        = String
     // Time
-    type Instant       = java.time.Instant
+    type Instant          = java.time.Instant
     // Refined
-    type PosInt        = numeric.PosInt
-    type PosBigDecimal = numeric.PosBigDecimal
+    type NonEmptyString   = string.NonEmptyString
+    type PosInt           = numeric.PosInt
+    type PosBigDecimal    = numeric.PosBigDecimal
   }
 
   object Enums {
@@ -91,12 +106,12 @@ trait ITC {
     type CloudExtinction                     = enum.CloudExtinction
     type WaterVapor                          = enum.WaterVapor
     type SkyBackground                       = enum.SkyBackground
-    type GmosNorthDisperser                  = enum.GmosNorthGrating
+    type GmosNorthGrating                    = enum.GmosNorthGrating
     type GmosNorthFilter                     = enum.GmosNorthFilter
-    type GmosNorthFpu                        = enum.GmosNorthFpu
-    type GmosSouthDisperser                  = enum.GmosSouthGrating
+    type GmosNorthBuiltinFpu                 = enum.GmosNorthFpu
+    type GmosSouthGrating                    = enum.GmosSouthGrating
     type GmosSouthFilter                     = enum.GmosSouthFilter
-    type GmosSouthFpu                        = enum.GmosSouthFpu
+    type GmosSouthBuiltinFpu                 = enum.GmosSouthFpu
     type GmosCustomSlitWidth                 = enum.GmosCustomSlitWidth
     type StellarLibrarySpectrum              = enum.StellarLibrarySpectrum
   }

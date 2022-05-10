@@ -24,6 +24,9 @@ import queries.schemas.ITC.Types._
 
 // There is a lot of duplication here with the odb.implicits package
 package itc {
+
+  import lucuma.core.enum.GmosNorthFpu
+  import lucuma.core.enum.GmosSouthFpu
   object implicits {
     implicit class AngleOps(val a: Angle) extends AnyVal {
       def toInput: AngleInput =
@@ -32,6 +35,10 @@ package itc {
 
     type SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
     val SpectroscopyModeInput = ITC.Types.SpectroscopyModeInput
+    type GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
+    val GmosNorthFpuInput = ITC.Types.GmosNorthFpuInput
+    type GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
+    val GmosSouthFpuInput = ITC.Types.GmosSouthFpuInput
     type ItcResults = ITCQueriesGQL.SpectroscopyITCQuery.Data
     type ItcError   = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
     val ItcError = ITCQueriesGQL.SpectroscopyITCQuery.Data.Spectroscopy.Results.Itc.ItcError
@@ -48,7 +55,7 @@ package itc {
     }
 
     // These are copied from the odb side
-    implicit class UnnormalizedSedOps(u: UnnormalizedSED) {
+    implicit class UnnormalizedSedOps(val u: UnnormalizedSED) extends AnyVal {
       def toInput: UnnormalizedSedInput =
         u match {
           case UnnormalizedSED.StellarLibrary(librarySpectrum)          =>
@@ -68,15 +75,16 @@ package itc {
           case UnnormalizedSED.PowerLaw(index)                          =>
             UnnormalizedSedInput(powerLaw = index.assign)
           case UnnormalizedSED.BlackBody(temperature)                   =>
-            UnnormalizedSedInput(blackBodyTempK = BigDecimal(temperature.value.value).assign)
+            UnnormalizedSedInput(blackBodyTempK = temperature.value.assign)
           case UnnormalizedSED.UserDefined(fluxDensities)               =>
             UnnormalizedSedInput(fluxDensities = fluxDensities.toSortedMap.toList.map {
-              case (wavelength, value) => FluxDensity(wavelength.toInput, value.value)
+              case (wavelength, value) => FluxDensity(wavelength.toInput, value)
             }.assign)
         }
     }
 
-    implicit class IntegratedBandNormalizedOps(b: SpectralDefinition.BandNormalized[Integrated]) {
+    implicit class IntegratedBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Integrated])
+        extends AnyVal {
       def toCreateInput: BandNormalizedIntegratedInput =
         BandNormalizedIntegratedInput(
           sed = b.sed.toInput.assign,
@@ -91,7 +99,8 @@ package itc {
         )
     }
 
-    implicit class SurfaceBandNormalizedOps(b: SpectralDefinition.BandNormalized[Surface]) {
+    implicit class SurfaceBandNormalizedOps(val b: SpectralDefinition.BandNormalized[Surface])
+        extends AnyVal {
       def toCreateInput: BandNormalizedSurfaceInput =
         BandNormalizedSurfaceInput(
           sed = b.sed.toInput.assign,
@@ -106,24 +115,35 @@ package itc {
         )
     }
 
-    implicit class IntegratedEmissionLinesOps(e: SpectralDefinition.EmissionLines[Integrated]) {
+    implicit class IntegratedEmissionLinesOps(val e: SpectralDefinition.EmissionLines[Integrated])
+        extends AnyVal {
       def toCreateInput: EmissionLinesIntegratedInput =
         EmissionLinesIntegratedInput(
           lines = e.lines.toList.map { case (wavelength, line) =>
             EmissionLineIntegratedInput(
               wavelength = wavelength.toInput,
-              lineWidth = line.lineWidth.value.value.assign,
+              lineWidth = line.lineWidth.value.assign,
               lineFlux = LineFluxIntegratedInput(
-                line.lineFlux.value.value,
+                line.lineFlux.value,
                 Measure.unitsTagged.get(line.lineFlux)
               ).assign
             )
           }.assign,
           fluxDensityContinuum = FluxDensityContinuumIntegratedInput(
-            value = e.fluxDensityContinuum.value.value,
+            value = e.fluxDensityContinuum.value,
             units = Measure.unitsTagged.get(e.fluxDensityContinuum)
           ).assign
         )
+    }
+
+    implicit class GmosNorthFpuOps(val e: GmosNorthFpu) extends AnyVal {
+      def toInput: GmosNorthFpuInput =
+        GmosNorthFpuInput(builtin = e.assign)
+    }
+
+    implicit class GmosSouthFpuOps(val e: GmosSouthFpu) extends AnyVal {
+      def toInput: GmosSouthFpuInput =
+        GmosSouthFpuInput(builtin = e.assign)
     }
 
     implicit class SurfaceEmissionLinesOps(e: SpectralDefinition.EmissionLines[Surface]) {
@@ -132,21 +152,20 @@ package itc {
           lines = e.lines.toList.map { case (wavelength, line) =>
             EmissionLineSurfaceInput(
               wavelength = wavelength.toInput,
-              lineWidth = line.lineWidth.value.value.assign,
+              lineWidth = line.lineWidth.value.assign,
               lineFlux = LineFluxSurfaceInput(
-                line.lineFlux.value.value,
+                line.lineFlux.value,
                 Measure.unitsTagged.get(line.lineFlux)
               ).assign
             )
           }.assign,
           fluxDensityContinuum = FluxDensityContinuumSurfaceInput(
-            value = e.fluxDensityContinuum.value.value,
+            value = e.fluxDensityContinuum.value,
             units = Measure.unitsTagged.get(e.fluxDensityContinuum)
           ).assign
         )
     }
-
-    implicit class IntegratedSpectralDefinitionOps(s: SpectralDefinition[Integrated]) {
+    implicit class IntegratedSpectralDefinitionOps(s: SpectralDefinition[Integrated])    {
       def toCreateInput: SpectralDefinitionIntegratedInput =
         s match {
           case b @ SpectralDefinition.BandNormalized(_, _) =>
@@ -182,12 +201,12 @@ package itc {
 
     implicit class GmosNorthSpectropyRowOps(val r: GmosNorthSpectroscopyRow) extends AnyVal {
       def toGmosNITCInput: Input[GmosNITCInput] =
-        GmosNITCInput(r.grating, r.fpu, filter = r.filter.orIgnore).assign
+        GmosNITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
     }
 
     implicit class GmosSouthSpectropyRowOps(val r: GmosSouthSpectroscopyRow) extends AnyVal {
       def toGmosSITCInput: Input[GmosSITCInput] =
-        GmosSITCInput(r.grating, r.fpu, filter = r.filter.orIgnore).assign
+        GmosSITCInput(r.grating, r.fpu.toInput, filter = r.filter.orIgnore).assign
     }
 
     implicit class RadialVelocityOps(val r: RadialVelocity) extends AnyVal {
@@ -206,13 +225,14 @@ package itc {
     }
 
     implicit class ITCInstrumentModesOps(val m: InstrumentRow) extends AnyVal {
-      def toITCInput: Option[InstrumentModes] = m match {
+      def toITCInput: Option[InstrumentModesInput] = m match {
         case r: GmosNorthSpectroscopyRow =>
-          InstrumentModes(gmosN = r.toGmosNITCInput).some
+          InstrumentModesInput(gmosN = r.toGmosNITCInput).some
         case r: GmosSouthSpectroscopyRow =>
-          InstrumentModes(gmosS = r.toGmosSITCInput).some
+          InstrumentModesInput(gmosS = r.toGmosSITCInput).some
         case _                           => none
       }
     }
   }
+
 }
