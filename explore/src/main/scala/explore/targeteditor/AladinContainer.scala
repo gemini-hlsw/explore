@@ -124,8 +124,8 @@ object AladinContainer {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates with pm correction if possible
-      .useStateBy { p =>
-        p.obsConf.map(o => p.target.get.at(o.obsInstant)).getOrElse(p.target.get.baseCoordinates)
+      .useMemoBy(_.obsConf.map(_.obsInstant)) { p => i =>
+        i.map(p.target.get.at).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
       .useStateBy { (p, baseCoordinates) =>
@@ -230,19 +230,13 @@ object AladinContainer {
 
         val showBase = props.obsConf.isDefined
 
-        def pmDistance = {
-          implicit val angleOrder = Angle.AngleOrder
-          baseCoordinates.value.angularDistance(props.target.get.baseCoordinates) >= Angle
-            .fromDoubleArcseconds(1)
-        }
-
-        val overlayTargets = if (showBase && pmDistance) {
+        val overlayTargets = if (showBase) {
           List(
-            SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10),
-            SVGTarget.CircleTarget(props.target.get.baseCoordinates, Css("base-target"), 3),
-            SVGTarget.ArrowTarget(baseCoordinates.value,
-                                  props.target.get.baseCoordinates,
-                                  Css("proper-motion-correction")
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
+            SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
+            SVGTarget.LineTo(baseCoordinates.value,
+                             props.target.get.baseCoordinates,
+                             ExploreStyles.PMCorrectionLine
             )
           )
         } else {

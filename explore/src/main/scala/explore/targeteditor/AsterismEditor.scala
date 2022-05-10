@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.react.ReuseView
+import crystal.react.ReuseViewOpt
 import crystal.react.View
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -14,6 +15,7 @@ import explore.Icons
 import explore.common.AsterismQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.config.ObsTimeComponent
 import explore.implicits._
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -36,6 +38,7 @@ import monocle.Optional
 import queries.common.TargetQueriesGQL._
 import queries.schemas.implicits._
 import react.common.ReactFnProps
+import react.semanticui.collections.form.Form
 import react.semanticui.elements.button._
 import react.semanticui.modules.checkbox._
 import react.semanticui.shorthand._
@@ -47,7 +50,7 @@ final case class AsterismEditor(
   obsIds:           ObsIdSet,
   asterism:         ReuseView[List[TargetWithId]],
   scienceMode:      Option[ScienceMode],
-  obsConf:          Option[ObsConfiguration],
+  obsConf:          ReuseViewOpt[ObsConfiguration],
   currentTarget:    Option[Target.Id],
   setTarget:        (Option[Target.Id], SetRouteVia) ==> Callback,
   otherObsCount:    Target.Id ==> Int,
@@ -161,6 +164,13 @@ object AsterismEditor {
                 })
             )
           ),
+          props.renderInTitle(
+            Form(size = Small)(
+              ExploreStyles.Compact,
+              ExploreStyles.ObsInstantTileTitle,
+              props.obsConf.zoom(ObsConfiguration.obsInstant).mapValue(ObsTimeComponent(_))
+            )
+          ),
           TargetTable(
             props.obsIds,
             props.asterism,
@@ -211,7 +221,7 @@ object AsterismEditor {
                         props.userId,
                         targetId,
                         targetView.unsafeNarrow[Target.Sidereal],
-                        props.obsConf,
+                        props.obsConf.get,
                         props.scienceMode,
                         props.undoStacks.zoom(atMapWithDefault(targetId, UndoStacks.empty)),
                         props.searching,

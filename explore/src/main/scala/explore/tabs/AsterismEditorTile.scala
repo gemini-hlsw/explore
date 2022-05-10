@@ -6,6 +6,7 @@ package explore.tabs
 import cats.effect.IO
 import crystal.Pot
 import crystal.react.ReuseView
+import crystal.react.ReuseViewOpt
 import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.components.Tile
@@ -35,7 +36,7 @@ object AsterismEditorTile {
     programId:       Program.Id,
     obsId:           ObsIdSet,
     potAsterismMode: Pot[(ReuseView[List[TargetWithId]], Option[ScienceMode])],
-    obsConf:         Option[ObsConfiguration],
+    obsConf:         ReuseViewOpt[ObsConfiguration],
     currentTarget:   Option[Target.Id],
     setTarget:       (Option[Target.Id], SetRouteVia) ==> Callback,
     otherObsCount:   Target.Id ==> Int,

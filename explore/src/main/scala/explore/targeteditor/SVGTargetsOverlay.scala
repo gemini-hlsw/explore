@@ -33,7 +33,7 @@ object SVGTarget {
     title:       Option[String] = None
   ) extends SVGTarget
 
-  final case class ArrowTarget(
+  final case class LineTo(
     coordinates: Coordinates,
     destination: Coordinates,
     css:         Css,
@@ -60,15 +60,14 @@ final case class SVGTargetsOverlay(
 
 object SVGTargetsOverlay {
   type Props = SVGTargetsOverlay
-  // implicit val doubleReuse: Reusability[Double] = Reusability.double(1)
   implicit val reuse: Reusability[Props] = Reusability.derive
 
   val canvasWidth  = VdomAttr("width")
   val canvasHeight = VdomAttr("height")
-  val component    =
+
+  val component =
     ScalaFnComponent
       .withChildren[Props] { (p, c) =>
-        println("REND")
         val svg = <.svg(
           Css("targets-overlay-svg"),
           canvasWidth  := s"${p.width}px",
@@ -86,7 +85,7 @@ object SVGTargetsOverlay {
                   <.line(^.x1 := x, ^.x2        := x, ^.y1        := y - side, ^.y2 := y + side, pointCss),
                   title.map(<.title(_))
                 )
-              case (SVGTarget.ArrowTarget(_, d, css, title), Some((x, y)))        =>
+              case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))             =>
                 val pointCss = Css("arrow-between-target") |+| css
                 p.world2pix(d)
                   .map { case (x1, y1) =>

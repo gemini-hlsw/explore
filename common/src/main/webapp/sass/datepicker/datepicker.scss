@@ -41,7 +41,7 @@
 }
 
 .react-datepicker-popper {
-  z-index: 1;
+  z-index: 60;
 
   &[data-placement^='bottom'] {
     padding-top: $datepicker__triangle-size + 2px;
