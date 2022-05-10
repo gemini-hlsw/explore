@@ -80,6 +80,8 @@ object reusability {
   implicit val scienceModeAdvancedResultReuse: Reusability[ScienceModeAdvanced] = Reusability.byEq
   implicit val scienceModeResultReuse: Reusability[ScienceMode]                 = Reusability.byEq
   implicit val obsCOnfigurationReuse: Reusability[ObsConfiguration]             = Reusability.byEq
+  implicit val guideStarReuse: Reusability[GuideStarCandidate]                  = Reusability.by(_.name.value)
+  implicit val catalogResultsReuse: Reusability[CatalogResults]                 = Reusability.by(_.candidates)
 
   implicit val existenceReuse: Reusability[Existence] = Reusability.byEq
 }

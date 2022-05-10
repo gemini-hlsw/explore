@@ -40,6 +40,13 @@ object SVGTarget {
     title:       Option[String] = None
   ) extends SVGTarget
 
+  final case class GuideStarCandidateTarget(
+    coordinates: Coordinates,
+    css:         Css,
+    radius:      Double,
+    title:       Option[String] = None
+  ) extends SVGTarget
+
   implicit val eqSVGTarget: Eq[SVGTarget] = Eq.instance {
     case (CircleTarget(c1, s1, r1, t1), CircleTarget(c2, s2, r2, t2))       =>
       c1 === c2 && s1 === s2 & r1 === r2 && t1 === t2
@@ -75,17 +82,20 @@ object SVGTargetsOverlay {
           p.targets
             .map(c => (c, p.world2pix(c.coordinates)))
             .collect {
-              case (SVGTarget.CircleTarget(_, css, radius, title), Some((x, y)))  =>
+              case (SVGTarget.CircleTarget(_, css, radius, title), Some((x, y)))             =>
                 val pointCss = Css("circle-target") |+| css
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
-              case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y))) =>
+              case (SVGTarget.GuideStarCandidateTarget(_, css, radius, title), Some((x, y))) =>
+                val pointCss = Css("guide-star-candidate-target") |+| css
+                <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
+              case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y)))            =>
                 val pointCss = Css("crosshair-target") |+| css
                 <.g(
                   <.line(^.x1 := x - side, ^.x2 := x + side, ^.y1 := y, ^.y2        := y, pointCss),
                   <.line(^.x1 := x, ^.x2        := x, ^.y1        := y - side, ^.y2 := y + side, pointCss),
                   title.map(<.title(_))
                 )
-              case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))             =>
+              case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))                        =>
                 val pointCss = Css("arrow-between-target") |+| css
                 p.world2pix(d)
                   .map { case (x1, y1) =>

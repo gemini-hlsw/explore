@@ -4,13 +4,12 @@
 package workers
 
 import cats.effect.IO
-
-import scala.scalajs.js
+import cats.effect.unsafe.implicits._
 import org.scalajs.dom
 
-import js.annotation._
+import scala.scalajs.js
 
-import cats.effect.unsafe.implicits._
+import js.annotation._
 
 /**
   * Sample web worker, extremely simple just accept messages, prints them

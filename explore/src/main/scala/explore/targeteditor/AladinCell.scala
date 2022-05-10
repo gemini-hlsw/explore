@@ -15,14 +15,17 @@ import eu.timepit.refined.auto._
 import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
+import explore.events._
 import explore.implicits._
 import explore.model.Constants
+import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
+import io.circe.parser._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -66,7 +69,29 @@ object AladinCell extends ModelOptics {
       // flag to trigger centering. This is a bit brute force but
       // avoids us needing a ref to a Fn component
       .useStateViewWithReuse(false)
-      .useEffectWithDepsBy((p, _, _, _) => (p.uid, p.tid)) { (props, _, options, _) => _ =>
+      // GuideStar candidates
+      .useState(List.empty[GuideStarCandidate])
+      // Lisen on web worker for messages with catalog candidates
+      .useEffectWithDepsBy((props, _, _, _, _) => props.target.get.baseCoordinates)(
+        (props, _, _, _, gs) =>
+          _ =>
+            props.ctx.worker.stream
+              .evalMap(m =>
+                IO(decode[List[GuideStarCandidate]](m.data.toString))
+                  .flatMap(
+                    _.fold(
+                      _ => IO.unit,
+                      gsl => gs.setState(gsl).to[IO]
+                    )
+                  )
+              )
+              .compile
+              .drain
+      )
+      .useEffectWithDepsBy((props, _, _, _, _) => props.target.get)((props, _, _, _, _) =>
+        tracking => props.ctx.worker.postMessage(ExploreEvent.CatalogRequest(tracking))
+      )
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.uid, p.tid)) { (props, _, options, _, _) => _ =>
         implicit val ctx = props.ctx
         UserTargetPreferencesQuery
           .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
@@ -79,7 +104,7 @@ object AladinCell extends ModelOptics {
           }
           .runAsyncAndForget
       }
-      .renderWithReuse { (props, mouseCoords, options, center) =>
+      .renderWithReuse { (props, mouseCoords, options, center, gsc) =>
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
@@ -125,7 +150,8 @@ object AladinCell extends ModelOptics {
             coordinatesSetter,
             Reuse.currying(props).in(fovSetter _),
             Reuse.currying(props).in(offsetSetter _),
-            center
+            center,
+            gsc.value
           ).withKey(aladinKey)
 
         val renderToolbar: TargetVisualOptions => VdomNode =
