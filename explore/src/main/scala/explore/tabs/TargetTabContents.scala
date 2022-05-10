@@ -524,6 +524,13 @@ object TargetTabContents {
     }
   }
 
+  // DELETEME:
+  def firstIdSelected(props: Props): Option[Observation.Id] =
+    (props.focusedObsSet, props.focusedTarget) match {
+      case (a @ Some(_), _) => a.map(_.idSet.head)
+      case _                => none
+    }
+
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -577,19 +584,40 @@ object TargetTabContents {
       .useSingleEffect(debounce = 1.second)
       // Shared obs conf (posAngle/obsTime)
       .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, Instant.now))
+      // DELETEME: For demos read from local obs
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => (p.focusedObsSet, p.focusedTarget)) {
+        (p, _, _, _, _, _, obsConf) => _ =>
+          ExploreLocalPreferences
+            .loadPreferences[IO]
+            .flatMap { e =>
+              println(s"LOAD ${firstIdSelected(p)}")
+              firstIdSelected(p)
+                .flatMap(o => e.obsConfigurations.get(o))
+                .map(obsConf.set(_).to[IO])
+                .getOrElse(IO.unit)
+            }
+      }
       .renderWithReuse {
         (props, twoPanelState, resize, layout, defaultLayout, debouncer, obsConf) =>
           implicit val ctx = props.ctx
           <.div(
             AsterismGroupLiveQuery(
               props.programId,
-              Reuse(renderFn _)(props,
-                                twoPanelState,
-                                defaultLayout,
-                                layout,
-                                resize,
-                                debouncer,
-                                obsConf
+              Reuse(renderFn _)(
+                props,
+                twoPanelState,
+                defaultLayout,
+                layout,
+                resize,
+                debouncer,
+                obsConf // DELETEME
+                  .withOnMod(conf =>
+                    firstIdSelected(props)
+                      .map(id =>
+                        ExploreLocalPreferences.storeObsConfig[IO](id, conf).runAsyncAndForget
+                      )
+                      .getOrElse(Callback.empty)
+                  )
               )
             )
           ).withRef(resize.ref)

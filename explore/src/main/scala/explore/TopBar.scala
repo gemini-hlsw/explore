@@ -185,6 +185,12 @@ object TopBar {
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
+                        .when(appCtx.environment === ExecutionEnvironment.Development),
+                      // DELETME
+                      DropdownItem(text = "Reset Local Obs",
+                                   icon = Icons.SkullCrossBones.fixedWidth(),
+                                   onClick = ExploreLocalPreferences.cleanObsConfig[IO].runAsync
+                      )
                         .when(appCtx.environment === ExecutionEnvironment.Development)
                     )
                   )
