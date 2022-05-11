@@ -52,8 +52,8 @@ object ConnectionsStatus {
     } else <.span()
   }
 
-  val component = ScalaFnComponent
-    .withReuseBy[Props, Unit](_ => ())(_ =>
+  val component =
+    ScalaFnComponent[Props](_ =>
       AppCtx.using { ctx =>
         ctx.clients.ODBConnectionStatus((renderStatus _).reuseCurrying("ODB"))
       }
