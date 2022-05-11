@@ -91,12 +91,13 @@ object AladinCell extends ModelOptics {
               // Don't save if the change is less than 1 arcse
               (o.fovAngle.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e6
           )
-          if (ignore || newFov.x.toMicroarcseconds === 0L) Callback.empty
+          if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
             implicit val ctx = props.ctx
             options.mod(_.map(_.copy(fovAngle = newFov.x))) *>
               UserTargetPreferencesUpsert
                 .updateFov[IO](props.uid, props.tid, newFov.x)
+                .unlessA(ignore)
                 .runAsync
                 .rateLimit(1.seconds, 1)
                 .void
