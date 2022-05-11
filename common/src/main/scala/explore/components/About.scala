@@ -8,23 +8,22 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactProps
+import react.common.ReactFnProps
 import react.semanticui.modules.modal.Dimmer.Blurring
 import react.semanticui.modules.modal.Modal
 import react.semanticui.modules.modal.ModalContent
 import react.semanticui.shorthand._
 
 case class About(trigger: Reuse[VdomNode], content: Reuse[VdomNode])
-    extends ReactProps[About](About.component)
+    extends ReactFnProps[About](About.component)
 
 object About {
   type Props = About
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected val component = ScalaComponent
-    .builder[Props]
-    .render_P { props =>
+  val component = ScalaFnComponent
+    .withReuse[Props](props =>
       Modal(
         dimmer = Blurring,
         trigger = props.trigger: VdomNode,
@@ -36,7 +35,5 @@ object About {
           )
         )
       )
-    }
-    .configure(Reusability.shouldComponentUpdate)
-    .build
+    )
 }

@@ -15,13 +15,13 @@ import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import react.common.ReactProps
+import react.common.ReactFnProps
 import react.semanticui.elements.icon._
 import react.semanticui.modules.popup._
 import react.semanticui.views.item.Item
 
 final case class ConnectionsStatus()
-    extends ReactProps[ConnectionsStatus](ConnectionsStatus.component)
+    extends ReactFnProps[ConnectionsStatus](ConnectionsStatus.component)
 
 object ConnectionsStatus {
   type Props = ConnectionsStatus
@@ -52,13 +52,11 @@ object ConnectionsStatus {
     } else <.span()
   }
 
-  val component = ScalaComponent
-    .builder[Props]
-    .render(_ =>
+  val component = ScalaFnComponent
+    .withReuseBy[Props, Unit](_ => ())(_ =>
       AppCtx.using { ctx =>
         ctx.clients.ODBConnectionStatus((renderStatus _).reuseCurrying("ODB"))
       }
     )
-    .build
 
 }
