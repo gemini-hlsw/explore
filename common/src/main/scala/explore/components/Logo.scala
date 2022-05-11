@@ -8,9 +8,11 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Logo {
-  def apply() = ScalaComponent.static(
+  def apply() = component()
+
+  protected val component = ScalaComponent.static(
     <.div(ExploreStyles.LoginTitleWrapper)(
       <.div(ExploreStyles.LoginTitle, "Explore")
     )
-  )()
+  )
 }
