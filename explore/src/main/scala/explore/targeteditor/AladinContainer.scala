@@ -265,10 +265,7 @@ object AladinContainer {
                 )
               }
             )
-          }
-
-          // )
-          else EmptyVdom
+          } else EmptyVdom
         )
           .withRef(resize.ref)
       }
