@@ -278,6 +278,7 @@ object ExploreStyles {
 
   // Configuration tile
   val ObsConfigurationForm: Css      = Css("explore-obs-configuration-form")
+  val ObsInstantTileTitle: Css       = Css("explore-obs-instant-tile-title")
   val ObsConfigurationObsPA: Css     = Css("explore-obs-configuration-pa")
   val ObsConfigurationObsTime: Css   = Css("explore-obs-configuration-time")
   val ConfigurationForm: Css         = Css("explore-configuration-form")
@@ -345,4 +346,9 @@ object ExploreStyles {
   val TargetSearchResultsSource: Css = Css("explore-target-search-results-source")
 
   val NewEmissionLineWavelength: Css = Css("explore-new-emissionline-wavelength")
+
+  // Aladin Target classes
+  val ScienceTarget: Css = Css("science-target")
+  val BaseTarget         = Css("base-target")
+  val PMCorrectionLine   = Css("proper-motion-correction")
 }

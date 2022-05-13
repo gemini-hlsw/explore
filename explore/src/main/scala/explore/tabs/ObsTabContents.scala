@@ -354,7 +354,7 @@ object ObsTabContents {
             props.programId,
             ObsIdSet.one(obsId),
             potAsterismMode,
-            obsConf.get.some,
+            obsConf.asOpt,
             props.focusedTarget,
             Reuse(setCurrentTarget _)(props.programId, props.focusedObs),
             Reuse.currying(obsWithConstraints.get.targetMap, obsId).in(otherObsCount _),

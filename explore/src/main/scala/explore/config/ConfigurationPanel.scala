@@ -50,17 +50,12 @@ import lucuma.ui.reusability._
 import monocle.Iso
 import monocle.Lens
 import react.common._
-import react.datepicker._
 import react.semanticui.collections.form.Form
 import react.semanticui.elements.button.Button
 import react.semanticui.sizes._
 
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-
-import scalajs.js
-import scalajs.js.|
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
@@ -149,50 +144,6 @@ object ConfigurationPanel {
       )
     )
 
-  // TODO Move these to react-datetime
-  implicit class InstantOps(val instant: Instant) extends AnyVal {
-    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-    def toDatePickerJsDate: js.Date =
-      new js.Date(instant.toEpochMilli.toDouble + (new js.Date()).getTimezoneOffset() * 60000)
-  }
-
-  object InstantBuilder {
-    // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-    // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-    def fromDatePickerJsDate(jsDate: js.Date): Instant =
-      Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
-  }
-
-  implicit class JSUndefOrNullOrTuple2DateTimeOps[A](
-    val value: js.UndefOr[DateOrRange]
-  ) extends AnyVal {
-    def toEitherOpt2: Option[Either[(A, A), A]] =
-      value.toOption
-        .flatMap(valueOrNull => Option(valueOrNull.asInstanceOf[A | js.Tuple2[A, A]]))
-        .map { valueOrTuple =>
-          if (js.Array.isArray(valueOrTuple))
-            Left(valueOrTuple.asInstanceOf[js.Tuple2[A, A]])
-          else
-            Right(valueOrTuple.asInstanceOf[A])
-        }
-
-    def fromDatePickerToInstantEitherOpt(implicit
-      ev: A <:< js.Date
-    ): Option[Either[(Instant, Instant), Instant]] =
-      value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
-        e match {
-          case Left((d1, d2)) =>
-            Left((InstantBuilder.fromDatePickerJsDate(d1), InstantBuilder.fromDatePickerJsDate(d2)))
-          case Right(d)       =>
-            Right(InstantBuilder.fromDatePickerJsDate(d))
-        }
-      }.widen
-
-    def fromDatePickerToInstantOpt(implicit ev: A <:< js.Date): Option[Instant] =
-      fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
-  }
-
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -271,17 +222,7 @@ object ConfigurationPanel {
               allowedFlipView.mapValue(posAngleEditor),
               parallacticOverrideView.mapValue(posAngleEditor)
             ),
-            <.div(
-              ExploreStyles.ObsConfigurationObsTime,
-              <.label("Observation time", HelpIcon("configuration/obstime.md")),
-              Datepicker(onChange =
-                (newValue, _) => newValue.fromDatePickerToInstantOpt.foldMap(obsInstant.set)
-              )
-                .showTimeInput(true)
-                .selected(obsInstant.get.toDatePickerJsDate)
-                .dateFormat("yyyy-MM-dd HH:mm"),
-              "UTC"
-            )
+            ObsTimeComponent(obsInstant)
           ),
           Form(size = Small)(
             ExploreStyles.Compact,

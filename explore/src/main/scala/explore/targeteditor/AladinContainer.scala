@@ -15,6 +15,7 @@ import explore.model.TargetVisualOptions
 import explore.model.enum.Visible
 import explore.model.reusability._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
@@ -22,6 +23,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Offset
 import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
 import org.scalajs.dom.Element
@@ -33,7 +35,7 @@ import react.resizeDetector.hooks._
 import scala.concurrent.duration._
 
 final case class AladinContainer(
-  target:                 ReuseView[Coordinates],
+  target:                 ReuseView[SiderealTracking],
   obsConf:                Option[ObsConfiguration],
   scienceMode:            Option[ScienceMode],
   options:                TargetVisualOptions,
@@ -41,10 +43,7 @@ final case class AladinContainer(
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset ==> Callback,
   centerOnTarget:         ReuseView[Boolean]
-) extends ReactFnProps[AladinContainer](AladinContainer.component) {
-  val baseCoordinates: Coordinates     = target.get
-  val baseCoordinatesForAladin: String = Coordinates.fromHmsDms.reverseGet(baseCoordinates)
-}
+) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
 
@@ -124,13 +123,17 @@ object AladinContainer {
   val component =
     ScalaFnComponent
       .withHooks[Props]
-      // View coordinates (in case the user pans)
-      .useStateBy { p =>
-        p.baseCoordinates.offsetBy(Angle.Angle0, p.options.viewOffset)
+      // Base coordinates with pm correction if possible
+      .useMemoBy(_.obsConf.map(_.obsInstant)) { p => i =>
+        i.map(p.target.get.at).getOrElse(p.target.get.baseCoordinates)
+      }
+      // View coordinates base coordinates with pm correction if possible + user panning
+      .useStateBy { (p, baseCoordinates) =>
+        baseCoordinates.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       }
       // Memoized svg
-      .useMemoBy((p, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
-        case (_, _) => { case (mode, posAngle, _) =>
+      .useMemoBy((p, _, _) => (p.scienceMode, p.obsConf.map(_.posAngle), p.options)) {
+        case (_, _, _) => { case (mode, posAngle, _) =>
           posAngle
             .collect {
               case PosAngle.Fixed(a)               => a
@@ -151,37 +154,37 @@ object AladinContainer {
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If needed center on target
-      .useEffectWithDepsBy((p, _, _, _) => (p.baseCoordinates, p.centerOnTarget.get))(
-        (_, _, _, aladinRef) => { case (coords, center) =>
-          aladinRef.get.asCBO
-            .flatMapCB(
-              _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
-                                  coords.dec.toAngle.toSignedDoubleDegrees
-              )
+      .useEffectWithDepsBy((p, baseCoordinates, _, _, _) =>
+        (baseCoordinates.value, p.centerOnTarget.get)
+      )((_, _, _, _, aladinRef) => { case (coords, center) =>
+        aladinRef.get.asCBO
+          .flatMapCB(
+            _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
+                                coords.dec.toAngle.toSignedDoubleDegrees
             )
-            .when(center)
-        }
-      )
+          )
+          .when(center)
+      })
       // Function to calculate coordinates
       .useSerialState(DefaultWorld2PixFn)
       // resize detector
       .useResizeDetector()
       // Update the world2pix function
-      .useEffectWithDepsBy { (p, currentPos, _, aladinRef, _, resize) =>
+      .useEffectWithDepsBy { (p, _, currentPos, _, aladinRef, _, resize) =>
         (resize, p.options, currentPos, aladinRef)
-      } { (_, _, _, aladinRef, w, _) => _ =>
+      } { (_, _, _, _, aladinRef, w, _) => _ =>
         aladinRef.get.asCBO.flatMapCB(_.backend.world2pixFn.flatMap(w.setState))
       }
       // Render the visualization, only if current pos, fov or size changes
-      .useEffectWithDepsBy((p, currentPos, _, _, world2pix, resize) =>
+      .useEffectWithDepsBy((p, baseCoordinates, currentPos, _, _, world2pix, resize) =>
         (p.options.fovAngle,
          p.scienceMode,
          p.obsConf.map(_.posAngle),
          currentPos,
-         world2pix.value(p.baseCoordinates),
+         world2pix.value(baseCoordinates.value),
          resize
         )
-      ) { (_, _, svg, aladinRef, _, _) =>
+      ) { (_, _, _, svg, aladinRef, _, _) =>
         { case (_, _, _, _, off, _) =>
           off
             .map(off =>
@@ -195,14 +198,14 @@ object AladinContainer {
             .getOrEmpty
         }
       }
-      .renderWithReuse { (props, currentPos, _, aladinRef, _, resize) =>
+      .renderWithReuse { (props, baseCoordinates, currentPos, _, aladinRef, world2pix, resize) =>
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
          * to keep the internal target correct
          */
         def onPositionChanged(u: PositionChanged): Callback = {
           val viewCoords = Coordinates(u.ra, u.dec)
-          val viewOffset = props.baseCoordinates.diff(viewCoords).offset
+          val viewOffset = baseCoordinates.value.diff(viewCoords).offset
           currentPos.setState(Some(viewCoords)) *>
             props.updateViewOffset(viewOffset) *>
             props.centerOnTarget.set(false)
@@ -223,7 +226,22 @@ object AladinContainer {
         val baseCoordinatesForAladin: String =
           currentPos.value
             .map(Coordinates.fromHmsDms.reverseGet)
-            .getOrElse(props.baseCoordinatesForAladin)
+            .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
+
+        val showBase = props.obsConf.isDefined
+
+        val overlayTargets = if (showBase) {
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10),
+            SVGTarget.CircleTarget(props.target.get.baseCoordinates, ExploreStyles.BaseTarget, 3),
+            SVGTarget.LineTo(baseCoordinates.value,
+                             props.target.get.baseCoordinates,
+                             ExploreStyles.PMCorrectionLine
+            )
+          )
+        } else {
+          List(SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10))
+        }
 
         <.div(
           ExploreStyles.AladinContainerBody,
@@ -231,19 +249,23 @@ object AladinContainer {
           // This happens during a second render. If we let the height to be zero, aladin
           // will take it as 1. This height ends up being a denominator, which, if low,
           // will make aladin request a large amount of tiles and end up freeze explore.
-          if (resize.height.exists(_ >= 100))
-            AladinComp.withRef(aladinRef) {
-              Aladin(
-                ExploreStyles.TargetAladin,
-                showReticle = false,
-                showLayersControl = false,
-                target = baseCoordinatesForAladin,
-                fov = props.options.fovAngle,
-                showGotoControl = false,
-                customize = includeSvg _
-              )
-            }
-          else EmptyVdom
+          if (resize.height.exists(_ >= 100)) {
+            ReactFragment(
+              (resize.width, resize.height)
+                .mapN(SVGTargetsOverlay(_, _, world2pix.value.reuseNever, overlayTargets)),
+              AladinComp.withRef(aladinRef) {
+                Aladin(
+                  ExploreStyles.TargetAladin,
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = props.options.fovAngle,
+                  showGotoControl = false,
+                  customize = includeSvg _
+                )
+              }
+            )
+          } else EmptyVdom
         )
           .withRef(resize.ref)
       }

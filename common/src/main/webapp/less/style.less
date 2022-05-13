@@ -2131,6 +2131,12 @@ html {
   justify-content: space-between;
 }
 
+.react-datepicker-wrapper() {
+  width: unset;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+}
+
 .explore-obs-configuration-form {
   grid-area: obs-props;
   display: flex;
@@ -2139,15 +2145,24 @@ html {
   border-bottom: 1px solid var(--site-border-color);
 
   .react-datepicker-wrapper {
-    width: unset;
-    padding-left: 0.3em;
-    padding-right: 0.3em;
+    .react-datepicker-wrapper();
   }
 
   .field .ui.selection.dropdown[id='pos-angle-alternative'] {
     min-width: 18ch;
     padding-left: 0.3em;
     padding-right: 0.3em;
+  }
+}
+
+.explore-obs-instant-tile-title {
+  display: flex;
+  justify-self: center;
+  justify-content: end;
+  flex-grow: 3;
+
+  .react-datepicker-wrapper {
+    .react-datepicker-wrapper();
   }
 }
 
@@ -2158,7 +2173,7 @@ html {
 
 .explore-obs-configuration-time {
   display: flex;
-  align-items: baseline;
+  align-items: center;
 }
 
 .explore-configuration-form {
@@ -2300,7 +2315,7 @@ th.sticky-column,
   position: sticky;
 
   &.sticky-header {
-    z-index: 1000;
+    z-index: 50;
   }
 }
 
@@ -2308,7 +2323,7 @@ th.sticky-header,
 .th.sticky-header {
   position: sticky;
   top: 0;
-  z-index: 900;
+  z-index: 30;
 }
 
 .ui.table tr.explore-table-row-selected td.sticky-column,

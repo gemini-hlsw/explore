@@ -59,11 +59,7 @@ object GmosGeometry {
         )
       case _                                                                                     =>
         NonEmptyMap.of(
-          (Css("gmos-probe"),
-           gmos.probeArm.shapeAt(posAngle, guideStarOffset, offsetPos, fpu, port)
-          ),
-          (Css("gmos-patrol-field"), gmos.probeArm.patrolFieldAt(posAngle, offsetPos, fpu, port)),
-          (Css("gmos-science-ccd-offset"), gmos.scienceArea.imaging ↗ offsetPos ⟲ posAngle)
+          (Css("gmos-science-ccd"), gmos.scienceArea.imaging ⟲ posAngle)
         )
     }
 

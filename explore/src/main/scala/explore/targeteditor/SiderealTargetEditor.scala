@@ -256,7 +256,7 @@ object SiderealTargetEditor {
                 props.id,
                 props.obsConf,
                 props.scienceMode,
-                targetView.zoom(Target.Sidereal.baseCoordinates)
+                targetView.zoom(Target.Sidereal.tracking)
               ),
               <.div(ExploreStyles.Grid, ExploreStyles.Compact, ExploreStyles.TargetForm)(
                 // Keep the search field and the coords always together

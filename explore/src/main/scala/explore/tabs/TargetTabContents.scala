@@ -130,6 +130,7 @@ object TargetTabContents {
     layouts:               ReuseView[LayoutsMap],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
+    obsConf:               ReuseView[ObsConfiguration],
     asterismGroupsWithObs: ReuseView[AsterismGroupsWithObs]
   )(implicit ctx:          AppContextIO): VdomNode = {
 
@@ -362,10 +363,6 @@ object TargetTabContents {
         case _        => None
       }
 
-      // Until these are in the API
-      val obsConfiguration =
-        scienceMode.map(_ => ObsConfiguration(PosAngle.Default, Instant.now))
-
       def setCurrentTarget(
         programId: Program.Id,
         oids:      ObsIdSet,
@@ -380,7 +377,7 @@ object TargetTabContents {
           props.programId,
           idsToEdit,
           Pot(asterismView, scienceMode),
-          obsConfiguration,
+          obsConf.asOpt,
           props.focusedTarget,
           Reuse(setCurrentTarget _)(props.programId, idsToEdit),
           Reuse.currying(targetMap, idsToEdit).in(otherObsCount _),
@@ -578,14 +575,24 @@ object TargetTabContents {
           }
       }
       .useSingleEffect(debounce = 1.second)
-      .renderWithReuse { (props, twoPanelState, resize, layout, defaultLayout, debouncer) =>
-        implicit val ctx = props.ctx
-        <.div(
-          AsterismGroupLiveQuery(
-            props.programId,
-            Reuse(renderFn _)(props, twoPanelState, defaultLayout, layout, resize, debouncer)
-          )
-        ).withRef(resize.ref)
+      // Shared obs conf (posAngle/obsTime)
+      .useStateViewWithReuse(ObsConfiguration(PosAngle.Default, Instant.now))
+      .renderWithReuse {
+        (props, twoPanelState, resize, layout, defaultLayout, debouncer, obsConf) =>
+          implicit val ctx = props.ctx
+          <.div(
+            AsterismGroupLiveQuery(
+              props.programId,
+              Reuse(renderFn _)(props,
+                                twoPanelState,
+                                defaultLayout,
+                                layout,
+                                resize,
+                                debouncer,
+                                obsConf
+              )
+            )
+          ).withRef(resize.ref)
       }
 
 }
