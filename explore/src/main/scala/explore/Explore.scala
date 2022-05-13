@@ -204,7 +204,7 @@ object ExploreMain extends IOApp.Simple {
       dispatcher <- Dispatcher[IO]
       worker     <- WebWorkerF[IO](WebWorkers.TestWorker(), dispatcher)
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
-      l          <- Resource.eval(setupLogger[IO](prefs))
+      l          <- { println(prefs); Resource.eval(setupLogger[IO](prefs)) }
       _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(l))
     } yield ()).useForever
   }
