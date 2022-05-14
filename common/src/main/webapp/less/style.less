@@ -35,13 +35,6 @@ body {
   width: 100vw;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-background);
-
-  // Reusability overlays.
-  &.hide-reusability {
-    & > div:not(#root) {
-      display: none;
-    }
-  }
 }
 
 *::-webkit-scrollbar {
@@ -2409,3 +2402,10 @@ input:-webkit-autofill:active {
   border: 1px solid var(--site-border-color) !important;
 }
 /* stylelint-enable */
+
+// Reusability overlays.
+body.hide-reusability {
+  & > div:not(#root) {
+    display: none;
+  }
+}
