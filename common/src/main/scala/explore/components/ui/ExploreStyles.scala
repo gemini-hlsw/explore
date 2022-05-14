@@ -12,6 +12,8 @@ import react.common.style._
 object ExploreStyles {
   val FadeIn: Css = Css("fade-in")
 
+  val HideReusability = Css("hide-reusability")
+
   val Tile: Css               = Css("explore-tile")
   val TileTitle: Css          = Css("explore-tile-title")
   val TileTitleMenu: Css      = Css("explore-tile-title-menu")

@@ -35,6 +35,13 @@ body {
   width: 100vw;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-background);
+
+  // Reusability overlays.
+  &.hide-reusability {
+    & > div:not(#root) {
+      display: none;
+    }
+  }
 }
 
 *::-webkit-scrollbar {

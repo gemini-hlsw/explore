@@ -194,6 +194,10 @@ object Icons {
   @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faTriangleSolid: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faCrystalBall")
+  val faCrystalBall: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   IconLibrary.add(
     faGears,
@@ -240,7 +244,8 @@ object Icons {
     faSpinner,
     faThumbtack,
     faSunBright,
-    faTriangleSolid
+    faTriangleSolid,
+    faCrystalBall
   )
 
   val Bars                = FontAwesomeIcon(faBars)
@@ -288,4 +293,5 @@ object Icons {
   val Thumbtack           = FontAwesomeIcon(faThumbtack)
   val SunBright           = FontAwesomeIcon(faSunBright)
   val TriangleSolid       = FontAwesomeIcon(faTriangleSolid)
+  val CrystalBall         = FontAwesomeIcon(faCrystalBall)
 }
