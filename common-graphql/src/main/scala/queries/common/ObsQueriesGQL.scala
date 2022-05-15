@@ -560,8 +560,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceModeMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsId: ObservationId!, $input: ScienceModeInput){
-        updateObservation(input: {observationId: $obsId, scienceMode: $input}) {
+      mutation ($input: BulkEditScienceModeInput){
+        bulkEditScienceMode(input: $input) {
           id
         }
       }

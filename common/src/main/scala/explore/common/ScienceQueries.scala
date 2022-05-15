@@ -4,8 +4,6 @@
 package explore.common
 
 import cats.Endo
-import cats.effect.IO
-import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.View
 import crystal.react.implicits._
@@ -21,7 +19,6 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Observation
 import lucuma.core.optics.syntax.lens._
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types._
 import monocle.Lens
 import queries.common.ObsQueriesGQL._
@@ -159,23 +156,16 @@ object ScienceQueries {
           ScienceModeInput(
             gmosNorthLongSlit = GmosNorthLongSlitInput(
               basic = basic.toInput.assign,
-              advanced = advanced.map(_.toInput).orUnassign
+              advanced = advanced.toInput.assign
             ).assign
           )
         case ScienceMode.GmosSouthLongSlit(basic, advanced) =>
           ScienceModeInput(
             gmosSouthLongSlit = GmosSouthLongSlitInput(
               basic = basic.toInput.assign,
-              advanced = advanced.map(_.toInput).orUnassign
+              advanced = advanced.toInput.assign
             ).assign
           )
       }
   }
-
-  def setScienceMode(obsId: Observation.Id, conf: Option[ScienceMode])(implicit
-    client:                 TransactionalClient[IO, ObservationDB]
-  ): IO[Unit] =
-    UpdateScienceModeMutation
-      .execute[IO](obsId, conf.map(_.toInput).orUnassign)
-      .void
 }

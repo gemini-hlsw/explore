@@ -143,6 +143,10 @@ object Icons {
   val faChevronLeftLight: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronsLeft")
+  val faChevronsLeft: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronDown")
   val faChevronDown: FAIcon = js.native
 
@@ -228,6 +232,7 @@ object Icons {
     faChevronRightLight,
     faChevronLeft,
     faChevronLeftLight,
+    faChevronsLeft,
     faChevronDown,
     faChevronDoubleUp,
     faChevronDoubleDown,
@@ -261,6 +266,7 @@ object Icons {
   val ChevronRightLight   = FontAwesomeIcon(faChevronRightLight)
   val ChevronLeft         = FontAwesomeIcon(faChevronLeft)
   val ChevronLeftLight    = FontAwesomeIcon(faChevronLeftLight)
+  val ChevronsLeft        = FontAwesomeIcon(faChevronsLeft)
   val ChevronDown         = FontAwesomeIcon(faChevronDown)
   val ChevronDoubleUp     = FontAwesomeIcon(faChevronDoubleUp)
   val ChevronDoubleDown   = FontAwesomeIcon(faChevronDoubleDown)

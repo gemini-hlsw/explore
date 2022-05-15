@@ -103,6 +103,7 @@ case class ObsSummaryWithTitleAndConstraints(
 
 object ObsSummaryWithTitleAndConstraints {
   val id           = Focus[ObsSummaryWithTitleAndConstraints](_.id)
+  val title        = Focus[ObsSummaryWithTitleAndConstraints](_.title)
   val subtitle     = Focus[ObsSummaryWithTitleAndConstraints](_.subtitle)
   val status       = Focus[ObsSummaryWithTitleAndConstraints](_.status)
   val activeStatus = Focus[ObsSummaryWithTitleAndConstraints](_.activeStatus)

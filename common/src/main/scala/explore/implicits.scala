@@ -19,6 +19,7 @@ import explore.optics._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom._
 import lucuma.core.optics._
+import lucuma.core.util.Enumerated
 import lucuma.schemas._
 import monocle.function.At.at
 import monocle.function.Index.index
@@ -106,11 +107,19 @@ trait RefinedImplicits {
     f(v.value)
 }
 
+trait EnumeratedImplicits {
+  implicit def combinedEnum[A: Enumerated, B: Enumerated]: Enumerated[(A, B)] =
+    Enumerated
+      .fromNEL(NonEmptyList.fromListUnsafe((Enumerated[A].all, Enumerated[B].all).tupled))
+      .withTag { case (a, b) => s"${Enumerated[A].tag(a)}, ${Enumerated[B].tag(b)} " }
+}
+
 object implicits
     extends ShorthandTypes
     with ListImplicits
     with ContextImplicits
-    with RefinedImplicits {
+    with RefinedImplicits
+    with EnumeratedImplicits {
   // View Optics implicits
   implicit class ViewOpticsOps[F[_], A](val view: ReuseViewF[F, A]) extends AnyVal {
     def zoomGetAdjust[B](getAdjust: GetAdjust[A, B])(implicit F: Monad[F]): ReuseViewF[F, B] =

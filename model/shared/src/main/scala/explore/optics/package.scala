@@ -142,6 +142,15 @@ package object optics extends ModelOptics {
       (s: S) => l4.replace(abc._4)(l3.replace(abc._3)(l2.replace(abc._2)(l1.replace(abc._1)(s))))
     )
 
+  // This only behaves as a lawful lens as long as A and B are both null or both set.
+  def unsafeDisjointOptionZip[S, A, B](
+    l1: Lens[S, Option[A]],
+    l2: Lens[S, Option[B]]
+  ): Lens[S, Option[(A, B)]] =
+    Lens((s: S) => (l1.get(s), l2.get(s)).tupled)((ab: Option[(A, B)]) =>
+      (s: S) => l2.replace(ab.map(_._2))(l1.replace(ab.map(_._1))(s))
+    )
+
   def optionIso[A, B](iso: Iso[A, B]): Iso[Option[A], Option[B]] =
     Iso[Option[A], Option[B]](_.map(iso.get))(_.map(iso.reverseGet))
 
@@ -159,5 +168,4 @@ package object optics extends ModelOptics {
 
   implicit def indexTreeSeqMap[K, V]: Index[TreeSeqMap[K, V], K, V] =
     fromAt(atTreeSeqMap)
-
 }

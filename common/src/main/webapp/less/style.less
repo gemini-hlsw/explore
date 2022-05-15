@@ -1889,7 +1889,7 @@ html {
   color: lightgreen;
 }
 
-.explore-configuration-grid {
+.explore-basic-configuration-grid {
   padding: 0.5em;
   min-height: 0;
   display: grid;
@@ -1897,24 +1897,58 @@ html {
   grid-template-areas:
     'obs-props obs-props'
     'form table-header'
-    'form table';
+    'form table'
+    'form buttons';
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto 1fr auto;
   height: 100%;
+}
+
+.explore-advanced-configuration-grid {
+  display: grid;
+  grid-gap: 0.5em;
+  grid-template-areas:
+    'col1 col2 col3'
+    'col1 buttons buttons';
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
 }
 
 .tile-sm-width,
 .tile-xxs-width,
 .tile-xs-width {
-  .explore-configuration-grid {
+  .explore-basic-configuration-grid {
     grid-template-areas:
       'obs-props'
       'form'
       'table-header'
-      'table';
+      'table'
+      'buttons';
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr auto;
   }
+
+  .explore-advanced-configuration-grid {
+    grid-template-areas:
+      'col1'
+      'col2'
+      'col3'
+      'buttons';
+    grid-template-columns: auto;
+    grid-template-rows: auto auto auto auto;
+  }
+}
+
+.explore-advanced-configuration-col1 {
+  grid-area: col1;
+}
+
+.explore-advanced-configuration-col2 {
+  grid-area: col2;
+}
+
+.explore-advanced-configuration-col3 {
+  grid-area: col3;
 }
 
 .explore-form {
@@ -2131,6 +2165,10 @@ html {
   justify-content: space-between;
 }
 
+.explore-modes-table {
+  grid-area: table;
+}
+
 .react-datepicker-wrapper() {
   width: unset;
   padding-left: 0.3em;
@@ -2155,6 +2193,16 @@ html {
   }
 }
 
+.explore-basic-configuration-buttons {
+  grid-area: buttons;
+  justify-self: end;
+}
+
+.explore-advanced-configuration-buttons {
+  grid-area: buttons;
+  justify-self: end;
+}
+
 .explore-obs-instant-tile-title {
   display: flex;
   justify-self: center;
@@ -2176,7 +2224,7 @@ html {
   align-items: center;
 }
 
-.explore-configuration-form {
+.explore-basic-configuration-form {
   grid-area: form;
   grid-row-start: 2;
   grid-row-end: span 2;

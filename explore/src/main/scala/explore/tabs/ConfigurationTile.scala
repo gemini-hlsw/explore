@@ -36,12 +36,13 @@ object ConfigurationTile {
       (scienceData, obsConf, undoStacks).curryReusing.in((potView, _, undoStacks_, renderInTitle) =>
         potRender[ReuseView[ScienceData]](
           Reuse.always(scienceData_ =>
-            ConfigurationPanel(obsId,
-                               obsConf,
-                               scienceData_.map(UndoContext(undoStacks_, _)),
-                               scienceData_.get.constraints,
-                               scienceData_.get.itcTargets,
-                               renderInTitle
+            ConfigurationPanel(
+              obsId,
+              obsConf,
+              scienceData_.map(UndoContext(undoStacks_, _)),
+              scienceData_.get.constraints,
+              scienceData_.get.itcTargets,
+              renderInTitle
             )
           )
         )(potView)
