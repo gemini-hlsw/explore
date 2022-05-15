@@ -143,7 +143,7 @@ object AsterismQueries {
     targetIds:  List[Target.Id]
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
     val input = BulkEditTargetEnvironmentInput(
-      selectObservations = obsIds.assign,
+      select = BulkEditSelectInput(observationIds = obsIds.assign),
       edit = TargetEnvironmentInput(asterism = targetIds.assign)
     )
     UpdateTargetEnvironmentMutation.execute[F](input).void
@@ -153,8 +153,9 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = BulkEditAsterismInput(selectObservations = obsIds.assign,
-                                      edit = List(EditAsterismInput(add = targetId.assign))
+    val input = BulkEditAsterismInput(
+      select = BulkEditSelectInput(observationIds = obsIds.assign),
+      edit = List(EditAsterismInput(add = targetId.assign))
     )
     UpdateAsterismMutation.execute[F](input).void
   }
@@ -163,8 +164,9 @@ object AsterismQueries {
     obsIds:     List[Observation.Id],
     targetId:   Target.Id
   )(implicit c: TransactionalClient[F, ObservationDB]) = {
-    val input = BulkEditAsterismInput(selectObservations = obsIds.assign,
-                                      edit = List(EditAsterismInput(delete = targetId.assign))
+    val input = BulkEditAsterismInput(
+      select = BulkEditSelectInput(observationIds = obsIds.assign),
+      edit = List(EditAsterismInput(delete = targetId.assign))
     )
     UpdateAsterismMutation.execute[F](input).void
   }
