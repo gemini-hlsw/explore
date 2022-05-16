@@ -82,7 +82,7 @@ object ObsQueriesGQL {
                   explicitSpatialOffsets {
                     microarcseconds
                   }
-                }                
+                }
               }
             }
           }
@@ -463,7 +463,7 @@ object ObsQueriesGQL {
                 explicitSpatialOffsets {
                   microarcseconds
                 }
-              }              
+              }
             }
             gmosSouthLongSlit {
               basic {
@@ -484,7 +484,7 @@ object ObsQueriesGQL {
                 explicitSpatialOffsets {
                   microarcseconds
                 }
-              }              
+              }
             }
           }
         }
@@ -539,7 +539,7 @@ object ObsQueriesGQL {
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($obsIds: [ObservationId!]!, $input: ConstraintSetInput!){
-        updateConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
+        bulkEditConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
           id
         }
       }
@@ -550,7 +550,7 @@ object ObsQueriesGQL {
   trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
       mutation ($obsIds: ObservationId!, $input: ScienceRequirementsInput!){
-        updateScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
+        bulkEditScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
           id
         }
       }
