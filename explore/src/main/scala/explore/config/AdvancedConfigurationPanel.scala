@@ -213,7 +213,7 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi
   }
 
-  // Gmos Soutth Long Slit
+  // Gmos South Long Slit
 
   final case class GmosSouthLongSlit(
     obsId:            Observation.Id,

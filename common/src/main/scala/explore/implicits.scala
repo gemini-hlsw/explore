@@ -108,7 +108,7 @@ trait RefinedImplicits {
 }
 
 trait EnumeratedImplicits {
-  implicit def combinedEnum[A: Enumerated, B: Enumerated]: Enumerated[(A, B)] =
+  implicit def zipEnums[A: Enumerated, B: Enumerated]: Enumerated[(A, B)] =
     Enumerated
       .fromNEL(NonEmptyList.fromListUnsafe((Enumerated[A].all, Enumerated[B].all).tupled))
       .withTag { case (a, b) => s"${Enumerated[A].tag(a)}, ${Enumerated[B].tag(b)} " }
