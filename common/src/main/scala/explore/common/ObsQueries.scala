@@ -56,26 +56,27 @@ object ObsQueries {
   val SpectroscopyRequirementsData = ObservationData.ScienceRequirements.Spectroscopy
 
   case class ScienceData(
-    requirements:  ScienceRequirementsData,
-    configuration: Option[ScienceMode],
-    constraints:   ConstraintSet,
-    targets:       Targets
+    requirements: ScienceRequirementsData,
+    mode:         Option[ScienceMode],
+    constraints:  ConstraintSet,
+    targets:      Targets
   )
 
   object ScienceData {
     val requirements: Lens[ScienceData, ScienceRequirementsData] =
       Focus[ScienceData](_.requirements)
     val mode: Lens[ScienceData, Option[ScienceMode]]             =
-      Focus[ScienceData](_.configuration)
+      Focus[ScienceData](_.mode)
     val constraints: Lens[ScienceData, ConstraintSet]            =
       Focus[ScienceData](_.constraints)
   }
 
   val scienceDataForObs: Lens[ObservationData, ScienceData] =
-    disjointZip(ObservationData.scienceRequirements,
-                ObservationData.scienceMode,
-                ObservationData.constraintSet,
-                ObservationData.targetEnvironment
+    disjointZip(
+      ObservationData.scienceRequirements,
+      ObservationData.scienceMode,
+      ObservationData.constraintSet,
+      ObservationData.targetEnvironment
     )
       .andThen(GenIso.fields[ScienceData].reverse)
 

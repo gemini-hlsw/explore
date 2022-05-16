@@ -4,12 +4,17 @@
 package explore
 
 import cats.kernel.Eq
-import explore.optics._
+import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
+import explore.model.arb.ArbScienceModeAdvanced._
+import lucuma.core.util.arb.ArbEnumerated._
 import monocle.Focus
 import monocle.Lens
-import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
+
+import explore.optics._
+import monocle.law.discipline.LensTests
+import munit.DisciplineSuite
 
 class OpticsSuite extends DisciplineSuite {
 
@@ -43,4 +48,27 @@ class OpticsSuite extends DisciplineSuite {
   val adjusterInt = adjuster[Int]
 
   checkAll("Adjuster.composeOptionLens", AdjusterTests(adjusterInt))
+
+  val disjointZip2 =
+    disjointZip(
+      GmosSouthLongSlit.overrideGrating,
+      GmosSouthLongSlit.overrideFilter
+    )
+  val disjointZip3 =
+    disjointZip(
+      GmosSouthLongSlit.overrideGrating,
+      GmosSouthLongSlit.overrideFilter,
+      GmosSouthLongSlit.overrideFpu
+    )
+  val disjointZip4 =
+    disjointZip(
+      GmosSouthLongSlit.overrideGrating,
+      GmosSouthLongSlit.overrideFilter,
+      GmosSouthLongSlit.overrideFpu,
+      GmosSouthLongSlit.explicitRoi
+    )
+
+  checkAll("disjointZip2", LensTests(disjointZip2))
+  checkAll("disjointZip3", LensTests(disjointZip3))
+  checkAll("disjointZip4", LensTests(disjointZip4))
 }

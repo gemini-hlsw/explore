@@ -24,6 +24,7 @@ import explore.itc._
 import explore.model.ITCTarget
 import explore.model.Progress
 import explore.model.ScienceMode
+import explore.model.ScienceModeAdvanced
 import explore.model.ScienceModeBasic
 import explore.model.reusability._
 import explore.modes._
@@ -316,7 +317,7 @@ object SpectroscopyModesTable {
         ScienceMode
           .GmosNorthLongSlit(
             basic = ScienceModeBasic.GmosNorthLongSlit(grating, filter, fpu),
-            advanced = none
+            advanced = ScienceModeAdvanced.GmosNorthLongSlit.Empty
           )
           .some
       case GmosSouthSpectroscopyRow(grating, fpu, filter)
@@ -324,7 +325,7 @@ object SpectroscopyModesTable {
         ScienceMode
           .GmosSouthLongSlit(
             basic = ScienceModeBasic.GmosSouthLongSlit(grating, filter, fpu),
-            advanced = none
+            advanced = ScienceModeAdvanced.GmosSouthLongSlit.Empty
           )
           .some
       case _ => none
@@ -536,8 +537,7 @@ object SpectroscopyModesTable {
                 errLabel.toTagMod
               )
             ),
-            <.div(
-              ExploreStyles.ExploreTable,
+            <.div(ExploreStyles.ExploreTable, ExploreStyles.ModesTable)(
               ModesTable
                 .Component(
                   table = Table(

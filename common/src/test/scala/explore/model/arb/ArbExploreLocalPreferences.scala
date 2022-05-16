@@ -6,9 +6,9 @@ package explore.model.arb
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences._
 import explore.model.ObsConfiguration
+import lucuma.core.model.Observation
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
-import lucuma.core.model.Observation
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Cogen

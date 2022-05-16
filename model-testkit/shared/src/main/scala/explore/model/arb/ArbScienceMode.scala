@@ -21,14 +21,14 @@ trait ArbScienceMode {
   implicit val arbGmosNorthLongSlit = Arbitrary[ScienceMode.GmosNorthLongSlit](
     for {
       basic    <- arbitrary[ScienceModeBasic.GmosNorthLongSlit]
-      advanced <- arbitrary[Option[ScienceModeAdvanced.GmosNorthLongSlit]]
+      advanced <- arbitrary[ScienceModeAdvanced.GmosNorthLongSlit]
     } yield ScienceMode.GmosNorthLongSlit(basic, advanced)
   )
 
   implicit val arbGmosSouthLongSlit = Arbitrary[ScienceMode.GmosSouthLongSlit](
     for {
       basic    <- arbitrary[ScienceModeBasic.GmosSouthLongSlit]
-      advanced <- arbitrary[Option[ScienceModeAdvanced.GmosSouthLongSlit]]
+      advanced <- arbitrary[ScienceModeAdvanced.GmosSouthLongSlit]
     } yield ScienceMode.GmosSouthLongSlit(basic, advanced)
   )
 
@@ -40,11 +40,11 @@ trait ArbScienceMode {
   )
 
   implicit val cogenGmosNorthLongSlit: Cogen[ScienceMode.GmosNorthLongSlit] =
-    Cogen[(ScienceModeBasic.GmosNorthLongSlit, Option[ScienceModeAdvanced.GmosNorthLongSlit])]
+    Cogen[(ScienceModeBasic.GmosNorthLongSlit, ScienceModeAdvanced.GmosNorthLongSlit)]
       .contramap(o => (o.basic, o.advanced))
 
   implicit val cogenGmosSouthLongSlit: Cogen[ScienceMode.GmosSouthLongSlit] =
-    Cogen[(ScienceModeBasic.GmosSouthLongSlit, Option[ScienceModeAdvanced.GmosSouthLongSlit])]
+    Cogen[(ScienceModeBasic.GmosSouthLongSlit, ScienceModeAdvanced.GmosSouthLongSlit)]
       .contramap(o => (o.basic, o.advanced))
 
   implicit val cogenScienceMode: Cogen[ScienceMode] =

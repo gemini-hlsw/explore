@@ -53,14 +53,14 @@ object ITCRequests {
     }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger: TransactionalClient[*[_], ITC]](
-    wavelength:    Wavelength,
-    signalToNoise: PosBigDecimal,
-    constraints:   ConstraintSet,
-    targets:       NonEmptyList[ITCTarget],
-    modes:         List[SpectroscopyModeRow],
-    cache:         ViewF[F, ItcResultsCache],
-    progress:      ViewF[F, Option[Progress]]
-  ): F[Unit] = {
+    wavelength:      Wavelength,
+    signalToNoise:   PosBigDecimal,
+    constraints:     ConstraintSet,
+    targets:         NonEmptyList[ITCTarget],
+    modes:           List[SpectroscopyModeRow],
+    cache:           ViewF[F, ItcResultsCache],
+    progress:        ViewF[F, Option[Progress]]
+  )(implicit monoid: Monoid[F[Unit]]): F[Unit] = {
     def itcResults(r: List[ItcResults]): List[EitherNec[ItcQueryProblems, ItcResult]] =
       // Convert to usable types
       r.flatMap(x =>
@@ -158,14 +158,18 @@ object ITCRequests {
           params,
           { r =>
             // Convert to usable types and update the cache
-            val update: EitherNec[ItcQueryProblems, ItcResult] =
+            val update: Option[EitherNec[ItcQueryProblems, ItcResult]] =
               // There maybe multiple targets, take the one with the max time
-              itcResults(r).maxBy {
-                case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
-                case _                                        => Long.MinValue
+              itcResults(r) match {
+                case Nil => none
+                case l   =>
+                  l.maxBy {
+                    case Right(ItcResult.Result(exposureTime, _)) => exposureTime.toMicros
+                    case _                                        => Long.MinValue
+                  }.some
               }
             // Put the results in the cache
-            cache.mod(ItcResultsCache.cache.modify(_ + (params -> update)))
+            update.foldMap(u => cache.mod(ItcResultsCache.cache.modify(_ + (params -> u))))
           }
         ) >> progress.mod(_.map(_.increment()))
       } >> progress.set(none)
