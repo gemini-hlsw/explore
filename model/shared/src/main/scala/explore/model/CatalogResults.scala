@@ -3,10 +3,20 @@
 
 package explore.model
 
+import cats.Eq
+import org.typelevel.cats.time._
+
 import java.time.Instant
 
-final case class CatalogResults(candidates: List[GuideStarCandidate], date: Instant)
+/**
+ * Holds a set of candidate guide stars and a reference date for expiration
+ */
+final case class CatalogResults(candidates: List[GuideStarCandidate], referenceDate: Instant)
+
 object CatalogResults {
   def empty = CatalogResults(Nil, Instant.now)
+
+  implicit val eqCatalogResults: Eq[CatalogResults] =
+    Eq.by(x => (x.candidates, x.referenceDate))
 
 }

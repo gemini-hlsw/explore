@@ -88,6 +88,7 @@ object AladinCell extends ModelOptics {
               .compile
               .drain
       )
+      // Request catalog info for the target
       .useEffectWithDepsBy((props, _, _, _, _) => props.target.get)((props, _, _, _, _) =>
         tracking => props.ctx.worker.postMessage(ExploreEvent.CatalogRequest(tracking))
       )
