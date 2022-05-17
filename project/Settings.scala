@@ -47,7 +47,7 @@ object Settings {
     val scalaJsReact        = "2.1.1"
     val pprint              = "0.7.3"
     val scalaJSSecureRandom = "1.0.0"
-    var webAppUtil          = "2.0.0-RC1"
+    var webAppUtil          = "2.0.0-RC2"
 
   }
 

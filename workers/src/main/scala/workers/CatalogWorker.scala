@@ -16,9 +16,11 @@ import io.circe.parser._
 import io.circe.syntax._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
+import japgolly.webapputil.indexeddb.IndexedDb
 import log4cats.loglevel.LogLevelLogger
 import lucuma.catalog._
 import lucuma.core.geom.gmos.probeArm
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import org.http4s.Method._
 import org.http4s.Request
@@ -27,20 +29,21 @@ import org.http4s.dom.FetchClientBuilder
 import org.http4s.syntax.all._
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
+import spire.math.Bounded
 import typings.loglevel.mod.LogLevelDesc
 
-import scala.scalajs.js
-
-import js.annotation._
-import java.time.temporal.ChronoUnit
-import spire.math.Bounded
-import java.time.temporal.ChronoField
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.temporal.ChronoField
+import java.time.temporal.ChronoUnit
+import scala.scalajs.js
+
+import js.annotation._
 
 /**
- * Sample web worker, extremely simple just accept messages, prints them and answers a number
+ * Web worker that can query gaia and store results locally
  */
 @JSExportTopLevel("CatalogWorker", moduleID = "catalogworker")
 object CatalogWorker extends CatalogIDB {
@@ -82,13 +85,66 @@ object CatalogWorker extends CatalogIDB {
       .toList
   }
 
+  /**
+   * Try to read the gaia query from the cache or else get it from gaia
+   */
+  def readFromGaia(
+    client:     Client[IO],
+    self:       dom.DedicatedWorkerGlobalScope,
+    idb:        IndexedDb.Database,
+    tracking:   SiderealTracking,
+    obsTime:    Instant
+  )(implicit L: Logger[IO]): IO[Unit] = {
+    val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
+    // We consider the query valid from the fist moment of the year to the end
+    val start =
+      ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
+    val end   = start.plus(1, ChronoUnit.YEARS)
+
+    // Make a time based query for pm over a year
+    val query = TimeRangeQueryByADQL(
+      tracking,
+      Bounded(start.toInstant(UTCOffset), end.toInstant(UTCOffset), 0),
+      probeArm.candidatesArea,
+      bc.some,
+      proxy.some
+    )
+
+    (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+      readGuideStarCandidates(idb, query).toIO.handleError(_ => none)) // Try to find it in the db
+      .flatMap(
+        _.fold(
+          // Not found in the db, re requset
+          readFromGaia[IO](client, query)
+            .map(
+              _.collect { case Right(s) =>
+                GuideStarCandidate.siderealTarget.get(s)
+              }
+            )
+            .flatMap { candidates =>
+              L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
+                IO(self.postMessage(candidates.asJson.noSpaces)) *>
+                storeGuideStarCandidates(idb, query, candidates).toIO
+                  .handleError(e => L.error(e)("Error storing guidstar candidates"))
+            }
+            .void
+        )(c =>
+          // Cache hit!
+          L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
+            IO(self.postMessage(c.candidates.asJson.noSpaces))
+        )
+      )
+  }
+
   def setupLogger[F[_]: Sync]: F[Logger[F]] = Sync[F].delay {
     LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
     LogLevelLogger.createForRoot[F]
   }
 
-  val UTC       = ZoneId.of("UTC")
-  val UTCOffset = ZoneOffset.UTC
+  val UTC                = ZoneId.of("UTC")
+  val UTCOffset          = ZoneOffset.UTC
+  // Expire the data in 30 days
+  val Expiration: Double = 30 * 24 * 60 * 60 * 1000.0
 
   def run: IO[Unit] =
     for {
@@ -96,60 +152,25 @@ object CatalogWorker extends CatalogIDB {
       self        <- IO(dom.DedicatedWorkerGlobalScope.self)
       idb         <- openDB(self).toIO
       (client, _) <- FetchClientBuilder[IO].allocated
-      _           <- IO {
-                       self.onmessage = (msg: dom.MessageEvent) => {
-                         val event = msg.data.asInstanceOf[ExploreEvent]
-                         event.event match {
-                           case ExploreEvent.CatalogRequestEvent.event =>
-                             decode[ExploreEvent.CatalogRequest](event.value.toString).foreach {
-                               case ExploreEvent.CatalogRequest(tracking, obsTime) =>
-                                 val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
-                                 // We consider the query valid from the fist moment of the year to the end
-                                 val start =
-                                   ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
-                                 val end   = start.plus(1, ChronoUnit.YEARS)
+      _           <-
+        IO {
+          self.onmessage = (msg: dom.MessageEvent) => {
+            val event = msg.data.asInstanceOf[ExploreEvent]
+            event.event match {
+              case ExploreEvent.CatalogRequestEvent.event =>
+                decode[CatalogRequest](event.value.toString).foreach {
+                  case CatalogRequest(tracking, obsTime) =>
+                    (readFromGaia(client, self, idb, tracking, obsTime)(
+                      logger
+                    ) *> expireGuideStarCandidates(idb, Expiration).toIO)
+                      .unsafeRunAndForget()
+                }
 
-                                 val query = TimeRangeQueryByADQL(
-                                   tracking,
-                                   Bounded(start.toInstant(UTCOffset), end.toInstant(UTCOffset), 0),
-                                   probeArm.candidatesArea,
-                                   bc.some,
-                                   proxy.some
-                                 )
-
-                                 (logger.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-                                   readStoredTargets(idb, query).toIO) // Try to find it in the db
-                                   .flatMap(
-                                     _.fold(
-                                       // Not found in the db, re requset
-                                       readFromGaia[IO](client, query)
-                                         .map(
-                                           _.collect { case Right(s) =>
-                                             GuideStarCandidate.siderealTarget.get(s)
-                                           }
-                                         )
-                                         .flatMap { candidates =>
-                                           logger.debug(
-                                             s"Got catalog results from remote catalog: ${candidates.length} candidates"
-                                           ) *>
-                                             IO(self.postMessage(candidates.asJson.noSpaces)) *>
-                                             storeTargets(idb, query, candidates).toIO
-                                         }
-                                     )(c =>
-                                       // Cache hit!
-                                       logger.debug(
-                                         s"Got catalog results from cache: ${c.candidates.length} candidates"
-                                       ) *> IO(
-                                         self.postMessage(c.candidates.asJson.noSpaces)
-                                       )
-                                     )
-                                   )
-                                   .unsafeRunAndForget()
-                             }
-
-                           case _ =>
-                         }
-                       }
-                     }
+              case ExploreEvent.CacheCleanupEvent.event =>
+                expireGuideStarCandidates(idb, Expiration).toIO.unsafeRunAndForget()
+              case _                                    =>
+            }
+          }
+        }
     } yield ()
 }

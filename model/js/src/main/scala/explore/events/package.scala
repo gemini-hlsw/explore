@@ -3,17 +3,18 @@
 
 package explore
 
+import io.circe._
+import io.circe.generic.semiauto._
 import io.circe.syntax._
 import lucuma.core.model.SiderealTracking
 
-import scala.scalajs.js
 import java.time.Instant
-import io.circe._
-import io.circe.generic.semiauto._
+import scala.scalajs.js
 
 package object events extends WorkerEncoders {
   val LogoutEventId         = 1
   val CatalogRequestEventId = 2
+  val CacheCleanupEventId   = 3
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate
@@ -22,16 +23,23 @@ package object events extends WorkerEncoders {
     def value: js.Any // encode whatever value as a String. it can be e.g. json
   }
 
+  final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
+
+  object CatalogRequest {
+    implicit val requestDecoder: Decoder[CatalogRequest] = deriveDecoder[CatalogRequest]
+    implicit val requestEncoder: Encoder[CatalogRequest] = deriveEncoder[CatalogRequest]
+  }
+
   object ExploreEvent {
-    class Logout(val nonce: Long) extends ExploreEvent {
+    class LogoutEvent(val nonce: Long) extends ExploreEvent {
       val event = LogoutEventId
       val value = nonce.toString
     }
 
-    object Logout {
-      val event                          = LogoutEventId
-      def apply(nonce: Long)             = new Logout(nonce)
-      def unapply(l: Logout): Some[Long] = Some(l.nonce)
+    object LogoutEvent {
+      val event                               = LogoutEventId
+      def apply(nonce: Long)                  = new LogoutEvent(nonce)
+      def unapply(l: LogoutEvent): Some[Long] = Some(l.nonce)
     }
 
     class CatalogRequestEvent(catalogRequest: CatalogRequest) extends ExploreEvent {
@@ -46,11 +54,14 @@ package object events extends WorkerEncoders {
       )
     }
 
-    final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
+    class CacheCleanupEvent(elapsedTime: Int) extends ExploreEvent {
+      val event = CacheCleanupEventId
+      val value = elapsedTime
+    }
 
-    object CatalogRequest {
-      implicit val requestDecoder: Decoder[CatalogRequest] = deriveDecoder[CatalogRequest]
-      implicit val requestEncoder: Encoder[CatalogRequest] = deriveEncoder[CatalogRequest]
+    object CacheCleanupEvent {
+      val event                   = CacheCleanupEventId
+      def apply(elapsedTime: Int) = new CacheCleanupEvent(elapsedTime)
     }
   }
 }

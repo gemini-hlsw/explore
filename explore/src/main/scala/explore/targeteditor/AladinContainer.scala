@@ -31,8 +31,8 @@ import react.aladin._
 import react.common._
 import react.resizeDetector.hooks._
 
-import scala.concurrent.duration._
 import java.time.Instant
+import scala.concurrent.duration._
 
 final case class AladinContainer(
   target:                 ReuseView[SiderealTracking],

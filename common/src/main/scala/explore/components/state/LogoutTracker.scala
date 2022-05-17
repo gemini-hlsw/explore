@@ -43,11 +43,11 @@ object LogoutTracker {
       bc.onmessage = (x: ExploreEvent) =>
         // This is coming from the js world, we can't match the type
         (x.event match {
-          case ExploreEvent.Logout.event =>
+          case ExploreEvent.LogoutEvent.event =>
             (props.setVault(none) >> props.setMessage(
               "You logged out in another instance"
             )).to[IO].whenA(x.value.toString =!= nonce.value.toString)
-          case _                         => IO.unit
+          case _                              => IO.unit
         })
 
       state
@@ -55,7 +55,7 @@ object LogoutTracker {
     }
     .renderWithReuse { (props, nonce, bc) =>
       bc.value.fold[VdomNode](React.Fragment())(bc =>
-        props.render(IO(bc.postMessage(ExploreEvent.Logout(nonce.value))).attempt.void)
+        props.render(IO(bc.postMessage(ExploreEvent.LogoutEvent(nonce.value))).attempt.void)
       )
     }
 
