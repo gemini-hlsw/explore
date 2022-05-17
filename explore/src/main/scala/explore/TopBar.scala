@@ -156,7 +156,7 @@ object TopBar {
                       )(
                         <.div(ExploreStyles.OrcidMenu)(
                           Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
-                          <.span(^.cls := "text", "Switch to ORCID")
+                          <.span(^.cls := "text", "Login with ORCID")
                         )
                       ).when(role === GuestRole),
                       DropdownItem(
