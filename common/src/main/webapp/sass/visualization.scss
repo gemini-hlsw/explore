@@ -101,7 +101,7 @@
     display: none;
   }
 
-  .arrow-between-target {
+  .arrow-between-targets {
     stroke: orange;
     stroke-width: 2px;
     stroke-dasharray: 2;
@@ -112,6 +112,15 @@
     stroke: red;
     stroke-width: 1px;
     fill: red;
+    fill-opacity: 0.4;
+    isolation: initial;
+  }
+
+  .guide-star-candidate-target-base {
+    display: none;
+    stroke: black;
+    stroke-width: 0.5px;
+    fill: yellow;
     fill-opacity: 0.4;
     isolation: initial;
   }

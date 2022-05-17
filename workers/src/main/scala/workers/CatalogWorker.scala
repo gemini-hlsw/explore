@@ -19,8 +19,6 @@ import japgolly.scalajs.react.callback._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.catalog._
 import lucuma.core.geom.gmos.probeArm
-import lucuma.core.geom.jts.interpreter._
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import org.http4s.Method._
 import org.http4s.Request
@@ -34,16 +32,21 @@ import typings.loglevel.mod.LogLevelDesc
 import scala.scalajs.js
 
 import js.annotation._
+import java.time.temporal.ChronoUnit
+import spire.math.Bounded
+import java.time.temporal.ChronoField
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 /**
  * Sample web worker, extremely simple just accept messages, prints them and answers a number
  */
 @JSExportTopLevel("CatalogWorker", moduleID = "catalogworker")
 object CatalogWorker extends CatalogIDB {
-  val proxy       = uri"https://lucuma-cors-proxy.herokuapp.com"
-  implicit val ci = ADQLInterpreter.nTarget(10000)
+  val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
   // TODO Read this from a table
-  val bc          =
+  val bc    =
     BrightnessConstraints(BandsList.GaiaBandsList,
                           FaintnessConstraint(16),
                           SaturationConstraint(9).some
@@ -64,7 +67,7 @@ object CatalogWorker extends CatalogIDB {
    */
   def readFromGaia[F[_]: Concurrent](
     client: Client[F],
-    query:  QueryByADQL
+    query:  ADQLQuery
   ): F[List[EitherNec[CatalogProblem, Target.Sidereal]]] = {
     val queryUri = CatalogSearch.gaiaSearchUri(query)
     val request  = Request[F](GET, queryUri)
@@ -84,6 +87,9 @@ object CatalogWorker extends CatalogIDB {
     LogLevelLogger.createForRoot[F]
   }
 
+  val UTC       = ZoneId.of("UTC")
+  val UTCOffset = ZoneOffset.UTC
+
   def run: IO[Unit] =
     for {
       logger      <- setupLogger[IO]
@@ -94,40 +100,51 @@ object CatalogWorker extends CatalogIDB {
                        self.onmessage = (msg: dom.MessageEvent) => {
                          val event = msg.data.asInstanceOf[ExploreEvent]
                          event.event match {
-                           case ExploreEvent.CatalogRequest.event =>
-                             decode[SiderealTracking](event.value.toString).foreach { tracking =>
-                               val query = QueryByADQL(tracking.baseCoordinates,
-                                                       probeArm.candidatesArea,
-                                                       bc.some,
-                                                       proxy.some
-                               )
+                           case ExploreEvent.CatalogRequestEvent.event =>
+                             decode[ExploreEvent.CatalogRequest](event.value.toString).foreach {
+                               case ExploreEvent.CatalogRequest(tracking, obsTime) =>
+                                 val ldt   = LocalDateTime.ofInstant(obsTime, ZoneId.of("UTC"))
+                                 // We consider the query valid from the fist moment of the year to the end
+                                 val start =
+                                   ldt.`with`(ChronoField.DAY_OF_YEAR, 1L).`with`(ChronoField.NANO_OF_DAY, 0)
+                                 val end   = start.plus(1, ChronoUnit.YEARS)
 
-                               (logger.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-                                 readStoredTargets(idb, query).toIO)
-                                 .flatMap(
-                                   _.fold(
-                                     readFromGaia[IO](client, query)
-                                       .map(
-                                         _.collect { case Right(s) =>
-                                           GuideStarCandidate.siderealTarget.get(s)
+                                 val query = TimeRangeQueryByADQL(
+                                   tracking,
+                                   Bounded(start.toInstant(UTCOffset), end.toInstant(UTCOffset), 0),
+                                   probeArm.candidatesArea,
+                                   bc.some,
+                                   proxy.some
+                                 )
+
+                                 (logger.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+                                   readStoredTargets(idb, query).toIO) // Try to find it in the db
+                                   .flatMap(
+                                     _.fold(
+                                       // Not found in the db, re requset
+                                       readFromGaia[IO](client, query)
+                                         .map(
+                                           _.collect { case Right(s) =>
+                                             GuideStarCandidate.siderealTarget.get(s)
+                                           }
+                                         )
+                                         .flatMap { candidates =>
+                                           logger.debug(
+                                             s"Got catalog results from remote catalog: ${candidates.length} candidates"
+                                           ) *>
+                                             IO(self.postMessage(candidates.asJson.noSpaces)) *>
+                                             storeTargets(idb, query, candidates).toIO
                                          }
+                                     )(c =>
+                                       // Cache hit!
+                                       logger.debug(
+                                         s"Got catalog results from cache: ${c.candidates.length} candidates"
+                                       ) *> IO(
+                                         self.postMessage(c.candidates.asJson.noSpaces)
                                        )
-                                       .flatMap { candidates =>
-                                         logger.debug(
-                                           s"Got catalog results from remote catalog: ${candidates.length} candidates"
-                                         ) *>
-                                           IO(self.postMessage(candidates.asJson.noSpaces)) *>
-                                           storeTargets(idb, query, candidates).toIO
-                                       }
-                                   )(c =>
-                                     logger.debug(
-                                       s"Got catalog results from cache: ${c.candidates.length} candidates"
-                                     ) *> IO(
-                                       self.postMessage(c.candidates.asJson.noSpaces)
                                      )
                                    )
-                                 )
-                                 .unsafeRunAndForget()
+                                   .unsafeRunAndForget()
                              }
 
                            case _ =>
