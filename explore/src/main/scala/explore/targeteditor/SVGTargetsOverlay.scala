@@ -6,13 +6,13 @@ package explore.targeteditor
 import cats.Eq
 import cats.syntax.all._
 import crystal.react.reuse._
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
 import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
-import explore.components.ui.ExploreStyles
 
 sealed trait SVGTarget {
   def coordinates: Coordinates

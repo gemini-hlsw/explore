@@ -5,19 +5,16 @@ package explore.model.arb
 
 import explore.model.CatalogResults
 import lucuma.core.model.arb._
-import lucuma.core.arb._
 import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.scalacheck.string._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
-import java.time.Instant
 import explore.model.GuideStarCandidate
 import lucuma.core.model.SiderealTracking
 
 trait ArbCatalogResults {
   import ArbSiderealTracking._
-  import ArbTime._
 
   implicit val guideStarCandidateArb = Arbitrary[GuideStarCandidate] {
     for {
@@ -35,12 +32,11 @@ trait ArbCatalogResults {
   implicit val catalogResultsArb = Arbitrary[CatalogResults] {
     for {
       candidates <- arbitrary[List[GuideStarCandidate]]
-      date       <- arbitrary[Instant]
-    } yield CatalogResults(candidates, date)
+    } yield CatalogResults(candidates)
   }
 
   implicit def catalogResultsCogen: Cogen[CatalogResults] =
-    Cogen[(List[GuideStarCandidate], Instant)].contramap(m => (m.candidates, m.referenceDate))
+    Cogen[List[GuideStarCandidate]].contramap(_.candidates)
 
 }
 

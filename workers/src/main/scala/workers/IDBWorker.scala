@@ -12,9 +12,8 @@ import scala.scalajs.js
 import js.annotation._
 
 /**
-  * Sample web worker, extremely simple just accept messages, prints them
-  * and answers a number
-  */
+ * Sample web worker, extremely simple just accept messages, prints them and answers a number
+ */
 @JSExportTopLevel("IDBWorker", moduleID = "worker")
 object IDBWorker {
 

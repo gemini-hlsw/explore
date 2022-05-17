@@ -21,12 +21,6 @@ object WebWorkers {
    * https://vitejs.dev/guide/features.html#import-with-query-suffixes=
    */
   @js.native
-  @JSImport("/workers.js?worker&inline", JSImport.Default)
-  object TestWorker extends js.Object {
-    def apply(): dom.Worker = js.native
-  }
-
-  @js.native
   @JSImport("/catalogworker.js?worker&inline", JSImport.Default)
   object CatalogWorker extends js.Object {
     def apply(): dom.Worker = js.native
