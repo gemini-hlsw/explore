@@ -41,8 +41,7 @@ object TargetSummaryTable {
 
   implicit protected val propsReuse: Reusability[Props] = Reusability.derive
 
-  protected val TargetTable =
-    TableDef[TargetGroup].withSortBy
+  protected val TargetTable = TableDef[TargetGroup].withSortBy
 
   protected val TargetTableComponent = new SUITable(TargetTable)
 

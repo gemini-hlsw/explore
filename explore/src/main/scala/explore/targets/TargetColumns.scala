@@ -9,6 +9,9 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.conversions._
 import explore.model.display._
+import explore.model.enum.IntegratedSEDType
+import explore.model.enum.SourceProfileType
+import explore.model.enum.SurfaceSEDType
 import explore.model.formats._
 import explore.optics.ModelOptics._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -24,6 +27,8 @@ import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
 
 object TargetColumns {
+  import IntegratedSEDType._
+  import SurfaceSEDType._
 
   val baseColNames: Map[String, String] = Map(
     "type" -> " ",
@@ -149,8 +154,24 @@ object TargetColumns {
           siderealColumnOpt("parallax", Target.Sidereal.parallax.get)
             .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
             .setSortByAuto,
-          siderealColumn("morphology", _ => "").setCell(_ => ""),
-          siderealColumn("sed", _ => "").setCell(_ => "")
+          siderealColumn(
+            "morphology",
+            (Target.Sidereal.sourceProfile.get _).andThen(SourceProfileType.fromSourceProfile)
+          ).setCell(_.value.map(_.shortName).orEmpty),
+          siderealColumn(
+            "sed",
+            t =>
+              Target.Sidereal.integratedSpectralDefinition
+                .getOption(t)
+                .map(IntegratedSEDType.fromSpectralDefinition)
+                .map(_.shortName)
+                .orElse(
+                  Target.Sidereal.surfaceSpectralDefinition
+                    .getOption(t)
+                    .map(SurfaceSEDType.fromSpectralDefinition)
+                    .map(_.shortName)
+                )
+          ).setCell(_.value.orEmpty)
         )
   }
 

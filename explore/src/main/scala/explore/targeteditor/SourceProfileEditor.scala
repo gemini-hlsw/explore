@@ -12,14 +12,13 @@ import eu.timepit.refined.auto._
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.enum.SourceProfileType
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Angle
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile._
-import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
 import lucuma.ui.optics.ChangeAuditor
@@ -39,22 +38,6 @@ object SourceProfileEditor {
 
   protected implicit val reuseProps: Reusability[Props] = Reusability.derive
 
-  private sealed abstract class SourceProfileType(
-    val name:    String,
-    val convert: SourceProfile => SourceProfile
-  ) extends Product
-      with Serializable
-  private object SourceProfileType {
-    case object PointType    extends SourceProfileType("Point", _.toPoint)
-    case object UniformType  extends SourceProfileType("Uniform", _.toUniform)
-    case object GaussianType extends SourceProfileType("Gaussian", _.toGaussian)
-
-    implicit val enumSourceProfileType: Enumerated[SourceProfileType] =
-      Enumerated.from(PointType, UniformType, GaussianType).withTag(_.name)
-
-    implicit val displaySourceProfileType: Display[SourceProfileType] = Display.byShortName(_.name)
-  }
-
   // We can't define a Format[String, Angle] for arcseconds. Roundtrip laws fail because of rounding.
   private val angleValidFormatInput: ValidFormatInput[Angle] =
     ValidFormatInput(
@@ -69,12 +52,6 @@ object SourceProfileEditor {
   { props =>
     implicit val appCtx = props.appCtx
 
-    val currentType: SourceProfileType = props.sourceProfile.get match {
-      case Point(_)       => SourceProfileType.PointType
-      case Uniform(_)     => SourceProfileType.UniformType
-      case Gaussian(_, _) => SourceProfileType.GaussianType
-    }
-
     val gaussianAlignerOpt: Option[ReuseAligner[Gaussian, GaussianInput]] =
       props.sourceProfile.zoomOpt(
         SourceProfile.gaussian,
@@ -84,7 +61,7 @@ object SourceProfileEditor {
     React.Fragment(
       <.label("Profile", ExploreStyles.SkipToNext),
       EnumSelect(
-        value = currentType.some,
+        value = SourceProfileType.fromSourceProfile(props.sourceProfile.get).some,
         onChange = Reuse.by(props.sourceProfile)((sp: SourceProfileType) =>
           props.sourceProfile.view(_.toInput).mod(sp.convert)
         )
