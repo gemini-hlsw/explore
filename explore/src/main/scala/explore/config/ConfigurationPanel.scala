@@ -65,7 +65,6 @@ object ConfigurationPanel {
               Aligner(
                 ctx,
                 EditObservationInput(props.obsId),
-                // TODO Change to specific bulk mutation for science mode
                 (ObsQueriesGQL.UpdateObservationMutation.execute[IO] _).andThen(_.void)
               ).zoom(
                 ScienceData.mode,
@@ -81,7 +80,8 @@ object ConfigurationPanel {
 
         val showBasicCB: Reuse[Callback] = showAdvanced.map(_.set(false))
 
-        val showAdvancedCB: Reuse[Callback] = showAdvanced.map(_.set(true))
+        val showAdvancedCB: Reuse[Option[Callback]] =
+          optModeView.map(_.get.map(_ => showAdvanced.set(true)))
 
         React.Fragment(
           props.renderInTitle(
