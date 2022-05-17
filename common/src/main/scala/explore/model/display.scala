@@ -8,14 +8,14 @@ import eu.timepit.refined.cats._
 import lucuma.core.enum._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.util.Display
+import lucuma.core.model.SpectralDefinition
+import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display._
+import lucuma.core.util.Display
 import lucuma.ui.implicits._
 
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import lucuma.core.model.UnnormalizedSED
-import lucuma.core.model.SpectralDefinition
 
 object display {
   implicit val displayProposalClass: Display[ProposalClass] =
