@@ -102,18 +102,26 @@ object ConfigurationPanel {
               // Gmos North Long Slit
               modeViewOpt
                 .zoom(model.ScienceMode.gmosNorthLongSlit)
-                .zoom(model.ScienceMode.GmosNorthLongSlit.advanced)
                 .mapValue(view =>
                   AdvancedConfigurationPanel
-                    .GmosNorthLongSlit(props.obsId, view, showBasicCB)
+                    .GmosNorthLongSlit(
+                      props.obsId,
+                      view.zoom(model.ScienceMode.GmosNorthLongSlit.advanced),
+                      view.zoom(model.ScienceMode.GmosNorthLongSlit.basic).get,
+                      showBasicCB
+                    )
                 ),
               // Gmos South Long Slit
               modeViewOpt
                 .zoom(model.ScienceMode.gmosSouthLongSlit)
-                .zoom(model.ScienceMode.GmosSouthLongSlit.advanced)
                 .mapValue(view =>
                   AdvancedConfigurationPanel
-                    .GmosSouthLongSlit(props.obsId, view, showBasicCB)
+                    .GmosSouthLongSlit(
+                      props.obsId,
+                      view.zoom(model.ScienceMode.GmosSouthLongSlit.advanced),
+                      view.zoom(model.ScienceMode.GmosSouthLongSlit.basic).get,
+                      showBasicCB
+                    )
                 )
             )
         )

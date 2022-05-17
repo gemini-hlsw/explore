@@ -6,15 +6,14 @@ package explore
 import cats.kernel.Eq
 import explore.model.ScienceModeAdvanced.GmosSouthLongSlit
 import explore.model.arb.ArbScienceModeAdvanced._
+import explore.optics._
 import lucuma.core.util.arb.ArbEnumerated._
 import monocle.Focus
 import monocle.Lens
-import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary._
-
-import explore.optics._
 import monocle.law.discipline.LensTests
 import munit.DisciplineSuite
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary._
 
 class OpticsSuite extends DisciplineSuite {
 
