@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import cats.Order._
-import cats.data.NonEmptyMap
 import cats.syntax.all._
 import clue.data.Input
 import clue.data.syntax._
@@ -21,6 +19,11 @@ import eu.timepit.refined.types.string
 import explore.common._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
+import explore.model.enum.IntegratedSEDType
+import explore.model.enum.IntegratedSEDType._
+import explore.model.enum.SEDType
+import explore.model.enum.SurfaceSEDType
+import explore.model.enum.SurfaceSEDType._
 import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -39,6 +42,7 @@ import lucuma.core.math.dimensional._
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB.Types._
 import lucuma.ui.forms.EnumSelect
@@ -78,82 +82,15 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   S,
   Props <: SpectralDefinitionEditor[T, S]
 ](implicit
-  enumFDCUnits: Enumerated[Units Of FluxDensityContinuum[T]]
+  sedTypeEnum:    Enumerated[SEDType[T]],
+  sedTypeDisplay: Display[SEDType[T]],
+  enumFDCUnits:   Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
-  import SpectralDefinition._
-  import UnnormalizedSED._
-
   protected val brightnessEditor: ReuseView[SortedMap[Band, BrightnessMeasure[T]]] => VdomNode
   protected val emissionLineEditor: ReuseView[SortedMap[Wavelength, EmissionLine[T]]] => VdomNode
 
-  private def toBandNormalized[T](
-    sed: UnnormalizedSED
-  ): SpectralDefinition[T] => SpectralDefinition[T] =
-    _ match {
-      case BandNormalized(_, bs) => BandNormalized(sed, bs)
-      case EmissionLines(_, _)   => BandNormalized(sed, SortedMap.empty)
-    }
-
-  private sealed abstract class SEDType(
-    val name:    String,
-    val convert: SpectralDefinition[T] => SpectralDefinition[T]
-  ) extends Product
-      with Serializable
-
-  private sealed abstract class BandNormalizedSED(name: String, sed: UnnormalizedSED)
-      extends SEDType(name, toBandNormalized(sed))
-
-  private object SEDType {
-
-    case object StellarLibraryType
-        extends BandNormalizedSED("Stellar Library", StellarLibrary(StellarLibrarySpectrum.O5V))
-    case object CoolStarModelType
-        extends BandNormalizedSED("Cool Star Model", CoolStarModel(CoolStarTemperature.T400K))
-    case object GalaxyType   extends BandNormalizedSED("Galaxy", Galaxy(GalaxySpectrum.Spiral))
-    case object PlanetType   extends BandNormalizedSED("Planet", Planet(PlanetSpectrum.Mars))
-    case object QuasarType   extends BandNormalizedSED("Quasar", Quasar(QuasarSpectrum.QS0))
-    case object HIIRegionType
-        extends BandNormalizedSED("HII Region", HIIRegion(HIIRegionSpectrum.OrionNebula))
-    case object PlanetaryNebulaType
-        extends BandNormalizedSED("Planetary Nebula",
-                                  PlanetaryNebula(PlanetaryNebulaSpectrum.NGC7009)
-        )
-    case object EmissionLineType
-        extends SEDType(
-          "Emission Line",
-          _ =>
-            EmissionLines[T](
-              SortedMap.empty,
-              enumFDCUnits.all.head.withValueTagged(PosBigDecimal(BigDecimal(1)))
-            )
-        )
-    case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
-    case object BlackBodyType
-        extends BandNormalizedSED("Black Body", BlackBody(PosInt(1000).withUnit[Kelvin]))
-    case object UserDefinedType
-        extends BandNormalizedSED("User Defined",
-                                  UserDefined(
-                                    null.asInstanceOf[NonEmptyMap[Wavelength, PosBigDecimal]]
-                                  )
-        )
-
-    implicit val enumSEDType: Enumerated[SEDType] =
-      Enumerated
-        .from[SEDType](
-          StellarLibraryType,
-          CoolStarModelType,
-          GalaxyType,
-          PlanetType,
-          QuasarType,
-          HIIRegionType,
-          PlanetaryNebulaType,
-          EmissionLineType,
-          PowerLawType,
-          BlackBodyType,
-          UserDefinedType
-        )
-        .withTag(_.name)
-  }
+  protected val currentType: SpectralDefinition[T] => SEDType[T]
+  protected val disabledItems: HashSet[SEDType[T]]
 
   val component = ScalaFnComponent[Props] { props =>
     import props._
@@ -239,21 +176,6 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
       )
 
-    val currentType: SEDType =
-      props.spectralDefinition.get match {
-        case BandNormalized(StellarLibrary(_), _)  => SEDType.StellarLibraryType
-        case BandNormalized(CoolStarModel(_), _)   => SEDType.CoolStarModelType
-        case BandNormalized(Galaxy(_), _)          => SEDType.GalaxyType
-        case BandNormalized(Planet(_), _)          => SEDType.PlanetType
-        case BandNormalized(Quasar(_), _)          => SEDType.QuasarType
-        case BandNormalized(HIIRegion(_), _)       => SEDType.HIIRegionType
-        case BandNormalized(PlanetaryNebula(_), _) => SEDType.PlanetaryNebulaType
-        case EmissionLines(_, _)                   => SEDType.EmissionLineType
-        case BandNormalized(PowerLaw(_), _)        => SEDType.PowerLawType
-        case BandNormalized(BlackBody(_), _)       => SEDType.BlackBodyType
-        case BandNormalized(UserDefined(_), _)     => SEDType.UserDefinedType
-      }
-
     def spectrumRow[T: Enumerated](id: string.NonEmptyString, view: ReuseView[T]) =
       React.Fragment(
         <.span,
@@ -263,13 +185,13 @@ sealed abstract class SpectralDefinitionEditorBuilder[
 
     React.Fragment(
       <.label("SED", ExploreStyles.SkipToNext),
-      EnumSelect[SEDType](
+      EnumSelect[SEDType[T]](
         label = "",
-        value = currentType.some,
-        onChange = Reuse.by(props.spectralDefinition)((sed: SEDType) =>
+        value = currentType(props.spectralDefinition.get).some,
+        onChange = Reuse.by(props.spectralDefinition)((sed: SEDType[T]) =>
           props.spectralDefinition.view(props.toInput).mod(sed.convert)
         ),
-        disabledItems = HashSet(SEDType.UserDefinedType)
+        disabledItems = disabledItems
       ),
       <.span,
       stellarLibrarySpectrumAlignerOpt
@@ -422,10 +344,17 @@ final case class IntegratedSpectralDefinitionEditor(
 }
 
 object IntegratedSpectralDefinitionEditor
-    extends SpectralDefinitionEditorBuilder[Integrated,
-                                            SpectralDefinitionIntegratedInput,
-                                            IntegratedSpectralDefinitionEditor
+    extends SpectralDefinitionEditorBuilder[
+      Integrated,
+      SpectralDefinitionIntegratedInput,
+      IntegratedSpectralDefinitionEditor
     ] {
+  override protected val currentType: SpectralDefinition[Integrated] => SEDType[Integrated] =
+    IntegratedSEDType.fromSpectralDefinition
+
+  override protected val disabledItems: HashSet[SEDType[Integrated]] =
+    HashSet(IntegratedSEDType.UserDefinedType)
+
   protected val brightnessEditor
     : ReuseView[SortedMap[Band, BrightnessMeasure[Integrated]]] => VdomNode =
     brightnessesView => IntegratedBrightnessEditor(brightnessesView, false)
@@ -509,10 +438,17 @@ final case class SurfaceSpectralDefinitionEditor(
 }
 
 object SurfaceSpectralDefinitionEditor
-    extends SpectralDefinitionEditorBuilder[Surface,
-                                            SpectralDefinitionSurfaceInput,
-                                            SurfaceSpectralDefinitionEditor
+    extends SpectralDefinitionEditorBuilder[
+      Surface,
+      SpectralDefinitionSurfaceInput,
+      SurfaceSpectralDefinitionEditor
     ] {
+  override protected val currentType: SpectralDefinition[Surface] => SEDType[Surface] =
+    SurfaceSEDType.fromSpectralDefinition
+
+  override protected val disabledItems: HashSet[SEDType[Surface]] =
+    HashSet(SurfaceSEDType.UserDefinedType)
+
   protected val brightnessEditor
     : ReuseView[SortedMap[Band, BrightnessMeasure[Surface]]] => VdomNode =
     brightnessesView => SurfaceBrightnessEditor(brightnessesView, false)
