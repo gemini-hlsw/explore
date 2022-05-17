@@ -8,6 +8,7 @@ import cats.syntax.all._
 import explore.events._
 import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
+import lucuma.core.geom.jts.interpreter._
 import io.circe.scalajs._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
@@ -25,7 +26,11 @@ import scala.scalajs.js
  */
 trait CatalogIDB {
   implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
-  val cacheQueryHash: Hash[QueryByADQL]           = Hash.by(q => (q.base, q.adqlBrightness, q.adqlBrightness))
+  implicit val ci                                 = ADQLInterpreter.nTarget(10000)
+
+  def cacheQueryHash: Hash[ADQLQuery] = Hash.by { q =>
+    println(q.adqlGeom); (q.base, q.adqlGeom, q.adqlBrightness)
+  }
 
   val DBVersion = 1
 
@@ -61,13 +66,13 @@ trait CatalogIDB {
 
   def readStoredTargets(
     idb:   IndexedDb.Database,
-    query: QueryByADQL
+    query: ADQLQuery
   ): AsyncCallback[Option[CatalogResults]] =
     idb.get(store)(cacheQueryHash.hash(query))
 
   def storeTargets(
     idb:     IndexedDb.Database,
-    query:   QueryByADQL,
+    query:   ADQLQuery,
     targets: List[GuideStarCandidate]
   ): AsyncCallback[Unit] =
     idb.add(store)(cacheQueryHash.hash(query), CatalogResults(targets, Instant.now()))

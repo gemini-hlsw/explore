@@ -12,6 +12,7 @@ import lucuma.core.math.Coordinates
 import lucuma.ui.reusability._
 import react.common._
 import react.common.implicits._
+import explore.components.ui.ExploreStyles
 
 sealed trait SVGTarget {
   def coordinates: Coordinates
@@ -83,20 +84,20 @@ object SVGTargetsOverlay {
             .map(c => (c, p.world2pix(c.coordinates)))
             .collect {
               case (SVGTarget.CircleTarget(_, css, radius, title), Some((x, y)))             =>
-                val pointCss = Css("circle-target") |+| css
+                val pointCss = ExploreStyles.CircleTarget |+| css
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
               case (SVGTarget.GuideStarCandidateTarget(_, css, radius, title), Some((x, y))) =>
-                val pointCss = Css("guide-star-candidate-target") |+| css
+                val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
               case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y)))            =>
-                val pointCss = Css("crosshair-target") |+| css
+                val pointCss = ExploreStyles.CrosshairTarget |+| css
                 <.g(
                   <.line(^.x1 := x - side, ^.x2 := x + side, ^.y1 := y, ^.y2        := y, pointCss),
                   <.line(^.x1 := x, ^.x2        := x, ^.y1        := y - side, ^.y2 := y + side, pointCss),
                   title.map(<.title(_))
                 )
               case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))                        =>
-                val pointCss = Css("arrow-between-target") |+| css
+                val pointCss = ExploreStyles.ArrowBetweenTargets |+| css
                 p.world2pix(d)
                   .map { case (x1, y1) =>
                     <.line(^.x1 := x,

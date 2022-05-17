@@ -72,25 +72,29 @@ object AladinCell extends ModelOptics {
       // GuideStar candidates
       .useState(List.empty[GuideStarCandidate])
       // Lisen on web worker for messages with catalog candidates
-      .useEffectWithDepsBy((props, _, _, _, _) => props.target.get.baseCoordinates)(
-        (props, _, _, _, gs) =>
-          _ =>
-            props.ctx.worker.stream
-              .evalMap(m =>
-                IO(decode[List[GuideStarCandidate]](m.data.toString))
-                  .flatMap(
-                    _.fold(
-                      _ => IO.unit,
-                      gsl => gs.setState(gsl).to[IO]
-                    )
-                  )
+      .useEffectOnMountBy((props, _, _, _, gs) =>
+        props.ctx.worker.stream
+          .evalMap(m =>
+            IO(decode[List[GuideStarCandidate]](m.data.toString))
+              .flatMap(
+                _.fold(
+                  _ => IO.unit,
+                  gsl => gs.setState(gsl).to[IO]
+                )
               )
-              .compile
-              .drain
+          )
+          .compile
+          .drain
+          .whenA(props.obsConf.isDefined)
       )
       // Request catalog info for the target
-      .useEffectWithDepsBy((props, _, _, _, _) => props.target.get)((props, _, _, _, _) =>
-        tracking => props.ctx.worker.postMessage(ExploreEvent.CatalogRequest(tracking))
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.target.get, props.obsConf))(
+        (props, _, _, _, _) => {
+          case (tracking, Some(obsConf)) =>
+            props.ctx.worker
+              .postMessage(ExploreEvent.CatalogRequestEvent(tracking, obsConf.obsInstant))
+          case _                         => IO.unit
+        }
       )
       .useEffectWithDepsBy((p, _, _, _, _) => (p.uid, p.tid)) { (props, _, options, _, _) => _ =>
         implicit val ctx = props.ctx

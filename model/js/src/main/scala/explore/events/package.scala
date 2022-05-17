@@ -7,10 +7,13 @@ import io.circe.syntax._
 import lucuma.core.model.SiderealTracking
 
 import scala.scalajs.js
+import java.time.Instant
+import io.circe._
+import io.circe.generic.semiauto._
 
 package object events extends WorkerEncoders {
-  val LogoutEvent         = 1
-  val CatalogRequestEvent = 2
+  val LogoutEventId         = 1
+  val CatalogRequestEventId = 2
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate
@@ -21,24 +24,33 @@ package object events extends WorkerEncoders {
 
   object ExploreEvent {
     class Logout(val nonce: Long) extends ExploreEvent {
-      val event = LogoutEvent
+      val event = LogoutEventId
       val value = nonce.toString
     }
 
     object Logout {
-      val event                          = LogoutEvent
+      val event                          = LogoutEventId
       def apply(nonce: Long)             = new Logout(nonce)
       def unapply(l: Logout): Some[Long] = Some(l.nonce)
     }
 
-    class CatalogRequest(q: SiderealTracking) extends ExploreEvent {
-      val event = CatalogRequestEvent
-      val value = q.asJson.noSpaces
+    class CatalogRequestEvent(catalogRequest: CatalogRequest) extends ExploreEvent {
+      val event = CatalogRequestEventId
+      val value = catalogRequest.asJson.noSpaces
     }
 
+    object CatalogRequestEvent {
+      val event                                        = CatalogRequestEventId
+      def apply(t: SiderealTracking, obsTime: Instant) = new CatalogRequestEvent(
+        CatalogRequest(t, obsTime)
+      )
+    }
+
+    final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
+
     object CatalogRequest {
-      val event                      = CatalogRequestEvent
-      def apply(t: SiderealTracking) = new CatalogRequest(t)
+      implicit val requestDecoder: Decoder[CatalogRequest] = deriveDecoder[CatalogRequest]
+      implicit val requestEncoder: Encoder[CatalogRequest] = deriveEncoder[CatalogRequest]
     }
   }
 }

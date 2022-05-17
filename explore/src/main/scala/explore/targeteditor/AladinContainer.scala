@@ -32,6 +32,7 @@ import react.common._
 import react.resizeDetector.hooks._
 
 import scala.concurrent.duration._
+import java.time.Instant
 
 final case class AladinContainer(
   target:                 ReuseView[SiderealTracking],
@@ -220,18 +221,27 @@ object AladinContainer {
           )
         } else
           List(
-            SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10)
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
           )
 
-        val guideStarCandidatesTargets = props.guideStarCandidates
-          .map(g =>
-            SVGTarget
-              .GuideStarCandidateTarget(g.tracking.baseCoordinates,
-                                        ExploreStyles.GuideStarCandidateTarget,
-                                        4
+        // This is the epoch for middle of 2000 assuminig it is correct for the image
+        // But we are not really sure what's the image epoch
+        val imageEpoch = Instant.ofEpochSecond(959817600)
+
+        val guideStarCandidatesTargets = props.obsConf.foldMap { conf =>
+          props.guideStarCandidates
+            .flatMap { g =>
+              List(
+                SVGTarget
+                  .GuideStarCandidateTarget(g.tracking.at(imageEpoch),
+                                            ExploreStyles.GuideStarCandidateTargetBase,
+                                            4
+                  ),
+                SVGTarget
+                  .GuideStarCandidateTarget(g.tracking.at(conf.obsInstant), Css.Empty, 4)
               )
-          )
-        println(props.guideStarCandidates.length)
+            }
+        }
 
         <.div(
           ExploreStyles.AladinContainerBody,
