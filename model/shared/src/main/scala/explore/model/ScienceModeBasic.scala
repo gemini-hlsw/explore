@@ -13,6 +13,8 @@ import lucuma.core.enum.GmosNorthGrating
 import lucuma.core.enum.GmosSouthFilter
 import lucuma.core.enum.GmosSouthFpu
 import lucuma.core.enum.GmosSouthGrating
+import monocle.Focus
+import monocle.Lens
 
 sealed trait ScienceModeBasic extends Product with Serializable
 
@@ -35,6 +37,11 @@ object ScienceModeBasic {
       Eq.by(x => (x.grating, x.filter, x.fpu))
 
     implicit val gmosNLongSlitDecoder: Decoder[GmosNorthLongSlit] = deriveDecoder
+
+    val grating: Lens[GmosNorthLongSlit, GmosNorthGrating]       = Focus[GmosNorthLongSlit](_.grating)
+    val filter: Lens[GmosNorthLongSlit, Option[GmosNorthFilter]] =
+      Focus[GmosNorthLongSlit](_.filter)
+    val fpu: Lens[GmosNorthLongSlit, GmosNorthFpu]               = Focus[GmosNorthLongSlit](_.fpu)
   }
 
   final case class GmosSouthLongSlit(
@@ -48,5 +55,10 @@ object ScienceModeBasic {
       Eq.by(x => (x.grating, x.filter, x.fpu))
 
     implicit val gmosSLongSlitDecoder: Decoder[GmosSouthLongSlit] = deriveDecoder
+
+    val grating: Lens[GmosSouthLongSlit, GmosSouthGrating]       = Focus[GmosSouthLongSlit](_.grating)
+    val filter: Lens[GmosSouthLongSlit, Option[GmosSouthFilter]] =
+      Focus[GmosSouthLongSlit](_.filter)
+    val fpu: Lens[GmosSouthLongSlit, GmosSouthFpu]               = Focus[GmosSouthLongSlit](_.fpu)
   }
 }

@@ -12,11 +12,14 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ScienceModeAdvanced
+import explore.model.ScienceModeBasic
+import explore.model.reusability._
 import explore.optics._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.enum._
 import lucuma.core.model.Observation
+import lucuma.core.syntax.all._
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.ui.forms.EnumViewOptionalSelect
@@ -29,9 +32,12 @@ import react.semanticui.elements.button.Button
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
-sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced] {
+import scala.scalajs.js.JSConverters._
+
+sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id
-  val scienceMode: Reuse[View[T]]
+  val scienceModeAdvanced: Reuse[View[T]]
+  val scienceModeBasic: S
   val onShowBasic: Reuse[Callback]
 
   implicit val ctx: AppContextIO
@@ -39,15 +45,16 @@ sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced] {
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ScienceModeAdvanced,
-  Props <: AdvancedConfigurationPanel[T],
-  Grating: Enumerated,
-  Filter: Enumerated,
-  Fpu: Enumerated,
-  XBinning: Enumerated,
-  YBinning: Enumerated,
-  ReadMode: Enumerated,
-  Gain: Enumerated,
-  Roi: Enumerated
+  S <: ScienceModeBasic,
+  Props <: AdvancedConfigurationPanel[T, S],
+  Grating: Enumerated: Display,
+  Filter: Enumerated: Display,
+  Fpu: Enumerated: Display,
+  XBinning: Enumerated: Display,
+  YBinning: Enumerated: Display,
+  ReadMode: Enumerated: Display,
+  Gain: Enumerated: Display,
+  Roi: Enumerated: Display
 ] {
   protected implicit val reuseProps: Reusability[Props]
 
@@ -61,8 +68,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val explicitGain: Lens[T, Option[Gain]]
   @inline protected val explicitRoi: Lens[T, Option[Roi]]
 
-  protected implicit val displayBinning: Display[(XBinning, YBinning)]
-  protected implicit val displayReadModeGain: Display[(ReadMode, Gain)]
+  @inline protected val gratingLens: Lens[S, Grating]
+  @inline protected val filterLens: Lens[S, Option[Filter]]
+  @inline protected val fpuLens: Lens[S, Fpu]
+
+  protected implicit val displayBinning: Display[(XBinning, YBinning)] =
+    Display.by(
+      { case (x, y) => s"${x.shortName} x ${y.shortName}" },
+      { case (x, y) => s"${x.longName} x ${y.longName}" }
+    )
+
+  protected implicit val displayReadModeGain: Display[(ReadMode, Gain)] =
+    Display.by( // Shortname is in lower case for some reason
+      { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
+      { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
+    )
 
   val component =
     ScalaFnComponent
@@ -81,35 +101,45 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             <.label("Grating", HelpIcon("configuration/grating.md")),
             EnumViewOptionalSelect[ReuseView, Grating](
               id = "override-grating",
-              value = props.scienceMode.zoom(overrideGratingLens)
+              value = props.scienceModeAdvanced.zoom(overrideGratingLens),
+              clearable = true,
+              placeholder = gratingLens.get(props.scienceModeBasic).shortName
             ),
             <.label("Filter", HelpIcon("configuration/filter.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect[ReuseView, Filter](
               id = "override-filter",
-              value = props.scienceMode.zoom(overrideFilterLens)
+              value = props.scienceModeAdvanced.zoom(overrideFilterLens),
+              clearable = true,
+              placeholder = filterLens.get(props.scienceModeBasic).map(_.shortName).orUndefined
             ),
             <.label("FPU", HelpIcon("configuration/fpu.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect[ReuseView, Fpu](
               id = "override-fpu",
-              value = props.scienceMode.zoom(overrideFpuLens)
+              value = props.scienceModeAdvanced.zoom(overrideFpuLens),
+              clearable = true,
+              placeholder = fpuLens.get(props.scienceModeBasic).shortName
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol2)(
             <.label("Binning", HelpIcon("configuration/binning.md")),
             EnumViewOptionalSelect[ReuseView, (XBinning, YBinning)](
               id = "explicitXBin",
-              value = props.scienceMode.zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin))
+              value =
+                props.scienceModeAdvanced.zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin)),
+              clearable = true
             ),
             <.label("Read Mode", HelpIcon("configuration/read-mode.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect[ReuseView, (ReadMode, Gain)](
               id = "explicitReadMode",
-              value =
-                props.scienceMode.zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain))
+              value = props.scienceModeAdvanced
+                .zoom(unsafeDisjointOptionZip(explicitReadMode, explicitGain)),
+              clearable = true
             ),
             <.label("ROI", HelpIcon("configuration/roi.md"), ExploreStyles.SkipToNext),
             EnumViewOptionalSelect[ReuseView, Roi](
               id = "explicitRoi",
-              value = props.scienceMode.zoom(explicitRoi)
+              value = props.scienceModeAdvanced.zoom(explicitRoi),
+              clearable = true
             )
           ),
           <.div(ExploreStyles.ExploreForm, ExploreStyles.AdvancedConfigurationCol3)(
@@ -141,25 +171,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
 object AdvancedConfigurationPanel {
 
-  // Gmos North Long Slit
-  final case class GmosNorthLongSlit(
-    obsId:            Observation.Id,
-    scienceMode:      Reuse[View[ScienceModeAdvanced.GmosNorthLongSlit]],
-    onShowBasic:      Reuse[Callback]
-  )(implicit val ctx: AppContextIO)
-      extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
-        AdvancedConfigurationPanel.GmosNorthLongSlit.component
-      )
-      with AdvancedConfigurationPanel[ScienceModeAdvanced.GmosNorthLongSlit]
-
   sealed abstract class GmosAdvancedConfigurationPanel[
     T <: ScienceModeAdvanced,
-    Props <: AdvancedConfigurationPanel[T],
+    S <: ScienceModeBasic,
+    Props <: AdvancedConfigurationPanel[T, S],
     Grating: Enumerated,
     Filter: Enumerated,
     Fpu: Enumerated
   ] extends AdvancedConfigurationPanelBuilder[
         T,
+        S,
         Props,
         Grating,
         Filter,
@@ -169,24 +190,27 @@ object AdvancedConfigurationPanel {
         GmosAmpReadMode,
         GmosAmpGain,
         GmosRoi
-      ] {
-    protected implicit val displayBinning: Display[(GmosXBinning, GmosYBinning)] =
-      Display.by(
-        { case (x, y) => s"${x.shortName} x ${y.shortName}" },
-        { case (x, y) => s"${x.longName} x ${y.longName}" }
-      )
+      ]
 
-    protected implicit val displayReadModeGain: Display[(GmosAmpReadMode, GmosAmpGain)] =
-      Display.by( // Shortname is in lower case for some reason
-        { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
-        { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
+  // Gmos North Long Slit
+  final case class GmosNorthLongSlit(
+    obsId:               Observation.Id,
+    scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosNorthLongSlit]],
+    scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
+    onShowBasic:         Reuse[Callback]
+  )(implicit val ctx:    AppContextIO)
+      extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
+        AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
-
-  }
+      with AdvancedConfigurationPanel[
+        ScienceModeAdvanced.GmosNorthLongSlit,
+        ScienceModeBasic.GmosNorthLongSlit
+      ]
 
   object GmosNorthLongSlit
       extends GmosAdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosNorthLongSlit,
+        ScienceModeBasic.GmosNorthLongSlit,
         AdvancedConfigurationPanel.GmosNorthLongSlit,
         GmosNorthGrating,
         GmosNorthFilter,
@@ -211,23 +235,32 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosNorthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosNorthLongSlit.explicitRoi
+
+    @inline protected val gratingLens = ScienceModeBasic.GmosNorthLongSlit.grating
+    @inline protected val filterLens  = ScienceModeBasic.GmosNorthLongSlit.filter
+    @inline protected val fpuLens     = ScienceModeBasic.GmosNorthLongSlit.fpu
   }
 
   // Gmos South Long Slit
 
   final case class GmosSouthLongSlit(
-    obsId:            Observation.Id,
-    scienceMode:      Reuse[View[ScienceModeAdvanced.GmosSouthLongSlit]],
-    onShowBasic:      Reuse[Callback]
-  )(implicit val ctx: AppContextIO)
+    obsId:               Observation.Id,
+    scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosSouthLongSlit]],
+    scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
+    onShowBasic:         Reuse[Callback]
+  )(implicit val ctx:    AppContextIO)
       extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )
-      with AdvancedConfigurationPanel[ScienceModeAdvanced.GmosSouthLongSlit]
+      with AdvancedConfigurationPanel[
+        ScienceModeAdvanced.GmosSouthLongSlit,
+        ScienceModeBasic.GmosSouthLongSlit
+      ]
 
   object GmosSouthLongSlit
       extends GmosAdvancedConfigurationPanel[
         ScienceModeAdvanced.GmosSouthLongSlit,
+        ScienceModeBasic.GmosSouthLongSlit,
         AdvancedConfigurationPanel.GmosSouthLongSlit,
         GmosSouthGrating,
         GmosSouthFilter,
@@ -252,5 +285,9 @@ object AdvancedConfigurationPanel {
       ScienceModeAdvanced.GmosSouthLongSlit.explicitAmpGain
     @inline protected val explicitRoi                       =
       ScienceModeAdvanced.GmosSouthLongSlit.explicitRoi
+
+    @inline protected val gratingLens = ScienceModeBasic.GmosSouthLongSlit.grating
+    @inline protected val filterLens  = ScienceModeBasic.GmosSouthLongSlit.filter
+    @inline protected val fpuLens     = ScienceModeBasic.GmosSouthLongSlit.fpu
   }
 }
