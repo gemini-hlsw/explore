@@ -27,9 +27,6 @@ import reactST.reactTable.Plugin
 import reactST.reactTable.TableDef
 
 object TargetColumns {
-  import IntegratedSEDType._
-  import SurfaceSEDType._
-
   val baseColNames: Map[String, String] = Map(
     "type" -> " ",
     "name" -> "Name"
@@ -163,14 +160,8 @@ object TargetColumns {
             t =>
               Target.Sidereal.integratedSpectralDefinition
                 .getOption(t)
-                .map(IntegratedSEDType.fromSpectralDefinition)
                 .map(_.shortName)
-                .orElse(
-                  Target.Sidereal.surfaceSpectralDefinition
-                    .getOption(t)
-                    .map(SurfaceSEDType.fromSpectralDefinition)
-                    .map(_.shortName)
-                )
+                .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
           ).setCell(_.value.orEmpty)
         )
   }

@@ -9,9 +9,13 @@ import lucuma.core.enum._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.util.Display
+import lucuma.core.syntax.display._
+import lucuma.ui.implicits._
 
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.SpectralDefinition
 
 object display {
   implicit val displayProposalClass: Display[ProposalClass] =
@@ -91,5 +95,24 @@ object display {
       formatter.setMinimumFractionDigits(if (x.scale > 0) x.precision - 1 else x.scale)
       formatter.format(x.bigDecimal).stripSuffix("E0").toLowerCase
     }
+  }
+
+  import UnnormalizedSED._
+  implicit val displayUnnormalizedSED: Display[UnnormalizedSED] = Display.byShortName {
+    case StellarLibrary(librarySpectrum)          => librarySpectrum.shortName
+    case CoolStarModel(temperature)               => s"Cool Star (${temperature.temperature.value} °K)"
+    case Galaxy(galaxySpectrum)                   => galaxySpectrum.shortName
+    case Planet(planetSpectrum)                   => planetSpectrum.shortName
+    case Quasar(quasarSpectrum)                   => quasarSpectrum.shortName
+    case HIIRegion(hiiRegionSpectrum)             => hiiRegionSpectrum.shortName
+    case PlanetaryNebula(planetaryNebulaSpectrum) => planetaryNebulaSpectrum.shortName
+    case PowerLaw(index)                          => s"Power Law ($index)"
+    case BlackBody(temperature)                   => s"Black Body (${temperature.value} °K)"
+    case UserDefined(_)                           => "User Defined"
+  }
+
+  implicit def displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName {
+    case SpectralDefinition.BandNormalized(band, _) => band.shortName
+    case SpectralDefinition.EmissionLines(_, _)     => "Emission Lines"
   }
 }
