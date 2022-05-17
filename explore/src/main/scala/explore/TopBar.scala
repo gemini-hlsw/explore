@@ -54,24 +54,24 @@ final case class TopBar(
 object TopBar {
   type Props = TopBar
 
-  implicit val propsReuse: Reusability[Props] = Reusability.by(p => (p.user, p.programId))
+  implicit private val propsReuse: Reusability[Props] = Reusability.by(p => (p.user, p.programId))
 
-  def currentTheme: Theme =
-    if (dom.document.body.classList.contains(Theme.Light.clazz.htmlClass))
+  private def bodyClasses: dom.DOMTokenList = dom.document.body.classList
+
+  private def currentTheme: Theme =
+    if (bodyClasses.contains(Theme.Light.clazz.htmlClass))
       Theme.Light
     else
       Theme.Dark
 
-  def flipTheme(theme: Theme): Theme =
+  private def flipTheme(theme: Theme): Theme =
     if (theme === Theme.Dark) Theme.Light else Theme.Dark
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      // copied
-      .useState(false)
-      // theme
-      .useState(currentTheme)
+      .useState(false)        // copied
+      .useState(currentTheme) // theme
       .renderWithReuse { (props, copied, theme) =>
         AppCtx.using { implicit appCtx =>
           val role = props.user.role
@@ -159,9 +159,10 @@ object TopBar {
                           <.span(^.cls := "text", "Switch to ORCID")
                         )
                       ).when(role === GuestRole),
-                      DropdownItem(text = "Logout",
-                                   icon = Icons.Logout.fixedWidth(),
-                                   onClick = logout.runAsync
+                      DropdownItem(
+                        text = "Logout",
+                        icon = Icons.Logout.fixedWidth(),
+                        onClick = logout.runAsync
                       ),
                       DropdownItem()(
                         Icons.BarCodeRead.fixedWidth(),
@@ -177,19 +178,25 @@ object TopBar {
                           )
                         )
                       ).when(appCtx.environment =!= ExecutionEnvironment.Production),
-                      DropdownItem(onClick =
-                        utils
-                          .setupScheme[CallbackTo](
-                            if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
-                          ) *> theme.modState(flipTheme)
+                      DropdownItem(
+                        onClick = utils.setupScheme[CallbackTo](
+                          if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
+                        ) *> theme.modState(flipTheme)
                       )(
                         Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
                         .when(appCtx.environment === ExecutionEnvironment.Development),
                       // DELETME
-                      DropdownItem(text = "Reset Local Obs",
-                                   icon = Icons.SkullCrossBones.fixedWidth(),
-                                   onClick = ExploreLocalPreferences.cleanObsConfig[IO].runAsync
+                      DropdownItem(
+                        text = "Reset Local Obs",
+                        icon = Icons.SkullCrossBones.fixedWidth(),
+                        onClick = ExploreLocalPreferences.cleanObsConfig[IO].runAsync
+                      )
+                        .when(appCtx.environment === ExecutionEnvironment.Development),
+                      DropdownItem(
+                        text = "Toggle Reusability",
+                        icon = Icons.CrystalBall.fixedWidth(),
+                        onClick = utils.toggleReusabilityOverlay[CallbackTo]()
                       )
                         .when(appCtx.environment === ExecutionEnvironment.Development)
                     )

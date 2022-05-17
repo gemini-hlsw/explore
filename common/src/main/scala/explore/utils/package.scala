@@ -11,6 +11,7 @@ import clue.data.syntax._
 import crystal.Pot
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.components.ui.ExploreStyles
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.ExecutionEnvironment.Development
 import explore.model.enum.Theme
@@ -36,6 +37,13 @@ package object utils {
         dom.document.body.classList.remove(Theme.Dark.clazz.htmlClass)
       }
     }
+
+  def toggleReusabilityOverlay[F[_]: Sync](): F[Unit] =
+    Sync[F]
+      .delay(
+        dom.document.body.classList.toggle(ExploreStyles.HideReusability.htmlClass)
+      )
+      .void
 
   val gitHash = BuildInfo.gitHeadCommit
     .orElse(BuildInfo.herokuSourceVersion)

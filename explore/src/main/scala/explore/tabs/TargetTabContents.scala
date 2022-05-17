@@ -590,7 +590,6 @@ object TargetTabContents {
           ExploreLocalPreferences
             .loadPreferences[IO]
             .flatMap { e =>
-              println(s"LOAD ${firstIdSelected(p)}")
               firstIdSelected(p)
                 .flatMap(o => e.obsConfigurations.get(o))
                 .map(obsConf.set(_).to[IO])

@@ -2450,3 +2450,10 @@ input:-webkit-autofill:active {
   border: 1px solid var(--site-border-color) !important;
 }
 /* stylelint-enable */
+
+// Reusability overlays.
+body.hide-reusability {
+  & > div:not(#root) {
+    display: none;
+  }
+}

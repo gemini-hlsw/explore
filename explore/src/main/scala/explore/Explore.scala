@@ -31,7 +31,7 @@ import explore.model.enum.AppTab
 import explore.model.enum.ExecutionEnvironment
 import explore.model.enum.Theme
 import explore.model.reusability._
-import explore.utils
+import explore.utils._
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.VdomElement
@@ -113,7 +113,12 @@ object ExploreMain extends IOApp.Simple {
     }
 
   override final def run: IO[Unit] = {
-    japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev()
+
+    def setupReusabilityOverlay(env: ExecutionEnvironment): IO[Unit] =
+      if (env === ExecutionEnvironment.Development) {
+        toggleReusabilityOverlay[IO]() >>
+          IO(japgolly.scalajs.react.extra.ReusabilityOverlay.overrideGloballyInDev())
+      } else IO.unit
 
     val reconnectionStrategy: WebSocketReconnectionStrategy =
       (attempt, reason) =>
@@ -165,8 +170,8 @@ object ExploreMain extends IOApp.Simple {
         appConfig            <- fetchConfig[IO]
         _                    <- logger.info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- logger.info(s"Config: ${appConfig.show}")
-        ctx                  <-
-          AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia, worker)
+        ctx                  <- AppContext.from[IO](appConfig, reconnectionStrategy, pageUrl, setPageVia, worker)
+        _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
         (vault, container, _) = r
       } yield {
@@ -204,7 +209,7 @@ object ExploreMain extends IOApp.Simple {
       dispatcher <- Dispatcher[IO]
       worker     <- WebWorkerF[IO](WebWorkers.TestWorker(), dispatcher)
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
-      l          <- { println(prefs); Resource.eval(setupLogger[IO](prefs)) }
+      l          <- Resource.eval(setupLogger[IO](prefs))
       _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(l))
     } yield ()).useForever
   }
