@@ -54,6 +54,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import java.time.Instant
+import scalajs.js.JSConverters._
 
 final case class BasicConfigurationPanel(
   obsId:            Observation.Id,
@@ -62,7 +63,7 @@ final case class BasicConfigurationPanel(
   scienceModeOpt:   ReuseView[Option[model.ScienceMode]],
   constraints:      ConstraintSet,
   itcTargets:       List[ITCTarget],
-  onShowAdvanced:   Reuse[Callback]
+  onShowAdvanced:   Reuse[Option[Callback]]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[BasicConfigurationPanel](BasicConfigurationPanel.component)
 
@@ -240,7 +241,8 @@ object BasicConfigurationPanel {
               compact = true,
               content = "Advanced Configuration",
               icon = Icons.Gears,
-              onClick = props.onShowAdvanced.value
+              disabled = props.onShowAdvanced.isEmpty,
+              onClick = props.onShowAdvanced.value.orUndefined
             )
           )
         )
