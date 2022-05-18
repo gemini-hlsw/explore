@@ -31,7 +31,12 @@ object ConstraintsQueries {
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateConstraintSetMutation
-            .execute(obsIds, remoteSet(value)(ConstraintSetInput()))
+            .execute(
+              BulkEditConstraintSetInput(
+                select = BulkEditSelectInput(observationIds = obsIds.assign),
+                edit = remoteSet(value)(ConstraintSetInput())
+              )
+            )
             .void
             .runAsync
         )

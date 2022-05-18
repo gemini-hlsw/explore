@@ -538,8 +538,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateConstraintSetMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsIds: [ObservationId!]!, $input: ConstraintSetInput!){
-        bulkEditConstraintSet(input: {selectObservations: $obsIds, edit: $input}) {
+      mutation ($input: BulkEditConstraintSetInput!){
+        bulkEditConstraintSet(input: $input) {
           id
         }
       }
@@ -549,8 +549,8 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceRequirementsMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($obsIds: ObservationId!, $input: ScienceRequirementsInput!){
-        bulkEditScienceRequirements(input: {selectObservations: [$obsIds], edit: $input}) {
+      mutation ($input: BulkEditScienceRequirementsInput!){
+        bulkEditScienceRequirements(input: $input) {
           id
         }
       }
@@ -560,7 +560,7 @@ object ObsQueriesGQL {
   @GraphQL
   trait UpdateScienceModeMutation extends GraphQLOperation[ObservationDB] {
     val document = """
-      mutation ($input: BulkEditScienceModeInput){
+      mutation ($input: BulkEditScienceModeInput!){
         bulkEditScienceMode(input: $input) {
           id
         }
