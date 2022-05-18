@@ -37,7 +37,12 @@ object ScienceQueries {
         .undoableView(modelGet, modelMod)
         .withOnMod(value =>
           UpdateScienceRequirementsMutation
-            .execute(obsId, remoteSet(value)(ScienceRequirementsInput()))
+            .execute(
+              BulkEditScienceRequirementsInput(
+                select = BulkEditSelectInput(observationIds = List(obsId).assign),
+                edit = remoteSet(value)(ScienceRequirementsInput())
+              )
+            )
             .void
             .runAsync
         )

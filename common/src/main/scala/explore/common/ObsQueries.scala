@@ -173,7 +173,14 @@ object ObsQueries {
       waterVapor = constraints.waterVapor.assign,
       elevationRange = createER.assign
     )
-    UpdateConstraintSetMutation.execute[F](obsIds, editInput).void
+    UpdateConstraintSetMutation
+      .execute[F](
+        BulkEditConstraintSetInput(
+          select = BulkEditSelectInput(observationIds = obsIds.assign),
+          edit = editInput
+        )
+      )
+      .void
   }
 
   def createObservation[F[_]: Async](programId: Program.Id)(implicit
