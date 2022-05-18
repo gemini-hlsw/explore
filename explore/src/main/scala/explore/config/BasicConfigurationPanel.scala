@@ -54,6 +54,7 @@ import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
 import java.time.Instant
+
 import scalajs.js.JSConverters._
 
 final case class BasicConfigurationPanel(

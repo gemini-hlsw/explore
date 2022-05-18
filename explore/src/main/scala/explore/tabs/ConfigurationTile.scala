@@ -9,6 +9,7 @@ import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ObsQueries._
 import explore.components.Tile
 import explore.config.ConfigurationPanel
@@ -25,7 +26,7 @@ object ConfigurationTile {
   def configurationTile(
     obsId:        Observation.Id,
     obsConf:      ReuseView[ObsConfiguration],
-    scienceData:  Pot[ReuseView[ScienceData]],
+    obsData:      Pot[(String, Option[NonEmptyString], ReuseView[ScienceData])],
     undoStacks:   ReuseView[UndoStacks[IO, ScienceData]]
   )(implicit ctx: AppContextIO) =
     Tile(
@@ -33,18 +34,20 @@ object ConfigurationTile {
       "Configuration",
       canMinimize = true
     )(
-      (scienceData, obsConf, undoStacks).curryReusing.in((potView, _, undoStacks_, renderInTitle) =>
-        potRender[ReuseView[ScienceData]](
-          Reuse.always(scienceData_ =>
+      (obsData, obsConf, undoStacks).curryReusing.in((potView, _, undoStacks_, renderInTitle) =>
+        potRender[(String, Option[NonEmptyString], ReuseView[ScienceData])](
+          Reuse.always { case (title, subtitle, scienceData) =>
             ConfigurationPanel(
               obsId,
+              title,
+              subtitle,
               obsConf,
-              scienceData_.map(UndoContext(undoStacks_, _)),
-              scienceData_.get.constraints,
-              scienceData_.get.itcTargets,
+              scienceData.map(UndoContext(undoStacks_, _)),
+              scienceData.get.constraints,
+              scienceData.get.itcTargets,
               renderInTitle
             )
-          )
+          }
         )(potView)
       )
     )

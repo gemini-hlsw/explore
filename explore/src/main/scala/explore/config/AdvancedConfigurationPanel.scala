@@ -7,6 +7,7 @@ import crystal.react.ReuseView
 import crystal.react.View
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -36,6 +37,8 @@ import scala.scalajs.js.JSConverters._
 
 sealed trait AdvancedConfigurationPanel[T <: ScienceModeAdvanced, S <: ScienceModeBasic] {
   val obsId: Observation.Id
+  val title: String
+  val subtitle: Option[NonEmptyString]
   val scienceModeAdvanced: Reuse[View[T]]
   val scienceModeBasic: S
   val onShowBasic: Reuse[Callback]
@@ -147,6 +150,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
             SequenceEditorPopup(
               props.obsId,
+              props.title,
+              props.subtitle,
               trigger = Reuse.by(props.obsId)(
                 Button(
                   size = Small,
@@ -195,6 +200,8 @@ object AdvancedConfigurationPanel {
   // Gmos North Long Slit
   final case class GmosNorthLongSlit(
     obsId:               Observation.Id,
+    title:               String,
+    subtitle:            Option[NonEmptyString],
     scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosNorthLongSlit]],
     scienceModeBasic:    ScienceModeBasic.GmosNorthLongSlit,
     onShowBasic:         Reuse[Callback]
@@ -245,6 +252,8 @@ object AdvancedConfigurationPanel {
 
   final case class GmosSouthLongSlit(
     obsId:               Observation.Id,
+    title:               String,
+    subtitle:            Option[NonEmptyString],
     scienceModeAdvanced: Reuse[View[ScienceModeAdvanced.GmosSouthLongSlit]],
     scienceModeBasic:    ScienceModeBasic.GmosSouthLongSlit,
     onShowBasic:         Reuse[Callback]

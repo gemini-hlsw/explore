@@ -10,6 +10,7 @@ import crystal.react._
 import crystal.react.hooks._
 import crystal.react.reuse._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.Aligner
 import explore.common.ObsQueries._
 import explore.common.ScienceQueries._
@@ -34,6 +35,8 @@ import react.common._
 
 final case class ConfigurationPanel(
   obsId:            Observation.Id,
+  title:            String,
+  subtitle:         Option[NonEmptyString],
   obsConf:          ReuseView[ObsConfiguration],
   scienceData:      Reuse[UndoContext[ScienceData]],
   constraints:      ConstraintSet,
@@ -106,6 +109,8 @@ object ConfigurationPanel {
                   AdvancedConfigurationPanel
                     .GmosNorthLongSlit(
                       props.obsId,
+                      props.title,
+                      props.subtitle,
                       view.zoom(model.ScienceMode.GmosNorthLongSlit.advanced),
                       view.zoom(model.ScienceMode.GmosNorthLongSlit.basic).get,
                       showBasicCB
@@ -118,6 +123,8 @@ object ConfigurationPanel {
                   AdvancedConfigurationPanel
                     .GmosSouthLongSlit(
                       props.obsId,
+                      props.title,
+                      props.subtitle,
                       view.zoom(model.ScienceMode.GmosSouthLongSlit.advanced),
                       view.zoom(model.ScienceMode.GmosSouthLongSlit.basic).get,
                       showBasicCB

@@ -238,6 +238,8 @@ object ObsQueriesGQL {
       query($obsId: ObservationId!) {
         observation(observationId: $obsId) {
           id
+          title
+          subtitle
           targetEnvironment {
             asterism {
               id

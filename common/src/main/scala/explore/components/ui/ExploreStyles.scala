@@ -308,6 +308,7 @@ object ExploreStyles {
   val SelectedDown: Css                 = Css("selected-down")
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
+  val SequenceObsSutitle                = Css("explore-sequence-obs-subtitle")
 
   val ButtonCopy: Css         = Css("explore-button-copy")
   val ButtonsUndo: Css        = Css("explore-buttons-undo")
