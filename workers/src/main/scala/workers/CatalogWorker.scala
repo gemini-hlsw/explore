@@ -17,6 +17,8 @@ import io.circe.syntax._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
+import japgolly.webapputil.boopickle._
+import japgolly.webapputil.binary._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.catalog._
 import lucuma.core.geom.gmos.probeArm
@@ -63,7 +65,7 @@ object CatalogWorker extends CatalogIDB {
     new AsyncCallbackOps(a)
 
   @JSExport
-  def runWorker(): Unit = run.unsafeRunAndForget()
+  def runWorker(): Unit = run.handleError(t => t.printStackTrace()).unsafeRunAndForget()
 
   /**
    * Request and parse data from Gaia
@@ -92,6 +94,7 @@ object CatalogWorker extends CatalogIDB {
     client:     Client[IO],
     self:       dom.DedicatedWorkerGlobalScope,
     idb:        IndexedDb.Database,
+    stores:     CacheIDBStores,
     tracking:   SiderealTracking,
     obsTime:    Instant
   )(implicit L: Logger[IO]): IO[Unit] = {
@@ -111,10 +114,12 @@ object CatalogWorker extends CatalogIDB {
     )
 
     (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
-      readGuideStarCandidates(idb, query).toIO.handleError(_ => none)) // Try to find it in the db
+      readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
+        none
+      )) // Try to find it in the db
       .flatMap(
         _.fold(
-          // Not found in the db, re requset
+          // Not found in the db, re request
           readFromGaia[IO](client, query)
             .map(
               _.collect { case Right(s) =>
@@ -124,7 +129,7 @@ object CatalogWorker extends CatalogIDB {
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
                 IO(self.postMessage(candidates.asJson.noSpaces)) *>
-                storeGuideStarCandidates(idb, query, candidates).toIO
+                storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
             .void
@@ -146,11 +151,17 @@ object CatalogWorker extends CatalogIDB {
   // Expire the data in 30 days
   val Expiration: Double = 30 * 24 * 60 * 60 * 1000.0
 
+  // 4) We need an encryption key
+  val encKey = BinaryData.fromStringAsUtf8("!" * 32)
+
   def run: IO[Unit] =
     for {
       logger      <- setupLogger[IO]
+      _           <- logger.info(s"Worker starting ")
       self        <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb         <- openDB(self).toIO
+      idb         <- IO(self.indexedDB.get)
+      stores       = CacheIDBStores()
+      cacheDb     <- stores.open(IndexedDb(idb)).toIO
       (client, _) <- FetchClientBuilder[IO].allocated
       _           <-
         IO {
@@ -160,14 +171,14 @@ object CatalogWorker extends CatalogIDB {
               case ExploreEvent.CatalogRequestEvent.event =>
                 decode[CatalogRequest](event.value.toString).foreach {
                   case CatalogRequest(tracking, obsTime) =>
-                    (readFromGaia(client, self, idb, tracking, obsTime)(
+                    (readFromGaia(client, self, cacheDb, stores, tracking, obsTime)(
                       logger
-                    ) *> expireGuideStarCandidates(idb, Expiration).toIO)
+                    ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO)
                       .unsafeRunAndForget()
                 }
 
               case ExploreEvent.CacheCleanupEvent.event =>
-                expireGuideStarCandidates(idb, Expiration).toIO.unsafeRunAndForget()
+                expireGuideStarCandidates(cacheDb, stores, Expiration).toIO.unsafeRunAndForget()
               case _                                    =>
             }
           }

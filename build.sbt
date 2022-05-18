@@ -188,6 +188,7 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Mouse.value ++
       PPrint.value ++
+      Boopickle.value ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++

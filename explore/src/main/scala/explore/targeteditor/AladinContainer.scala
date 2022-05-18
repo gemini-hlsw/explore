@@ -232,14 +232,16 @@ object AladinContainer {
           props.guideStarCandidates
             .flatMap { g =>
               List(
-                SVGTarget
-                  .GuideStarCandidateTarget(g.tracking.at(imageEpoch),
-                                            ExploreStyles.GuideStarCandidateTargetBase,
-                                            4
+                g.tracking
+                  .at(imageEpoch)
+                  .map(p =>
+                    SVGTarget
+                      .GuideStarCandidateTarget(p, ExploreStyles.GuideStarCandidateTargetBase, 4)
                   ),
-                SVGTarget
-                  .GuideStarCandidateTarget(g.tracking.at(conf.obsInstant), Css.Empty, 4)
-              )
+                g.tracking
+                  .at(conf.obsInstant)
+                  .map(p => SVGTarget.GuideStarCandidateTarget(p, Css.Empty, 4))
+              ).collect { case Some(x) => x }
             }
         }
 
