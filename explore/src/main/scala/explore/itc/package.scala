@@ -16,7 +16,6 @@ package object itc {
         ^.cls := "fa-layers fa-fw",
         Icons.StarExclamation
           .clazz(ExploreStyles.WarningIcon)
-          .title("Required for ITC")
           .size(IconSize.X1),
         <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
       )
