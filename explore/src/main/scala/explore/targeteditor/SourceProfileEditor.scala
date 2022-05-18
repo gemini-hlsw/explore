@@ -90,7 +90,7 @@ object SourceProfileEditor {
             InputWithUnits( // FWHM is positive arcsec accepting decimals
               gaussianAligner.zoom(Gaussian.fwhm, GaussianInput.fwhm.modify).view(_.toInput.assign),
               angleValidFormatInput,
-              ChangeAuditor.fromValidFormatInput(angleValidFormatInput).denyNeg,
+              ChangeAuditor.fromValidFormatInput(angleValidFormatInput).denyNeg.allowEmpty,
               id = "fwhm",
               units = "arcsec"
             ),

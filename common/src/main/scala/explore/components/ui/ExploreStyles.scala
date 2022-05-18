@@ -143,6 +143,7 @@ object ExploreStyles {
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
+  val Gaussian: Css                  = Css("gaussian")
 
   val SkyPlotTile: Css               = Css("sky-plot-tile")
   val SkyPlotTileBody: Css           = Css("sky-plot-tile-body")

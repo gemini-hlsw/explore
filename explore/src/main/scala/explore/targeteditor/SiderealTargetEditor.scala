@@ -340,6 +340,9 @@ object SiderealTargetEditor {
                 ExploreStyles.Compact,
                 ExploreStyles.ExploreForm,
                 ExploreStyles.TargetSourceProfileEditor,
+                ExploreStyles.Gaussian
+                  .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined)
+              )(
                 SourceProfileEditor(sourceProfileAligner, disabled = disabled)
               )
             )
