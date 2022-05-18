@@ -20,9 +20,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Declination
 import lucuma.core.math.Offset
-import lucuma.core.math.RightAscension
 import lucuma.core.model.SiderealTracking
 import lucuma.svgdotjs.Svg
 import lucuma.ui.reusability._
@@ -46,27 +44,6 @@ final case class AladinContainer(
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
-
-  implicit class CoordinatesOps(val c: Coordinates) extends AnyVal {
-    def offsetBy(posAngle: Angle, o: Offset): Option[Coordinates] = {
-      val paCos  = posAngle.cos
-      val paSin  = posAngle.sin
-      val pDeg   = o.p.toAngle.toSignedDoubleDegrees
-      val qDeg   = o.q.toAngle.toSignedDoubleDegrees
-      val dRa    = pDeg * paCos + qDeg * paSin
-      val dDec   = -pDeg * paSin + qDeg * paCos
-      val decCos = c.dec.toAngle.cos
-
-      Declination
-        .fromDoubleDegrees(c.dec.toAngle.toSignedDoubleDegrees + dDec)
-        .filter(_ => decCos != 0)
-        .map { d =>
-          Coordinates(RightAscension.fromDoubleDegrees(c.ra.toAngle.toDoubleDegrees + dRa / decCos),
-                      d
-          )
-        }
-    }
-  }
 
   type Props       = AladinContainer
   type World2PixFn = Coordinates => Option[(Double, Double)]
@@ -125,7 +102,7 @@ object AladinContainer {
       .withHooks[Props]
       // Base coordinates with pm correction if possible
       .useMemoBy(_.obsConf.map(_.obsInstant)) { p => i =>
-        i.map(p.target.get.at).getOrElse(p.target.get.baseCoordinates)
+        i.flatMap(p.target.get.at).getOrElse(p.target.get.baseCoordinates)
       }
       // View coordinates base coordinates with pm correction if possible + user panning
       .useStateBy { (p, baseCoordinates) =>
