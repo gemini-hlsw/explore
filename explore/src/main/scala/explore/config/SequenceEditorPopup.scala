@@ -4,6 +4,7 @@
 package explore.config
 
 import crystal.react.reuse._
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.implicits._
@@ -19,6 +20,8 @@ import react.semanticui.sizes._
 
 final case class SequenceEditorPopup(
   obsId:            Observation.Id,
+  title:            String,
+  subtitle:         Option[NonEmptyString],
   trigger:          Reuse[Button]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditorPopup](SequenceEditorPopup.component)
@@ -49,7 +52,10 @@ object SequenceEditorPopup {
             dimmer = Dimmer.Blurring,
             size = ModalSize.Small,
             onClose = isOpen.setState(false),
-            header = ModalHeader(s"${props.obsId}: Observation Title"),
+            header = ModalHeader(
+              <.div(s"${props.obsId}: ${props.title}"),
+              props.subtitle.map(subtitle => <.div(ExploreStyles.SequenceObsSutitle, subtitle))
+            ),
             content = ModalContent(
               GeneratedSequenceViewer(props.obsId)
             )

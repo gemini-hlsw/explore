@@ -371,8 +371,8 @@ object ObsTabContents {
           // so that the constraints selector dropdown always appears in front of any other tiles. If more
           // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
           // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-          val constraintsTile = ConstraintsTile
-            .constraintsTile(
+          val constraintsTile =
+            ConstraintsTile.constraintsTile(
               obsId,
               obsView.map(_.zoom(ObservationData.constraintSet)),
               props.undoStacks
@@ -382,14 +382,15 @@ object ObsTabContents {
               clazz = ExploreStyles.ConstraintsTile.some
             )
 
-          val configurationTile = ConfigurationTile.configurationTile(
-            obsId,
-            obsConf,
-            obsView.map(_.zoom(scienceDataForObs)),
-            props.undoStacks
-              .zoom(ModelUndoStacks.forScienceData[IO])
-              .zoom(atMapWithDefault(obsId, UndoStacks.empty))
-          )
+          val configurationTile =
+            ConfigurationTile.configurationTile(
+              obsId,
+              obsConf,
+              obsView.map(obs => (obs.get.title, obs.get.subtitle, obs.zoom(scienceDataForObs))),
+              props.undoStacks
+                .zoom(ModelUndoStacks.forScienceData[IO])
+                .zoom(atMapWithDefault(obsId, UndoStacks.empty))
+            )
 
           TileController(
             props.userId.get,
