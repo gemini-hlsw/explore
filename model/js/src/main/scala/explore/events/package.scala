@@ -3,19 +3,18 @@
 
 package explore
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
 import lucuma.core.model.SiderealTracking
 
 import java.time.Instant
 import scala.scalajs.js
+import explore.model.boopickle.CatalogPicklers
 
-package object events extends WorkerEncoders {
+package object events {
+  object picklers extends CatalogPicklers with WorkerPicklers
+
   val LogoutEventId         = 1
   val CatalogRequestEventId = 2
   val CacheCleanupEventId   = 3
-  val CatalogResultsEventId = 4
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate
@@ -26,10 +25,7 @@ package object events extends WorkerEncoders {
 
   final case class CatalogRequest(tracking: SiderealTracking, obsTime: Instant)
 
-  object CatalogRequest {
-    implicit val requestDecoder: Decoder[CatalogRequest] = deriveDecoder[CatalogRequest]
-    implicit val requestEncoder: Encoder[CatalogRequest] = deriveEncoder[CatalogRequest]
-  }
+  final case class CacheCleanupRequest(elapsedTime: Int)
 
   object ExploreEvent {
     class LogoutEvent(val nonce: Long) extends ExploreEvent {
@@ -43,26 +39,5 @@ package object events extends WorkerEncoders {
       def unapply(l: LogoutEvent): Some[Long] = Some(l.nonce)
     }
 
-    class CatalogRequestEvent(catalogRequest: CatalogRequest) extends ExploreEvent {
-      val event = CatalogRequestEventId
-      val value = catalogRequest.asJson.noSpaces
-    }
-
-    object CatalogRequestEvent {
-      val event                                        = CatalogRequestEventId
-      def apply(t: SiderealTracking, obsTime: Instant) = new CatalogRequestEvent(
-        CatalogRequest(t, obsTime)
-      )
-    }
-
-    class CacheCleanupEvent(elapsedTime: Int) extends ExploreEvent {
-      val event = CacheCleanupEventId
-      val value = elapsedTime
-    }
-
-    object CacheCleanupEvent {
-      val event                   = CacheCleanupEventId
-      def apply(elapsedTime: Int) = new CacheCleanupEvent(elapsedTime)
-    }
   }
 }

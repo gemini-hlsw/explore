@@ -3,7 +3,6 @@
 
 package workers
 
-import boopickle.Default._
 import cats.data.EitherNec
 import cats.effect.Concurrent
 import cats.effect.IO
@@ -11,11 +10,11 @@ import cats.effect.kernel.Sync
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
-import explore.model.CatalogPicklers
+import explore.events.picklers._
+import explore.model.boopickle._
 import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
 import fs2.text
-import io.circe.parser._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.binary._
@@ -44,13 +43,12 @@ import java.time.temporal.ChronoUnit
 import scala.scalajs.js
 
 import js.annotation._
-import js.typedarray.TypedArrayBufferOps._
 
 /**
  * Web worker that can query gaia and store results locally
  */
 @JSExportTopLevel("CatalogWorker", moduleID = "catalogworker")
-object CatalogWorker extends CatalogIDB with CatalogPicklers {
+object CatalogWorker extends CatalogIDB with WorkerPicklers {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
   // TODO Read this from a table
   val bc    =
@@ -87,11 +85,6 @@ object CatalogWorker extends CatalogIDB with CatalogPicklers {
       )
       .compile
       .toList
-  }
-
-  def postAsTransferable(self: dom.DedicatedWorkerGlobalScope, results: CatalogResults) = IO {
-    val arr = Pickle.intoBytes(results).typedArray()
-    self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
   }
 
   /**
@@ -136,7 +129,7 @@ object CatalogWorker extends CatalogIDB with CatalogPicklers {
             )
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                postAsTransferable(self, CatalogResults(candidates)) *>
+                postAsTransferable[IO, CatalogResults](self, CatalogResults(candidates)) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
@@ -144,7 +137,7 @@ object CatalogWorker extends CatalogIDB with CatalogPicklers {
         ) { c =>
           // Cache hit!
           L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            postAsTransferable(self, c)
+            postAsTransferable[IO, CatalogResults](self, c)
         }
       )
   }
@@ -165,7 +158,6 @@ object CatalogWorker extends CatalogIDB with CatalogPicklers {
   def run: IO[Unit] =
     for {
       logger      <- setupLogger[IO]
-      _           <- logger.info(s"Worker starting ")
       self        <- IO(dom.DedicatedWorkerGlobalScope.self)
       idb         <- IO(self.indexedDB.get)
       stores       = CacheIDBStores()
@@ -173,23 +165,19 @@ object CatalogWorker extends CatalogIDB with CatalogPicklers {
       (client, _) <- FetchClientBuilder[IO].allocated
       _           <-
         IO {
-          self.onmessage = (msg: dom.MessageEvent) => {
-            val event = msg.data.asInstanceOf[ExploreEvent]
-            event.event match {
-              case ExploreEvent.CatalogRequestEvent.event =>
-                decode[CatalogRequest](event.value.toString).foreach {
-                  case CatalogRequest(tracking, obsTime) =>
-                    (readFromGaia(client, self, cacheDb, stores, tracking, obsTime)(
-                      logger
-                    ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO)
-                      .unsafeRunAndForget()
-                }
-
-              case ExploreEvent.CacheCleanupEvent.event =>
-                expireGuideStarCandidates(cacheDb, stores, Expiration).toIO.unsafeRunAndForget()
-              case _                                    =>
-            }
-          }
+          self.onmessage = (msg: dom.MessageEvent) =>
+            // Decode transferrable events
+            (decodeFromTransferable[IO, CatalogRequest](msg) {
+              case CatalogRequest(tracking, obsTime) =>
+                (readFromGaia(client, self, cacheDb, stores, tracking, obsTime)(
+                  logger
+                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO)
+            } *>
+              decodeFromTransferable[IO, CacheCleanupRequest](msg) {
+                case CacheCleanupRequest(expTime) =>
+                  expireGuideStarCandidates(cacheDb, stores, expTime).toIO
+              })
+              .unsafeRunAndForget()
         }
     } yield ()
 }
