@@ -4,14 +4,15 @@
 package explore.events
 
 import boopickle.DefaultBasic._
-import explore.model.boopickle.CatalogPicklers._
 import explore.events._
+import explore.model.boopickle.CatalogPicklers._
+
 import java.time.Instant
 
 /**
  * Picklers used by web workers
  */
-trait WorkerPicklers {
+trait EventPicklers {
   implicit def picklerInstant: Pickler[Instant] =
     transformPickler(Instant.ofEpochMilli)(_.toEpochMilli())
 
@@ -23,4 +24,4 @@ trait WorkerPicklers {
 
 }
 
-object WorkerPicklers extends WorkerPicklers
+object EventPicklers extends EventPicklers

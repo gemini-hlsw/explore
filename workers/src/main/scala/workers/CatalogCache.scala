@@ -3,52 +3,39 @@
 
 package workers
 
+import cats.syntax.all._
 import cats.data.EitherNec
 import cats.effect.Concurrent
 import cats.effect.IO
-import cats.effect.kernel.Sync
-import cats.effect.unsafe.implicits._
-import cats.syntax.all._
-import explore.events._
-import explore.events.picklers._
-import explore.model.boopickle._
+import cats.Hash
 import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
-import fs2.text
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.callback._
-import japgolly.webapputil.binary._
-import japgolly.webapputil.indexeddb.IndexedDb
-import log4cats.loglevel.LogLevelLogger
-import lucuma.catalog._
-import lucuma.core.geom.gmos.probeArm
-import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
+import explore.events.picklers._
+import lucuma.core.geom.gmos.probeArm
+import japgolly.webapputil.indexeddb._
+import lucuma.core.model.SiderealTracking
+import lucuma.catalog._
+import fs2.text
 import org.http4s.Method._
 import org.http4s.Request
 import org.http4s.client.Client
-import org.http4s.dom.FetchClientBuilder
 import org.http4s.syntax.all._
-import org.scalajs.dom
+import lucuma.core.geom.jts.interpreter._
+import lucuma.core.math.Coordinates
 import org.typelevel.log4cats.Logger
-import spire.math.Bounded
-import typings.loglevel.mod.LogLevelDesc
+import explore.model.boopickle._
 
+import org.scalajs.dom
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
-import scala.scalajs.js
+import spire.math.Bounded
 
-import js.annotation._
-
-/**
- * Web worker that can query gaia and store results locally
- */
-@JSExportTopLevel("CatalogWorker", moduleID = "catalogworker")
-object CatalogWorker extends CatalogIDB with WorkerPicklers {
+trait CatalogQuerySettings {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
   // TODO Read this from a table
   val bc    =
@@ -57,15 +44,20 @@ object CatalogWorker extends CatalogIDB with WorkerPicklers {
                           SaturationConstraint(9).some
     )
 
-  class AsyncCallbackOps[A](val a: AsyncCallback[A]) {
-    def toIO: IO[A] = asyncCallbackToIO.apply(a)
-  }
+  implicit val coordinatesHash: Hash[Coordinates] = Hash.fromUniversalHashCode
+  implicit val ci                                 = ADQLInterpreter.nTarget(10000)
 
-  implicit def AsyncTo[A](a: AsyncCallback[A]): AsyncCallbackOps[A] =
-    new AsyncCallbackOps(a)
+  def cacheQueryHash: Hash[ADQLQuery] = Hash.by(q => (q.base, q.adqlGeom, q.adqlBrightness))
 
-  @JSExport
-  def runWorker(): Unit = run.handleError(t => t.printStackTrace()).unsafeRunAndForget()
+  val UTC       = ZoneId.of("UTC")
+  val UTCOffset = ZoneOffset.UTC
+}
+
+/**
+ * Handles the catalog cache, it tries to use the local db and if not it goes to gaia to get the
+ * data
+ */
+trait CatalogCache extends CatalogIDB with AsyncToIO {
 
   /**
    * Request and parse data from Gaia
@@ -142,42 +134,4 @@ object CatalogWorker extends CatalogIDB with WorkerPicklers {
       )
   }
 
-  def setupLogger[F[_]: Sync]: F[Logger[F]] = Sync[F].delay {
-    LogLevelLogger.setLevel(LogLevelDesc.DEBUG)
-    LogLevelLogger.createForRoot[F]
-  }
-
-  val UTC                = ZoneId.of("UTC")
-  val UTCOffset          = ZoneOffset.UTC
-  // Expire the data in 30 days
-  val Expiration: Double = 30 * 24 * 60 * 60 * 1000.0
-
-  // 4) We need an encryption key
-  val encKey = BinaryData.fromStringAsUtf8("!" * 32)
-
-  def run: IO[Unit] =
-    for {
-      logger      <- setupLogger[IO]
-      self        <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb         <- IO(self.indexedDB.get)
-      stores       = CacheIDBStores()
-      cacheDb     <- stores.open(IndexedDb(idb)).toIO
-      (client, _) <- FetchClientBuilder[IO].allocated
-      _           <-
-        IO {
-          self.onmessage = (msg: dom.MessageEvent) =>
-            // Decode transferrable events
-            (decodeFromTransferable[IO, CatalogRequest](msg) {
-              case CatalogRequest(tracking, obsTime) =>
-                (readFromGaia(client, self, cacheDb, stores, tracking, obsTime)(
-                  logger
-                ) *> expireGuideStarCandidates(cacheDb, stores, Expiration).toIO)
-            } *>
-              decodeFromTransferable[IO, CacheCleanupRequest](msg) {
-                case CacheCleanupRequest(expTime) =>
-                  expireGuideStarCandidates(cacheDb, stores, expTime).toIO
-              })
-              .unsafeRunAndForget()
-        }
-    } yield ()
 }

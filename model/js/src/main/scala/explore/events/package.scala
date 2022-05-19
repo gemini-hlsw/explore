@@ -10,11 +10,10 @@ import scala.scalajs.js
 import explore.model.boopickle.CatalogPicklers
 
 package object events {
-  object picklers extends CatalogPicklers with WorkerPicklers
+  object picklers extends CatalogPicklers with EventPicklers
 
   val LogoutEventId         = 1
   val CatalogRequestEventId = 2
-  val CacheCleanupEventId   = 3
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate

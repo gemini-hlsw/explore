@@ -18,13 +18,13 @@ import explore.components.ui.ExploreStyles
 import explore.events._
 import explore.events.picklers._
 import explore.implicits._
-import explore.model.boopickle._
 import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
 import explore.model.TargetVisualOptions
+import explore.model.boopickle._
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
@@ -88,9 +88,7 @@ object AladinCell extends ModelOptics {
         (props, _, _, _, _) => {
           case (tracking, Some(obsConf)) =>
             props.ctx.worker
-              .postTransferrable(CacheCleanupRequest(1000)) *>
-              props.ctx.worker
-                .postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
+              .postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
           case _                         => IO.unit
         }
       )
