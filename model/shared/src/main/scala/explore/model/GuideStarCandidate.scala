@@ -23,7 +23,7 @@ import lucuma.core.optics.SplitEpi
 import scala.collection.immutable.SortedMap
 
 /**
- * Poors' man SiderealTracking with a single G brightness and no extra metadata
+ * Poors' man Target.Sidereal with a single G brightness and no extra metadata
  */
 final case class GuideStarCandidate(
   name:        NonEmptyString,

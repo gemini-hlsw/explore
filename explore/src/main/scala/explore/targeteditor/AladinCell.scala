@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import boopickle.Default._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -17,8 +16,9 @@ import explore.Icons
 import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.events._
+import explore.events.picklers._
 import explore.implicits._
-import explore.model.CatalogPicklers._
+import explore.model.boopickle._
 import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.GuideStarCandidate
@@ -46,7 +46,6 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import scala.scalajs.js.typedarray._
 
 final case class AladinCell(
   uid:              User.Id,
@@ -78,13 +77,7 @@ object AladinCell extends ModelOptics {
       .useEffectOnMountBy((props, _, _, _, gs) =>
         props.ctx.worker.stream
           .evalMap(m =>
-            m.data match {
-              case e: Int8Array =>
-                Either
-                  .catchNonFatal(Unpickle[CatalogResults].fromBytes(TypedArrayBuffer.wrap(e)))
-                  .fold(_ => IO.unit, gsl => gs.setState(gsl.candidates).to[IO])
-              case _            => IO.unit
-            }
+            decodeFromTransferable[IO, CatalogResults](m)(gsl => gs.setState(gsl.candidates).to[IO])
           )
           .compile
           .drain
@@ -95,7 +88,9 @@ object AladinCell extends ModelOptics {
         (props, _, _, _, _) => {
           case (tracking, Some(obsConf)) =>
             props.ctx.worker
-              .postMessage(ExploreEvent.CatalogRequestEvent(tracking, obsConf.obsInstant))
+              .postTransferrable(CacheCleanupRequest(1000)) *>
+              props.ctx.worker
+                .postTransferrable(CatalogRequest(tracking, obsConf.obsInstant))
           case _                         => IO.unit
         }
       )

@@ -4,7 +4,7 @@
 package workers
 
 import cats.Hash
-import explore.model.CatalogPicklers
+import explore.model.boopickle._
 import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
 import japgolly.scalajs.react.callback._
