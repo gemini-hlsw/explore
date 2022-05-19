@@ -9,8 +9,8 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
-import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
+import explore.components.LiveQuery
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -21,7 +21,6 @@ import explore.model.ScienceMode
 import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -138,15 +137,14 @@ object ObsQueries {
     protected val component = ScalaFnComponent.withReuse[Props] { props =>
       implicit val ctx = props.ctx
 
-      StreamResourceRendererMod(
+      LiveQuery(
         ProgramObservationsQuery
           .query(props.programId)
           .map(ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get)
           .reRunOnResourceSignals(
             ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-          ),
-        potRender(props.render)
-      )
+          )
+      )(props.render)
     }
   }
 

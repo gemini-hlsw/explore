@@ -7,13 +7,12 @@ import cats.Order
 import cats.effect.IO
 import cats.implicits._
 import crystal.react.ReuseView
-import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
+import explore.components.LiveQuery
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConf
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -93,15 +92,14 @@ object ConstraintGroupQueries {
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
 
-        StreamResourceRendererMod(
+        LiveQuery(
           ConstraintGroupObsQuery
             .query(props.programId)
             .map(ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get)
             .reRunOnResourceSignals(
               ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-            ),
-          potRender(props.render)
-        )
+            )
+        )(props.render)
       }
   }
 }

@@ -9,11 +9,10 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
-import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.components.LiveQuery
 import explore.implicits._
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -59,16 +58,15 @@ object ProgramQueries {
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
 
-        StreamResourceRendererMod(
+        LiveQuery(
           ProgramsQuery
             .query(props.includeDeleted)
             .map(ProgramsQuery.Data.asProgramInfoList)
             .flatTap(props.onNewData)
             .reRunOnResourceSignals(
               ProgramEditSubscription.subscribe[IO]()
-            ),
-          potRender(props.render)
-        )
+            )
+        )(props.render)
       }
   }
 
