@@ -22,7 +22,7 @@ import lucuma.core.math.RadialVelocity
 // Boopicklers for catalog related types
 trait CatalogPicklers {
 
-  protected implicit def picklerNonEmptyString: Pickler[NonEmptyString] =
+  implicit def picklerNonEmptyString: Pickler[NonEmptyString] =
     new Pickler[NonEmptyString] {
       override def pickle(a: NonEmptyString)(implicit state: PickleState): Unit = {
         state.pickle(a.value)
@@ -34,16 +34,16 @@ trait CatalogPicklers {
       }
     }
 
-  protected implicit def picklerAngle: Pickler[Angle] =
+  implicit def picklerAngle: Pickler[Angle] =
     transformPickler(Angle.fromMicroarcseconds)(_.toMicroarcseconds)
 
-  protected implicit def picklerHourAngle: Pickler[HourAngle] =
+  implicit def picklerHourAngle: Pickler[HourAngle] =
     transformPickler(HourAngle.fromMicroseconds)(_.toMicroseconds)
 
-  protected implicit def picklerRA: Pickler[RightAscension] =
+  implicit def picklerRA: Pickler[RightAscension] =
     transformPickler(RightAscension.apply)(_.toHourAngle)
 
-  protected implicit def picklerDec: Pickler[Declination] =
+  implicit def picklerDec: Pickler[Declination] =
     new Pickler[Declination] {
       override def pickle(a: Declination)(implicit state: PickleState): Unit = {
         state.pickle(Declination.fromAngle.reverseGet(a))
@@ -55,10 +55,10 @@ trait CatalogPicklers {
       }
     }
 
-  protected implicit def picklerCoordinates: Pickler[Coordinates] =
+  implicit def picklerCoordinates: Pickler[Coordinates] =
     transformPickler(Function.tupled(Coordinates.apply _))(x => (x.ra, x.dec))
 
-  protected implicit def picklerEpoch: Pickler[Epoch] =
+  implicit def picklerEpoch: Pickler[Epoch] =
     new Pickler[Epoch] {
       override def pickle(a: Epoch)(implicit state: PickleState): Unit = {
         state.pickle(a.scheme.prefix)
@@ -76,38 +76,40 @@ trait CatalogPicklers {
       }
     }
 
-  protected implicit def picklerAngularVelocityRA: Pickler[ProperMotion.RA] =
+  implicit def picklerAngularVelocityRA: Pickler[ProperMotion.RA] =
     transformPickler(ProperMotion.RA.microarcsecondsPerYear.reverseGet)(
       ProperMotion.RA.microarcsecondsPerYear.get
     )
 
-  protected implicit def picklerAngularVelocityDec: Pickler[ProperMotion.Dec] =
+  implicit def picklerAngularVelocityDec: Pickler[ProperMotion.Dec] =
     transformPickler(ProperMotion.Dec.microarcsecondsPerYear.reverseGet)(
       ProperMotion.Dec.microarcsecondsPerYear.get
     )
-  protected implicit def picklerProperMotion: Pickler[ProperMotion]           =
+  implicit def picklerProperMotion: Pickler[ProperMotion]           =
     transformPickler(Function.tupled(ProperMotion.apply _))(x => (x.ra, x.dec))
 
-  protected implicit def picklerRadialVelocity: Pickler[RadialVelocity] =
+  implicit def picklerRadialVelocity: Pickler[RadialVelocity] =
     transformPickler((x: BigDecimal) =>
       RadialVelocity.fromMetersPerSecond
         .getOption(x)
         .getOrElse(sys.error("Cannot unpickle"))
     )(RadialVelocity.fromMetersPerSecond.reverseGet)
 
-  protected implicit def picklerParallax: Pickler[Parallax] =
+  implicit def picklerParallax: Pickler[Parallax] =
     transformPickler(Parallax.fromMicroarcseconds)(_.μas.value.value)
 
-  protected implicit def picklerSiderealTracking: Pickler[SiderealTracking] =
+  implicit def picklerSiderealTracking: Pickler[SiderealTracking] =
     transformPickler(Function.tupled(SiderealTracking.apply _))(x =>
       (x.baseCoordinates, x.epoch, x.properMotion, x.radialVelocity, x.parallax)
     )
 
-  protected implicit def picklerGuideStarCandadite: Pickler[GuideStarCandidate] =
+  implicit def picklerGuideStarCandadite: Pickler[GuideStarCandidate] =
     transformPickler(Function.tupled(GuideStarCandidate.apply _))(x =>
       (x.name, x.tracking, x.gBrightness)
     )
 
-  protected implicit def picklerCatalogResults: Pickler[CatalogResults] =
+  implicit def picklerCatalogResults: Pickler[CatalogResults] =
     transformPickler(CatalogResults.apply)(_.candidates)
 }
+
+object CatalogPicklers extends CatalogPicklers

@@ -21,11 +21,11 @@ import explore.model.Constants
 import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
+import explore.model.CatalogPicklers._
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
 import explore.utils._
-import io.circe.parser._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.math.Coordinates
@@ -44,6 +44,9 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
+import boopickle.Default._
+import scala.scalajs.js.typedarray._
+import explore.model.CatalogResults
 
 final case class AladinCell(
   uid:              User.Id,
@@ -75,13 +78,13 @@ object AladinCell extends ModelOptics {
       .useEffectOnMountBy((props, _, _, _, gs) =>
         props.ctx.worker.stream
           .evalMap(m =>
-            IO(decode[List[GuideStarCandidate]](m.data.toString))
-              .flatMap(
-                _.fold(
-                  _ => IO.unit,
-                  gsl => gs.setState(gsl).to[IO]
-                )
-              )
+            m.data match {
+              case e: Int8Array =>
+                Either
+                  .catchNonFatal(Unpickle[CatalogResults].fromBytes(TypedArrayBuffer.wrap(e)))
+                  .fold(_ => IO.unit, gsl => gs.setState(gsl.candidates).to[IO])
+              case _            => IO.unit
+            }
           )
           .compile
           .drain

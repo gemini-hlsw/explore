@@ -53,11 +53,8 @@ object WebWorkerF {
           channel <- Stream.eval(Channel.unbounded[F, dom.MessageEvent])
           _       <- Stream.eval(
                        Sync[F].delay(worker.onmessage =
-                         (e: dom.MessageEvent) =>
-                           dispatcher.unsafeRunAndForget(
-                             channel
-                               .send(e)
-                           )
+                         (e: dom.MessageEvent) => 
+                           dispatcher.unsafeRunAndForget(channel.send(e))
                        )
                      )
           stream  <- channel.stream

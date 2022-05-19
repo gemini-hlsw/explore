@@ -3,6 +3,7 @@
 
 package workers
 
+import boopickle.Default._
 import cats.data.EitherNec
 import cats.effect.Concurrent
 import cats.effect.IO
@@ -13,11 +14,9 @@ import explore.events._
 import explore.model.GuideStarCandidate
 import fs2.text
 import io.circe.parser._
-import io.circe.syntax._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
 import japgolly.webapputil.indexeddb.IndexedDb
-import japgolly.webapputil.boopickle._
 import japgolly.webapputil.binary._
 import log4cats.loglevel.LogLevelLogger
 import lucuma.catalog._
@@ -43,12 +42,16 @@ import java.time.temporal.ChronoUnit
 import scala.scalajs.js
 
 import js.annotation._
+import explore.model.CatalogPicklers
+import js.typedarray.TypedArrayBufferOps._
+import js.JSConverters._
+import explore.model.CatalogResults
 
 /**
  * Web worker that can query gaia and store results locally
  */
 @JSExportTopLevel("CatalogWorker", moduleID = "catalogworker")
-object CatalogWorker extends CatalogIDB {
+object CatalogWorker extends CatalogIDB with CatalogPicklers {
   val proxy = uri"https://lucuma-cors-proxy.herokuapp.com"
   // TODO Read this from a table
   val bc    =
@@ -87,6 +90,11 @@ object CatalogWorker extends CatalogIDB {
       .toList
   }
 
+  def postAsTransferable(self: dom.DedicatedWorkerGlobalScope, results: CatalogResults) = IO {
+    val arr = Pickle.intoBytes(results).typedArray()
+    self.postMessage(arr, js.Array(arr.buffer: dom.Transferable))
+  }
+
   /**
    * Try to read the gaia query from the cache or else get it from gaia
    */
@@ -114,6 +122,7 @@ object CatalogWorker extends CatalogIDB {
     )
 
     (L.debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
+      // Try to find it in the db
       readGuideStarCandidates(idb, stores, query).toIO.handleError(_ =>
         none
       )) // Try to find it in the db
@@ -128,16 +137,16 @@ object CatalogWorker extends CatalogIDB {
             )
             .flatMap { candidates =>
               L.debug(s"Catalog results from remote catalog: ${candidates.length} candidates") *>
-                IO(self.postMessage(candidates.asJson.noSpaces)) *>
+                postAsTransferable(self, CatalogResults(candidates)) *>
                 storeGuideStarCandidates(idb, stores, query, candidates).toIO
                   .handleError(e => L.error(e)("Error storing guidstar candidates"))
             }
             .void
-        )(c =>
+        ) { c =>
           // Cache hit!
           L.debug(s"Catalog results from cache: ${c.candidates.length} candidates") *>
-            IO(self.postMessage(c.candidates.asJson.noSpaces))
-        )
+            postAsTransferable(self, c)
+        }
       )
   }
 
