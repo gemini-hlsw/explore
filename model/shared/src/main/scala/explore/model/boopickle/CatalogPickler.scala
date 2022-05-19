@@ -4,20 +4,19 @@
 package explore.model
 
 import boopickle.DefaultBasic._
-import lucuma.core.math.Coordinates
-
 import eu.timepit.refined._
-import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.collection.NonEmpty
-import lucuma.core.model.SiderealTracking
-import lucuma.core.math.RightAscension
+import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Angle
-import lucuma.core.math.HourAngle
+import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import lucuma.core.math.ProperMotion
+import lucuma.core.math.HourAngle
 import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.RightAscension
+import lucuma.core.model.SiderealTracking
 
 // Boopicklers for catalog related types
 trait CatalogPicklers {

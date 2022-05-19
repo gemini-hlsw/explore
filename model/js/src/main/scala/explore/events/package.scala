@@ -15,6 +15,7 @@ package object events extends WorkerEncoders {
   val LogoutEventId         = 1
   val CatalogRequestEventId = 2
   val CacheCleanupEventId   = 3
+  val CatalogResultsEventId = 4
 
   // These are messages sent across tabs thus they need to be JS compatible
   // We don't need yet more than just an index to  differentiate
