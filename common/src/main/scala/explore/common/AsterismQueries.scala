@@ -10,14 +10,13 @@ import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
 import crystal.react.ReuseView
-import crystal.react.StreamResourceRendererMod
 import crystal.react.reuse._
+import explore.components.LiveQuery
 import explore.implicits._
 import explore.model.AsterismGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithConstraintsAndConf
 import explore.model.TargetGroup
-import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.vdom.VdomNode
@@ -125,16 +124,15 @@ object AsterismQueries {
       ScalaFnComponent.withReuse[Props] { props =>
         implicit val ctx = props.ctx
 
-        StreamResourceRendererMod(
+        LiveQuery(
           AsterismGroupObsQuery
             .query(props.programId)
             .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
             .reRunOnResourceSignals(
               ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
               TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
-            ),
-          potRender(props.render)
-        )
+            )
+        )(props.render)
       }
   }
 
