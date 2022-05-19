@@ -4,14 +4,14 @@
 package workers
 
 import cats.Hash
-import explore.model.CatalogResults
 import explore.model.CatalogPicklers
+import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
 import japgolly.scalajs.react.callback._
-import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
-import japgolly.webapputil.indexeddb._
 import japgolly.webapputil.binary._
 import japgolly.webapputil.boopickle._
+import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
+import japgolly.webapputil.indexeddb._
 import lucuma.catalog._
 import lucuma.core.geom.jts.interpreter._
 import lucuma.core.math.Coordinates

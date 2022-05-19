@@ -11,13 +11,15 @@ import cats.effect.kernel.Sync
 import cats.effect.unsafe.implicits._
 import cats.syntax.all._
 import explore.events._
+import explore.model.CatalogPicklers
+import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
 import fs2.text
 import io.circe.parser._
 import japgolly.scalajs.react.callback.CallbackCatsEffect._
 import japgolly.scalajs.react.callback._
-import japgolly.webapputil.indexeddb.IndexedDb
 import japgolly.webapputil.binary._
+import japgolly.webapputil.indexeddb.IndexedDb
 import log4cats.loglevel.LogLevelLogger
 import lucuma.catalog._
 import lucuma.core.geom.gmos.probeArm
@@ -42,10 +44,7 @@ import java.time.temporal.ChronoUnit
 import scala.scalajs.js
 
 import js.annotation._
-import explore.model.CatalogPicklers
 import js.typedarray.TypedArrayBufferOps._
-import js.JSConverters._
-import explore.model.CatalogResults
 
 /**
  * Web worker that can query gaia and store results locally

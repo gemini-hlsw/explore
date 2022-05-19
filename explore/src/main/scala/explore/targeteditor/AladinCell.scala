@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import boopickle.Default._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
@@ -17,11 +18,12 @@ import explore.common.UserPreferencesQueries._
 import explore.components.ui.ExploreStyles
 import explore.events._
 import explore.implicits._
+import explore.model.CatalogPicklers._
+import explore.model.CatalogResults
 import explore.model.Constants
 import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.ScienceMode
-import explore.model.CatalogPicklers._
 import explore.model.TargetVisualOptions
 import explore.model.reusability._
 import explore.optics.ModelOptics
@@ -44,9 +46,7 @@ import react.semanticui.modules.popup.PopupPosition
 import react.semanticui.sizes._
 
 import scala.concurrent.duration._
-import boopickle.Default._
 import scala.scalajs.js.typedarray._
-import explore.model.CatalogResults
 
 final case class AladinCell(
   uid:              User.Id,
