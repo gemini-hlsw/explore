@@ -207,7 +207,7 @@ object ExploreMain extends IOApp.Simple {
 
     (for {
       dispatcher <- Dispatcher[IO]
-      worker     <- WebWorkerF[IO](WebWorkers.CatalogWorker(), dispatcher)
+      worker     <- WebWorkerF[IO](WebWorkers.CacheIDBWorker(), dispatcher)
       prefs      <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       l          <- Resource.eval(setupLogger[IO](prefs))
       _          <- Resource.eval(buildPage(dispatcher, worker, prefs)(l))
