@@ -1804,6 +1804,7 @@ html {
 .obs-badge-description {
   display: flex;
   justify-content: space-between;
+  text-overflow: ellipsis;
 }
 
 .ui.button.delete-button.obs-delete-button {
@@ -1914,8 +1915,8 @@ html {
   grid-template-areas:
     'col1 col2 col3'
     'col1 buttons buttons';
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
 }
 
 .tile-sm-width,
@@ -2302,7 +2303,8 @@ svg[focusable='false']:focus {
 }
 
 .ui.toggle.checkbox.obs-active-status-toggle {
-  transform: rotate(270deg) scale(0.6) translate(0, 150%);
+  transform: rotate(270deg) scale(0.6) translate(-100%, 70%);
+  width: auto;
 
   input:checked ~ label::before {
     background-color: var(--checkbox-toggle-checked-background) !important;
