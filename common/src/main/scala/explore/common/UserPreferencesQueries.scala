@@ -11,6 +11,7 @@ import clue.TransactionalClient
 import clue.data.syntax._
 import explore.model.GridLayoutSection
 import explore.model.ResizableSection
+import explore.model.enum.Visible
 import explore.model.layout._
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -24,7 +25,6 @@ import queries.schemas.implicits._
 import react.gridlayout.{ BreakpointName => _, _ }
 
 import scala.collection.immutable.SortedMap
-import explore.model.enum.Visible
 
 object UserPreferencesQueries {
 

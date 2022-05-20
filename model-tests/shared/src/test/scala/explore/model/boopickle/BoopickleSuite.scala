@@ -11,8 +11,6 @@ import explore.model.CatalogResults
 import explore.model.GuideStarCandidate
 import explore.model.arb.ArbCatalogResults._
 import explore.model.boopickle.CatalogPicklers
-import lucuma.core.model.SiderealTracking
-import lucuma.core.model.arb.ArbSiderealTracking._
 import lucuma.core.math._
 import lucuma.core.math.arb.ArbAngle._
 import lucuma.core.math.arb.ArbCoordinates._
@@ -22,6 +20,8 @@ import lucuma.core.math.arb.ArbParallax._
 import lucuma.core.math.arb.ArbProperMotion._
 import lucuma.core.math.arb.ArbRadialVelocity._
 import lucuma.core.math.arb.ArbRightAscension._
+import lucuma.core.model.SiderealTracking
+import lucuma.core.model.arb.ArbSiderealTracking._
 
 class BoopickleSuite extends munit.DisciplineSuite with CatalogPicklers {
   checkAll("Pickler[Angle]", PicklerTests[Angle].pickler)

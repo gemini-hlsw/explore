@@ -3,11 +3,11 @@
 
 package explore
 
+import explore.model.boopickle.CatalogPicklers
 import lucuma.core.model.SiderealTracking
 
 import java.time.Instant
 import scala.scalajs.js
-import explore.model.boopickle.CatalogPicklers
 
 package object events {
   object picklers extends CatalogPicklers with EventPicklers

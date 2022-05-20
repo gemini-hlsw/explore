@@ -36,19 +36,19 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
+import monocle.Prism
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common._
 import react.fa.Transform
+import react.semanticui.collections.menu._
+import react.semanticui.elements.button.Button
+import react.semanticui.modules.checkbox.Checkbox
 import react.semanticui.modules.popup.Popup
 import react.semanticui.modules.popup.PopupPosition
-
 import react.semanticui.sizes._
-import react.semanticui.elements.button.Button
-import react.semanticui.collections.menu._
-import react.semanticui.modules.checkbox.Checkbox
+
 import scala.concurrent.duration._
-import monocle.Prism
 
 final case class AladinCell(
   uid:              User.Id,
@@ -130,12 +130,15 @@ object AladinCell extends ModelOptics {
         val fovView =
           options.zoom(potPrism.andThen(TargetVisualOptions.fovAngle))
 
+        val offsetView =
+          options.zoom(potPrism.andThen(TargetVisualOptions.viewOffset))
+
         val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
 
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
-        def fovSetter(props: Props, newFov: Fov): Callback = {
+        val fovSetter = (newFov: Fov) => {
           val ignore = options.get.fold(
             _ => true,
             _ => true,
@@ -145,7 +148,6 @@ object AladinCell extends ModelOptics {
           )
           if (newFov.x.toMicroarcseconds === 0L) Callback.empty
           else {
-            implicit val ctx = props.ctx
             fovView.set(newFov.x) *>
               (fovView.get, agsCandidatesView.get).mapN { (_, a) =>
                 UserTargetPreferencesUpsert
@@ -158,19 +160,16 @@ object AladinCell extends ModelOptics {
           }
         }
 
-        def offsetSetter(props: Props, newOffset: Offset): Callback = {
-          implicit val ctx = props.ctx
-          options.mod(_.map(_.copy(viewOffset = newOffset))) *>
+        val offsetSetter = (newOffset: Offset) =>
+          offsetView.set(newOffset) *>
             UserTargetPreferencesFovUpdate
               .updateViewOffset[IO](props.uid, props.tid, newOffset)
               .runAsync
               .rateLimit(1.seconds, 1)
               .void
-        }
 
         def candidatesSetter: Callback =
           agsCandidatesView.mod(_.flip) *>
-            Callback.log("Store") *>
             (fovView.get, agsCandidatesView.get).mapN { (f, a) =>
               UserTargetPreferencesUpsert
                 .updatePreferences[IO](props.uid, props.tid, f, a.flip)
@@ -187,8 +186,8 @@ object AladinCell extends ModelOptics {
             props.scienceMode,
             t,
             coordinatesSetter,
-            Reuse.currying(props).in(fovSetter _),
-            Reuse.currying(props).in(offsetSetter _),
+            fovSetter.reuseAlways,
+            offsetSetter.reuseAlways,
             center,
             gsc.value
           ).withKey(aladinKey)
