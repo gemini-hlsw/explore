@@ -117,6 +117,7 @@ object UserPreferencesQueriesGQL {
           fov
           viewOffsetP
           viewOffsetQ
+          agsCandidates
         }
       }
     """

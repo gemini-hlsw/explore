@@ -24,6 +24,7 @@ import queries.schemas.implicits._
 import react.gridlayout.{ BreakpointName => _, _ }
 
 import scala.collection.immutable.SortedMap
+import explore.model.enum.Visible
 
 object UserPreferencesQueries {
 
@@ -160,13 +161,13 @@ object UserPreferencesQueries {
       uid:         User.Id,
       tid:         Target.Id,
       defaultFov:  Angle
-    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[(Angle, Offset)] =
+    )(implicit cl: TransactionalClient[F, UserPreferencesDB]): F[(Angle, Offset, Visible)] =
       for {
         r <-
           query[F](uid.show, tid.show)
             .map { r =>
               r.lucuma_target_preferences_by_pk.map(result =>
-                (result.fov, result.viewOffsetP, result.viewOffsetQ)
+                (result.fov, result.viewOffsetP, result.viewOffsetQ, result.agsCandidates)
               )
             }
             .handleError(_ => none)
@@ -175,7 +176,9 @@ object UserPreferencesQueries {
         val offset = r
           .map(u => Offset(Angle.fromMicroarcseconds(u._2).p, Angle.fromMicroarcseconds(u._3).q))
           .getOrElse(Offset.Zero)
-        (fov, offset)
+
+        val agsCandidates = r.map(_._4).map(Visible.boolIso.get).getOrElse(Visible.Hidden)
+        (fov, offset, agsCandidates)
       }
   }
 
@@ -184,25 +187,30 @@ object UserPreferencesQueries {
     import self._
     import UserPreferencesDB.Enums._
 
-    def updateFov[F[_]: ApplicativeError[*[_], Throwable]](
-      uid:      User.Id,
-      targetId: Target.Id,
-      fov:      Angle
+    def updatePreferences[F[_]: ApplicativeError[*[_], Throwable]](
+      uid:           User.Id,
+      targetId:      Target.Id,
+      fov:           Angle,
+      agsCandidates: Visible
     )(implicit
-      cl:       TransactionalClient[F, UserPreferencesDB]
+      cl:            TransactionalClient[F, UserPreferencesDB]
     ): F[Unit] =
       execute[F](
         LucumaTargetInsertInput(
           target_id = targetId.show.assign,
           lucuma_target_preferences = LucumaTargetPreferencesArrRelInsertInput(
             data = List(
-              LucumaTargetPreferencesInsertInput(user_id = uid.show.assign,
-                                                 fov = fov.toMicroarcseconds.assign
+              LucumaTargetPreferencesInsertInput(
+                user_id = uid.show.assign,
+                fov = fov.toMicroarcseconds.assign,
+                agsCandidates = Visible.boolIso.reverseGet(agsCandidates).assign
               )
             ),
             on_conflict = LucumaTargetPreferencesOnConflict(
               constraint = LucumaTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-              update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov)
+              update_columns = List(LucumaTargetPreferencesUpdateColumn.Fov,
+                                    LucumaTargetPreferencesUpdateColumn.AgsCandidates
+              )
             ).assign
           ).assign
         )

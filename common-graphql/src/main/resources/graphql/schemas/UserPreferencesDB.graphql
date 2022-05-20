@@ -1,3 +1,17 @@
+"""
+expression to compare columns of type Boolean. All fields are combined with logical 'AND'.
+"""
+input Boolean_comparison_exp {
+  _eq: Boolean
+  _gt: Boolean
+  _gte: Boolean
+  _in: [Boolean!]
+  _is_null: Boolean
+  _lt: Boolean
+  _lte: Boolean
+  _neq: Boolean
+  _nin: [Boolean!]
+}
 
 """
 expression to compare columns of type Int. All fields are combined with logical 'AND'.
@@ -986,6 +1000,7 @@ input lucuma_target_pk_columns_input {
 columns and relationships of "lucuma_target_preferences"
 """
 type lucuma_target_preferences {
+  agsCandidates: Boolean!
   fov: bigint!
 
   """An object relationship"""
@@ -1069,6 +1084,7 @@ input lucuma_target_preferences_bool_exp {
   _and: [lucuma_target_preferences_bool_exp]
   _not: lucuma_target_preferences_bool_exp
   _or: [lucuma_target_preferences_bool_exp]
+  agsCandidates: Boolean_comparison_exp
   fov: bigint_comparison_exp
   lucuma_target: lucuma_target_bool_exp
   target_id: String_comparison_exp
@@ -1098,6 +1114,7 @@ input lucuma_target_preferences_inc_input {
 input type for inserting data into table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_insert_input {
+  agsCandidates: Boolean
   fov: bigint
   lucuma_target: lucuma_target_obj_rel_insert_input
   target_id: String
@@ -1178,6 +1195,7 @@ input lucuma_target_preferences_on_conflict {
 ordering options when selecting data from "lucuma_target_preferences"
 """
 input lucuma_target_preferences_order_by {
+  agsCandidates: order_by
   fov: order_by
   lucuma_target: lucuma_target_order_by
   target_id: order_by
@@ -1199,6 +1217,9 @@ select columns of table "lucuma_target_preferences"
 """
 enum lucuma_target_preferences_select_column {
   """column name"""
+  agsCandidates
+
+  """column name"""
   fov
 
   """column name"""
@@ -1218,6 +1239,7 @@ enum lucuma_target_preferences_select_column {
 input type for updating data in table "lucuma_target_preferences"
 """
 input lucuma_target_preferences_set_input {
+  agsCandidates: Boolean
   fov: bigint
   target_id: String
   user_id: String
@@ -1293,6 +1315,9 @@ input lucuma_target_preferences_sum_order_by {
 update columns of table "lucuma_target_preferences"
 """
 enum lucuma_target_preferences_update_column {
+  """column name"""
+  agsCandidates
+
   """column name"""
   fov
 
