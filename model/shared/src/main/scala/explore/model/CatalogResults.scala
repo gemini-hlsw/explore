@@ -11,7 +11,7 @@ import cats.Eq
 final case class CatalogResults(candidates: List[GuideStarCandidate])
 
 object CatalogResults {
-  def empty = CatalogResults(Nil)
+  def Empty = CatalogResults(Nil)
 
   implicit val eqCatalogResults: Eq[CatalogResults] =
     Eq.by(_.candidates)

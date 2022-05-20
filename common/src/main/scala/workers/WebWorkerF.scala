@@ -35,7 +35,8 @@ trait WebWorkerF[F[_]] {
   /**
    * Post a boopickle encoded message on effect F
    */
-  def postTransferrable[A: Pickler](a: A): F[Unit]
+  def postTransferrable[A: Pickler](a: A): F[Unit] =
+    postTransferrable(asTransferable(a))
 
   /**
    * Terminate the web worker
@@ -60,9 +61,6 @@ object WebWorkerF {
 
       def postTransferrable(buffer: Int8Array): F[Unit] =
         Sync[F].delay(worker.postMessage(buffer, js.Array(buffer.buffer: dom.Transferable)))
-
-      def postTransferrable[A: Pickler](a: A): F[Unit] =
-        postTransferrable(asTransferable(a))
 
       def terminate: F[Unit] =
         Sync[F].delay(worker.terminate())
