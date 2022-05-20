@@ -80,7 +80,14 @@ lazy val workers = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
+  .settings(
+    libraryDependencies ++= LucumaCatalog.value ++
+      Http4sDom.value ++
+      Log4Cats.value ++
+      ScalaWebAppUtil.value
+  )
   .enablePlugins(ScalaJSPlugin)
+  .dependsOn(model.js)
 
 lazy val graphql = project
   .in(file("common-graphql"))
@@ -88,7 +95,8 @@ lazy val graphql = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(
-    libraryDependencies ++= LucumaSchemas.value
+    libraryDependencies ++=
+      LucumaSchemas.value
   )
   .enablePlugins(ScalaJSPlugin)
 
@@ -180,6 +188,7 @@ lazy val commonLibSettings = Seq(
       Monocle.value ++
       Mouse.value ++
       PPrint.value ++
+      Boopickle.value ++
       In(Test)(
         MUnit.value ++
           Discipline.value ++

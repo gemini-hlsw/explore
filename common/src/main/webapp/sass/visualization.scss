@@ -90,7 +90,7 @@
   position: absolute;
   z-index: 20;
   vector-effect: non-scaling-stroke;
-  mix-blend-mode: difference;
+  mix-blend-mode: exclusion;
 
   .crosshair-target {
     stroke: hsl(84, 100%, 29.2%);
@@ -101,9 +101,27 @@
     display: none;
   }
 
-  .arrow-between-target {
+  .arrow-between-targets {
     stroke: orange;
     stroke-width: 2px;
     stroke-dasharray: 2;
+  }
+
+  .guide-star-candidate-target {
+    display: none;
+    stroke: red;
+    stroke-width: 1px;
+    fill: red;
+    fill-opacity: 0.4;
+    isolation: initial;
+  }
+
+  .guide-star-candidate-target-base {
+    display: none;
+    stroke: black;
+    stroke-width: 0.5px;
+    fill: yellow;
+    fill-opacity: 0.4;
+    isolation: initial;
   }
 }

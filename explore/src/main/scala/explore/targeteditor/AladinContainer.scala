@@ -8,6 +8,7 @@ import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
 import explore.components.ui.ExploreStyles
+import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
 import explore.model.PosAngle
 import explore.model.ScienceMode
@@ -30,6 +31,7 @@ import react.aladin._
 import react.common._
 import react.resizeDetector.hooks._
 
+import java.time.Instant
 import scala.concurrent.duration._
 
 final case class AladinContainer(
@@ -40,7 +42,8 @@ final case class AladinContainer(
   updateMouseCoordinates: Coordinates ==> Callback,
   updateFov:              Fov ==> Callback, // TODO Move the functionality of saving the FOV in ALadincell here
   updateViewOffset:       Offset ==> Callback,
-  centerOnTarget:         ReuseView[Boolean]
+  centerOnTarget:         ReuseView[Boolean],
+  guideStarCandidates:    List[GuideStarCandidate]
 ) extends ReactFnProps[AladinContainer](AladinContainer.component)
 
 object AladinContainer {
@@ -216,8 +219,30 @@ object AladinContainer {
                              ExploreStyles.PMCorrectionLine
             )
           )
-        } else {
-          List(SVGTarget.CrosshairTarget(baseCoordinates.value, Css("science-target"), 10))
+        } else
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, ExploreStyles.ScienceTarget, 10)
+          )
+
+        // This is the epoch for middle of 2000 assuminig it is correct for the image
+        // But we are not really sure what's the image epoch
+        val imageEpoch = Instant.ofEpochSecond(959817600)
+
+        val guideStarCandidatesTargets = props.obsConf.foldMap { conf =>
+          props.guideStarCandidates
+            .flatMap { g =>
+              List(
+                g.tracking
+                  .at(imageEpoch)
+                  .map(p =>
+                    SVGTarget
+                      .GuideStarCandidateTarget(p, ExploreStyles.GuideStarCandidateTargetBase, 4)
+                  ),
+                g.tracking
+                  .at(conf.obsInstant)
+                  .map(p => SVGTarget.GuideStarCandidateTarget(p, Css.Empty, 4))
+              ).collect { case Some(x) => x }
+            }
         }
 
         <.div(
@@ -229,7 +254,13 @@ object AladinContainer {
           if (resize.height.exists(_ >= 100)) {
             ReactFragment(
               (resize.width, resize.height)
-                .mapN(SVGTargetsOverlay(_, _, world2pix.value.reuseNever, overlayTargets)),
+                .mapN(
+                  SVGTargetsOverlay(_,
+                                    _,
+                                    world2pix.value.reuseNever,
+                                    overlayTargets ++ guideStarCandidatesTargets
+                  )
+                ),
               AladinComp.withRef(aladinRef) {
                 Aladin(
                   ExploreStyles.TargetAladin,

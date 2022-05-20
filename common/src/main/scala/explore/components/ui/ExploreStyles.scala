@@ -360,7 +360,12 @@ object ExploreStyles {
   val NewEmissionLineWavelength: Css = Css("explore-new-emissionline-wavelength")
 
   // Aladin Target classes
-  val ScienceTarget: Css = Css("science-target")
-  val BaseTarget         = Css("base-target")
-  val PMCorrectionLine   = Css("proper-motion-correction")
+  val ScienceTarget: Css           = Css("science-target")
+  val CircleTarget: Css            = Css("circle-target")
+  val BaseTarget                   = Css("base-target")
+  val CrosshairTarget              = Css("crosshair-target")
+  val ArrowBetweenTargets          = Css("arrow-between-targets")
+  val GuideStarCandidateTarget     = Css("guide-star-candidate-target")
+  val GuideStarCandidateTargetBase = Css("guide-star-candidate-target-base")
+  val PMCorrectionLine             = Css("proper-motion-correction")
 }

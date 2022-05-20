@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.Eq
 import cats.syntax.all._
 import crystal.react.reuse._
+import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
 import lucuma.core.math.Coordinates
@@ -37,6 +38,13 @@ object SVGTarget {
     coordinates: Coordinates,
     destination: Coordinates,
     css:         Css,
+    title:       Option[String] = None
+  ) extends SVGTarget
+
+  final case class GuideStarCandidateTarget(
+    coordinates: Coordinates,
+    css:         Css,
+    radius:      Double,
     title:       Option[String] = None
   ) extends SVGTarget
 
@@ -75,18 +83,21 @@ object SVGTargetsOverlay {
           p.targets
             .map(c => (c, p.world2pix(c.coordinates)))
             .collect {
-              case (SVGTarget.CircleTarget(_, css, radius, title), Some((x, y)))  =>
-                val pointCss = Css("circle-target") |+| css
+              case (SVGTarget.CircleTarget(_, css, radius, title), Some((x, y)))             =>
+                val pointCss = ExploreStyles.CircleTarget |+| css
                 <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
-              case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y))) =>
-                val pointCss = Css("crosshair-target") |+| css
+              case (SVGTarget.GuideStarCandidateTarget(_, css, radius, title), Some((x, y))) =>
+                val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
+                <.circle(^.cx := x, ^.cy := y, ^.r := radius, pointCss, title.map(<.title(_)))
+              case (SVGTarget.CrosshairTarget(_, css, side, title), Some((x, y)))            =>
+                val pointCss = ExploreStyles.CrosshairTarget |+| css
                 <.g(
                   <.line(^.x1 := x - side, ^.x2 := x + side, ^.y1 := y, ^.y2        := y, pointCss),
                   <.line(^.x1 := x, ^.x2        := x, ^.y1        := y - side, ^.y2 := y + side, pointCss),
                   title.map(<.title(_))
                 )
-              case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))             =>
-                val pointCss = Css("arrow-between-target") |+| css
+              case (SVGTarget.LineTo(_, d, css, title), Some((x, y)))                        =>
+                val pointCss = ExploreStyles.ArrowBetweenTargets |+| css
                 p.world2pix(d)
                   .map { case (x1, y1) =>
                     <.line(^.x1 := x,

@@ -21,9 +21,8 @@ object WebWorkers {
    * https://vitejs.dev/guide/features.html#import-with-query-suffixes=
    */
   @js.native
-  @JSImport("/workers.js?worker&inline", JSImport.Default)
-  object TestWorker extends js.Object {
+  @JSImport("/cacheworker.js?worker", JSImport.Default)
+  object CacheIDBWorker extends js.Object {
     def apply(): dom.Worker = js.native
   }
-
 }

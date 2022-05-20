@@ -47,7 +47,8 @@ object Settings {
     val scalaJsReact        = "2.1.1"
     val pprint              = "0.7.3"
     val scalaJSSecureRandom = "1.0.0"
-    var webAppUtil          = "2.0.0-RC1"
+    var webAppUtil          = "2.0.0-RC2"
+    var boopickle           = "1.4.0"
 
   }
 
@@ -351,9 +352,15 @@ object Settings {
 
     val ScalaWebAppUtil = Def.setting(
       deps(
-        "com.github.japgolly.webapp-util" %%% "core"
+        "com.github.japgolly.webapp-util" %%% "core",
+        "com.github.japgolly.webapp-util" %%% "core-boopickle"
       )(webAppUtil)
     )
 
+    val Boopickle = Def.setting(
+      deps(
+        "io.suzaku" %%% "boopickle"
+      )(boopickle)
+    )
   }
 }
