@@ -7,38 +7,22 @@ import cats._
 import explore.model.enum.Visible
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.math.syntax.int._
 import monocle.Focus
 
 final case class TargetVisualOptions(
-  ccd:        Visible,
-  fovAngle:   Angle,
-  viewOffset: Offset,
-  offsets:    Visible,
-  guiding:    Visible,
-  probe:      Visible,
-  posAngle:   Angle // This belongs to the observation model
+  fovAngle:      Angle,
+  viewOffset:    Offset,
+  agsCandidates: Visible
 )
 
 object TargetVisualOptions {
-  val ccd        = Focus[TargetVisualOptions](_.ccd)
-  val fovAngle   = Focus[TargetVisualOptions](_.fovAngle)
-  val viewOffset = Focus[TargetVisualOptions](_.viewOffset)
-  val offsets    = Focus[TargetVisualOptions](_.offsets)
-  val guiding    = Focus[TargetVisualOptions](_.guiding)
-  val probe      = Focus[TargetVisualOptions](_.probe)
-  val posAngle   = Focus[TargetVisualOptions](_.posAngle)
+  val fovAngle      = Focus[TargetVisualOptions](_.fovAngle)
+  val viewOffset    = Focus[TargetVisualOptions](_.viewOffset)
+  val agsCandidates = Focus[TargetVisualOptions](_.agsCandidates)
 
   val Default =
-    TargetVisualOptions(Visible.Hidden,
-                        Constants.InitialFov,
-                        Offset.Zero,
-                        Visible.Hidden,
-                        Visible.Hidden,
-                        Visible.Hidden,
-                        145.deg
-    )
+    TargetVisualOptions(Constants.InitialFov, Offset.Zero, Visible.Hidden)
 
   implicit val targetVisualOptionsEq: Eq[TargetVisualOptions] =
-    Eq.by(x => (x.ccd, x.fovAngle, x.viewOffset, x.offsets, x.guiding, x.probe, x.posAngle))
+    Eq.by(x => (x.fovAngle, x.viewOffset, x.agsCandidates))
 }

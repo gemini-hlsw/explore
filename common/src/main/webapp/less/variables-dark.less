@@ -139,7 +139,16 @@
     calc(var(--gray-l) - 10%),
     var(--gray-a)
   );
-  --gray-dark: @color-gray-dark;
+  --gray-dark-h: 210;
+  --gray-dark-s: 7.9%;
+  --gray-dark-l: 24.7%;
+  --gray-dark-a: 1;
+  --gray-dark-hsla: var(--gray-dark-h), var(--gray-dark-s), var(--gray-dark-l),
+    var(--gray-dark-a);
+  --gray-dark: hsla(var(--gray-dark-hsla));
+  --gray-dark-semi-hsla: var(--gray-dark-h), var(--gray-dark-s),
+    var(--gray-dark-l), 75%;
+  --gray-dark-semi: hsla(var(--gray-dark-semi-hsla));
   --negative-color: hsla(2, 81.2%, 64.5%, 80%);
 }
 
@@ -237,7 +246,8 @@
   --button-hover-background-color: lighten(@color-gray-dark, 5%);
   --button-hover-border-color: lighten(@color-gray-dark, 25%);
   --button-basic-hover-background-color: lighten(@color-gray-dark, 10%);
-  --button-background-color: @color-gray-dark;
+  --button-background-color: var(--gray-dark);
+  --button-background-color-semi: var(--gray-dark-semi);
   --button-text-color: var(--text-color);
   --button-active-color: @activeColor;
   --button-tertiary-text-color: var(--button-text-color);

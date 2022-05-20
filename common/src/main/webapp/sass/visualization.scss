@@ -90,7 +90,6 @@
   position: absolute;
   z-index: 20;
   vector-effect: non-scaling-stroke;
-  mix-blend-mode: exclusion;
 
   .crosshair-target {
     stroke: hsl(84, 100%, 29.2%);
@@ -107,12 +106,16 @@
     stroke-dasharray: 2;
   }
 
+  .guide-star-candidate-target.guide-star-candidate-target-visible {
+    display: inline;
+  }
+
   .guide-star-candidate-target {
     display: none;
     stroke: red;
     stroke-width: 1px;
     fill: red;
-    fill-opacity: 0.4;
+    fill-opacity: 0.5;
     isolation: initial;
   }
 
@@ -124,4 +127,51 @@
     fill-opacity: 0.4;
     isolation: initial;
   }
+}
+
+.ui.vertical.menu.explore-aladin-settings-menu {
+  background: var(--button-background-color-semi);
+  border-color: var(--site-border-color);
+  min-height: auto;
+  margin-left: 0.1em;
+  cursor: pointer;
+
+  .item {
+    padding: 0.6em;
+  }
+}
+
+.explore-aladin-button {
+  background: var(--button-background-color-semi);
+}
+
+@mixin aladin-button-mixin {
+  position: absolute;
+  z-index: 120;
+
+  .ui.icon.button:not(.animated):not(.compact):not(.labeled) {
+    padding: 0.4em;
+  }
+
+  .ui.icon.button {
+    margin: 0;
+
+    svg.svg-inline--fa {
+      width: auto;
+    }
+  }
+}
+
+.explore-aladin-zoom-control {
+  @include aladin-button-mixin();
+  right: 10px;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-aladin-toolbox-button {
+  @include aladin-button-mixin();
+  top: 10px;
+  left: 10px;
 }

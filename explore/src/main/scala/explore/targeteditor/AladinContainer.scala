@@ -7,6 +7,7 @@ import cats.syntax.all._
 import crystal.react.ReuseView
 import crystal.react.hooks._
 import crystal.react.reuse._
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.GuideStarCandidate
 import explore.model.ObsConfiguration
@@ -30,6 +31,8 @@ import org.scalajs.dom.document
 import react.aladin._
 import react.common._
 import react.resizeDetector.hooks._
+import react.semanticui.elements.button.Button
+import react.semanticui.sizes._
 
 import java.time.Instant
 import scala.concurrent.duration._
@@ -228,6 +231,9 @@ object AladinContainer {
         // But we are not really sure what's the image epoch
         val imageEpoch = Instant.ofEpochSecond(959817600)
 
+        val candidatesVisibility =
+          ExploreStyles.GuideStarCandidateVisible.when_(props.options.agsCandidates.visible)
+
         val guideStarCandidatesTargets = props.obsConf.foldMap { conf =>
           props.guideStarCandidates
             .flatMap { g =>
@@ -236,11 +242,15 @@ object AladinContainer {
                   .at(imageEpoch)
                   .map(p =>
                     SVGTarget
-                      .GuideStarCandidateTarget(p, ExploreStyles.GuideStarCandidateTargetBase, 4)
+                      .GuideStarCandidateTarget(
+                        p,
+                        ExploreStyles.GuideStarCandidateTargetBase,
+                        3
+                      )
                   ),
                 g.tracking
                   .at(conf.obsInstant)
-                  .map(p => SVGTarget.GuideStarCandidateTarget(p, Css.Empty, 4))
+                  .map(p => SVGTarget.GuideStarCandidateTarget(p, candidatesVisibility, 3))
               ).collect { case Some(x) => x }
             }
         }
@@ -253,6 +263,23 @@ object AladinContainer {
           // will make aladin request a large amount of tiles and end up freeze explore.
           if (resize.height.exists(_ >= 100)) {
             ReactFragment(
+              <.div(
+                ExploreStyles.AladinZoomControl,
+                Button(size = Small,
+                       icon = true,
+                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+                )(
+                  ExploreStyles.ButtonOnAladin,
+                  Icons.ThinPlus
+                ),
+                Button(size = Small,
+                       icon = true,
+                       onClick = aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+                )(
+                  ExploreStyles.ButtonOnAladin,
+                  Icons.ThinMinus
+                )
+              ),
               (resize.width, resize.height)
                 .mapN(
                   SVGTargetsOverlay(_,
@@ -269,6 +296,7 @@ object AladinContainer {
                   target = baseCoordinatesForAladin,
                   fov = props.options.fovAngle,
                   showGotoControl = false,
+                  showZoomControl = false,
                   customize = includeSvg _
                 )
               }
