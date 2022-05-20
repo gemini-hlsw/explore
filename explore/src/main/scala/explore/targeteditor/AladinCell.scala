@@ -36,7 +36,6 @@ import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.ui.reusability._
-import monocle.Prism
 import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common._
@@ -121,17 +120,14 @@ object AladinCell extends ModelOptics {
       .renderWithReuse { (props, mouseCoords, options, center, gsc, openSettings) =>
         implicit val ctx = props.ctx
 
-        def potPrism[A]: Prism[Pot[A], A] =
-          Prism.apply[Pot[A], A](_.toOption)(_.ready)
-
         val agsCandidatesView =
-          options.zoom(potPrism.andThen(TargetVisualOptions.agsCandidates))
+          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.agsCandidates))
 
         val fovView =
-          options.zoom(potPrism.andThen(TargetVisualOptions.fovAngle))
+          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.fovAngle))
 
         val offsetView =
-          options.zoom(potPrism.andThen(TargetVisualOptions.viewOffset))
+          options.zoom(Pot.readyPrism.andThen(TargetVisualOptions.viewOffset))
 
         val agsCandidatesShown: Boolean = agsCandidatesView.get.map(_.visible).getOrElse(false)
 

@@ -145,10 +145,8 @@
   background: var(--button-background-color-semi);
 }
 
-.explore-aladin-toolbox-button {
+@mixin aladin-button-mixin {
   position: absolute;
-  top: 10px;
-  left: 10px;
   z-index: 120;
 
   .ui.icon.button:not(.animated):not(.compact):not(.labeled) {
@@ -162,4 +160,18 @@
       width: auto;
     }
   }
+}
+
+.explore-aladin-zoom-control {
+  @include aladin-button-mixin();
+  right: 10px;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-aladin-toolbox-button {
+  @include aladin-button-mixin();
+  top: 10px;
+  left: 10px;
 }

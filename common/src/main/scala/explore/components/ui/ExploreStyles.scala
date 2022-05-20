@@ -370,6 +370,7 @@ object ExploreStyles {
   val GuideStarCandidateVisible    = Css("guide-star-candidate-target-visible")
   val PMCorrectionLine             = Css("proper-motion-correction")
   val AladinToolbox                = Css("explore-aladin-toolbox-button")
+  val AladinZoomControl            = Css("explore-aladin-zoom-control")
   val ButtonOnAladin               = Css("explore-aladin-button")
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
   val BlendedSVG                   = Css("blended-svg")
