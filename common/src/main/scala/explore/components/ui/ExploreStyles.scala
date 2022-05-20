@@ -367,5 +367,10 @@ object ExploreStyles {
   val ArrowBetweenTargets          = Css("arrow-between-targets")
   val GuideStarCandidateTarget     = Css("guide-star-candidate-target")
   val GuideStarCandidateTargetBase = Css("guide-star-candidate-target-base")
+  val GuideStarCandidateVisible    = Css("guide-star-candidate-target-visible")
   val PMCorrectionLine             = Css("proper-motion-correction")
+  val AladinToolbox                = Css("explore-aladin-toolbox-button")
+  val ButtonOnAladin               = Css("explore-aladin-button")
+  val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
+  val BlendedSVG                   = Css("blended-svg")
 }

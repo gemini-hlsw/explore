@@ -228,6 +228,9 @@ object AladinContainer {
         // But we are not really sure what's the image epoch
         val imageEpoch = Instant.ofEpochSecond(959817600)
 
+        val candidatesVisibility =
+          ExploreStyles.GuideStarCandidateVisible.when_(props.options.agsCandidates.visible)
+
         val guideStarCandidatesTargets = props.obsConf.foldMap { conf =>
           props.guideStarCandidates
             .flatMap { g =>
@@ -236,11 +239,15 @@ object AladinContainer {
                   .at(imageEpoch)
                   .map(p =>
                     SVGTarget
-                      .GuideStarCandidateTarget(p, ExploreStyles.GuideStarCandidateTargetBase, 4)
+                      .GuideStarCandidateTarget(
+                        p,
+                        ExploreStyles.GuideStarCandidateTargetBase,
+                        4
+                      )
                   ),
                 g.tracking
                   .at(conf.obsInstant)
-                  .map(p => SVGTarget.GuideStarCandidateTarget(p, Css.Empty, 4))
+                  .map(p => SVGTarget.GuideStarCandidateTarget(p, candidatesVisibility, 4))
               ).collect { case Some(x) => x }
             }
         }

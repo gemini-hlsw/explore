@@ -1,7 +1,7 @@
 // vite with SUI has troubles loading fonts
 @importGoogleFonts: false;
 
-@color-gray-dark: #3A3F44;
+@color-gray-dark: hsl(210, 7.9%, 24.7%);
 @color-gray-darker:  #272b30;
 
 @gray-base: #000;

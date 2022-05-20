@@ -19,20 +19,14 @@ trait ArbTargetVisualOptions {
 
   implicit val targetVisualOptionsArb = Arbitrary[TargetVisualOptions] {
     for {
-      f  <- arbitrary[Visible]
       fa <- arbitrary[Angle]
       vo <- arbitrary[Offset]
-      o  <- arbitrary[Visible]
-      g  <- arbitrary[Visible]
-      p  <- arbitrary[Visible]
-      a  <- arbitrary[Angle]
-    } yield TargetVisualOptions(f, fa, vo, o, g, p, a)
+      a  <- arbitrary[Visible]
+    } yield TargetVisualOptions(fa, vo, a)
   }
 
   implicit val targetVisualOptionsCogen: Cogen[TargetVisualOptions] =
-    Cogen[(Visible, Angle, Offset, Visible, Visible, Visible, Angle)].contramap(c =>
-      (c.ccd, c.fovAngle, c.viewOffset, c.offsets, c.guiding, c.probe, c.posAngle)
-    )
+    Cogen[(Angle, Offset, Visible)].contramap(c => (c.fovAngle, c.viewOffset, c.agsCandidates))
 }
 
 object ArbTargetVisualOptions extends ArbTargetVisualOptions

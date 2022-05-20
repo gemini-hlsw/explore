@@ -18,6 +18,8 @@ sealed trait Visible extends Product with Serializable {
     }
 
   def visible: Boolean = fold(false, true)
+
+  def flip: Visible = fold(Visible.Inline, Visible.Hidden)
 }
 
 object Visible {

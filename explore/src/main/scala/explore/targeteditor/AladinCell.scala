@@ -40,12 +40,15 @@ import queries.common.UserPreferencesQueriesGQL._
 import react.aladin.Fov
 import react.common._
 import react.fa.Transform
-import react.semanticui.elements.button.Button
 import react.semanticui.modules.popup.Popup
 import react.semanticui.modules.popup.PopupPosition
-import react.semanticui.sizes._
 
+import react.semanticui.sizes._
+import react.semanticui.elements.button.Button
+import react.semanticui.collections.menu._
+import react.semanticui.modules.checkbox.Checkbox
 import scala.concurrent.duration._
+import explore.model.enum.Visible
 
 final case class AladinCell(
   uid:              User.Id,
@@ -55,6 +58,12 @@ final case class AladinCell(
   target:           ReuseView[SiderealTracking]
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[AladinCell](AladinCell.component)
+
+final case class AladinSettings(showMenu: Boolean, showCatalog: Boolean)
+
+object AladinSettings {
+  val Default = AladinSettings(false, false)
+}
 
 object AladinCell extends ModelOptics {
   type Props = AladinCell
@@ -105,7 +114,9 @@ object AladinCell extends ModelOptics {
           }
           .runAsyncAndForget
       }
-      .renderWithReuse { (props, mouseCoords, options, center, gsc) =>
+      // open settings menu
+      .useState(false)
+      .renderWithReuse { (props, mouseCoords, options, center, gsc, openSettings) =>
         val coordinatesSetter =
           ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
@@ -159,10 +170,41 @@ object AladinCell extends ModelOptics {
           (t: TargetVisualOptions) =>
             AladinToolbar(Fov.square(t.fovAngle), mouseCoords.value): VdomNode
 
+        def potPrismO[A, B](lens: monocle.Lens[A, B]): monocle.Optional[Pot[A], B] =
+          monocle.Optional[Pot[A], B](_.toOption.map(lens.get))(b => a => a.map(lens.replace(b)))
+
+        val agsCandidates =
+          options.zoom(potPrismO[TargetVisualOptions, Visible](TargetVisualOptions.agsCandidates))
+
+        val agsCandidatesShown: Boolean = agsCandidates.get.map(_.visible).getOrElse(false)
+
         <.div(
           ExploreStyles.TargetAladinCell,
           <.div(
             ExploreStyles.AladinContainerColumn,
+            <.div(
+              ExploreStyles.AladinToolbox,
+              Button(size = Small, icon = true, onClick = openSettings.modState(s => !s))(
+                ExploreStyles.ButtonOnAladin,
+                ^.onMouseEnter --> openSettings.setState(true),
+                Icons.ThinSliders
+              ),
+              Menu(vertical = true,
+                   compact = true,
+                   size = Mini,
+                   clazz = ExploreStyles.AladinSettingsMenu
+              )(
+                ^.onMouseLeave --> openSettings.setState(false),
+                MenuItem(
+                  Checkbox(
+                    label = "Show Catalog",
+                    checked = agsCandidatesShown,
+                    onChange =
+                      (_: Boolean) => openSettings.setState(false) *> agsCandidates.mod(_.flip)
+                  )
+                )
+              ).when(openSettings.value)
+            ),
             potRender[TargetVisualOptions](renderCell.reuseAlways)(options.get),
             potRender[TargetVisualOptions](renderToolbar.reuseAlways)(options.get),
             <.div(
