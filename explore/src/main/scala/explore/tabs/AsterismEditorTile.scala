@@ -49,7 +49,7 @@ object AsterismEditorTile {
     height:          Int
   )(implicit ctx:    AppContextIO) =
     Tile(
-      ObsTabTiles.TargetId,
+      ObsTabTilesIds.TargetId,
       title,
       back = backButton,
       canMinimize = true,

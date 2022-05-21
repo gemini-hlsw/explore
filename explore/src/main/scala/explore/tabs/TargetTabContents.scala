@@ -36,8 +36,8 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.PosAngle
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
@@ -46,6 +46,9 @@ import lucuma.ui.reusability._
 import lucuma.ui.utils._
 import monocle.Optional
 import org.scalajs.dom.window
+import queries.common.AsterismQueriesGQL._
+import queries.common.ObsQueriesGQL
+import queries.common.TargetQueriesGQL
 import queries.common.UserPreferencesQueriesGQL._
 import react.common._
 import react.common.implicits._
@@ -88,7 +91,7 @@ object TargetTabContents {
 
   val layoutMedium: Layout = Layout(
     List(
-      LayoutItem(i = ObsTabTiles.TargetId.value,
+      LayoutItem(i = ObsTabTilesIds.TargetId.value,
                  x = 0,
                  y = 0,
                  w = DefaultWidth.value,
@@ -97,7 +100,7 @@ object TargetTabContents {
                  minW = TileMinWidth.value
       ),
       LayoutItem(
-        i = ObsTabTiles.PlotId.value,
+        i = ObsTabTilesIds.PlotId.value,
         x = 0,
         y = TargetHeight.value,
         w = DefaultWidth.value,
@@ -608,12 +611,32 @@ object TargetTabContents {
                 .getOrElse(IO.unit)
             }
       }
+      .useStreamResourceViewWithReuseOnMountBy { (props, _, _, _, _, _, _) =>
+        implicit val ctx = props.ctx
+
+        AsterismGroupObsQuery
+          .query(props.programId)
+          .map(AsterismGroupObsQuery.Data.asAsterismGroupWithObs.get)
+          .reRunOnResourceSignals(
+            ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId),
+            TargetQueriesGQL.ProgramTargetEditSubscription.subscribe[IO](props.programId)
+          )
+      }
       .renderWithReuse {
-        (props, twoPanelState, resize, layout, defaultLayout, debouncer, obsConf) =>
+        (
+          props,
+          twoPanelState,
+          resize,
+          layout,
+          defaultLayout,
+          debouncer,
+          obsConf,
+          asterismGroupsWithObs
+        ) =>
           implicit val ctx = props.ctx
+
           <.div(
-            AsterismGroupLiveQuery(
-              props.programId,
+            potRender(
               Reuse(renderFn _)(
                 props,
                 twoPanelState,
@@ -630,7 +653,7 @@ object TargetTabContents {
                       .getOrElse(Callback.empty)
                   )
               )
-            )
+            )(asterismGroupsWithObs)
           ).withRef(resize.ref)
       }
 

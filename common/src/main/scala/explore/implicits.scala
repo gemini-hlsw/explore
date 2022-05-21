@@ -5,7 +5,7 @@ package explore
 
 import cats._
 import cats.data.NonEmptyList
-import cats.effect.Concurrent
+import cats.effect.Temporal
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import clue._
@@ -30,7 +30,7 @@ import shapeless._
 
 import scala.annotation.unused
 import scala.collection.immutable.SortedMap
-import scala.concurrent.duration
+import scala.concurrent.duration._
 
 trait ListImplicits {
 
@@ -160,7 +160,7 @@ object implicits
 
         handler
           .when_(!currentTarget.contains(dom.document.activeElement))
-          .setTimeout(duration.Duration.Zero)
+          .setTimeout(Duration.Zero)
           .void
       }
   }
@@ -171,34 +171,43 @@ object implicits
      * Given an effect producing an A and a signal stream, runs the effect and then re-runs it
      * whenver a signal is received, producing a Stream[A].
      */
-    def reRunOnSignal(signal: fs2.Stream[F, Unit]): fs2.Stream[F, A] =
-      fs2.Stream.eval(f) ++ signal.evalMap(_ => f)
+    def reRunOnSignal(
+      signal:     fs2.Stream[F, Unit],
+      debounce:   Option[FiniteDuration] = 2.seconds.some
+    )(implicit F: Temporal[F]): fs2.Stream[F, A] = {
+      val debouncedSignal = debounce.fold(signal)(signal.debounce)
+      fs2.Stream.eval(f) ++ debouncedSignal.evalMap(_ => f)
+    }
 
     /**
      * Given an effect producing an A and a bunch of signal streams, runs the effect and then
      * re-runs it whenver a signal is received, producing a Stream[A].
      */
     def reRunOnSignals(
-      signals: NonEmptyList[fs2.Stream[F, Unit]]
-    )(implicit
-      F:       Concurrent[F]
-    ): fs2.Stream[F, A] =
-      reRunOnSignal(signals.reduceLeft(_ merge _))
+      signals:    NonEmptyList[fs2.Stream[F, Unit]],
+      debounce:   Option[FiniteDuration] = 2.seconds.some
+    )(implicit F: Temporal[F]): fs2.Stream[F, A] =
+      reRunOnSignal(signals.reduceLeft(_ merge _), debounce)
 
     def reRunOnResourceSignals(
-      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]]
-    )(implicit
-      F:             Concurrent[F]
-    ): Resource[F, fs2.Stream[F, A]] =
+      subscriptions: NonEmptyList[Resource[F, fs2.Stream[F, _]]],
+      debounce:      Option[FiniteDuration] = 2.seconds.some
+    )(implicit F:    Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       subscriptions.sequence
-        .map(ss => reRunOnSignals(ss.map(_.void)))
+        .map(ss => reRunOnSignals(ss.map(_.void), debounce))
 
     def reRunOnResourceSignals(
-      head: Resource[F, fs2.Stream[F, _]],
-      tail: Resource[F, fs2.Stream[F, _]]*
-    )(implicit
-      F:    Concurrent[F]
-    ): Resource[F, fs2.Stream[F, A]] =
+      head:       Resource[F, fs2.Stream[F, _]],
+      tail:       Resource[F, fs2.Stream[F, _]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
       reRunOnResourceSignals(NonEmptyList.of(head, tail: _*))
+
+    def reRunOnResourceSignals(
+      debounce:   FiniteDuration,
+      head:       Resource[F, fs2.Stream[F, _]],
+      tail:       Resource[F, fs2.Stream[F, _]]*
+    )(implicit F: Temporal[F]): Resource[F, fs2.Stream[F, A]] =
+      reRunOnResourceSignals(NonEmptyList.of(head, tail: _*), debounce.some)
+
   }
 }

@@ -3,11 +3,7 @@
 
 package explore.config
 
-import cats.effect.IO
-import cats.effect.Resource
-import crystal.react.StreamResourceRenderer
-import crystal.react.reuse._
-import explore.AppCtx
+import crystal.react.hooks._
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -17,7 +13,7 @@ import lucuma.ui.reusability._
 import queries.common.ManualSequenceGQL._
 import react.common._
 
-final case class SequenceEditor(programId: Program.Id)
+final case class SequenceEditor(programId: Program.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[SequenceEditor](SequenceEditor.component)
 
 object SequenceEditor {
@@ -30,20 +26,15 @@ object SequenceEditor {
 
   val component =
     ScalaFnComponent
-      .withReuse[Props](props =>
-        AppCtx.using { implicit ctx =>
-          StreamResourceRenderer[Option[SequenceSteps.Data.Observations.Nodes.Config]](
-            Resource.eval(
-              IO(
-                fs2.Stream.eval(
-                  SequenceSteps
-                    .query(props.programId)
-                    .map(_.observations.nodes.headOption.flatMap(_.config))
-                )
-              )
-            ),
-            potRenderWithReuse((renderFn _).reuseAlways)
-          )
-        }
-      )
+      .withHooks[Props]
+      .useStreamOnMountBy { props =>
+        implicit val ctx = props.ctx
+
+        fs2.Stream.eval(
+          SequenceSteps
+            .query(props.programId)
+            .map(_.observations.nodes.headOption.flatMap(_.config))
+        )
+      }
+      .render((_, config) => potRender(renderFn)(config))
 }

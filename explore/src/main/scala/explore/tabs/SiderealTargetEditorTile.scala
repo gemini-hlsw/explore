@@ -29,7 +29,7 @@ object SiderealTargetEditorTile {
     width:      Int,
     height:     Int
   ) =
-    Tile(ObsTabTiles.TargetId, title, back = backButton, canMinimize = true)(
+    Tile(ObsTabTilesIds.TargetId, title, back = backButton, canMinimize = true)(
       Reuse
         .by(
           (userId, targetId, target, undoStacks, searching, width, height)

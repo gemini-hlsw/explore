@@ -11,15 +11,17 @@ import crystal.react.implicits._
 import crystal.react.reuse._
 import explore.Icons
 import explore.common.ProgramQueries
-import explore.common.ProgramQueries.ProgramInfo
+import explore.common.ProgramQueries._
 import explore.components.ui.ExploreStyles
 import explore.implicits._
 import explore.model.ModelUndoStacks
 import explore.model.enum.AppTab
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.Program
 import lucuma.ui.reusability._
+import queries.common.ProgramQueriesGQL._
 import react.common.ReactFnProps
 import react.semanticui.elements.button.Button
 import react.semanticui.modules.checkbox.Checkbox
@@ -28,12 +30,12 @@ import react.semanticui.modules.modal._
 import react.semanticui.shorthand._
 import react.semanticui.sizes._
 
-import scalajs.js
+import scalajs.js.JSConverters._
 
 final case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
   undoStacks:       ReuseView[ModelUndoStacks[IO]],
-  trigger:          Option[Callback ==> VdomNode] = none
+  onClose:          Reuse[Option[Callback]] = none.reuseAlways
 )(implicit val ctx: AppContextIO)
     extends ReactFnProps[ProgramsPopup](ProgramsPopup.component)
 
@@ -54,89 +56,74 @@ object ProgramsPopup {
         .guarantee(adding.async.set(false))
 
   protected def selectProgram(
-    isRequired: Boolean,
-    isOpen:     ReuseView[Boolean],
-    undoStacks: ReuseView[ModelUndoStacks[IO]],
-    programId:  Program.Id
-  )(implicit
-    ctx:        AppContextIO
-  ): Callback =
-    isOpen.set(false) >>
+    onClose:      Reuse[Option[Callback]],
+    undoStacks:   ReuseView[ModelUndoStacks[IO]],
+    programId:    Program.Id
+  )(implicit ctx: AppContextIO): Callback =
+    onClose.value.orEmpty >>
       undoStacks.set(ModelUndoStacks[IO]()) >>
-      (if (isRequired) ctx.replacePage(AppTab.Overview, programId, none, none)
+      (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, none, none)
        else ctx.pushPage(AppTab.Overview, programId, none, none))
 
   protected def onNewData(
-    isOpen:     ReuseView[Boolean],
-    isRequired: Boolean,
-    programs:   List[ProgramInfo]
-  )(implicit
-    ctx:        AppContextIO
-  ): IO[Unit] =
+    isRequired:   Boolean,
+    programs:     List[ProgramInfo]
+  )(implicit ctx: AppContextIO): IO[Unit] =
     (isRequired, programs) match {
-      case (false, _)          => IO.unit
       case (true, head :: Nil) => ctx.replacePage(AppTab.Overview, head.id, none, none).to[IO]
-      case _                   => isOpen.set(true).to[IO]
+      case _                   => IO.unit
     }
 
   protected def showModal(
     props:       Props,
-    isOpen:      ReuseView[Boolean],
     adding:      ReuseView[Boolean],
     showDeleted: ReuseView[Boolean],
-    isRequired:  Boolean,
     programs:    ReuseView[List[ProgramInfo]]
   ): VdomNode = {
     implicit val ctx = props.ctx
 
     val actions =
-      if (isRequired) List.empty
+      if (props.onClose.isEmpty) List.empty
       else
         List(
-          Button(size = Small, icon = true)(Icons.Close, "Cancel")(^.tpe := "button",
-                                                                   ^.key := "input-cancel"
+          Button(size = Small, icon = true)(Icons.Close, "Cancel")(
+            ^.tpe := "button",
+            ^.key := "input-cancel"
           )
         )
 
-    React.Fragment(
-      Modal(
-        clazz = ExploreStyles.ProgramsPopup,
-        actions = actions,
-        centered = false,
-        open = isOpen.get,
-        closeOnDimmerClick = !isRequired,
-        closeOnEscape = !isRequired,
-        closeIcon =
-          if (isRequired) js.undefined
-          else Icons.Close.clazz(ExploreStyles.ModalCloseButton),
-        dimmer = Dimmer.Blurring,
-        size = ModalSize.Small,
-        onClose = isOpen.set(false),
-        header = ModalHeader(
-          "Programs"
+    Modal(
+      clazz = ExploreStyles.ProgramsPopup,
+      actions = actions,
+      centered = false,
+      open = true,
+      closeOnDimmerClick = props.onClose.isDefined,
+      closeOnEscape = props.onClose.isDefined,
+      closeIcon = props.onClose.value
+        .map(_ => Icons.Close.clazz(ExploreStyles.ModalCloseButton): VdomNode)
+        .orUndefined,
+      dimmer = Dimmer.Blurring,
+      size = ModalSize.Small,
+      onClose = props.onClose.value.orUndefined,
+      header = ModalHeader("Programs"),
+      content = ModalContent(
+        ProgramTable(
+          props.currentProgramId,
+          programs,
+          showDeleted.get,
+          selectProgram = Reuse.currying(props.onClose, props.undoStacks).in(selectProgram _)
         ),
-        content = ModalContent(
-          ProgramTable(
-            props.currentProgramId,
-            programs,
-            showDeleted.get,
-            selectProgram = Reuse.currying(isRequired, isOpen, props.undoStacks).in(selectProgram _)
+        <.div(
+          Button(
+            clazz = ExploreStyles.ProgramAdd,
+            compact = true,
+            icon = Icons.New,
+            content = "Program",
+            disabled = adding.get,
+            loading = adding.get,
+            onClick = addProgram(programs, adding).runAsync
           ),
-          <.div(
-            Button(
-              clazz = ExploreStyles.ProgramAdd,
-              compact = true,
-              icon = Icons.New,
-              content = "Program",
-              disabled = adding.get,
-              loading = adding.get,
-              onClick = addProgram(programs, adding).runAsync
-            ),
-            Checkbox(label = "Show deleted",
-                     checked = showDeleted.get,
-                     onChange = showDeleted.set _
-            )
-          )
+          Checkbox(label = "Show deleted", checked = showDeleted.get, onChange = showDeleted.set _)
         )
       )
     )
@@ -144,26 +131,19 @@ object ProgramsPopup {
 
   protected val component = ScalaFnComponent
     .withHooks[Props]
-    .useStateViewWithReuse(false) // isOpen
     .useStateViewWithReuse(false) // Adding new program
     .useStateViewWithReuse(false) // Show deleted
-    .useMemoBy((props, _, _, _) => props.trigger)((_, _, _, _) =>
-      _.isEmpty                   // if no trigger, program id was missing or invalid
+    .useStreamResourceViewWithReuseBy((_, _, showDeleted) => showDeleted) {
+      (props, _, _) => showDeleted =>
+        implicit val ctx = props.ctx
+
+        ProgramsQuery
+          .query(showDeleted.get)
+          .map(ProgramsQuery.Data.asProgramInfoList)
+          .flatTap(programs => onNewData(props.onClose.isEmpty, programs))
+          .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO]())
+    }
+    .renderWithReuse((props, adding, showDeleted, programs) =>
+      potRender(p => showModal(props, adding, showDeleted, p))(programs)
     )
-    .useMemoBy((props, isOpen, adding, showDeleted, isRequired) =>
-      (props, isOpen, adding, showDeleted, isRequired)
-    ) { (props, isOpen, adding, showDeleted, isRequired) => _ =>
-      implicit val ctx = props.ctx
-      if (isOpen.get || isRequired)
-        ProgramQueries
-          .ProgramsLiveQuery(Reuse(showModal _)(props, isOpen, adding, showDeleted, isRequired),
-                             true,
-                             Reuse(onNewData _)(isOpen, isRequired)
-          )
-          .some
-      else none
-    }
-    .renderWithReuse { (props, isOpen, _, _, _, popup) =>
-      React.Fragment(props.trigger.map(_(isOpen.set(true))), popup.value)
-    }
 }

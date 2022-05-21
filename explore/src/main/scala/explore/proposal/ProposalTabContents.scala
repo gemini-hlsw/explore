@@ -9,28 +9,26 @@
 // import coulomb.refined._
 // import coulomb.time._
 // import crystal.Ready
-// import crystal.react.StreamRendererMod
 // import crystal.react.implicits._
-// import crystal.react.reuse._
 // import eu.timepit.refined.auto._
 // import eu.timepit.refined.numeric._
 // import explore.components.WIP
 // import explore.implicits._
-// import explore.model._
 // import explore.model.refined._
 // import explore.model.reusability._
 // import fs2.concurrent.SignallingRef
 // import japgolly.scalajs.react._
-// import japgolly.scalajs.react.callback.CallbackCatsEffect._
 // import japgolly.scalajs.react.vdom.html_<^._
-// import lucuma.core.enum._
-// import lucuma.core.model._
-// import react.common.ReactProps
+// import lucuma.core.enum
+// import react.common.ReactFnProps
 
 // import java.net.URI
+// import crystal.react.hooks._
+// import explore.model.ProposalDetails
+// import lucuma.core.model._
 
-// case class ProposalTabContents()(implicit val ctx: AppContextIO)
-//     extends ReactProps[ProposalTabContents](ProposalTabContents.component)
+// final case class ProposalTabContents()(implicit val ctx: AppContextIO)
+//     extends ReactFnProps[ProposalTabContents](ProposalTabContents.component)
 
 // object ProposalTabContents {
 //   type Props = ProposalTabContents
@@ -47,9 +45,9 @@
 //   private val proposalDetails = ProposalDetails(
 //     "",
 //     pi,
-//     ProposalClass.Queue,
+//     enum.ProposalClass.Queue,
 //     None,
-//     ToOActivation.None,
+//     enum.ToOActivation.None,
 //     "",
 //     List.empty,
 //     7.5.withRefinedUnit[NonNegative, Hour],
@@ -57,30 +55,22 @@
 //     80.withRefinedUnit[ZeroTo100, Percent],
 //     80.withRefinedUnit[ZeroTo100, Percent]
 //   )
-//   class Backend() {
-//     def render(props: Props, state: State) =
-//       state.ref.map { ref =>
-//         implicit val ctx = props.ctx
 
-//         val component = StreamRendererMod.build(ref.discrete)
-
-//         component(Reuse.always(_ match {
-//           case Ready(view) => WIP(ProposalDetailsEditor(view))
-//           case _           => <.div("Ruh-Roh")
-//         }))
-//       }
-//   }
-
-//   val component = ScalaComponent
-//     .builder[Props]
-//     .initialState(State())
-//     .renderBackend[Backend]
-//     .componentDidMount { $ =>
-//       implicit val ctx = $.props.ctx
+//   val component = ScalaFnComponent
+//     .withHooks[Props]
+//     .useState(none[SignallingRef[IO, ProposalDetails]])
+//     .useEffectOnMountBy((_, state) =>
 //       SignallingRef
 //         .of[IO, ProposalDetails](proposalDetails)
-//         .flatMap(ref => $.setStateIn[IO](State(ref.some)))
-//         .runAsync
+//         .flatMap(ref => state.setStateAsync(ref.some))
+//     )
+//     .useStreamViewWithReuseBy((_, state) => state.value.void) { (_, state) => _ =>
+//       state.value.fold[fs2.Stream[IO, ProposalDetails]](fs2.Stream.empty)(_.discrete)
 //     }
-//     .build
+//     .render((_, _, viewPot) =>
+//       viewPot match {
+//         case Ready(view) => WIP(ProposalDetailsEditor(view))
+//         case _           => <.div("Ruh-Roh")
+//       }
+//     )
 // }

@@ -4,13 +4,9 @@
 package explore.common
 
 import cats.effect.Async
-import cats.effect.IO
 import cats.implicits._
 import clue.TransactionalClient
 import clue.data.syntax._
-import crystal.react.ReuseView
-import crystal.react.reuse._
-import explore.components.LiveQuery
 import explore.data.KeyedIndexedList
 import explore.implicits._
 import explore.model.ConstraintGroup
@@ -22,8 +18,6 @@ import explore.model.TargetSummary
 import explore.model.reusability._
 import explore.optics._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.html_<^._
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
@@ -37,7 +31,6 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenIso
 import queries.common.ObsQueriesGQL._
-import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 
@@ -121,31 +114,6 @@ object ObsQueries {
   implicit class ProgramObservationsQueryDataOps(val self: ProgramObservationsQuery.Data.type)
       extends AnyVal {
     def asObsSummariesWithConstraints = queryToObsSummariesWithConstraintsGetter
-  }
-
-  case class ObsLiveQuery(
-    programId:        Program.Id,
-    render:           ReuseView[ObsSummariesWithConstraints] ==> VdomNode
-  )(implicit val ctx: AppContextIO)
-      extends ReactFnProps[ObsLiveQuery](ObsLiveQuery.component)
-
-  object ObsLiveQuery {
-    type Props = ObsLiveQuery
-
-    implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-    protected val component = ScalaFnComponent.withReuse[Props] { props =>
-      implicit val ctx = props.ctx
-
-      LiveQuery(
-        ProgramObservationsQuery
-          .query(props.programId)
-          .map(ProgramObservationsQuery.Data.asObsSummariesWithConstraints.get)
-          .reRunOnResourceSignals(
-            ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-          )
-      )(props.render)
-    }
   }
 
   def updateObservationConstraintSet[F[_]: Async](

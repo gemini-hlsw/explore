@@ -4,26 +4,17 @@
 package explore.common
 
 import cats.Order
-import cats.effect.IO
 import cats.implicits._
-import crystal.react.ReuseView
-import crystal.react.reuse._
-import explore.components.LiveQuery
 import explore.implicits._
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.ObsSummaryWithTitleAndConf
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.callback.CallbackCatsEffect._
-import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.ui.reusability._
 import monocle.Focus
 import monocle.Getter
 import queries.common.ConstraintGroupQueriesGQL._
-import queries.common.ObsQueriesGQL
-import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedMap
 
@@ -75,31 +66,5 @@ object ConstraintGroupQueries {
   implicit class ConstraintGroupObsQueryDataOps(val self: ConstraintGroupObsQuery.Data.type)
       extends AnyVal {
     def asConstraintSummWithObs = queryToConstraintsWithObsGetter
-  }
-
-  final case class ConstraintGroupLiveQuery(
-    programId:        Program.Id,
-    render:           ReuseView[ConstraintSummaryWithObervations] ==> VdomNode
-  )(implicit val ctx: AppContextIO)
-      extends ReactFnProps[ConstraintGroupLiveQuery](ConstraintGroupLiveQuery.component)
-
-  object ConstraintGroupLiveQuery {
-    type Props = ConstraintGroupLiveQuery
-
-    implicit val reuseProps: Reusability[Props] = Reusability.derive
-
-    protected val component =
-      ScalaFnComponent.withReuse[Props] { props =>
-        implicit val ctx = props.ctx
-
-        LiveQuery(
-          ConstraintGroupObsQuery
-            .query(props.programId)
-            .map(ConstraintGroupObsQuery.Data.asConstraintSummWithObs.get)
-            .reRunOnResourceSignals(
-              ObsQueriesGQL.ProgramObservationsEditSubscription.subscribe[IO](props.programId)
-            )
-        )(props.render)
-      }
   }
 }

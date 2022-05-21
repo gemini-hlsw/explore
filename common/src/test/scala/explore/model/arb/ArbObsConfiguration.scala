@@ -4,9 +4,9 @@
 package explore.model.arb
 
 import explore.model.ObsConfiguration
+import lucuma.core.arb.ArbTime._
 import lucuma.core.model.PosAngle
 import lucuma.core.model.arb.ArbPosAngle._
-import lucuma.core.arb.ArbTime._
 import lucuma.core.util.arb.ArbEnumerated._
 import lucuma.core.util.arb.ArbGid._
 import org.scalacheck.Arbitrary

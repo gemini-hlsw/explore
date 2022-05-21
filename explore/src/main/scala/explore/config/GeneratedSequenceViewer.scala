@@ -3,11 +3,7 @@
 
 package explore.config
 
-import cats.effect.IO
-import cats.effect.Resource
-import crystal.react.StreamResourceRenderer
-import crystal.react.reuse._
-import explore.AppCtx
+import crystal.react.hooks._
 import explore.implicits._
 import explore.utils._
 import japgolly.scalajs.react._
@@ -18,7 +14,7 @@ import lucuma.ui.reusability._
 import queries.common.GeneratedSequenceSQL._
 import react.common._
 
-final case class GeneratedSequenceViewer(obsId: Observation.Id)
+final case class GeneratedSequenceViewer(obsId: Observation.Id)(implicit val ctx: AppContextIO)
     extends ReactFnProps[GeneratedSequenceViewer](GeneratedSequenceViewer.component)
 
 object GeneratedSequenceViewer {
@@ -31,20 +27,17 @@ object GeneratedSequenceViewer {
 
   val component =
     ScalaFnComponent
-      .withReuse[Props](props =>
-        AppCtx.using { implicit ctx =>
-          StreamResourceRenderer[Option[FutureExecutionConfig]](
-            Resource.eval(
-              IO(
-                fs2.Stream.eval(
-                  SequenceSteps
-                    .query(props.obsId)
-                    .map(_.observation.flatMap(_.execution.config))
-                )
-              )
-            ),
-            potRenderWithReuse((renderFn _).reuseAlways)
-          )
-        }
-      )
+      .withHooks[Props]
+      .useStreamOnMountBy { props =>
+        implicit val ctx = props.ctx
+
+        // TODO A hook that just runs an effect and stores its result in state?
+        // Or are we going to livequery the sequence?
+        fs2.Stream.eval(
+          SequenceSteps
+            .query(props.obsId)
+            .map(_.observation.flatMap(_.execution.config))
+        )
+      }
+      .render((_, config) => potRender(renderFn)(config))
 }

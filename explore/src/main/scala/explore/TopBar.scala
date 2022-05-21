@@ -8,6 +8,7 @@ import cats.syntax.all._
 import crystal.react.ReuseView
 import crystal.react.implicits._
 import crystal.react.reuse.Reuse
+import crystal.react.reuse._
 import explore.Icons
 import explore.Resources
 import explore.components.About
@@ -30,7 +31,6 @@ import lucuma.core.model.User
 import lucuma.ui.reusability._
 import org.scalajs.dom
 import org.scalajs.dom.window
-import react.clipboard.CopyToClipboard
 import react.common._
 import react.semanticui.collections.menu._
 import react.semanticui.elements.image.Image
@@ -70,14 +70,13 @@ object TopBar {
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(false)        // copied
+      .useState(false)        // isProgramsOpen
       .useState(currentTheme) // theme
-      .renderWithReuse { (props, copied, theme) =>
+      .renderWithReuse { (props, isProgramsOpen, theme) =>
         AppCtx.using { implicit appCtx =>
           val role = props.user.role
 
-          def logout: IO[Unit] =
-            appCtx.sso.logout >> props.onLogout
+          def logout: IO[Unit] = appCtx.sso.logout >> props.onLogout
 
           val level = props.preferences.level
 
@@ -87,119 +86,98 @@ object TopBar {
                 props.preferences.copy(level = l)
               ) *> IO(window.location.reload(false))).runAsync
 
-          React.Fragment(
-            <.div(
-              ExploreStyles.MainHeader,
-              Menu(
-                attached = MenuAttached.Top,
-                borderless = true,
-                tabular = MenuTabular.Right
-              )(
-                MenuItem(
-                  <.span(
-                    ExploreStyles.MainTitle,
-                    "Explore"
-                  )
-                ),
-                Item(
-                  ExploreStyles.MainUserName,
-                  props.user.displayName
-                ),
-                ConnectionsStatus(),
-                MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
-                  Dropdown(item = true,
-                           simple = true,
-                           compact = true,
-                           icon = Icons.Bars,
-                           open = false,
-                           clazz = ExploreStyles.MainMenuDropdown
-                  )(
-                    DropdownMenu(
-                      About(
-                        Reuse.always(
-                          DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
-                        ),
-                        Reuse.never(
-                          <.span(ExploreStyles.Version,
-                                 ExploreStyles.VersionUncopied.when(!copied.value)
-                          )(
-                            s"Version: ${appCtx.version}",
-                            CopyToClipboard(
-                              text = appCtx.version.value,
-                              onCopy = (_, copiedCallback) =>
-                                copied.setState(copiedCallback) *>
-                                  copied.setState(false).delayMs(1500).toCallback
-                            )(
-                              <.span(Icons.Clipboard.unless(copied.value),
-                                     Icons.ClipboardCheck.when(copied.value)
-                              )
-                            )
-                          )
-                        )
-                      ),
+          <.div(
+            ExploreStyles.MainHeader,
+            Menu(
+              attached = MenuAttached.Top,
+              borderless = true,
+              tabular = MenuTabular.Right
+            )(
+              MenuItem(
+                <.span(
+                  ExploreStyles.MainTitle,
+                  "Explore"
+                )
+              ),
+              Item(
+                ExploreStyles.MainUserName,
+                props.user.displayName
+              ),
+              ConnectionsStatus(),
+              MenuMenu(position = MenuMenuPosition.Right, clazz = ExploreStyles.MainMenu)(
+                Dropdown(
+                  item = true,
+                  simple = true,
+                  compact = true,
+                  icon = Icons.Bars,
+                  open = false,
+                  clazz = ExploreStyles.MainMenuDropdown
+                )(
+                  DropdownMenu(
+                    About(
+                      Reuse.always(
+                        DropdownItem(text = "About Explore", icon = Icons.Info.fixedWidth())
+                      )
+                    ),
+                    DropdownItem(
+                      text = "Manage Programs",
+                      icon = Icons.ListCheck.fixedWidth(),
+                      onClick = isProgramsOpen.setState(true)
+                    ),
+                    TagMod.when(isProgramsOpen.value)(
                       ProgramsPopup(
-                        currentProgramId = props.programId,
-                        undoStacks = props.undoStacks,
-                        trigger = Reuse
-                          .always((cb: Callback) =>
-                            DropdownItem(
-                              text = "Manage Programs",
-                              icon = Icons.ListCheck.fixedWidth(),
-                              onClick = cb
-                            ): VdomNode
-                          )
-                          .some
-                      ),
-                      DropdownDivider(),
-                      DropdownItem(
-                        onClick = appCtx.sso.switchToORCID.runAsync
-                      )(
-                        <.div(ExploreStyles.OrcidMenu)(
-                          Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
-                          <.span(^.cls := "text", "Login with ORCID")
+                        props.programId,
+                        props.undoStacks,
+                        isProgramsOpen.setState(false).some.reuseAlways
+                      )
+                    ),
+                    DropdownDivider(),
+                    DropdownItem(
+                      onClick = appCtx.sso.switchToORCID.runAsync
+                    )(
+                      <.div(ExploreStyles.OrcidMenu)(
+                        Image(clazz = ExploreStyles.OrcidIconMenu, src = Resources.OrcidLogo),
+                        <.span(^.cls := "text", "Login with ORCID")
+                      )
+                    ).when(role === GuestRole),
+                    DropdownItem(
+                      text = "Logout",
+                      icon = Icons.Logout.fixedWidth(),
+                      onClick = logout.runAsync
+                    ),
+                    DropdownItem()(
+                      Icons.BarCodeRead.fixedWidth(),
+                      "Log Level",
+                      DropdownMenu(
+                        DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
+                          Checkbox(label = "Info", checked = level =!= LogLevelDesc.DEBUG)
+                        ),
+                        DropdownItem(onClick = setLogLevel(LogLevelDesc.DEBUG))(
+                          Checkbox(label = "Debug", checked = level === LogLevelLogger.Level.DEBUG)
                         )
-                      ).when(role === GuestRole),
-                      DropdownItem(
-                        text = "Logout",
-                        icon = Icons.Logout.fixedWidth(),
-                        onClick = logout.runAsync
-                      ),
-                      DropdownItem()(
-                        Icons.BarCodeRead.fixedWidth(),
-                        "Log Level",
-                        DropdownMenu(
-                          DropdownItem(onClick = setLogLevel(LogLevelDesc.INFO))(
-                            Checkbox(label = "Info", checked = level =!= LogLevelDesc.DEBUG)
-                          ),
-                          DropdownItem(onClick = setLogLevel(LogLevelDesc.DEBUG))(
-                            Checkbox(label = "Debug",
-                                     checked = level === LogLevelLogger.Level.DEBUG
-                            )
-                          )
-                        )
-                      ).when(appCtx.environment =!= ExecutionEnvironment.Production),
-                      DropdownItem(
-                        onClick = utils.setupScheme[CallbackTo](
-                          if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
-                        ) *> theme.modState(flipTheme)
-                      )(
-                        Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                       )
-                        .when(appCtx.environment === ExecutionEnvironment.Development),
-                      // DELETME
-                      DropdownItem(
-                        text = "Reset Local Obs",
-                        icon = Icons.SkullCrossBones.fixedWidth(),
-                        onClick = ExploreLocalPreferences.cleanObsConfig[IO].runAsync
-                      )
-                        .when(appCtx.environment === ExecutionEnvironment.Development),
-                      DropdownItem(
-                        text = "Toggle Reusability",
-                        icon = Icons.CrystalBall.fixedWidth(),
-                        onClick = utils.toggleReusabilityOverlay[CallbackTo]()
-                      )
-                        .when(appCtx.environment === ExecutionEnvironment.Development)
+                    ).when(appCtx.environment =!= ExecutionEnvironment.Production),
+                    DropdownItem(
+                      onClick = utils.setupScheme[CallbackTo](
+                        if (theme.value === Theme.Dark) Theme.Light else Theme.Dark
+                      ) *> theme.modState(flipTheme)
+                    )(
+                      Checkbox(label = "Dark/Light", checked = currentTheme === Theme.Dark)
                     )
+                      .when(appCtx.environment === ExecutionEnvironment.Development),
+                    // DELETME
+                    DropdownItem(
+                      text = "Reset Local Obs",
+                      icon = Icons.SkullCrossBones.fixedWidth(),
+                      onClick = ExploreLocalPreferences.cleanObsConfig[IO].runAsync
+                    )
+                      .when(appCtx.environment === ExecutionEnvironment.Development),
+                    DropdownItem(
+                      text = "Toggle Reusability",
+                      icon = Icons.CrystalBall.fixedWidth(),
+                      onClick = utils.toggleReusabilityOverlay[CallbackTo]()
+                    )
+                      .when(appCtx.environment === ExecutionEnvironment.Development)
                   )
                 )
               )
