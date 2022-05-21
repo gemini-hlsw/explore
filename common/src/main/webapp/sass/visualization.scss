@@ -101,11 +101,15 @@
   }
 
   .arrow-between-targets {
-    stroke: orange;
+    stroke: darkblue;
     stroke-width: 2px;
     stroke-dasharray: 2;
   }
 
+  .proper-motion-line-gs {
+    display: none;
+  }
+  .proper-motion-line-gs.guide-star-candidate-target-visible,
   .guide-star-candidate-target.guide-star-candidate-target-visible {
     display: inline;
   }
