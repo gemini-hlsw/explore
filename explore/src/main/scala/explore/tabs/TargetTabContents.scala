@@ -7,6 +7,7 @@ import cats.Order._
 import cats.effect.IO
 import cats.syntax.all._
 import crystal.Pot
+import crystal.implicits._
 import crystal.react._
 import crystal.react.hooks._
 import crystal.react.implicits._
@@ -30,6 +31,7 @@ import explore.optics._
 import explore.syntax.ui._
 import explore.targets.TargetSummaryTable
 import explore.undo._
+import explore.utils._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^._
@@ -127,7 +129,7 @@ object TargetTabContents {
     props:                 Props,
     panels:                ReuseView[TwoPanelState],
     defaultLayouts:        LayoutsMap,
-    layouts:               ReuseView[LayoutsMap],
+    layouts:               ReuseView[Pot[LayoutsMap]],
     resize:                UseResizeDetectorReturn,
     debouncer:             Reusable[UseSingleEffect[IO]],
     obsConf:               ReuseView[ObsConfiguration],
@@ -404,15 +406,17 @@ object TargetTabContents {
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(coreWidth, coreHeight, selectedCoordinates.flatten)
 
-      TileController(
-        props.userId,
-        coreWidth,
-        defaultLayouts,
-        layouts,
-        List(asterismEditorTile, skyPlotTile),
-        GridLayoutSection.TargetLayout,
-        None
-      )
+      val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+        TileController(
+          props.userId,
+          coreWidth,
+          defaultLayouts,
+          l,
+          List(asterismEditorTile, skyPlotTile),
+          GridLayoutSection.TargetLayout,
+          None
+        )
+      potRender[LayoutsMap](rglRender.reuseAlways)(layouts.get)
     }
 
     def renderSiderealTargetEditor(targetId: Target.Id, target: Target.Sidereal): VdomNode = {
@@ -447,14 +451,16 @@ object TargetTabContents {
                                             Target.Sidereal.baseCoordinates.get(target).some
         )
 
-      TileController(props.userId,
-                     coreWidth,
-                     defaultLayouts,
-                     layouts,
-                     List(targetTile, skyPlotTile),
-                     GridLayoutSection.TargetLayout,
-                     None
-      )
+      val rglRender: LayoutsMap => VdomNode = (l: LayoutsMap) =>
+        TileController(props.userId,
+                       coreWidth,
+                       defaultLayouts,
+                       l,
+                       List(targetTile, skyPlotTile),
+                       GridLayoutSection.TargetLayout,
+                       None
+        )
+      potRender[LayoutsMap](rglRender.reuseAlways)(layouts.get)
     }
 
     val selectedPanel = panels.get.selected
@@ -553,7 +559,7 @@ object TargetTabContents {
       // Measure its size
       .useResizeDetector()
       // Initial target layout
-      .useStateViewWithReuse(defaultTargetLayouts)
+      .useStateViewWithReuse(Pot.pending[LayoutsMap])
       // Keep a record of the initial target layouut
       .useMemo(())(_ => defaultTargetLayouts)
       // Load the config from user prefrences
@@ -570,13 +576,18 @@ object TargetTabContents {
               )
               .attempt
               .flatMap {
-                case Right((w, l)) =>
+                case Right((w, dbLayout)) =>
                   (panels
                     .mod(
                       TwoPanelState.treeWidth.replace(w.toDouble)
-                    ) *> layout.mod(o => mergeMap(o, l)))
+                    ) *> layout.mod(
+                    _.fold(_ => mergeMap(dbLayout, defaultLayout).ready,
+                           _ => mergeMap(dbLayout, defaultLayout).ready,
+                           cur => mergeMap(dbLayout, cur).ready
+                    )
+                  ))
                     .to[IO]
-                case Left(_)       =>
+                case Left(_)              =>
                   IO.unit
               }
           }
